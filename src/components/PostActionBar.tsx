@@ -1,16 +1,16 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
-import {
-  Bookmark,
-  Heart,
-  MessageCircle,
-  Quote,
-  Repeat2,
-  Share,
-} from "lucide-react";
+import { Share } from "lucide-react";
 import React, { memo, useCallback, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useActionSyncOptional } from "../contexts/ActionSyncContext";
 import { useBookmarks } from "../hooks/useBookmarks";
+import {
+  BookmarkIcon,
+  HeartIcon,
+  QuoteIcon,
+  ReplyIcon,
+  RepostIcon,
+} from "./icons";
 import { PostMenu } from "./PostMenu";
 import { SyncStatusBadge } from "./SyncStatusBadge";
 
@@ -143,11 +143,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
         aria-label={`Reply to post${post.replyCount ? `, ${post.replyCount} replies` : ""}`}
         aria-pressed={isReplying}
       >
-        <MessageCircle
-          size={iconSize}
-          fill={isReplying ? "currentColor" : "none"}
-          aria-hidden="true"
-        />
+        <ReplyIcon size={iconSize} filled={isReplying} aria-hidden="true" />
         {showCounts && (
           <span
             className="min-w-[1rem] text-left text-xs font-medium"
@@ -182,7 +178,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
           aria-haspopup="menu"
         >
           <span className="relative">
-            <Repeat2 size={iconSize} aria-hidden="true" />
+            <RepostIcon size={iconSize} aria-hidden="true" />
             <SyncStatusBadge
               status={repostStatus}
               onRetry={repostRetryFn}
@@ -227,7 +223,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
                     setShowRepostMenu(false);
                   }}
                 >
-                  <Repeat2 size={16} aria-hidden="true" />
+                  <RepostIcon size={16} aria-hidden="true" />
                   <span>Repost</span>
                 </button>
                 <button
@@ -238,7 +234,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
                     setShowRepostMenu(false);
                   }}
                 >
-                  <Quote size={16} aria-hidden="true" />
+                  <QuoteIcon size={16} aria-hidden="true" />
                   <span>Quote</span>
                 </button>
               </div>
@@ -257,11 +253,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
         aria-pressed={isLiked}
       >
         <span className="relative">
-          <Heart
-            size={iconSize}
-            fill={isLiked ? "currentColor" : "none"}
-            aria-hidden="true"
-          />
+          <HeartIcon size={iconSize} filled={isLiked} aria-hidden="true" />
           <SyncStatusBadge
             status={likeStatus}
             onRetry={likeRetryFn}
@@ -288,9 +280,9 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
         aria-pressed={bookmarked}
       >
         <span className="relative">
-          <Bookmark
+          <BookmarkIcon
             size={iconSize}
-            fill={bookmarked ? "currentColor" : "none"}
+            filled={bookmarked}
             className={`transition-all duration-200 ease-out ${bookmarked ? "animate-bookmark-fill" : ""}`}
             aria-hidden="true"
           />

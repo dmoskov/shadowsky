@@ -1,17 +1,11 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
 import { formatDistanceToNow } from "date-fns";
-import {
-  ChevronDown,
-  ChevronUp,
-  Heart,
-  Quote,
-  Repeat2,
-  UserPlus,
-} from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import React from "react";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { getNotificationUrl } from "../utils/url-helpers";
+import { FollowIcon, HeartIcon, QuoteIcon, RepostIcon } from "./icons";
 
 export interface AggregatedNotification {
   type: "aggregated";
@@ -228,37 +222,39 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
         switch (item.reason) {
           case "like":
             return (
-              <Heart
+              <HeartIcon
                 size={18}
+                filled
                 style={{ color: "var(--bsky-like)" }}
-                fill="currentColor"
               />
             );
           case "repost":
             return (
-              <Repeat2 size={18} style={{ color: "var(--bsky-repost)" }} />
+              <RepostIcon size={18} style={{ color: "var(--bsky-repost)" }} />
             );
           case "follow":
             return (
-              <UserPlus size={18} style={{ color: "var(--bsky-follow)" }} />
+              <FollowIcon size={18} style={{ color: "var(--bsky-follow)" }} />
             );
           case "quote":
-            return <Quote size={18} style={{ color: "var(--bsky-quote)" }} />;
+            return (
+              <QuoteIcon size={18} style={{ color: "var(--bsky-quote)" }} />
+            );
           case "starterpack-joined":
             return (
-              <UserPlus size={18} style={{ color: "var(--bsky-follow)" }} />
+              <FollowIcon size={18} style={{ color: "var(--bsky-follow)" }} />
             );
           case "like-via-repost":
             return (
-              <Heart
+              <HeartIcon
                 size={18}
+                filled
                 style={{ color: "var(--bsky-like)" }}
-                fill="currentColor"
               />
             );
           case "repost-via-repost":
             return (
-              <Repeat2 size={18} style={{ color: "var(--bsky-repost)" }} />
+              <RepostIcon size={18} style={{ color: "var(--bsky-repost)" }} />
             );
           default:
             return null;

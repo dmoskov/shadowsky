@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { AccountSwitcher } from "../../components";
 import { useAuth } from "../../contexts/AuthContext";
+import { ArrowLeftIcon } from "../../components/icons";
 
 interface SettingsScreenProps {
   section?: string;
@@ -78,7 +79,10 @@ export function SettingsScreen({ section }: SettingsScreenProps) {
             onPress={() => setShowAccountSwitcher(false)}
             style={styles.backButton}
           >
-            <Text style={styles.backButtonText}>← Back</Text>
+            <View style={styles.backButtonContent}>
+              <ArrowLeftIcon size={20} color="#1DA1F2" />
+              <Text style={styles.backButtonText}>Back</Text>
+            </View>
           </TouchableOpacity>
         </View>
         <AccountSwitcher
@@ -192,6 +196,11 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
+  },
+  backButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
   backButtonText: {
     color: "#1DA1F2",

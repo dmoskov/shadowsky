@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
 import { AuthAccount } from "../services/auth/auth-service";
+import { CheckIcon, CloseIcon, PlusIcon } from "./icons";
 
 interface AccountSwitcherProps {
   onAccountSwitch?: () => void;
@@ -119,7 +120,7 @@ export function AccountSwitcher({
           )}
           {isActive && !isSwitching && (
             <View style={styles.activeIndicator}>
-              <Text style={styles.activeIndicatorText}>✓</Text>
+              <CheckIcon size={16} color="#fff" />
             </View>
           )}
         </TouchableOpacity>
@@ -133,7 +134,7 @@ export function AccountSwitcher({
             {isRemoving ? (
               <ActivityIndicator size="small" color="#F91880" />
             ) : (
-              <Text style={styles.removeButtonText}>×</Text>
+              <CloseIcon size={20} color="#F91880" />
             )}
           </TouchableOpacity>
         )}
@@ -156,7 +157,10 @@ export function AccountSwitcher({
       </View>
 
       <TouchableOpacity style={styles.addAccountButton} onPress={onAddAccount}>
-        <Text style={styles.addAccountButtonText}>+ Add Account</Text>
+        <View style={styles.addAccountContent}>
+          <PlusIcon size={18} color="#fff" />
+          <Text style={styles.addAccountButtonText}>Add Account</Text>
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -239,22 +243,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginLeft: 8,
   },
-  activeIndicatorText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
   removeButton: {
     width: 32,
     height: 32,
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 8,
-  },
-  removeButtonText: {
-    color: "#F91880",
-    fontSize: 28,
-    fontWeight: "300",
   },
   emptyText: {
     color: "#8899a6",
@@ -268,6 +262,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "#1DA1F2",
     alignItems: "center",
+  },
+  addAccountContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   addAccountButtonText: {
     color: "#fff",

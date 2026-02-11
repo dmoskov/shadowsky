@@ -1,15 +1,18 @@
-import React from 'react';
+import React, {ReactNode} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
+import {MailboxIcon} from './icons';
 
 interface EmptyStateProps {
   message: string;
-  icon?: string;
+  icon?: ReactNode;
 }
 
-export function EmptyState({message, icon = '📭'}: EmptyStateProps) {
+export function EmptyState({message, icon}: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>{icon}</Text>
+      <View style={styles.iconWrapper}>
+        {icon || <MailboxIcon size={64} color="#9ca3af" />}
+      </View>
       <Text style={styles.message}>{message}</Text>
     </View>
   );
@@ -23,8 +26,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#0a0a0f',
   },
-  icon: {
-    fontSize: 64,
+  iconWrapper: {
     marginBottom: 16,
   },
   message: {

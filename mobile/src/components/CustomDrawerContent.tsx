@@ -1,21 +1,24 @@
-import React from "react";
+import React, {ReactNode} from "react";
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { useRouter, usePathname } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
 import { colors } from "../constants/theme";
+import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon } from "./icons";
 
 interface DrawerItemProps {
   label: string;
+  icon?: ReactNode;
   onPress: () => void;
   isActive?: boolean;
 }
 
-function DrawerItem({ label, onPress, isActive }: DrawerItemProps) {
+function DrawerItem({ label, icon, onPress, isActive }: DrawerItemProps) {
   return (
     <TouchableOpacity
       style={[styles.drawerItem, isActive && styles.drawerItemActive]}
       onPress={onPress}
     >
+      {icon && <View style={styles.drawerItemIcon}>{icon}</View>}
       <Text
         style={[
           styles.drawerItemText,
@@ -54,21 +57,25 @@ export function CustomDrawerContent() {
       <View style={styles.drawerItems}>
         <DrawerItem
           label="Home"
+          icon={<HomeIcon size={20} color={pathname === "/" || pathname.startsWith("/(app)/(tabs)") ? colors.primary : colors.text} />}
           isActive={pathname === "/" || pathname.startsWith("/(app)/(tabs)")}
           onPress={() => router.push("/(app)/(tabs)/(home)")}
         />
         <DrawerItem
           label="Lists"
+          icon={<ListIcon size={20} color={pathname.includes("/lists") ? colors.primary : colors.text} />}
           isActive={pathname.includes("/lists")}
           onPress={() => router.push("/(app)/lists")}
         />
         <DrawerItem
           label="Scheduled Posts"
+          icon={<CalendarIcon size={20} color={pathname.includes("/scheduled") ? colors.primary : colors.text} />}
           isActive={pathname.includes("/scheduled")}
           onPress={() => router.push("/(app)/scheduled")}
         />
         <DrawerItem
           label="Analytics"
+          icon={<ChartIcon size={20} color={pathname.includes("/analytics") ? colors.primary : colors.text} />}
           isActive={pathname.includes("/analytics")}
           onPress={() => router.push("/(app)/analytics")}
         />
@@ -77,6 +84,7 @@ export function CustomDrawerContent() {
 
         <DrawerItem
           label="Settings"
+          icon={<SettingsIcon size={20} color={pathname.includes("/settings") ? colors.primary : colors.text} />}
           isActive={pathname.includes("/settings")}
           onPress={() => router.push("/(app)/settings")}
         />
@@ -127,12 +135,19 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   drawerItem: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 14,
     minHeight: 44,
   },
   drawerItemActive: {
     backgroundColor: colors.border,
+  },
+  drawerItemIcon: {
+    marginRight: 12,
+    width: 24,
+    alignItems: "center",
   },
   drawerItemText: {
     color: colors.text,

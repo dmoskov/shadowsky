@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { useCreatePost } from "../../hooks/api/usePosts";
+import { ImageIcon, GifIcon, PollIcon, ThreadIcon } from "../../components/icons";
 
 const MAX_POST_LENGTH = 300;
 
@@ -73,7 +74,20 @@ export function ComposeScreen() {
       />
 
       <View style={styles.toolbar}>
-        <Text style={styles.toolbarText}>Image | GIF | Poll | Thread</Text>
+        <View style={styles.toolbarIcons}>
+          <TouchableOpacity style={styles.toolbarButton} activeOpacity={0.7}>
+            <ImageIcon size={22} color="#6b7280" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolbarButton} activeOpacity={0.7}>
+            <GifIcon size={22} color="#6b7280" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolbarButton} activeOpacity={0.7}>
+            <PollIcon size={22} color="#6b7280" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolbarButton} activeOpacity={0.7}>
+            <ThreadIcon size={22} color="#6b7280" />
+          </TouchableOpacity>
+        </View>
         <Text style={[
           styles.charCount,
           isOverLimit && styles.charCountOver
@@ -141,9 +155,12 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#1f2937",
   },
-  toolbarText: {
-    color: "#6b7280",
-    fontSize: 14,
+  toolbarIcons: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  toolbarButton: {
+    padding: 4,
   },
   charCount: {
     color: "#6b7280",

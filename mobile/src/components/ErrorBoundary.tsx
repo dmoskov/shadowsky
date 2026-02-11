@@ -1,9 +1,6 @@
 import React, { Component, ReactNode } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
-import { createLogger } from "../../../src/utils/logger";
-
-const logger = createLogger("ErrorBoundary");
 
 interface Props {
   children: ReactNode;
@@ -28,10 +25,7 @@ class ErrorBoundaryClass extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     // Log the error for debugging
-    logger.logError(error, {
-      componentStack: errorInfo.componentStack,
-      errorBoundary: true,
-    });
+    console.error("[ErrorBoundary]", error, errorInfo.componentStack);
   }
 
   handleReset = (): void => {

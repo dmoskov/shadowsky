@@ -24,6 +24,7 @@ import { getAtProtoClient } from "../../services/atproto/client";
 import { LoadingState } from "../../components/LoadingState";
 import { ErrorState } from "../../components/ErrorState";
 import { EmptyState } from "../../components/EmptyState";
+import { LockIcon, ChatBubbleIcon, ArrowLeftIcon } from "../../components/icons";
 
 export function MessagesScreen() {
   const { session } = useAuth();
@@ -248,7 +249,9 @@ export function MessagesScreen() {
       return (
         <View style={styles.container}>
           <View style={styles.permissionErrorContainer}>
-            <Text style={styles.permissionErrorIcon}>🔒</Text>
+            <View style={{marginBottom: 16}}>
+              <LockIcon size={64} color="#9ca3af" />
+            </View>
             <Text style={styles.permissionErrorTitle}>
               App Password Required
             </Text>
@@ -283,7 +286,7 @@ export function MessagesScreen() {
   if (!conversations || conversations.length === 0) {
     return (
       <EmptyState
-        icon="💬"
+        icon={<ChatBubbleIcon size={64} color="#9ca3af" />}
         message="No conversations yet. Start a conversation on Bluesky to see it here!"
       />
     );
@@ -325,7 +328,10 @@ export function MessagesScreen() {
           style={styles.backButton}
           onPress={() => setSelectedConversation(null)}
         >
-          <Text style={styles.backButtonText}>← Back</Text>
+          <View style={styles.backButtonContent}>
+            <ArrowLeftIcon size={20} color="#1d9bf0" />
+            <Text style={styles.backButtonText}>Back</Text>
+          </View>
         </TouchableOpacity>
         <View style={styles.chatHeaderContent}>
           {otherMember.avatar ? (
@@ -497,6 +503,11 @@ const styles = StyleSheet.create({
   backButton: {
     paddingVertical: 4,
   },
+  backButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
   backButtonText: {
     color: "#1d9bf0",
     fontSize: 16,
@@ -619,10 +630,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
-  },
-  permissionErrorIcon: {
-    fontSize: 64,
-    marginBottom: 16,
   },
   permissionErrorTitle: {
     color: "#ffffff",

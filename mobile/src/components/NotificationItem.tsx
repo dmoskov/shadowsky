@@ -1,8 +1,9 @@
-import React from 'react';
+import React, {ReactNode} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {AppBskyNotificationListNotifications, AppBskyFeedPost} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
+import {HeartIcon, RepostIcon, FollowIcon, AtSignIcon, ReplyIcon, QuoteIcon, BellIcon} from './icons';
 
 interface NotificationItemProps {
   notification: AppBskyNotificationListNotifications.Notification;
@@ -23,47 +24,47 @@ export function NotificationItem({
   });
 
   // Get notification icon and message based on reason
-  const getNotificationContent = () => {
+  const getNotificationContent = (): {icon: ReactNode; message: string; color: string} => {
     switch (notification.reason) {
       case 'like':
         return {
-          icon: '❤️',
+          icon: <HeartIcon size={16} color="#ef4444" filled />,
           message: 'liked your post',
           color: '#ef4444',
         };
       case 'repost':
         return {
-          icon: '🔄',
+          icon: <RepostIcon size={16} color="#10b981" />,
           message: 'reposted your post',
           color: '#10b981',
         };
       case 'follow':
         return {
-          icon: '👤',
+          icon: <FollowIcon size={16} color="#3b82f6" />,
           message: 'followed you',
           color: '#3b82f6',
         };
       case 'mention':
         return {
-          icon: '@',
+          icon: <AtSignIcon size={16} color="#8b5cf6" />,
           message: 'mentioned you',
           color: '#8b5cf6',
         };
       case 'reply':
         return {
-          icon: '💬',
+          icon: <ReplyIcon size={16} color="#6366f1" />,
           message: 'replied to your post',
           color: '#6366f1',
         };
       case 'quote':
         return {
-          icon: '💭',
+          icon: <QuoteIcon size={16} color="#06b6d4" />,
           message: 'quoted your post',
           color: '#06b6d4',
         };
       default:
         return {
-          icon: '🔔',
+          icon: <BellIcon size={16} color="#9ca3af" />,
           message: 'sent a notification',
           color: '#9ca3af',
         };
@@ -91,7 +92,7 @@ export function NotificationItem({
       <View style={styles.content}>
         {/* Icon indicator */}
         <View style={[styles.iconContainer, {backgroundColor: color + '20'}]}>
-          <Text style={styles.icon}>{icon}</Text>
+          {icon}
         </View>
 
         {/* Author info and notification message */}
@@ -155,9 +156,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  icon: {
-    fontSize: 16,
   },
   main: {
     flex: 1,

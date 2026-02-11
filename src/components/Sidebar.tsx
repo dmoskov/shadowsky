@@ -1,22 +1,20 @@
-import {
-  BarChart3,
-  Bell,
-  Bookmark,
-  Clock,
-  ExternalLink,
-  Home,
-  List,
-  Mail,
-  PenSquare,
-  Search,
-  User,
-  X,
-} from "lucide-react";
+import { Clock, ExternalLink, PenSquare } from "lucide-react";
 import React from "react";
 import { NavLink } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useUnreadNotificationCount } from "../hooks/useNotifications";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
+import {
+  BellIcon,
+  BookmarkIcon,
+  ChartIcon,
+  CloseIcon,
+  HomeIcon,
+  ListIcon,
+  MailboxIcon,
+  PersonIcon,
+  SearchIcon,
+} from "./icons";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -35,26 +33,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
     useRoutePrefetch();
 
   const navItems = [
-    { path: "/", label: "Home", icon: Home },
-    { path: "/search", label: "Search", icon: Search },
+    { path: "/", label: "Home", icon: HomeIcon },
+    { path: "/search", label: "Search", icon: SearchIcon },
     {
       path: "/notifications",
       label: "Notifications",
-      icon: Bell,
+      icon: BellIcon,
     },
     { path: "/timeline", label: "Timeline", icon: Clock },
-    { path: "/bookmarks", label: "Bookmarks", icon: Bookmark },
-    { path: "/lists", label: "Lists", icon: List },
-    { path: "/messages", label: "Direct Messages", icon: Mail },
+    { path: "/bookmarks", label: "Bookmarks", icon: BookmarkIcon },
+    { path: "/lists", label: "Lists", icon: ListIcon },
+    { path: "/messages", label: "Direct Messages", icon: MailboxIcon },
     // Scheduled posts disabled for testing
     { path: "/compose", label: "Compose", icon: PenSquare },
     {
       path: `/profile/${session?.handle || ""}`,
       label: "Profile",
-      icon: User,
+      icon: PersonIcon,
       profileHandle: session?.handle,
     },
-    { path: "/analytics", label: "Analytics", icon: BarChart3 },
+    { path: "/analytics", label: "Analytics", icon: ChartIcon },
   ];
 
   return (
@@ -89,7 +87,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             aria-label="Close menu"
             className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 transition-all hover:opacity-70"
           >
-            <X
+            <CloseIcon
               size={20}
               style={{ color: "var(--bsky-text-secondary)" }}
               aria-hidden="true"

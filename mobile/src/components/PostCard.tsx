@@ -3,6 +3,7 @@ import {View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
 import {AppBskyFeedDefs, AppBskyFeedPost, AppBskyEmbedImages} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
+import {ReplyIcon, RepostIcon, HeartIcon, BookmarkIcon} from './icons';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -43,6 +44,8 @@ export function PostCard({
   const timestamp = formatDistanceToNow(new Date(postView.indexedAt), {
     addSuffix: true,
   });
+
+  const isLiked = !!postView.viewer?.like;
 
   return (
     <TouchableOpacity
@@ -90,7 +93,7 @@ export function PostCard({
             style={styles.engagementButton}
             onPress={onReply}
             activeOpacity={0.7}>
-            <Text style={styles.engagementIcon}>💬</Text>
+            <ReplyIcon size={18} color="#9ca3af" />
             <Text style={styles.engagementCount}>
               {postView.replyCount || 0}
             </Text>
@@ -100,7 +103,7 @@ export function PostCard({
             style={styles.engagementButton}
             onPress={onRepost}
             activeOpacity={0.7}>
-            <Text style={styles.engagementIcon}>🔄</Text>
+            <RepostIcon size={18} color="#9ca3af" />
             <Text style={styles.engagementCount}>
               {postView.repostCount || 0}
             </Text>
@@ -110,9 +113,7 @@ export function PostCard({
             style={styles.engagementButton}
             onPress={onLike}
             activeOpacity={0.7}>
-            <Text style={[styles.engagementIcon, postView.viewer?.like && styles.liked]}>
-              {postView.viewer?.like ? '❤️' : '🤍'}
-            </Text>
+            <HeartIcon size={18} color={isLiked ? '#ef4444' : '#9ca3af'} filled={isLiked} />
             <Text style={styles.engagementCount}>
               {postView.likeCount || 0}
             </Text>
@@ -122,9 +123,7 @@ export function PostCard({
             style={styles.engagementButton}
             onPress={onBookmark}
             activeOpacity={0.7}>
-            <Text style={[styles.engagementIcon, isBookmarked && styles.bookmarked]}>
-              {isBookmarked ? '🔖' : '🏷️'}
-            </Text>
+            <BookmarkIcon size={18} color={isBookmarked ? '#3b82f6' : '#9ca3af'} filled={isBookmarked} />
           </TouchableOpacity>
         </View>
       </View>
@@ -193,15 +192,6 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 4,
     paddingHorizontal: 12,
-  },
-  engagementIcon: {
-    fontSize: 18,
-  },
-  liked: {
-    opacity: 1,
-  },
-  bookmarked: {
-    opacity: 1,
   },
   engagementCount: {
     color: '#9ca3af',

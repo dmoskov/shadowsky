@@ -2,19 +2,13 @@ import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notif
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
-  AtSign,
   ChevronUp,
   Crown,
   Filter,
-  Heart,
   Image,
   Loader,
-  MessageCircle,
   MoreVertical,
-  Quote,
   RefreshCw,
-  Repeat2,
-  UserPlus,
   Users,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
@@ -38,6 +32,14 @@ import { useMinDuration } from "../hooks/useTiming";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { NotificationCache } from "../utils/notificationCache";
 import { getNotificationUrl } from "../utils/url-helpers";
+import {
+  AtSignIcon,
+  FollowIcon,
+  HeartIcon,
+  QuoteIcon,
+  ReplyIcon,
+  RepostIcon,
+} from "./icons";
 import {
   AggregatedNotificationItem,
   aggregateNotifications,
@@ -388,26 +390,22 @@ const NotificationsFeedComponent: React.FC = () => {
     switch (reason) {
       case "like":
         return (
-          <Heart
-            size={18}
-            style={{ color: "var(--bsky-like)" }}
-            fill="currentColor"
-          />
+          <HeartIcon size={18} filled style={{ color: "var(--bsky-like)" }} />
         );
       case "repost":
-        return <Repeat2 size={18} style={{ color: "var(--bsky-repost)" }} />;
+        return <RepostIcon size={18} style={{ color: "var(--bsky-repost)" }} />;
       case "follow":
-        return <UserPlus size={18} style={{ color: "var(--bsky-follow)" }} />;
+        return <FollowIcon size={18} style={{ color: "var(--bsky-follow)" }} />;
       case "mention":
-        return <AtSign size={18} style={{ color: "var(--bsky-mention)" }} />;
-      case "reply":
         return (
-          <MessageCircle size={18} style={{ color: "var(--bsky-reply)" }} />
+          <AtSignIcon size={18} style={{ color: "var(--bsky-mention)" }} />
         );
+      case "reply":
+        return <ReplyIcon size={18} style={{ color: "var(--bsky-reply)" }} />;
       case "quote":
-        return <Quote size={18} style={{ color: "var(--bsky-quote)" }} />;
+        return <QuoteIcon size={18} style={{ color: "var(--bsky-quote)" }} />;
       case "starterpack-joined":
-        return <UserPlus size={18} style={{ color: "var(--bsky-follow)" }} />;
+        return <FollowIcon size={18} style={{ color: "var(--bsky-follow)" }} />;
       default:
         return null;
     }
@@ -476,21 +474,21 @@ const NotificationsFeedComponent: React.FC = () => {
                 <FilterTab
                   active={filter === "likes"}
                   onClick={() => handleFilterChange("likes")}
-                  icon={<Heart size={16} />}
+                  icon={<HeartIcon size={16} />}
                   label="Likes"
                   count={filterCounts["likes"]}
                 />
                 <FilterTab
                   active={filter === "reposts"}
                   onClick={() => handleFilterChange("reposts")}
-                  icon={<Repeat2 size={16} />}
+                  icon={<RepostIcon size={16} />}
                   label="Reposts"
                   count={filterCounts["reposts"]}
                 />
                 <FilterTab
                   active={filter === "mentions"}
                   onClick={() => handleFilterChange("mentions")}
-                  icon={<AtSign size={16} />}
+                  icon={<AtSignIcon size={16} />}
                   label="Mentions"
                   count={filterCounts["mentions"]}
                 />
@@ -499,14 +497,14 @@ const NotificationsFeedComponent: React.FC = () => {
                   <FilterTab
                     active={filter === "replies"}
                     onClick={() => handleFilterChange("replies")}
-                    icon={<MessageCircle size={16} />}
+                    icon={<ReplyIcon size={16} />}
                     label="Replies"
                     count={filterCounts["replies"]}
                   />
                   <FilterTab
                     active={filter === "follows"}
                     onClick={() => handleFilterChange("follows")}
-                    icon={<UserPlus size={16} />}
+                    icon={<FollowIcon size={16} />}
                     label="Follows"
                     count={filterCounts["follows"]}
                   />
@@ -517,21 +515,21 @@ const NotificationsFeedComponent: React.FC = () => {
                   <FilterTab
                     active={filter === "follows"}
                     onClick={() => handleFilterChange("follows")}
-                    icon={<UserPlus size={16} />}
+                    icon={<FollowIcon size={16} />}
                     label="Follows"
                     count={filterCounts["follows"]}
                   />
                   <FilterTab
                     active={filter === "replies"}
                     onClick={() => handleFilterChange("replies")}
-                    icon={<MessageCircle size={16} />}
+                    icon={<ReplyIcon size={16} />}
                     label="Replies"
                     count={filterCounts["replies"]}
                   />
                   <FilterTab
                     active={filter === "quotes"}
                     onClick={() => handleFilterChange("quotes")}
-                    icon={<Quote size={16} />}
+                    icon={<QuoteIcon size={16} />}
                     label="Quotes"
                     count={filterCounts["quotes"]}
                   />
@@ -607,7 +605,7 @@ const NotificationsFeedComponent: React.FC = () => {
                           filter === "quotes" ? "text-blue-500" : ""
                         }`}
                       >
-                        <Quote size={16} />
+                        <QuoteIcon size={16} />
                         <span>Quotes</span>
                         {filterCounts["quotes"] > 0 && (
                           <span className="ml-auto text-xs">

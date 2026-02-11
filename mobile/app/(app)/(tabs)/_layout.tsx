@@ -1,6 +1,6 @@
 import {Tabs} from 'expo-router';
 import {Text, View} from 'react-native';
-import {Ionicons} from '@expo/vector-icons';
+import {HomeIcon, SearchIcon, BellIcon, PersonIcon} from '../../../src/components/icons';
 import {useUnreadCount} from '../../../src/hooks/api/useNotifications';
 
 function NotificationsBadge() {
@@ -45,11 +45,7 @@ function NotificationsIcon({
 }) {
   return (
     <View style={{position: 'relative'}}>
-      <Ionicons
-        name={focused ? 'notifications' : 'notifications-outline'}
-        size={24}
-        color={color}
-      />
+      <BellIcon size={24} color={color} filled={focused} />
       <NotificationsBadge />
     </View>
   );
@@ -73,11 +69,7 @@ export default function TabsLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({color, focused}) => (
-            <Ionicons
-              name={focused ? 'home' : 'home-outline'}
-              size={24}
-              color={color}
-            />
+            <HomeIcon size={24} color={color} filled={focused} />
           ),
         }}
       />
@@ -85,12 +77,8 @@ export default function TabsLayout() {
         name="(search)"
         options={{
           title: 'Search',
-          tabBarIcon: ({color, focused}) => (
-            <Ionicons
-              name={focused ? 'search' : 'search-outline'}
-              size={24}
-              color={color}
-            />
+          tabBarIcon: ({color}) => (
+            <SearchIcon size={24} color={color} />
           ),
         }}
       />
@@ -108,11 +96,7 @@ export default function TabsLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({color, focused}) => (
-            <Ionicons
-              name={focused ? 'person' : 'person-outline'}
-              size={24}
-              color={color}
-            />
+            <PersonIcon size={24} color={color} filled={focused} />
           ),
         }}
       />
