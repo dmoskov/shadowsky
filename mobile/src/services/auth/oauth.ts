@@ -5,6 +5,7 @@
 
 import { AtpSessionData } from "@atproto/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Crypto from "expo-crypto";
 import * as Linking from "expo-linking";
 
 const OAUTH_STATE_KEY = "@shadowsky/oauth_state";
@@ -32,6 +33,23 @@ function generateRandomString(length: number = 32): string {
 }
 
 /**
+ * Generate code challenge from code verifier using S256 method
+ * Converts the code verifier to base64url-encoded SHA256 hash
+ */
+async function generateCodeChallenge(verifier: string): Promise<string> {
+  // SHA256 hash the code verifier
+  const hash = await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    verifier,
+    { encoding: Crypto.CryptoEncoding.BASE64 },
+  );
+
+  // Convert base64 to base64url (URL-safe base64)
+  // Replace + with -, / with _, and remove trailing =
+  return hash.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/**
  * Start OAuth flow by opening browser
  */
 export async function startOAuthFlow(
@@ -50,14 +68,17 @@ export async function startOAuthFlow(
   const redirectUri = "shadowsky://oauth-callback";
   const clientId = "shadowsky-mobile";
 
+  // Generate code challenge using S256 method
+  const codeChallenge = await generateCodeChallenge(codeVerifier);
+
   const authUrl =
     `${service}/oauth/authorize?` +
     `client_id=${encodeURIComponent(clientId)}` +
     `&redirect_uri=${encodeURIComponent(redirectUri)}` +
     `&response_type=code` +
     `&state=${state}` +
-    `&code_challenge=${codeVerifier}` +
-    `&code_challenge_method=plain`;
+    `&code_challenge=${codeChallenge}` +
+    `&code_challenge_method=S256`;
 
   const canOpen = await Linking.canOpenURL(authUrl);
   if (!canOpen) {
@@ -92,10 +113,53 @@ export async function handleOAuthCallback(
       throw new Error("OAuth state expired");
     }
 
-    // TODO: Implement proper OAuth token exchange with PKCE
-    throw new Error(
-      "OAuth token exchange not yet implemented. Use app password authentication instead.",
-    );
+    // Determine the token endpoint from the issuer or use default
+    const tokenEndpoint = params.iss
+      ? `${params.iss}/oauth/token`
+      : "https://bsky.social/oauth/token";
+
+    // Exchange authorization code for tokens using PKCE
+    const redirectUri = "shadowsky://oauth-callback";
+    const clientId = "shadowsky-mobile";
+
+    const tokenResponse = await fetch(tokenEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        code: params.code,
+        redirect_uri: redirectUri,
+        client_id: clientId,
+        code_verifier: storedState.codeVerifier,
+      }).toString(),
+    });
+
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      throw new Error(
+        `Token exchange failed: ${tokenResponse.status} - ${errorText}`,
+      );
+    }
+
+    const tokenData = await tokenResponse.json();
+
+    // Parse the token response into AtpSessionData
+    // AT Protocol OAuth token response includes: access_token, refresh_token, token_type, scope, sub (DID)
+    const sessionData: AtpSessionData = {
+      accessJwt: tokenData.access_token,
+      refreshJwt: tokenData.refresh_token,
+      did: tokenData.sub,
+      handle: tokenData.handle || "", // May need to fetch handle separately
+      email: tokenData.email,
+      emailConfirmed: tokenData.email_confirmed,
+    };
+
+    // Clean up OAuth state
+    await AsyncStorage.removeItem(OAUTH_STATE_KEY);
+
+    return sessionData;
   } catch (error) {
     await AsyncStorage.removeItem(OAUTH_STATE_KEY);
     throw error;
