@@ -71,6 +71,7 @@ mobile/
 
 ## 📱 Available Scripts
 
+### Development Scripts
 ```bash
 npm run android       # Run on Android
 npm run ios          # Run on iOS
@@ -79,6 +80,25 @@ npm test             # Run tests
 npm run lint         # Lint code
 npm run clean        # Clean build artifacts
 npm run pod-install  # Install iOS pods
+```
+
+### EAS Build Scripts
+```bash
+# Build for all platforms
+npm run build:development  # Development builds with development client
+npm run build:preview      # Preview builds for internal testing
+npm run build:production   # Production builds for App Store/Play Store
+
+# Platform-specific builds
+npm run build:preview:ios      # iOS preview build (.ipa)
+npm run build:preview:android  # Android preview build (.apk)
+npm run build:production:ios      # iOS production build
+npm run build:production:android  # Android production build (.aab)
+
+# OTA Updates
+npm run update:development -- "Update message"  # Push OTA update to development
+npm run update:preview -- "Update message"      # Push OTA update to preview
+npm run update:production -- "Update message"   # Push OTA update to production
 ```
 
 ## 🎯 Current Implementation Status
@@ -161,6 +181,204 @@ npm run lint
 - **Minimum SDK**: 24 (Android 7.0)
 - **Target SDK**: 34 (Android 14)
 - **AndroidManifest.xml**: Intent filters configured
+
+## 🏗️ EAS Build & Updates
+
+ShadowSky uses Expo Application Services (EAS) for building iOS and Android binaries and delivering over-the-air (OTA) updates.
+
+### Prerequisites
+
+1. **EAS Account**: Sign up at https://expo.dev
+2. **Project Setup**: Run `npx eas-cli login` to authenticate
+3. **Project Configuration**: Run `npx eas-cli init` to link the project
+
+### Build Profiles
+
+The app has three build profiles configured in `eas.json`:
+
+#### Development Profile
+- **Purpose**: Development builds with Expo development client
+- **Distribution**: Internal (via Ad Hoc provisioning on iOS)
+- **Output**:
+  - iOS: `.ipa` file (device builds)
+  - Android: `.apk` file (debug build)
+- **Channel**: `development`
+- **Usage**: `npm run build:development`
+
+#### Preview Profile
+- **Purpose**: Internal testing and QA
+- **Distribution**: Internal (Ad Hoc on iOS, unsigned APK on Android)
+- **Output**:
+  - iOS: `.ipa` file for TestFlight or direct distribution
+  - Android: `.apk` file for sideloading
+- **Channel**: `preview`
+- **Usage**: `npm run build:preview` or platform-specific commands
+
+#### Production Profile
+- **Purpose**: Official App Store and Google Play releases
+- **Distribution**: Store (App Store on iOS, Google Play on Android)
+- **Output**:
+  - iOS: `.ipa` file for App Store submission
+  - Android: `.aab` (Android App Bundle) for Play Store
+- **Channel**: `production`
+- **Usage**: `npm run build:production`
+
+### Building Your App
+
+#### First-Time Setup
+
+1. **Login to EAS**:
+   ```bash
+   cd mobile
+   npx eas-cli login
+   ```
+
+2. **Initialize Project** (if not done):
+   ```bash
+   npx eas-cli init
+   ```
+   This will create a project ID and update `app.config.ts` and `eas.json`.
+
+3. **Configure Credentials**:
+   ```bash
+   # iOS: Set up Apple Developer credentials
+   npx eas-cli credentials
+
+   # Android: Generate or upload signing keystore
+   npx eas-cli credentials
+   ```
+
+#### Building
+
+```bash
+# Preview builds (recommended for testing)
+npm run build:preview:ios      # Build iOS .ipa
+npm run build:preview:android  # Build Android .apk
+
+# Production builds (for store submission)
+npm run build:production:ios      # Build for App Store
+npm run build:production:android  # Build for Play Store
+```
+
+**Build Status**: Monitor builds at https://expo.dev/accounts/[your-account]/projects/shadowsky/builds
+
+#### Installing Builds
+
+**iOS Preview (.ipa)**:
+1. Download the .ipa from EAS dashboard
+2. Install via TestFlight (recommended) or direct installation with tools like Apple Configurator
+3. Or share the install link from EAS (requires device UDID registration)
+
+**Android Preview (.apk)**:
+1. Download the .apk from EAS dashboard
+2. Transfer to device and install (enable "Install from Unknown Sources")
+3. Or use the QR code/install link from EAS
+
+### Over-The-Air (OTA) Updates
+
+EAS Update allows you to push JavaScript/asset updates without rebuilding:
+
+#### Publishing Updates
+
+```bash
+# Development channel
+npm run update:development -- "Fix login bug"
+
+# Preview channel
+npm run update:preview -- "Add new feed layout"
+
+# Production channel
+npm run update:production -- "Critical security fix"
+```
+
+#### How OTA Updates Work
+
+1. **Compatible Changes**: JS code, assets, and configuration changes that don't require native rebuilds
+2. **Channels**: Each build profile subscribes to a channel (development, preview, production)
+3. **Runtime Version**: Updates must match the app's runtime version (policy: `appVersion`)
+4. **Automatic**: Apps check for updates on launch and in the background
+
+#### What Requires a New Build
+
+OTA updates **cannot** change:
+- Native dependencies (e.g., adding a new native module)
+- Native code modifications
+- App version, bundle identifier, or permissions
+- Splash screen or app icon
+
+For these changes, you must create a new build.
+
+#### Update Best Practices
+
+1. **Test First**: Always test updates on development/preview before production
+2. **Semantic Messages**: Use clear, descriptive update messages
+3. **Rollback Ready**: Keep previous working builds available
+4. **Monitor**: Check update success rates in EAS dashboard
+5. **Version Alignment**: Ensure `runtimeVersion` policy matches your versioning strategy
+
+### Configuration Files
+
+#### `eas.json`
+Defines build profiles, credentials, and submit configuration. Key settings:
+- `developmentClient`: Enables Expo development client for debugging
+- `distribution`: Controls how the app is distributed (internal/store)
+- `resourceClass`: Build machine size (affects build speed)
+- `channel`: Update channel for OTA updates
+
+#### `app.config.ts`
+Contains app configuration including:
+- `updates.url`: EAS Update endpoint
+- `runtimeVersion`: Version matching policy for updates
+- `extra.eas.projectId`: Your EAS project ID
+- Bundle identifiers: `io.shadowsky.app` (iOS and Android)
+
+### Code Signing
+
+#### iOS
+- **Development/Preview**: Requires Apple Developer account and provisioning profiles
+- **Production**: Requires distribution certificate and App Store provisioning profile
+- EAS can manage certificates automatically or use existing credentials
+
+#### Android
+- **Development**: Uses debug keystore (automatically generated)
+- **Preview/Production**: Requires release keystore
+- EAS can generate a new keystore or use an existing one
+
+See [Apple Developer Setup](../docs/guides/APPLE_DEVELOPER_SETUP.md) and [Android Signing Setup](../docs/guides/ANDROID_SIGNING_SETUP.md) for detailed guides.
+
+### Troubleshooting EAS Builds
+
+**Build Failed - Credentials Issue**:
+```bash
+# Reconfigure credentials
+npx eas-cli credentials
+```
+
+**Build Failed - Dependencies**:
+```bash
+# Clear npm cache and reinstall
+rm -rf node_modules package-lock.json
+npm install
+```
+
+**OTA Update Not Appearing**:
+- Check that the runtime version matches
+- Verify the update channel matches the build profile
+- Try force-closing and reopening the app
+- Check for errors in EAS dashboard
+
+**Build Timeout**:
+- Consider upgrading to a larger resource class in `eas.json`
+- Reduce unnecessary dependencies
+- Check for build script issues
+
+### Resources
+
+- **EAS Build Docs**: https://docs.expo.dev/build/introduction/
+- **EAS Update Docs**: https://docs.expo.dev/eas-update/introduction/
+- **EAS Dashboard**: https://expo.dev
+- **Build Status**: Check the EAS dashboard for real-time build progress
+- **Update Insights**: Monitor update adoption and rollback if needed
 
 ## 🔐 App Store Configuration
 
