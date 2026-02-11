@@ -27,6 +27,8 @@ interface FeedListProps {
   onLike?: (post: AppBskyFeedDefs.FeedViewPost) => void;
   onRepost?: (post: AppBskyFeedDefs.FeedViewPost) => void;
   onReply?: (post: AppBskyFeedDefs.FeedViewPost) => void;
+  onBookmark?: (post: AppBskyFeedDefs.FeedViewPost) => void;
+  isBookmarked?: (postUri: string) => boolean;
   emptyMessage?: string;
 }
 
@@ -43,6 +45,8 @@ export function FeedList({
   onLike,
   onRepost,
   onReply,
+  onBookmark,
+  isBookmarked,
   emptyMessage = 'No posts yet',
 }: FeedListProps) {
   const renderItem: ListRenderItem<AppBskyFeedDefs.FeedViewPost> = ({item}) => (
@@ -53,6 +57,8 @@ export function FeedList({
       onLike={() => onLike?.(item)}
       onRepost={() => onRepost?.(item)}
       onReply={() => onReply?.(item)}
+      onBookmark={() => onBookmark?.(item)}
+      isBookmarked={isBookmarked?.(item.post.uri)}
     />
   );
 

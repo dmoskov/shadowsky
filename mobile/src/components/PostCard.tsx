@@ -11,6 +11,8 @@ interface PostCardProps {
   onLike?: () => void;
   onRepost?: () => void;
   onReply?: () => void;
+  onBookmark?: () => void;
+  isBookmarked?: boolean;
 }
 
 export function PostCard({
@@ -20,6 +22,8 @@ export function PostCard({
   onLike,
   onRepost,
   onReply,
+  onBookmark,
+  isBookmarked = false,
 }: PostCardProps) {
   const postView = post.post;
   const author = postView.author;
@@ -116,8 +120,11 @@ export function PostCard({
 
           <TouchableOpacity
             style={styles.engagementButton}
+            onPress={onBookmark}
             activeOpacity={0.7}>
-            <Text style={styles.engagementIcon}>📤</Text>
+            <Text style={[styles.engagementIcon, isBookmarked && styles.bookmarked]}>
+              {isBookmarked ? '🔖' : '🏷️'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -191,6 +198,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   liked: {
+    opacity: 1,
+  },
+  bookmarked: {
     opacity: 1,
   },
   engagementCount: {
