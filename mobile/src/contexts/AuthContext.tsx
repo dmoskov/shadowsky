@@ -61,6 +61,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Refs to hold latest callbacks to avoid stale closures
   const refreshSessionRef = useRef<() => Promise<void>>();
   const checkSessionValidityRef = useRef<() => Promise<void>>();
+  const setupSessionRefreshRef = useRef<() => void>();
 
   const clearTimers = useCallback(() => {
     if (refreshTimerRef.current) {
@@ -139,7 +140,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     refreshSessionRef.current = refreshSession;
     checkSessionValidityRef.current = checkSessionValidity;
-  }, [refreshSession, checkSessionValidity]);
+    setupSessionRefreshRef.current = setupSessionRefresh;
+  }, [refreshSession, checkSessionValidity, setupSessionRefresh]);
 
   const setupSessionRefresh = useCallback(() => {
     clearTimers();
@@ -233,7 +235,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     if (session && !isLoading) {
-      setupSessionRefresh();
+      // Use ref to call setupSessionRefresh to avoid dependency on the callback itself
+      setupSessionRefreshRef.current?.();
     } else {
       clearTimers();
     }
@@ -241,7 +244,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => {
       clearTimers();
     };
-  }, [session, isLoading, setupSessionRefresh, clearTimers]);
+  }, [session, isLoading, clearTimers]);
 
   const loadSession = async () => {
     try {
