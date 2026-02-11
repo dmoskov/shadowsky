@@ -62,7 +62,7 @@ export function SettingsScreen({ section }: SettingsScreenProps) {
             try {
               await signOut();
             } catch {
-              // Sign out failed
+              Alert.alert("Error", "Failed to sign out. Please try again.");
             }
           },
         },
