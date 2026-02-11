@@ -5,3 +5,4 @@ export * from './useNotifications';
 export * from './usePosts';
 export * from './useBookmarks';
 export * from './useLists';
+export * from './useAnalytics';
