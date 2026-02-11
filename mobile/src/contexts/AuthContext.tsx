@@ -58,6 +58,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const consecutiveRefreshFailures = useRef<number>(0);
   const consecutiveValidityFailures = useRef<number>(0);
+  // Refs to hold latest callbacks to avoid stale closures
+  const refreshSessionRef = useRef<() => Promise<void>>();
+  const checkSessionValidityRef = useRef<() => Promise<void>>();
 
   const clearTimers = useCallback(() => {
     if (refreshTimerRef.current) {
@@ -92,12 +95,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await agent.getProfile({ actor: session.did });
     } catch {
       try {
-        await refreshSession();
+        // Use ref to get latest refreshSession to avoid stale closures
+        await refreshSessionRef.current?.();
       } catch {
         await signOut();
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, signOut]);
 
   const refreshSession = useCallback(async () => {
@@ -132,11 +135,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [session, signOut]);
 
+  // Update refs with latest callbacks to avoid stale closures
+  useEffect(() => {
+    refreshSessionRef.current = refreshSession;
+    checkSessionValidityRef.current = checkSessionValidity;
+  }, [refreshSession, checkSessionValidity]);
+
   const setupSessionRefresh = useCallback(() => {
     clearTimers();
 
     refreshTimerRef.current = setInterval(() => {
-      refreshSession()
+      // Use refs to get latest callbacks and avoid stale closures
+      refreshSessionRef.current?.()
         .then(() => {
           // Reset failure counter on success
           consecutiveRefreshFailures.current = 0;
@@ -163,7 +173,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }, SESSION_REFRESH_INTERVAL);
 
     checkTimerRef.current = setInterval(() => {
-      checkSessionValidity()
+      // Use refs to get latest callbacks and avoid stale closures
+      checkSessionValidityRef.current?.()
         .then(() => {
           // Reset failure counter on success
           consecutiveValidityFailures.current = 0;
@@ -188,7 +199,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         });
     }, SESSION_CHECK_INTERVAL);
-  }, [clearTimers, refreshSession, checkSessionValidity, signOut]);
+  }, [clearTimers, signOut]);
 
   const handleAppStateChange = useCallback(
     (nextAppState: AppStateStatus) => {
@@ -197,11 +208,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         nextAppState === "active" &&
         session
       ) {
-        checkSessionValidity();
+        // Use ref to get latest callback and avoid stale closures
+        checkSessionValidityRef.current?.();
       }
       appStateRef.current = nextAppState;
     },
-    [session, checkSessionValidity],
+    [session],
   );
 
   useEffect(() => {
