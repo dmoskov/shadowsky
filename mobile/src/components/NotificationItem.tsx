@@ -1,6 +1,6 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import {AppBskyNotificationListNotifications} from '@atproto/api';
+import {AppBskyNotificationListNotifications, AppBskyFeedPost} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
 
@@ -78,9 +78,9 @@ export function NotificationItem({
     }
   };
 
-  // Get post text if available
-  const postText = notification.record
-    ? (notification.record as any).text || ''
+  // Get post text if available using type guard
+  const postText = AppBskyFeedPost.isRecord(notification.record)
+    ? notification.record.text || ''
     : '';
 
   return (
