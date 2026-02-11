@@ -1,12 +1,406 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  TextInput,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
+import { useAuth } from "../../contexts/AuthContext";
+import {
+  dmService,
+  DmConversation,
+  DmMessage,
+} from "../../services/dm-service";
+import { getAtProtoClient } from "../../services/atproto/client";
+import { LoadingState } from "../../components/LoadingState";
+import { ErrorState } from "../../components/ErrorState";
+import { EmptyState } from "../../components/EmptyState";
 
 export function MessagesScreen() {
+  const { session } = useAuth();
+  const queryClient = useQueryClient();
+  const [selectedConversation, setSelectedConversation] = useState<
+    string | null
+  >(null);
+  const [messageText, setMessageText] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const flatListRef = useRef<FlatList>(null);
+
+  // Set up DM service with agent
+  useEffect(() => {
+    if (session) {
+      try {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+        dmService.setAgent(agent);
+      } catch (error) {
+        console.error("Failed to get agent:", error);
+      }
+    }
+  }, [session]);
+
+  // Fetch conversations list
+  const {
+    data: conversations,
+    isLoading: loadingConversations,
+    error: conversationsError,
+    refetch: refetchConversations,
+  } = useQuery({
+    queryKey: ["dm-conversations"],
+    queryFn: () => dmService.listConversations(),
+    enabled: !!session,
+    refetchInterval: 10000, // Refresh every 10 seconds
+  });
+
+  // Fetch messages for selected conversation
+  const {
+    data: conversationData,
+    isLoading: loadingMessages,
+    refetch: refetchMessages,
+  } = useQuery({
+    queryKey: ["dm-conversation", selectedConversation],
+    queryFn: () =>
+      selectedConversation
+        ? dmService.getConversation(selectedConversation)
+        : Promise.resolve(null),
+    enabled: !!selectedConversation && !!session,
+    refetchInterval: selectedConversation ? 5000 : false, // Refresh every 5 seconds when viewing
+  });
+
+  // Mark conversation as read when opened
+  useEffect(() => {
+    if (
+      selectedConversation &&
+      conversationData?.conversation?.unreadCount &&
+      conversationData.conversation.unreadCount > 0
+    ) {
+      const timer = setTimeout(() => {
+        dmService.updateRead(selectedConversation).then(() => {
+          queryClient.invalidateQueries({ queryKey: ["dm-conversations"] });
+        });
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [selectedConversation, conversationData, queryClient]);
+
+  // Scroll to bottom when messages load
+  useEffect(() => {
+    if (conversationData?.messages.length) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: false });
+      }, 100);
+    }
+  }, [conversationData?.messages.length]);
+
+  const handleSendMessage = async () => {
+    if (!selectedConversation || !messageText.trim() || isSending) return;
+
+    const text = messageText.trim();
+    setMessageText("");
+    setIsSending(true);
+
+    try {
+      await dmService.sendMessage(selectedConversation, text);
+      // Refresh messages after sending
+      setTimeout(() => {
+        refetchMessages();
+        refetchConversations();
+      }, 500);
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      Alert.alert("Error", "Failed to send message. Please try again.");
+      setMessageText(text); // Restore message on error
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const getOtherMember = (conversation: DmConversation) => {
+    return (
+      conversation.members.find((member) => member.did !== session?.did) ||
+      conversation.members[0]
+    );
+  };
+
+  const formatMessageTime = (timestamp: string) => {
+    try {
+      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+    } catch {
+      return "";
+    }
+  };
+
+  const renderConversationItem = ({
+    item,
+  }: {
+    item: DmConversation;
+  }) => {
+    const otherMember = getOtherMember(item);
+    const isSelected = selectedConversation === item.id;
+
+    return (
+      <TouchableOpacity
+        style={[styles.conversationItem, isSelected && styles.selectedConversation]}
+        onPress={() => setSelectedConversation(item.id)}
+      >
+        <View style={styles.conversationContent}>
+          {otherMember.avatar ? (
+            <Image
+              source={{ uri: otherMember.avatar }}
+              style={styles.avatar}
+            />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarText}>
+                {(
+                  otherMember.displayName ||
+                  otherMember.handle ||
+                  "U"
+                )[0].toUpperCase()}
+              </Text>
+            </View>
+          )}
+          <View style={styles.conversationDetails}>
+            <View style={styles.conversationHeader}>
+              <Text style={styles.displayName} numberOfLines={1}>
+                {otherMember.displayName ||
+                  otherMember.handle ||
+                  "Unknown User"}
+              </Text>
+              {item.unreadCount > 0 && (
+                <View style={styles.unreadBadge}>
+                  <Text style={styles.unreadCount}>{item.unreadCount}</Text>
+                </View>
+              )}
+            </View>
+            {otherMember.handle && (
+              <Text style={styles.handle} numberOfLines={1}>
+                @{otherMember.handle}
+              </Text>
+            )}
+            {item.lastMessage && (
+              <Text style={styles.lastMessage} numberOfLines={1}>
+                {item.lastMessage.text}
+              </Text>
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderMessage = ({ item }: { item: DmMessage }) => {
+    const isOwnMessage = item.sender.did === session?.did;
+
+    return (
+      <View
+        style={[
+          styles.messageContainer,
+          isOwnMessage ? styles.ownMessage : styles.otherMessage,
+        ]}
+      >
+        <View
+          style={[
+            styles.messageBubble,
+            isOwnMessage ? styles.ownMessageBubble : styles.otherMessageBubble,
+          ]}
+        >
+          <Text
+            style={[
+              styles.messageText,
+              isOwnMessage ? styles.ownMessageText : styles.otherMessageText,
+            ]}
+          >
+            {item.text}
+          </Text>
+          <Text
+            style={[
+              styles.messageTime,
+              isOwnMessage ? styles.ownMessageTime : styles.otherMessageTime,
+            ]}
+          >
+            {formatMessageTime(item.sentAt)}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
+  // Handle error state
+  if (conversationsError) {
+    const errorMessage =
+      conversationsError instanceof Error
+        ? conversationsError.message
+        : "Failed to load conversations";
+
+    // Check if it's a permission error
+    if (errorMessage.includes("permission") || errorMessage.includes("403")) {
+      return (
+        <View style={styles.container}>
+          <View style={styles.permissionErrorContainer}>
+            <Text style={styles.permissionErrorIcon}>🔒</Text>
+            <Text style={styles.permissionErrorTitle}>
+              App Password Required
+            </Text>
+            <Text style={styles.permissionErrorText}>
+              Direct Messages require an app password with chat permissions.
+            </Text>
+            <Text style={styles.permissionErrorSteps}>
+              To enable DMs:{"\n"}
+              1. Go to Settings → App Passwords on Bluesky{"\n"}
+              2. Create a new app password with "Direct Messages" enabled{"\n"}
+              3. Log out and log back in with the new app password
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <ErrorState
+        message={errorMessage}
+        onRetry={refetchConversations}
+      />
+    );
+  }
+
+  // Show loading state
+  if (loadingConversations) {
+    return <LoadingState />;
+  }
+
+  // Show empty state if no conversations
+  if (!conversations || conversations.length === 0) {
+    return (
+      <EmptyState
+        icon="💬"
+        message="No conversations yet. Start a conversation on Bluesky to see it here!"
+      />
+    );
+  }
+
+  // Conversation list view (no conversation selected)
+  if (!selectedConversation) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Messages</Text>
+        </View>
+        <FlatList
+          data={conversations}
+          renderItem={renderConversationItem}
+          keyExtractor={(item) => item.id}
+          style={styles.conversationsList}
+        />
+      </View>
+    );
+  }
+
+  // Conversation view (conversation selected)
+  if (!conversationData) {
+    return <LoadingState />;
+  }
+
+  const otherMember = getOtherMember(conversationData.conversation);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Direct Messages</Text>
-      <Text style={styles.subtext}>Your conversations will appear here</Text>
-    </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+    >
+      {/* Header */}
+      <View style={styles.chatHeader}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => setSelectedConversation(null)}
+        >
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
+        <View style={styles.chatHeaderContent}>
+          {otherMember.avatar ? (
+            <Image
+              source={{ uri: otherMember.avatar }}
+              style={styles.chatAvatar}
+            />
+          ) : (
+            <View style={styles.chatAvatarPlaceholder}>
+              <Text style={styles.avatarText}>
+                {(
+                  otherMember.displayName ||
+                  otherMember.handle ||
+                  "U"
+                )[0].toUpperCase()}
+              </Text>
+            </View>
+          )}
+          <View style={styles.chatHeaderText}>
+            <Text style={styles.chatDisplayName} numberOfLines={1}>
+              {otherMember.displayName ||
+                otherMember.handle ||
+                "Unknown User"}
+            </Text>
+            {otherMember.handle && (
+              <Text style={styles.chatHandle}>@{otherMember.handle}</Text>
+            )}
+          </View>
+        </View>
+      </View>
+
+      {/* Messages */}
+      {loadingMessages ? (
+        <LoadingState />
+      ) : (
+        <FlatList
+          ref={flatListRef}
+          data={conversationData.messages}
+          renderItem={renderMessage}
+          keyExtractor={(item) => item.id}
+          style={styles.messagesList}
+          contentContainerStyle={styles.messagesContent}
+          onContentSizeChange={() =>
+            flatListRef.current?.scrollToEnd({ animated: false })
+          }
+        />
+      )}
+
+      {/* Input */}
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          value={messageText}
+          onChangeText={setMessageText}
+          placeholder="Type a message..."
+          placeholderTextColor="#666"
+          multiline
+          maxLength={1000}
+        />
+        <TouchableOpacity
+          style={[
+            styles.sendButton,
+            (!messageText.trim() || isSending) && styles.sendButtonDisabled,
+          ]}
+          onPress={handleSendMessage}
+          disabled={!messageText.trim() || isSending}
+        >
+          {isSending ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={styles.sendButtonText}>Send</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -14,17 +408,239 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#0a0a0f",
-    justifyContent: "center",
-    alignItems: "center",
   },
-  text: {
+  header: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#1f1f23",
+  },
+  headerTitle: {
     color: "#ffffff",
     fontSize: 24,
     fontWeight: "bold",
   },
-  subtext: {
+  conversationsList: {
+    flex: 1,
+  },
+  conversationItem: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#1f1f23",
+    padding: 16,
+  },
+  selectedConversation: {
+    backgroundColor: "#1a1a1f",
+  },
+  conversationContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  avatarPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#3a3a3f",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarText: {
+    color: "#ffffff",
+    fontSize: 20,
+    fontWeight: "600",
+  },
+  conversationDetails: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  conversationHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  displayName: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+    flex: 1,
+  },
+  handle: {
     color: "#9ca3af",
     fontSize: 14,
+    marginTop: 2,
+  },
+  lastMessage: {
+    color: "#9ca3af",
+    fontSize: 14,
+    marginTop: 4,
+  },
+  unreadBadge: {
+    backgroundColor: "#1d9bf0",
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 8,
+  },
+  unreadCount: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  chatHeader: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#1f1f23",
+    padding: 12,
+  },
+  backButton: {
+    paddingVertical: 4,
+  },
+  backButtonText: {
+    color: "#1d9bf0",
+    fontSize: 16,
+  },
+  chatHeaderContent: {
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 8,
+  },
+  chatAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  chatAvatarPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#3a3a3f",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  chatHeaderText: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  chatDisplayName: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  chatHandle: {
+    color: "#9ca3af",
+    fontSize: 14,
+  },
+  messagesList: {
+    flex: 1,
+  },
+  messagesContent: {
+    padding: 16,
+  },
+  messageContainer: {
+    marginVertical: 4,
+    maxWidth: "80%",
+  },
+  ownMessage: {
+    alignSelf: "flex-end",
+  },
+  otherMessage: {
+    alignSelf: "flex-start",
+  },
+  messageBubble: {
+    padding: 12,
+    borderRadius: 16,
+  },
+  ownMessageBubble: {
+    backgroundColor: "#1d9bf0",
+  },
+  otherMessageBubble: {
+    backgroundColor: "#1f1f23",
+  },
+  messageText: {
+    fontSize: 16,
+    lineHeight: 20,
+  },
+  ownMessageText: {
+    color: "#ffffff",
+  },
+  otherMessageText: {
+    color: "#ffffff",
+  },
+  messageTime: {
+    fontSize: 11,
+    marginTop: 4,
+  },
+  ownMessageTime: {
+    color: "rgba(255, 255, 255, 0.7)",
+  },
+  otherMessageTime: {
+    color: "#9ca3af",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    padding: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#1f1f23",
+    alignItems: "flex-end",
+  },
+  input: {
+    flex: 1,
+    backgroundColor: "#1f1f23",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    color: "#ffffff",
+    fontSize: 16,
+    maxHeight: 100,
+  },
+  sendButton: {
+    backgroundColor: "#1d9bf0",
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginLeft: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    minWidth: 60,
+  },
+  sendButtonDisabled: {
+    backgroundColor: "#3a3a3f",
+    opacity: 0.5,
+  },
+  sendButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  permissionErrorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  permissionErrorIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  permissionErrorTitle: {
+    color: "#ffffff",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  permissionErrorText: {
+    color: "#9ca3af",
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  permissionErrorSteps: {
+    color: "#9ca3af",
+    fontSize: 14,
+    textAlign: "left",
+    lineHeight: 22,
   },
 });
