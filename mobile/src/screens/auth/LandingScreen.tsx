@@ -69,24 +69,6 @@ export function LandingScreen() {
         </View>
 
         <View style={styles.formContainer}>
-          <TouchableOpacity
-            style={[styles.oauthButton, isLoading && styles.oauthButtonDisabled]}
-            onPress={handleOAuthLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : (
-              <Text style={styles.oauthButtonText}>Sign in with Bluesky</Text>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.dividerContainer}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.divider} />
-          </View>
-
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Handle or Email</Text>
             <TextInput
@@ -144,6 +126,21 @@ export function LandingScreen() {
             </Text>
           </View>
 
+          <View style={styles.dividerContainer}>
+            <View style={styles.divider} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.divider} />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.oauthButton, styles.oauthButtonDisabled]}
+            disabled={true}
+          >
+            <Text style={styles.oauthButtonText}>
+              Sign in with Bluesky (Coming Soon)
+            </Text>
+          </TouchableOpacity>
+
           <Text style={styles.disclaimer}>
             By signing in, you agree to our Terms of Service and Privacy Policy
           </Text>
@@ -193,7 +190,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   oauthButtonDisabled: {
-    backgroundColor: "#0d4d8f",
+    backgroundColor: "#1a1a24",
+    borderWidth: 1,
+    borderColor: "#374151",
+    opacity: 0.6,
   },
   oauthButtonText: {
     color: "#ffffff",
