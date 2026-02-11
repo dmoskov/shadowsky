@@ -3,3 +3,4 @@ export * from './useFeed';
 export * from './useProfile';
 export * from './useNotifications';
 export * from './usePosts';
+export * from './useBookmarks';
