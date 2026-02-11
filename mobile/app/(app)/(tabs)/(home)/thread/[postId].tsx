@@ -1,10 +1,15 @@
 import { useLocalSearchParams } from "expo-router";
+import { useRequiredParam } from "../../../../../src/hooks/useRequiredParam";
 import { ThreadScreen } from "../../../../../src/screens/shared/ThreadScreen";
+import { ErrorState } from "../../../../../src/components/ErrorState";
 
 export default function ThreadRoute() {
-  const { postId, handle } = useLocalSearchParams<{
-    postId: string;
-    handle?: string;
-  }>();
-  return <ThreadScreen postId={postId!} handle={handle || ""} />;
+  const { value: postId, isValid } = useRequiredParam("postId");
+  const { handle } = useLocalSearchParams<{ handle?: string }>();
+
+  if (!isValid || !postId) {
+    return <ErrorState message="Missing post ID" />;
+  }
+
+  return <ThreadScreen postId={postId} handle={handle || ""} />;
 }
