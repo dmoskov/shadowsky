@@ -135,7 +135,7 @@ function createWebKitBridge(messageHandler: any): IOSNativeBridge {
   let progressCallback: ((progress: number, stage: string) => void) | null =
     null;
   let callId = 0;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const pendingCalls = new Map<
     number,
     { resolve: (value: any) => void; reject: (reason?: any) => void }

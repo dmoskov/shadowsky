@@ -154,7 +154,7 @@ function createAndroidBridge(nativeInterface: any): AndroidNativeBridge {
 
   // Set up global callback receiver for async results
   let callId = 0;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const pendingCalls = new Map<
     number,
     { resolve: (value: any) => void; reject: (reason?: any) => void }
