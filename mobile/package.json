@@ -8,7 +8,17 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "build": "npx tsc --noEmit"
+    "build": "npx tsc --noEmit",
+    "build:development": "eas build --platform all --profile development",
+    "build:preview": "eas build --platform all --profile preview",
+    "build:preview:ios": "eas build --platform ios --profile preview",
+    "build:preview:android": "eas build --platform android --profile preview",
+    "build:production": "eas build --platform all --profile production",
+    "build:production:ios": "eas build --platform ios --profile production",
+    "build:production:android": "eas build --platform android --profile production",
+    "update:development": "eas update --branch development --message",
+    "update:preview": "eas update --branch preview --message",
+    "update:production": "eas update --branch production --message"
   },
   "dependencies": {
     "@atproto/api": "^0.13.21",
@@ -21,6 +31,7 @@
     "expo-router": "~5.0.7",
     "expo-status-bar": "~3.0.9",
     "expo-system-ui": "~5.0.7",
+    "expo-updates": "~0.26.23",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
