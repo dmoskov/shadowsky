@@ -1,6 +1,6 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
-import {AppBskyFeedDefs} from '@atproto/api';
+import {AppBskyFeedDefs, AppBskyFeedPost, AppBskyEmbedImages} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
 
@@ -23,7 +23,11 @@ export function PostCard({
 }: PostCardProps) {
   const postView = post.post;
   const author = postView.author;
-  const record = postView.record as any;
+
+  // Type guard for record
+  const record = AppBskyFeedPost.isRecord(postView.record)
+    ? postView.record
+    : undefined;
 
   const handleProfilePress = () => {
     if (onPressProfile) {
@@ -60,12 +64,12 @@ export function PostCard({
         </TouchableOpacity>
 
         {/* Post Text */}
-        <Text style={styles.text}>{record.text}</Text>
+        {record && <Text style={styles.text}>{record.text}</Text>}
 
         {/* Embed Images */}
-        {postView.embed?.$type === 'app.bsky.embed.images#view' && (
+        {AppBskyEmbedImages.isView(postView.embed) && (
           <View style={styles.images}>
-            {(postView.embed as any).images?.map((img: any, idx: number) => (
+            {postView.embed.images.map((img, idx) => (
               <Image
                 key={idx}
                 source={{uri: img.thumb}}

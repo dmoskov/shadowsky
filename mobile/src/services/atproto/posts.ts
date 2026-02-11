@@ -1,5 +1,5 @@
 import {getAtProtoClient} from './client';
-import {RichText} from '@atproto/api';
+import {RichText, AppBskyFeedPost} from '@atproto/api';
 
 export interface CreatePostOptions {
   text: string;
@@ -26,7 +26,7 @@ export async function createPost(options: CreatePostOptions) {
   const rt = new RichText({text: options.text});
   await rt.detectFacets(agent);
 
-  const record: any = {
+  const record: Partial<AppBskyFeedPost.Record> = {
     text: rt.text,
     facets: rt.facets,
     createdAt: new Date().toISOString(),
