@@ -1,5 +1,6 @@
 import {Tabs} from 'expo-router';
 import {Text, View} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 import {useUnreadCount} from '../../../src/hooks/api/useNotifications';
 
 function NotificationsBadge() {
@@ -35,10 +36,20 @@ function NotificationsBadge() {
   );
 }
 
-function NotificationsIcon({color}: {color: string}) {
+function NotificationsIcon({
+  color,
+  focused,
+}: {
+  color: string;
+  focused: boolean;
+}) {
   return (
     <View style={{position: 'relative'}}>
-      <Text style={{color, fontSize: 20}}>N</Text>
+      <Ionicons
+        name={focused ? 'notifications' : 'notifications-outline'}
+        size={24}
+        color={color}
+      />
       <NotificationsBadge />
     </View>
   );
@@ -61,28 +72,48 @@ export default function TabsLayout() {
         name="(home)"
         options={{
           title: 'Home',
-          tabBarIcon: ({color}) => <Text style={{color, fontSize: 20}}>H</Text>,
+          tabBarIcon: ({color, focused}) => (
+            <Ionicons
+              name={focused ? 'home' : 'home-outline'}
+              size={24}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="(search)"
         options={{
           title: 'Search',
-          tabBarIcon: ({color}) => <Text style={{color, fontSize: 20}}>S</Text>,
+          tabBarIcon: ({color, focused}) => (
+            <Ionicons
+              name={focused ? 'search' : 'search-outline'}
+              size={24}
+              color={color}
+            />
+          ),
         }}
       />
       <Tabs.Screen
         name="(notifications)"
         options={{
           title: 'Notifications',
-          tabBarIcon: ({color}) => <NotificationsIcon color={color} />,
+          tabBarIcon: ({color, focused}) => (
+            <NotificationsIcon color={color} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="(profile)"
         options={{
           title: 'Profile',
-          tabBarIcon: ({color}) => <Text style={{color, fontSize: 20}}>P</Text>,
+          tabBarIcon: ({color, focused}) => (
+            <Ionicons
+              name={focused ? 'person' : 'person-outline'}
+              size={24}
+              color={color}
+            />
+          ),
         }}
       />
     </Tabs>
