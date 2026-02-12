@@ -5,6 +5,7 @@ import { useCreatePost } from "../../hooks/api/usePosts";
 import { ImageIcon, GifIcon, PollIcon, ThreadIcon, CloseIcon } from "../../components/icons";
 import { Avatar } from "../../components/Avatar";
 import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
+import { colors } from "../../constants/theme";
 
 const MAX_POST_LENGTH = 300;
 
@@ -378,7 +379,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   postButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: colors.primary,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 20,
@@ -624,7 +625,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   saveAltTextButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: colors.primary,
     padding: 16,
     borderRadius: 8,
     alignItems: "center",

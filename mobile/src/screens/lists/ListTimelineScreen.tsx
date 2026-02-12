@@ -5,6 +5,7 @@ import {useListFeed, useList} from '../../hooks/api';
 import {AppBskyFeedDefs} from '@atproto/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {useRouter} from 'expo-router';
+import {colors} from '../../constants/theme';
 
 interface ListTimelineScreenProps {
   listId: string;
@@ -85,7 +86,7 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
   if (isLoadingList) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator color="#3b82f6" size="large" />
+        <ActivityIndicator color={colors.primary} size="large" />
         <Text style={styles.loadingText}>Loading list...</Text>
       </View>
     );

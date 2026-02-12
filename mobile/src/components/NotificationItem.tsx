@@ -5,6 +5,7 @@ import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
 import {HeartIcon, RepostIcon, FollowIcon, AtSignIcon, ReplyIcon, QuoteIcon, BellIcon} from './icons';
 import {RichText} from '../utils/rich-text';
+import {colors} from '../constants/theme';
 
 interface NotificationItemProps {
   notification: AppBskyNotificationListNotifications.Notification;
@@ -45,9 +46,9 @@ export function NotificationItem({
         };
       case 'follow':
         return {
-          icon: <FollowIcon size={16} color="#3b82f6" />,
+          icon: <FollowIcon size={16} color={colors.primary} />,
           message: 'followed you',
-          color: '#3b82f6',
+          color: colors.primary,
         };
       case 'mention':
         return {
@@ -223,7 +224,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.primary,
     transform: [{translateY: -3}],
   },
 });

@@ -20,6 +20,7 @@ import { Avatar } from "../../components/Avatar";
 import { FeedList } from "../../components/FeedList";
 import { AppBskyActorDefs, AppBskyFeedDefs } from "@atproto/api";
 import { useBookmarks } from "../../hooks/api/useBookmarks";
+import { colors } from "../../constants/theme";
 
 const SEARCH_HISTORY_KEY = "@search_history";
 const MAX_HISTORY_ITEMS = 20;
@@ -341,7 +342,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
           {/* Content */}
           {isLoading && debouncedQuery ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#1d9bf0" />
+              <ActivityIndicator size="large" color={colors.primary} />
               <Text style={styles.loadingText}>Searching...</Text>
             </View>
           ) : activeTab === "people" ? (
@@ -356,8 +357,8 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
                 <RefreshControl
                   refreshing={isRefreshing}
                   onRefresh={handleRefresh}
-                  tintColor="#3b82f6"
-                  colors={["#3b82f6"]}
+                  tintColor={colors.primary}
+                  colors={[colors.primary]}
                 />
               }
             />
@@ -544,7 +545,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "transparent",
   },
   activeTab: {
-    borderBottomColor: "#1d9bf0",
+    borderBottomColor: colors.primary,
   },
   tabText: {
     fontSize: 16,
@@ -552,7 +553,7 @@ const styles = StyleSheet.create({
     color: "#6b7280",
   },
   activeTabText: {
-    color: "#1d9bf0",
+    color: colors.primary,
   },
   filterBar: {
     padding: 12,
@@ -647,7 +648,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   clearHistoryText: {
-    color: "#1d9bf0",
+    color: colors.primary,
     fontSize: 14,
   },
   historyList: {
@@ -688,7 +689,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   modalClose: {
-    color: "#1d9bf0",
+    color: colors.primary,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -714,7 +715,7 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   filterOptionActive: {
-    borderColor: "#1d9bf0",
+    borderColor: colors.primary,
     backgroundColor: "#1d4e6f",
   },
   filterOptionText: {
@@ -722,7 +723,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   filterOptionTextActive: {
-    color: "#1d9bf0",
+    color: colors.primary,
     fontWeight: "600",
   },
   resetButton: {

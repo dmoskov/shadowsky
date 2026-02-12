@@ -11,6 +11,7 @@ import {
 import {useLists} from '../../hooks/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {AppBskyGraphDefs} from '@atproto/api';
+import {colors} from '../../constants/theme';
 
 interface ListItemProps {
   list: AppBskyGraphDefs.ListView;
@@ -55,7 +56,7 @@ export function ListsScreen() {
     if (isLoading) {
       return (
         <View style={styles.centerContainer}>
-          <ActivityIndicator color="#3b82f6" size="large" />
+          <ActivityIndicator color={colors.primary} size="large" />
           <Text style={styles.loadingText}>Loading lists...</Text>
         </View>
       );
@@ -106,8 +107,8 @@ export function ListsScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor="#3b82f6"
-            colors={['#3b82f6']}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
       />
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a0a0f',
   },
   createButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -210,7 +211,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,

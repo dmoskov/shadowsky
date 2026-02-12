@@ -3,6 +3,7 @@ import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { handleOAuthCallback } from "../../services/auth/oauth";
 import { signInWithOAuth } from "../../services/auth/auth-service";
+import { colors } from "../../constants/theme";
 
 interface OAuthCallbackScreenProps {
   code?: string;
@@ -55,7 +56,7 @@ export function OAuthCallbackScreen({
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#3b82f6" />
+      <ActivityIndicator size="large" color={colors.primary} />
       <Text style={styles.text}>
         {errorMessage || "Completing sign in..."}
       </Text>

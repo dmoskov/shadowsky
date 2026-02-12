@@ -14,6 +14,7 @@ import {
   type ThreadSummaryFormat,
   type ThreadSummaryResult,
 } from "../services/ai-service";
+import {colors} from "../constants/theme";
 
 type Post = AppBskyFeedDefs.PostView;
 
@@ -269,7 +270,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   highlightAuthor: {
-    color: "#3b82f6",
+    color: colors.primary,
     fontSize: 12,
   },
   highlightEngagement: {

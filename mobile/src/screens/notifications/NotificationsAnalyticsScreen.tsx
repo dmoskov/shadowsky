@@ -11,6 +11,7 @@ import {useNotifications} from '../../hooks/api/useNotifications';
 import {LoadingState} from '../../components/LoadingState';
 import {ErrorState} from '../../components/ErrorState';
 import {EmptyState} from '../../components/EmptyState';
+import {colors} from '../../constants/theme';
 import {
   format,
   startOfDay,
@@ -110,7 +111,7 @@ export function NotificationsAnalyticsScreen() {
     > = {
       like: {icon: '❤️', color: '#ef4444', label: 'Likes'},
       repost: {icon: '🔄', color: '#10b981', label: 'Reposts'},
-      follow: {icon: '👤', color: '#3b82f6', label: 'Follows'},
+      follow: {icon: '👤', color: colors.primary, label: 'Follows'},
       mention: {icon: '@', color: '#8b5cf6', label: 'Mentions'},
       reply: {icon: '💬', color: '#6366f1', label: 'Replies'},
       quote: {icon: '💭', color: '#06b6d4', label: 'Quotes'},
@@ -417,7 +418,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   timeRangeButtonActive: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.primary,
   },
   timeRangeButtonText: {
     color: '#9ca3af',
@@ -471,7 +472,7 @@ const styles = StyleSheet.create({
   },
   bar: {
     width: '80%',
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.primary,
     borderTopLeftRadius: 4,
     borderTopRightRadius: 4,
     minHeight: 2,
@@ -552,7 +553,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   postRank: {
-    color: '#3b82f6',
+    color: colors.primary,
     fontSize: 20,
     fontWeight: 'bold',
   },

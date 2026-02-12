@@ -16,6 +16,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { ScheduledPost } from '../services/scheduled-posts';
+import { colors } from '../constants/theme';
 
 const MAX_POST_LENGTH = 300;
 
@@ -215,7 +216,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   saveButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.primary,
   },
   saveButtonDisabled: {
     backgroundColor: '#1e3a5f',

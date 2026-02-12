@@ -8,6 +8,7 @@ import {RichText} from '../utils/rich-text';
 import {useNetwork} from '../contexts/NetworkContext';
 import {PostEmbed} from './PostEmbed';
 import {useBlockUser, useMuteUser} from '../hooks/api/useProfile';
+import {colors} from '../constants/theme';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -208,7 +209,7 @@ export function PostCard({
             onPress={onBookmark}
             activeOpacity={0.7}
             disabled={!isOnline}>
-            <BookmarkIcon size={18} color={isOnline ? (isBookmarked ? '#3b82f6' : '#9ca3af') : '#4b5563'} filled={isBookmarked} />
+            <BookmarkIcon size={18} color={isOnline ? (isBookmarked ? colors.primary : '#9ca3af') : '#4b5563'} filled={isBookmarked} />
           </TouchableOpacity>
         </View>
       </View>

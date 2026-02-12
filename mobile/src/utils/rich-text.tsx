@@ -1,6 +1,7 @@
 import React from 'react';
 import {Text, Linking, Alert, TextStyle} from 'react-native';
 import {RichText as AtpRichText, AppBskyRichtextFacet} from '@atproto/api';
+import {colors} from '../constants/theme';
 
 interface RichTextProps {
   text: string;
@@ -39,7 +40,7 @@ export function RichText({
       segments.push(
         <Text
           key={key}
-          style={{color: '#1d9bf0'}}
+          style={{color: colors.primary}}
           onPress={() => {
             if (onMentionPress) {
               onMentionPress(handle, segment.mention!.did);
@@ -53,7 +54,7 @@ export function RichText({
       segments.push(
         <Text
           key={key}
-          style={{color: '#1d9bf0', textDecorationLine: 'underline'}}
+          style={{color: colors.primary, textDecorationLine: 'underline'}}
           onPress={() => {
             Linking.openURL(segment.link!.uri);
           }}
@@ -91,7 +92,7 @@ export function RichText({
       segments.push(
         <Text
           key={key}
-          style={{color: '#1d9bf0'}}
+          style={{color: colors.primary}}
           onPress={() => {
             if (onHashtagPress) {
               onHashtagPress(segment.tag!.tag);

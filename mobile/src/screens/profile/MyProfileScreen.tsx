@@ -15,6 +15,7 @@ import { PostCard } from "../../components/PostCard";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAuthorFeed } from "../../hooks/api/useFeed";
 import { useProfile } from "../../hooks/api/useProfile";
+import { colors } from "../../constants/theme";
 
 interface MyProfileScreenProps {
   onNavigateToPost?: (uri: string) => void;
@@ -88,7 +89,7 @@ export function MyProfileScreen({
     if (isLoadingProfile || !profile) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3b82f6" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       );
     }
@@ -146,7 +147,7 @@ export function MyProfileScreen({
 
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#3b82f6" />
+        <ActivityIndicator size="small" color={colors.primary} />
       </View>
     );
   };
@@ -155,7 +156,7 @@ export function MyProfileScreen({
     if (isLoadingFeed) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3b82f6" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       );
     }
@@ -197,8 +198,8 @@ export function MyProfileScreen({
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor="#3b82f6"
-            colors={['#3b82f6']}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
         contentContainerStyle={
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   editProfileButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 24,

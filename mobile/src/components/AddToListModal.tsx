@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {useLists, useAddToList} from '../hooks/api';
 import {AppBskyGraphDefs} from '@atproto/api';
+import {colors} from '../constants/theme';
 
 interface AddToListModalProps {
   visible: boolean;
@@ -67,7 +68,7 @@ export function AddToListModal({
     if (isLoading) {
       return (
         <View style={styles.centerContainer}>
-          <ActivityIndicator color="#3b82f6" size="large" />
+          <ActivityIndicator color={colors.primary} size="large" />
           <Text style={styles.loadingText}>Loading lists...</Text>
         </View>
       );

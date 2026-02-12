@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {useCreateList} from '../../hooks/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
+import {colors} from '../../constants/theme';
 
 interface CreateListScreenProps {
   onSuccess?: () => void;
@@ -202,7 +203,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   purposeOptionSelected: {
-    borderColor: '#3b82f6',
+    borderColor: colors.primary,
     backgroundColor: 'rgba(59, 130, 246, 0.1)',
   },
   radioButton: {
@@ -220,7 +221,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.primary,
   },
   purposeTextContainer: {
     flex: 1,
@@ -237,7 +238,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   createButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.primary,
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',

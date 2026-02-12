@@ -19,6 +19,7 @@ import { AddToListModal } from "../../components/AddToListModal";
 import { MoreVerticalIcon } from "../../components/icons";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useAuth } from "../../contexts/AuthContext";
+import { colors } from "../../constants/theme";
 
 interface ProfileScreenProps {
   handle: string;
@@ -148,7 +149,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
     if (isLoadingProfile) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3b82f6" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       );
     }
@@ -257,7 +258,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
 
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#3b82f6" />
+        <ActivityIndicator size="small" color={colors.primary} />
       </View>
     );
   };
@@ -266,7 +267,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
     if (isLoadingFeed) {
       return (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3b82f6" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       );
     }
@@ -297,8 +298,8 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor="#3b82f6"
-            colors={['#3b82f6']}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
         contentContainerStyle={posts.length === 0 ? styles.emptyList : undefined}
@@ -451,7 +452,7 @@ const styles = StyleSheet.create({
   },
   followButton: {
     flex: 1,
-    backgroundColor: "#3b82f6",
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 24,
@@ -460,7 +461,7 @@ const styles = StyleSheet.create({
   followingButton: {
     backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: "#3b82f6",
+    borderColor: colors.primary,
   },
   followButtonText: {
     color: "#ffffff",
@@ -468,20 +469,20 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   followingButtonText: {
-    color: "#3b82f6",
+    color: colors.primary,
   },
   addToListButton: {
     flex: 1,
     backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: "#3b82f6",
+    borderColor: colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 24,
     alignItems: "center",
   },
   addToListButtonText: {
-    color: "#3b82f6",
+    color: colors.primary,
     fontSize: 16,
     fontWeight: "600",
   },

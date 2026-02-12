@@ -14,6 +14,7 @@ import { EditScheduledPostModal } from '../../components/EditScheduledPostModal'
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
 import { ScheduledPost } from '../../services/scheduled-posts';
+import { colors } from '../../constants/theme';
 
 export function ScheduledPostsScreen() {
   const { posts, isLoading, error, refetch, updatePost, deletePost } = useScheduledPosts();
@@ -73,7 +74,7 @@ export function ScheduledPostsScreen() {
   if (isLoading && !isRefreshing) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator color="#3b82f6" size="large" />
+        <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
   }
@@ -101,8 +102,8 @@ export function ScheduledPostsScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor="#3b82f6"
-            colors={['#3b82f6']}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
         ListEmptyComponent={

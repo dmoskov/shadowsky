@@ -6,6 +6,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ScheduledPost } from '../services/scheduled-posts';
+import { colors } from '../constants/theme';
 
 const MAX_POST_LENGTH = 300;
 
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   scheduledTime: {
-    color: '#3b82f6',
+    color: colors.primary,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -134,7 +135,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   actionButtonText: {
-    color: '#3b82f6',
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },

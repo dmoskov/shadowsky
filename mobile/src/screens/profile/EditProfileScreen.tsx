@@ -13,6 +13,7 @@ import { Avatar } from '../../components/Avatar';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile, useUpdateProfile } from '../../hooks/api/useProfile';
 import { useImagePicker } from '../../hooks/useImagePicker';
+import { colors } from '../../constants/theme';
 
 interface EditProfileScreenProps {
   onSave?: () => void;
@@ -91,7 +92,7 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3b82f6" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </View>
     );
@@ -271,7 +272,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   changeAvatarText: {
-    color: '#3b82f6',
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -319,7 +320,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   saveButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.primary,
   },
   saveButtonDisabled: {
     backgroundColor: '#374151',

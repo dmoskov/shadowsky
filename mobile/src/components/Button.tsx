@@ -7,6 +7,7 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
+import {colors} from '../constants/theme';
 
 interface ButtonProps {
   title: string;
@@ -45,7 +46,7 @@ export function Button({
       activeOpacity={0.7}>
       {loading ? (
         <ActivityIndicator
-          color={variant === 'primary' ? '#fff' : '#3b82f6'}
+          color={variant === 'primary' ? '#fff' : colors.primary}
           size="small"
         />
       ) : (
@@ -72,7 +73,7 @@ const styles = StyleSheet.create({
   },
   // Variants
   primary: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.primary,
   },
   secondary: {
     backgroundColor: '#1f2937',
@@ -115,7 +116,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   ghostText: {
-    color: '#3b82f6',
+    color: colors.primary,
   },
   smallText: {
     fontSize: 13,

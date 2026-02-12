@@ -14,6 +14,7 @@ import {LoadingState} from './LoadingState';
 import {ErrorState} from './ErrorState';
 import {EmptyState} from './EmptyState';
 import {useNetwork} from '../contexts/NetworkContext';
+import {colors} from '../constants/theme';
 
 interface FeedListProps {
   posts: AppBskyFeedDefs.FeedViewPost[];
@@ -74,7 +75,7 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
     if (!isLoadingMore) return null;
     return (
       <View style={styles.footer}>
-        <ActivityIndicator color="#3b82f6" />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   };
@@ -109,8 +110,8 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor={isOnline ? "#3b82f6" : "#6b7280"}
-            colors={[isOnline ? "#3b82f6" : "#6b7280"]}
+            tintColor={isOnline ? colors.primary : "#6b7280"}
+            colors={[isOnline ? colors.primary : "#6b7280"]}
             enabled={isOnline}
           />
         ) : undefined

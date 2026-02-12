@@ -21,6 +21,7 @@ import { LoadingState } from "../../components/LoadingState";
 import { ErrorState } from "../../components/ErrorState";
 import { ThreadSummary } from "../../components/ThreadSummary";
 import { getAtProtoClient } from "../../services/atproto/client";
+import { colors } from "../../constants/theme";
 
 interface ThreadScreenProps {
   handle: string;
@@ -339,8 +340,8 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor="#3b82f6"
-            colors={['#3b82f6']}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
       >
@@ -494,7 +495,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   cancelButton: {
-    color: "#3b82f6",
+    color: colors.primary,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -524,7 +525,7 @@ const styles = StyleSheet.create({
     color: "#ef4444",
   },
   replyButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: colors.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
@@ -544,7 +545,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 20,
     right: 20,
-    backgroundColor: "#3b82f6",
+    backgroundColor: colors.primary,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 24,

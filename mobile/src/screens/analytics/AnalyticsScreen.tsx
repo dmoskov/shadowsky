@@ -12,6 +12,7 @@ import { useUserAnalytics } from "../../hooks/api/useAnalytics";
 import { TimeRange } from "../../services/atproto/analytics";
 import { PostCard } from "../../components/PostCard";
 import { AppBskyFeedDefs } from "@atproto/api";
+import { colors } from "../../constants/theme";
 
 export function AnalyticsScreen() {
   const { account } = useAuth();
@@ -91,7 +92,7 @@ export function AnalyticsScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#3b82f6" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Loading analytics...</Text>
         </View>
       </View>
@@ -150,7 +151,7 @@ export function AnalyticsScreen() {
           "Replies",
           analytics.repliesReceived,
           "💬",
-          "#3b82f6"
+          colors.primary
         )}
         {renderMetricCard(
           "Total Followers",
@@ -297,7 +298,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   timeRangeButtonActive: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: colors.primary,
   },
   timeRangeText: {
     color: "#9ca3af",
@@ -366,7 +367,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   topPostRankText: {
-    color: "#3b82f6",
+    color: colors.primary,
     fontSize: 18,
     fontWeight: "bold",
   },

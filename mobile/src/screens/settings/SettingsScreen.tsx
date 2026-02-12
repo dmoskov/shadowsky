@@ -15,6 +15,7 @@ import { usePreferences } from "../../contexts/PreferencesContext";
 import { ArrowLeftIcon } from "../../components/icons";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { colors } from "../../constants/theme";
 
 interface SettingsScreenProps {
   section?: string;
@@ -335,7 +336,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
           <Switch
             value={preferences.showNSFW}
             onValueChange={(value) => updatePreference("showNSFW", value)}
-            trackColor={{ false: "#374151", true: "#3b82f6" }}
+            trackColor={{ false: "#374151", true: colors.primary }}
             thumbColor="#ffffff"
           />
         </SettingRow>
@@ -354,7 +355,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
             onValueChange={(value) =>
               updatePreference("notificationsEnabled", value)
             }
-            trackColor={{ false: "#374151", true: "#3b82f6" }}
+            trackColor={{ false: "#374151", true: colors.primary }}
             thumbColor="#ffffff"
           />
         </SettingRow>
@@ -367,7 +368,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                 onValueChange={(value) =>
                   updatePreference("notifyOnLikes", value)
                 }
-                trackColor={{ false: "#374151", true: "#3b82f6" }}
+                trackColor={{ false: "#374151", true: colors.primary }}
                 thumbColor="#ffffff"
               />
             </SettingRow>
@@ -378,7 +379,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                 onValueChange={(value) =>
                   updatePreference("notifyOnReplies", value)
                 }
-                trackColor={{ false: "#374151", true: "#3b82f6" }}
+                trackColor={{ false: "#374151", true: colors.primary }}
                 thumbColor="#ffffff"
               />
             </SettingRow>
@@ -389,7 +390,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                 onValueChange={(value) =>
                   updatePreference("notifyOnFollows", value)
                 }
-                trackColor={{ false: "#374151", true: "#3b82f6" }}
+                trackColor={{ false: "#374151", true: colors.primary }}
                 thumbColor="#ffffff"
               />
             </SettingRow>
@@ -400,7 +401,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                 onValueChange={(value) =>
                   updatePreference("notifyOnMentions", value)
                 }
-                trackColor={{ false: "#374151", true: "#3b82f6" }}
+                trackColor={{ false: "#374151", true: colors.primary }}
                 thumbColor="#ffffff"
               />
             </SettingRow>
@@ -411,7 +412,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                 onValueChange={(value) =>
                   updatePreference("notifyOnQuotes", value)
                 }
-                trackColor={{ false: "#374151", true: "#3b82f6" }}
+                trackColor={{ false: "#374151", true: colors.primary }}
                 thumbColor="#ffffff"
               />
             </SettingRow>
@@ -638,7 +639,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#3b82f6",
+    backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
@@ -715,8 +716,8 @@ const styles = StyleSheet.create({
     borderColor: "#374151",
   },
   themeButtonActive: {
-    backgroundColor: "#3b82f6",
-    borderColor: "#3b82f6",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   themeButtonText: {
     color: "#9ca3af",

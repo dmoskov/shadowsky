@@ -26,6 +26,7 @@ import { ErrorState } from "../../components/ErrorState";
 import { EmptyState } from "../../components/EmptyState";
 import { LockIcon, ChatBubbleIcon, ArrowLeftIcon, SearchIcon, CloseIcon } from "../../components/icons";
 import { useConversations, useConversation, useSendMessage, useMarkAsRead } from "../../hooks/api";
+import { colors } from "../../constants/theme";
 
 export function MessagesScreen() {
   const { session } = useAuth();
@@ -334,9 +335,9 @@ export function MessagesScreen() {
               style={styles.searchToggle}
             >
               {isSearchVisible ? (
-                <CloseIcon size={24} color="#1d9bf0" />
+                <CloseIcon size={24} color={colors.primary} />
               ) : (
-                <SearchIcon size={24} color="#1d9bf0" />
+                <SearchIcon size={24} color={colors.primary} />
               )}
             </TouchableOpacity>
           </View>
@@ -397,7 +398,7 @@ export function MessagesScreen() {
           onPress={() => setSelectedConversation(null)}
         >
           <View style={styles.backButtonContent}>
-            <ArrowLeftIcon size={20} color="#1d9bf0" />
+            <ArrowLeftIcon size={20} color={colors.primary} />
             <Text style={styles.backButtonText}>Back</Text>
           </View>
         </TouchableOpacity>
@@ -576,7 +577,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   unreadBadge: {
-    backgroundColor: "#1d9bf0",
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -601,7 +602,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   backButtonText: {
-    color: "#1d9bf0",
+    color: colors.primary,
     fontSize: 16,
   },
   chatHeaderContent: {
@@ -656,7 +657,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   ownMessageBubble: {
-    backgroundColor: "#1d9bf0",
+    backgroundColor: colors.primary,
   },
   otherMessageBubble: {
     backgroundColor: "#1f1f23",
@@ -710,7 +711,7 @@ const styles = StyleSheet.create({
     maxHeight: 100,
   },
   sendButton: {
-    backgroundColor: "#1d9bf0",
+    backgroundColor: colors.primary,
     borderRadius: 20,
     paddingHorizontal: 20,
     paddingVertical: 10,

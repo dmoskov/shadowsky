@@ -15,6 +15,7 @@ import { useTimeline } from "../../hooks/api/useFeed";
 import { useAppNavigation } from "../../hooks/useNavigation";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorState } from "../../components/ErrorState";
+import { colors } from "../../constants/theme";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const GRID_COLUMNS = 3;
@@ -126,7 +127,7 @@ export function TimelineScreen() {
     if (!isFetchingNextPage) return null;
     return (
       <View style={styles.footer}>
-        <ActivityIndicator size="small" color="#3b82f6" />
+        <ActivityIndicator size="small" color={colors.primary} />
       </View>
     );
   };
@@ -145,7 +146,7 @@ export function TimelineScreen() {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -172,8 +173,8 @@ export function TimelineScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={handleRefresh}
-            tintColor="#3b82f6"
-            colors={["#3b82f6"]}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
         onEndReached={handleLoadMore}

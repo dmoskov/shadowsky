@@ -19,6 +19,7 @@ import {
 } from '../../hooks/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {AppBskyGraphDefs} from '@atproto/api';
+import {colors} from '../../constants/theme';
 
 interface ListDetailScreenProps {
   listUri: string;
@@ -172,7 +173,7 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
     if (isLoading || isLoadingList) {
       return (
         <View style={styles.centerContainer}>
-          <ActivityIndicator color="#3b82f6" size="large" />
+          <ActivityIndicator color={colors.primary} size="large" />
           <Text style={styles.loadingText}>Loading members...</Text>
         </View>
       );
@@ -265,8 +266,8 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor="#3b82f6"
-            colors={['#3b82f6']}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
         onEndReached={handleLoadMore}
@@ -274,7 +275,7 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
         ListFooterComponent={
           isFetchingNextPage ? (
             <View style={styles.footerLoader}>
-              <ActivityIndicator color="#3b82f6" />
+              <ActivityIndicator color={colors.primary} />
             </View>
           ) : null
         }
@@ -314,7 +315,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   listPurpose: {
-    color: '#3b82f6',
+    color: colors.primary,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   avatarPlaceholder: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -449,7 +450,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   retryButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,

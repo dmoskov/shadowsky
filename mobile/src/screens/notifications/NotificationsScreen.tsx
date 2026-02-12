@@ -19,6 +19,7 @@ import {ErrorState} from '../../components/ErrorState';
 import {EmptyState} from '../../components/EmptyState';
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {clearBadgeCount} from '../../services/notification-poller';
+import {colors} from '../../constants/theme';
 
 export function NotificationsScreen() {
   const {
@@ -143,7 +144,7 @@ export function NotificationsScreen() {
     if (!isFetchingNextPage) return null;
     return (
       <View style={styles.footer}>
-        <ActivityIndicator color="#3b82f6" />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   };
@@ -239,8 +240,8 @@ export function NotificationsScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={handleRefresh}
-            tintColor="#3b82f6"
-            colors={['#3b82f6']}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
         removeClippedSubviews={true}
