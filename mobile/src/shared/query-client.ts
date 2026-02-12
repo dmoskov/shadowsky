@@ -224,6 +224,9 @@ export function cleanupAppStateListener() {
  * - Pause queries when offline
  * - Resume and revalidate queries when back online
  */
+let networkInvalidationTimer: ReturnType<typeof setTimeout> | null = null;
+let wasOnline = true;
+
 export function setupNetworkListener() {
   // Tell React Query how to check online status
   onlineManager.setEventListener((setOnline) => {
@@ -233,19 +236,32 @@ export function setupNetworkListener() {
       // Update React Query's online status
       setOnline(isOnline);
 
-      // If coming back online, invalidate and refetch stale queries
-      if (isOnline) {
-        console.log('[NetworkListener] Back online, invalidating stale queries');
-        queryClient.invalidateQueries({ stale: true });
-      } else {
+      // Debounce invalidation to prevent flooding on startup
+      // Only invalidate when transitioning from offline -> online
+      if (isOnline && !wasOnline) {
+        if (networkInvalidationTimer) {
+          clearTimeout(networkInvalidationTimer);
+        }
+        networkInvalidationTimer = setTimeout(() => {
+          console.log('[NetworkListener] Back online, invalidating stale queries');
+          queryClient.invalidateQueries({ stale: true });
+          networkInvalidationTimer = null;
+        }, 2000);
+      } else if (!isOnline) {
+        wasOnline = false;
         console.log('[NetworkListener] Offline detected, pausing queries');
+      }
+
+      if (isOnline) {
+        wasOnline = true;
       }
     });
   });
 
-  // Also setup initial state
+  // Setup initial state without triggering invalidation
   NetInfo.fetch().then((state: NetInfoState) => {
     const isOnline = state.isConnected === true && state.isInternetReachable !== false;
+    wasOnline = isOnline;
     onlineManager.setOnline(isOnline);
   });
 }

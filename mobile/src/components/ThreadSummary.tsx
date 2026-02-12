@@ -96,8 +96,9 @@ export function ThreadSummary({
     enabled: shouldFetchSummary,
     staleTime: STALE_TIME_MS,
     gcTime: STALE_TIME_MS * 2,
-    retry: 1,
+    retry: false,
     refetchOnWindowFocus: false,
+    meta: { suppressErrors: true },
   });
 
   if (!shouldFetchSummary) {

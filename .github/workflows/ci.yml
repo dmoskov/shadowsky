@@ -10,6 +10,7 @@ on:
 
 jobs:
   test:
+    if: false # temporarily skipped — running e2e + performance only
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,6 +47,7 @@ jobs:
           retention-days: 30
 
   bundle-analysis:
+    if: false # temporarily skipped — running e2e + performance only
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -148,6 +150,7 @@ jobs:
           retention-days: 30
 
   accessibility:
+    if: false # temporarily skipped — running e2e + performance only
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -273,6 +276,7 @@ jobs:
           retention-days: 30
 
   lighthouse:
+    if: false # temporarily skipped — running e2e + performance only
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -126,6 +126,13 @@ export async function generateThreadSummary(
     const data = await response.json();
     return data;
   } catch (error) {
+    // Network errors in dev are expected when the local API server isn't running
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      throw new Error("Thread summary unavailable: API server not reachable");
+    }
     console.error("Error generating thread summary:", error);
     throw error;
   }

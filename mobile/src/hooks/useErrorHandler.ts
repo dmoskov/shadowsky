@@ -142,6 +142,15 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
 
   const handleError = useCallback(
     (error: Error | unknown, context?: string) => {
+      // Suppress rate limiter internal queue timeout errors — these are
+      // a symptom of burst traffic, not actionable failures
+      if (
+        error instanceof Error &&
+        error.message.includes("Rate limit queue timeout")
+      ) {
+        return;
+      }
+
       console.error(`[ErrorHandler] ${context || "Error"}:`, error);
 
       // Handle rate limit errors (429)
