@@ -7,4 +7,5 @@ export * from './ErrorState';
 export * from './EmptyState';
 export * from './AccountSwitcher';
 export * from './CustomDrawerContent';
+export * from './NotificationSetup';
 export * from './icons';

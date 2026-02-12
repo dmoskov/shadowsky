@@ -18,6 +18,7 @@ import {LoadingState} from '../../components/LoadingState';
 import {ErrorState} from '../../components/ErrorState';
 import {EmptyState} from '../../components/EmptyState';
 import {useAppNavigation} from '../../hooks/useNavigation';
+import {clearBadgeCount} from '../../services/notification-poller';
 
 export function NotificationsScreen() {
   const {
@@ -42,6 +43,8 @@ export function NotificationsScreen() {
       if (data?.pages?.[0]?.notifications?.length) {
         markNotificationsSeen.mutate(new Date().toISOString());
       }
+      // Clear badge count when viewing notifications
+      clearBadgeCount();
     }, [data?.pages, markNotificationsSeen]),
   );
 

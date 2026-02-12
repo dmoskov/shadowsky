@@ -25,6 +25,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "applinks:staging.bsky.app",
     ],
   },
+  notification: {
+    icon: "./assets/notification-icon.png",
+    color: "#1d9bf0",
+    androidMode: "default",
+    androidCollapsedTitle: "{{unread_count}} new notifications",
+  },
   android: {
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
@@ -49,7 +55,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     favicon: "./assets/favicon.png",
     bundler: "metro",
   },
-  plugins: ["expo-router"],
+  plugins: [
+    "expo-router",
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/notification-icon.png",
+        color: "#1d9bf0",
+        sounds: [],
+      },
+    ],
+  ],
   experiments: {
     typedRoutes: true,
   },
