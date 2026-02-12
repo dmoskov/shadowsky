@@ -69,6 +69,18 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const handleMentionPress = useCallback(
+    (handle: string, did: string) => {
+      handleProfilePress(handle);
+    },
+    [handleProfilePress]
+  );
+
+  const handleHashtagPress = useCallback((tag: string) => {
+    // TODO: Navigate to search with hashtag query
+    console.log('Hashtag pressed:', tag);
+  }, []);
+
   // Show loading state while fetching list details
   if (isLoadingList) {
     return (
@@ -102,6 +114,8 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
         onLoadMore={handleLoadMore}
         onPostPress={handlePostPress}
         onProfilePress={handleProfilePress}
+        onMentionPress={handleMentionPress}
+        onHashtagPress={handleHashtagPress}
         emptyMessage="No posts in this list yet"
       />
     </View>

@@ -39,6 +39,15 @@ export function BookmarksScreen() {
     toggleBookmark(post.post);
   };
 
+  const handleMentionPress = (handle: string, did: string) => {
+    handleProfilePress(handle);
+  };
+
+  const handleHashtagPress = (tag: string) => {
+    // TODO: Navigate to search with hashtag query
+    console.log('Hashtag pressed:', tag);
+  };
+
   return (
     <View style={styles.container}>
       <FeedList
@@ -50,6 +59,8 @@ export function BookmarksScreen() {
         onProfilePress={handleProfilePress}
         onBookmark={handleBookmark}
         isBookmarked={isBookmarked}
+        onMentionPress={handleMentionPress}
+        onHashtagPress={handleHashtagPress}
         emptyMessage="No bookmarks yet. Bookmark posts to see them here."
       />
     </View>

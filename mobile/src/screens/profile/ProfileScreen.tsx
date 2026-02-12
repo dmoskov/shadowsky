@@ -48,11 +48,22 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
 
   const posts = feedData?.pages.flatMap((page) => page.feed) ?? [];
 
+  const handleMentionPress = (handle: string, did: string) => {
+    onNavigateToProfile?.(handle);
+  };
+
+  const handleHashtagPress = (tag: string) => {
+    // TODO: Navigate to search with hashtag query
+    console.log('Hashtag pressed:', tag);
+  };
+
   const renderPost = ({ item }: { item: AppBskyFeedDefs.FeedViewPost }) => (
     <PostCard
       post={item}
       onPress={() => onNavigateToPost?.(item.post.uri)}
       onPressProfile={(handle) => onNavigateToProfile?.(handle)}
+      onMentionPress={handleMentionPress}
+      onHashtagPress={handleHashtagPress}
     />
   );
 

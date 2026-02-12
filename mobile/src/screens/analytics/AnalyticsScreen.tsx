@@ -22,6 +22,16 @@ export function AnalyticsScreen() {
     timeRange
   );
 
+  const handleMentionPress = (handle: string, did: string) => {
+    // TODO: Navigate to profile
+    console.log('Navigate to profile:', handle);
+  };
+
+  const handleHashtagPress = (tag: string) => {
+    // TODO: Navigate to search with hashtag query
+    console.log('Hashtag pressed:', tag);
+  };
+
   const timeRanges: { value: TimeRange; label: string }[] = [
     { value: "today", label: "Today" },
     { value: "week", label: "This Week" },
@@ -176,7 +186,11 @@ export function AnalyticsScreen() {
                 <Text style={styles.topPostRankText}>#{index + 1}</Text>
               </View>
               <View style={styles.topPostContent}>
-                <PostCard post={post} />
+                <PostCard
+                  post={post}
+                  onMentionPress={handleMentionPress}
+                  onHashtagPress={handleHashtagPress}
+                />
                 <View style={styles.topPostStats}>
                   <View style={styles.topPostStat}>
                     <Text style={styles.topPostStatLabel}>Likes</Text>
