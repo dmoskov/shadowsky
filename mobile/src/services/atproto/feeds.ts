@@ -133,10 +133,22 @@ export async function getPostThread(uri: string, depth: number = 6) {
   );
 }
 
+export interface SearchPostsOptions extends FeedOptions {
+  sort?: 'top' | 'latest';
+  since?: string;
+  until?: string;
+  mentions?: string;
+  author?: string;
+  lang?: string;
+  domain?: string;
+  url?: string;
+  tag?: string[];
+}
+
 /**
- * Search posts
+ * Search posts with filters
  */
-export async function searchPosts(query: string, options: FeedOptions = {}): Promise<FeedResponse> {
+export async function searchPosts(query: string, options: SearchPostsOptions = {}): Promise<FeedResponse> {
   return rateLimited(
     async () =>
       withRetry(async () => {
@@ -147,6 +159,15 @@ export async function searchPosts(query: string, options: FeedOptions = {}): Pro
           q: query,
           limit: options.limit || 50,
           cursor: options.cursor,
+          sort: options.sort,
+          since: options.since,
+          until: options.until,
+          mentions: options.mentions,
+          author: options.author,
+          lang: options.lang,
+          domain: options.domain,
+          url: options.url,
+          tag: options.tag,
         });
 
         return {
