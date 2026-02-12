@@ -100,7 +100,7 @@ export const LandingPage: React.FC = () => {
       <main
         id="main-content"
         role="main"
-        aria-label="Asphodel landing page"
+        aria-label="ShadowSky landing page"
         className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"
       >
         <div className="grid grid-cols-1 items-start gap-6 sm:gap-12 lg:grid-cols-2">
@@ -110,12 +110,12 @@ export const LandingPage: React.FC = () => {
               <div className="mb-4 flex items-center justify-center gap-3 lg:justify-start">
                 <img
                   src={butterflyIcon}
-                  alt="Asphodel Logo"
+                  alt="ShadowSky Logo"
                   className="h-16 w-16 rounded-xl shadow-md"
                 />
                 <div>
                   <h1 className="asph-gradient-text text-3xl font-bold">
-                    Asphodel
+                    ShadowSky
                   </h1>
                   <p
                     className="text-sm"

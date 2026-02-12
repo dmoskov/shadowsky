@@ -105,7 +105,7 @@
   /* Primary colors - shifted towards a unique blue-purple gradient */
   --asph-primary: #c9a84c;
   --asph-primary-rgb: 201, 168, 76;
-  --asph-primary-dark: #a68a3a;
+  --asph-primary-dark: #6b5720; /* Darker for WCAG AA compliance (4.5:1 on white) */
   --asph-primary-light: #ddc472;
   --asph-accent: #9b8ec4; /* Purple accent for distinction */
 
