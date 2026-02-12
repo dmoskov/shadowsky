@@ -20,6 +20,9 @@ export interface AppPreferences {
   // Data
   autoPlayVideos: "always" | "wifi" | "never";
   imageQuality: "high" | "medium" | "low";
+
+  // Background fetch
+  backgroundFetchEnabled: boolean;
 }
 
 const PREFERENCES_KEY = "@shadowsky_preferences";
@@ -45,6 +48,9 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   // Data
   autoPlayVideos: "wifi",
   imageQuality: "high",
+
+  // Background fetch
+  backgroundFetchEnabled: true,
 };
 
 class PreferencesService {

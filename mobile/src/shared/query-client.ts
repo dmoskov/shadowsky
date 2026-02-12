@@ -6,6 +6,7 @@
 import { QueryClient, QueryCache, MutationCache, onlineManager } from '@tanstack/react-query';
 import { AppState, AppStateStatus } from 'react-native';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
+import { loadPrefetchData, isPrefetchDataStale } from '../services/background-fetch';
 
 // Type for error responses from AT Protocol
 interface AtProtoError {
@@ -172,13 +173,43 @@ export function setupAppStateListener() {
     appStateSubscription.remove();
   }
 
-  const handleAppStateChange = (nextAppState: AppStateStatus) => {
+  const handleAppStateChange = async (nextAppState: AppStateStatus) => {
     const now = Date.now();
 
     if (nextAppState === 'active') {
       // App came to foreground
       const backgroundDuration = now - lastActiveTime;
       const fiveMinutes = 5 * 60 * 1000;
+
+      // Try to hydrate from prefetched data for instant display
+      try {
+        const prefetchData = await loadPrefetchData();
+        const isStale = await isPrefetchDataStale();
+
+        if (prefetchData && !isStale) {
+          console.log('[QueryClient] Hydrating timeline from prefetched data');
+
+          // Hydrate timeline query cache
+          if (prefetchData.timeline) {
+            queryClient.setQueryData(
+              ['timeline'],
+              {
+                pages: [prefetchData.timeline],
+                pageParams: [undefined],
+              }
+            );
+          }
+
+          // Hydrate unread count
+          if (prefetchData.unreadCount !== undefined) {
+            queryClient.setQueryData(['unreadCount'], prefetchData.unreadCount);
+          }
+
+          console.log('[QueryClient] Prefetched data hydrated successfully');
+        }
+      } catch (error) {
+        console.error('[QueryClient] Error hydrating prefetched data:', error);
+      }
 
       // If app was in background for more than 5 minutes, invalidate stale queries
       if (backgroundDuration > fiveMinutes) {

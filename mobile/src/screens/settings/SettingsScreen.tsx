@@ -16,6 +16,10 @@ import { ArrowLeftIcon } from "../../components/icons";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors } from "../../constants/theme";
+import {
+  registerBackgroundFetch,
+  unregisterBackgroundFetch,
+} from "../../services/background-fetch";
 
 interface SettingsScreenProps {
   section?: string;
@@ -442,6 +446,25 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
       {/* Data & Storage Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>DATA & STORAGE</Text>
+
+        <SettingRow
+          label="Background Fetch"
+          description="Pre-load fresh content when app is closed"
+        >
+          <Switch
+            value={preferences.backgroundFetchEnabled}
+            onValueChange={async (value) => {
+              await updatePreference("backgroundFetchEnabled", value);
+              if (value) {
+                await registerBackgroundFetch();
+              } else {
+                await unregisterBackgroundFetch();
+              }
+            }}
+            trackColor={{ false: "#374151", true: colors.primary }}
+            thumbColor="#ffffff"
+          />
+        </SettingRow>
 
         <SettingRow label="Auto-play Videos">
           <View style={styles.themeSelector}>

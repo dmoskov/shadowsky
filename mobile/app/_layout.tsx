@@ -26,6 +26,7 @@ import {
   cleanupAppStateListener,
   setupNetworkListener,
 } from "../src/shared/query-client";
+import { registerBackgroundFetch } from "../src/services/background-fetch";
 
 function AuthGate() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -54,6 +55,9 @@ export default function RootLayout() {
 
     // Setup network listener for online/offline handling
     setupNetworkListener();
+
+    // Register background fetch for fresh content
+    registerBackgroundFetch();
 
     return cleanup;
   }, []);
