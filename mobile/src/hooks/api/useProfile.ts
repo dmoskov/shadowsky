@@ -11,6 +11,8 @@ import {
   unmuteUser,
   blockUser,
   unblockUser,
+  updateProfile,
+  UpdateProfileParams,
 } from '../../services/atproto/profiles';
 import {mutationQueue} from '../../services/mutation-queue';
 
@@ -171,6 +173,49 @@ export function useUnblockUser() {
   return useMutation({
     mutationFn: unblockUser,
     onSuccess: () => {
+      queryClient.invalidateQueries({queryKey: ['profile']});
+    },
+  });
+}
+
+/**
+ * Hook to update user profile
+ */
+export function useUpdateProfile() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateProfile,
+    onMutate: async (params: UpdateProfileParams) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({queryKey: ['profile']});
+
+      // Snapshot the previous profile data
+      const previousProfiles = queryClient.getQueriesData({queryKey: ['profile']});
+
+      // Optimistically update all profile queries
+      queryClient.setQueriesData({queryKey: ['profile']}, (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          displayName: params.displayName !== undefined ? params.displayName : old.displayName,
+          description: params.description !== undefined ? params.description : old.description,
+          // Note: avatar URL will be updated after successful upload
+        };
+      });
+
+      return {previousProfiles};
+    },
+    onError: (error, variables, context) => {
+      // Rollback to previous profile data on error
+      if (context?.previousProfiles) {
+        context.previousProfiles.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSuccess: () => {
+      // Invalidate to refetch with the updated data from server
       queryClient.invalidateQueries({queryKey: ['profile']});
     },
   });
