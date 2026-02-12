@@ -22,6 +22,7 @@ import { ErrorState } from "../../components/ErrorState";
 import { ThreadSummary } from "../../components/ThreadSummary";
 import { getAtProtoClient } from "../../services/atproto/client";
 import { colors } from "../../constants/theme";
+import { sharePost } from "../../utils/share";
 
 interface ThreadScreenProps {
   handle: string;
@@ -214,11 +215,11 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
       return;
     }
 
-    // Show menu: Repost or Quote
+    // Show menu: Repost, Quote, or Share
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: ['Cancel', 'Repost', 'Quote'],
+          options: ['Cancel', 'Repost', 'Quote', 'Share'],
           cancelButtonIndex: 0,
         },
         (buttonIndex) => {
@@ -239,6 +240,9 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
                 text: record?.text?.substring(0, 150) || '',
               },
             });
+          } else if (buttonIndex === 3) {
+            // Share
+            handleShare(post);
           }
         }
       );
@@ -270,6 +274,10 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
               });
             },
           },
+          {
+            text: 'Share',
+            onPress: () => handleShare(post),
+          },
         ],
         { cancelable: true }
       );
@@ -292,6 +300,10 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
         text: record?.text?.substring(0, 100) || '',
       },
     });
+  };
+
+  const handleShare = (post: AppBskyFeedDefs.FeedViewPost) => {
+    sharePost(post);
   };
 
   const handlePostReply = async () => {
