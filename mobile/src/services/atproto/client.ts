@@ -1,4 +1,5 @@
 import {BskyAgent, AtpSessionData} from '@atproto/api';
+import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
 
 /**
  * AT Protocol Client Wrapper
@@ -25,18 +26,28 @@ export class AtProtoClient {
    * Login with identifier and password
    */
   async login(identifier: string, password: string) {
-    const response = await this.agent.login({identifier, password});
-    this.session = response.data as AtpSessionData;
-    return this.session;
+    return rateLimited(
+      async () => {
+        const response = await this.agent.login({identifier, password});
+        this.session = response.data as AtpSessionData;
+        return this.session;
+      },
+      ATProtoEndpointType.AUTH
+    );
   }
 
   /**
    * Resume session with stored data
    */
   async resumeSession(sessionData: AtpSessionData) {
-    await this.agent.resumeSession(sessionData);
-    this.session = sessionData;
-    return this.agent;
+    return rateLimited(
+      async () => {
+        await this.agent.resumeSession(sessionData);
+        this.session = sessionData;
+        return this.agent;
+      },
+      ATProtoEndpointType.AUTH
+    );
   }
 
   /**
@@ -46,15 +57,20 @@ export class AtProtoClient {
     if (!this.session) {
       throw new Error('No active session to refresh');
     }
-    // BskyAgent handles token refresh automatically
-    // Just verify the session is still valid
-    try {
-      await this.agent.getProfile({actor: this.session.did});
-      return this.session;
-    } catch (error) {
-      // Session is invalid, need to re-authenticate
-      throw new Error('Session expired, please log in again');
-    }
+    return rateLimited(
+      async () => {
+        // BskyAgent handles token refresh automatically
+        // Just verify the session is still valid
+        try {
+          await this.agent.getProfile({actor: this.session!.did});
+          return this.session!;
+        } catch (error) {
+          // Session is invalid, need to re-authenticate
+          throw new Error('Session expired, please log in again');
+        }
+      },
+      ATProtoEndpointType.AUTH
+    );
   }
 
   /**

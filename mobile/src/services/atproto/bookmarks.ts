@@ -1,6 +1,7 @@
 import { AppBskyFeedDefs } from '@atproto/api';
 import { getAtProtoClient } from './client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
 
 const BOOKMARKS_STORAGE_KEY = '@shadowsky/bookmarks';
 
@@ -31,9 +32,12 @@ export async function getBookmarks(): Promise<BookmarkPost[]> {
     const bookmarkPosts: BookmarkPost[] = [];
     for (const bookmark of bookmarks) {
       try {
-        const response = await agent.getPostThread({
-          uri: bookmark.postUri,
-        });
+        const response = await rateLimited(
+          async () => agent.getPostThread({
+            uri: bookmark.postUri,
+          }),
+          ATProtoEndpointType.FEED
+        );
 
         if (response.data.thread && 'post' in response.data.thread) {
           bookmarkPosts.push({

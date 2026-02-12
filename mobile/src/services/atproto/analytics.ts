@@ -4,6 +4,9 @@ import { getAuthorFeed } from "./feeds";
 import { AppBskyFeedDefs, AppBskyFeedPost } from "@atproto/api";
 import { withRetry } from "../../utils/with-retry";
 
+// Note: getProfile and getAuthorFeed are already rate-limited,
+// so analytics functions inherit rate limiting automatically
+
 export type TimeRange = "today" | "week" | "month";
 
 export interface AnalyticsMetrics {
