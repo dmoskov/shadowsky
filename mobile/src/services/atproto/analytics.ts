@@ -2,6 +2,7 @@ import { getAtProtoClient } from "./client";
 import { getProfile } from "./profiles";
 import { getAuthorFeed } from "./feeds";
 import { AppBskyFeedDefs, AppBskyFeedPost } from "@atproto/api";
+import { withRetry } from "../../utils/with-retry";
 
 export type TimeRange = "today" | "week" | "month";
 
