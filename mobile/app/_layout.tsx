@@ -6,12 +6,14 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import ErrorBoundary from "../src/components/ErrorBoundary";
 import { QueryErrorHandler } from "../src/components/QueryErrorHandler";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
+import { NetworkProvider } from "../src/contexts/NetworkContext";
 import { PreferencesProvider } from "../src/contexts/PreferencesContext";
 import { ToastProvider } from "../src/contexts/ToastContext";
 import {
   queryClient,
   setupAppStateListener,
   cleanupAppStateListener,
+  setupNetworkListener,
 } from "../src/shared/query-client";
 
 function AuthGate() {
@@ -38,6 +40,10 @@ export default function RootLayout() {
   useEffect(() => {
     // Setup AppState listener for query invalidation on foreground
     const cleanup = setupAppStateListener();
+
+    // Setup network listener for online/offline handling
+    setupNetworkListener();
+
     return cleanup;
   }, []);
 
@@ -45,16 +51,18 @@ export default function RootLayout() {
     <ErrorBoundary>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <PreferencesProvider>
-              <ToastProvider>
-                <QueryErrorHandler>
-                  <StatusBar style="light" />
-                  <AuthGate />
-                </QueryErrorHandler>
-              </ToastProvider>
-            </PreferencesProvider>
-          </AuthProvider>
+          <NetworkProvider>
+            <AuthProvider>
+              <PreferencesProvider>
+                <ToastProvider>
+                  <QueryErrorHandler>
+                    <StatusBar style="light" />
+                    <AuthGate />
+                  </QueryErrorHandler>
+                </ToastProvider>
+              </PreferencesProvider>
+            </AuthProvider>
+          </NetworkProvider>
         </QueryClientProvider>
       </GestureHandlerRootView>
     </ErrorBoundary>

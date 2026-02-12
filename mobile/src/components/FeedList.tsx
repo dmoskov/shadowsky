@@ -13,6 +13,7 @@ import {PostCard} from './PostCard';
 import {LoadingState} from './LoadingState';
 import {ErrorState} from './ErrorState';
 import {EmptyState} from './EmptyState';
+import {useNetwork} from '../contexts/NetworkContext';
 
 interface FeedListProps {
   posts: AppBskyFeedDefs.FeedViewPost[];
@@ -53,6 +54,7 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   onMentionPress,
   onHashtagPress,
 }: FeedListProps, ref) {
+  const { isOnline } = useNetwork();
   const renderItem: ListRenderItem<AppBskyFeedDefs.FeedViewPost> = ({item}) => (
     <PostCard
       post={item}
@@ -107,8 +109,9 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor="#3b82f6"
-            colors={['#3b82f6']}
+            tintColor={isOnline ? "#3b82f6" : "#6b7280"}
+            colors={[isOnline ? "#3b82f6" : "#6b7280"]}
+            enabled={isOnline}
           />
         ) : undefined
       }

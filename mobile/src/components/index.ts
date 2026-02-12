@@ -9,3 +9,4 @@ export * from './AccountSwitcher';
 export * from './CustomDrawerContent';
 export * from './NotificationSetup';
 export * from './icons';
+export {default as OfflineBanner} from './OfflineBanner';

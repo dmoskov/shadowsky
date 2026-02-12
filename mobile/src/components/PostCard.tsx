@@ -5,6 +5,7 @@ import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
 import {ReplyIcon, RepostIcon, HeartIcon, BookmarkIcon} from './icons';
 import {RichText} from '../utils/rich-text';
+import {useNetwork} from '../contexts/NetworkContext';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -31,6 +32,7 @@ export function PostCard({
   onMentionPress,
   onHashtagPress,
 }: PostCardProps) {
+  const { isOnline } = useNetwork();
   const postView = post.post;
   const author = postView.author;
 
@@ -105,9 +107,10 @@ export function PostCard({
           <TouchableOpacity
             style={styles.engagementButton}
             onPress={onReply}
-            activeOpacity={0.7}>
-            <ReplyIcon size={18} color="#9ca3af" />
-            <Text style={styles.engagementCount}>
+            activeOpacity={0.7}
+            disabled={!isOnline}>
+            <ReplyIcon size={18} color={isOnline ? "#9ca3af" : "#4b5563"} />
+            <Text style={[styles.engagementCount, !isOnline && styles.disabled]}>
               {postView.replyCount || 0}
             </Text>
           </TouchableOpacity>
@@ -115,9 +118,10 @@ export function PostCard({
           <TouchableOpacity
             style={styles.engagementButton}
             onPress={onRepost}
-            activeOpacity={0.7}>
-            <RepostIcon size={18} color="#9ca3af" />
-            <Text style={styles.engagementCount}>
+            activeOpacity={0.7}
+            disabled={!isOnline}>
+            <RepostIcon size={18} color={isOnline ? "#9ca3af" : "#4b5563"} />
+            <Text style={[styles.engagementCount, !isOnline && styles.disabled]}>
               {postView.repostCount || 0}
             </Text>
           </TouchableOpacity>
@@ -125,9 +129,10 @@ export function PostCard({
           <TouchableOpacity
             style={styles.engagementButton}
             onPress={onLike}
-            activeOpacity={0.7}>
-            <HeartIcon size={18} color={isLiked ? '#ef4444' : '#9ca3af'} filled={isLiked} />
-            <Text style={styles.engagementCount}>
+            activeOpacity={0.7}
+            disabled={!isOnline}>
+            <HeartIcon size={18} color={isOnline ? (isLiked ? '#ef4444' : '#9ca3af') : '#4b5563'} filled={isLiked} />
+            <Text style={[styles.engagementCount, !isOnline && styles.disabled]}>
               {postView.likeCount || 0}
             </Text>
           </TouchableOpacity>
@@ -135,8 +140,9 @@ export function PostCard({
           <TouchableOpacity
             style={styles.engagementButton}
             onPress={onBookmark}
-            activeOpacity={0.7}>
-            <BookmarkIcon size={18} color={isBookmarked ? '#3b82f6' : '#9ca3af'} filled={isBookmarked} />
+            activeOpacity={0.7}
+            disabled={!isOnline}>
+            <BookmarkIcon size={18} color={isOnline ? (isBookmarked ? '#3b82f6' : '#9ca3af') : '#4b5563'} filled={isBookmarked} />
           </TouchableOpacity>
         </View>
       </View>
@@ -209,5 +215,9 @@ const styles = StyleSheet.create({
   engagementCount: {
     color: '#9ca3af',
     fontSize: 13,
+  },
+  disabled: {
+    color: '#4b5563',
+    opacity: 0.5,
   },
 });

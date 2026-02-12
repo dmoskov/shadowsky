@@ -3,8 +3,9 @@
  * Provides unified query defaults, retry logic, and mobile-specific optimizations
  */
 
-import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
+import { QueryClient, QueryCache, MutationCache, onlineManager } from '@tanstack/react-query';
 import { AppState, AppStateStatus } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 
 // Type for error responses from AT Protocol
 interface AtProtoError {
@@ -215,4 +216,36 @@ export function cleanupAppStateListener() {
     appStateSubscription.remove();
     appStateSubscription = null;
   }
+}
+
+/**
+ * Setup network status monitoring for React Query
+ * Integrates NetInfo with React Query's onlineManager to:
+ * - Pause queries when offline
+ * - Resume and revalidate queries when back online
+ */
+export function setupNetworkListener() {
+  // Tell React Query how to check online status
+  onlineManager.setEventListener((setOnline) => {
+    return NetInfo.addEventListener((state) => {
+      const isOnline = state.isConnected === true && state.isInternetReachable !== false;
+
+      // Update React Query's online status
+      setOnline(isOnline);
+
+      // If coming back online, invalidate and refetch stale queries
+      if (isOnline) {
+        console.log('[NetworkListener] Back online, invalidating stale queries');
+        queryClient.invalidateQueries({ stale: true });
+      } else {
+        console.log('[NetworkListener] Offline detected, pausing queries');
+      }
+    });
+  });
+
+  // Also setup initial state
+  NetInfo.fetch().then((state) => {
+    const isOnline = state.isConnected === true && state.isInternetReachable !== false;
+    onlineManager.setOnline(isOnline);
+  });
 }
