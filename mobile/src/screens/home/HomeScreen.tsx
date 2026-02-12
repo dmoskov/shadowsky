@@ -46,7 +46,7 @@ export function HomeScreen() {
 
     if (viewer?.like) {
       // Unlike if already liked
-      unlikePost.mutate(viewer.like);
+      unlikePost.mutate({ likeUri: viewer.like, postUri: uri });
     } else {
       // Like the post
       likePost.mutate({ uri, cid });
@@ -60,7 +60,7 @@ export function HomeScreen() {
 
     // If already reposted, just unrepost
     if (viewer?.repost) {
-      deleteRepost.mutate(viewer.repost);
+      deleteRepost.mutate({ repostUri: viewer.repost, postUri: uri });
       return;
     }
 
