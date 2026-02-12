@@ -7,11 +7,18 @@ import React, {
   useState,
 } from "react";
 import { batchedStorage } from "../services/storage/batched-local-storage";
+import type {
+  ContentFilterPreferences,
+  LabelPreference,
+  LabelType,
+} from "../utils/labels";
+import { DEFAULT_CONTENT_FILTER_PREFERENCES } from "../utils/labels";
 
 interface ModerationContextType {
   mutedUsers: Set<string>;
   mutedThreads: Set<string>;
   blockedUsers: Set<string>;
+  contentFilterPreferences: ContentFilterPreferences;
   muteUser: (did: string) => void;
   unmuteUser: (did: string) => void;
   muteThread: (uri: string) => void;
@@ -21,6 +28,11 @@ interface ModerationContextType {
   isUserMuted: (did: string) => boolean;
   isThreadMuted: (uri: string) => boolean;
   isUserBlocked: (did: string) => boolean;
+  setContentFilterPreference: (
+    labelType: LabelType,
+    preference: LabelPreference,
+  ) => void;
+  resetContentFilterPreferences: () => void;
 }
 
 const ModerationContext = createContext<ModerationContextType | undefined>(
@@ -30,6 +42,7 @@ const ModerationContext = createContext<ModerationContextType | undefined>(
 const MUTED_USERS_KEY = "shadowsky_muted_users";
 const MUTED_THREADS_KEY = "shadowsky_muted_threads";
 const BLOCKED_USERS_KEY = "shadowsky_blocked_users";
+const CONTENT_FILTER_KEY = "shadowsky_content_filter_preferences";
 
 export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -37,6 +50,8 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [mutedUsers, setMutedUsers] = useState<Set<string>>(new Set());
   const [mutedThreads, setMutedThreads] = useState<Set<string>>(new Set());
   const [blockedUsers, setBlockedUsers] = useState<Set<string>>(new Set());
+  const [contentFilterPreferences, setContentFilterPreferences] =
+    useState<ContentFilterPreferences>(DEFAULT_CONTENT_FILTER_PREFERENCES);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -44,6 +59,7 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
       const storedMutedUsers = batchedStorage.getItem(MUTED_USERS_KEY);
       const storedMutedThreads = batchedStorage.getItem(MUTED_THREADS_KEY);
       const storedBlockedUsers = batchedStorage.getItem(BLOCKED_USERS_KEY);
+      const storedContentFilter = batchedStorage.getItem(CONTENT_FILTER_KEY);
 
       if (storedMutedUsers) {
         setMutedUsers(new Set(JSON.parse(storedMutedUsers)));
@@ -53,6 +69,9 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
       }
       if (storedBlockedUsers) {
         setBlockedUsers(new Set(JSON.parse(storedBlockedUsers)));
+      }
+      if (storedContentFilter) {
+        setContentFilterPreferences(JSON.parse(storedContentFilter));
       }
     } catch (error) {
       console.error("Failed to load moderation data:", error);
@@ -92,6 +111,17 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Failed to save blocked users:", error);
     }
   }, [blockedUsers]);
+
+  useEffect(() => {
+    try {
+      batchedStorage.setItem(
+        CONTENT_FILTER_KEY,
+        JSON.stringify(contentFilterPreferences),
+      );
+    } catch (error) {
+      console.error("Failed to save content filter preferences:", error);
+    }
+  }, [contentFilterPreferences]);
 
   // Expose to window for debugging (DEV only)
   React.useEffect(() => {
@@ -188,12 +218,28 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
     [blockedUsers],
   );
 
+  const setContentFilterPreference = useCallback(
+    (labelType: LabelType, preference: LabelPreference) => {
+      if (labelType === "unknown") return; // Don't allow setting preference for unknown
+      setContentFilterPreferences((prev) => ({
+        ...prev,
+        [labelType]: preference,
+      }));
+    },
+    [],
+  );
+
+  const resetContentFilterPreferences = useCallback(() => {
+    setContentFilterPreferences(DEFAULT_CONTENT_FILTER_PREFERENCES);
+  }, []);
+
   // Memoize context value to prevent unnecessary re-renders of consumers
   const contextValue = useMemo(
     () => ({
       mutedUsers,
       mutedThreads,
       blockedUsers,
+      contentFilterPreferences,
       muteUser,
       unmuteUser,
       muteThread,
@@ -203,11 +249,14 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
       isUserMuted,
       isThreadMuted,
       isUserBlocked,
+      setContentFilterPreference,
+      resetContentFilterPreferences,
     }),
     [
       mutedUsers,
       mutedThreads,
       blockedUsers,
+      contentFilterPreferences,
       muteUser,
       unmuteUser,
       muteThread,
@@ -217,6 +266,8 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
       isUserMuted,
       isThreadMuted,
       isUserBlocked,
+      setContentFilterPreference,
+      resetContentFilterPreferences,
     ],
   );
 

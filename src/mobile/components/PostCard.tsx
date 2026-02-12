@@ -14,7 +14,7 @@
 
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { formatDistanceToNow } from "date-fns";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   Image,
   Pressable,
@@ -25,6 +25,15 @@ import {
   type TextStyle,
   type ViewStyle,
 } from "react-native";
+import {
+  DEFAULT_CONTENT_FILTER_PREFERENCES,
+  getContentWarningDescription,
+  getContentWarningIcon,
+  getContentWarningText,
+  shouldBlurImages,
+  shouldHideContent,
+  shouldWarnContent,
+} from "../../utils/labels";
 import type { PostCardProps, PostImage } from "../types";
 
 // Placeholder for expo-image - will be used when available
@@ -244,14 +253,51 @@ const ActionBar = memo(function ActionBar({
 });
 
 /**
+ * Content warning overlay component
+ */
+const ContentWarningOverlay = memo(function ContentWarningOverlay({
+  labels,
+  onReveal,
+}: {
+  labels: any[];
+  onReveal: () => void;
+}) {
+  const warningText = getContentWarningText(labels);
+  const warningDescription = getContentWarningDescription(labels);
+  const warningIcon = getContentWarningIcon(labels);
+
+  return (
+    <View style={styles.contentWarningOverlay}>
+      <View style={styles.contentWarningContent}>
+        <Text style={styles.contentWarningIcon}>{warningIcon}</Text>
+        <Text style={styles.contentWarningTitle}>{warningText}</Text>
+        <Text style={styles.contentWarningDescription}>
+          {warningDescription}
+        </Text>
+        <Pressable
+          onPress={onReveal}
+          style={styles.contentWarningButton}
+          accessibilityRole="button"
+          accessibilityLabel="Show content"
+        >
+          <Text style={styles.contentWarningButtonText}>Show</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+});
+
+/**
  * Post images component with grid layout
  */
 const PostImages = memo(function PostImages({
   images,
   onPress,
+  shouldBlur,
 }: {
   images: PostImage[];
   onPress?: (index: number) => void;
+  shouldBlur?: boolean;
 }) {
   const gridStyle = useMemo<ViewStyle>(() => {
     if (!images || images.length === 0) return styles.singleImage;
@@ -276,9 +322,15 @@ const PostImages = memo(function PostImages({
         >
           <Image
             source={{ uri: image.thumb }}
-            style={styles.postImage}
+            style={
+              shouldBlur
+                ? [styles.postImage, styles.blurredImage]
+                : styles.postImage
+            }
             resizeMode="cover"
-            // For expo-image:
+            // Note: blurRadius is not available in basic React Native Image
+            // For expo-image, we would use:
+            // blurRadius={shouldBlur ? 20 : 0}
             // placeholder={blurhash}
             // transition={200}
             // cachePolicy="memory-disk"
@@ -286,6 +338,11 @@ const PostImages = memo(function PostImages({
           {image.alt && (
             <View style={styles.altBadge}>
               <Text style={styles.altText}>ALT</Text>
+            </View>
+          )}
+          {shouldBlur && (
+            <View style={styles.blurOverlay}>
+              <Text style={styles.blurOverlayText}>Tap to reveal</Text>
             </View>
           )}
         </Pressable>
@@ -402,6 +459,27 @@ function PostCardComponent({
   showBorder = true,
 }: PostCardProps) {
   const record = post.record as any;
+  const [contentRevealed, setContentRevealed] = useState(false);
+
+  // Use default content filter preferences (can be extended to use user preferences later)
+  const contentFilterPreferences = DEFAULT_CONTENT_FILTER_PREFERENCES;
+
+  // Check if content should be hidden or warned based on labels
+  const hideContent = useMemo(
+    () => shouldHideContent(post.labels, contentFilterPreferences),
+    [post.labels],
+  );
+
+  const warnContent = useMemo(
+    () => shouldWarnContent(post.labels, contentFilterPreferences),
+    [post.labels],
+  );
+
+  const showWarning = warnContent && !contentRevealed;
+  const blurImages = useMemo(
+    () => shouldBlurImages(post.labels, contentFilterPreferences),
+    [post.labels],
+  );
 
   const handleAvatarPress = useCallback(() => {
     onAuthorPress?.(post.author.handle);
@@ -422,6 +500,10 @@ function PostCardComponent({
   const handleBookmark = useCallback(() => {
     onBookmark?.();
   }, [onBookmark]);
+
+  const handleRevealContent = useCallback(() => {
+    setContentRevealed(true);
+  }, []);
 
   // Extract images from embed
   const images = useMemo<PostImage[]>(() => {
@@ -450,7 +532,12 @@ function PostCardComponent({
 
     // Images
     if (images.length > 0) {
-      return <PostImages images={images} />;
+      return (
+        <PostImages
+          images={images}
+          shouldBlur={blurImages && !contentRevealed}
+        />
+      );
     }
 
     // Quoted post
@@ -467,7 +554,12 @@ function PostCardComponent({
     }
 
     return null;
-  }, [post.embed, images, onQuotePress]);
+  }, [post.embed, images, onQuotePress, blurImages, contentRevealed]);
+
+  // If content should be completely hidden, don't render it
+  if (hideContent) {
+    return null;
+  }
 
   return (
     <Pressable
@@ -495,13 +587,25 @@ function PostCardComponent({
             onAuthorPress={onAuthorPress}
           />
 
-          {/* Post text */}
-          {record?.text && <Text style={styles.postText}>{record.text}</Text>}
+          {/* Content warning overlay or content */}
+          {showWarning ? (
+            <ContentWarningOverlay
+              labels={post.labels || []}
+              onReveal={handleRevealContent}
+            />
+          ) : (
+            <>
+              {/* Post text */}
+              {record?.text && (
+                <Text style={styles.postText}>{record.text}</Text>
+              )}
 
-          {/* Embedded content */}
-          {renderEmbed()}
+              {/* Embedded content */}
+              {renderEmbed()}
+            </>
+          )}
 
-          {/* Action bar */}
+          {/* Action bar - always show */}
           <ActionBar
             post={post}
             onLike={handleLike}
@@ -795,5 +899,74 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#687684",
     lineHeight: 18,
+  } as TextStyle,
+  contentWarningOverlay: {
+    marginTop: 12,
+    padding: 24,
+    backgroundColor: "#f7f9fa",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e1e1e1",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 150,
+  } as ViewStyle,
+  contentWarningContent: {
+    alignItems: "center",
+    justifyContent: "center",
+  } as ViewStyle,
+  contentWarningIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  } as TextStyle,
+  contentWarningTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#0f1419",
+    marginBottom: 4,
+    textAlign: "center",
+  } as TextStyle,
+  contentWarningDescription: {
+    fontSize: 14,
+    color: "#687684",
+    marginBottom: 16,
+    textAlign: "center",
+  } as TextStyle,
+  contentWarningButton: {
+    backgroundColor: "#0085ff",
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 20,
+    minWidth: 100,
+    alignItems: "center",
+    minHeight: 44,
+    justifyContent: "center",
+  } as ViewStyle,
+  contentWarningButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#ffffff",
+  } as TextStyle,
+  blurredImage: {
+    opacity: 0.5,
+  } as ImageStyle,
+  blurOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    alignItems: "center",
+    justifyContent: "center",
+  } as ViewStyle,
+  blurOverlayText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#ffffff",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   } as TextStyle,
 });
