@@ -82,6 +82,17 @@ export function useAppNavigation() {
     [router],
   );
 
+  const navigateToListMembers = useCallback(
+    (listUri: string) => {
+      router.push(`/(app)/lists/${encodeURIComponent(listUri)}/members`);
+    },
+    [router],
+  );
+
+  const navigateToCreateList = useCallback(() => {
+    router.push("/(app)/lists/create");
+  }, [router]);
+
   const goBack = useCallback(() => {
     router.back();
   }, [router]);
@@ -98,6 +109,8 @@ export function useAppNavigation() {
     navigateToBookmarks,
     navigateToMessages,
     navigateToList,
+    navigateToListMembers,
+    navigateToCreateList,
     goBack,
   };
 }
