@@ -1,11 +1,12 @@
-import React, { useState, useRef } from "react";
-import { View, StyleSheet, Alert, ActionSheetIOS, Platform, FlatList } from "react-native";
+import React, { useState, useRef, useMemo } from "react";
+import { View, StyleSheet, Alert, ActionSheetIOS, Platform, FlatList, ScrollView, TouchableOpacity, Text } from "react-native";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useScrollToTop } from "@react-navigation/native";
-import { useTimeline } from "../../hooks/api/useFeed";
+import { useTimeline, useCustomFeed, useSavedFeeds } from "../../hooks/api";
 import { useLikePost, useUnlikePost, useRepost, useDeleteRepost } from "../../hooks/api/usePosts";
 import { useAppNavigation } from "../../hooks/useNavigation";
 import { FeedList } from "../../components/FeedList";
+import { useRouter } from "expo-router";
 
 /**
  * Extract post ID (rkey) from AT Protocol URI
@@ -17,7 +18,8 @@ function getPostIdFromUri(uri: string): string {
 }
 
 export function HomeScreen() {
-  const { data, isLoading, isRefetching, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useTimeline();
+  const router = useRouter();
+  const [selectedFeedUri, setSelectedFeedUri] = useState<string | null>(null);
   const { navigateToThread, navigateToProfile, navigateToCompose } = useAppNavigation();
   const likePost = useLikePost();
   const unlikePost = useUnlikePost();
@@ -25,11 +27,31 @@ export function HomeScreen() {
   const deleteRepost = useDeleteRepost();
   const scrollRef = useRef<FlatList>(null);
 
+  // Fetch saved feeds
+  const { data: savedFeeds } = useSavedFeeds();
+
+  // Fetch timeline or custom feed based on selection
+  const timelineQuery = useTimeline();
+  const customFeedQuery = useCustomFeed(selectedFeedUri || '');
+
+  // Use the appropriate query based on selection
+  const { data, isLoading, isRefetching, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    selectedFeedUri ? customFeedQuery : timelineQuery;
+
   // Enable scroll-to-top on tab press
   useScrollToTop(scrollRef);
 
   // Flatten paginated data
   const posts = data?.pages.flatMap((page) => page.feed) ?? [];
+
+  // Handle feed selection
+  const handleFeedSelect = (feedUri: string | null) => {
+    setSelectedFeedUri(feedUri);
+  };
+
+  const handleDiscoverFeeds = () => {
+    router.push('/(app)/feeds/discover');
+  };
 
   const handlePostPress = (post: AppBskyFeedDefs.FeedViewPost) => {
     const postId = getPostIdFromUri(post.post.uri);
@@ -165,6 +187,41 @@ export function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Feed Picker Chips */}
+      {savedFeeds && savedFeeds.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.feedPickerContainer}
+          contentContainerStyle={styles.feedPickerContent}>
+          <TouchableOpacity
+            style={[styles.feedChip, !selectedFeedUri && styles.feedChipActive]}
+            onPress={() => handleFeedSelect(null)}
+            activeOpacity={0.7}>
+            <Text style={[styles.feedChipText, !selectedFeedUri && styles.feedChipTextActive]}>
+              🏠 Following
+            </Text>
+          </TouchableOpacity>
+          {savedFeeds.map((feed) => (
+            <TouchableOpacity
+              key={feed.uri}
+              style={[styles.feedChip, selectedFeedUri === feed.uri && styles.feedChipActive]}
+              onPress={() => handleFeedSelect(feed.uri)}
+              activeOpacity={0.7}>
+              <Text style={[styles.feedChipText, selectedFeedUri === feed.uri && styles.feedChipTextActive]}>
+                {feed.displayName}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          <TouchableOpacity
+            style={styles.feedChipDiscover}
+            onPress={handleDiscoverFeeds}
+            activeOpacity={0.7}>
+            <Text style={styles.feedChipDiscoverText}>+ Discover</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      )}
+
       <FeedList
         ref={scrollRef}
         posts={posts}
@@ -191,5 +248,51 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#0a0a0f",
+  },
+  feedPickerContainer: {
+    backgroundColor: "#15202B",
+    borderBottomWidth: 1,
+    borderBottomColor: "#38444D",
+    maxHeight: 56,
+  },
+  feedPickerContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  feedChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#192734",
+    borderWidth: 1,
+    borderColor: "#38444D",
+    marginRight: 8,
+  },
+  feedChipActive: {
+    backgroundColor: "#1DA1F2",
+    borderColor: "#1DA1F2",
+  },
+  feedChipText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#8899A6",
+  },
+  feedChipTextActive: {
+    color: "#FFFFFF",
+  },
+  feedChipDiscover: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#253341",
+    borderWidth: 1,
+    borderColor: "#1DA1F2",
+    marginRight: 8,
+  },
+  feedChipDiscoverText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1DA1F2",
   },
 });

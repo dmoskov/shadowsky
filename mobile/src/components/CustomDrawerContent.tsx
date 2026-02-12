@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-nati
 import { useRouter, usePathname } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
 import { colors } from "../constants/theme";
-import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon, ChatBubbleIcon } from "./icons";
+import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon, ChatBubbleIcon, SearchIcon } from "./icons";
 import { useUnreadMessageCount } from "../hooks/api";
 
 interface DrawerItemProps {
@@ -75,6 +75,12 @@ export function CustomDrawerContent() {
           isActive={pathname.includes("/messages")}
           onPress={() => router.push("/(app)/(tabs)/(profile)/messages")}
           badge={unreadCount}
+        />
+        <DrawerItem
+          label="Discover Feeds"
+          icon={<SearchIcon size={20} color={pathname.includes("/feeds/discover") ? colors.primary : colors.text} />}
+          isActive={pathname.includes("/feeds/discover")}
+          onPress={() => router.push("/(app)/feeds/discover")}
         />
         <DrawerItem
           label="Lists"

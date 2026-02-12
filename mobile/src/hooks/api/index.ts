@@ -7,3 +7,4 @@ export * from './useBookmarks';
 export * from './useLists';
 export * from './useAnalytics';
 export * from './useMessages';
+export * from './useFeedGenerators';
