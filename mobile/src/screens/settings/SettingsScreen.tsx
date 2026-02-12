@@ -18,11 +18,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface SettingsScreenProps {
   section?: string;
+  onNavigateToBlockedAccounts?: () => void;
+  onNavigateToMutedAccounts?: () => void;
 }
 
 const APP_VERSION = "0.7.0";
 
-export function SettingsScreen({ section }: SettingsScreenProps) {
+export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigateToMutedAccounts }: SettingsScreenProps) {
   const { signOut, accounts, account } = useAuth();
   const { preferences, updatePreference } = usePreferences();
   const queryClient = useQueryClient();
@@ -415,6 +417,25 @@ export function SettingsScreen({ section }: SettingsScreenProps) {
             </SettingRow>
           </>
         )}
+      </View>
+
+      {/* Moderation Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>MODERATION</Text>
+
+        <SettingRow
+          label="Blocked Accounts"
+          description="Manage accounts you've blocked"
+          onPress={onNavigateToBlockedAccounts}
+          showChevron
+        />
+
+        <SettingRow
+          label="Muted Accounts"
+          description="Manage accounts you've muted"
+          onPress={onNavigateToMutedAccounts}
+          showChevron
+        />
       </View>
 
       {/* Data & Storage Section */}

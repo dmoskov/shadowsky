@@ -42,3 +42,6 @@ export {ChatBubbleIcon} from './ChatBubbleIcon';
 export {AtSignIcon} from './AtSignIcon';
 export {QuoteIcon} from './QuoteIcon';
 export {FollowIcon} from './FollowIcon';
+
+// Menu
+export {MoreVerticalIcon} from './MoreVerticalIcon';
