@@ -37,19 +37,42 @@ export async function createPost(options: CreatePostOptions) {
     record.reply = options.reply;
   }
 
-  // Add quote reference if this is a quote post
-  if (options.quote) {
+  // Handle embeds (images, quote, or both)
+  const hasImages = options.images && options.images.length > 0;
+  const hasQuote = !!options.quote;
+
+  if (hasImages && hasQuote) {
+    // Combined quote + images: use recordWithMedia
+    const imageBlobs = await Promise.all(
+      options.images.map(async (img) => {
+        const blob = await uploadImage(img.uri);
+        return {
+          alt: img.alt || '',
+          image: blob,
+        };
+      })
+    );
+
+    record.embed = {
+      $type: 'app.bsky.embed.recordWithMedia',
+      record: {
+        record: options.quote,
+      },
+      media: {
+        $type: 'app.bsky.embed.images',
+        images: imageBlobs,
+      },
+    };
+  } else if (hasQuote) {
+    // Quote only
     record.embed = {
       $type: 'app.bsky.embed.record',
       record: options.quote,
     };
-  }
-
-  // Add images if provided
-  if (options.images && options.images.length > 0) {
+  } else if (hasImages) {
+    // Images only
     const imageBlobs = await Promise.all(
       options.images.map(async (img) => {
-        // Upload image blob
         const blob = await uploadImage(img.uri);
         return {
           alt: img.alt || '',
