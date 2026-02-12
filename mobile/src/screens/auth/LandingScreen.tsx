@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   loginButtonDisabled: {
-    backgroundColor: "#a68a3a",
+    backgroundColor: "#8a7230",
   },
   loginButtonText: {
     color: "#ffffff",

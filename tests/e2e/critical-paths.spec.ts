@@ -30,7 +30,7 @@ test.describe("Application Load", () => {
     const title = await page.title();
     expect(title).toBeTruthy();
     // Title should contain app name
-    expect(title.toLowerCase()).toContain("shadowsky");
+    expect(title.toLowerCase()).toContain("asphodel");
   });
 
   test("React root element is present", async ({ page }) => {
@@ -50,8 +50,8 @@ test.describe("Landing Page", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    // Check for ShadowSky branding
-    await expect(page.getByText("ShadowSky")).toBeVisible();
+    // Check for Asphodel branding
+    await expect(page.getByText("Asphodel")).toBeVisible();
 
     // Check for sign in heading
     await expect(
