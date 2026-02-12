@@ -1,11 +1,12 @@
 import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
-import {AppBskyFeedDefs, AppBskyFeedPost, AppBskyEmbedImages} from '@atproto/api';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import {AppBskyFeedDefs, AppBskyFeedPost} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
 import {ReplyIcon, RepostIcon, HeartIcon, BookmarkIcon} from './icons';
 import {RichText} from '../utils/rich-text';
 import {useNetwork} from '../contexts/NetworkContext';
+import {PostEmbed} from './PostEmbed';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -18,6 +19,9 @@ interface PostCardProps {
   isBookmarked?: boolean;
   onMentionPress?: (handle: string, did: string) => void;
   onHashtagPress?: (tag: string) => void;
+  onImagePress?: (images: Array<{thumb: string; fullsize: string; alt?: string}>, index: number) => void;
+  onLinkPress?: (url: string) => void;
+  onQuotePress?: (uri: string, handle: string) => void;
 }
 
 export function PostCard({
@@ -31,6 +35,9 @@ export function PostCard({
   isBookmarked = false,
   onMentionPress,
   onHashtagPress,
+  onImagePress,
+  onLinkPress,
+  onQuotePress,
 }: PostCardProps) {
   const { isOnline } = useNetwork();
   const postView = post.post;
@@ -88,19 +95,13 @@ export function PostCard({
           />
         )}
 
-        {/* Embed Images */}
-        {AppBskyEmbedImages.isView(postView.embed) && (
-          <View style={styles.images}>
-            {postView.embed.images.map((img, idx) => (
-              <Image
-                key={idx}
-                source={{uri: img.thumb}}
-                style={styles.image}
-                resizeMode="cover"
-              />
-            ))}
-          </View>
-        )}
+        {/* Embeds (Images, Links, Quotes, Videos) */}
+        <PostEmbed
+          embed={postView.embed}
+          onImagePress={onImagePress}
+          onLinkPress={onLinkPress}
+          onQuotePress={onQuotePress}
+        />
 
         {/* Engagement Bar */}
         <View style={styles.engagementBar}>
@@ -187,18 +188,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
     marginBottom: 12,
-  },
-  images: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 12,
-    gap: 4,
-  },
-  image: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
-    backgroundColor: '#1f2937',
   },
   engagementBar: {
     flexDirection: 'row',
