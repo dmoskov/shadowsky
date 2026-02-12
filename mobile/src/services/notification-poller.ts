@@ -64,7 +64,7 @@ async function updateBadgeCount(count: number): Promise<void> {
   }
 }
 
-let pollingInterval: NodeJS.Timeout | null = null;
+let pollingInterval: ReturnType<typeof setInterval> | null = null;
 let appStateSubscription: any = null;
 let currentAppState: AppStateStatus = 'active';
 

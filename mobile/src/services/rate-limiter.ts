@@ -72,7 +72,7 @@ class TokenBucket {
     resolve: () => void;
     reject: (error: Error) => void;
     enqueuedAt: number;
-    timeout: NodeJS.Timeout;
+    timeout: ReturnType<typeof setTimeout>;
   }> = [];
 
   constructor(config: RateLimiterConfig) {

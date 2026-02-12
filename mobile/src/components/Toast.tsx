@@ -74,7 +74,7 @@ function ToastItem({
     ]).start();
 
     // Auto-dismiss timer
-    let intervalId: NodeJS.Timeout | undefined;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
     if (toast.duration > 0) {
       const startTime = Date.now();
       intervalId = setInterval(() => {

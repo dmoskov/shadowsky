@@ -5,7 +5,7 @@
 
 import { QueryClient, QueryCache, MutationCache, onlineManager } from '@tanstack/react-query';
 import { AppState, AppStateStatus } from 'react-native';
-import NetInfo from '@react-native-community/netinfo';
+import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 
 // Type for error responses from AT Protocol
 interface AtProtoError {
@@ -227,7 +227,7 @@ export function cleanupAppStateListener() {
 export function setupNetworkListener() {
   // Tell React Query how to check online status
   onlineManager.setEventListener((setOnline) => {
-    return NetInfo.addEventListener((state) => {
+    return NetInfo.addEventListener((state: NetInfoState) => {
       const isOnline = state.isConnected === true && state.isInternetReachable !== false;
 
       // Update React Query's online status
@@ -244,7 +244,7 @@ export function setupNetworkListener() {
   });
 
   // Also setup initial state
-  NetInfo.fetch().then((state) => {
+  NetInfo.fetch().then((state: NetInfoState) => {
     const isOnline = state.isConnected === true && state.isInternetReachable !== false;
     onlineManager.setOnline(isOnline);
   });

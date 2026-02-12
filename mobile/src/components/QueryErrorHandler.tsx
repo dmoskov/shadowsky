@@ -14,14 +14,10 @@ export function QueryErrorHandler({ children }: { children: React.ReactNode }) {
     // Set up global error handler for React Query
     const defaultOptions = queryClient.getDefaultOptions();
 
+    // In React Query v5, global error handling is done via QueryCache/MutationCache
+    // Set up mutation-level error handling through default mutation options
     queryClient.setDefaultOptions({
       ...defaultOptions,
-      queries: {
-        ...defaultOptions.queries,
-        onError: (error: unknown) => {
-          handleError(error, "Query Error");
-        },
-      },
       mutations: {
         ...defaultOptions.mutations,
         onError: (error: unknown) => {

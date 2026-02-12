@@ -116,7 +116,7 @@ function getErrorMessage(error: unknown): string {
     "message" in error &&
     typeof (error as ApiError).message === "string"
   ) {
-    return (error as ApiError).message;
+    return (error as ApiError).message as string;
   }
   return "An unexpected error occurred";
 }

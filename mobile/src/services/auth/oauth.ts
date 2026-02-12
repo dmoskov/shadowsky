@@ -148,6 +148,7 @@ export async function handleOAuthCallback(
     // Parse the token response into AtpSessionData
     // AT Protocol OAuth token response includes: access_token, refresh_token, token_type, scope, sub (DID)
     const sessionData: AtpSessionData = {
+      active: true,
       accessJwt: tokenData.access_token,
       refreshJwt: tokenData.refresh_token,
       did: tokenData.sub,

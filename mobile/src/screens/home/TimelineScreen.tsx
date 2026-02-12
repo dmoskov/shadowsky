@@ -154,8 +154,7 @@ export function TimelineScreen() {
     return (
       <View style={styles.container}>
         <EmptyState
-          title="No media posts yet"
-          message="Posts with images will appear here"
+          message="No media posts yet — posts with images will appear here"
         />
       </View>
     );

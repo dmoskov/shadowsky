@@ -23,17 +23,17 @@ export function BookmarksScreen() {
   const handlePostPress = (post: AppBskyFeedDefs.FeedViewPost) => {
     // Navigate to post detail
     router.push({
-      pathname: '/post/[uri]',
+      pathname: '/post/[uri]' as never,
       params: { uri: encodeURIComponent(post.post.uri) },
-    });
+    } as never);
   };
 
   const handleProfilePress = (handle: string) => {
     // Navigate to profile
     router.push({
-      pathname: '/profile/[handle]',
+      pathname: '/profile/[handle]' as never,
       params: { handle },
-    });
+    } as never);
   };
 
   const handleBookmark = (post: AppBskyFeedDefs.FeedViewPost) => {

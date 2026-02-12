@@ -9,7 +9,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {AppState, AppStateStatus} from 'react-native';
-import NetInfo from '@react-native-community/netinfo';
+import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 
 const QUEUE_KEY = '@BskyMutationQueue';
 const MAX_RETRIES = 3;
@@ -49,7 +49,7 @@ class MutationQueue {
   private listeners: Set<() => void> = new Set();
   private appStateSubscription: any = null;
   private netInfoUnsubscribe: (() => void) | null = null;
-  private processingTimer: NodeJS.Timeout | null = null;
+  private processingTimer: ReturnType<typeof setInterval> | null = null;
 
   private constructor() {}
 
@@ -104,7 +104,7 @@ class MutationQueue {
   private setupNetInfoListener(): void {
     if (this.netInfoUnsubscribe) return;
 
-    this.netInfoUnsubscribe = NetInfo.addEventListener(state => {
+    this.netInfoUnsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
       if (state.isConnected && state.isInternetReachable !== false) {
         console.log('[MutationQueue] Network restored, processing queue...');
         this.processQueue();

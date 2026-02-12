@@ -13,18 +13,15 @@ export function useNotificationHandler() {
 
   useEffect(() => {
     // Listen for notifications received while app is in foreground
-    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      console.log('Notification received in foreground:', notification);
+    notificationListener.current = Notifications.addNotificationReceivedListener((_notification: Notifications.Notification) => {
       // The notification handler configured in useNotificationPermissions
       // will determine if it shows as a banner
     });
 
     // Listen for user tapping on notification
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('Notification tapped:', response);
-
+    responseListener.current = Notifications.addNotificationResponseReceivedListener((_response: Notifications.NotificationResponse) => {
       // Navigate to Notifications tab when user taps notification
-      router.push('/(tabs)/notifications');
+      router.push('/(tabs)/notifications' as never);
 
       // Clear badge count when user opens from notification
       clearBadgeCount();

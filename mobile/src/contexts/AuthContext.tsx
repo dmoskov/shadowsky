@@ -59,9 +59,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const consecutiveRefreshFailures = useRef<number>(0);
   const consecutiveValidityFailures = useRef<number>(0);
   // Refs to hold latest callbacks to avoid stale closures
-  const refreshSessionRef = useRef<() => Promise<void>>();
-  const checkSessionValidityRef = useRef<() => Promise<void>>();
-  const setupSessionRefreshRef = useRef<() => void>();
+  const refreshSessionRef = useRef<() => Promise<void>>(undefined);
+  const checkSessionValidityRef = useRef<() => Promise<void>>(undefined);
+  const setupSessionRefreshRef = useRef<() => void>(undefined);
 
   const clearTimers = useCallback(() => {
     if (refreshTimerRef.current) {
@@ -136,13 +136,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [session, signOut]);
 
-  // Update refs with latest callbacks to avoid stale closures
-  useEffect(() => {
-    refreshSessionRef.current = refreshSession;
-    checkSessionValidityRef.current = checkSessionValidity;
-    setupSessionRefreshRef.current = setupSessionRefresh;
-  }, [refreshSession, checkSessionValidity, setupSessionRefresh]);
-
   const setupSessionRefresh = useCallback(() => {
     clearTimers();
 
@@ -202,6 +195,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
     }, SESSION_CHECK_INTERVAL);
   }, [clearTimers, signOut]);
+
+  // Update refs with latest callbacks to avoid stale closures
+  useEffect(() => {
+    refreshSessionRef.current = refreshSession;
+    checkSessionValidityRef.current = checkSessionValidity;
+    setupSessionRefreshRef.current = setupSessionRefresh;
+  }, [refreshSession, checkSessionValidity, setupSessionRefresh]);
 
   const handleAppStateChange = useCallback(
     (nextAppState: AppStateStatus) => {

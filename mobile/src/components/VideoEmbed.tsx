@@ -1,6 +1,6 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Linking} from 'react-native';
-import {Image} from 'expo-image';
+import {Image} from 'react-native';
 import {AppBskyEmbedVideo} from '@atproto/api';
 
 interface VideoEmbedProps {
@@ -33,7 +33,7 @@ export function VideoEmbed({video, onPress}: VideoEmbedProps) {
         <Image
           source={{uri: video.thumbnail}}
           style={styles.thumbnail}
-          contentFit="cover"
+          resizeMode="cover"
         />
       )}
       <View style={styles.playButtonContainer}>
