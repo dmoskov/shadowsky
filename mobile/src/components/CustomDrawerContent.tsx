@@ -1,5 +1,6 @@
 import React, {ReactNode} from "react";
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, usePathname } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
 import { colors } from "../constants/theme";
@@ -39,13 +40,14 @@ function DrawerItem({ label, icon, onPress, isActive, badge }: DrawerItemProps) 
 }
 
 export function CustomDrawerContent() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const pathname = usePathname();
   const { account } = useAuth();
   const unreadCount = useUnreadMessageCount();
 
   return (
-    <ScrollView style={styles.drawerContent}>
+    <ScrollView style={[styles.drawerContent, { paddingTop: insets.top }]}>
       <View style={styles.drawerHeader}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>

@@ -69,15 +69,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   experiments: {
     typedRoutes: true,
   },
-  updates: {
-    url: "https://u.expo.dev/projectId-placeholder",
-  },
-  runtimeVersion: {
-    policy: "appVersion",
-  },
   extra: {
     eas: {
-      projectId: "projectId-placeholder",
+      projectId: "bb805399-ea1d-4550-9fee-e7ecf9cc8b74",
     },
   },
 });

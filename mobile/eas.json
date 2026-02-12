@@ -34,7 +34,7 @@
         "simulator": false
       },
       "android": {
-        "buildType": "aab"
+        "buildType": "app-bundle"
       },
       "channel": "production"
     }
@@ -51,8 +51,5 @@
         "track": "internal"
       }
     }
-  },
-  "update": {
-    "url": "https://u.expo.dev/projectId-placeholder"
   }
 }

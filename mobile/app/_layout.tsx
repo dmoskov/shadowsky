@@ -3,6 +3,7 @@ import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import ErrorBoundary from "../src/components/ErrorBoundary";
 import { QueryErrorHandler } from "../src/components/QueryErrorHandler";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
@@ -49,22 +50,24 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <QueryClientProvider client={queryClient}>
-          <NetworkProvider>
-            <AuthProvider>
-              <PreferencesProvider>
-                <ToastProvider>
-                  <QueryErrorHandler>
-                    <StatusBar style="light" />
-                    <AuthGate />
-                  </QueryErrorHandler>
-                </ToastProvider>
-              </PreferencesProvider>
-            </AuthProvider>
-          </NetworkProvider>
-        </QueryClientProvider>
-      </GestureHandlerRootView>
+      <SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <QueryClientProvider client={queryClient}>
+            <NetworkProvider>
+              <AuthProvider>
+                <PreferencesProvider>
+                  <ToastProvider>
+                    <QueryErrorHandler>
+                      <StatusBar style="light" />
+                      <AuthGate />
+                    </QueryErrorHandler>
+                  </ToastProvider>
+                </PreferencesProvider>
+              </AuthProvider>
+            </NetworkProvider>
+          </QueryClientProvider>
+        </GestureHandlerRootView>
+      </SafeAreaProvider>
     </ErrorBoundary>
   );
 }

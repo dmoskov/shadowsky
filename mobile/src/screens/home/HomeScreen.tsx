@@ -1,5 +1,7 @@
 import React, { useState, useRef, useMemo } from "react";
 import { View, StyleSheet, Alert, ActionSheetIOS, Platform, FlatList, ScrollView, TouchableOpacity, Text } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { colors } from "../../constants/theme";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useScrollToTop } from "@react-navigation/native";
 import { useTimeline, useCustomFeed, useSavedFeeds } from "../../hooks/api";
@@ -18,6 +20,7 @@ function getPostIdFromUri(uri: string): string {
 }
 
 export function HomeScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [selectedFeedUri, setSelectedFeedUri] = useState<string | null>(null);
   const { navigateToThread, navigateToProfile, navigateToCompose } = useAppNavigation();
@@ -182,11 +185,10 @@ export function HomeScreen() {
 
   const handleHashtagPress = (tag: string) => {
     // TODO: Navigate to search with hashtag query
-    console.log('Hashtag pressed:', tag);
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Feed Picker Chips */}
       {savedFeeds && savedFeeds.length > 0 && (
         <ScrollView
@@ -270,8 +272,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   feedChipActive: {
-    backgroundColor: "#1DA1F2",
-    borderColor: "#1DA1F2",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   feedChipText: {
     fontSize: 14,
@@ -287,12 +289,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#253341",
     borderWidth: 1,
-    borderColor: "#1DA1F2",
+    borderColor: colors.primary,
     marginRight: 8,
   },
   feedChipDiscoverText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#1DA1F2",
+    color: colors.primary,
   },
 });

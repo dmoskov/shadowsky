@@ -11,6 +11,7 @@ import {
   Modal,
   ScrollView,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useScrollToTop } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -39,6 +40,7 @@ interface SearchFilters {
 }
 
 export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("posts");
   const [searchQuery, setSearchQuery] = useState(initialQuery || "");
@@ -258,7 +260,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.searchBar}>
         <TextInput
           style={styles.input}

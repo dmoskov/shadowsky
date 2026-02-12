@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image, ScrollView, Modal } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useCreatePost } from "../../hooks/api/usePosts";
 import { ImageIcon, GifIcon, PollIcon, ThreadIcon, CloseIcon } from "../../components/icons";
@@ -37,6 +38,7 @@ export interface ComposeScreenProps {
 }
 
 export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [text, setText] = useState("");
   const createPost = useCreatePost();
@@ -157,7 +159,7 @@ export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
     : "What's happening?";
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity
           onPress={handleClose}
@@ -281,7 +283,7 @@ export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
         </View>
       )}
 
-      <View style={styles.toolbar}>
+      <View style={[styles.toolbar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
         <View style={styles.toolbarIcons}>
           <TouchableOpacity
             style={styles.toolbarButton}

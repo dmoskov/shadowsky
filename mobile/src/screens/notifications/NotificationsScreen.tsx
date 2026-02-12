@@ -7,6 +7,7 @@ import {
   StyleSheet,
   RefreshControl,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect, useScrollToTop} from '@react-navigation/native';
 import {AppBskyNotificationListNotifications} from '@atproto/api';
 import {
@@ -22,6 +23,7 @@ import {clearBadgeCount} from '../../services/notification-poller';
 import {colors} from '../../constants/theme';
 
 export function NotificationsScreen() {
+  const insets = useSafeAreaInsets();
   const {
     data,
     isLoading,
@@ -183,7 +185,6 @@ export function NotificationsScreen() {
 
   const handleHashtagPress = useCallback((tag: string) => {
     // TODO: Navigate to search with hashtag query
-    console.log('Hashtag pressed:', tag);
   }, []);
 
   // Flatten sections into a single list with headers
@@ -221,7 +222,7 @@ export function NotificationsScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {paddingTop: insets.top}]}>
       <FlatList
         ref={scrollRef}
         data={flattenedData}

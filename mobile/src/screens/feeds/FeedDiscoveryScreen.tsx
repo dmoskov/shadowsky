@@ -11,6 +11,8 @@ import {
   Image,
 } from 'react-native';
 import {useRouter} from 'expo-router';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {colors} from '../../constants/theme';
 import {
   usePopularFeedGenerators,
   useSuggestedFeeds,
@@ -28,6 +30,7 @@ interface FeedDiscoveryScreenProps {
 }
 
 export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScreenProps) {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
@@ -144,7 +147,7 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
 
   const handleFeedPress = (feedUri: string) => {
     router.push({
-      pathname: '/(app)/(tabs)/(home)/index',
+      pathname: '/(app)/(tabs)/(home)' as any,
       params: {feedUri},
     });
   };
@@ -231,13 +234,13 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
     }
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#1DA1F2" />
+        <ActivityIndicator size="small" color={colors.primary} />
       </View>
     );
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {paddingTop: insets.top}]}>
       {/* Tabs */}
       <View style={styles.tabs}>
         <TouchableOpacity
@@ -282,7 +285,7 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
       {/* Feed List */}
       {isLoading && feeds.length === 0 ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#1DA1F2" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
         <FlatList
@@ -319,7 +322,7 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     borderBottomWidth: 2,
-    borderBottomColor: '#1DA1F2',
+    borderBottomColor: colors.primary,
   },
   tabText: {
     fontSize: 16,
@@ -327,7 +330,7 @@ const styles = StyleSheet.create({
     color: '#8899A6',
   },
   tabTextActive: {
-    color: '#1DA1F2',
+    color: colors.primary,
   },
   searchContainer: {
     padding: 12,
@@ -391,12 +394,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#1DA1F2',
+    backgroundColor: colors.primary,
   },
   saveButtonActive: {
     backgroundColor: '#253341',
     borderWidth: 1,
-    borderColor: '#1DA1F2',
+    borderColor: colors.primary,
   },
   saveButtonText: {
     fontSize: 14,
@@ -404,7 +407,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   saveButtonTextActive: {
-    color: '#1DA1F2',
+    color: colors.primary,
   },
   feedDescription: {
     fontSize: 14,

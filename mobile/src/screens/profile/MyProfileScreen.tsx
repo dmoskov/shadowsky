@@ -9,6 +9,7 @@ import {
   View,
   RefreshControl,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScrollToTop } from "@react-navigation/native";
 import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
@@ -30,6 +31,7 @@ export function MyProfileScreen({
   onNavigateToEditProfile,
   onSignOut,
 }: MyProfileScreenProps) {
+  const insets = useSafeAreaInsets();
   const { account, signOut } = useAuth();
   const { data: profile, isLoading: isLoadingProfile, refetch: refetchProfile } = useProfile(
     account?.handle || "",
@@ -66,7 +68,6 @@ export function MyProfileScreen({
 
   const handleHashtagPress = (tag: string) => {
     // TODO: Navigate to search with hashtag query
-    console.log('Hashtag pressed:', tag);
   };
 
   const handleRefresh = async () => {
@@ -170,7 +171,7 @@ export function MyProfileScreen({
 
   if (!account) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Not authenticated</Text>
         </View>
@@ -179,7 +180,7 @@ export function MyProfileScreen({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <FlatList
         ref={scrollRef}
         data={posts}

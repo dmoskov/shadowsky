@@ -11,9 +11,12 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
+import { colors } from "../../constants/theme";
 
 export function LandingScreen() {
+  const insets = useSafeAreaInsets();
   const { signIn, signInWithOAuth } = useAuth();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -54,7 +57,7 @@ export function LandingScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -250,7 +253,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   loginButtonDisabled: {
-    backgroundColor: "#8a7230",
+    backgroundColor: colors.primaryDark,
   },
   loginButtonText: {
     color: "#ffffff",
