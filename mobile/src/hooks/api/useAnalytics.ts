@@ -13,7 +13,6 @@ export function useUserAnalytics(actor: string, timeRange: TimeRange) {
     queryKey: ["analytics", actor, timeRange],
     queryFn: () => getUserAnalytics(actor, timeRange),
     enabled: !!actor,
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
   });
 }
 
@@ -25,6 +24,5 @@ export function useFollowerMetrics(actor: string) {
     queryKey: ["followerMetrics", actor],
     queryFn: () => getFollowerMetrics(actor),
     enabled: !!actor,
-    staleTime: 5 * 60 * 1000,
   });
 }

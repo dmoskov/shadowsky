@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -8,17 +8,11 @@ import { QueryErrorHandler } from "../src/components/QueryErrorHandler";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { PreferencesProvider } from "../src/contexts/PreferencesContext";
 import { ToastProvider } from "../src/contexts/ToastContext";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,
-      gcTime: 10 * 60 * 1000,
-      retry: 2,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+import {
+  queryClient,
+  setupAppStateListener,
+  cleanupAppStateListener,
+} from "../src/shared/query-client";
 
 function AuthGate() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -41,6 +35,12 @@ function AuthGate() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    // Setup AppState listener for query invalidation on foreground
+    const cleanup = setupAppStateListener();
+    return cleanup;
+  }, []);
+
   return (
     <ErrorBoundary>
       <GestureHandlerRootView style={{ flex: 1 }}>
