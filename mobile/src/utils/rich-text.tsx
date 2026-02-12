@@ -8,6 +8,7 @@ interface RichTextProps {
   onMentionPress?: (handle: string, did: string) => void;
   onHashtagPress?: (tag: string) => void;
   style?: TextStyle;
+  numberOfLines?: number;
 }
 
 export function RichText({
@@ -16,10 +17,11 @@ export function RichText({
   onMentionPress,
   onHashtagPress,
   style,
+  numberOfLines,
 }: RichTextProps) {
   // If no facets, just render plain text
   if (!facets || facets.length === 0) {
-    return <Text style={style}>{text}</Text>;
+    return <Text style={style} numberOfLines={numberOfLines}>{text}</Text>;
   }
 
   // Create RichText instance to properly parse facets
@@ -104,5 +106,5 @@ export function RichText({
     }
   }
 
-  return <Text style={style}>{segments}</Text>;
+  return <Text style={style} numberOfLines={numberOfLines}>{segments}</Text>;
 }
