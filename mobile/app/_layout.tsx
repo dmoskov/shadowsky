@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
+import { PreferencesProvider } from "../src/contexts/PreferencesContext";
 import ErrorBoundary from "../src/components/ErrorBoundary";
 
 const queryClient = new QueryClient({
@@ -43,8 +44,10 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <StatusBar style="light" />
-            <AuthGate />
+            <PreferencesProvider>
+              <StatusBar style="light" />
+              <AuthGate />
+            </PreferencesProvider>
           </AuthProvider>
         </QueryClientProvider>
       </GestureHandlerRootView>
