@@ -1,6 +1,7 @@
 import {getAtProtoClient} from './client';
 import {RichText, AppBskyFeedPost} from '@atproto/api';
 import {withRetry} from '../../utils/with-retry';
+import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
 
 export interface CreatePostOptions {
   text: string;
@@ -20,7 +21,9 @@ export interface CreatePostOptions {
  * Create a new post
  */
 export async function createPost(options: CreatePostOptions) {
-  return withRetry(async () => {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
     const client = getAtProtoClient();
     const agent = client.getAgent();
 
@@ -96,69 +99,91 @@ export async function createPost(options: CreatePostOptions) {
 
     const response = await agent.post(record);
     return response;
-  });
+      }),
+    ATProtoEndpointType.RECORD
+  );
 }
 
 /**
  * Delete a post
  */
 export async function deletePost(uri: string) {
-  return withRetry(async () => {
-    const client = getAtProtoClient();
-    const agent = client.getAgent();
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
 
-    await agent.deletePost(uri);
-  });
+        await agent.deletePost(uri);
+      }),
+    ATProtoEndpointType.RECORD
+  );
 }
 
 /**
  * Like a post
  */
 export async function likePost(uri: string, cid: string) {
-  return withRetry(async () => {
-    const client = getAtProtoClient();
-    const agent = client.getAgent();
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
 
-    const response = await agent.like(uri, cid);
-    return response;
-  });
+        const response = await agent.like(uri, cid);
+        return response;
+      }),
+    ATProtoEndpointType.RECORD
+  );
 }
 
 /**
  * Unlike a post
  */
 export async function unlikePost(likeUri: string) {
-  return withRetry(async () => {
-    const client = getAtProtoClient();
-    const agent = client.getAgent();
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
 
-    await agent.deleteLike(likeUri);
-  });
+        await agent.deleteLike(likeUri);
+      }),
+    ATProtoEndpointType.RECORD
+  );
 }
 
 /**
  * Repost a post
  */
 export async function repost(uri: string, cid: string) {
-  return withRetry(async () => {
-    const client = getAtProtoClient();
-    const agent = client.getAgent();
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
 
-    const response = await agent.repost(uri, cid);
-    return response;
-  });
+        const response = await agent.repost(uri, cid);
+        return response;
+      }),
+    ATProtoEndpointType.RECORD
+  );
 }
 
 /**
  * Delete a repost
  */
 export async function deleteRepost(repostUri: string) {
-  return withRetry(async () => {
-    const client = getAtProtoClient();
-    const agent = client.getAgent();
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
 
-    await agent.deleteRepost(repostUri);
-  });
+        await agent.deleteRepost(repostUri);
+      }),
+    ATProtoEndpointType.RECORD
+  );
 }
 
 /**
@@ -166,22 +191,26 @@ export async function deleteRepost(repostUri: string) {
  * Note: This is a helper function that needs platform-specific implementation
  */
 async function uploadImage(uri: string) {
-  return withRetry(async () => {
-    const client = getAtProtoClient();
-    const agent = client.getAgent();
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
 
-    // For React Native, we need to fetch the image as a blob
-    const response = await fetch(uri);
-    const blob = await response.blob();
+        // For React Native, we need to fetch the image as a blob
+        const response = await fetch(uri);
+        const blob = await response.blob();
 
-    // Convert blob to Uint8Array for upload
-    const arrayBuffer = await blob.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
+        // Convert blob to Uint8Array for upload
+        const arrayBuffer = await blob.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
 
-    const uploadResponse = await agent.uploadBlob(uint8Array, {
-      encoding: blob.type,
-    });
+        const uploadResponse = await agent.uploadBlob(uint8Array, {
+          encoding: blob.type,
+        });
 
-    return uploadResponse.data.blob;
-  });
+        return uploadResponse.data.blob;
+      }),
+    ATProtoEndpointType.UPLOAD
+  );
 }
