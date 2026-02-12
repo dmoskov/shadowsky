@@ -170,7 +170,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
     const { uri, cid, viewer } = post.post;
 
     if (viewer?.like) {
-      unlikePost.mutate(viewer.like);
+      unlikePost.mutate({ likeUri: viewer.like, postUri: uri });
     } else {
       likePost.mutate({ uri, cid });
     }
@@ -183,7 +183,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
 
     // If already reposted, just unrepost
     if (viewer?.repost) {
-      deleteRepost.mutate(viewer.repost);
+      deleteRepost.mutate({ repostUri: viewer.repost, postUri: uri });
       return;
     }
 
