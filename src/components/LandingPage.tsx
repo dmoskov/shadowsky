@@ -351,7 +351,7 @@ export const LandingPage: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="underline hover:no-underline"
-                        style={{ color: "var(--asph-primary-dark)" }}
+                        style={{ color: "#7a6330" }}
                       >
                         bsky.app/settings/app-passwords
                       </a>

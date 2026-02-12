@@ -764,7 +764,7 @@ test.describe("Visual Regression - Notification UI", () => {
     await page.waitForLoadState("networkidle");
 
     // Verify page loaded
-    await expect(page.getByText("ShadowSky")).toBeVisible();
+    await expect(page.getByText("Asphodel")).toBeVisible();
   });
 
   test("login page visual snapshot", async ({ page }) => {
@@ -921,8 +921,8 @@ test.describe("Stress Testing", () => {
     expect(wsConnected).toBe(true);
 
     // Page should still be interactive
-    const shadowskyText = page.getByText("ShadowSky");
-    await expect(shadowskyText).toBeVisible();
+    const asphodelText = page.getByText("Asphodel");
+    await expect(asphodelText).toBeVisible();
   });
 
   test("handles interleaved notifications and count updates", async ({

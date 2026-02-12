@@ -141,7 +141,7 @@ test.describe("UI Components", () => {
     await page.waitForLoadState("networkidle");
 
     // Check for logo image
-    const logo = page.locator('img[alt*="ShadowSky" i], img[alt*="Logo" i]');
+    const logo = page.locator('img[alt*="Asphodel" i], img[alt*="Logo" i]');
     await expect(logo.first()).toBeVisible();
   });
 
@@ -161,14 +161,14 @@ test.describe("UI Components", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    // Check that CSS variables for dark theme are applied
+    // Check that CSS variables for theme are applied
     const bgColor = await page.evaluate(() => {
       return getComputedStyle(document.documentElement)
-        .getPropertyValue("--bsky-bg-primary")
+        .getPropertyValue("--asph-bg-primary")
         .trim();
     });
 
-    // Background should be a dark color (starts with # and has low values)
+    // Background should be defined
     expect(bgColor).toBeTruthy();
   });
 });
@@ -179,8 +179,8 @@ test.describe("Responsive Design", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    // ShadowSky branding should still be visible
-    await expect(page.getByText("ShadowSky").first()).toBeVisible();
+    // Asphodel branding should still be visible
+    await expect(page.getByText("Asphodel").first()).toBeVisible();
 
     // Login form should be accessible
     const loginForm = page.locator('button[type="submit"]');
@@ -192,7 +192,7 @@ test.describe("Responsive Design", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByText("ShadowSky").first()).toBeVisible();
+    await expect(page.getByText("Asphodel").first()).toBeVisible();
   });
 
   test("desktop viewport renders correctly", async ({ page }) => {
@@ -200,7 +200,7 @@ test.describe("Responsive Design", () => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByText("ShadowSky").first()).toBeVisible();
+    await expect(page.getByText("Asphodel").first()).toBeVisible();
   });
 });
 
