@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -24,7 +24,8 @@ import { getAtProtoClient } from "../../services/atproto/client";
 import { LoadingState } from "../../components/LoadingState";
 import { ErrorState } from "../../components/ErrorState";
 import { EmptyState } from "../../components/EmptyState";
-import { LockIcon, ChatBubbleIcon, ArrowLeftIcon } from "../../components/icons";
+import { LockIcon, ChatBubbleIcon, ArrowLeftIcon, SearchIcon, CloseIcon } from "../../components/icons";
+import { useConversations, useConversation, useSendMessage, useMarkAsRead } from "../../hooks/api";
 
 export function MessagesScreen() {
   const { session } = useAuth();
@@ -33,7 +34,8 @@ export function MessagesScreen() {
     string | null
   >(null);
   const [messageText, setMessageText] = useState("");
-  const [isSending, setIsSending] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   // Set up DM service with agent
@@ -49,33 +51,24 @@ export function MessagesScreen() {
     }
   }, [session]);
 
-  // Fetch conversations list
+  // Fetch conversations list using hook
   const {
     data: conversations,
     isLoading: loadingConversations,
     error: conversationsError,
     refetch: refetchConversations,
-  } = useQuery({
-    queryKey: ["dm-conversations"],
-    queryFn: () => dmService.listConversations(),
-    enabled: !!session,
-    refetchInterval: 10000, // Refresh every 10 seconds
-  });
+  } = useConversations();
 
-  // Fetch messages for selected conversation
+  // Fetch messages for selected conversation using hook
   const {
     data: conversationData,
     isLoading: loadingMessages,
     refetch: refetchMessages,
-  } = useQuery({
-    queryKey: ["dm-conversation", selectedConversation],
-    queryFn: () =>
-      selectedConversation
-        ? dmService.getConversation(selectedConversation)
-        : Promise.resolve(null),
-    enabled: !!selectedConversation && !!session,
-    refetchInterval: selectedConversation ? 5000 : false, // Refresh every 5 seconds when viewing
-  });
+  } = useConversation(selectedConversation);
+
+  // Mutations
+  const sendMessageMutation = useSendMessage();
+  const markAsReadMutation = useMarkAsRead();
 
   // Mark conversation as read when opened
   useEffect(() => {
@@ -85,14 +78,12 @@ export function MessagesScreen() {
       conversationData.conversation.unreadCount > 0
     ) {
       const timer = setTimeout(() => {
-        dmService.updateRead(selectedConversation).then(() => {
-          queryClient.invalidateQueries({ queryKey: ["dm-conversations"] });
-        });
+        markAsReadMutation.mutate(selectedConversation);
       }, 1000);
 
       return () => clearTimeout(timer);
     }
-  }, [selectedConversation, conversationData, queryClient]);
+  }, [selectedConversation, conversationData, markAsReadMutation]);
 
   // Scroll to bottom when messages load
   useEffect(() => {
@@ -104,27 +95,45 @@ export function MessagesScreen() {
   }, [conversationData?.messages.length]);
 
   const handleSendMessage = async () => {
-    if (!selectedConversation || !messageText.trim() || isSending) return;
+    if (!selectedConversation || !messageText.trim() || sendMessageMutation.isPending) return;
 
     const text = messageText.trim();
     setMessageText("");
-    setIsSending(true);
 
     try {
-      await dmService.sendMessage(selectedConversation, text);
+      await sendMessageMutation.mutateAsync({
+        conversationId: selectedConversation,
+        text,
+      });
       // Refresh messages after sending
       setTimeout(() => {
         refetchMessages();
-        refetchConversations();
       }, 500);
     } catch (error) {
       console.error("Failed to send message:", error);
       Alert.alert("Error", "Failed to send message. Please try again.");
       setMessageText(text); // Restore message on error
-    } finally {
-      setIsSending(false);
     }
   };
+
+  // Filter conversations based on search text
+  const filteredConversations = useMemo(() => {
+    if (!conversations || !searchText.trim()) return conversations;
+
+    const search = searchText.toLowerCase();
+    return conversations.filter((convo) => {
+      const otherMember = convo.members.find((m) => m.did !== session?.did) || convo.members[0];
+      const displayName = (otherMember.displayName || "").toLowerCase();
+      const handle = (otherMember.handle || "").toLowerCase();
+      const lastMessage = (convo.lastMessage?.text || "").toLowerCase();
+
+      return (
+        displayName.includes(search) ||
+        handle.includes(search) ||
+        lastMessage.includes(search)
+      );
+    });
+  }, [conversations, searchText, session?.did]);
 
   const getOtherMember = (conversation: DmConversation) => {
     return (
@@ -200,8 +209,14 @@ export function MessagesScreen() {
     );
   };
 
-  const renderMessage = ({ item }: { item: DmMessage }) => {
+  const renderMessage = ({ item, index }: { item: DmMessage; index: number }) => {
     const isOwnMessage = item.sender.did === session?.did;
+    const messages = conversationData?.messages || [];
+    const isLastMessage = index === messages.length - 1;
+
+    // Determine delivery status for own messages
+    // If message exists on server, it's delivered
+    const deliveryStatus = isOwnMessage ? (item.id ? "delivered" : "sent") : null;
 
     return (
       <View
@@ -224,14 +239,26 @@ export function MessagesScreen() {
           >
             {item.text}
           </Text>
-          <Text
-            style={[
-              styles.messageTime,
-              isOwnMessage ? styles.ownMessageTime : styles.otherMessageTime,
-            ]}
-          >
-            {formatMessageTime(item.sentAt)}
-          </Text>
+          <View style={styles.messageFooter}>
+            <Text
+              style={[
+                styles.messageTime,
+                isOwnMessage ? styles.ownMessageTime : styles.otherMessageTime,
+              ]}
+            >
+              {formatMessageTime(item.sentAt)}
+            </Text>
+            {isOwnMessage && deliveryStatus && (
+              <Text
+                style={[
+                  styles.deliveryStatus,
+                  isOwnMessage && styles.ownDeliveryStatus,
+                ]}
+              >
+                {deliveryStatus === "delivered" ? "✓✓" : "✓"}
+              </Text>
+            )}
+          </View>
         </View>
       </View>
     );
@@ -297,13 +324,54 @@ export function MessagesScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Messages</Text>
+          <View style={styles.headerTop}>
+            <Text style={styles.headerTitle}>Messages</Text>
+            <TouchableOpacity
+              onPress={() => {
+                setIsSearchVisible(!isSearchVisible);
+                if (isSearchVisible) setSearchText("");
+              }}
+              style={styles.searchToggle}
+            >
+              {isSearchVisible ? (
+                <CloseIcon size={24} color="#1d9bf0" />
+              ) : (
+                <SearchIcon size={24} color="#1d9bf0" />
+              )}
+            </TouchableOpacity>
+          </View>
+          {isSearchVisible && (
+            <View style={styles.searchContainer}>
+              <SearchIcon size={20} color="#9ca3af" />
+              <TextInput
+                style={styles.searchInput}
+                value={searchText}
+                onChangeText={setSearchText}
+                placeholder="Search conversations..."
+                placeholderTextColor="#666"
+                autoFocus
+              />
+              {searchText.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchText("")}>
+                  <CloseIcon size={20} color="#9ca3af" />
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
         </View>
         <FlatList
-          data={conversations}
+          data={filteredConversations}
           renderItem={renderConversationItem}
           keyExtractor={(item) => item.id}
           style={styles.conversationsList}
+          ListEmptyComponent={
+            searchText.length > 0 ? (
+              <EmptyState
+                icon={<SearchIcon size={64} color="#9ca3af" />}
+                message="No conversations found"
+              />
+            ) : null
+          }
         />
       </View>
     );
@@ -394,12 +462,12 @@ export function MessagesScreen() {
         <TouchableOpacity
           style={[
             styles.sendButton,
-            (!messageText.trim() || isSending) && styles.sendButtonDisabled,
+            (!messageText.trim() || sendMessageMutation.isPending) && styles.sendButtonDisabled,
           ]}
           onPress={handleSendMessage}
-          disabled={!messageText.trim() || isSending}
+          disabled={!messageText.trim() || sendMessageMutation.isPending}
         >
-          {isSending ? (
+          {sendMessageMutation.isPending ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
             <Text style={styles.sendButtonText}>Send</Text>
@@ -416,14 +484,38 @@ const styles = StyleSheet.create({
     backgroundColor: "#0a0a0f",
   },
   header: {
-    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#1f1f23",
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
   },
   headerTitle: {
     color: "#ffffff",
     fontSize: 24,
     fontWeight: "bold",
+  },
+  searchToggle: {
+    padding: 4,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1f1f23',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    color: '#ffffff',
+    fontSize: 16,
   },
   conversationsList: {
     flex: 1,
@@ -579,15 +671,26 @@ const styles = StyleSheet.create({
   otherMessageText: {
     color: "#ffffff",
   },
+  messageFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 4,
+  },
   messageTime: {
     fontSize: 11,
-    marginTop: 4,
   },
   ownMessageTime: {
     color: "rgba(255, 255, 255, 0.7)",
   },
   otherMessageTime: {
     color: "#9ca3af",
+  },
+  deliveryStatus: {
+    fontSize: 11,
+  },
+  ownDeliveryStatus: {
+    color: "rgba(255, 255, 255, 0.7)",
   },
   inputContainer: {
     flexDirection: "row",
