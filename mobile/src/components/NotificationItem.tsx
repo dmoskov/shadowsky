@@ -4,17 +4,22 @@ import {AppBskyNotificationListNotifications, AppBskyFeedPost} from '@atproto/ap
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
 import {HeartIcon, RepostIcon, FollowIcon, AtSignIcon, ReplyIcon, QuoteIcon, BellIcon} from './icons';
+import {RichText} from '../utils/rich-text';
 
 interface NotificationItemProps {
   notification: AppBskyNotificationListNotifications.Notification;
   onPress?: () => void;
   onProfilePress?: (handle: string) => void;
+  onMentionPress?: (handle: string, did: string) => void;
+  onHashtagPress?: (tag: string) => void;
 }
 
 export function NotificationItem({
   notification,
   onPress,
   onProfilePress,
+  onMentionPress,
+  onHashtagPress,
 }: NotificationItemProps) {
   const author = notification.author;
 
@@ -79,10 +84,11 @@ export function NotificationItem({
     }
   };
 
-  // Get post text if available using type guard
-  const postText = AppBskyFeedPost.isRecord(notification.record)
-    ? notification.record.text || ''
-    : '';
+  // Get post text and facets if available using type guard
+  const postRecord = AppBskyFeedPost.isRecord(notification.record)
+    ? notification.record
+    : undefined;
+  const postText = postRecord?.text || '';
 
   return (
     <TouchableOpacity
@@ -121,9 +127,13 @@ export function NotificationItem({
           {/* Post preview if available */}
           {postText && (
             <View style={styles.postPreview}>
-              <Text style={styles.postText} numberOfLines={3}>
-                {postText}
-              </Text>
+              <RichText
+                text={postText}
+                facets={postRecord?.facets}
+                onMentionPress={onMentionPress}
+                onHashtagPress={onHashtagPress}
+                style={styles.postText}
+              />
             </View>
           )}
         </View>

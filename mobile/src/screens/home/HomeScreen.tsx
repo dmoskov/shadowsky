@@ -75,6 +75,15 @@ export function HomeScreen() {
     }
   };
 
+  const handleMentionPress = (handle: string, did: string) => {
+    navigateToProfile(handle);
+  };
+
+  const handleHashtagPress = (tag: string) => {
+    // TODO: Navigate to search with hashtag query
+    console.log('Hashtag pressed:', tag);
+  };
+
   return (
     <View style={styles.container}>
       <FeedList
@@ -90,6 +99,8 @@ export function HomeScreen() {
         onLike={handleLike}
         onRepost={handleRepost}
         onReply={handleReply}
+        onMentionPress={handleMentionPress}
+        onHashtagPress={handleHashtagPress}
         emptyMessage="No posts in your timeline yet"
       />
     </View>

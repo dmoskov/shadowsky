@@ -17,6 +17,7 @@ import {NotificationItem} from '../../components/NotificationItem';
 import {LoadingState} from '../../components/LoadingState';
 import {ErrorState} from '../../components/ErrorState';
 import {EmptyState} from '../../components/EmptyState';
+import {useAppNavigation} from '../../hooks/useNavigation';
 
 export function NotificationsScreen() {
   const {
@@ -32,6 +33,7 @@ export function NotificationsScreen() {
   } = useNotifications();
 
   const markNotificationsSeen = useMarkNotificationsSeen();
+  const {navigateToProfile} = useAppNavigation();
 
   // Mark notifications as seen when screen is focused
   useFocusEffect(
@@ -164,6 +166,18 @@ export function NotificationsScreen() {
     refetch();
   };
 
+  const handleMentionPress = useCallback(
+    (handle: string, did: string) => {
+      navigateToProfile(handle);
+    },
+    [navigateToProfile],
+  );
+
+  const handleHashtagPress = useCallback((tag: string) => {
+    // TODO: Navigate to search with hashtag query
+    console.log('Hashtag pressed:', tag);
+  }, []);
+
   // Flatten sections into a single list with headers
   const flattenedData = React.useMemo(() => {
     const result: Array<{
@@ -187,9 +201,15 @@ export function NotificationsScreen() {
       if (item.type === 'header') {
         return renderSectionHeader(item.title!);
       }
-      return <NotificationItem notification={item.notification!} />;
+      return (
+        <NotificationItem
+          notification={item.notification!}
+          onMentionPress={handleMentionPress}
+          onHashtagPress={handleHashtagPress}
+        />
+      );
     },
-    [renderSectionHeader],
+    [renderSectionHeader, handleMentionPress, handleHashtagPress],
   );
 
   return (

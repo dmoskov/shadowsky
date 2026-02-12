@@ -4,6 +4,7 @@ import {AppBskyFeedDefs, AppBskyFeedPost, AppBskyEmbedImages} from '@atproto/api
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
 import {ReplyIcon, RepostIcon, HeartIcon, BookmarkIcon} from './icons';
+import {RichText} from '../utils/rich-text';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -14,6 +15,8 @@ interface PostCardProps {
   onReply?: () => void;
   onBookmark?: () => void;
   isBookmarked?: boolean;
+  onMentionPress?: (handle: string, did: string) => void;
+  onHashtagPress?: (tag: string) => void;
 }
 
 export function PostCard({
@@ -25,6 +28,8 @@ export function PostCard({
   onReply,
   onBookmark,
   isBookmarked = false,
+  onMentionPress,
+  onHashtagPress,
 }: PostCardProps) {
   const postView = post.post;
   const author = postView.author;
@@ -71,7 +76,15 @@ export function PostCard({
         </TouchableOpacity>
 
         {/* Post Text */}
-        {record && <Text style={styles.text}>{record.text}</Text>}
+        {record && (
+          <RichText
+            text={record.text}
+            facets={record.facets}
+            onMentionPress={onMentionPress}
+            onHashtagPress={onHashtagPress}
+            style={styles.text}
+          />
+        )}
 
         {/* Embed Images */}
         {AppBskyEmbedImages.isView(postView.embed) && (

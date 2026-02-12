@@ -30,6 +30,8 @@ interface FeedListProps {
   onBookmark?: (post: AppBskyFeedDefs.FeedViewPost) => void;
   isBookmarked?: (postUri: string) => boolean;
   emptyMessage?: string;
+  onMentionPress?: (handle: string, did: string) => void;
+  onHashtagPress?: (tag: string) => void;
 }
 
 export function FeedList({
@@ -48,6 +50,8 @@ export function FeedList({
   onBookmark,
   isBookmarked,
   emptyMessage = 'No posts yet',
+  onMentionPress,
+  onHashtagPress,
 }: FeedListProps) {
   const renderItem: ListRenderItem<AppBskyFeedDefs.FeedViewPost> = ({item}) => (
     <PostCard
@@ -59,6 +63,8 @@ export function FeedList({
       onReply={() => onReply?.(item)}
       onBookmark={() => onBookmark?.(item)}
       isBookmarked={isBookmarked?.(item.post.uri)}
+      onMentionPress={onMentionPress}
+      onHashtagPress={onHashtagPress}
     />
   );
 

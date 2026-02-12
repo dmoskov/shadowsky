@@ -154,6 +154,16 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
     navigateToProfile(pressedHandle);
   };
 
+  const handleMentionPress = (handle: string, did: string) => {
+    navigateToProfile(handle);
+  };
+
+  const handleHashtagPress = (tag: string) => {
+    // TODO: Navigate to search with hashtag query
+    // For now, just log it
+    console.log('Hashtag pressed:', tag);
+  };
+
   const handleLike = (post: AppBskyFeedDefs.FeedViewPost) => {
     const { uri, cid, viewer } = post.post;
 
@@ -228,6 +238,8 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
           onLike={() => handleLike(rootPost)}
           onRepost={() => handleRepost(rootPost)}
           onReply={() => handleReply(rootPost)}
+          onMentionPress={handleMentionPress}
+          onHashtagPress={handleHashtagPress}
         />
 
         {/* Divider */}
@@ -242,6 +254,8 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
               onLike={() => handleLike(reply)}
               onRepost={() => handleRepost(reply)}
               onReply={() => handleReply(reply)}
+              onMentionPress={handleMentionPress}
+              onHashtagPress={handleHashtagPress}
             />
           </View>
         ))}
