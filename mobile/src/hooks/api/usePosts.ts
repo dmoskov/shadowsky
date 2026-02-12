@@ -8,6 +8,7 @@ import {
   deleteRepost,
   CreatePostOptions,
 } from '../../services/atproto/posts';
+import {mutationQueue} from '../../services/mutation-queue';
 
 /**
  * Hook to create a post
@@ -62,6 +63,16 @@ export function useLikePost() {
       queryClient.invalidateQueries({queryKey: ['authorFeed']});
       queryClient.invalidateQueries({queryKey: ['thread']});
     },
+    onError: async (error, {uri, cid}) => {
+      // Queue the mutation for retry
+      console.log('[useLikePost] Failed to like post, queueing for retry');
+      await mutationQueue.enqueue({
+        type: 'like',
+        targetUri: uri,
+        targetCid: cid,
+        maxRetries: 3,
+      });
+    },
   });
 }
 
@@ -78,6 +89,15 @@ export function useUnlikePost() {
       queryClient.invalidateQueries({queryKey: ['authorFeed']});
       queryClient.invalidateQueries({queryKey: ['thread']});
     },
+    onError: async (error, likeUri: string) => {
+      // Queue the mutation for retry
+      console.log('[useUnlikePost] Failed to unlike post, queueing for retry');
+      await mutationQueue.enqueue({
+        type: 'unlike',
+        targetUri: likeUri,
+        maxRetries: 3,
+      });
+    },
   });
 }
 
@@ -93,6 +113,16 @@ export function useRepost() {
       queryClient.invalidateQueries({queryKey: ['timeline']});
       queryClient.invalidateQueries({queryKey: ['authorFeed']});
     },
+    onError: async (error, {uri, cid}) => {
+      // Queue the mutation for retry
+      console.log('[useRepost] Failed to repost, queueing for retry');
+      await mutationQueue.enqueue({
+        type: 'repost',
+        targetUri: uri,
+        targetCid: cid,
+        maxRetries: 3,
+      });
+    },
   });
 }
 
@@ -107,6 +137,15 @@ export function useDeleteRepost() {
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['timeline']});
       queryClient.invalidateQueries({queryKey: ['authorFeed']});
+    },
+    onError: async (error, repostUri: string) => {
+      // Queue the mutation for retry
+      console.log('[useDeleteRepost] Failed to delete repost, queueing for retry');
+      await mutationQueue.enqueue({
+        type: 'deleteRepost',
+        targetUri: repostUri,
+        maxRetries: 3,
+      });
     },
   });
 }
