@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -7,8 +7,10 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useScrollToTop } from "@react-navigation/native";
 import { useSearchActors } from "../../hooks/api/useProfile";
 import { Avatar } from "../../components/Avatar";
 import { AppBskyActorDefs } from "@atproto/api";
@@ -21,6 +23,11 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState(initialQuery || "");
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery || "");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const scrollRef = useRef<FlatList>(null);
+
+  // Enable scroll-to-top on tab press
+  useScrollToTop(scrollRef);
 
   // Debounce search query
   useEffect(() => {
@@ -32,7 +39,13 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   }, [searchQuery]);
 
   // Fetch search results
-  const { data: actors, isLoading, isError } = useSearchActors(debouncedQuery);
+  const { data: actors, isLoading, isError, refetch } = useSearchActors(debouncedQuery);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
+  };
 
   const handleProfilePress = (handle: string) => {
     router.push(`/(app)/(tabs)/(search)/profile/${handle}`);
@@ -111,11 +124,20 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
         </View>
       ) : (
         <FlatList
+          ref={scrollRef}
           data={actors || []}
           keyExtractor={(item) => item.did}
           renderItem={renderSearchResult}
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={renderEmptyState}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor="#3b82f6"
+              colors={['#3b82f6']}
+            />
+          }
         />
       )}
     </View>

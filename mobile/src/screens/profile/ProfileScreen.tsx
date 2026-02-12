@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   ScrollView,
+  RefreshControl,
 } from "react-native";
 import { useProfile, useFollowUser, useUnfollowUser } from "../../hooks/api/useProfile";
 import { useAuthorFeed } from "../../hooks/api/useFeed";
@@ -22,17 +23,20 @@ interface ProfileScreenProps {
 }
 
 export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }: ProfileScreenProps) {
-  const { data: profile, isLoading: isLoadingProfile, error: profileError } = useProfile(handle);
+  const { data: profile, isLoading: isLoadingProfile, error: profileError, refetch: refetchProfile } = useProfile(handle);
   const {
     data: feedData,
     isLoading: isLoadingFeed,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch: refetchFeed,
+    isRefetching,
   } = useAuthorFeed(handle);
   const { account } = useAuth();
   const followMutation = useFollowUser();
   const unfollowMutation = useUnfollowUser();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   const isOwnProfile = account?.handle === handle;
 
@@ -55,6 +59,12 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
   const handleHashtagPress = (tag: string) => {
     // TODO: Navigate to search with hashtag query
     console.log('Hashtag pressed:', tag);
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await Promise.all([refetchProfile(), refetchFeed()]);
+    setIsRefreshing(false);
   };
 
   const renderPost = ({ item }: { item: AppBskyFeedDefs.FeedViewPost }) => (
@@ -188,6 +198,14 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
           }
         }}
         onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor="#3b82f6"
+            colors={['#3b82f6']}
+          />
+        }
         contentContainerStyle={posts.length === 0 ? styles.emptyList : undefined}
       />
     </View>

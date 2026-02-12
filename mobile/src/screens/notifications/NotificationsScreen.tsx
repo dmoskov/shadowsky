@@ -1,4 +1,4 @@
-import React, {useCallback} from 'react';
+import React, {useCallback, useRef} from 'react';
 import {
   FlatList,
   ActivityIndicator,
@@ -7,7 +7,7 @@ import {
   StyleSheet,
   RefreshControl,
 } from 'react-native';
-import {useFocusEffect} from '@react-navigation/native';
+import {useFocusEffect, useScrollToTop} from '@react-navigation/native';
 import {AppBskyNotificationListNotifications} from '@atproto/api';
 import {
   useNotifications,
@@ -34,6 +34,10 @@ export function NotificationsScreen() {
 
   const markNotificationsSeen = useMarkNotificationsSeen();
   const {navigateToProfile} = useAppNavigation();
+  const scrollRef = useRef<FlatList>(null);
+
+  // Enable scroll-to-top on tab press
+  useScrollToTop(scrollRef);
 
   // Mark notifications as seen when screen is focused
   useFocusEffect(
@@ -215,6 +219,7 @@ export function NotificationsScreen() {
   return (
     <View style={styles.container}>
       <FlatList
+        ref={scrollRef}
         data={flattenedData}
         renderItem={renderFlattenedItem}
         keyExtractor={(item, index) => {

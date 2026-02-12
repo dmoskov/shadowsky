@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { View, StyleSheet, Alert, ActionSheetIOS, Platform } from "react-native";
+import React, { useState, useRef } from "react";
+import { View, StyleSheet, Alert, ActionSheetIOS, Platform, FlatList } from "react-native";
 import { AppBskyFeedDefs } from "@atproto/api";
+import { useScrollToTop } from "@react-navigation/native";
 import { useTimeline } from "../../hooks/api/useFeed";
 import { useLikePost, useUnlikePost, useRepost, useDeleteRepost } from "../../hooks/api/usePosts";
 import { useAppNavigation } from "../../hooks/useNavigation";
@@ -22,6 +23,10 @@ export function HomeScreen() {
   const unlikePost = useUnlikePost();
   const repost = useRepost();
   const deleteRepost = useDeleteRepost();
+  const scrollRef = useRef<FlatList>(null);
+
+  // Enable scroll-to-top on tab press
+  useScrollToTop(scrollRef);
 
   // Flatten paginated data
   const posts = data?.pages.flatMap((page) => page.feed) ?? [];
@@ -161,6 +166,7 @@ export function HomeScreen() {
   return (
     <View style={styles.container}>
       <FeedList
+        ref={scrollRef}
         posts={posts}
         isLoading={isLoading}
         isRefreshing={isRefetching}

@@ -10,6 +10,7 @@ import {
   Alert,
   ActionSheetIOS,
   Platform,
+  RefreshControl,
 } from "react-native";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { usePostThread } from "../../hooks/api/useFeed";
@@ -85,6 +86,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   const [resolveError, setResolveError] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
   const [isReplyVisible, setIsReplyVisible] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { navigateToProfile, navigateToThread, navigateToCompose } = useAppNavigation();
   const likePost = useLikePost();
@@ -295,13 +297,29 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
     }
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
+  };
+
   const isReplyDisabled = !replyText.trim() || replyText.length > MAX_REPLY_LENGTH;
   const replyCharCount = replyText.length;
   const isOverLimit = replyCharCount > MAX_REPLY_LENGTH;
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor="#3b82f6"
+            colors={['#3b82f6']}
+          />
+        }
+      >
         {/* Root Post */}
         <PostCard
           post={rootPost}
