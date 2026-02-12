@@ -3,9 +3,10 @@ import {View, Text, StyleSheet, TouchableOpacity, Modal, Alert} from 'react-nati
 import {AppBskyFeedDefs, AppBskyFeedPost} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
-import {ReplyIcon, RepostIcon, HeartIcon, BookmarkIcon, MoreVerticalIcon} from './icons';
+import {ReplyIcon, RepostIcon, HeartIcon, BookmarkIcon, MoreVerticalIcon, SendIcon} from './icons';
 import {RichText} from '../utils/rich-text';
 import {useNetwork} from '../contexts/NetworkContext';
+import {sharePost} from '../utils/share';
 import {PostEmbed} from './PostEmbed';
 import {useBlockUser, useMuteUser} from '../hooks/api/useProfile';
 import {colors} from '../constants/theme';
@@ -121,6 +122,10 @@ export function PostCard({
     );
   };
 
+  const handleShare = () => {
+    sharePost(post);
+  };
+
   return (
     <TouchableOpacity
       style={styles.container}
@@ -210,6 +215,13 @@ export function PostCard({
             activeOpacity={0.7}
             disabled={!isOnline}>
             <BookmarkIcon size={18} color={isOnline ? (isBookmarked ? colors.primary : '#9ca3af') : '#4b5563'} filled={isBookmarked} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.engagementButton}
+            onPress={handleShare}
+            activeOpacity={0.7}>
+            <SendIcon size={18} color="#9ca3af" />
           </TouchableOpacity>
         </View>
       </View>
