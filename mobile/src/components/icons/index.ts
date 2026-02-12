@@ -45,3 +45,6 @@ export {FollowIcon} from './FollowIcon';
 
 // Menu
 export {MoreVerticalIcon} from './MoreVerticalIcon';
+
+// Actions
+export {MoreIcon} from './MoreIcon';

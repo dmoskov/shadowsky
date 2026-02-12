@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { useMutedAccounts, useUnmuteUser } from '../../hooks/api/useProfile';
 import { Avatar } from '../../components/Avatar';
@@ -20,12 +21,14 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
   const {
     data,
     isLoading,
+    error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     refetch,
   } = useMutedAccounts();
   const unmuteMutation = useUnmuteUser();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   const accounts = data?.pages.flatMap((page) => page.mutes) ?? [];
 
@@ -41,7 +44,6 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
           onPress: async () => {
             try {
               await unmuteMutation.mutateAsync(account.did);
-              // Refetch to update the list
               refetch();
             } catch (error) {
               Alert.alert('Error', 'Failed to unmute user. Please try again.');
@@ -52,13 +54,18 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
     );
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
+  };
+
   const renderAccount = ({ item }: { item: AppBskyActorDefs.ProfileView }) => (
     <View style={styles.accountItem}>
       <TouchableOpacity
         style={styles.accountInfo}
         onPress={() => onNavigateToProfile?.(item.handle)}
-        activeOpacity={0.7}
-      >
+        activeOpacity={0.7}>
         <Avatar uri={item.avatar} size={48} />
         <View style={styles.accountDetails}>
           <Text style={styles.displayName} numberOfLines={1}>
@@ -72,8 +79,7 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
       <TouchableOpacity
         style={styles.unmuteButton}
         onPress={() => handleUnmute(item)}
-        disabled={unmuteMutation.isPending}
-      >
+        disabled={unmuteMutation.isPending}>
         <Text style={styles.unmuteButtonText}>
           {unmuteMutation.isPending ? '...' : 'Unmute'}
         </Text>
@@ -96,6 +102,14 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
       return (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color="#3b82f6" />
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.errorText}>Failed to load muted accounts</Text>
         </View>
       );
     }
@@ -130,6 +144,14 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
           }
         }}
         onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor="#3b82f6"
+            colors={['#3b82f6']}
+          />
+        }
         contentContainerStyle={accounts.length === 0 ? styles.emptyList : undefined}
       />
     </View>
@@ -190,7 +212,7 @@ const styles = StyleSheet.create({
     borderColor: '#3b82f6',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 16,
+    borderRadius: 20,
   },
   unmuteButtonText: {
     color: '#3b82f6',
@@ -220,6 +242,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 16,
+    textAlign: 'center',
   },
   emptyList: {
     flexGrow: 1,

@@ -3,7 +3,7 @@ import {View, Text, StyleSheet, TouchableOpacity, Modal, Alert} from 'react-nati
 import {AppBskyFeedDefs, AppBskyFeedPost} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
-import {ReplyIcon, RepostIcon, HeartIcon, BookmarkIcon, MoreVerticalIcon, SendIcon} from './icons';
+import {ReplyIcon, RepostIcon, HeartIcon, BookmarkIcon, MoreIcon, SendIcon} from './icons';
 import {RichText} from '../utils/rich-text';
 import {useNetwork} from '../contexts/NetworkContext';
 import {sharePost} from '../utils/share';
@@ -25,6 +25,10 @@ interface PostCardProps {
   onImagePress?: (images: Array<{thumb: string; fullsize: string; alt?: string}>, index: number) => void;
   onLinkPress?: (url: string) => void;
   onQuotePress?: (uri: string, handle: string) => void;
+  onBlock?: (did: string) => void;
+  onMute?: (did: string) => void;
+  onReport?: (uri: string, cid: string) => void;
+  currentUserDid?: string;
 }
 
 export function PostCard({
@@ -41,6 +45,10 @@ export function PostCard({
   onImagePress,
   onLinkPress,
   onQuotePress,
+  onBlock,
+  onMute,
+  onReport,
+  currentUserDid,
 }: PostCardProps) {
   const { isOnline } = useNetwork();
   const postView = post.post;
@@ -59,13 +67,6 @@ export function PostCard({
       onPressProfile(author.handle);
     }
   };
-
-  // Format timestamp
-  const timestamp = formatDistanceToNow(new Date(postView.indexedAt), {
-    addSuffix: true,
-  });
-
-  const isLiked = !!postView.viewer?.like;
 
   const handleMuteUser = () => {
     setShowMenu(false);
@@ -122,6 +123,14 @@ export function PostCard({
     );
   };
 
+  // Format timestamp
+  const timestamp = formatDistanceToNow(new Date(postView.indexedAt), {
+    addSuffix: true,
+  });
+
+  const isLiked = !!postView.viewer?.like;
+  const isOwnPost = currentUserDid === author.did;
+
   const handleShare = () => {
     sharePost(post);
   };
@@ -133,27 +142,33 @@ export function PostCard({
       activeOpacity={0.9}>
       <View style={styles.content}>
         {/* Author Header */}
-        <TouchableOpacity
-          style={styles.header}
-          onPress={handleProfilePress}
-          activeOpacity={0.7}>
-          <Avatar uri={author.avatar} size={44} />
-          <View style={styles.authorInfo}>
-            <Text style={styles.displayName} numberOfLines={1}>
-              {author.displayName || author.handle}
-            </Text>
-            <Text style={styles.handle} numberOfLines={1}>
-              @{author.handle}
-            </Text>
-          </View>
-          <Text style={styles.timestamp}>{timestamp}</Text>
+        <View style={styles.header}>
           <TouchableOpacity
-            style={styles.menuButton}
-            onPress={() => setShowMenu(true)}
+            style={styles.authorSection}
+            onPress={handleProfilePress}
             activeOpacity={0.7}>
-            <MoreVerticalIcon size={18} color="#9ca3af" />
+            <Avatar uri={author.avatar} size={44} />
+            <View style={styles.authorInfo}>
+              <Text style={styles.displayName} numberOfLines={1}>
+                {author.displayName || author.handle}
+              </Text>
+              <Text style={styles.handle} numberOfLines={1}>
+                @{author.handle}
+              </Text>
+            </View>
           </TouchableOpacity>
-        </TouchableOpacity>
+          <View style={styles.headerRight}>
+            <Text style={styles.timestamp}>{timestamp}</Text>
+            {!isOwnPost && isOnline && (
+              <TouchableOpacity
+                style={styles.moreButton}
+                onPress={() => setShowMenu(true)}
+                activeOpacity={0.7}>
+                <MoreIcon size={20} color="#9ca3af" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
 
         {/* Post Text */}
         {record && (
@@ -226,38 +241,34 @@ export function PostCard({
         </View>
       </View>
 
-      {/* Action Menu Modal */}
+      {/* Menu Modal */}
       <Modal
         visible={showMenu}
         transparent={true}
         animationType="fade"
         onRequestClose={() => setShowMenu(false)}>
         <TouchableOpacity
-          style={styles.modalOverlay}
+          style={styles.menuOverlay}
           activeOpacity={1}
           onPress={() => setShowMenu(false)}>
           <View style={styles.menuContainer}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={handleMuteUser}
-              activeOpacity={0.7}>
+            <TouchableOpacity style={styles.menuItem} onPress={handleMuteUser}>
               <Text style={styles.menuItemText}>Mute @{author.handle}</Text>
             </TouchableOpacity>
-            <View style={styles.menuDivider} />
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={handleBlockUser}
-              activeOpacity={0.7}>
-              <Text style={[styles.menuItemText, styles.dangerText]}>
+            <TouchableOpacity style={styles.menuItem} onPress={handleBlockUser}>
+              <Text style={[styles.menuItemText, styles.menuItemDanger]}>
                 Block @{author.handle}
               </Text>
             </TouchableOpacity>
-            <View style={styles.menuDivider} />
+            <TouchableOpacity style={styles.menuItem} onPress={handleReport}>
+              <Text style={[styles.menuItemText, styles.menuItemDanger]}>
+                Report Post
+              </Text>
+            </TouchableOpacity>
             <TouchableOpacity
-              style={styles.menuItem}
-              onPress={handleReport}
-              activeOpacity={0.7}>
-              <Text style={[styles.menuItemText, styles.dangerText]}>Report</Text>
+              style={[styles.menuItem, styles.menuItemLast]}
+              onPress={() => setShowMenu(false)}>
+              <Text style={styles.menuItemText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -278,11 +289,25 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 12,
+  },
+  authorSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   authorInfo: {
     flex: 1,
     marginLeft: 12,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  moreButton: {
+    padding: 4,
   },
   displayName: {
     color: '#ffffff',
@@ -298,10 +323,6 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     fontSize: 13,
     marginRight: 4,
-  },
-  menuButton: {
-    padding: 4,
-    marginLeft: 4,
   },
   text: {
     color: '#ffffff',
@@ -329,32 +350,36 @@ const styles = StyleSheet.create({
     color: '#4b5563',
     opacity: 0.5,
   },
-  modalOverlay: {
+  menuOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 16,
   },
   menuContainer: {
     backgroundColor: '#1f2937',
     borderRadius: 12,
-    minWidth: 200,
+    width: '100%',
+    maxWidth: 320,
     overflow: 'hidden',
   },
   menuItem: {
     paddingVertical: 16,
     paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#374151',
+  },
+  menuItemLast: {
+    borderBottomWidth: 0,
   },
   menuItemText: {
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '500',
+    textAlign: 'center',
   },
-  menuDivider: {
-    height: 1,
-    backgroundColor: '#374151',
-  },
-  dangerText: {
+  menuItemDanger: {
     color: '#ef4444',
   },
 });

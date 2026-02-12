@@ -134,6 +134,8 @@ export function useMuteUser() {
     mutationFn: muteUser,
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['profile']});
+      queryClient.invalidateQueries({queryKey: ['mutes']});
+      queryClient.invalidateQueries({queryKey: ['mutedAccounts']});
     },
   });
 }
@@ -148,6 +150,8 @@ export function useUnmuteUser() {
     mutationFn: unmuteUser,
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['profile']});
+      queryClient.invalidateQueries({queryKey: ['mutes']});
+      queryClient.invalidateQueries({queryKey: ['mutedAccounts']});
     },
   });
 }
@@ -162,6 +166,8 @@ export function useBlockUser() {
     mutationFn: blockUser,
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['profile']});
+      queryClient.invalidateQueries({queryKey: ['blocks']});
+      queryClient.invalidateQueries({queryKey: ['blockedAccounts']});
     },
   });
 }
@@ -176,6 +182,8 @@ export function useUnblockUser() {
     mutationFn: unblockUser,
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['profile']});
+      queryClient.invalidateQueries({queryKey: ['blocks']});
+      queryClient.invalidateQueries({queryKey: ['blockedAccounts']});
     },
   });
 }
@@ -235,6 +243,9 @@ export function useMutedAccounts() {
   });
 }
 
+// Alias for backward compatibility
+export const useMutes = useMutedAccounts;
+
 /**
  * Hook to get blocked accounts with infinite scroll
  */
@@ -246,3 +257,6 @@ export function useBlockedAccounts() {
     initialPageParam: undefined as string | undefined,
   });
 }
+
+// Alias for backward compatibility
+export const useBlocks = useBlockedAccounts;

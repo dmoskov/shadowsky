@@ -11,7 +11,7 @@ import {
   Modal,
   Alert,
 } from "react-native";
-import { useProfile, useFollowUser, useUnfollowUser, useBlockUser, useMuteUser } from "../../hooks/api/useProfile";
+import { useProfile, useFollowUser, useUnfollowUser, useBlockUser, useUnblockUser, useMuteUser, useUnmuteUser } from "../../hooks/api/useProfile";
 import { useAuthorFeed } from "../../hooks/api/useFeed";
 import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
@@ -44,7 +44,9 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   const followMutation = useFollowUser();
   const unfollowMutation = useUnfollowUser();
   const blockMutation = useBlockUser();
+  const unblockMutation = useUnblockUser();
   const muteMutation = useMuteUser();
+  const unmuteMutation = useUnmuteUser();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [showAddToList, setShowAddToList] = React.useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -72,60 +74,102 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
     console.log('Hashtag pressed:', tag);
   };
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await Promise.all([refetchProfile(), refetchFeed()]);
-    setIsRefreshing(false);
+  const handleBlock = () => {
+    if (!profile) return;
+    setShowMenu(false);
+    Alert.alert(
+      'Block User',
+      `Are you sure you want to block @${profile.handle}? You won't see their posts and they won't be able to follow you or see your posts.`,
+      [
+        {text: 'Cancel', style: 'cancel'},
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: () => {
+            blockMutation.mutate(profile.did, {
+              onSuccess: () => {
+                refetchProfile();
+              },
+            });
+          },
+        },
+      ]
+    );
   };
 
-  const handleMuteUser = () => {
+  const handleUnblock = () => {
+    if (!profile?.viewer?.blocking) return;
+    setShowMenu(false);
+    Alert.alert(
+      'Unblock User',
+      `Are you sure you want to unblock @${profile.handle}?`,
+      [
+        {text: 'Cancel', style: 'cancel'},
+        {
+          text: 'Unblock',
+          style: 'default',
+          onPress: () => {
+            unblockMutation.mutate(profile.viewer.blocking!, {
+              onSuccess: () => {
+                refetchProfile();
+              },
+            });
+          },
+        },
+      ]
+    );
+  };
+
+  const handleMute = () => {
     if (!profile) return;
     setShowMenu(false);
     Alert.alert(
       'Mute User',
       `Are you sure you want to mute @${profile.handle}? You won't see their posts in your timeline.`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        {text: 'Cancel', style: 'cancel'},
         {
           text: 'Mute',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await muteMutation.mutateAsync(profile.did);
-              Alert.alert('Success', `@${profile.handle} has been muted.`);
-              refetchProfile();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to mute user. Please try again.');
-            }
+          style: 'default',
+          onPress: () => {
+            muteMutation.mutate(profile.did, {
+              onSuccess: () => {
+                refetchProfile();
+              },
+            });
           },
         },
       ]
     );
   };
 
-  const handleBlockUser = () => {
+  const handleUnmute = () => {
     if (!profile) return;
     setShowMenu(false);
     Alert.alert(
-      'Block User',
-      `Are you sure you want to block @${profile.handle}? They won't be able to follow you or view your posts.`,
+      'Unmute User',
+      `Are you sure you want to unmute @${profile.handle}?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        {text: 'Cancel', style: 'cancel'},
         {
-          text: 'Block',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await blockMutation.mutateAsync(profile.did);
-              Alert.alert('Success', `@${profile.handle} has been blocked.`);
-              refetchProfile();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to block user. Please try again.');
-            }
+          text: 'Unmute',
+          style: 'default',
+          onPress: () => {
+            unmuteMutation.mutate(profile.did, {
+              onSuccess: () => {
+                refetchProfile();
+              },
+            });
           },
         },
       ]
     );
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await Promise.all([refetchProfile(), refetchFeed()]);
+    setIsRefreshing(false);
   };
 
   const handleReport = () => {
@@ -164,6 +208,10 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
       );
     }
 
+    const isBlocked = !!profile.viewer?.blocking;
+    const isMuted = !!profile.viewer?.muted;
+    const isBlockedBy = !!profile.viewer?.blockedBy;
+
     return (
       <View style={styles.header}>
         {/* Menu button for non-own profiles */}
@@ -183,14 +231,21 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
             {profile.displayName || profile.handle}
           </Text>
           <Text style={styles.handle}>@{profile.handle}</Text>
-          {profile.viewer?.muted && (
-            <View style={styles.statusBadge}>
+
+          {/* Block/Mute Status Indicators */}
+          {isBlocked && (
+            <View style={[styles.statusBadge, styles.blockedBadge]}>
+              <Text style={styles.statusBadgeText}>Blocked</Text>
+            </View>
+          )}
+          {isMuted && !isBlocked && (
+            <View style={[styles.statusBadge, styles.mutedBadge]}>
               <Text style={styles.statusBadgeText}>Muted</Text>
             </View>
           )}
-          {profile.viewer?.blocking && (
-            <View style={[styles.statusBadge, styles.statusBadgeBlocked]}>
-              <Text style={styles.statusBadgeText}>Blocked</Text>
+          {isBlockedBy && !isBlocked && (
+            <View style={[styles.statusBadge, styles.blockedByBadge]}>
+              <Text style={styles.statusBadgeText}>Blocks you</Text>
             </View>
           )}
         </View>
@@ -320,40 +375,46 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           userHandle={profile.handle}
         />
       )}
-      {!isOwnProfile && profile && (
+
+      {/* Menu Modal */}
+      {profile && !isOwnProfile && (
         <Modal
           visible={showMenu}
           transparent={true}
           animationType="fade"
           onRequestClose={() => setShowMenu(false)}>
           <TouchableOpacity
-            style={styles.modalOverlay}
+            style={styles.menuOverlay}
             activeOpacity={1}
             onPress={() => setShowMenu(false)}>
             <View style={styles.menuContainer}>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={handleMuteUser}
-                activeOpacity={0.7}>
-                <Text style={styles.menuItemText}>
-                  {profile.viewer?.muted ? 'Unmute' : 'Mute'} @{profile.handle}
-                </Text>
+              {profile.viewer?.muted ? (
+                <TouchableOpacity style={styles.menuItem} onPress={handleUnmute}>
+                  <Text style={styles.menuItemText}>Unmute @{profile.handle}</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity style={styles.menuItem} onPress={handleMute}>
+                  <Text style={styles.menuItemText}>Mute @{profile.handle}</Text>
+                </TouchableOpacity>
+              )}
+              {profile.viewer?.blocking ? (
+                <TouchableOpacity style={styles.menuItem} onPress={handleUnblock}>
+                  <Text style={styles.menuItemText}>Unblock @{profile.handle}</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity style={styles.menuItem} onPress={handleBlock}>
+                  <Text style={[styles.menuItemText, styles.menuItemDanger]}>
+                    Block @{profile.handle}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={styles.menuItem} onPress={handleReport}>
+                <Text style={[styles.menuItemText, styles.menuItemDanger]}>Report</Text>
               </TouchableOpacity>
-              <View style={styles.menuDivider} />
               <TouchableOpacity
-                style={styles.menuItem}
-                onPress={handleBlockUser}
-                activeOpacity={0.7}>
-                <Text style={[styles.menuItemText, styles.dangerText]}>
-                  {profile.viewer?.blocking ? 'Unblock' : 'Block'} @{profile.handle}
-                </Text>
-              </TouchableOpacity>
-              <View style={styles.menuDivider} />
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={handleReport}
-                activeOpacity={0.7}>
-                <Text style={[styles.menuItemText, styles.dangerText]}>Report</Text>
+                style={[styles.menuItem, styles.menuItemLast]}
+                onPress={() => setShowMenu(false)}>
+                <Text style={styles.menuItemText}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -403,14 +464,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   statusBadge: {
-    backgroundColor: "#3b82f6",
     paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderRadius: 12,
     marginTop: 8,
   },
-  statusBadgeBlocked: {
+  blockedBadge: {
     backgroundColor: "#ef4444",
+  },
+  mutedBadge: {
+    backgroundColor: "#f59e0b",
+  },
+  blockedByBadge: {
+    backgroundColor: "#6b7280",
   },
   statusBadgeText: {
     color: "#ffffff",
@@ -515,32 +581,36 @@ const styles = StyleSheet.create({
   emptyList: {
     flexGrow: 1,
   },
-  modalOverlay: {
+  menuOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
+    padding: 16,
   },
   menuContainer: {
     backgroundColor: "#1f2937",
     borderRadius: 12,
-    minWidth: 200,
+    width: "100%",
+    maxWidth: 320,
     overflow: "hidden",
   },
   menuItem: {
     paddingVertical: 16,
     paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#374151",
+  },
+  menuItemLast: {
+    borderBottomWidth: 0,
   },
   menuItemText: {
     color: "#ffffff",
     fontSize: 16,
     fontWeight: "500",
+    textAlign: "center",
   },
-  menuDivider: {
-    height: 1,
-    backgroundColor: "#374151",
-  },
-  dangerText: {
+  menuItemDanger: {
     color: "#ef4444",
   },
 });

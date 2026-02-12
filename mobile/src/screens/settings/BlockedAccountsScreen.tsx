@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { useBlockedAccounts, useUnblockUser } from '../../hooks/api/useProfile';
 import { Avatar } from '../../components/Avatar';
@@ -20,12 +21,14 @@ export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsSc
   const {
     data,
     isLoading,
+    error,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     refetch,
   } = useBlockedAccounts();
   const unblockMutation = useUnblockUser();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   const accounts = data?.pages.flatMap((page) => page.blocks) ?? [];
 
@@ -44,7 +47,6 @@ export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsSc
           onPress: async () => {
             try {
               await unblockMutation.mutateAsync(blockUri);
-              // Refetch to update the list
               refetch();
             } catch (error) {
               Alert.alert('Error', 'Failed to unblock user. Please try again.');
@@ -55,13 +57,18 @@ export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsSc
     );
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
+  };
+
   const renderAccount = ({ item }: { item: AppBskyActorDefs.ProfileView }) => (
     <View style={styles.accountItem}>
       <TouchableOpacity
         style={styles.accountInfo}
         onPress={() => onNavigateToProfile?.(item.handle)}
-        activeOpacity={0.7}
-      >
+        activeOpacity={0.7}>
         <Avatar uri={item.avatar} size={48} />
         <View style={styles.accountDetails}>
           <Text style={styles.displayName} numberOfLines={1}>
@@ -75,8 +82,7 @@ export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsSc
       <TouchableOpacity
         style={styles.unblockButton}
         onPress={() => handleUnblock(item)}
-        disabled={unblockMutation.isPending}
-      >
+        disabled={unblockMutation.isPending}>
         <Text style={styles.unblockButtonText}>
           {unblockMutation.isPending ? '...' : 'Unblock'}
         </Text>
@@ -99,6 +105,14 @@ export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsSc
       return (
         <View style={styles.emptyContainer}>
           <ActivityIndicator size="large" color="#3b82f6" />
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.errorText}>Failed to load blocked accounts</Text>
         </View>
       );
     }
@@ -133,6 +147,14 @@ export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsSc
           }
         }}
         onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor="#3b82f6"
+            colors={['#3b82f6']}
+          />
+        }
         contentContainerStyle={accounts.length === 0 ? styles.emptyList : undefined}
       />
     </View>
@@ -193,7 +215,7 @@ const styles = StyleSheet.create({
     borderColor: '#ef4444',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 16,
+    borderRadius: 20,
   },
   unblockButtonText: {
     color: '#ef4444',
@@ -223,6 +245,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 16,
+    textAlign: 'center',
   },
   emptyList: {
     flexGrow: 1,

@@ -20,6 +20,7 @@ import {
   unregisterBackgroundFetch,
 } from "../../services/background-fetch";
 import { openLink } from "../../utils/browser";
+import { useRouter } from "expo-router";
 
 interface SettingsScreenProps {
   section?: string;
@@ -33,6 +34,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
   const { signOut, accounts, account } = useAuth();
   const { preferences, updatePreference } = usePreferences();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
   const [cacheSize, setCacheSize] = useState<string>("calculating...");
 
@@ -427,14 +429,14 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
         <SettingRow
           label="Blocked Accounts"
           description="Manage accounts you've blocked"
-          onPress={onNavigateToBlockedAccounts}
+          onPress={() => router.push("/(app)/settings/blocked")}
           showChevron
         />
 
         <SettingRow
           label="Muted Accounts"
           description="Manage accounts you've muted"
-          onPress={onNavigateToMutedAccounts}
+          onPress={() => router.push("/(app)/settings/muted")}
           showChevron
         />
       </View>
