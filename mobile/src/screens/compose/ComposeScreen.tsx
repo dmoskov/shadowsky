@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image, ScrollView, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -7,6 +7,8 @@ import { ImageIcon, GifIcon, PollIcon, ThreadIcon, CloseIcon } from "../../compo
 import { Avatar } from "../../components/Avatar";
 import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
 import { colors } from "../../constants/theme";
+import { useSearchActors } from "../../hooks/api/useProfile";
+import { MentionSuggestions } from "../../components/MentionSuggestions";
 
 const MAX_POST_LENGTH = 300;
 
@@ -46,6 +48,84 @@ export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [altTextModalVisible, setAltTextModalVisible] = useState(false);
   const [tempAltText, setTempAltText] = useState("");
+
+  // Mention autocomplete state
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [mentionStartPos, setMentionStartPos] = useState<number | null>(null);
+  const [debouncedMentionQuery, setDebouncedMentionQuery] = useState("");
+
+  // Debounce mention query (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedMentionQuery(mentionQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [mentionQuery]);
+
+  // Search for actors with debounced query
+  const { data: searchResults, isLoading: isSearching } = useSearchActors(debouncedMentionQuery);
+
+  // Detect @ mentions in text
+  const detectMention = useCallback((newText: string, cursorPosition?: number) => {
+    // Use cursor position or end of text
+    const position = cursorPosition ?? newText.length;
+
+    // Find the @ symbol before cursor
+    let atIndex = -1;
+    for (let i = position - 1; i >= 0; i--) {
+      const char = newText[i];
+      if (char === "@") {
+        atIndex = i;
+        break;
+      }
+      // Stop if we hit whitespace or newline (mention should be continuous)
+      if (char === " " || char === "\n") {
+        break;
+      }
+    }
+
+    // If we found an @ and it's at start or after whitespace/newline
+    if (atIndex !== -1) {
+      const beforeAt = atIndex === 0 ? "" : newText[atIndex - 1];
+      const isValidStart = atIndex === 0 || beforeAt === " " || beforeAt === "\n";
+
+      if (isValidStart) {
+        const textAfterAt = newText.substring(atIndex + 1, position);
+        // Check if text after @ is valid (no spaces/newlines and 2+ chars for search)
+        if (!textAfterAt.includes(" ") && !textAfterAt.includes("\n")) {
+          setMentionQuery(textAfterAt);
+          setMentionStartPos(atIndex);
+          return;
+        }
+      }
+    }
+
+    // No valid mention found
+    setMentionQuery("");
+    setMentionStartPos(null);
+  }, []);
+
+  // Handle text change and detect mentions
+  const handleTextChange = useCallback((newText: string) => {
+    setText(newText);
+    detectMention(newText);
+  }, [detectMention]);
+
+  // Handle mention selection
+  const handleSelectMention = useCallback((handle: string) => {
+    if (mentionStartPos !== null) {
+      // Replace the partial mention with the full handle
+      const beforeMention = text.substring(0, mentionStartPos);
+      const afterMention = text.substring(mentionStartPos + mentionQuery.length + 1); // +1 for @
+      const newText = `${beforeMention}@${handle} ${afterMention}`;
+      setText(newText);
+
+      // Clear mention state
+      setMentionQuery("");
+      setMentionStartPos(null);
+    }
+  }, [text, mentionQuery, mentionStartPos]);
 
   const handleClose = () => {
     if (imagePicker.selectedImages.length > 0 || text.trim()) {
@@ -218,7 +298,7 @@ export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
         multiline
         autoFocus
         value={text}
-        onChangeText={setText}
+        onChangeText={handleTextChange}
         editable={!createPost.isPending && !imagePicker.isUploading}
       />
 
@@ -281,6 +361,15 @@ export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
             </Text>
           </View>
         </View>
+      )}
+
+      {/* Mention Suggestions */}
+      {mentionQuery.length >= 2 && (
+        <MentionSuggestions
+          suggestions={searchResults || []}
+          onSelectMention={handleSelectMention}
+          isLoading={isSearching}
+        />
       )}
 
       <View style={[styles.toolbar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
