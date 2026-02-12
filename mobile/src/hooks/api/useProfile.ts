@@ -12,6 +12,7 @@ import {
   blockUser,
   unblockUser,
 } from '../../services/atproto/profiles';
+import {mutationQueue} from '../../services/mutation-queue';
 
 /**
  * Hook to fetch a user profile
@@ -60,6 +61,15 @@ export function useFollowUser() {
       // Invalidate profile query to refetch updated follow status
       queryClient.invalidateQueries({queryKey: ['profile']});
     },
+    onError: async (error, did: string) => {
+      // Queue the mutation for retry
+      console.log('[useFollowUser] Failed to follow user, queueing for retry');
+      await mutationQueue.enqueue({
+        type: 'follow',
+        targetUri: did,
+        maxRetries: 3,
+      });
+    },
   });
 }
 
@@ -73,6 +83,15 @@ export function useUnfollowUser() {
     mutationFn: unfollowUser,
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['profile']});
+    },
+    onError: async (error, followUri: string) => {
+      // Queue the mutation for retry
+      console.log('[useUnfollowUser] Failed to unfollow user, queueing for retry');
+      await mutationQueue.enqueue({
+        type: 'unfollow',
+        targetUri: followUri,
+        maxRetries: 3,
+      });
     },
   });
 }
