@@ -19,12 +19,14 @@ import { useProfile } from "../../hooks/api/useProfile";
 interface MyProfileScreenProps {
   onNavigateToPost?: (uri: string) => void;
   onNavigateToProfile?: (handle: string) => void;
+  onNavigateToEditProfile?: () => void;
   onSignOut?: () => void;
 }
 
 export function MyProfileScreen({
   onNavigateToPost,
   onNavigateToProfile,
+  onNavigateToEditProfile,
   onSignOut,
 }: MyProfileScreenProps) {
   const { account, signOut } = useAuth();
@@ -122,6 +124,11 @@ export function MyProfileScreen({
             <Text style={styles.statLabel}>Following</Text>
           </View>
         </View>
+
+        {/* Edit Profile Button */}
+        <TouchableOpacity style={styles.editProfileButton} onPress={onNavigateToEditProfile}>
+          <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+        </TouchableOpacity>
 
         {/* Sign Out Button */}
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
@@ -267,6 +274,19 @@ const styles = StyleSheet.create({
     color: "#9ca3af",
     fontSize: 14,
     marginTop: 4,
+  },
+  editProfileButton: {
+    backgroundColor: "#3b82f6",
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 24,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  editProfileButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   signOutButton: {
     backgroundColor: "#ef4444",

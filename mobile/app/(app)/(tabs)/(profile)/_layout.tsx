@@ -10,6 +10,7 @@ export default function ProfileLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="edit" options={{ title: "Edit Profile" }} />
       <Stack.Screen name="user/[handle]" options={{ title: "Profile" }} />
       <Stack.Screen name="thread/[postId]" options={{ title: "Thread" }} />
       <Stack.Screen name="bookmarks" options={{ title: "Bookmarks" }} />

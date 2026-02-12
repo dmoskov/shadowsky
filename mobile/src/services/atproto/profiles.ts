@@ -268,3 +268,58 @@ export async function getBlocks(cursor?: string) {
     ATProtoEndpointType.FEED
   );
 }
+
+export interface UpdateProfileParams {
+  displayName?: string;
+  description?: string;
+  avatar?: string; // URI to local image file
+}
+
+/**
+ * Update user profile
+ */
+export async function updateProfile(params: UpdateProfileParams) {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        // Upload avatar if provided
+        let avatarBlob: any;
+        if (params.avatar) {
+          const response = await fetch(params.avatar);
+          const blob = await response.blob();
+          const arrayBuffer = await blob.arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+
+          const uploadResponse = await agent.uploadBlob(uint8Array, {
+            encoding: blob.type,
+          });
+          avatarBlob = uploadResponse.data.blob;
+        }
+
+        // Use upsertProfile to update the profile
+        const result = await agent.upsertProfile((existing) => {
+          const updated: Record<string, any> = {
+            ...existing,
+          };
+
+          if (params.displayName !== undefined) {
+            updated.displayName = params.displayName;
+          }
+          if (params.description !== undefined) {
+            updated.description = params.description;
+          }
+          if (avatarBlob) {
+            updated.avatar = avatarBlob;
+          }
+
+          return updated;
+        });
+
+        return result;
+      }),
+    ATProtoEndpointType.RECORD
+  );
+}
