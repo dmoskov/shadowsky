@@ -1,7 +1,8 @@
 import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Linking} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {Image} from 'expo-image';
 import {AppBskyEmbedExternal} from '@atproto/api';
+import {openLink} from '../utils/browser';
 
 interface ExternalLinkEmbedProps {
   external: AppBskyEmbedExternal.ViewExternal;
@@ -14,7 +15,7 @@ export function ExternalLinkEmbed({external, onPress}: ExternalLinkEmbedProps) {
       onPress(external.uri);
     } else {
       try {
-        await Linking.openURL(external.uri);
+        await openLink(external.uri);
       } catch (error) {
         console.error('Failed to open URL:', error);
       }

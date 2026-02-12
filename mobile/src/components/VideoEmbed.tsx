@@ -1,7 +1,8 @@
 import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Linking} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {Image} from 'react-native';
 import {AppBskyEmbedVideo} from '@atproto/api';
+import {openLink} from '../utils/browser';
 
 interface VideoEmbedProps {
   video: AppBskyEmbedVideo.View;
@@ -17,7 +18,7 @@ export function VideoEmbed({video, onPress}: VideoEmbedProps) {
       onPress(videoUrl);
     } else if (videoUrl) {
       try {
-        await Linking.openURL(videoUrl);
+        await openLink(videoUrl);
       } catch (error) {
         console.error('Failed to open video URL:', error);
       }

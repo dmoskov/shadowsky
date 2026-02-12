@@ -1,7 +1,8 @@
 import React from 'react';
-import {Text, Linking, Alert, TextStyle} from 'react-native';
+import {Text, Alert, TextStyle} from 'react-native';
 import {RichText as AtpRichText, AppBskyRichtextFacet} from '@atproto/api';
 import {colors} from '../constants/theme';
+import {openLink} from './browser';
 
 interface RichTextProps {
   text: string;
@@ -56,7 +57,7 @@ export function RichText({
           key={key}
           style={{color: colors.primary, textDecorationLine: 'underline'}}
           onPress={() => {
-            Linking.openURL(segment.link!.uri);
+            openLink(segment.link!.uri);
           }}
           onLongPress={() => {
             // Show action sheet on long press
@@ -66,7 +67,7 @@ export function RichText({
               [
                 {
                   text: 'Open',
-                  onPress: () => Linking.openURL(segment.link!.uri),
+                  onPress: () => openLink(segment.link!.uri),
                 },
                 {
                   text: 'Copy URL',

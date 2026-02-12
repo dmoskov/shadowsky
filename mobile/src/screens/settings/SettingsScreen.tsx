@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Alert,
   Switch,
-  Linking,
 } from "react-native";
 import { AccountSwitcher } from "../../components";
 import { useAuth } from "../../contexts/AuthContext";
@@ -20,6 +19,7 @@ import {
   registerBackgroundFetch,
   unregisterBackgroundFetch,
 } from "../../services/background-fetch";
+import { openLink } from "../../utils/browser";
 
 interface SettingsScreenProps {
   section?: string;
@@ -183,21 +183,17 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
   };
 
   const handleOpenBluesky = async () => {
-    const url = "https://bsky.app";
-    const supported = await Linking.canOpenURL(url);
-    if (supported) {
-      await Linking.openURL(url);
-    } else {
+    try {
+      await openLink("https://bsky.app");
+    } catch (error) {
       Alert.alert("Error", "Cannot open Bluesky");
     }
   };
 
   const handleOpenGitHub = async () => {
-    const url = "https://github.com/yourusername/shadowsky";
-    const supported = await Linking.canOpenURL(url);
-    if (supported) {
-      await Linking.openURL(url);
-    } else {
+    try {
+      await openLink("https://github.com/yourusername/shadowsky");
+    } catch (error) {
       Alert.alert("Error", "Cannot open GitHub");
     }
   };
