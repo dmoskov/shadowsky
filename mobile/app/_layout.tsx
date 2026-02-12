@@ -1,11 +1,13 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import ErrorBoundary from "../src/components/ErrorBoundary";
+import { QueryErrorHandler } from "../src/components/QueryErrorHandler";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { PreferencesProvider } from "../src/contexts/PreferencesContext";
-import ErrorBoundary from "../src/components/ErrorBoundary";
+import { ToastProvider } from "../src/contexts/ToastContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,8 +47,12 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <PreferencesProvider>
-              <StatusBar style="light" />
-              <AuthGate />
+              <ToastProvider>
+                <QueryErrorHandler>
+                  <StatusBar style="light" />
+                  <AuthGate />
+                </QueryErrorHandler>
+              </ToastProvider>
             </PreferencesProvider>
           </AuthProvider>
         </QueryClientProvider>
