@@ -23,6 +23,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "applinks:main.shadowsky.io",
       "applinks:bsky.app",
       "applinks:staging.bsky.app",
+      "applinks:asphodel.is",
+      "applinks:main.asphodel.is",
     ],
   },
   notification: {
