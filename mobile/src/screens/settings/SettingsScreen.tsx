@@ -541,6 +541,23 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
         />
       </View>
 
+      {/* Accessibility Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>ACCESSIBILITY</Text>
+
+        <SettingRow
+          label="Haptic Feedback"
+          description="Vibrate on interactions like likes, reposts, and bookmarks"
+        >
+          <Switch
+            value={preferences.hapticsEnabled}
+            onValueChange={(value) => updatePreference("hapticsEnabled", value)}
+            trackColor={{ false: "#374151", true: "#3b82f6" }}
+            thumbColor="#ffffff"
+          />
+        </SettingRow>
+      </View>
+
       {/* About Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>ABOUT</Text>

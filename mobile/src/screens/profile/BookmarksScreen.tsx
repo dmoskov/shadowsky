@@ -4,6 +4,7 @@ import { FeedList } from '../../components/FeedList';
 import { useBookmarks } from '../../hooks/api';
 import { AppBskyFeedDefs } from '@atproto/api';
 import { useRouter } from 'expo-router';
+import { triggerHaptic } from '../../../src/utils/haptics';
 
 export function BookmarksScreen() {
   const router = useRouter();
@@ -37,6 +38,7 @@ export function BookmarksScreen() {
   };
 
   const handleBookmark = (post: AppBskyFeedDefs.FeedViewPost) => {
+    triggerHaptic("light");
     toggleBookmark(post.post);
   };
 

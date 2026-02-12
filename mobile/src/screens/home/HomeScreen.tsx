@@ -6,9 +6,11 @@ import { AppBskyFeedDefs } from "@atproto/api";
 import { useScrollToTop } from "@react-navigation/native";
 import { useTimeline, useCustomFeed, useSavedFeeds } from "../../hooks/api";
 import { useLikePost, useUnlikePost, useRepost, useDeleteRepost } from "../../hooks/api/usePosts";
+import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useAppNavigation } from "../../hooks/useNavigation";
 import { FeedList } from "../../components/FeedList";
 import { useRouter } from "expo-router";
+import { triggerHaptic } from "../../utils/haptics";
 
 /**
  * Extract post ID (rkey) from AT Protocol URI
@@ -28,6 +30,7 @@ export function HomeScreen() {
   const unlikePost = useUnlikePost();
   const repost = useRepost();
   const deleteRepost = useDeleteRepost();
+  const { toggleBookmark, isBookmarked } = useBookmarks();
   const scrollRef = useRef<FlatList>(null);
 
   // Fetch saved feeds
@@ -71,9 +74,11 @@ export function HomeScreen() {
 
     if (viewer?.like) {
       // Unlike if already liked
+      triggerHaptic("light");
       unlikePost.mutate({ likeUri: viewer.like, postUri: uri });
     } else {
       // Like the post
+      triggerHaptic("light");
       likePost.mutate({ uri, cid });
     }
   };
@@ -85,6 +90,7 @@ export function HomeScreen() {
 
     // If already reposted, just unrepost
     if (viewer?.repost) {
+      triggerHaptic("medium");
       deleteRepost.mutate({ repostUri: viewer.repost, postUri: uri });
       return;
     }
@@ -99,6 +105,7 @@ export function HomeScreen() {
         (buttonIndex) => {
           if (buttonIndex === 1) {
             // Repost
+            triggerHaptic("medium");
             repost.mutate({ uri, cid });
           } else if (buttonIndex === 2) {
             // Quote
@@ -126,7 +133,10 @@ export function HomeScreen() {
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Repost',
-            onPress: () => repost.mutate({ uri, cid }),
+            onPress: () => {
+              triggerHaptic("medium");
+              repost.mutate({ uri, cid });
+            },
           },
           {
             text: 'Quote',
@@ -187,6 +197,11 @@ export function HomeScreen() {
     // TODO: Navigate to search with hashtag query
   };
 
+  const handleBookmark = (post: AppBskyFeedDefs.FeedViewPost) => {
+    triggerHaptic("light");
+    toggleBookmark(post.post);
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Feed Picker Chips */}
@@ -238,6 +253,8 @@ export function HomeScreen() {
         onLike={handleLike}
         onRepost={handleRepost}
         onReply={handleReply}
+        onBookmark={handleBookmark}
+        isBookmarked={isBookmarked}
         onMentionPress={handleMentionPress}
         onHashtagPress={handleHashtagPress}
         emptyMessage="No posts in your timeline yet"

@@ -23,6 +23,9 @@ export interface AppPreferences {
 
   // Background fetch
   backgroundFetchEnabled: boolean;
+
+  // Haptics
+  hapticsEnabled: boolean;
 }
 
 const PREFERENCES_KEY = "@shadowsky_preferences";
@@ -51,6 +54,9 @@ const DEFAULT_PREFERENCES: AppPreferences = {
 
   // Background fetch
   backgroundFetchEnabled: true,
+
+  // Haptics
+  hapticsEnabled: true,
 };
 
 class PreferencesService {

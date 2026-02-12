@@ -23,6 +23,7 @@ import { ThreadSummary } from "../../components/ThreadSummary";
 import { getAtProtoClient } from "../../services/atproto/client";
 import { colors } from "../../constants/theme";
 import { sharePost } from "../../utils/share";
+import { triggerHaptic } from "../../utils/haptics";
 
 interface ThreadScreenProps {
   handle: string;
@@ -198,8 +199,10 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
     const { uri, cid, viewer } = post.post;
 
     if (viewer?.like) {
+      triggerHaptic("light");
       unlikePost.mutate({ likeUri: viewer.like, postUri: uri });
     } else {
+      triggerHaptic("light");
       likePost.mutate({ uri, cid });
     }
   };
@@ -211,6 +214,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
 
     // If already reposted, just unrepost
     if (viewer?.repost) {
+      triggerHaptic("medium");
       deleteRepost.mutate({ repostUri: viewer.repost, postUri: uri });
       return;
     }
@@ -225,6 +229,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
         (buttonIndex) => {
           if (buttonIndex === 1) {
             // Repost
+            triggerHaptic("medium");
             repost.mutate({ uri, cid });
           } else if (buttonIndex === 2) {
             // Quote
@@ -255,7 +260,10 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Repost',
-            onPress: () => repost.mutate({ uri, cid }),
+            onPress: () => {
+              triggerHaptic("medium");
+              repost.mutate({ uri, cid });
+            },
           },
           {
             text: 'Quote',

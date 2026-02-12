@@ -11,6 +11,7 @@ import { useSearchActors } from "../../hooks/api/useProfile";
 import { MentionSuggestions } from "../../components/MentionSuggestions";
 import { ThreadComposer } from "../../components/ThreadComposer";
 import { ThreadPost } from "../../components/ThreadPostItem";
+import { triggerHaptic } from "../../utils/haptics";
 
 const MAX_POST_LENGTH = 300;
 
@@ -320,11 +321,13 @@ export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
       await createPost.mutateAsync(postOptions);
       imagePicker.clearImages();
       router.back();
-      // Show success feedback
+      // Show success feedback with haptic
+      triggerHaptic("success");
       const successMessage = replyTo ? "Reply posted!" : quoteTo ? "Quote posted!" : "Your post has been published!";
       Alert.alert("Success", successMessage);
     } catch (error) {
-      // Show error feedback
+      // Show error feedback with haptic
+      triggerHaptic("error");
       const errorMessage = error instanceof Error ? error.message : "Failed to create post. Please try again.";
       Alert.alert("Error", errorMessage);
     } finally {
