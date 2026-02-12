@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,28 +6,61 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Switch,
+  Linking,
 } from "react-native";
 import { AccountSwitcher } from "../../components";
 import { useAuth } from "../../contexts/AuthContext";
+import { usePreferences } from "../../contexts/PreferencesContext";
 import { ArrowLeftIcon } from "../../components/icons";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface SettingsScreenProps {
   section?: string;
 }
 
-const SETTINGS_SECTIONS = [
-  { id: "account", title: "Account", description: "Manage your account settings" },
-  { id: "appearance", title: "Appearance", description: "Theme, colors, and display" },
-  { id: "notifications", title: "Notifications", description: "Push and in-app notifications" },
-  { id: "privacy", title: "Privacy", description: "Control your data and visibility" },
-  { id: "accessibility", title: "Accessibility", description: "Screen reader and motion settings" },
-  { id: "storage", title: "Storage", description: "Data sync and local storage" },
-  { id: "about", title: "About", description: "App version and legal info" },
-];
+const APP_VERSION = "0.7.0";
 
 export function SettingsScreen({ section }: SettingsScreenProps) {
-  const { signOut, accounts } = useAuth();
+  const { signOut, accounts, account } = useAuth();
+  const { preferences, updatePreference } = usePreferences();
+  const queryClient = useQueryClient();
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
+  const [cacheSize, setCacheSize] = useState<string>("calculating...");
+
+  // Calculate cache size on mount
+  useEffect(() => {
+    calculateCacheSize();
+  }, []);
+
+  const calculateCacheSize = async () => {
+    try {
+      // Get all AsyncStorage keys
+      const keys = await AsyncStorage.getAllKeys();
+      let totalSize = 0;
+
+      // Calculate approximate size of stored data
+      for (const key of keys) {
+        const value = await AsyncStorage.getItem(key);
+        if (value) {
+          totalSize += value.length;
+        }
+      }
+
+      // Convert to KB or MB
+      if (totalSize < 1024) {
+        setCacheSize(`${totalSize} B`);
+      } else if (totalSize < 1024 * 1024) {
+        setCacheSize(`${(totalSize / 1024).toFixed(2)} KB`);
+      } else {
+        setCacheSize(`${(totalSize / (1024 * 1024)).toFixed(2)} MB`);
+      }
+    } catch (error) {
+      console.error("Failed to calculate cache size:", error);
+      setCacheSize("unknown");
+    }
+  };
 
   const handleSignOut = () => {
     Alert.alert(
@@ -71,6 +104,97 @@ export function SettingsScreen({ section }: SettingsScreenProps) {
     );
   };
 
+  const handleClearCache = () => {
+    Alert.alert(
+      "Clear Cache",
+      "This will clear all cached data including posts, profiles, and images. Your settings and bookmarks will be preserved.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Clear React Query cache
+              queryClient.clear();
+
+              // Calculate new size
+              await calculateCacheSize();
+
+              Alert.alert("Success", "Cache cleared successfully");
+            } catch (error) {
+              Alert.alert("Error", "Failed to clear cache");
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleClearSearchHistory = () => {
+    Alert.alert(
+      "Clear Search History",
+      "This will delete all your search history.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem("@shadowsky_search_history");
+              Alert.alert("Success", "Search history cleared");
+            } catch (error) {
+              Alert.alert("Error", "Failed to clear search history");
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleClearBookmarks = () => {
+    Alert.alert(
+      "Clear Bookmarks",
+      "This will delete all your bookmarks. This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem("shadowsky_bookmarks");
+              Alert.alert("Success", "Bookmarks cleared");
+            } catch (error) {
+              Alert.alert("Error", "Failed to clear bookmarks");
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleOpenBluesky = async () => {
+    const url = "https://bsky.app";
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert("Error", "Cannot open Bluesky");
+    }
+  };
+
+  const handleOpenGitHub = async () => {
+    const url = "https://github.com/yourusername/shadowsky";
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      Alert.alert("Error", "Cannot open GitHub");
+    }
+  };
+
   if (showAccountSwitcher) {
     return (
       <View style={styles.container}>
@@ -96,53 +220,371 @@ export function SettingsScreen({ section }: SettingsScreenProps) {
     );
   }
 
+  if (!preferences) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>Loading preferences...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.header}>Settings</Text>
-      {section && (
-        <Text style={styles.activeSection}>Active section: {section}</Text>
-      )}
 
+      {/* Account Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account Management</Text>
+        <Text style={styles.sectionTitle}>ACCOUNT</Text>
 
-        {accounts.length > 1 && (
-          <TouchableOpacity
-            style={styles.item}
-            onPress={() => setShowAccountSwitcher(true)}
-          >
-            <Text style={styles.itemTitle}>Switch Account</Text>
-            <Text style={styles.itemDescription}>
-              Manage and switch between {accounts.length} accounts
-            </Text>
-          </TouchableOpacity>
+        {account && (
+          <View style={styles.accountInfo}>
+            <View style={styles.accountAvatar}>
+              <Text style={styles.accountAvatarText}>
+                {account.handle.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.accountDetails}>
+              <Text style={styles.accountName}>
+                {account.displayName || account.handle}
+              </Text>
+              <Text style={styles.accountHandle}>@{account.handle}</Text>
+            </View>
+          </View>
         )}
 
-        <TouchableOpacity style={styles.item} onPress={handleSignOut}>
-          <Text style={[styles.itemTitle, styles.dangerText]}>Sign Out</Text>
-          <Text style={styles.itemDescription}>
-            Sign out of your current account
-          </Text>
-        </TouchableOpacity>
+        {accounts.length > 1 && (
+          <SettingRow
+            label="Switch Account"
+            description={`Manage ${accounts.length} accounts`}
+            onPress={() => setShowAccountSwitcher(true)}
+            showChevron
+          />
+        )}
+
+        <SettingRow
+          label="Sign Out"
+          onPress={handleSignOut}
+          labelStyle={styles.dangerText}
+        />
       </View>
 
+      {/* Appearance Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>App Settings</Text>
-        {SETTINGS_SECTIONS.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.item}>
-            <Text style={styles.itemTitle}>{item.title}</Text>
-            <Text style={styles.itemDescription}>{item.description}</Text>
-          </TouchableOpacity>
-        ))}
+        <Text style={styles.sectionTitle}>APPEARANCE</Text>
+
+        <SettingRow label="Theme">
+          <View style={styles.themeSelector}>
+            {(["dark", "light", "system"] as const).map((theme) => (
+              <TouchableOpacity
+                key={theme}
+                style={[
+                  styles.themeButton,
+                  preferences.theme === theme && styles.themeButtonActive,
+                ]}
+                onPress={() => updatePreference("theme", theme)}
+              >
+                <Text
+                  style={[
+                    styles.themeButtonText,
+                    preferences.theme === theme && styles.themeButtonTextActive,
+                  ]}
+                >
+                  {theme.charAt(0).toUpperCase() + theme.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </SettingRow>
+      </View>
+
+      {/* Content Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>CONTENT</Text>
+
+        <SettingRow label="Default Feed">
+          <View style={styles.themeSelector}>
+            {(["following", "discover"] as const).map((feed) => (
+              <TouchableOpacity
+                key={feed}
+                style={[
+                  styles.themeButton,
+                  preferences.defaultFeed === feed && styles.themeButtonActive,
+                ]}
+                onPress={() => updatePreference("defaultFeed", feed)}
+              >
+                <Text
+                  style={[
+                    styles.themeButtonText,
+                    preferences.defaultFeed === feed &&
+                      styles.themeButtonTextActive,
+                  ]}
+                >
+                  {feed.charAt(0).toUpperCase() + feed.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </SettingRow>
+
+        <SettingRow
+          label="Show NSFW Content"
+          description="Display posts marked as sensitive"
+        >
+          <Switch
+            value={preferences.showNSFW}
+            onValueChange={(value) => updatePreference("showNSFW", value)}
+            trackColor={{ false: "#374151", true: "#3b82f6" }}
+            thumbColor="#ffffff"
+          />
+        </SettingRow>
+      </View>
+
+      {/* Notifications Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
+
+        <SettingRow
+          label="Enable Notifications"
+          description="Master toggle for all notifications"
+        >
+          <Switch
+            value={preferences.notificationsEnabled}
+            onValueChange={(value) =>
+              updatePreference("notificationsEnabled", value)
+            }
+            trackColor={{ false: "#374151", true: "#3b82f6" }}
+            thumbColor="#ffffff"
+          />
+        </SettingRow>
+
+        {preferences.notificationsEnabled && (
+          <>
+            <SettingRow label="Likes">
+              <Switch
+                value={preferences.notifyOnLikes}
+                onValueChange={(value) =>
+                  updatePreference("notifyOnLikes", value)
+                }
+                trackColor={{ false: "#374151", true: "#3b82f6" }}
+                thumbColor="#ffffff"
+              />
+            </SettingRow>
+
+            <SettingRow label="Replies">
+              <Switch
+                value={preferences.notifyOnReplies}
+                onValueChange={(value) =>
+                  updatePreference("notifyOnReplies", value)
+                }
+                trackColor={{ false: "#374151", true: "#3b82f6" }}
+                thumbColor="#ffffff"
+              />
+            </SettingRow>
+
+            <SettingRow label="Follows">
+              <Switch
+                value={preferences.notifyOnFollows}
+                onValueChange={(value) =>
+                  updatePreference("notifyOnFollows", value)
+                }
+                trackColor={{ false: "#374151", true: "#3b82f6" }}
+                thumbColor="#ffffff"
+              />
+            </SettingRow>
+
+            <SettingRow label="Mentions">
+              <Switch
+                value={preferences.notifyOnMentions}
+                onValueChange={(value) =>
+                  updatePreference("notifyOnMentions", value)
+                }
+                trackColor={{ false: "#374151", true: "#3b82f6" }}
+                thumbColor="#ffffff"
+              />
+            </SettingRow>
+
+            <SettingRow label="Quotes">
+              <Switch
+                value={preferences.notifyOnQuotes}
+                onValueChange={(value) =>
+                  updatePreference("notifyOnQuotes", value)
+                }
+                trackColor={{ false: "#374151", true: "#3b82f6" }}
+                thumbColor="#ffffff"
+              />
+            </SettingRow>
+          </>
+        )}
+      </View>
+
+      {/* Data & Storage Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>DATA & STORAGE</Text>
+
+        <SettingRow label="Auto-play Videos">
+          <View style={styles.themeSelector}>
+            {(["always", "wifi", "never"] as const).map((option) => (
+              <TouchableOpacity
+                key={option}
+                style={[
+                  styles.themeButton,
+                  styles.smallButton,
+                  preferences.autoPlayVideos === option &&
+                    styles.themeButtonActive,
+                ]}
+                onPress={() => updatePreference("autoPlayVideos", option)}
+              >
+                <Text
+                  style={[
+                    styles.themeButtonText,
+                    styles.smallButtonText,
+                    preferences.autoPlayVideos === option &&
+                      styles.themeButtonTextActive,
+                  ]}
+                >
+                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </SettingRow>
+
+        <SettingRow label="Image Quality">
+          <View style={styles.themeSelector}>
+            {(["high", "medium", "low"] as const).map((quality) => (
+              <TouchableOpacity
+                key={quality}
+                style={[
+                  styles.themeButton,
+                  styles.smallButton,
+                  preferences.imageQuality === quality &&
+                    styles.themeButtonActive,
+                ]}
+                onPress={() => updatePreference("imageQuality", quality)}
+              >
+                <Text
+                  style={[
+                    styles.themeButtonText,
+                    styles.smallButtonText,
+                    preferences.imageQuality === quality &&
+                      styles.themeButtonTextActive,
+                  ]}
+                >
+                  {quality.charAt(0).toUpperCase() + quality.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </SettingRow>
+
+        <SettingRow
+          label="Cache Size"
+          description={cacheSize}
+          onPress={handleClearCache}
+          showChevron
+        />
+
+        <SettingRow
+          label="Clear Search History"
+          onPress={handleClearSearchHistory}
+          showChevron
+        />
+
+        <SettingRow
+          label="Clear Bookmarks"
+          onPress={handleClearBookmarks}
+          labelStyle={styles.dangerText}
+          showChevron
+        />
+      </View>
+
+      {/* About Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>ABOUT</Text>
+
+        <SettingRow label="App Name" value="ShadowSky" />
+
+        <SettingRow label="Version" value={APP_VERSION} />
+
+        <SettingRow
+          label="View on Bluesky"
+          onPress={handleOpenBluesky}
+          showChevron
+        />
+
+        <SettingRow
+          label="Report a Bug"
+          onPress={handleOpenGitHub}
+          showChevron
+        />
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>ShadowSky v{APP_VERSION}</Text>
+        <Text style={styles.footerSubtext}>
+          A third-party Bluesky client
+        </Text>
       </View>
     </ScrollView>
   );
+}
+
+interface SettingRowProps {
+  label: string;
+  description?: string;
+  value?: string;
+  onPress?: () => void;
+  children?: React.ReactNode;
+  labelStyle?: object;
+  showChevron?: boolean;
+}
+
+function SettingRow({
+  label,
+  description,
+  value,
+  onPress,
+  children,
+  labelStyle,
+  showChevron,
+}: SettingRowProps) {
+  const content = (
+    <View style={styles.settingRow}>
+      <View style={styles.settingLeft}>
+        <Text style={[styles.settingLabel, labelStyle]}>{label}</Text>
+        {description && (
+          <Text style={styles.settingDescription}>{description}</Text>
+        )}
+      </View>
+      <View style={styles.settingRight}>
+        {value && <Text style={styles.settingValue}>{value}</Text>}
+        {children}
+        {showChevron && <Text style={styles.chevron}>›</Text>}
+      </View>
+    </View>
+  );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return content;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#0a0a0f",
+  },
+  loadingText: {
+    color: "#9ca3af",
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 24,
   },
   header: {
     color: "#ffffff",
@@ -151,42 +593,138 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 24,
   },
-  activeSection: {
-    color: "#3b82f6",
-    fontSize: 14,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-  },
   section: {
-    marginBottom: 24,
+    marginBottom: 32,
   },
   sectionTitle: {
-    color: "#9ca3af",
-    fontSize: 14,
+    color: "#6b7280",
+    fontSize: 12,
     fontWeight: "600",
     textTransform: "uppercase",
+    letterSpacing: 0.5,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    marginTop: 16,
+    marginBottom: 4,
   },
-  item: {
+  accountInfo: {
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#1f2937",
-    minHeight: 44,
   },
-  itemTitle: {
+  accountAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#3b82f6",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  accountAvatarText: {
     color: "#ffffff",
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 20,
+    fontWeight: "bold",
   },
-  itemDescription: {
+  accountDetails: {
+    flex: 1,
+  },
+  accountName: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  accountHandle: {
     color: "#9ca3af",
     fontSize: 14,
-    marginTop: 4,
+  },
+  settingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#1f2937",
+    minHeight: 48,
+  },
+  settingLeft: {
+    flex: 1,
+    marginRight: 12,
+  },
+  settingLabel: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  settingDescription: {
+    color: "#6b7280",
+    fontSize: 13,
+    marginTop: 2,
+  },
+  settingRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  settingValue: {
+    color: "#9ca3af",
+    fontSize: 14,
+  },
+  chevron: {
+    color: "#6b7280",
+    fontSize: 24,
+    fontWeight: "300",
   },
   dangerText: {
-    color: "#F91880",
+    color: "#ef4444",
+  },
+  themeSelector: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  themeButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: "#1f2937",
+    borderWidth: 1,
+    borderColor: "#374151",
+  },
+  themeButtonActive: {
+    backgroundColor: "#3b82f6",
+    borderColor: "#3b82f6",
+  },
+  themeButtonText: {
+    color: "#9ca3af",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  themeButtonTextActive: {
+    color: "#ffffff",
+  },
+  smallButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  smallButtonText: {
+    fontSize: 12,
+  },
+  footer: {
+    padding: 24,
+    alignItems: "center",
+  },
+  footerText: {
+    color: "#6b7280",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  footerSubtext: {
+    color: "#4b5563",
+    fontSize: 12,
+    marginTop: 4,
   },
   accountSwitcherHeader: {
     padding: 16,
