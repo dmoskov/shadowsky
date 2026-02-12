@@ -1,5 +1,5 @@
 import {getAtProtoClient} from './client';
-import {AppBskyFeedDefs, AppBskyFeedGetTimeline} from '@atproto/api';
+import {AppBskyFeedDefs, AppBskyFeedGetTimeline, AppBskyFeedDefs as FeedDefs} from '@atproto/api';
 import {withRetry} from '../../utils/with-retry';
 import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
 
@@ -179,6 +179,231 @@ export async function searchPosts(query: string, options: SearchPostsOptions = {
           })) as AppBskyFeedDefs.FeedViewPost[],
           cursor: response.data.cursor,
         };
+      }),
+    ATProtoEndpointType.FEED
+  );
+}
+
+export interface FeedGeneratorResponse {
+  feeds: FeedDefs.GeneratorView[];
+  cursor?: string;
+}
+
+/**
+ * Get popular feed generators
+ */
+export async function getPopularFeedGenerators(options: FeedOptions = {}): Promise<FeedGeneratorResponse> {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        const response = await agent.app.bsky.unspecced.getPopularFeedGenerators({
+          limit: options.limit || 50,
+          cursor: options.cursor,
+        });
+
+        return {
+          feeds: response.data.feeds,
+          cursor: response.data.cursor,
+        };
+      }),
+    ATProtoEndpointType.FEED
+  );
+}
+
+/**
+ * Get suggested feed generators for the current user
+ */
+export async function getSuggestedFeeds(options: FeedOptions = {}): Promise<FeedGeneratorResponse> {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        const response = await agent.app.bsky.feed.getSuggestedFeeds({
+          limit: options.limit || 50,
+          cursor: options.cursor,
+        });
+
+        return {
+          feeds: response.data.feeds,
+          cursor: response.data.cursor,
+        };
+      }),
+    ATProtoEndpointType.FEED
+  );
+}
+
+/**
+ * Search for feed generators by query (client-side filtering of popular feeds)
+ * Note: AT Protocol doesn't have a native search endpoint for feed generators yet,
+ * so we fetch popular feeds and filter them client-side
+ */
+export async function searchFeedGenerators(query: string, options: FeedOptions = {}): Promise<FeedGeneratorResponse> {
+  if (!query || query.trim() === '') {
+    return {feeds: [], cursor: undefined};
+  }
+
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        // Fetch popular feeds and filter client-side
+        const response = await agent.app.bsky.unspecced.getPopularFeedGenerators({
+          limit: 100, // Fetch more to have better search results
+          cursor: options.cursor,
+        });
+
+        const searchLower = query.toLowerCase().trim();
+        const filteredFeeds = response.data.feeds.filter((feed) => {
+          const displayName = feed.displayName?.toLowerCase() || '';
+          const description = feed.description?.toLowerCase() || '';
+          const creatorHandle = feed.creator.handle?.toLowerCase() || '';
+
+          return (
+            displayName.includes(searchLower) ||
+            description.includes(searchLower) ||
+            creatorHandle.includes(searchLower)
+          );
+        });
+
+        return {
+          feeds: filteredFeeds,
+          cursor: response.data.cursor,
+        };
+      }),
+    ATProtoEndpointType.FEED
+  );
+}
+
+/**
+ * Get the current user's saved feeds (feed preferences)
+ */
+export async function getSavedFeeds(): Promise<FeedDefs.GeneratorView[]> {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        const response = await agent.app.bsky.actor.getPreferences();
+        const savedFeedsPreference = response.data.preferences.find(
+          (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
+        ) as {saved?: string[]; pinned?: string[]} | undefined;
+
+        if (!savedFeedsPreference || !savedFeedsPreference.saved || savedFeedsPreference.saved.length === 0) {
+          return [];
+        }
+
+        // Get feed generator info for all saved feeds
+        const feedsResponse = await agent.app.bsky.feed.getFeedGenerators({
+          feeds: savedFeedsPreference.saved,
+        });
+
+        return feedsResponse.data.feeds;
+      }),
+    ATProtoEndpointType.FEED
+  );
+}
+
+/**
+ * Save a feed to the user's preferences
+ */
+export async function saveFeed(feedUri: string): Promise<void> {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        // Get current preferences
+        const response = await agent.app.bsky.actor.getPreferences();
+        const preferences = response.data.preferences;
+
+        // Find saved feeds preference
+        const savedFeedsIndex = preferences.findIndex(
+          (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
+        );
+
+        let savedFeeds: string[] = [];
+        let pinnedFeeds: string[] = [];
+
+        if (savedFeedsIndex >= 0) {
+          const savedFeedsPref = preferences[savedFeedsIndex] as {saved?: string[]; pinned?: string[]};
+          savedFeeds = savedFeedsPref.saved || [];
+          pinnedFeeds = savedFeedsPref.pinned || [];
+        }
+
+        // Add feed if not already saved
+        if (!savedFeeds.includes(feedUri)) {
+          savedFeeds.push(feedUri);
+
+          // Update preferences
+          const updatedPreferences = [...preferences];
+          if (savedFeedsIndex >= 0) {
+            updatedPreferences[savedFeedsIndex] = {
+              $type: 'app.bsky.actor.defs#savedFeedsPref',
+              saved: savedFeeds,
+              pinned: pinnedFeeds,
+            };
+          } else {
+            updatedPreferences.push({
+              $type: 'app.bsky.actor.defs#savedFeedsPref',
+              saved: savedFeeds,
+              pinned: pinnedFeeds,
+            });
+          }
+
+          await agent.app.bsky.actor.putPreferences({preferences: updatedPreferences});
+        }
+      }),
+    ATProtoEndpointType.FEED
+  );
+}
+
+/**
+ * Remove a feed from the user's preferences
+ */
+export async function unsaveFeed(feedUri: string): Promise<void> {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        // Get current preferences
+        const response = await agent.app.bsky.actor.getPreferences();
+        const preferences = response.data.preferences;
+
+        // Find saved feeds preference
+        const savedFeedsIndex = preferences.findIndex(
+          (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
+        );
+
+        if (savedFeedsIndex >= 0) {
+          const savedFeedsPref = preferences[savedFeedsIndex] as {saved?: string[]; pinned?: string[]};
+          const savedFeeds = savedFeedsPref.saved || [];
+          const pinnedFeeds = savedFeedsPref.pinned || [];
+
+          // Remove feed from saved and pinned
+          const updatedSavedFeeds = savedFeeds.filter((uri) => uri !== feedUri);
+          const updatedPinnedFeeds = pinnedFeeds.filter((uri) => uri !== feedUri);
+
+          // Update preferences
+          const updatedPreferences = [...preferences];
+          updatedPreferences[savedFeedsIndex] = {
+            $type: 'app.bsky.actor.defs#savedFeedsPref',
+            saved: updatedSavedFeeds,
+            pinned: updatedPinnedFeeds,
+          };
+
+          await agent.app.bsky.actor.putPreferences({preferences: updatedPreferences});
+        }
       }),
     ATProtoEndpointType.FEED
   );
