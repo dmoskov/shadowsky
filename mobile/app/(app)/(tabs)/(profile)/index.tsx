@@ -8,5 +8,19 @@ export default function MyProfileRoute() {
     router.push("/(app)/(tabs)/(profile)/edit");
   };
 
-  return <MyProfileScreen onNavigateToEditProfile={handleNavigateToEditProfile} />;
+  const handleNavigateToFollowers = (actor: string) => {
+    router.push(`/(app)/(tabs)/(profile)/followers/${actor}`);
+  };
+
+  const handleNavigateToFollowing = (actor: string) => {
+    router.push(`/(app)/(tabs)/(profile)/following/${actor}`);
+  };
+
+  return (
+    <MyProfileScreen
+      onNavigateToEditProfile={handleNavigateToEditProfile}
+      onNavigateToFollowers={handleNavigateToFollowers}
+      onNavigateToFollowing={handleNavigateToFollowing}
+    />
+  );
 }

@@ -22,6 +22,8 @@ interface MyProfileScreenProps {
   onNavigateToPost?: (uri: string) => void;
   onNavigateToProfile?: (handle: string) => void;
   onNavigateToEditProfile?: () => void;
+  onNavigateToFollowers?: (actor: string) => void;
+  onNavigateToFollowing?: (actor: string) => void;
   onSignOut?: () => void;
 }
 
@@ -29,6 +31,8 @@ export function MyProfileScreen({
   onNavigateToPost,
   onNavigateToProfile,
   onNavigateToEditProfile,
+  onNavigateToFollowers,
+  onNavigateToFollowing,
   onSignOut,
 }: MyProfileScreenProps) {
   const insets = useSafeAreaInsets();
@@ -117,14 +121,20 @@ export function MyProfileScreen({
             <Text style={styles.statValue}>{profile.postsCount ?? 0}</Text>
             <Text style={styles.statLabel}>Posts</Text>
           </View>
-          <View style={styles.stat}>
+          <TouchableOpacity
+            style={styles.stat}
+            onPress={() => onNavigateToFollowers?.(account?.handle || "")}
+            activeOpacity={0.7}>
             <Text style={styles.statValue}>{profile.followersCount ?? 0}</Text>
             <Text style={styles.statLabel}>Followers</Text>
-          </View>
-          <View style={styles.stat}>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.stat}
+            onPress={() => onNavigateToFollowing?.(account?.handle || "")}
+            activeOpacity={0.7}>
             <Text style={styles.statValue}>{profile.followsCount ?? 0}</Text>
             <Text style={styles.statLabel}>Following</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Edit Profile Button */}
