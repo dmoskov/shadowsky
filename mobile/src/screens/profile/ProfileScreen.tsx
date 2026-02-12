@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,12 +8,15 @@ import {
   TouchableOpacity,
   ScrollView,
   RefreshControl,
+  Modal,
+  Alert,
 } from "react-native";
-import { useProfile, useFollowUser, useUnfollowUser } from "../../hooks/api/useProfile";
+import { useProfile, useFollowUser, useUnfollowUser, useBlockUser, useMuteUser } from "../../hooks/api/useProfile";
 import { useAuthorFeed } from "../../hooks/api/useFeed";
 import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
 import { AddToListModal } from "../../components/AddToListModal";
+import { MoreVerticalIcon } from "../../components/icons";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -37,8 +40,11 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
   const { account } = useAuth();
   const followMutation = useFollowUser();
   const unfollowMutation = useUnfollowUser();
+  const blockMutation = useBlockUser();
+  const muteMutation = useMuteUser();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [showAddToList, setShowAddToList] = React.useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   const isOwnProfile = account?.handle === handle;
 
@@ -67,6 +73,65 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
     setIsRefreshing(true);
     await Promise.all([refetchProfile(), refetchFeed()]);
     setIsRefreshing(false);
+  };
+
+  const handleMuteUser = () => {
+    if (!profile) return;
+    setShowMenu(false);
+    Alert.alert(
+      'Mute User',
+      `Are you sure you want to mute @${profile.handle}? You won't see their posts in your timeline.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Mute',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await muteMutation.mutateAsync(profile.did);
+              Alert.alert('Success', `@${profile.handle} has been muted.`);
+              refetchProfile();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to mute user. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleBlockUser = () => {
+    if (!profile) return;
+    setShowMenu(false);
+    Alert.alert(
+      'Block User',
+      `Are you sure you want to block @${profile.handle}? They won't be able to follow you or view your posts.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await blockMutation.mutateAsync(profile.did);
+              Alert.alert('Success', `@${profile.handle} has been blocked.`);
+              refetchProfile();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to block user. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleReport = () => {
+    setShowMenu(false);
+    Alert.alert(
+      'Report',
+      'Reporting functionality will be available soon.',
+      [{ text: 'OK' }]
+    );
   };
 
   const renderPost = ({ item }: { item: AppBskyFeedDefs.FeedViewPost }) => (
@@ -98,6 +163,16 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
 
     return (
       <View style={styles.header}>
+        {/* Menu button for non-own profiles */}
+        {!isOwnProfile && (
+          <TouchableOpacity
+            style={styles.headerMenuButton}
+            onPress={() => setShowMenu(true)}
+            activeOpacity={0.7}>
+            <MoreVerticalIcon size={24} color="#9ca3af" />
+          </TouchableOpacity>
+        )}
+
         {/* Avatar and Display Name */}
         <View style={styles.profileInfo}>
           <Avatar uri={profile.avatar} size={96} />
@@ -105,6 +180,16 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
             {profile.displayName || profile.handle}
           </Text>
           <Text style={styles.handle}>@{profile.handle}</Text>
+          {profile.viewer?.muted && (
+            <View style={styles.statusBadge}>
+              <Text style={styles.statusBadgeText}>Muted</Text>
+            </View>
+          )}
+          {profile.viewer?.blocking && (
+            <View style={[styles.statusBadge, styles.statusBadgeBlocked]}>
+              <Text style={styles.statusBadgeText}>Blocked</Text>
+            </View>
+          )}
         </View>
 
         {/* Bio */}
@@ -226,6 +311,45 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
           userHandle={profile.handle}
         />
       )}
+      {!isOwnProfile && profile && (
+        <Modal
+          visible={showMenu}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowMenu(false)}>
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowMenu(false)}>
+            <View style={styles.menuContainer}>
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={handleMuteUser}
+                activeOpacity={0.7}>
+                <Text style={styles.menuItemText}>
+                  {profile.viewer?.muted ? 'Unmute' : 'Mute'} @{profile.handle}
+                </Text>
+              </TouchableOpacity>
+              <View style={styles.menuDivider} />
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={handleBlockUser}
+                activeOpacity={0.7}>
+                <Text style={[styles.menuItemText, styles.dangerText]}>
+                  {profile.viewer?.blocking ? 'Unblock' : 'Block'} @{profile.handle}
+                </Text>
+              </TouchableOpacity>
+              <View style={styles.menuDivider} />
+              <TouchableOpacity
+                style={styles.menuItem}
+                onPress={handleReport}
+                activeOpacity={0.7}>
+                <Text style={[styles.menuItemText, styles.dangerText]}>Report</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -256,10 +380,33 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     borderBottomWidth: 1,
     borderBottomColor: "#1f2937",
+    position: "relative",
+  },
+  headerMenuButton: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    padding: 8,
+    zIndex: 10,
   },
   profileInfo: {
     alignItems: "center",
     marginBottom: 16,
+  },
+  statusBadge: {
+    backgroundColor: "#3b82f6",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  statusBadgeBlocked: {
+    backgroundColor: "#ef4444",
+  },
+  statusBadgeText: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "600",
   },
   displayName: {
     color: "#ffffff",
@@ -358,5 +505,33 @@ const styles = StyleSheet.create({
   },
   emptyList: {
     flexGrow: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  menuContainer: {
+    backgroundColor: "#1f2937",
+    borderRadius: 12,
+    minWidth: 200,
+    overflow: "hidden",
+  },
+  menuItem: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+  menuItemText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: "#374151",
+  },
+  dangerText: {
+    color: "#ef4444",
   },
 });

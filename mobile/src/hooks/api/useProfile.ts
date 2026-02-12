@@ -13,6 +13,8 @@ import {
   unblockUser,
   updateProfile,
   UpdateProfileParams,
+  getMutes,
+  getBlocks,
 } from '../../services/atproto/profiles';
 import {mutationQueue} from '../../services/mutation-queue';
 
@@ -218,5 +220,29 @@ export function useUpdateProfile() {
       // Invalidate to refetch with the updated data from server
       queryClient.invalidateQueries({queryKey: ['profile']});
     },
+  });
+}
+
+/**
+ * Hook to get muted accounts with infinite scroll
+ */
+export function useMutedAccounts() {
+  return useInfiniteQuery({
+    queryKey: ['mutedAccounts'],
+    queryFn: ({pageParam}) => getMutes(pageParam),
+    getNextPageParam: (lastPage) => lastPage.cursor,
+    initialPageParam: undefined as string | undefined,
+  });
+}
+
+/**
+ * Hook to get blocked accounts with infinite scroll
+ */
+export function useBlockedAccounts() {
+  return useInfiniteQuery({
+    queryKey: ['blockedAccounts'],
+    queryFn: ({pageParam}) => getBlocks(pageParam),
+    getNextPageParam: (lastPage) => lastPage.cursor,
+    initialPageParam: undefined as string | undefined,
   });
 }
