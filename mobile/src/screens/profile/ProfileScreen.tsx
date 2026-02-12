@@ -13,6 +13,7 @@ import { useProfile, useFollowUser, useUnfollowUser } from "../../hooks/api/useP
 import { useAuthorFeed } from "../../hooks/api/useFeed";
 import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
+import { AddToListModal } from "../../components/AddToListModal";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -37,6 +38,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
   const followMutation = useFollowUser();
   const unfollowMutation = useUnfollowUser();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [showAddToList, setShowAddToList] = React.useState(false);
 
   const isOwnProfile = account?.handle === handle;
 
@@ -126,29 +128,37 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
           </View>
         </View>
 
-        {/* Follow/Unfollow Button */}
+        {/* Follow/Unfollow Button and Actions */}
         {!isOwnProfile && (
-          <TouchableOpacity
-            style={[
-              styles.followButton,
-              profile.viewer?.following && styles.followingButton,
-            ]}
-            onPress={handleFollowToggle}
-            disabled={followMutation.isPending || unfollowMutation.isPending}
-          >
-            <Text
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity
               style={[
-                styles.followButtonText,
-                profile.viewer?.following && styles.followingButtonText,
+                styles.followButton,
+                profile.viewer?.following && styles.followingButton,
               ]}
+              onPress={handleFollowToggle}
+              disabled={followMutation.isPending || unfollowMutation.isPending}
             >
-              {followMutation.isPending || unfollowMutation.isPending
-                ? "..."
-                : profile.viewer?.following
-                ? "Following"
-                : "Follow"}
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.followButtonText,
+                  profile.viewer?.following && styles.followingButtonText,
+                ]}
+              >
+                {followMutation.isPending || unfollowMutation.isPending
+                  ? "..."
+                  : profile.viewer?.following
+                  ? "Following"
+                  : "Follow"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.addToListButton}
+              onPress={() => setShowAddToList(true)}
+            >
+              <Text style={styles.addToListButtonText}>Add to List</Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         {/* Posts Header */}
@@ -208,6 +218,14 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
         }
         contentContainerStyle={posts.length === 0 ? styles.emptyList : undefined}
       />
+      {profile && (
+        <AddToListModal
+          visible={showAddToList}
+          onClose={() => setShowAddToList(false)}
+          userDid={profile.did}
+          userHandle={profile.handle}
+        />
+      )}
     </View>
   );
 }
@@ -279,13 +297,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
   },
+  actionsContainer: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 16,
+  },
   followButton: {
+    flex: 1,
     backgroundColor: "#3b82f6",
     paddingVertical: 12,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
     borderRadius: 24,
     alignItems: "center",
-    marginBottom: 16,
   },
   followingButton: {
     backgroundColor: "transparent",
@@ -299,6 +322,21 @@ const styles = StyleSheet.create({
   },
   followingButtonText: {
     color: "#3b82f6",
+  },
+  addToListButton: {
+    flex: 1,
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "#3b82f6",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    alignItems: "center",
+  },
+  addToListButtonText: {
+    color: "#3b82f6",
+    fontSize: 16,
+    fontWeight: "600",
   },
   postsHeader: {
     color: "#ffffff",

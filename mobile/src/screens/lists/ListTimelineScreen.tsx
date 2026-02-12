@@ -1,5 +1,5 @@
 import React, {useCallback, useMemo} from 'react';
-import {View, StyleSheet, Text, ActivityIndicator} from 'react-native';
+import {View, StyleSheet, Text, ActivityIndicator, TouchableOpacity} from 'react-native';
 import {FeedList} from '../../components/FeedList';
 import {useListFeed, useList} from '../../hooks/api';
 import {AppBskyFeedDefs} from '@atproto/api';
@@ -12,7 +12,7 @@ interface ListTimelineScreenProps {
 
 export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
   const router = useRouter();
-  const {navigateToList} = useAppNavigation();
+  const {navigateToList, navigateToListMembers} = useAppNavigation();
 
   // Decode the listId since it was encoded when passed
   const decodedListId = useMemo(() => {
@@ -99,9 +99,14 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
           {listData.description && (
             <Text style={styles.listDescription}>{listData.description}</Text>
           )}
-          <Text style={styles.listMemberCount}>
-            {listData.listItemCount || 0} members
-          </Text>
+          <TouchableOpacity
+            style={styles.manageMembersButton}
+            onPress={() => navigateToListMembers(decodedListId)}>
+            <Text style={styles.listMemberCount}>
+              {listData.listItemCount || 0} members
+            </Text>
+            <Text style={styles.chevron}>›</Text>
+          </TouchableOpacity>
         </View>
       )}
       <FeedList
@@ -156,8 +161,18 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     lineHeight: 20,
   },
+  manageMembersButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
   listMemberCount: {
     color: '#6b7280',
     fontSize: 13,
+  },
+  chevron: {
+    color: '#6b7280',
+    fontSize: 18,
+    marginLeft: 4,
   },
 });

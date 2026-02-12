@@ -172,3 +172,155 @@ export async function deleteList(listUri: string): Promise<void> {
     ATProtoEndpointType.RECORD
   );
 }
+
+/**
+ * Get members of a list
+ */
+export async function getListMembers(
+  listUri: string,
+  options: {limit?: number; cursor?: string} = {}
+): Promise<{items: AppBskyGraphDefs.ListItemView[]; cursor?: string}> {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        const response = await agent.app.bsky.graph.getList({
+          list: listUri,
+          limit: options.limit || 50,
+          cursor: options.cursor,
+        });
+
+        return {
+          items: response.data.items,
+          cursor: response.data.cursor,
+        };
+      }),
+    ATProtoEndpointType.FEED
+  );
+}
+
+/**
+ * Add a user to a list
+ */
+export async function addUserToList(
+  listUri: string,
+  did: string
+): Promise<{uri: string; cid: string}> {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+        const session = client.getSession();
+
+        if (!session?.did) {
+          throw new Error('No active session');
+        }
+
+        const record = {
+          $type: 'app.bsky.graph.listitem',
+          subject: did,
+          list: listUri,
+          createdAt: new Date().toISOString(),
+        };
+
+        const response = await agent.api.com.atproto.repo.createRecord({
+          repo: session.did,
+          collection: 'app.bsky.graph.listitem',
+          record,
+        });
+
+        return {
+          uri: response.data.uri,
+          cid: response.data.cid,
+        };
+      }),
+    ATProtoEndpointType.RECORD
+  );
+}
+
+/**
+ * Remove a user from a list
+ */
+export async function removeUserFromList(listItemUri: string): Promise<void> {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+        const session = client.getSession();
+
+        if (!session?.did) {
+          throw new Error('No active session');
+        }
+
+        const rkey = listItemUri.split('/').pop();
+        if (!rkey) {
+          throw new Error('Invalid list item URI');
+        }
+
+        await agent.api.com.atproto.repo.deleteRecord({
+          repo: session.did,
+          collection: 'app.bsky.graph.listitem',
+          rkey,
+        });
+      }),
+    ATProtoEndpointType.RECORD
+  );
+}
+
+/**
+ * Update a list's metadata (name, description, purpose)
+ */
+export async function updateList(
+  listUri: string,
+  updates: {name?: string; description?: string; purpose?: string}
+): Promise<{uri: string; cid: string}> {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+        const session = client.getSession();
+
+        if (!session?.did) {
+          throw new Error('No active session');
+        }
+
+        const rkey = listUri.split('/').pop();
+        if (!rkey) {
+          throw new Error('Invalid list URI');
+        }
+
+        // First, get the current list data
+        const currentList = await getList(listUri);
+        if (!currentList) {
+          throw new Error('List not found');
+        }
+
+        // Merge updates with existing data
+        const record = {
+          $type: 'app.bsky.graph.list',
+          purpose: updates.purpose || currentList.purpose,
+          name: updates.name || currentList.name,
+          description: updates.description !== undefined ? updates.description : currentList.description,
+          createdAt: currentList.indexedAt || new Date().toISOString(),
+        };
+
+        const response = await agent.api.com.atproto.repo.putRecord({
+          repo: session.did,
+          collection: 'app.bsky.graph.list',
+          rkey,
+          record,
+        });
+
+        return {
+          uri: response.data.uri,
+          cid: response.data.cid,
+        };
+      }),
+    ATProtoEndpointType.RECORD
+  );
+}

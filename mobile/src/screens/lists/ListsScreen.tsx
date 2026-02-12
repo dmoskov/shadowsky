@@ -40,11 +40,15 @@ function ListItem({list, onPress}: ListItemProps) {
 
 export function ListsScreen() {
   const {data, isLoading, error, refetch, isRefetching} = useLists();
-  const {navigateToList} = useAppNavigation();
+  const {navigateToList, router} = useAppNavigation();
 
   const handleListPress = (list: AppBskyGraphDefs.ListView) => {
     // Extract the list URI or use it directly
     navigateToList(encodeURIComponent(list.uri));
+  };
+
+  const handleCreateList = () => {
+    router.push('/(app)/lists/create');
   };
 
   const renderEmpty = () => {
@@ -85,6 +89,11 @@ export function ListsScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.createButton} onPress={handleCreateList}>
+          <Text style={styles.createButtonText}>+ Create List</Text>
+        </TouchableOpacity>
+      </View>
       <FlatList
         data={lists}
         renderItem={({item}) => (
@@ -110,6 +119,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0a0a0f',
+  },
+  header: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1f1f2e',
+    backgroundColor: '#0a0a0f',
+  },
+  createButton: {
+    backgroundColor: '#3b82f6',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  createButtonText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '600',
   },
   listItem: {
     flexDirection: 'row',
