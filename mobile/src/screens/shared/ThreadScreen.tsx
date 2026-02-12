@@ -19,6 +19,7 @@ import { useAppNavigation } from "../../hooks/useNavigation";
 import { PostCard } from "../../components/PostCard";
 import { LoadingState } from "../../components/LoadingState";
 import { ErrorState } from "../../components/ErrorState";
+import { ThreadSummary } from "../../components/ThreadSummary";
 import { getAtProtoClient } from "../../services/atproto/client";
 
 interface ThreadScreenProps {
@@ -153,6 +154,29 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
 
   // Extract replies
   const replies = extractReplies(thread);
+
+  // Build parent URIs map for depth calculation in AI summary
+  const buildParentUris = (node: any): Map<string, string> => {
+    const map = new Map<string, string>();
+
+    const traverse = (currentNode: any) => {
+      if (!currentNode || !currentNode.replies || !Array.isArray(currentNode.replies)) {
+        return;
+      }
+
+      for (const replyNode of currentNode.replies) {
+        if (replyNode?.post?.uri && currentNode?.post?.uri) {
+          map.set(replyNode.post.uri, currentNode.post.uri);
+        }
+        traverse(replyNode);
+      }
+    };
+
+    traverse(node);
+    return map;
+  };
+
+  const parentUris = buildParentUris(thread);
 
   const handleProfilePress = (pressedHandle: string) => {
     navigateToProfile(pressedHandle);
@@ -330,6 +354,15 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
           onMentionPress={handleMentionPress}
           onHashtagPress={handleHashtagPress}
         />
+
+        {/* AI Thread Summary */}
+        {replies.length >= 5 && (
+          <ThreadSummary
+            posts={[rootPost, ...replies].map(p => p.post)}
+            threadUri={rootPost.post.uri}
+            parentUris={parentUris}
+          />
+        )}
 
         {/* Divider */}
         {replies.length > 0 && <View style={styles.divider} />}
