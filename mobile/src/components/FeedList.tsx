@@ -15,6 +15,7 @@ import {ErrorState} from './ErrorState';
 import {EmptyState} from './EmptyState';
 import {useNetwork} from '../contexts/NetworkContext';
 import {colors} from '../constants/theme';
+import {triggerHaptic} from '../utils/haptics';
 
 interface FeedListProps {
   posts: AppBskyFeedDefs.FeedViewPost[];
@@ -56,6 +57,12 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   onHashtagPress,
 }: FeedListProps, ref) {
   const { isOnline } = useNetwork();
+
+  const handleRefresh = () => {
+    triggerHaptic('selection');
+    onRefresh?.();
+  };
+
   const renderItem: ListRenderItem<AppBskyFeedDefs.FeedViewPost> = ({item}) => (
     <PostCard
       post={item}
@@ -109,7 +116,7 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
         onRefresh ? (
           <RefreshControl
             refreshing={isRefreshing}
-            onRefresh={onRefresh}
+            onRefresh={handleRefresh}
             tintColor={isOnline ? colors.primary : "#6b7280"}
             colors={[isOnline ? colors.primary : "#6b7280"]}
             enabled={isOnline}
