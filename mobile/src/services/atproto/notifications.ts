@@ -1,5 +1,6 @@
 import {getAtProtoClient} from './client';
 import {AppBskyNotificationListNotifications} from '@atproto/api';
+import {withRetry} from '../../utils/with-retry';
 
 export interface NotificationsOptions {
   limit?: number;
@@ -11,39 +12,45 @@ export interface NotificationsOptions {
  * Get notifications
  */
 export async function getNotifications(options: NotificationsOptions = {}) {
-  const client = getAtProtoClient();
-  const agent = client.getAgent();
+  return withRetry(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-  const response = await agent.listNotifications({
-    limit: options.limit || 50,
-    cursor: options.cursor,
-    seenAt: options.seenAt,
+    const response = await agent.listNotifications({
+      limit: options.limit || 50,
+      cursor: options.cursor,
+      seenAt: options.seenAt,
+    });
+
+    return {
+      notifications: response.data.notifications,
+      cursor: response.data.cursor,
+      seenAt: response.data.seenAt,
+    };
   });
-
-  return {
-    notifications: response.data.notifications,
-    cursor: response.data.cursor,
-    seenAt: response.data.seenAt,
-  };
 }
 
 /**
  * Get unread notification count
  */
 export async function getUnreadCount() {
-  const client = getAtProtoClient();
-  const agent = client.getAgent();
+  return withRetry(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-  const response = await agent.countUnreadNotifications();
-  return response.data.count;
+    const response = await agent.countUnreadNotifications();
+    return response.data.count;
+  });
 }
 
 /**
  * Mark notifications as seen
  */
 export async function updateSeenNotifications(seenAt?: string) {
-  const client = getAtProtoClient();
-  const agent = client.getAgent();
+  return withRetry(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-  await agent.updateSeenNotifications(seenAt);
+    await agent.updateSeenNotifications(seenAt);
+  });
 }
