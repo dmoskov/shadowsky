@@ -23,6 +23,10 @@ export enum WebSocketEventType {
   ENGAGEMENT_UNSUBSCRIBE = "engagement:unsubscribe",
   ENGAGEMENT_UPDATE = "engagement:update",
 
+  // Timeline events (Jetstream firehose)
+  TIMELINE_NEW_POST = "timeline:newpost",
+  TIMELINE_DELETE_POST = "timeline:deletepost",
+
   // System events
   PING = "ping",
   PONG = "pong",
@@ -110,6 +114,29 @@ export interface EngagementUpdateEvent extends WebSocketEvent {
   updates: PostEngagement[];
 }
 
+/**
+ * Timeline event for new post from followed account
+ */
+export interface TimelineNewPostEvent extends WebSocketEvent {
+  type: WebSocketEventType.TIMELINE_NEW_POST;
+  data: {
+    did: string;
+    uri: string;
+    cid?: string;
+  };
+}
+
+/**
+ * Timeline event for deleted post
+ */
+export interface TimelineDeletePostEvent extends WebSocketEvent {
+  type: WebSocketEventType.TIMELINE_DELETE_POST;
+  data: {
+    did: string;
+    uri: string;
+  };
+}
+
 export enum AuthErrorCategory {
   TOKEN_INVALID = "token_invalid",
   SERVER_ERROR = "server_error",
@@ -128,6 +155,8 @@ export type WebSocketMessage =
   | EngagementSubscribeEvent
   | EngagementUnsubscribeEvent
   | EngagementUpdateEvent
+  | TimelineNewPostEvent
+  | TimelineDeletePostEvent
   | WebSocketEvent;
 
 export enum WebSocketConnectionState {
