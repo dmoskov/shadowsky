@@ -1,5 +1,5 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, StyleSheet, Alert, ActionSheetIOS, Platform } from "react-native";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useTimeline } from "../../hooks/api/useFeed";
 import { useLikePost, useUnlikePost, useRepost, useDeleteRepost } from "../../hooks/api/usePosts";
@@ -17,7 +17,7 @@ function getPostIdFromUri(uri: string): string {
 
 export function HomeScreen() {
   const { data, isLoading, isRefetching, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useTimeline();
-  const { navigateToThread, navigateToProfile } = useAppNavigation();
+  const { navigateToThread, navigateToProfile, navigateToCompose } = useAppNavigation();
   const likePost = useLikePost();
   const unlikePost = useUnlikePost();
   const repost = useRepost();
@@ -49,20 +49,94 @@ export function HomeScreen() {
   };
 
   const handleRepost = (post: AppBskyFeedDefs.FeedViewPost) => {
-    const { uri, cid, viewer } = post.post;
+    const postView = post.post;
+    const { uri, cid, viewer } = postView;
+    const record = postView.record as any;
 
+    // If already reposted, just unrepost
     if (viewer?.repost) {
-      // Delete repost if already reposted
       deleteRepost.mutate(viewer.repost);
+      return;
+    }
+
+    // Show menu: Repost or Quote
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', 'Repost', 'Quote'],
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            // Repost
+            repost.mutate({ uri, cid });
+          } else if (buttonIndex === 2) {
+            // Quote
+            navigateToCompose({
+              quoteTo: {
+                uri: postView.uri,
+                cid: postView.cid,
+                author: {
+                  handle: postView.author.handle,
+                  displayName: postView.author.displayName,
+                  avatar: postView.author.avatar,
+                },
+                text: record?.text?.substring(0, 150) || '',
+              },
+            });
+          }
+        }
+      );
     } else {
-      // Repost the post
-      repost.mutate({ uri, cid });
+      // Android - use Alert
+      Alert.alert(
+        'Repost',
+        'Choose an option',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Repost',
+            onPress: () => repost.mutate({ uri, cid }),
+          },
+          {
+            text: 'Quote',
+            onPress: () => {
+              navigateToCompose({
+                quoteTo: {
+                  uri: postView.uri,
+                  cid: postView.cid,
+                  author: {
+                    handle: postView.author.handle,
+                    displayName: postView.author.displayName,
+                    avatar: postView.author.avatar,
+                  },
+                  text: record?.text?.substring(0, 150) || '',
+                },
+              });
+            },
+          },
+        ],
+        { cancelable: true }
+      );
     }
   };
 
   const handleReply = (post: AppBskyFeedDefs.FeedViewPost) => {
-    // Navigate to thread view where reply can be composed
-    handlePostPress(post);
+    const postView = post.post;
+    const record = postView.record as any;
+
+    navigateToCompose({
+      replyTo: {
+        uri: postView.uri,
+        cid: postView.cid,
+        author: {
+          handle: postView.author.handle,
+          displayName: postView.author.displayName,
+          avatar: postView.author.avatar,
+        },
+        text: record?.text?.substring(0, 100) || '',
+      },
+    });
   };
 
   const handleRefresh = () => {

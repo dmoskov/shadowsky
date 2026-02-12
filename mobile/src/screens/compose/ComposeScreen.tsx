@@ -1,12 +1,40 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { useCreatePost } from "../../hooks/api/usePosts";
-import { ImageIcon, GifIcon, PollIcon, ThreadIcon } from "../../components/icons";
+import { ImageIcon, GifIcon, PollIcon, ThreadIcon, CloseIcon } from "../../components/icons";
+import { Avatar } from "../../components/Avatar";
 
 const MAX_POST_LENGTH = 300;
 
-export function ComposeScreen() {
+export interface ReplyToPost {
+  uri: string;
+  cid: string;
+  author: {
+    handle: string;
+    displayName?: string;
+    avatar?: string;
+  };
+  text: string;
+}
+
+export interface QuoteToPost {
+  uri: string;
+  cid: string;
+  author: {
+    handle: string;
+    displayName?: string;
+    avatar?: string;
+  };
+  text: string;
+}
+
+export interface ComposeScreenProps {
+  replyTo?: ReplyToPost;
+  quoteTo?: QuoteToPost;
+}
+
+export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
   const router = useRouter();
   const [text, setText] = useState("");
   const createPost = useCreatePost();
@@ -21,10 +49,26 @@ export function ComposeScreen() {
     }
 
     try {
-      await createPost.mutateAsync({ text: text.trim() });
+      const postOptions: any = { text: text.trim() };
+
+      // Add reply reference if replying
+      if (replyTo) {
+        postOptions.reply = {
+          root: { uri: replyTo.uri, cid: replyTo.cid },
+          parent: { uri: replyTo.uri, cid: replyTo.cid },
+        };
+      }
+
+      // Add quote reference if quoting
+      if (quoteTo) {
+        postOptions.quote = { uri: quoteTo.uri, cid: quoteTo.cid };
+      }
+
+      await createPost.mutateAsync(postOptions);
       router.back();
       // Show success feedback
-      Alert.alert("Success", "Your post has been published!");
+      const successMessage = replyTo ? "Reply posted!" : quoteTo ? "Quote posted!" : "Your post has been published!";
+      Alert.alert("Success", successMessage);
     } catch (error) {
       // Show error feedback
       const errorMessage = error instanceof Error ? error.message : "Failed to create post. Please try again.";
@@ -35,6 +79,12 @@ export function ComposeScreen() {
   const isPostDisabled = !text.trim() || text.length > MAX_POST_LENGTH;
   const charCount = text.length;
   const isOverLimit = charCount > MAX_POST_LENGTH;
+
+  const placeholderText = replyTo
+    ? "Post your reply"
+    : quoteTo
+    ? "Add your thoughts"
+    : "What's happening?";
 
   return (
     <View style={styles.container}>
@@ -62,9 +112,36 @@ export function ComposeScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Reply Context */}
+      {replyTo && (
+        <View style={styles.replyContext}>
+          <View style={styles.replyHeader}>
+            <Text style={styles.replyingTo}>
+              Replying to @{replyTo.author.handle}
+            </Text>
+          </View>
+          <View style={styles.parentPost}>
+            <Avatar uri={replyTo.author.avatar} size={36} />
+            <View style={styles.parentPostContent}>
+              <View style={styles.parentPostHeader}>
+                <Text style={styles.parentPostAuthor} numberOfLines={1}>
+                  {replyTo.author.displayName || replyTo.author.handle}
+                </Text>
+                <Text style={styles.parentPostHandle} numberOfLines={1}>
+                  @{replyTo.author.handle}
+                </Text>
+              </View>
+              <Text style={styles.parentPostText} numberOfLines={2}>
+                {replyTo.text}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
+
       <TextInput
         style={styles.input}
-        placeholder="What's happening?"
+        placeholder={placeholderText}
         placeholderTextColor="#6b7280"
         multiline
         autoFocus
@@ -72,6 +149,28 @@ export function ComposeScreen() {
         onChangeText={setText}
         editable={!createPost.isPending}
       />
+
+      {/* Quote Preview */}
+      {quoteTo && (
+        <View style={styles.quotePreview}>
+          <View style={styles.quoteCard}>
+            <View style={styles.quoteHeader}>
+              <Avatar uri={quoteTo.author.avatar} size={32} />
+              <View style={styles.quoteAuthorInfo}>
+                <Text style={styles.quoteAuthorName} numberOfLines={1}>
+                  {quoteTo.author.displayName || quoteTo.author.handle}
+                </Text>
+                <Text style={styles.quoteAuthorHandle} numberOfLines={1}>
+                  @{quoteTo.author.handle}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.quoteText} numberOfLines={6}>
+              {quoteTo.text}
+            </Text>
+          </View>
+        </View>
+      )}
 
       <View style={styles.toolbar}>
         <View style={styles.toolbarIcons}>
@@ -169,5 +268,84 @@ const styles = StyleSheet.create({
   },
   charCountOver: {
     color: "#ef4444",
+  },
+  replyContext: {
+    backgroundColor: "#111116",
+    borderBottomWidth: 1,
+    borderBottomColor: "#1f2937",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  replyHeader: {
+    marginBottom: 8,
+  },
+  replyingTo: {
+    color: "#6b7280",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  parentPost: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  parentPostContent: {
+    flex: 1,
+  },
+  parentPostHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 4,
+  },
+  parentPostAuthor: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "600",
+    maxWidth: 150,
+  },
+  parentPostHandle: {
+    color: "#6b7280",
+    fontSize: 13,
+    flex: 1,
+  },
+  parentPostText: {
+    color: "#9ca3af",
+    fontSize: 14,
+    lineHeight: 18,
+  },
+  quotePreview: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  quoteCard: {
+    borderWidth: 1,
+    borderColor: "#1f2937",
+    borderRadius: 12,
+    padding: 12,
+    backgroundColor: "#111116",
+  },
+  quoteHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  quoteAuthorInfo: {
+    flex: 1,
+  },
+  quoteAuthorName: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  quoteAuthorHandle: {
+    color: "#6b7280",
+    fontSize: 13,
+  },
+  quoteText: {
+    color: "#e5e7eb",
+    fontSize: 14,
+    lineHeight: 18,
   },
 });

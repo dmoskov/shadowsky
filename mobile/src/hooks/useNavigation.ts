@@ -29,9 +29,24 @@ export function useAppNavigation() {
     [router],
   );
 
-  const navigateToCompose = useCallback(() => {
-    router.push("/(app)/compose");
-  }, [router]);
+  const navigateToCompose = useCallback(
+    (params?: { replyTo?: any; quoteTo?: any }) => {
+      if (params?.replyTo) {
+        router.push({
+          pathname: "/(app)/compose",
+          params: { replyTo: JSON.stringify(params.replyTo) },
+        });
+      } else if (params?.quoteTo) {
+        router.push({
+          pathname: "/(app)/compose",
+          params: { quoteTo: JSON.stringify(params.quoteTo) },
+        });
+      } else {
+        router.push("/(app)/compose");
+      }
+    },
+    [router],
+  );
 
   const navigateToSettings = useCallback(
     (section?: string) => {
