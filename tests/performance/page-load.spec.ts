@@ -76,8 +76,8 @@ test.describe("Page Load Optimizations @performance", () => {
 
     // Check for inline style tag with critical CSS variables
     expect(html).toContain("<style>");
-    expect(html).toContain("--bsky-primary");
-    expect(html).toContain("--bsky-bg-primary");
+    expect(html).toContain("--asph-primary");
+    expect(html).toContain("--asph-bg-primary");
   });
 
   test("CSS loading is configured", async ({ page }) => {

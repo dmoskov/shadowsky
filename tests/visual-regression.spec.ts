@@ -178,7 +178,7 @@ test.describe("Visual Regression - Authenticated Views", () => {
     // Check CSS variables are applied
     const bgColor = await page.evaluate(() => {
       return getComputedStyle(document.documentElement)
-        .getPropertyValue("--bsky-bg-primary")
+        .getPropertyValue("--asph-bg-primary")
         .trim();
     });
 

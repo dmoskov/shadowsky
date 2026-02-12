@@ -150,7 +150,7 @@ test.describe("UI Components", () => {
     await page.waitForLoadState("networkidle");
 
     // Check for feature section elements (cards or list items describing features)
-    const featureSection = page.locator(".bsky-card, [class*='feature']");
+    const featureSection = page.locator(".asph-card, [class*='feature']");
     const count = await featureSection.count();
 
     // Should have at least the login card
