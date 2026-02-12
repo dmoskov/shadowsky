@@ -4,6 +4,54 @@ import {useRouter} from 'expo-router';
 import {clearBadgeCount} from '../services/notification-poller';
 
 /**
+ * Handle notification tap and navigate to appropriate screen
+ */
+function handleNotificationNavigation(
+  router: any,
+  data: Record<string, any> | undefined,
+) {
+  if (!data) {
+    // Default to notifications tab
+    router.push('/(tabs)/notifications' as never);
+    return;
+  }
+
+  // Handle different notification types
+  switch (data.type) {
+    case 'post':
+    case 'thread':
+      // Navigate to specific post/thread
+      if (data.postId) {
+        router.push(`/(tabs)/(home)/thread/${data.postId}` as never);
+      } else {
+        router.push('/(tabs)/notifications' as never);
+      }
+      break;
+
+    case 'profile':
+      // Navigate to specific profile
+      if (data.handle) {
+        router.push(`/(tabs)/(home)/profile/${data.handle}` as never);
+      } else {
+        router.push('/(tabs)/notifications' as never);
+      }
+      break;
+
+    case 'dm':
+    case 'message':
+      // Navigate to messages
+      router.push('/(app)/profile/messages' as never);
+      break;
+
+    case 'notification':
+    default:
+      // Navigate to notifications tab
+      router.push('/(tabs)/notifications' as never);
+      break;
+  }
+}
+
+/**
  * Hook to handle notification interactions (tap, receive, etc.)
  */
 export function useNotificationHandler() {
@@ -19,9 +67,11 @@ export function useNotificationHandler() {
     });
 
     // Listen for user tapping on notification
-    responseListener.current = Notifications.addNotificationResponseReceivedListener((_response: Notifications.NotificationResponse) => {
-      // Navigate to Notifications tab when user taps notification
-      router.push('/(tabs)/notifications' as never);
+    responseListener.current = Notifications.addNotificationResponseReceivedListener((response: Notifications.NotificationResponse) => {
+      const data = response.notification.request.content.data;
+
+      // Navigate based on notification data
+      handleNotificationNavigation(router, data);
 
       // Clear badge count when user opens from notification
       clearBadgeCount();

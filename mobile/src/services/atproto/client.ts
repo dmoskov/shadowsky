@@ -126,3 +126,11 @@ export function getAtProtoClient(): AtProtoClient {
 export function resetAtProtoClient() {
   clientInstance = null;
 }
+
+/**
+ * Get the agent from the global client instance
+ */
+export function getAgent(): BskyAgent {
+  const client = getAtProtoClient();
+  return client.getAgent();
+}

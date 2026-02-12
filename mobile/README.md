@@ -14,6 +14,7 @@ The mobile apps are currently in the foundation stage with infrastructure comple
 - **[Mobile App Completion Plan](../docs/MOBILE_APP_COMPLETION_PLAN.md)** - Comprehensive implementation plan
 - **[Quick Reference Guide](../docs/MOBILE_APP_QUICK_REFERENCE.md)** - Quick start and key info
 - **[Navigation Architecture](./src/navigation/README.md)** - Navigation structure and deep linking
+- **[Push Notifications Setup](./PUSH_NOTIFICATIONS.md)** - Real-time push notification implementation
 - **[Apple Developer Setup](../docs/guides/APPLE_DEVELOPER_SETUP.md)** - iOS setup guide
 - **[Android Signing Setup](../docs/guides/ANDROID_SIGNING_SETUP.md)** - Android setup guide
 
@@ -110,6 +111,7 @@ npm run update:production -- "Update message"   # Push OTA update to production
 - Authentication context
 - Build configuration (iOS + Android)
 - TypeScript setup
+- Push notifications (Expo Push Service)
 
 ### 🚧 In Progress
 - 17 screen components (placeholder state)
@@ -119,7 +121,6 @@ npm run update:production -- "Update message"   # Push OTA update to production
 - AT Protocol service integration
 - Core features (feeds, posting, profiles)
 - Media handling
-- Push notifications
 - Testing infrastructure
 - CI/CD pipeline
 

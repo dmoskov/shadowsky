@@ -1,11 +1,13 @@
-import {useEffect} from 'react';
+import {useEffect, useState} from 'react';
 import {
   useNotificationPermissions,
   configureNotificationHandler,
 } from '../hooks/useNotificationPermissions';
 import {useNotificationHandler} from '../hooks/useNotificationHandler';
 import {startNotificationPoller, stopNotificationPoller} from '../services/notification-poller';
+import {initializePushNotifications} from '../services/push-notification-service';
 import {useAuth} from '../contexts/AuthContext';
+import {getAgent} from '../services/atproto/client';
 
 /**
  * Component to initialize and manage push notifications
@@ -15,6 +17,8 @@ export function NotificationSetup() {
   const {isAuthenticated} = useAuth();
   const {hasPermission, permissionStatus, requestPermission, hasAskedBefore} =
     useNotificationPermissions();
+  const [pushInitialized, setPushInitialized] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
 
   // Set up notification handler for foreground/background
   useNotificationHandler();
@@ -36,15 +40,51 @@ export function NotificationSetup() {
     }
   }, [isAuthenticated, hasAskedBefore, permissionStatus, requestPermission]);
 
-  // Start/stop poller based on authentication and permission
+  // Initialize push notifications when authenticated and has permission
   useEffect(() => {
-    if (isAuthenticated && hasPermission) {
+    let mounted = true;
+
+    async function setupPushNotifications() {
+      if (isAuthenticated && hasPermission && !pushInitialized) {
+        try {
+          const agent = await getAgent();
+          const success = await initializePushNotifications(agent);
+
+          if (mounted) {
+            if (success) {
+              setPushInitialized(true);
+              setUseFallback(false);
+            } else {
+              // Push initialization failed, use polling fallback
+              setUseFallback(true);
+            }
+          }
+        } catch (error) {
+          console.error('Error setting up push notifications:', error);
+          if (mounted) {
+            setUseFallback(true);
+          }
+        }
+      }
+    }
+
+    setupPushNotifications();
+
+    return () => {
+      mounted = false;
+    };
+  }, [isAuthenticated, hasPermission, pushInitialized]);
+
+  // Start/stop poller as fallback if push initialization fails
+  useEffect(() => {
+    if (isAuthenticated && hasPermission && useFallback) {
+      console.log('Using polling fallback for notifications');
       startNotificationPoller();
       return () => {
         stopNotificationPoller();
       };
     }
-  }, [isAuthenticated, hasPermission]);
+  }, [isAuthenticated, hasPermission, useFallback]);
 
   // This component doesn't render anything
   return null;

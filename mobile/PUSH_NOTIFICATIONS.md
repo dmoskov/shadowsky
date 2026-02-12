@@ -1,188 +1,238 @@
-# Push Notification Implementation
+# Push Notifications Setup
 
-This document describes the push notification implementation for the ShadowSky mobile app.
-
-## Overview
-
-The implementation uses **local polling-based notifications** as an MVP. The app polls the Bluesky API every 60 seconds when in the background to check for new notifications, and displays local notifications when the unread count increases.
-
-This approach does not require server infrastructure, but is limited to:
-- Generic notification messages ("You have X new notifications")
-- Battery drain from periodic polling
-- No true push delivery (requires app to be running in background)
+This document describes the push notification implementation for the Asphodel mobile app.
 
 ## Architecture
 
-### Core Components
+The push notification system uses **Expo Push Notification Service** as an intermediary between the app and Apple Push Notification Service (APNs) / Firebase Cloud Messaging (FCM).
 
-1. **notification-poller.ts** - Background polling service
-   - Polls `getUnreadCount()` every 60 seconds
-   - Only polls when app is backgrounded (uses AppState)
-   - Compares with last known count stored in AsyncStorage
-   - Shows local notification when count increases
-   - Updates app badge count
+### Components
 
-2. **useNotificationPermissions.ts** - Permission management hook
-   - Requests notification permissions on first app launch
-   - Tracks permission status (granted/denied/undetermined)
-   - Configures notification handler for foreground notifications
-   - Sets up Android notification channels
+1. **Mobile App** (`mobile/`)
+   - Registers for push notifications and obtains Expo Push Token
+   - Stores push token in AT Protocol record for the user
+   - Handles incoming notifications and deep links to content
+   - Falls back to polling if push registration fails
 
-3. **useNotificationHandler.ts** - Notification interaction handler
-   - Listens for notification taps
-   - Navigates to Notifications tab when tapped
-   - Clears badge count when user opens notifications
+2. **Backend Worker** (`server/push-worker.js`)
+   - Polls Bluesky API for new notifications (30-second intervals)
+   - Sends push notifications via Expo Push Service
+   - Tracks notification state to avoid duplicate notifications
 
-4. **NotificationSetup.tsx** - Initialization component
-   - Mounted when user is authenticated
-   - Requests permissions after login
-   - Starts/stops poller based on auth state
+3. **API Server** (`server/routes/push-notifications.js`)
+   - Provides endpoints for push token registration
+   - Manages push token storage (in-memory, should be Redis/DB in production)
 
-### Integration Points
+## Mobile App Implementation
 
-1. **app/(app)/_layout.tsx** - Mounts NotificationSetup
-2. **NotificationsScreen.tsx** - Clears badge when viewing notifications
-3. **Settings screen** - Already has notification preference toggles
+### Push Token Registration
 
-## Preferences
+The mobile app registers for push notifications in `NotificationSetup.tsx`:
 
-Notification preferences are managed through the existing preferences system:
+1. Requests notification permissions from the OS
+2. Obtains Expo Push Token using `expo-notifications`
+3. Saves token to AT Protocol as a singleton record
+4. Falls back to polling if registration fails
 
-```typescript
-interface AppPreferences {
-  notificationsEnabled: boolean;
-  notifyOnLikes: boolean;
-  notifyOnReplies: boolean;
-  notifyOnFollows: boolean;
-  notifyOnMentions: boolean;
-  notifyOnQuotes: boolean;
-}
-```
+Key files:
+- `mobile/src/services/push-notification-service.ts` - Core push notification logic
+- `mobile/src/components/NotificationSetup.tsx` - Initialization component
+- `mobile/src/hooks/useNotificationHandler.ts` - Notification tap handling
+- `mobile/src/hooks/useNotificationPermissions.ts` - Permission management
 
-The poller respects the `notificationsEnabled` master toggle. Individual notification type preferences are stored for future use when implementing richer notifications (Phase 2).
+### AT Protocol Storage
+
+Push tokens are stored as AT Protocol records:
+- **Collection**: `com.shadowsky.pushToken`
+- **RKey**: `self` (singleton record)
+- **Record Schema**:
+  ```typescript
+  {
+    token: string;        // Expo Push Token
+    platform: 'ios' | 'android';
+    deviceId: string;     // Device identifier
+    updatedAt: string;    // ISO timestamp
+  }
+  ```
+
+### Deep Linking
+
+When users tap a notification, the app navigates to the appropriate screen based on the notification data:
+
+- `type: 'post'` or `type: 'thread'` - Navigate to post thread
+- `type: 'profile'` - Navigate to user profile
+- `type: 'dm'` or `type: 'message'` - Navigate to messages
+- `type: 'notification'` - Navigate to notifications tab (default)
+
+### Fallback Mechanism
+
+If push registration fails (e.g., on simulator, permission denied, network issues), the app automatically falls back to the existing polling mechanism (`notification-poller.ts`).
+
+## Backend Implementation
+
+### Push Worker
+
+The push worker (`server/push-worker.js`) runs continuously and:
+
+1. Maintains a cache of user notification states
+2. Polls Bluesky API every 30 seconds (configurable)
+3. Detects new notifications by comparing unread counts
+4. Sends push notifications via Expo Push Service
+5. Batches notifications for efficiency (up to 100 per request)
+
+### API Endpoints
+
+The server provides these endpoints:
+
+- `POST /api/push-subscription` - Register a push token
+- `DELETE /api/push-subscription/:did` - Unregister a push token
+- `GET /api/push-subscriptions` - List all registered tokens (admin)
+- `POST /api/push-notification/send` - Send a test notification
+- `GET /api/push-notification/stats` - Get service statistics
 
 ## Configuration
 
-### app.config.ts
+### App Configuration
+
+Update `mobile/app.config.ts`:
 
 ```typescript
-notification: {
-  icon: "./assets/notification-icon.png",
-  color: "#1d9bf0",
-  androidMode: "default",
-  androidCollapsedTitle: "{{unread_count}} new notifications",
-},
+ios: {
+  infoPlist: {
+    UIBackgroundModes: ["remote-notification"]
+  }
+}
+
+android: {
+  permissions: ["RECEIVE_BOOT_COMPLETED"]
+}
+
 plugins: [
-  "expo-router",
-  [
-    "expo-notifications",
-    {
-      icon: "./assets/notification-icon.png",
-      color: "#1d9bf0",
-      sounds: [],
-    },
-  ],
-],
+  ["expo-notifications", {
+    icon: "./assets/notification-icon.png",
+    color: "#c9a84c"
+  }]
+]
 ```
 
-## Usage
+### EAS Configuration
 
-### For Users
-
-1. Launch app and sign in
-2. After 2 seconds, permission dialog appears
-3. Grant notification permission
-4. Notifications will appear when app is backgrounded and new activity occurs
-5. Tap notification to jump to Notifications tab
-6. Badge count shows unread count on app icon
-
-### Settings
-
-Users can control notifications in Settings > Notifications:
-- Master toggle: Enable/disable all notifications
-- Per-type toggles: Likes, Replies, Follows, Mentions, Quotes (saved for Phase 2)
-
-## Limitations (MVP)
-
-1. **Generic notifications only** - All notifications say "You have X new notifications"
-2. **Requires background execution** - Notifications only work if app is running in background
-3. **Battery impact** - Polling every 60 seconds drains battery
-4. **No true push** - Notifications are not instant; they arrive on next poll cycle
-5. **No notification grouping** - Each poll creates one notification
-
-## Future Enhancements
-
-### Phase 2: Richer Notifications
-
-To show specific notification content ("alice liked your post"):
-1. Store last seen notification list in AsyncStorage
-2. On each poll, fetch notification items (not just count)
-3. Compare with previous list to find new notifications
-4. Show individual local notifications for each new item
-
-Implementation complexity: Medium
-Benefit: Better user experience, specific action context
-
-### Phase 3: True Push Notifications
-
-To implement real push notifications:
-1. Build a server that polls Bluesky API per user
-2. Create push token registration endpoint
-3. Integrate with APNs (iOS) and FCM (Android)
-4. Server sends push when new notifications detected
-
-Implementation complexity: High
-Requires: Backend infrastructure, APNs/FCM setup, token management
-Benefit: Instant delivery, no battery drain, works when app is closed
-
-## Testing
-
-### Manual Testing Checklist
-
-- [ ] Permission request appears after login
-- [ ] Notifications appear when app is backgrounded and activity occurs
-- [ ] Tapping notification navigates to Notifications tab
-- [ ] Badge count updates correctly
-- [ ] Badge clears when viewing Notifications tab
-- [ ] Master toggle in Settings disables notifications
-- [ ] Notifications respect permission denial
-
-### Testing on Real Device
-
-1. Build development app: `npm run build:development`
-2. Install on physical device (simulator notifications don't work)
-3. Sign in and grant permission
-4. Background the app
-5. Generate activity on another device/web
-6. Wait 60 seconds for poll cycle
-7. Verify notification appears
-
-## Dependencies
+Ensure `mobile/eas.json` has a valid project ID:
 
 ```json
 {
-  "expo-notifications": "~0.32.16",
-  "expo-device": "~8.0.10",
-  "expo-constants": "~18.0.13"
+  "extra": {
+    "eas": {
+      "projectId": "your-actual-project-id"
+    }
+  }
 }
 ```
 
-## Files Modified
+Get your project ID from: https://expo.dev/accounts/[account]/projects/[project]/settings
 
-- `mobile/package.json` - Added dependencies
-- `mobile/app.config.ts` - Added notification configuration
-- `mobile/app/(app)/_layout.tsx` - Added NotificationSetup component
-- `mobile/src/components/NotificationSetup.tsx` - Created
-- `mobile/src/components/index.ts` - Exported NotificationSetup
-- `mobile/src/services/notification-poller.ts` - Created
-- `mobile/src/hooks/useNotificationPermissions.ts` - Created
-- `mobile/src/hooks/useNotificationHandler.ts` - Created
-- `mobile/src/screens/notifications/NotificationsScreen.tsx` - Added badge clearing
-- `mobile/assets/notification-icon.png` - Created
+### APNs Certificates
 
-## Notes
+For iOS push notifications:
 
-- Notification icon is currently the app icon
-- For production, consider creating a simpler monochrome icon for notifications
-- The 60-second poll interval is configurable via `POLL_INTERVAL` constant
-- Poller automatically stops when app is closed or user signs out
+1. Go to [Apple Developer Portal](https://developer.apple.com/account/)
+2. Navigate to Certificates, Identifiers & Profiles
+3. Create an APNs certificate for `io.shadowsky.app`
+4. Upload certificate to Expo: `eas credentials`
+5. Select iOS → Push Notifications certificate
+
+## Deployment
+
+### Running the Push Worker
+
+```bash
+cd server
+node push-worker.js
+```
+
+For production, use a process manager like PM2:
+
+```bash
+pm2 start push-worker.js --name "push-notifications"
+pm2 save
+```
+
+### Environment Variables
+
+No additional environment variables required. The worker uses the Expo Push Service public API.
+
+### Production Considerations
+
+1. **Token Storage**: Replace in-memory storage with Redis or PostgreSQL
+2. **User Management**: Implement a proper user database with push tokens
+3. **Monitoring**: Add logging, metrics, and alerting
+4. **Rate Limiting**: Implement rate limiting for Expo Push API
+5. **Error Handling**: Handle token expiration and device unregistration
+6. **Scalability**: Use a job queue (Bull, BullMQ) for large-scale deployments
+
+## Testing
+
+### Testing on Device
+
+1. Build a development build: `eas build --profile development --platform ios`
+2. Install on a physical device (push notifications don't work on simulator)
+3. Log in to the app
+4. Grant notification permissions when prompted
+5. Send a test notification or wait for real notifications
+
+### Testing the Worker
+
+```bash
+# Terminal 1: Start the API server
+cd server
+npm start
+
+# Terminal 2: Start the push worker
+cd server
+node push-worker.js
+
+# Terminal 3: Register a test token
+curl -X POST http://localhost:3000/api/push-subscription \
+  -H "Content-Type: application/json" \
+  -d '{
+    "did": "did:plc:test123",
+    "handle": "testuser.bsky.social",
+    "pushToken": "ExponentPushToken[xxxxxxxxxxxxxx]",
+    "platform": "ios",
+    "deviceId": "test-device"
+  }'
+```
+
+## Troubleshooting
+
+### Push notifications not arriving
+
+1. **Check permissions**: Ensure notification permissions are granted
+2. **Verify token**: Check that push token is registered in AT Protocol
+3. **Check worker**: Ensure push-worker.js is running
+4. **Verify connectivity**: Check that the device has internet access
+5. **Check logs**: Review server logs for errors
+
+### Token registration fails
+
+1. **Project ID**: Verify EAS project ID is configured
+2. **Physical device**: Push tokens only work on physical devices
+3. **Network**: Check that device can reach expo.dev
+4. **Permissions**: Ensure notification permissions are granted
+
+### Notifications arrive late
+
+1. **Worker interval**: Reduce POLL_INTERVAL in push-worker.js (default: 30s)
+2. **Network**: Check server network connectivity
+3. **Rate limiting**: Verify you're not hitting Bluesky API rate limits
+
+## Future Enhancements
+
+1. **Direct APNs/FCM**: Bypass Expo Push Service for lower latency
+2. **Rich Notifications**: Add images, actions, and custom layouts
+3. **Notification Categories**: Support different notification types (likes, replies, mentions)
+4. **Quiet Hours**: Allow users to configure do-not-disturb times
+5. **Priority**: Implement priority levels for different notification types
+6. **Webhooks**: Use Bluesky webhooks instead of polling (when available)
+7. **Multi-device**: Support multiple devices per user
+8. **Notification History**: Track sent notifications for analytics

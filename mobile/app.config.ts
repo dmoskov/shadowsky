@@ -26,6 +26,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "applinks:asphodel.is",
       "applinks:main.asphodel.is",
     ],
+    infoPlist: {
+      UIBackgroundModes: ["remote-notification"],
+    },
   },
   notification: {
     icon: "./assets/notification-icon.png",
@@ -39,6 +42,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       backgroundColor: "#0a0a0f",
     },
     package: "io.shadowsky.app",
+    permissions: [
+      "RECEIVE_BOOT_COMPLETED",
+    ],
     intentFilters: [
       {
         action: "VIEW",
