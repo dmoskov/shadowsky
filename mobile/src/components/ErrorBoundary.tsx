@@ -1,6 +1,6 @@
-import React, { Component, ReactNode } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
+import React, { Component, ReactNode } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface Props {
   children: ReactNode;
@@ -9,27 +9,39 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  errorId: string;
+}
+
+/**
+ * Generate a short error ID for reference in bug reports
+ */
+function generateErrorId(): string {
+  return `err-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
 }
 
 // Error boundary requires class component
 class ErrorBoundaryClass extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, errorId: "" };
   }
 
   static getDerivedStateFromError(error: Error): State {
     // Update state so the next render will show the fallback UI
-    return { hasError: true, error };
+    return { hasError: true, error, errorId: generateErrorId() };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    // Log the error for debugging
-    console.error("[ErrorBoundary]", error, errorInfo.componentStack);
+    // Log the error for debugging with error ID
+    console.error(
+      `[ErrorBoundary] Error ID: ${this.state.errorId}`,
+      error,
+      errorInfo.componentStack,
+    );
   }
 
   handleReset = (): void => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null, errorId: "" });
   };
 
   render() {
@@ -37,6 +49,7 @@ class ErrorBoundaryClass extends Component<Props, State> {
       return (
         <ErrorFallback
           error={this.state.error}
+          errorId={this.state.errorId}
           onReset={this.handleReset}
         />
       );
@@ -49,9 +62,11 @@ class ErrorBoundaryClass extends Component<Props, State> {
 // Functional component for the fallback UI that can use hooks
 function ErrorFallback({
   error,
+  errorId,
   onReset,
 }: {
   error: Error | null;
+  errorId: string;
   onReset: () => void;
 }) {
   const router = useRouter();
@@ -76,6 +91,8 @@ function ErrorFallback({
           We encountered an unexpected error. You can try again or return to the
           home screen.
         </Text>
+
+        {errorId && <Text style={styles.errorId}>Error ID: {errorId}</Text>}
 
         {isDevelopment && error && (
           <View style={styles.errorDetails}>
@@ -131,9 +148,16 @@ const styles = StyleSheet.create({
   message: {
     fontSize: 16,
     color: "#AAAAAA",
-    marginBottom: 24,
+    marginBottom: 12,
     textAlign: "center",
     lineHeight: 22,
+  },
+  errorId: {
+    fontSize: 12,
+    color: "#666666",
+    marginBottom: 24,
+    textAlign: "center",
+    fontFamily: "monospace",
   },
   errorDetails: {
     backgroundColor: "#1A1A1A",
