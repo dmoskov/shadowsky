@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import {View, StyleSheet, TouchableOpacity, Text} from 'react-native';
 import {Image} from 'expo-image';
 import {AppBskyEmbedImages} from '@atproto/api';
-import {ImageLightbox} from './ImageLightbox';
+import {ImageCarousel, CarouselImage} from './ImageCarousel';
 
 interface ImageEmbedProps {
   images: AppBskyEmbedImages.ViewImage[];
@@ -10,7 +10,7 @@ interface ImageEmbedProps {
 }
 
 export function ImageEmbed({images, onImagePress}: ImageEmbedProps) {
-  const [viewerVisible, setViewerVisible] = useState(false);
+  const [carouselVisible, setCarouselVisible] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const imageCount = images.length;
@@ -25,9 +25,15 @@ export function ImageEmbed({images, onImagePress}: ImageEmbedProps) {
       onImagePress(imageData, index);
     } else {
       setCurrentImageIndex(index);
-      setViewerVisible(true);
+      setCarouselVisible(true);
     }
   };
+
+  const carouselImages: CarouselImage[] = images.map(img => ({
+    thumb: img.thumb,
+    fullsize: img.fullsize,
+    alt: img.alt,
+  }));
 
   const getImageStyle = (index: number) => {
     if (imageCount === 1) {
@@ -80,16 +86,12 @@ export function ImageEmbed({images, onImagePress}: ImageEmbedProps) {
         ))}
       </View>
 
-      {/* Full-screen Image Lightbox with zoom/pan */}
-      <ImageLightbox
-        visible={viewerVisible}
-        images={images.map(img => ({
-          thumb: img.thumb,
-          fullsize: img.fullsize,
-          alt: img.alt,
-        }))}
+      {/* Image Carousel Modal */}
+      <ImageCarousel
+        images={carouselImages}
         initialIndex={currentImageIndex}
-        onClose={() => setViewerVisible(false)}
+        visible={carouselVisible}
+        onClose={() => setCarouselVisible(false)}
       />
     </View>
   );
