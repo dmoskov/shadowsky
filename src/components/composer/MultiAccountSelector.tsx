@@ -161,9 +161,9 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
         disabled={disabled}
         className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-white hover:bg-opacity-10 disabled:cursor-not-allowed disabled:opacity-50"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
-          color: "var(--bsky-text-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
+          color: "var(--asph-text-primary)",
         }}
       >
         <div className="flex -space-x-2">
@@ -174,14 +174,14 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
                   src={proxifyBskyImage(account.avatar)}
                   alt={account.handle}
                   className="h-6 w-6 rounded-full border-2"
-                  style={{ borderColor: "var(--bsky-bg-secondary)" }}
+                  style={{ borderColor: "var(--asph-bg-secondary)" }}
                 />
               ) : (
                 <div
                   className="flex h-6 w-6 items-center justify-center rounded-full border-2"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    borderColor: "var(--bsky-bg-secondary)",
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    borderColor: "var(--asph-bg-secondary)",
                   }}
                 >
                   <User size={12} />
@@ -193,9 +193,9 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
             <div
               className="flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-medium"
               style={{
-                backgroundColor: "var(--bsky-bg-tertiary)",
-                borderColor: "var(--bsky-bg-secondary)",
-                color: "var(--bsky-text-secondary)",
+                backgroundColor: "var(--asph-bg-tertiary)",
+                borderColor: "var(--asph-bg-secondary)",
+                color: "var(--asph-text-secondary)",
               }}
             >
               +{selectedAccountsData.length - 3}
@@ -220,34 +220,34 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
         ReactDOM.createPortal(
           <div
             ref={menuRef}
-            className="bsky-glass fixed z-[9999] w-72 overflow-hidden rounded-lg shadow-lg"
+            className="asph-glass fixed z-[9999] w-72 overflow-hidden rounded-lg shadow-lg"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border-primary)",
               top: `${menuPosition.top}px`,
               left: `${menuPosition.left}px`,
             }}
           >
             <div
               className="flex items-center justify-between px-3 py-2"
-              style={{ borderBottom: "1px solid var(--bsky-border-primary)" }}
+              style={{ borderBottom: "1px solid var(--asph-border-primary)" }}
             >
               <span
                 className="text-xs font-medium"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 Post to accounts
               </span>
               <button
                 onClick={selectAll}
                 className="text-xs hover:underline"
-                style={{ color: "var(--bsky-primary)" }}
+                style={{ color: "var(--asph-primary)" }}
               >
                 Select all
               </button>
             </div>
 
-            <div className="bsky-scrollbar max-h-80 overflow-y-auto">
+            <div className="asph-scrollbar max-h-80 overflow-y-auto">
               {accounts.map((account) => {
                 const isSelected = selectedAccounts.includes(account.did);
                 const isCurrent = account.did === currentAccountDid;
@@ -258,7 +258,7 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
                     className="flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-blue-50 hover:bg-opacity-10"
                     style={{
                       backgroundColor: isSelected
-                        ? "rgba(var(--bsky-primary-rgb), 0.1)"
+                        ? "rgba(var(--asph-primary-rgb), 0.1)"
                         : "transparent",
                     }}
                   >
@@ -268,11 +268,11 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
                       }`}
                       style={{
                         backgroundColor: isSelected
-                          ? "var(--bsky-primary)"
+                          ? "var(--asph-primary)"
                           : "transparent",
                         borderColor: isSelected
-                          ? "var(--bsky-primary)"
-                          : "var(--bsky-border-primary)",
+                          ? "var(--asph-primary)"
+                          : "var(--asph-border-primary)",
                       }}
                     >
                       {isSelected && <Check size={12} className="text-white" />}
@@ -286,7 +286,7 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
                     ) : (
                       <div
                         className="flex h-10 w-10 items-center justify-center rounded-full"
-                        style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                        style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
                       >
                         <User size={20} />
                       </div>
@@ -295,7 +295,7 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
                       <div className="flex items-center gap-2">
                         <p
                           className="text-sm font-medium"
-                          style={{ color: "var(--bsky-text-primary)" }}
+                          style={{ color: "var(--asph-text-primary)" }}
                         >
                           {account.displayName || account.handle}
                         </p>
@@ -303,8 +303,8 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
                           <span
                             className="rounded px-1.5 py-0.5 text-[10px] font-medium"
                             style={{
-                              backgroundColor: "var(--bsky-bg-tertiary)",
-                              color: "var(--bsky-text-secondary)",
+                              backgroundColor: "var(--asph-bg-tertiary)",
+                              color: "var(--asph-text-secondary)",
                             }}
                           >
                             Current
@@ -313,7 +313,7 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
                       </div>
                       <p
                         className="text-xs"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         @{account.handle}
                       </p>
@@ -328,10 +328,10 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
               postStatuses.some((s) => s.status !== "pending") && (
                 <div
                   className="px-3 py-2"
-                  style={{ borderTop: "1px solid var(--bsky-border-primary)" }}
+                  style={{ borderTop: "1px solid var(--asph-border-primary)" }}
                 >
                   <div className="flex items-center justify-between text-xs">
-                    <span style={{ color: "var(--bsky-text-tertiary)" }}>
+                    <span style={{ color: "var(--asph-text-tertiary)" }}>
                       {
                         postStatuses.filter((s) => s.status === "success")
                           .length

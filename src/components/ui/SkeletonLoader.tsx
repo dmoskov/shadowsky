@@ -54,7 +54,7 @@ export const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
   "aria-label": ariaLabel,
 }) => {
   // Use theme-aware colors instead of hardcoded gray
-  const baseClasses = "bg-bsky-bg-tertiary";
+  const baseClasses = "bg-asph-bg-tertiary";
 
   const animationClasses: Record<string, string> = {
     pulse: "animate-pulse",
@@ -113,7 +113,7 @@ export const PostSkeleton: React.FC<PostSkeletonProps> = ({
   // Match post-renderer padding: p-4
   return (
     <div
-      className="border-b border-bsky-border-primary p-4"
+      className="border-b border-asph-border-primary p-4"
       role="status"
       aria-label={ariaLabel}
       aria-busy="true"
@@ -225,7 +225,7 @@ export const FeedSkeleton: React.FC<FeedSkeletonProps> = ({
 }) => {
   return (
     <div
-      className="divide-y divide-bsky-border-primary"
+      className="divide-y divide-asph-border-primary"
       role="status"
       aria-label={ariaLabel}
     >
@@ -287,7 +287,7 @@ export const ProfileSkeleton: React.FC<ProfileSkeletonProps> = ({
             variant="circular"
             width={144}
             height={144}
-            className="border-4 border-bsky-bg-primary shadow-lg"
+            className="border-4 border-asph-bg-primary shadow-lg"
             aria-label="Loading avatar"
           />
         </div>
@@ -349,7 +349,7 @@ export const ProfileSkeleton: React.FC<ProfileSkeletonProps> = ({
 
       {/* Profile tabs - matches ProfilePage tab section */}
       {showTabs && (
-        <div className="border-b border-bsky-border-primary">
+        <div className="border-b border-asph-border-primary">
           <div className="flex gap-1 px-4">
             <SkeletonLoader
               width={60}
@@ -392,7 +392,7 @@ export const NotificationSkeleton: React.FC<NotificationSkeletonProps> = ({
 }) => {
   return (
     <div
-      className="border-b border-bsky-border-primary px-4 py-3"
+      className="border-b border-asph-border-primary px-4 py-3"
       role="status"
       aria-label={ariaLabel}
     >
@@ -424,7 +424,7 @@ export const NotificationFeedSkeleton: React.FC<
 > = ({ count = 5, "aria-label": ariaLabel = "Loading notifications" }) => {
   return (
     <div
-      className="divide-y divide-bsky-border-primary"
+      className="divide-y divide-asph-border-primary"
       role="status"
       aria-label={ariaLabel}
     >
@@ -448,7 +448,7 @@ export const SearchResultSkeleton: React.FC<SearchResultSkeletonProps> = ({
 }) => {
   return (
     <div
-      className="border-b border-bsky-border-primary px-4 py-3"
+      className="border-b border-asph-border-primary px-4 py-3"
       role="status"
       aria-label={ariaLabel}
     >
@@ -523,7 +523,7 @@ export const ThreadSkeleton: React.FC<ThreadSkeletonProps> = ({
     >
       {/* Parent post context (if replying to something) */}
       {showParent && (
-        <div className="mb-4 border-l-2 border-bsky-border-primary pl-4">
+        <div className="mb-4 border-l-2 border-asph-border-primary pl-4">
           <div className="flex gap-3 opacity-60">
             <SkeletonLoader variant="circular" width={40} height={40} />
             <div className="flex-1">
@@ -535,7 +535,7 @@ export const ThreadSkeleton: React.FC<ThreadSkeletonProps> = ({
       )}
 
       {/* Hero/Root post - larger styling */}
-      <div className="mb-6 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-4">
+      <div className="mb-6 rounded-lg border border-asph-border-primary bg-asph-bg-secondary p-4">
         {/* Author row */}
         <div className="mb-4 flex items-center gap-3">
           <SkeletonLoader
@@ -565,12 +565,12 @@ export const ThreadSkeleton: React.FC<ThreadSkeletonProps> = ({
         </div>
 
         {/* Timestamp */}
-        <div className="mb-4 mt-4 border-t border-bsky-border-primary pt-4">
+        <div className="mb-4 mt-4 border-t border-asph-border-primary pt-4">
           <SkeletonLoader width={140} height={14} variant="rounded" />
         </div>
 
         {/* Engagement stats */}
-        <div className="mb-4 flex gap-4 border-b border-bsky-border-primary pb-4">
+        <div className="mb-4 flex gap-4 border-b border-asph-border-primary pb-4">
           <SkeletonLoader width={80} height={16} variant="rounded" />
           <SkeletonLoader width={80} height={16} variant="rounded" />
           <SkeletonLoader width={60} height={16} variant="rounded" />
@@ -586,7 +586,7 @@ export const ThreadSkeleton: React.FC<ThreadSkeletonProps> = ({
       </div>
 
       {/* Replies section header */}
-      <div className="mb-4 border-b border-bsky-border-primary pb-3">
+      <div className="mb-4 border-b border-asph-border-primary pb-3">
         <SkeletonLoader width={80} height={16} variant="rounded" />
       </div>
 
@@ -596,10 +596,10 @@ export const ThreadSkeleton: React.FC<ThreadSkeletonProps> = ({
           <div key={`thread-reply-${i}`} className="relative">
             {/* Thread line connecting replies */}
             {i < replyCount - 1 && (
-              <div className="absolute bottom-0 left-6 top-12 w-0.5 bg-bsky-border-primary" />
+              <div className="absolute bottom-0 left-6 top-12 w-0.5 bg-asph-border-primary" />
             )}
 
-            <div className="border-b border-bsky-border-primary p-4">
+            <div className="border-b border-asph-border-primary p-4">
               <div className="flex gap-3">
                 <SkeletonLoader
                   variant="circular"
@@ -651,7 +651,7 @@ export const ConversationListSkeleton: React.FC<
 > = ({ count = 5, "aria-label": ariaLabel = "Loading conversations" }) => {
   return (
     <div
-      className="divide-y divide-bsky-border-primary"
+      className="divide-y divide-asph-border-primary"
       role="status"
       aria-label={ariaLabel}
       aria-busy="true"
@@ -770,16 +770,16 @@ export const DMSkeleton: React.FC<DMSkeletonProps> = ({
 }) => {
   return (
     <div
-      className="flex h-[calc(100vh-8rem)] w-full overflow-hidden bg-bsky-bg-primary lg:h-[calc(100vh-4rem)]"
+      className="flex h-[calc(100vh-8rem)] w-full overflow-hidden bg-asph-bg-primary lg:h-[calc(100vh-4rem)]"
       role="status"
       aria-label={ariaLabel}
       aria-busy="true"
     >
       {/* Conversation list panel */}
       {showConversationList && (
-        <div className="w-full border-r border-bsky-border-primary lg:w-80">
+        <div className="w-full border-r border-asph-border-primary lg:w-80">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-bsky-border-primary p-4">
+          <div className="flex items-center justify-between border-b border-asph-border-primary p-4">
             <SkeletonLoader width={100} height={24} variant="rounded" />
             <SkeletonLoader variant="circular" width={24} height={24} />
           </div>
@@ -792,7 +792,7 @@ export const DMSkeleton: React.FC<DMSkeletonProps> = ({
       {showMessages && (
         <div className="hidden flex-1 flex-col lg:flex">
           {/* Message header */}
-          <div className="flex items-center gap-3 border-b border-bsky-border-primary p-4">
+          <div className="flex items-center gap-3 border-b border-asph-border-primary p-4">
             <SkeletonLoader variant="circular" width={40} height={40} />
             <div className="flex-1">
               <SkeletonLoader width={120} height={18} variant="rounded" />
@@ -804,7 +804,7 @@ export const DMSkeleton: React.FC<DMSkeletonProps> = ({
             <MessageListSkeleton count={8} />
           </div>
           {/* Message input */}
-          <div className="border-t border-bsky-border-primary p-4">
+          <div className="border-t border-asph-border-primary p-4">
             <div className="flex items-center gap-3">
               <SkeletonLoader
                 width="100%"
@@ -834,7 +834,7 @@ export const UserListSkeleton: React.FC<UserListSkeletonProps> = ({
 }) => {
   return (
     <div
-      className="divide-y divide-bsky-border-primary"
+      className="divide-y divide-asph-border-primary"
       role="status"
       aria-label={ariaLabel}
     >
@@ -873,7 +873,7 @@ export const ListItemSkeleton: React.FC<ListItemSkeletonProps> = ({
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={`list-item-skeleton-${i}`}
-          className="flex items-center justify-between rounded-lg border border-bsky-border-primary p-3"
+          className="flex items-center justify-between rounded-lg border border-asph-border-primary p-3"
         >
           <div className="flex-1">
             <SkeletonLoader

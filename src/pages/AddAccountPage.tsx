@@ -80,25 +80,25 @@ export const AddAccountPage: React.FC = () => {
       <button
         onClick={() => navigate(-1)}
         className="mb-6 flex items-center gap-2 text-sm transition-opacity hover:opacity-80"
-        style={{ color: "var(--bsky-text-secondary)" }}
+        style={{ color: "var(--asph-text-secondary)" }}
       >
         <ArrowLeft size={16} />
         Back
       </button>
 
       <div
-        className="bsky-glass rounded-lg p-6"
-        style={{ border: "1px solid var(--bsky-border-primary)" }}
+        className="asph-glass rounded-lg p-6"
+        style={{ border: "1px solid var(--asph-border-primary)" }}
       >
         <h1
           className="mb-2 text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Sign into another account
         </h1>
         <p
           className="mb-6 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Add another Bluesky account to switch between
         </p>
@@ -106,7 +106,7 @@ export const AddAccountPage: React.FC = () => {
         {/* Login Mode Toggle */}
         <div
           className="mb-4 flex rounded-lg p-1"
-          style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+          style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
         >
           <button
             type="button"
@@ -123,12 +123,12 @@ export const AddAccountPage: React.FC = () => {
             style={{
               backgroundColor:
                 loginMode === "oauth"
-                  ? "var(--bsky-bg-secondary)"
+                  ? "var(--asph-bg-secondary)"
                   : "transparent",
               color:
                 loginMode === "oauth"
-                  ? "var(--bsky-text-primary)"
-                  : "var(--bsky-text-tertiary)",
+                  ? "var(--asph-text-primary)"
+                  : "var(--asph-text-tertiary)",
             }}
             title={!isOAuthAvailable ? "OAuth not available yet" : ""}
           >
@@ -147,12 +147,12 @@ export const AddAccountPage: React.FC = () => {
             style={{
               backgroundColor:
                 loginMode === "app-password"
-                  ? "var(--bsky-bg-secondary)"
+                  ? "var(--asph-bg-secondary)"
                   : "transparent",
               color:
                 loginMode === "app-password"
-                  ? "var(--bsky-text-primary)"
-                  : "var(--bsky-text-tertiary)",
+                  ? "var(--asph-text-primary)"
+                  : "var(--asph-text-tertiary)",
             }}
           >
             <Key size={16} />
@@ -168,11 +168,11 @@ export const AddAccountPage: React.FC = () => {
                 ? "rgba(59, 130, 246, 0.1)"
                 : "rgba(239, 68, 68, 0.1)",
               border: showEmailCode
-                ? "1px solid var(--bsky-primary)"
-                : "1px solid var(--bsky-error)",
+                ? "1px solid var(--asph-primary)"
+                : "1px solid var(--asph-error)",
               color: showEmailCode
-                ? "var(--bsky-primary)"
-                : "var(--bsky-error)",
+                ? "var(--asph-primary)"
+                : "var(--asph-error)",
             }}
           >
             {showEmailCode && (
@@ -189,7 +189,7 @@ export const AddAccountPage: React.FC = () => {
               <label
                 htmlFor="handle"
                 className="mb-2 block text-sm font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Handle
               </label>
@@ -200,22 +200,22 @@ export const AddAccountPage: React.FC = () => {
                 onChange={(e) => setHandle(e.target.value)}
                 className="w-full rounded-xl px-4 py-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                 style={{
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                  border: "1px solid var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
+                  backgroundColor: "var(--asph-bg-tertiary)",
+                  border: "1px solid var(--asph-border-primary)",
+                  color: "var(--asph-text-primary)",
                 }}
                 onFocus={(e) =>
-                  (e.target.style.borderColor = "var(--bsky-primary)")
+                  (e.target.style.borderColor = "var(--asph-primary)")
                 }
                 onBlur={(e) =>
-                  (e.target.style.borderColor = "var(--bsky-border-primary)")
+                  (e.target.style.borderColor = "var(--asph-border-primary)")
                 }
                 placeholder="@handle.bsky.social"
                 required
               />
               <p
                 className="mt-1 text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 You'll be redirected to Bluesky to authorize
               </p>
@@ -224,7 +224,7 @@ export const AddAccountPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="bsky-button-primary flex w-full items-center justify-center gap-2 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="asph-button-primary flex w-full items-center justify-center gap-2 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? (
                 "Redirecting..."
@@ -245,7 +245,7 @@ export const AddAccountPage: React.FC = () => {
               <label
                 htmlFor="identifier"
                 className="mb-2 block text-sm font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Handle or Email
               </label>
@@ -256,15 +256,15 @@ export const AddAccountPage: React.FC = () => {
                 onChange={(e) => setIdentifier(e.target.value)}
                 className="w-full rounded-xl px-4 py-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                 style={{
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                  border: "1px solid var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
+                  backgroundColor: "var(--asph-bg-tertiary)",
+                  border: "1px solid var(--asph-border-primary)",
+                  color: "var(--asph-text-primary)",
                 }}
                 onFocus={(e) =>
-                  (e.target.style.borderColor = "var(--bsky-primary)")
+                  (e.target.style.borderColor = "var(--asph-primary)")
                 }
                 onBlur={(e) =>
-                  (e.target.style.borderColor = "var(--bsky-border-primary)")
+                  (e.target.style.borderColor = "var(--asph-border-primary)")
                 }
                 placeholder="@handle.bsky.social"
                 required
@@ -275,7 +275,7 @@ export const AddAccountPage: React.FC = () => {
               <label
                 htmlFor="password"
                 className="mb-2 block text-sm font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 App Password
               </label>
@@ -286,22 +286,22 @@ export const AddAccountPage: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-xl px-4 py-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                 style={{
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                  border: "1px solid var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
+                  backgroundColor: "var(--asph-bg-tertiary)",
+                  border: "1px solid var(--asph-border-primary)",
+                  color: "var(--asph-text-primary)",
                 }}
                 onFocus={(e) =>
-                  (e.target.style.borderColor = "var(--bsky-primary)")
+                  (e.target.style.borderColor = "var(--asph-primary)")
                 }
                 onBlur={(e) =>
-                  (e.target.style.borderColor = "var(--bsky-border-primary)")
+                  (e.target.style.borderColor = "var(--asph-border-primary)")
                 }
                 placeholder="xxxx-xxxx-xxxx-xxxx"
                 required
               />
               <p
                 className="mt-1 text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 Create an app password at{" "}
                 <a
@@ -309,7 +309,7 @@ export const AddAccountPage: React.FC = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline hover:no-underline"
-                  style={{ color: "var(--bsky-primary-dark)" }}
+                  style={{ color: "var(--asph-primary-dark)" }}
                 >
                   bsky.app/settings/app-passwords
                 </a>
@@ -321,7 +321,7 @@ export const AddAccountPage: React.FC = () => {
                 <label
                   htmlFor="emailCode"
                   className="mb-2 block text-sm font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Email Verification Code
                 </label>
@@ -332,15 +332,15 @@ export const AddAccountPage: React.FC = () => {
                   onChange={(e) => setEmailCode(e.target.value)}
                   className="w-full rounded-xl px-4 py-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    border: "1px solid var(--bsky-border-primary)",
-                    color: "var(--bsky-text-primary)",
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    border: "1px solid var(--asph-border-primary)",
+                    color: "var(--asph-text-primary)",
                   }}
                   onFocus={(e) =>
-                    (e.target.style.borderColor = "var(--bsky-primary)")
+                    (e.target.style.borderColor = "var(--asph-primary)")
                   }
                   onBlur={(e) =>
-                    (e.target.style.borderColor = "var(--bsky-border-primary)")
+                    (e.target.style.borderColor = "var(--asph-border-primary)")
                   }
                   placeholder="Enter the code from your email"
                   required
@@ -349,7 +349,7 @@ export const AddAccountPage: React.FC = () => {
                 <div className="mt-1 flex items-center justify-between">
                   <p
                     className="text-xs"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   >
                     Check your email for the verification code
                   </p>
@@ -361,7 +361,7 @@ export const AddAccountPage: React.FC = () => {
                       setError("");
                     }}
                     className="text-xs hover:underline"
-                    style={{ color: "var(--bsky-primary)" }}
+                    style={{ color: "var(--asph-primary)" }}
                   >
                     Try different credentials
                   </button>
@@ -374,7 +374,7 @@ export const AddAccountPage: React.FC = () => {
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
                 className="flex items-center gap-1 text-sm transition-opacity hover:opacity-80"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 <span
                   className={`transition-transform ${showAdvanced ? "rotate-90" : ""}`}
@@ -392,16 +392,16 @@ export const AddAccountPage: React.FC = () => {
                     onChange={(e) => setPdsUrl(e.target.value)}
                     className="w-full rounded-xl px-4 py-3 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                     style={{
-                      backgroundColor: "var(--bsky-bg-tertiary)",
-                      border: "1px solid var(--bsky-border-primary)",
-                      color: "var(--bsky-text-primary)",
+                      backgroundColor: "var(--asph-bg-tertiary)",
+                      border: "1px solid var(--asph-border-primary)",
+                      color: "var(--asph-text-primary)",
                     }}
                     onFocus={(e) =>
-                      (e.target.style.borderColor = "var(--bsky-primary)")
+                      (e.target.style.borderColor = "var(--asph-primary)")
                     }
                     onBlur={(e) =>
                       (e.target.style.borderColor =
-                        "var(--bsky-border-primary)")
+                        "var(--asph-border-primary)")
                     }
                     placeholder="https://bsky.social"
                   />
@@ -412,7 +412,7 @@ export const AddAccountPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="bsky-button-primary w-full px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="asph-button-primary w-full px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? "Signing in..." : "Sign In"}
             </button>

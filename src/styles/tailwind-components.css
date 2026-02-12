@@ -1,9 +1,9 @@
 /* Tailwind Component Classes */
-/* These reusable component classes replace the ones from bluesky-theme.css */
+/* These reusable component classes replace the ones from asphodel-theme.css */
 
 @layer components {
   /* Button styles with spring animations */
-  .bsky-button {
+  .asph-button {
     @apply rounded-md px-3 py-1.5 text-sm font-medium hover:shadow-sm;
     transition:
       transform var(--transition-fast) var(--ease-spring-soft),
@@ -13,30 +13,30 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .bsky-button:active {
+    .asph-button:active {
       transform: scale(0.97);
     }
   }
 
-  .bsky-button-primary {
-    @apply bsky-button bg-gradient-to-r from-bsky-primary to-bsky-accent text-white hover:opacity-90;
+  .asph-button-primary {
+    @apply asph-button bg-gradient-to-r from-asph-primary to-asph-accent text-white hover:opacity-90;
   }
 
-  .bsky-button-secondary {
-    @apply bsky-button border border-bsky-border-primary bg-bsky-bg-tertiary text-bsky-text-primary hover:bg-opacity-80;
+  .asph-button-secondary {
+    @apply asph-button border border-asph-border-primary bg-asph-bg-tertiary text-asph-text-primary hover:bg-opacity-80;
   }
 
-  .bsky-button-ghost {
-    @apply bsky-button bg-transparent text-bsky-text-secondary hover:bg-white/10;
+  .asph-button-ghost {
+    @apply asph-button bg-transparent text-asph-text-secondary hover:bg-white/10;
   }
 
   /* Card styles with spring animations */
-  .bsky-card {
-    @apply rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary shadow-sm;
+  .asph-card {
+    @apply rounded-lg border border-asph-border-primary bg-asph-bg-secondary shadow-sm;
   }
 
-  .bsky-card-hover {
-    @apply bsky-card;
+  .asph-card-hover {
+    @apply asph-card;
     transition:
       transform var(--transition-normal) var(--ease-spring-soft),
       box-shadow var(--transition-normal) var(--ease-out),
@@ -45,25 +45,25 @@
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .bsky-card-hover:hover {
+    .asph-card-hover:hover {
       transform: translateY(-1px) scale(1.003);
-      box-shadow: var(--bsky-shadow-md);
-      border-color: var(--bsky-border-secondary);
+      box-shadow: var(--asph-shadow-md);
+      border-color: var(--asph-border-secondary);
     }
   }
 
   /* Avatar styles */
-  .bsky-avatar {
-    @apply rounded-full border-2 border-bsky-bg-primary shadow-sm;
+  .asph-avatar {
+    @apply rounded-full border-2 border-asph-bg-primary shadow-sm;
   }
 
-  .bsky-avatar-glow {
-    @apply bsky-avatar shadow-bsky-glow;
+  .asph-avatar-glow {
+    @apply asph-avatar shadow-asph-glow;
   }
 
   /* Badge styles */
-  .bsky-badge {
-    @apply inline-flex items-center rounded-md border border-bsky-border-primary bg-bsky-bg-tertiary px-2 py-0.5 text-xs font-medium text-bsky-text-secondary;
+  .asph-badge {
+    @apply inline-flex items-center rounded-md border border-asph-border-primary bg-asph-bg-tertiary px-2 py-0.5 text-xs font-medium text-asph-text-secondary;
   }
 
   /* Domain verification badge styles */
@@ -84,30 +84,30 @@
   }
 
   /* Notification styles with spring animations */
-  .bsky-notification {
-    @apply relative overflow-hidden border-b border-bsky-border-light;
+  .asph-notification {
+    @apply relative overflow-hidden border-b border-asph-border-light;
     transition:
       background-color var(--transition-fast) var(--ease-default),
       transform var(--transition-fast) var(--ease-spring-soft);
   }
 
-  .bsky-notification:hover {
-    background-color: var(--bsky-bg-hover);
+  .asph-notification:hover {
+    background-color: var(--asph-bg-hover);
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .bsky-notification:active {
+    .asph-notification:active {
       transform: scale(0.998);
     }
   }
 
-  .bsky-notification-unread {
-    @apply border-l-4 border-l-bsky-primary;
-    background: linear-gradient(to right, var(--bsky-primary-10), transparent);
+  .asph-notification-unread {
+    @apply border-l-4 border-l-asph-primary;
+    background: linear-gradient(to right, var(--asph-primary-10), transparent);
   }
 
   /* New notification animation for batched updates */
-  .bsky-notification-new {
+  .asph-notification-new {
     animation: notification-slide-in 0.3s ease-out forwards;
   }
 
@@ -123,9 +123,9 @@
   }
 
   /* Batching indicator */
-  .bsky-notification-batch-indicator {
+  .asph-notification-batch-indicator {
     @apply fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white shadow-lg;
-    background-color: var(--bsky-primary);
+    background-color: var(--asph-primary);
     animation: batch-indicator-pulse 1.5s ease-in-out infinite;
   }
 
@@ -143,79 +143,79 @@
 
   /* Reduced motion preferences for notification animations */
   @media (prefers-reduced-motion: reduce) {
-    .bsky-notification-new {
+    .asph-notification-new {
       animation: none;
       opacity: 1;
       transform: none;
     }
 
-    .bsky-notification-batch-indicator {
+    .asph-notification-batch-indicator {
       animation: none;
     }
   }
 
   /* Tab styles with spring animations */
-  .bsky-tab {
-    @apply relative min-w-fit flex-shrink-0 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-bsky-text-secondary;
+  .asph-tab {
+    @apply relative min-w-fit flex-shrink-0 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-asph-text-secondary;
     transition:
       color var(--transition-fast) var(--ease-default),
       background-color var(--transition-fast) var(--ease-default),
       transform var(--transition-fast) var(--ease-spring-soft);
   }
 
-  .bsky-tab:hover {
-    color: var(--bsky-text-primary);
+  .asph-tab:hover {
+    color: var(--asph-text-primary);
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .bsky-tab:active {
+    .asph-tab:active {
       transform: scale(0.97);
     }
   }
 
-  .bsky-tab-active {
-    @apply bg-bsky-bg-secondary text-bsky-text-primary;
+  .asph-tab-active {
+    @apply bg-asph-bg-secondary text-asph-text-primary;
   }
 
   /* Compact mode for tabs */
-  .bsky-tabs-compact .bsky-tab {
+  .asph-tabs-compact .asph-tab {
     @apply px-2 py-1.5;
   }
 
-  .bsky-tabs-compact .bsky-tab-label {
+  .asph-tabs-compact .asph-tab-label {
     @apply text-xs;
   }
 
   /* Icon-only mode for desktop */
   @media (min-width: 769px) {
-    .bsky-tabs-icon-only-desktop .bsky-tab-label {
+    .asph-tabs-icon-only-desktop .asph-tab-label {
       @apply hidden;
     }
 
-    .bsky-tabs-icon-only-desktop .bsky-tab {
+    .asph-tabs-icon-only-desktop .asph-tab {
       @apply px-3;
     }
 
-    .bsky-tabs-icon-only-desktop .bsky-tab-count {
+    .asph-tabs-icon-only-desktop .asph-tab-count {
       @apply ml-1 text-xs;
     }
   }
 
   /* Icon-only mode for columns (always active) */
-  .bsky-tabs-icon-only-column .bsky-tab-label {
+  .asph-tabs-icon-only-column .asph-tab-label {
     @apply hidden;
   }
 
-  .bsky-tabs-icon-only-column .bsky-tab {
+  .asph-tabs-icon-only-column .asph-tab {
     @apply px-3;
   }
 
-  .bsky-tabs-icon-only-column .bsky-tab-count {
+  .asph-tabs-icon-only-column .asph-tab-count {
     @apply ml-1 text-xs;
   }
 
   /* Loading animation */
-  .bsky-loading {
+  .asph-loading {
     @apply animate-pulse;
   }
 
@@ -307,7 +307,7 @@
   }
 
   /* Responsive tabs container */
-  .bsky-tabs-container {
+  .asph-tabs-container {
     @apply scrollbar-hide relative max-w-full flex-shrink-0;
     overflow-x: auto;
     overflow-y: hidden;
@@ -315,42 +315,42 @@
   }
 
   /* Fade indicators for scrollable tabs */
-  .bsky-tabs-container::before,
-  .bsky-tabs-container::after {
+  .asph-tabs-container::before,
+  .asph-tabs-container::after {
     @apply pointer-events-none absolute bottom-0 top-0 z-[1] w-5 opacity-0 transition-opacity duration-300 content-[''];
   }
 
-  .bsky-tabs-container::before {
-    @apply left-0 bg-gradient-to-r from-bsky-bg-primary to-transparent;
+  .asph-tabs-container::before {
+    @apply left-0 bg-gradient-to-r from-asph-bg-primary to-transparent;
   }
 
-  .bsky-tabs-container::after {
-    @apply right-0 bg-gradient-to-l from-bsky-bg-primary to-transparent;
+  .asph-tabs-container::after {
+    @apply right-0 bg-gradient-to-l from-asph-bg-primary to-transparent;
   }
 
-  .bsky-tabs-container.has-scroll::before,
-  .bsky-tabs-container.has-scroll::after {
+  .asph-tabs-container.has-scroll::before,
+  .asph-tabs-container.has-scroll::after {
     @apply opacity-100;
   }
 
   /* Hide tab labels on small screens */
   @media (max-width: 768px) {
-    .bsky-tab {
+    .asph-tab {
       @apply flex-shrink-0 px-3 py-2;
     }
 
-    .bsky-tab-label {
+    .asph-tab-label {
       @apply hidden;
     }
 
-    .bsky-tab span:first-child {
+    .asph-tab span:first-child {
       @apply m-0;
     }
   }
 
   /* Show labels on larger screens */
   @media (min-width: 769px) {
-    .bsky-tab-label {
+    .asph-tab-label {
       @apply inline;
     }
   }
@@ -359,7 +359,7 @@
    * FOCUS-VISIBLE UTILITY CLASSES - WCAG 2.1 AAA
    * ============================================
    * Enhanced focus states for keyboard navigation accessibility.
-   * Uses CSS custom properties from bluesky-theme.css for consistent,
+   * Uses CSS custom properties from asphodel-theme.css for consistent,
    * accessible focus indicators meeting 3:1 contrast requirements.
    *
    * Usage: Apply these classes to focusable elements for consistent
@@ -417,7 +417,7 @@
 
   /* Blue focus ring variant (for use with blue accent buttons) */
   .focus-ring-blue:focus-visible {
-    --focus-ring-color: #3b82f6;
+    --focus-ring-color: #c9a84c;
     --focus-ring-color-rgb: 59, 130, 246;
     outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset);
@@ -484,7 +484,7 @@
 
   /* Base modal container - mobile-first fullscreen, centered on desktop */
   .modal-container {
-    @apply relative flex w-full flex-col overflow-hidden rounded-none bg-bsky-bg-primary;
+    @apply relative flex w-full flex-col overflow-hidden rounded-none bg-asph-bg-primary;
     /* Mobile: fullscreen */
     @apply h-full max-h-full;
     /* Animation */
@@ -555,30 +555,30 @@
 
   /* Modal header - sticky with proper styling */
   .modal-header {
-    @apply sticky top-0 z-10 flex flex-shrink-0 items-center justify-between border-b border-bsky-border-primary bg-bsky-bg-primary p-4;
+    @apply sticky top-0 z-10 flex flex-shrink-0 items-center justify-between border-b border-asph-border-primary bg-asph-bg-primary p-4;
     /* Safe area padding for notched devices */
     padding-top: max(1rem, env(safe-area-inset-top));
   }
 
   /* Modal body - scrollable content area */
   .modal-body {
-    @apply bsky-scrollbar flex-1 overflow-y-auto p-4;
+    @apply asph-scrollbar flex-1 overflow-y-auto p-4;
   }
 
   /* Modal footer - sticky at bottom */
   .modal-footer {
-    @apply sticky bottom-0 flex flex-shrink-0 items-center justify-end gap-3 border-t border-bsky-border-primary bg-bsky-bg-secondary p-4;
+    @apply sticky bottom-0 flex flex-shrink-0 items-center justify-end gap-3 border-t border-asph-border-primary bg-asph-bg-secondary p-4;
     /* Safe area padding for notched devices */
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 
   /* Modal close button - consistent styling */
   .modal-close {
-    @apply focus-ring rounded-full p-2 text-bsky-text-secondary transition-colors hover:bg-bsky-bg-hover;
+    @apply focus-ring rounded-full p-2 text-asph-text-secondary transition-colors hover:bg-asph-bg-hover;
   }
 
   /* Modal title styling */
   .modal-title {
-    @apply text-lg font-semibold text-bsky-text-primary sm:text-xl;
+    @apply text-lg font-semibold text-asph-text-primary sm:text-xl;
   }
 }

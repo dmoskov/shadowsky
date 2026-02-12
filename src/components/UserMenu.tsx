@@ -116,7 +116,7 @@ export const UserMenu: React.FC = () => {
           setIsOpen(!isOpen);
         }}
         className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-white hover:bg-opacity-10"
-        style={{ color: "var(--bsky-text-primary)" }}
+        style={{ color: "var(--asph-text-primary)" }}
         aria-label="User menu"
         aria-haspopup="menu"
         aria-expanded={isOpen}
@@ -139,27 +139,27 @@ export const UserMenu: React.FC = () => {
             id={menuId}
             role="menu"
             aria-label="User menu"
-            className="bsky-glass fixed z-[9999] w-56 overflow-hidden rounded-lg shadow-lg"
+            className="asph-glass fixed z-[9999] w-56 overflow-hidden rounded-lg shadow-lg"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border-primary)",
               top: `${menuPosition.top}px`,
               right: `${menuPosition.right}px`,
             }}
           >
             <div
               className="border-b px-4 py-3"
-              style={{ borderColor: "var(--bsky-border-primary)" }}
+              style={{ borderColor: "var(--asph-border-primary)" }}
             >
               <p
                 className="truncate font-medium"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {session?.handle}
               </p>
               <p
                 className="truncate text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 @{session?.handle}
               </p>
@@ -173,7 +173,7 @@ export const UserMenu: React.FC = () => {
                       key={`menu-divider-${index}`}
                       role="separator"
                       className="my-1 border-t"
-                      style={{ borderColor: "var(--bsky-border-primary)" }}
+                      style={{ borderColor: "var(--asph-border-primary)" }}
                     />
                   );
                 }
@@ -190,7 +190,7 @@ export const UserMenu: React.FC = () => {
                     style={{
                       color: item.className?.includes("text-red")
                         ? undefined
-                        : "var(--bsky-text-primary)",
+                        : "var(--asph-text-primary)",
                     }}
                   >
                     <Icon size={16} aria-hidden="true" />

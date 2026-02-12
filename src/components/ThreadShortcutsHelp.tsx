@@ -27,9 +27,9 @@ export const ThreadShortcutsHelp: React.FC<ThreadShortcutsHelpProps> = ({
       <div
         className="flex flex-wrap items-center gap-2 rounded-lg px-3 py-2 text-xs"
         style={{
-          backgroundColor: "var(--bsky-bg-tertiary)",
-          color: "var(--bsky-text-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
+          color: "var(--asph-text-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
         role="region"
         aria-label="Keyboard shortcuts"
@@ -86,21 +86,21 @@ export const ThreadShortcutsHelp: React.FC<ThreadShortcutsHelpProps> = ({
       <div
         className="relative z-10 w-full max-w-md rounded-lg p-6 shadow-2xl"
         style={{
-          backgroundColor: "var(--bsky-bg-primary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-primary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Keyboard
               size={20}
-              style={{ color: "var(--bsky-primary)" }}
+              style={{ color: "var(--asph-primary)" }}
               aria-hidden="true"
             />
             <h2
               id="shortcuts-title"
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Thread Navigation Shortcuts
             </h2>
@@ -108,7 +108,7 @@ export const ThreadShortcutsHelp: React.FC<ThreadShortcutsHelpProps> = ({
           <button
             onClick={onClose}
             className="rounded-full p-1.5 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
             aria-label="Close shortcuts panel"
           >
             <X size={20} />
@@ -120,7 +120,7 @@ export const ThreadShortcutsHelp: React.FC<ThreadShortcutsHelpProps> = ({
           <div>
             <h3
               className="mb-2 text-xs font-medium uppercase tracking-wide"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               Navigation
             </h3>
@@ -139,7 +139,7 @@ export const ThreadShortcutsHelp: React.FC<ThreadShortcutsHelpProps> = ({
           <div>
             <h3
               className="mb-2 text-xs font-medium uppercase tracking-wide"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               Filter
             </h3>
@@ -156,7 +156,7 @@ export const ThreadShortcutsHelp: React.FC<ThreadShortcutsHelpProps> = ({
           <div>
             <h3
               className="mb-2 text-xs font-medium uppercase tracking-wide"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               Actions
             </h3>
@@ -172,7 +172,7 @@ export const ThreadShortcutsHelp: React.FC<ThreadShortcutsHelpProps> = ({
 
         <div
           className="mt-4 text-center text-xs"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           Press{" "}
           <kbd className="rounded bg-gray-200 px-1.5 py-0.5 font-mono dark:bg-gray-700">
@@ -194,15 +194,15 @@ const ShortcutRow: React.FC<ShortcutRowProps> = ({ shortcut }) => (
     className="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
     role="listitem"
   >
-    <span style={{ color: "var(--bsky-text-primary)" }}>
+    <span style={{ color: "var(--asph-text-primary)" }}>
       {shortcut.description}
     </span>
     <kbd
       className="rounded px-2 py-1 font-mono text-sm"
       style={{
-        backgroundColor: "var(--bsky-bg-secondary)",
-        color: "var(--bsky-text-secondary)",
-        border: "1px solid var(--bsky-border-primary)",
+        backgroundColor: "var(--asph-bg-secondary)",
+        color: "var(--asph-text-secondary)",
+        border: "1px solid var(--asph-border-primary)",
       }}
       aria-label={`Press ${shortcut.key}`}
     >
@@ -223,9 +223,9 @@ export const ThreadShortcutsHintBar: React.FC<{
     <div
       className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg px-3 py-2 text-xs"
       style={{
-        backgroundColor: "var(--bsky-bg-tertiary)",
-        color: "var(--bsky-text-secondary)",
-        border: "1px solid var(--bsky-border-primary)",
+        backgroundColor: "var(--asph-bg-tertiary)",
+        color: "var(--asph-text-secondary)",
+        border: "1px solid var(--asph-border-primary)",
       }}
       role="region"
       aria-label="Thread keyboard shortcuts"

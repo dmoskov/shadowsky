@@ -156,17 +156,17 @@ export function GiphySearch({ onSelectGif, onClose }: GiphySearchProps) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal-container modal-auto-height modal-2xl bg-bsky-bg-primary"
+        className="modal-container modal-auto-height modal-2xl bg-asph-bg-primary"
         onClick={(e) => e.stopPropagation()}
       >
         <div
           className="border-b p-4"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
           <div className="mb-3 flex items-center justify-between">
             <h3
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Search GIFs
             </h3>
@@ -183,7 +183,7 @@ export function GiphySearch({ onSelectGif, onClose }: GiphySearchProps) {
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 transform"
               size={20}
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             />
             <input
               ref={searchInputRef}
@@ -193,26 +193,26 @@ export function GiphySearch({ onSelectGif, onClose }: GiphySearchProps) {
               onChange={handleSearch}
               className="w-full rounded-lg py-2 pl-10 pr-4"
               style={{
-                background: "var(--bsky-bg-secondary)",
-                border: "1px solid var(--bsky-border-primary)",
-                color: "var(--bsky-text-primary)",
+                background: "var(--asph-bg-secondary)",
+                border: "1px solid var(--asph-border-primary)",
+                color: "var(--asph-text-primary)",
                 outline: "none",
               }}
               onFocus={(e) =>
-                (e.target.style.borderColor = "var(--bsky-primary)")
+                (e.target.style.borderColor = "var(--asph-primary)")
               }
               onBlur={(e) =>
-                (e.target.style.borderColor = "var(--bsky-border-primary)")
+                (e.target.style.borderColor = "var(--asph-border-primary)")
               }
               autoFocus
             />
           </div>
         </div>
 
-        <div className="bsky-scrollbar flex-1 overflow-y-auto p-4">
+        <div className="asph-scrollbar flex-1 overflow-y-auto p-4">
           {!GIPHY_API_KEY && (
             <div className="py-8 text-center">
-              <p style={{ color: "var(--bsky-text-secondary)" }}>
+              <p style={{ color: "var(--asph-text-secondary)" }}>
                 Giphy API key not configured. Add VITE_GIPHY_API_KEY to your
                 .env file.
               </p>
@@ -221,7 +221,7 @@ export function GiphySearch({ onSelectGif, onClose }: GiphySearchProps) {
 
           {error && (
             <div className="py-8 text-center">
-              <p style={{ color: "var(--bsky-error)" }}>{error}</p>
+              <p style={{ color: "var(--asph-error)" }}>{error}</p>
             </div>
           )}
 
@@ -230,14 +230,14 @@ export function GiphySearch({ onSelectGif, onClose }: GiphySearchProps) {
               <Loader
                 className="animate-spin"
                 size={32}
-                style={{ color: "var(--bsky-primary)" }}
+                style={{ color: "var(--asph-primary)" }}
               />
             </div>
           )}
 
           {!loading && !error && displayGifs.length === 0 && searchTerm && (
             <div className="py-8 text-center">
-              <p style={{ color: "var(--bsky-text-secondary)" }}>
+              <p style={{ color: "var(--asph-text-secondary)" }}>
                 No GIFs found
               </p>
             </div>
@@ -255,7 +255,7 @@ export function GiphySearch({ onSelectGif, onClose }: GiphySearchProps) {
                   }}
                   className="relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-80"
                   style={{
-                    background: "var(--bsky-bg-secondary)",
+                    background: "var(--asph-bg-secondary)",
                     opacity: selectedGifId === gif.id ? 0.5 : 1,
                   }}
                   disabled={selectedGifId !== null}
@@ -280,7 +280,7 @@ export function GiphySearch({ onSelectGif, onClose }: GiphySearchProps) {
             <div className="mb-3 text-center">
               <p
                 className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Trending GIFs
               </p>
@@ -290,15 +290,15 @@ export function GiphySearch({ onSelectGif, onClose }: GiphySearchProps) {
 
         <div
           className="border-t p-3 text-center"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
           <p
             className="mb-1 text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             Powered by GIPHY
           </p>
-          <p className="text-xs" style={{ color: "var(--bsky-text-tertiary)" }}>
+          <p className="text-xs" style={{ color: "var(--asph-text-tertiary)" }}>
             GIFs will be converted to videos for animation support
           </p>
         </div>

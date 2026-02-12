@@ -390,22 +390,22 @@ const NotificationsFeedComponent: React.FC = () => {
     switch (reason) {
       case "like":
         return (
-          <HeartIcon size={18} filled style={{ color: "var(--bsky-like)" }} />
+          <HeartIcon size={18} filled style={{ color: "var(--asph-like)" }} />
         );
       case "repost":
-        return <RepostIcon size={18} style={{ color: "var(--bsky-repost)" }} />;
+        return <RepostIcon size={18} style={{ color: "var(--asph-repost)" }} />;
       case "follow":
-        return <FollowIcon size={18} style={{ color: "var(--bsky-follow)" }} />;
+        return <FollowIcon size={18} style={{ color: "var(--asph-follow)" }} />;
       case "mention":
         return (
-          <AtSignIcon size={18} style={{ color: "var(--bsky-mention)" }} />
+          <AtSignIcon size={18} style={{ color: "var(--asph-mention)" }} />
         );
       case "reply":
-        return <ReplyIcon size={18} style={{ color: "var(--bsky-reply)" }} />;
+        return <ReplyIcon size={18} style={{ color: "var(--asph-reply)" }} />;
       case "quote":
-        return <QuoteIcon size={18} style={{ color: "var(--bsky-quote)" }} />;
+        return <QuoteIcon size={18} style={{ color: "var(--asph-quote)" }} />;
       case "starterpack-joined":
-        return <FollowIcon size={18} style={{ color: "var(--bsky-follow)" }} />;
+        return <FollowIcon size={18} style={{ color: "var(--asph-follow)" }} />;
       default:
         return null;
     }
@@ -436,13 +436,13 @@ const NotificationsFeedComponent: React.FC = () => {
     return (
       <div className="p-6">
         <div
-          className="bsky-card p-4"
+          className="asph-card p-4"
           style={{
-            borderColor: "var(--bsky-error)",
+            borderColor: "var(--asph-error)",
             backgroundColor: "rgba(239, 68, 68, 0.1)",
           }}
         >
-          <p style={{ color: "var(--bsky-error)" }}>
+          <p style={{ color: "var(--asph-error)" }}>
             Failed to load notifications
           </p>
         </div>
@@ -451,10 +451,10 @@ const NotificationsFeedComponent: React.FC = () => {
   }
 
   return (
-    <div className="bsky-font" role="main" aria-label="Notifications">
+    <div className="asph-font" role="main" aria-label="Notifications">
       {/* Filter tabs */}
       <div
-        className="bsky-glass sticky top-0 z-10 border-b border-bsky-border-primary"
+        className="asph-glass sticky top-0 z-10 border-b border-asph-border-primary"
         role="toolbar"
         aria-label="Notification filters"
       >
@@ -577,8 +577,8 @@ const NotificationsFeedComponent: React.FC = () => {
                   }}
                   className={`flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
                     showMoreFilters
-                      ? "bg-bsky-primary text-white"
-                      : "text-bsky-text-secondary hover:bg-bsky-bg-secondary hover:text-bsky-text-primary"
+                      ? "bg-asph-primary text-white"
+                      : "text-asph-text-secondary hover:bg-asph-bg-secondary hover:text-asph-text-primary"
                   }`}
                   aria-label="More filters"
                 >
@@ -590,7 +590,7 @@ const NotificationsFeedComponent: React.FC = () => {
                   ReactDOM.createPortal(
                     <div
                       ref={moreFiltersRef}
-                      className="fixed z-[9999] w-48 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-1 shadow-md"
+                      className="fixed z-[9999] w-48 rounded-lg border border-asph-border-primary bg-asph-bg-secondary p-1 shadow-md"
                       style={{
                         top: `${moreFiltersPosition.top}px`,
                         right: `${moreFiltersPosition.right}px`,
@@ -601,7 +601,7 @@ const NotificationsFeedComponent: React.FC = () => {
                           handleFilterChange("quotes");
                           setShowMoreFilters(false);
                         }}
-                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
+                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-asph-bg-hover ${
                           filter === "quotes" ? "text-blue-500" : ""
                         }`}
                       >
@@ -618,7 +618,7 @@ const NotificationsFeedComponent: React.FC = () => {
                           handleFilterChange("images");
                           setShowMoreFilters(false);
                         }}
-                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
+                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-asph-bg-hover ${
                           filter === "images" ? "text-blue-500" : ""
                         }`}
                       >
@@ -635,7 +635,7 @@ const NotificationsFeedComponent: React.FC = () => {
                           handleFilterChange("from-following");
                           setShowMoreFilters(false);
                         }}
-                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
+                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-asph-bg-hover ${
                           filter === "from-following" ? "text-blue-500" : ""
                         }`}
                         disabled={isLoadingFollowing}
@@ -654,7 +654,7 @@ const NotificationsFeedComponent: React.FC = () => {
                             handleFilterChange("top-accounts");
                             setShowMoreFilters(false);
                           }}
-                          className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover ${
+                          className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-asph-bg-hover ${
                             filter === "top-accounts" ? "text-blue-500" : ""
                           }`}
                         >
@@ -679,7 +679,7 @@ const NotificationsFeedComponent: React.FC = () => {
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing || isLoading}
-                className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-bsky-text-secondary transition-all hover:bg-bsky-bg-secondary hover:text-bsky-text-primary disabled:opacity-50"
+                className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-asph-text-secondary transition-all hover:bg-asph-bg-secondary hover:text-asph-text-primary disabled:opacity-50"
                 aria-label={
                   isRefreshing
                     ? "Refreshing notifications"
@@ -698,7 +698,7 @@ const NotificationsFeedComponent: React.FC = () => {
               {unreadCount && unreadCount > 0 && (
                 <button
                   onClick={() => markAsRead()}
-                  className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-bsky-primary transition-all hover:bg-bsky-bg-secondary"
+                  className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-asph-primary transition-all hover:bg-asph-bg-secondary"
                   aria-label={`Mark all ${unreadCount} notifications as read`}
                 >
                   <svg
@@ -737,7 +737,7 @@ const NotificationsFeedComponent: React.FC = () => {
         ) : filteredNotifications.length === 0 ? (
           <div
             className="p-6 text-center sm:p-12"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             <div className="mb-4 text-5xl opacity-20">📭</div>
             <p className="text-lg">No notifications to show</p>
@@ -812,7 +812,7 @@ const NotificationsFeedComponent: React.FC = () => {
                       <div
                         className="border-l-2"
                         style={{
-                          borderColor: "var(--bsky-border-secondary)",
+                          borderColor: "var(--asph-border-secondary)",
                           marginLeft: "3rem",
                         }}
                       >
@@ -843,9 +843,9 @@ const NotificationsFeedComponent: React.FC = () => {
                             newExpanded.delete(aggregationKey);
                             setExpandedAggregations(newExpanded);
                           }}
-                          className="flex w-full items-center gap-1 rounded-md px-3 py-2 text-left text-xs hover:bg-bsky-bg-hover"
+                          className="flex w-full items-center gap-1 rounded-md px-3 py-2 text-left text-xs hover:bg-asph-bg-hover"
                           style={{
-                            color: "var(--bsky-text-secondary)",
+                            color: "var(--asph-text-secondary)",
                             paddingLeft: "calc(1rem + 3rem)",
                           }}
                         >
@@ -908,19 +908,19 @@ const NotificationsFeedComponent: React.FC = () => {
             {isFetchingNextPage ? (
               <div
                 className="flex items-center gap-2"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 <Loader
                   className="animate-spin"
                   size={20}
-                  style={{ color: "var(--bsky-primary)" }}
+                  style={{ color: "var(--asph-primary)" }}
                 />
                 <span className="text-sm">Loading more...</span>
               </div>
             ) : (
               <div
                 className="text-sm"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 <div className="animate-pulse">↓ Scroll for more</div>
               </div>
@@ -931,14 +931,14 @@ const NotificationsFeedComponent: React.FC = () => {
         {/* End of notifications message */}
         {!hasNextPage && notifications.length > 0 && (
           <div className="p-8 text-center">
-            <div className="bsky-badge mb-2">
+            <div className="asph-badge mb-2">
               {notifications.length >= 1000
                 ? `1,000 notifications max`
                 : `End of notifications`}
             </div>
             <p
               className="text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               {notifications.length >= 1000
                 ? "Showing the most recent 1,000 notifications"
@@ -950,10 +950,10 @@ const NotificationsFeedComponent: React.FC = () => {
         {/* Configuration Modal */}
         {showConfigModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-            <div className="bsky-card w-full max-w-md p-6">
+            <div className="asph-card w-full max-w-md p-6">
               <h3
                 className="mb-4 text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 Top Accounts Settings
               </h3>
@@ -961,7 +961,7 @@ const NotificationsFeedComponent: React.FC = () => {
               <div className="mb-4">
                 <label
                   className="mb-2 block text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Minimum Follower Count
                 </label>
@@ -969,18 +969,18 @@ const NotificationsFeedComponent: React.FC = () => {
                   type="number"
                   value={minFollowerCount}
                   onChange={(e) => setMinFollowerCount(Number(e.target.value))}
-                  className="bsky-input w-full rounded px-3 py-2"
+                  className="asph-input w-full rounded px-3 py-2"
                   style={{
-                    backgroundColor: "var(--bsky-bg-secondary)",
-                    border: "1px solid var(--bsky-border-primary)",
-                    color: "var(--bsky-text-primary)",
+                    backgroundColor: "var(--asph-bg-secondary)",
+                    border: "1px solid var(--asph-border-primary)",
+                    color: "var(--asph-text-primary)",
                   }}
                   min="0"
                   step="1000"
                 />
                 <p
                   className="mt-1 text-xs"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   Show accounts with at least this many followers
                 </p>
@@ -989,13 +989,13 @@ const NotificationsFeedComponent: React.FC = () => {
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setShowConfigModal(false)}
-                  className="bsky-button-secondary"
+                  className="asph-button-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => setShowConfigModal(false)}
-                  className="bsky-button-primary"
+                  className="asph-button-primary"
                 >
                   Save
                 </button>
@@ -1039,8 +1039,8 @@ const FilterTab: React.FC<FilterTabProps> = React.memo(
         onClick={onClick}
         className={`flex items-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-1 text-xs font-medium transition-all duration-200 sm:gap-1 sm:px-2 sm:py-1.5 sm:text-sm md:px-2.5 ${
           active
-            ? "bg-bsky-primary text-white"
-            : "text-bsky-text-secondary hover:bg-bsky-bg-secondary hover:text-bsky-text-primary"
+            ? "bg-asph-primary text-white"
+            : "text-asph-text-secondary hover:bg-asph-bg-secondary hover:text-asph-text-primary"
         } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
         aria-label={`Filter by ${label}${count !== undefined && count > 0 ? `, ${count} items` : ""}`}
         aria-pressed={active}
@@ -1055,7 +1055,7 @@ const FilterTab: React.FC<FilterTabProps> = React.memo(
         {count !== undefined && count > 0 && (
           <span
             className={`text-[10px] font-bold sm:text-xs ${
-              active ? "text-white/90" : "text-bsky-text-tertiary"
+              active ? "text-white/90" : "text-asph-text-tertiary"
             }`}
             aria-hidden="true"
           >
@@ -1169,14 +1169,14 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
               <div
                 className="mt-3 rounded-lg p-4"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  border: "1px solid var(--bsky-border-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  border: "1px solid var(--asph-border-primary)",
                   boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                 }}
               >
                 <p
                   className="text-sm italic"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   Post unavailable
                 </p>
@@ -1208,9 +1208,9 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
         const hasMedia = hasImages || hasVideo || hasExternal;
 
         return (
-          <div className="mt-2 rounded-md border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
+          <div className="mt-2 rounded-md border border-asph-border-primary bg-asph-bg-secondary p-2.5">
             <div className="mb-1 flex items-center gap-1.5">
-              <span className="text-xs font-medium text-bsky-text-tertiary">
+              <span className="text-xs font-medium text-asph-text-tertiary">
                 {notification.reason === "reply"
                   ? "Replying to your post:"
                   : notification.reason === "quote"
@@ -1223,13 +1223,13 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                     <img
                       src={proxifyBskyImage(post.author.avatar)}
                       alt={post.author.handle}
-                      className="bsky-avatar h-5 w-5 cursor-pointer transition-opacity hover:opacity-80"
+                      className="asph-avatar h-5 w-5 cursor-pointer transition-opacity hover:opacity-80"
                       onClick={handlePostAuthorClick}
                     />
                   ) : (
                     <div
-                      className="bsky-avatar flex h-5 w-5 cursor-pointer items-center justify-center text-xs transition-opacity hover:opacity-80"
-                      style={{ background: "var(--bsky-bg-tertiary)" }}
+                      className="asph-avatar flex h-5 w-5 cursor-pointer items-center justify-center text-xs transition-opacity hover:opacity-80"
+                      style={{ background: "var(--asph-bg-tertiary)" }}
                       onClick={handlePostAuthorClick}
                     >
                       {post.author?.handle?.charAt(0).toUpperCase()}
@@ -1239,7 +1239,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
               )}
               {post.author?.handle ? (
                 <ProfileHoverCard handle={post.author.handle}>
-                  <span className="inline-flex cursor-pointer items-center text-xs font-medium text-bsky-text-secondary hover:underline">
+                  <span className="inline-flex cursor-pointer items-center text-xs font-medium text-asph-text-secondary hover:underline">
                     <span>
                       {post.author?.displayName ||
                         post.author?.handle ||
@@ -1249,7 +1249,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                   </span>
                 </ProfileHoverCard>
               ) : (
-                <span className="inline-flex items-center text-xs font-medium text-bsky-text-secondary">
+                <span className="inline-flex items-center text-xs font-medium text-asph-text-secondary">
                   <span>
                     {post.author?.displayName ||
                       post.author?.handle ||
@@ -1260,7 +1260,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
               {hasMedia && (
                 <span
                   className="flex items-center gap-1 text-xs"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   · {hasVideo ? "🎬" : hasExternal ? "🔗" : "📷"}
                 </span>
@@ -1268,7 +1268,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
             </div>
 
             {post.record?.text && (
-              <p className="text-sm leading-relaxed text-bsky-text-primary">
+              <p className="text-sm leading-relaxed text-asph-text-primary">
                 {post.record.text}
               </p>
             )}
@@ -1286,7 +1286,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                     <div
                       className="relative overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
                       style={{
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                         aspectRatio: "16/9",
                         maxHeight: "200px",
                       }}
@@ -1300,7 +1300,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
-                          <span style={{ color: "var(--bsky-text-tertiary)" }}>
+                          <span style={{ color: "var(--asph-text-tertiary)" }}>
                             Video
                           </span>
                         </div>
@@ -1337,7 +1337,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                     <div
                       className="relative overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
                       style={{
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                         aspectRatio: "16/9",
                         maxHeight: "200px",
                       }}
@@ -1351,7 +1351,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
-                          <span style={{ color: "var(--bsky-text-tertiary)" }}>
+                          <span style={{ color: "var(--asph-text-tertiary)" }}>
                             Video
                           </span>
                         </div>
@@ -1395,7 +1395,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                       <div
                         className="overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
                         style={{
-                          borderColor: "var(--bsky-border-primary)",
+                          borderColor: "var(--asph-border-primary)",
                         }}
                       >
                         <img
@@ -1408,7 +1408,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                         {external.title && !isGif && (
                           <div
                             className="p-2 text-xs"
-                            style={{ color: "var(--bsky-text-secondary)" }}
+                            style={{ color: "var(--asph-text-secondary)" }}
                           >
                             {external.title}
                           </div>
@@ -1439,7 +1439,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                       <div
                         className="overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
                         style={{
-                          borderColor: "var(--bsky-border-primary)",
+                          borderColor: "var(--asph-border-primary)",
                         }}
                       >
                         <img
@@ -1452,7 +1452,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                         {external.title && !isGif && (
                           <div
                             className="p-2 text-xs"
-                            style={{ color: "var(--bsky-text-secondary)" }}
+                            style={{ color: "var(--asph-text-secondary)" }}
                           >
                             {external.title}
                           </div>
@@ -1495,7 +1495,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                         key={`notif-feed-img-${img.thumb}-${idx}`}
                         className="relative overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
                         style={{
-                          borderColor: "var(--bsky-border-primary)",
+                          borderColor: "var(--asph-border-primary)",
                           aspectRatio: images.length === 1 ? "16/9" : "1",
                           maxHeight: images.length === 1 ? "200px" : "120px",
                         }}
@@ -1524,8 +1524,8 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
         "text" in notification.record
       ) {
         return (
-          <div className="mt-2 rounded-md border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
-            <p className="text-sm leading-relaxed text-bsky-text-primary">
+          <div className="mt-2 rounded-md border border-asph-border-primary bg-asph-bg-secondary p-2.5">
+            <p className="text-sm leading-relaxed text-asph-text-primary">
               {(notification.record as { text?: string }).text}
             </p>
           </div>
@@ -1544,10 +1544,10 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
         "text" in notification.record
       ) {
         return (
-          <div className="mt-2 rounded-md border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
+          <div className="mt-2 rounded-md border border-asph-border-primary bg-asph-bg-secondary p-2.5">
             <p
               className="text-sm"
-              style={{ color: "var(--bsky-text-primary)", lineHeight: "1.5" }}
+              style={{ color: "var(--asph-text-primary)", lineHeight: "1.5" }}
             >
               {(notification.record as { text?: string }).text}
             </p>
@@ -1602,9 +1602,9 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
 
     return (
       <div
-        className={`bsky-notification cursor-pointer px-3 py-2 ${
-          !notification.isRead ? "bsky-notification-unread" : ""
-        } ${isNew ? "bsky-notification-new" : ""}`}
+        className={`asph-notification cursor-pointer px-3 py-2 ${
+          !notification.isRead ? "asph-notification-unread" : ""
+        } ${isNew ? "asph-notification-new" : ""}`}
         onClick={handleNotificationClick}
       >
         <div className="flex items-start gap-2">
@@ -1618,13 +1618,13 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                 <img
                   src={proxifyBskyImage(notification.author.avatar)}
                   alt={notification.author.handle}
-                  className="bsky-avatar h-10 w-10 cursor-pointer transition-opacity hover:opacity-80"
+                  className="asph-avatar h-10 w-10 cursor-pointer transition-opacity hover:opacity-80"
                   onClick={handleAuthorClick}
                 />
               ) : (
                 <div
-                  className="bsky-avatar flex h-10 w-10 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
-                  style={{ background: "var(--bsky-bg-tertiary)" }}
+                  className="asph-avatar flex h-10 w-10 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
+                  style={{ background: "var(--asph-bg-tertiary)" }}
                   onClick={handleAuthorClick}
                 >
                   <span className="text-sm font-semibold">
@@ -1643,9 +1643,9 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                 <span
                   className="rounded-full px-2 py-0.5 text-xs font-medium"
                   style={{
-                    backgroundColor: "var(--bsky-bg-secondary)",
-                    color: "var(--bsky-text-secondary)",
-                    border: "1px solid var(--bsky-border-primary)",
+                    backgroundColor: "var(--asph-bg-secondary)",
+                    color: "var(--asph-text-secondary)",
+                    border: "1px solid var(--asph-border-primary)",
                   }}
                 >
                   {getNotificationTypeLabel(notification.reason)}
@@ -1657,7 +1657,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                 <span className="inline-flex items-center">
                   <span
                     className="cursor-pointer font-semibold hover:underline"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {notification.author.displayName ||
                       notification.author.handle}
@@ -1667,12 +1667,12 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                   />
                 </span>
               </ProfileHoverCard>{" "}
-              <span style={{ color: "var(--bsky-text-secondary)" }}>
+              <span style={{ color: "var(--asph-text-secondary)" }}>
                 {getNotificationText(notification.reason)}
               </span>
               <span
                 className="ml-1 text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 ·{" "}
                 {formatDistanceToNow(new Date(notification.indexedAt), {

@@ -134,22 +134,22 @@ export const DmSearch: React.FC<DmSearchProps> = ({
   return (
     <div className="flex h-full flex-col">
       {/* Search input */}
-      <div className="border-b border-bsky-border-primary p-3">
+      <div className="border-b border-asph-border-primary p-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-bsky-text-secondary" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-asph-text-secondary" />
           <input
             ref={searchInputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search messages..."
-            className="w-full rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary py-2 pl-10 pr-10 text-sm text-bsky-text-primary placeholder-bsky-text-secondary focus-visible:border-bsky-primary focus-visible:outline-none"
+            className="w-full rounded-lg border border-asph-border-primary bg-asph-bg-secondary py-2 pl-10 pr-10 text-sm text-asph-text-primary placeholder-asph-text-secondary focus-visible:border-asph-primary focus-visible:outline-none"
             aria-label="Search messages"
           />
           {query && (
             <button
               onClick={() => setQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-bsky-text-secondary hover:text-bsky-text-primary"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-asph-text-secondary hover:text-asph-text-primary"
               aria-label="Clear search"
             >
               <X className="h-4 w-4" />
@@ -162,8 +162,8 @@ export const DmSearch: React.FC<DmSearchProps> = ({
           onClick={() => setShowFilters(!showFilters)}
           className={`mt-2 flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors ${
             hasActiveFilters(filters)
-              ? "bg-bsky-primary text-white"
-              : "text-bsky-text-secondary hover:bg-bsky-bg-secondary"
+              ? "bg-asph-primary text-white"
+              : "text-asph-text-secondary hover:bg-asph-bg-secondary"
           }`}
         >
           <Filter className="h-3 w-3" />
@@ -188,11 +188,11 @@ export const DmSearch: React.FC<DmSearchProps> = ({
 
       {/* Filters panel */}
       {showFilters && (
-        <div className="border-b border-bsky-border-primary bg-bsky-bg-secondary p-3">
+        <div className="border-b border-asph-border-primary bg-asph-bg-secondary p-3">
           <div className="space-y-3">
             {/* Sender filter */}
             <div>
-              <label className="mb-1 flex items-center gap-1 text-xs text-bsky-text-secondary">
+              <label className="mb-1 flex items-center gap-1 text-xs text-asph-text-secondary">
                 <User className="h-3 w-3" />
                 Sender
               </label>
@@ -204,7 +204,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
                     senderDid: e.target.value || undefined,
                   })
                 }
-                className="w-full rounded border border-bsky-border-primary bg-bsky-bg-primary px-2 py-1.5 text-sm text-bsky-text-primary focus-visible:border-bsky-primary focus-visible:outline-none"
+                className="w-full rounded border border-asph-border-primary bg-asph-bg-primary px-2 py-1.5 text-sm text-asph-text-primary focus-visible:border-asph-primary focus-visible:outline-none"
               >
                 <option value="">All senders</option>
                 {senders.map((sender) => (
@@ -218,7 +218,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
             {/* Date range */}
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="mb-1 flex items-center gap-1 text-xs text-bsky-text-secondary">
+                <label className="mb-1 flex items-center gap-1 text-xs text-asph-text-secondary">
                   <Calendar className="h-3 w-3" />
                   From
                 </label>
@@ -237,11 +237,11 @@ export const DmSearch: React.FC<DmSearchProps> = ({
                         : undefined,
                     })
                   }
-                  className="w-full rounded border border-bsky-border-primary bg-bsky-bg-primary px-2 py-1.5 text-sm text-bsky-text-primary focus-visible:border-bsky-primary focus-visible:outline-none"
+                  className="w-full rounded border border-asph-border-primary bg-asph-bg-primary px-2 py-1.5 text-sm text-asph-text-primary focus-visible:border-asph-primary focus-visible:outline-none"
                 />
               </div>
               <div>
-                <label className="mb-1 flex items-center gap-1 text-xs text-bsky-text-secondary">
+                <label className="mb-1 flex items-center gap-1 text-xs text-asph-text-secondary">
                   <Calendar className="h-3 w-3" />
                   To
                 </label>
@@ -258,14 +258,14 @@ export const DmSearch: React.FC<DmSearchProps> = ({
                         : undefined,
                     })
                   }
-                  className="w-full rounded border border-bsky-border-primary bg-bsky-bg-primary px-2 py-1.5 text-sm text-bsky-text-primary focus-visible:border-bsky-primary focus-visible:outline-none"
+                  className="w-full rounded border border-asph-border-primary bg-asph-bg-primary px-2 py-1.5 text-sm text-asph-text-primary focus-visible:border-asph-primary focus-visible:outline-none"
                 />
               </div>
             </div>
 
             {/* Content type */}
             <div>
-              <label className="mb-1 block text-xs text-bsky-text-secondary">
+              <label className="mb-1 block text-xs text-asph-text-secondary">
                 Content type
               </label>
               <div className="flex flex-wrap gap-1">
@@ -285,8 +285,8 @@ export const DmSearch: React.FC<DmSearchProps> = ({
                     }
                     className={`flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors ${
                       (filters.contentType || "all") === value
-                        ? "bg-bsky-primary text-white"
-                        : "hover:bg-bsky-bg-primary/80 bg-bsky-bg-primary text-bsky-text-secondary"
+                        ? "bg-asph-primary text-white"
+                        : "hover:bg-asph-bg-primary/80 bg-asph-bg-primary text-asph-text-secondary"
                     }`}
                   >
                     {Icon && <Icon className="h-3 w-3" />}
@@ -300,7 +300,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
             {hasActiveFilters(filters) && (
               <button
                 onClick={clearFilters}
-                className="text-xs text-bsky-primary hover:underline"
+                className="text-xs text-asph-primary hover:underline"
               >
                 Clear all filters
               </button>
@@ -310,20 +310,20 @@ export const DmSearch: React.FC<DmSearchProps> = ({
       )}
 
       {/* Results */}
-      <div className="bsky-scrollbar flex-1 overflow-y-auto">
+      <div className="asph-scrollbar flex-1 overflow-y-auto">
         {isSearching ? (
-          <div className="p-4 text-center text-sm text-bsky-text-secondary">
+          <div className="p-4 text-center text-sm text-asph-text-secondary">
             Searching...
           </div>
         ) : results.length > 0 ? (
-          <div className="divide-y divide-bsky-border-primary">
+          <div className="divide-y divide-asph-border-primary">
             {results.map((result) => (
               <button
                 key={result.message.id}
                 onClick={() => handleResultClick(result)}
-                className="w-full cursor-pointer p-3 text-left transition-colors hover:bg-bsky-bg-secondary focus-visible:bg-bsky-bg-secondary focus-visible:outline-none"
+                className="w-full cursor-pointer p-3 text-left transition-colors hover:bg-asph-bg-secondary focus-visible:bg-asph-bg-secondary focus-visible:outline-none"
               >
-                <div className="flex items-center gap-2 text-xs text-bsky-text-secondary">
+                <div className="flex items-center gap-2 text-xs text-asph-text-secondary">
                   <span className="font-medium">
                     {result.message.senderDisplayName ||
                       result.message.senderHandle ||
@@ -334,24 +334,24 @@ export const DmSearch: React.FC<DmSearchProps> = ({
                     {format(new Date(result.message.sentAt), "MMM d, yyyy")}
                   </span>
                   {result.message.hasMedia && (
-                    <Image className="h-3 w-3 text-bsky-primary" />
+                    <Image className="h-3 w-3 text-asph-primary" />
                   )}
                   {result.message.hasLinks && (
-                    <Link2 className="h-3 w-3 text-bsky-primary" />
+                    <Link2 className="h-3 w-3 text-asph-primary" />
                   )}
                 </div>
-                <div className="mt-1 text-sm text-bsky-text-primary">
+                <div className="mt-1 text-sm text-asph-text-primary">
                   {highlightMatch(result.matchSnippet, query)}
                 </div>
               </button>
             ))}
           </div>
         ) : query.length >= 2 || hasActiveFilters(filters) ? (
-          <div className="p-4 text-center text-sm text-bsky-text-secondary">
+          <div className="p-4 text-center text-sm text-asph-text-secondary">
             No messages found
           </div>
         ) : (
-          <div className="p-4 text-center text-sm text-bsky-text-secondary">
+          <div className="p-4 text-center text-sm text-asph-text-secondary">
             Enter at least 2 characters to search
           </div>
         )}

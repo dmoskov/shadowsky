@@ -151,7 +151,7 @@ export const ThreadEngagementAnalytics: React.FC<
     return (
       <div
         className="h-2 rounded-full"
-        style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+        style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
       >
         <div
           className="h-full rounded-full transition-all"
@@ -173,8 +173,8 @@ export const ThreadEngagementAnalytics: React.FC<
     <div
       className={`rounded-lg ${className}`}
       style={{
-        backgroundColor: "var(--bsky-bg-secondary)",
-        border: "1px solid var(--bsky-border-primary)",
+        backgroundColor: "var(--asph-bg-secondary)",
+        border: "1px solid var(--asph-border-primary)",
       }}
     >
       {/* Header - always visible */}
@@ -183,18 +183,18 @@ export const ThreadEngagementAnalytics: React.FC<
         className="flex w-full items-center justify-between px-4 py-3 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
       >
         <div className="flex items-center gap-2">
-          <BarChart3 size={18} style={{ color: "var(--bsky-primary)" }} />
+          <BarChart3 size={18} style={{ color: "var(--asph-primary)" }} />
           <span
             className="text-sm font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Thread Analytics
           </span>
           <span
             className="rounded-full px-2 py-0.5 text-xs"
             style={{
-              backgroundColor: "var(--bsky-bg-tertiary)",
-              color: "var(--bsky-text-secondary)",
+              backgroundColor: "var(--asph-bg-tertiary)",
+              color: "var(--asph-text-secondary)",
             }}
           >
             {analytics.totalEngagement.toLocaleString()} total engagements
@@ -203,12 +203,12 @@ export const ThreadEngagementAnalytics: React.FC<
         {collapsed ? (
           <ChevronDown
             size={18}
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           />
         ) : (
           <ChevronUp
             size={18}
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           />
         )}
       </button>
@@ -217,26 +217,26 @@ export const ThreadEngagementAnalytics: React.FC<
       {!collapsed && (
         <div
           className="border-t px-4 py-4"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
           {/* Summary stats */}
           <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div
               className="rounded-lg p-3 text-center"
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
             >
               <div className="flex items-center justify-center gap-1.5">
                 <Heart size={14} className="text-red-500" />
                 <span
                   className="text-lg font-bold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {analytics.totalLikes.toLocaleString()}
                 </span>
               </div>
               <span
                 className="text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 Total Likes
               </span>
@@ -244,20 +244,20 @@ export const ThreadEngagementAnalytics: React.FC<
 
             <div
               className="rounded-lg p-3 text-center"
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
             >
               <div className="flex items-center justify-center gap-1.5">
                 <Repeat2 size={14} className="text-green-500" />
                 <span
                   className="text-lg font-bold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {analytics.totalReposts.toLocaleString()}
                 </span>
               </div>
               <span
                 className="text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 Total Reposts
               </span>
@@ -265,20 +265,20 @@ export const ThreadEngagementAnalytics: React.FC<
 
             <div
               className="rounded-lg p-3 text-center"
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
             >
               <div className="flex items-center justify-center gap-1.5">
                 <MessageCircle size={14} className="text-blue-500" />
                 <span
                   className="text-lg font-bold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {analytics.totalReplies.toLocaleString()}
                 </span>
               </div>
               <span
                 className="text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 Total Replies
               </span>
@@ -286,7 +286,7 @@ export const ThreadEngagementAnalytics: React.FC<
 
             <div
               className="rounded-lg p-3 text-center"
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
             >
               <div className="flex items-center justify-center gap-1.5">
                 <TrendingUp
@@ -297,7 +297,7 @@ export const ThreadEngagementAnalytics: React.FC<
                 />
                 <span
                   className="text-lg font-bold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {analytics.trend > 0 ? "+" : ""}
                   {analytics.trend.toFixed(0)}%
@@ -305,7 +305,7 @@ export const ThreadEngagementAnalytics: React.FC<
               </div>
               <span
                 className="text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 Engagement Trend
               </span>
@@ -317,19 +317,19 @@ export const ThreadEngagementAnalytics: React.FC<
             <div className="mb-2">
               <h4
                 className="flex items-center gap-2 text-sm font-medium"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 <BarChart3 size={14} />
                 Posts in Thread
               </h4>
               <p
                 className="mt-0.5 text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 Ranked by engagement (likes + reposts + replies)
               </p>
             </div>
-            <div className="bsky-scrollbar max-h-64 space-y-2 overflow-y-auto">
+            <div className="asph-scrollbar max-h-64 space-y-2 overflow-y-auto">
               {analytics.postEngagements.map((pe) => {
                 const postText =
                   (pe.post.record as { text?: string })?.text || "";
@@ -338,7 +338,7 @@ export const ThreadEngagementAnalytics: React.FC<
                   <div
                     key={pe.post.uri}
                     className="rounded-lg p-2"
-                    style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                    style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
                   >
                     <div className="mb-1 flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -355,8 +355,8 @@ export const ThreadEngagementAnalytics: React.FC<
                           style={
                             pe.rank > 3
                               ? {
-                                  backgroundColor: "var(--bsky-bg-secondary)",
-                                  color: "var(--bsky-text-tertiary)",
+                                  backgroundColor: "var(--asph-bg-secondary)",
+                                  color: "var(--asph-text-tertiary)",
                                 }
                               : {}
                           }
@@ -379,7 +379,7 @@ export const ThreadEngagementAnalytics: React.FC<
                           />
                           <span
                             className="truncate text-xs font-medium"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                           >
                             {pe.post.author.displayName ||
                               pe.post.author.handle}
@@ -387,7 +387,7 @@ export const ThreadEngagementAnalytics: React.FC<
                         </Link>
                         <span
                           className="text-xs"
-                          style={{ color: "var(--bsky-text-tertiary)" }}
+                          style={{ color: "var(--asph-text-tertiary)" }}
                         >
                           {formatDistanceToNow(new Date(pe.post.indexedAt), {
                             addSuffix: true,
@@ -415,7 +415,7 @@ export const ThreadEngagementAnalytics: React.FC<
                       <button
                         onClick={() => onPostClick?.(pe.post)}
                         className="mb-1 mt-2 line-clamp-2 block w-full cursor-pointer text-left text-xs transition-opacity hover:opacity-70"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                         title="View this post in thread"
                       >
                         {postText}
@@ -426,12 +426,12 @@ export const ThreadEngagementAnalytics: React.FC<
                       {renderEngagementBar(
                         pe.total,
                         maxEngagement,
-                        "var(--bsky-primary)",
+                        "var(--asph-primary)",
                       )}
                     </div>
                     <div
                       className="mt-1 text-right text-xs"
-                      style={{ color: "var(--bsky-text-tertiary)" }}
+                      style={{ color: "var(--asph-text-tertiary)" }}
                     >
                       {pe.percentOfTotal.toFixed(1)}% of thread engagement
                     </div>
@@ -445,7 +445,7 @@ export const ThreadEngagementAnalytics: React.FC<
           <div>
             <h4
               className="mb-2 flex items-center gap-2 text-sm font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               <Users size={14} />
               Thread Participants ({analytics.uniqueAuthors.length})
@@ -458,7 +458,7 @@ export const ThreadEngagementAnalytics: React.FC<
                   <div
                     key={author.handle}
                     className="flex items-center gap-1.5 rounded-full px-2 py-1"
-                    style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                    style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
                   >
                     <img
                       src={
@@ -469,13 +469,13 @@ export const ThreadEngagementAnalytics: React.FC<
                     />
                     <span
                       className="text-xs font-medium"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       {author.displayName || author.handle}
                     </span>
                     <span
                       className="rounded bg-gray-200 px-1 text-xs dark:bg-gray-700"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       {author.postCount}
                     </span>
@@ -485,8 +485,8 @@ export const ThreadEngagementAnalytics: React.FC<
                 <span
                   className="rounded-full px-2 py-1 text-xs"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    color: "var(--bsky-text-tertiary)",
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    color: "var(--asph-text-tertiary)",
                   }}
                 >
                   +{analytics.uniqueAuthors.length - 10} more

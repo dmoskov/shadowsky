@@ -936,7 +936,7 @@ export const Home: React.FC<HomeProps> = React.memo(
             {item.reason && (
               <div
                 className="mb-1.5 flex items-center gap-2 text-xs"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 <Repeat2 size={12} />
                 <span>
@@ -960,24 +960,24 @@ export const Home: React.FC<HomeProps> = React.memo(
             {item.reply?.parent && (
               <div className="relative">
                 {/* Reply indicator with background */}
-                <div className="border-bsky-primary/20 from-bsky-primary/10 to-bsky-primary/5 mb-3 flex items-center gap-2 rounded-lg border bg-gradient-to-br px-3 py-2 backdrop-blur-sm">
+                <div className="border-asph-primary/20 from-asph-primary/10 to-asph-primary/5 mb-3 flex items-center gap-2 rounded-lg border bg-gradient-to-br px-3 py-2 backdrop-blur-sm">
                   <div className="flex items-center">
                     <div className="flex w-12 justify-center">
-                      <div className="h-6 w-0.5 bg-bsky-primary"></div>
+                      <div className="h-6 w-0.5 bg-asph-primary"></div>
                     </div>
-                    <Reply size={16} className="mr-2 text-bsky-primary" />
+                    <Reply size={16} className="mr-2 text-asph-primary" />
                   </div>
                   <div className="flex-1">
                     <span
                       className="text-sm font-medium"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       Replying to{" "}
                       <ProfileHoverCard
                         handle={item.reply.parent.author?.handle || "unknown"}
                       >
                         <button
-                          className="font-semibold text-bsky-primary hover:underline"
+                          className="font-semibold text-asph-primary hover:underline"
                           onClick={(e) => {
                             e.stopPropagation();
                             // Navigate to parent post
@@ -994,7 +994,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                     {item.reply.parent.record?.text && (
                       <div
                         className="mt-0.5 line-clamp-1 text-xs"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         "{item.reply.parent.record.text}"
                       </div>
@@ -1002,7 +1002,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                   </div>
                 </div>
                 {/* Connecting line from reply indicator to avatar */}
-                <div className="bg-bsky-primary/30 absolute left-6 top-full h-3 w-0.5"></div>
+                <div className="bg-asph-primary/30 absolute left-6 top-full h-3 w-0.5"></div>
               </div>
             )}
 
@@ -1010,22 +1010,22 @@ export const Home: React.FC<HomeProps> = React.memo(
             {!item.reply?.parent && post.record?.reply?.parent && (
               <div className="relative">
                 {/* Reply indicator with background */}
-                <div className="border-bsky-primary/20 from-bsky-primary/10 to-bsky-primary/5 mb-3 flex items-center gap-2 rounded-lg border bg-gradient-to-br px-3 py-2 backdrop-blur-sm">
+                <div className="border-asph-primary/20 from-asph-primary/10 to-asph-primary/5 mb-3 flex items-center gap-2 rounded-lg border bg-gradient-to-br px-3 py-2 backdrop-blur-sm">
                   <div className="flex items-center">
                     <div className="flex w-12 justify-center">
-                      <div className="h-6 w-0.5 bg-bsky-primary"></div>
+                      <div className="h-6 w-0.5 bg-asph-primary"></div>
                     </div>
-                    <Reply size={16} className="mr-2 text-bsky-primary" />
+                    <Reply size={16} className="mr-2 text-asph-primary" />
                   </div>
                   <span
                     className="text-sm font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     This is a reply
                   </span>
                 </div>
                 {/* Connecting line from reply indicator to avatar */}
-                <div className="bg-bsky-primary/30 absolute left-6 top-full h-3 w-0.5"></div>
+                <div className="bg-asph-primary/30 absolute left-6 top-full h-3 w-0.5"></div>
               </div>
             )}
 
@@ -1052,7 +1052,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                     <ProfileHoverCard handle={post.author.handle}>
                       <span
                         className="cursor-pointer font-semibold hover:underline"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`/profile/${post.author.handle}`);
@@ -1075,7 +1075,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                   </div>
                   <div
                     className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     <ProfileHoverCard handle={post.author.handle}>
                       <span
@@ -1109,7 +1109,7 @@ export const Home: React.FC<HomeProps> = React.memo(
               <div className="mt-2">
                 <div
                   className="whitespace-pre-wrap"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   <RichText
                     text={post.record.text}
@@ -1653,7 +1653,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                     key={`home-img-${img.thumb}-${idx}`}
                     className={`group relative cursor-pointer overflow-hidden rounded-lg ${colSpan}`}
                     onClick={(e) => handleImageClick(e, idx)}
-                    style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                    style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
                   >
                     {/* Image container with max height to prevent tall images */}
                     <div
@@ -1736,7 +1736,7 @@ export const Home: React.FC<HomeProps> = React.memo(
           return (
             <div
               className="mt-2 cursor-pointer rounded-lg border p-2.5 transition-opacity hover:opacity-90"
-              style={{ borderColor: "var(--bsky-border-primary)" }}
+              style={{ borderColor: "var(--asph-border-primary)" }}
               onClick={(e) => {
                 e.stopPropagation();
                 if (external.uri) {
@@ -1751,19 +1751,19 @@ export const Home: React.FC<HomeProps> = React.memo(
                   className="mb-2 h-auto w-full rounded object-cover"
                   style={{
                     maxHeight: "200px",
-                    backgroundColor: "var(--bsky-bg-tertiary)",
+                    backgroundColor: "var(--asph-bg-tertiary)",
                   }}
                 />
               )}
               <div
                 className="text-sm font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {external.title}
               </div>
               <div
                 className="mt-1 text-xs"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 {external.description}
               </div>
@@ -1780,7 +1780,7 @@ export const Home: React.FC<HomeProps> = React.memo(
               <Suspense
                 fallback={
                   <div
-                    className="flex items-center justify-center bg-bsky-bg-tertiary"
+                    className="flex items-center justify-center bg-asph-bg-tertiary"
                     style={{
                       aspectRatio: embed.aspectRatio
                         ? `${embed.aspectRatio.width}/${embed.aspectRatio.height}`
@@ -1813,15 +1813,15 @@ export const Home: React.FC<HomeProps> = React.memo(
             return (
               <div
                 className="mt-2 overflow-hidden rounded-lg border transition-all hover:border-opacity-80"
-                style={{ borderColor: "var(--bsky-border-primary)" }}
+                style={{ borderColor: "var(--asph-border-primary)" }}
               >
                 {/* Quote post header */}
                 <div
                   className="flex items-center gap-2 px-3 py-1.5 text-xs"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    borderBottom: `1px solid var(--bsky-border-primary)`,
-                    color: "var(--bsky-text-secondary)",
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    borderBottom: `1px solid var(--asph-border-primary)`,
+                    color: "var(--asph-text-secondary)",
                   }}
                 >
                   <MessageCircle size={12} />
@@ -1859,7 +1859,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                         <ProfileHoverCard handle={quotedPost.author.handle}>
                           <span
                             className="cursor-pointer font-semibold hover:underline"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                           >
                             {quotedPost.author?.displayName ||
                               quotedPost.author?.handle}
@@ -1868,7 +1868,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                       ) : (
                         <span
                           className="font-semibold"
-                          style={{ color: "var(--bsky-text-primary)" }}
+                          style={{ color: "var(--asph-text-primary)" }}
                         >
                           Unknown
                         </span>
@@ -1877,13 +1877,13 @@ export const Home: React.FC<HomeProps> = React.memo(
                         <ProfileHoverCard handle={quotedPost.author.handle}>
                           <span
                             className="cursor-pointer hover:underline"
-                            style={{ color: "var(--bsky-text-secondary)" }}
+                            style={{ color: "var(--asph-text-secondary)" }}
                           >
                             @{quotedPost.author?.handle || "unknown"}
                           </span>
                         </ProfileHoverCard>
                       ) : (
-                        <span style={{ color: "var(--bsky-text-secondary)" }}>
+                        <span style={{ color: "var(--asph-text-secondary)" }}>
                           @{quotedPost.author?.handle || "unknown"}
                         </span>
                       )}
@@ -1891,7 +1891,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                   </div>
                   <div
                     className="text-sm"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     <RichText
                       text={quotedPost.value?.text || ""}
@@ -1913,14 +1913,14 @@ export const Home: React.FC<HomeProps> = React.memo(
             return (
               <div
                 className="mt-2 overflow-hidden rounded-lg border"
-                style={{ borderColor: "var(--bsky-border-primary)" }}
+                style={{ borderColor: "var(--asph-border-primary)" }}
               >
                 <div
                   className="flex items-center gap-2 px-3 py-1.5 text-xs"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    borderBottom: `1px solid var(--bsky-border-primary)`,
-                    color: "var(--bsky-text-secondary)",
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    borderBottom: `1px solid var(--asph-border-primary)`,
+                    color: "var(--asph-text-secondary)",
                   }}
                 >
                   <MessageCircle size={12} />
@@ -1929,7 +1929,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                 <div className="p-3">
                   <div
                     className="text-sm italic"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Post not found or deleted
                   </div>
@@ -1941,14 +1941,14 @@ export const Home: React.FC<HomeProps> = React.memo(
             return (
               <div
                 className="mt-2 overflow-hidden rounded-lg border"
-                style={{ borderColor: "var(--bsky-border-primary)" }}
+                style={{ borderColor: "var(--asph-border-primary)" }}
               >
                 <div
                   className="flex items-center gap-2 px-3 py-1.5 text-xs"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    borderBottom: `1px solid var(--bsky-border-primary)`,
-                    color: "var(--bsky-text-secondary)",
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    borderBottom: `1px solid var(--asph-border-primary)`,
+                    color: "var(--asph-text-secondary)",
                   }}
                 >
                   <MessageCircle size={12} />
@@ -1957,7 +1957,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                 <div className="p-3">
                   <div
                     className="text-sm italic"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Post from blocked user
                   </div>
@@ -1998,12 +1998,12 @@ export const Home: React.FC<HomeProps> = React.memo(
     if (error) {
       return (
         <div className="p-8 text-center">
-          <p style={{ color: "var(--bsky-text-secondary)" }}>
+          <p style={{ color: "var(--asph-text-secondary)" }}>
             Failed to load feed
           </p>
           <p
             className="mt-2 text-sm"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             {error.message}
           </p>
@@ -2059,7 +2059,7 @@ export const Home: React.FC<HomeProps> = React.memo(
               <Loader
                 className="animate-spin"
                 size={24}
-                style={{ color: "var(--bsky-primary)" }}
+                style={{ color: "var(--asph-primary)" }}
               />
             </div>
           )}
@@ -2072,7 +2072,7 @@ export const Home: React.FC<HomeProps> = React.memo(
             >
               <div
                 className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Loading more posts...
               </div>
@@ -2119,9 +2119,9 @@ export const Home: React.FC<HomeProps> = React.memo(
           <Suspense
             fallback={
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                <div className="flex flex-col items-center gap-3 rounded-lg bg-bsky-bg-secondary p-6 shadow-bsky-lg">
+                <div className="flex flex-col items-center gap-3 rounded-lg bg-asph-bg-secondary p-6 shadow-asph-lg">
                   <Spinner size="lg" aria-label="Loading thread" />
-                  <p className="text-sm text-bsky-text-secondary">
+                  <p className="text-sm text-asph-text-secondary">
                     Loading thread...
                   </p>
                 </div>

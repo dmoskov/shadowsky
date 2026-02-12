@@ -915,22 +915,22 @@ export function ThreadPlannerComposer({
         aria-modal="true"
         aria-labelledby="thread-planner-title"
         className="relative w-full max-w-3xl overflow-hidden rounded-xl shadow-xl"
-        style={{ background: "var(--bsky-bg-primary)" }}
+        style={{ background: "var(--asph-bg-primary)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
           className="sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3 md:px-6"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            background: "var(--bsky-bg-primary)",
+            borderColor: "var(--asph-border-primary)",
+            background: "var(--asph-bg-primary)",
           }}
         >
           <div className="flex items-center gap-3">
             <h2
               id="thread-planner-title"
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Thread Planner
             </h2>
@@ -940,10 +940,10 @@ export function ThreadPlannerComposer({
                 style={{
                   color:
                     status.type === "error"
-                      ? "var(--bsky-error)"
+                      ? "var(--asph-error)"
                       : status.type === "success"
-                        ? "var(--bsky-success)"
-                        : "var(--bsky-text-secondary)",
+                        ? "var(--asph-success)"
+                        : "var(--asph-text-secondary)",
                 }}
               >
                 {status.type === "saving" && (
@@ -963,9 +963,9 @@ export function ThreadPlannerComposer({
               className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors"
               style={{
                 background: showTemplates
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-bg-secondary)",
-                color: showTemplates ? "white" : "var(--bsky-text-secondary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-bg-secondary)",
+                color: showTemplates ? "white" : "var(--asph-text-secondary)",
               }}
               title="Thread templates"
             >
@@ -978,9 +978,9 @@ export function ThreadPlannerComposer({
               className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors"
               style={{
                 background: showSettings
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-bg-secondary)",
-                color: showSettings ? "white" : "var(--bsky-text-secondary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-bg-secondary)",
+                color: showSettings ? "white" : "var(--asph-text-secondary)",
               }}
               title="Numbering settings"
             >
@@ -992,9 +992,9 @@ export function ThreadPlannerComposer({
               className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors"
               style={{
                 background: showPreview
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-bg-secondary)",
-                color: showPreview ? "white" : "var(--bsky-text-secondary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-bg-secondary)",
+                color: showPreview ? "white" : "var(--asph-text-secondary)",
               }}
             >
               {showPreview ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -1003,7 +1003,7 @@ export function ThreadPlannerComposer({
             <button
               onClick={onClose}
               className="rounded-lg p-2 transition-colors hover:opacity-80"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
               aria-label="Close"
             >
               <X size={20} />
@@ -1016,13 +1016,13 @@ export function ThreadPlannerComposer({
           <div
             className="border-b px-4 py-3 md:px-6"
             style={{
-              borderColor: "var(--bsky-border-primary)",
-              background: "var(--bsky-bg-secondary)",
+              borderColor: "var(--asph-border-primary)",
+              background: "var(--asph-bg-secondary)",
             }}
           >
             <h3
               className="mb-3 text-sm font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Choose a template to get started
             </h3>
@@ -1033,20 +1033,20 @@ export function ThreadPlannerComposer({
                   onClick={() => applyTemplate(template)}
                   className="flex flex-col items-start rounded-lg border p-3 text-left transition-colors hover:border-blue-400"
                   style={{
-                    borderColor: "var(--bsky-border-primary)",
-                    background: "var(--bsky-bg-primary)",
+                    borderColor: "var(--asph-border-primary)",
+                    background: "var(--asph-bg-primary)",
                   }}
                 >
                   <span className="mb-1 text-lg">{template.icon}</span>
                   <span
                     className="text-sm font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {template.name}
                   </span>
                   <span
                     className="text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     {template.description}
                   </span>
@@ -1061,13 +1061,13 @@ export function ThreadPlannerComposer({
           <div
             className="border-b px-4 py-3 md:px-6"
             style={{
-              borderColor: "var(--bsky-border-primary)",
-              background: "var(--bsky-bg-secondary)",
+              borderColor: "var(--asph-border-primary)",
+              background: "var(--asph-bg-secondary)",
             }}
           >
             <h3
               className="mb-3 text-sm font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Numbering Settings
             </h3>
@@ -1076,7 +1076,7 @@ export function ThreadPlannerComposer({
               <div>
                 <label
                   className="mb-1 block text-xs"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Format
                 </label>
@@ -1090,9 +1090,9 @@ export function ThreadPlannerComposer({
                   }
                   className="rounded-lg border px-3 py-1.5 text-sm"
                   style={{
-                    background: "var(--bsky-bg-primary)",
-                    borderColor: "var(--bsky-border-primary)",
-                    color: "var(--bsky-text-primary)",
+                    background: "var(--asph-bg-primary)",
+                    borderColor: "var(--asph-border-primary)",
+                    color: "var(--asph-text-primary)",
                   }}
                 >
                   {Object.entries(NUMBERING_FORMATS).map(([key, { label }]) => (
@@ -1106,7 +1106,7 @@ export function ThreadPlannerComposer({
               <div>
                 <label
                   className="mb-1 block text-xs"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Position
                 </label>
@@ -1119,9 +1119,9 @@ export function ThreadPlannerComposer({
                   }
                   className="rounded-lg border px-3 py-1.5 text-sm"
                   style={{
-                    background: "var(--bsky-bg-primary)",
-                    borderColor: "var(--bsky-border-primary)",
-                    color: "var(--bsky-text-primary)",
+                    background: "var(--asph-bg-primary)",
+                    borderColor: "var(--asph-border-primary)",
+                    color: "var(--asph-text-primary)",
                   }}
                   disabled={settings.numberingFormat === "none"}
                 >
@@ -1134,16 +1134,16 @@ export function ThreadPlannerComposer({
                 <div>
                   <label
                     className="mb-1 block text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Example
                   </label>
                   <div
                     className="rounded-lg border px-3 py-1.5 text-sm"
                     style={{
-                      background: "var(--bsky-bg-primary)",
-                      borderColor: "var(--bsky-border-primary)",
-                      color: "var(--bsky-text-primary)",
+                      background: "var(--asph-bg-primary)",
+                      borderColor: "var(--asph-border-primary)",
+                      color: "var(--asph-text-primary)",
                     }}
                   >
                     {formatPostWithNumbering(
@@ -1159,14 +1159,14 @@ export function ThreadPlannerComposer({
         )}
 
         {/* Content */}
-        <div className="bsky-scrollbar max-h-[calc(100vh-280px)] overflow-y-auto p-4 md:p-6">
+        <div className="asph-scrollbar max-h-[calc(100vh-280px)] overflow-y-auto p-4 md:p-6">
           {showPreview ? (
             // Preview mode
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3
                   className="text-sm font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Thread Preview ({validPosts.length}{" "}
                   {validPosts.length === 1 ? "post" : "posts"})
@@ -1174,7 +1174,7 @@ export function ThreadPlannerComposer({
                 {settings.numberingFormat !== "none" && (
                   <span
                     className="text-xs"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   >
                     <Hash size={12} className="mr-1 inline" />
                     Auto-numbering:{" "}
@@ -1199,15 +1199,15 @@ export function ThreadPlannerComposer({
                         className="rounded-lg border p-4"
                         style={{
                           borderColor: isOverLimit
-                            ? "var(--bsky-error)"
-                            : "var(--bsky-border-primary)",
-                          background: "var(--bsky-bg-secondary)",
+                            ? "var(--asph-error)"
+                            : "var(--asph-border-primary)",
+                          background: "var(--asph-bg-secondary)",
                         }}
                       >
                         <div className="mb-2 flex items-center justify-between">
                           <span
                             className="text-sm font-medium"
-                            style={{ color: "var(--bsky-primary)" }}
+                            style={{ color: "var(--asph-primary)" }}
                           >
                             Post {index + 1}
                           </span>
@@ -1215,8 +1215,8 @@ export function ThreadPlannerComposer({
                             className="font-mono text-xs"
                             style={{
                               color: isOverLimit
-                                ? "var(--bsky-error)"
-                                : "var(--bsky-text-tertiary)",
+                                ? "var(--asph-error)"
+                                : "var(--asph-text-tertiary)",
                             }}
                           >
                             {formattedText.length}/{MAX_POST_LENGTH}
@@ -1224,7 +1224,7 @@ export function ThreadPlannerComposer({
                         </div>
                         <p
                           className="whitespace-pre-wrap"
-                          style={{ color: "var(--bsky-text-primary)" }}
+                          style={{ color: "var(--asph-text-primary)" }}
                         >
                           {formattedText}
                         </p>
@@ -1245,7 +1245,7 @@ export function ThreadPlannerComposer({
                         {isOverLimit && (
                           <p
                             className="mt-2 text-xs"
-                            style={{ color: "var(--bsky-error)" }}
+                            style={{ color: "var(--asph-error)" }}
                           >
                             This post exceeds the character limit
                           </p>
@@ -1278,11 +1278,11 @@ export function ThreadPlannerComposer({
                     style={{
                       borderColor:
                         dragOverIndex === index
-                          ? "var(--bsky-primary)"
+                          ? "var(--asph-primary)"
                           : isOverLimit
-                            ? "var(--bsky-error)"
-                            : "var(--bsky-border-primary)",
-                      background: "var(--bsky-bg-secondary)",
+                            ? "var(--asph-error)"
+                            : "var(--asph-border-primary)",
+                      background: "var(--asph-bg-secondary)",
                       opacity: draggedIndex === index ? 0.5 : 1,
                     }}
                     draggable
@@ -1295,17 +1295,17 @@ export function ThreadPlannerComposer({
                     {/* Post card header */}
                     <div
                       className="flex items-center justify-between border-b px-3 py-2"
-                      style={{ borderColor: "var(--bsky-border-primary)" }}
+                      style={{ borderColor: "var(--asph-border-primary)" }}
                     >
                       <div className="flex items-center gap-2">
                         <GripVertical
                           size={16}
                           className="cursor-grab"
-                          style={{ color: "var(--bsky-text-tertiary)" }}
+                          style={{ color: "var(--asph-text-tertiary)" }}
                         />
                         <span
                           className="text-sm font-medium"
-                          style={{ color: "var(--bsky-primary)" }}
+                          style={{ color: "var(--asph-primary)" }}
                         >
                           Post {index + 1}
                         </span>
@@ -1313,8 +1313,8 @@ export function ThreadPlannerComposer({
                           <span
                             className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
                             style={{
-                              background: "var(--bsky-bg-tertiary)",
-                              color: "var(--bsky-text-secondary)",
+                              background: "var(--asph-bg-tertiary)",
+                              color: "var(--asph-text-secondary)",
                             }}
                           >
                             <Image size={10} />
@@ -1328,10 +1328,10 @@ export function ThreadPlannerComposer({
                           className="mr-2 font-mono text-xs"
                           style={{
                             color: isOverLimit
-                              ? "var(--bsky-error)"
+                              ? "var(--asph-error)"
                               : isNearLimit
-                                ? "var(--bsky-warning)"
-                                : "var(--bsky-text-tertiary)",
+                                ? "var(--asph-warning)"
+                                : "var(--asph-text-tertiary)",
                           }}
                         >
                           {charCount}/{MAX_POST_LENGTH}
@@ -1346,7 +1346,7 @@ export function ThreadPlannerComposer({
                           onClick={() => movePost(index, "up")}
                           disabled={index === 0}
                           className="rounded p-1 transition-colors hover:bg-black/10 disabled:opacity-30"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                           title="Move up"
                         >
                           <ChevronUp size={14} />
@@ -1355,7 +1355,7 @@ export function ThreadPlannerComposer({
                           onClick={() => movePost(index, "down")}
                           disabled={index === posts.length - 1}
                           className="rounded p-1 transition-colors hover:bg-black/10 disabled:opacity-30"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                           title="Move down"
                         >
                           <ChevronDown size={14} />
@@ -1364,7 +1364,7 @@ export function ThreadPlannerComposer({
                         <button
                           onClick={() => duplicatePost(index)}
                           className="rounded p-1 transition-colors hover:bg-black/10"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                           title="Duplicate post"
                         >
                           <Copy size={14} />
@@ -1373,7 +1373,7 @@ export function ThreadPlannerComposer({
                         <button
                           onClick={() => togglePostExpanded(post.id)}
                           className="rounded p-1 transition-colors hover:bg-black/10"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                           title={isExpanded ? "Collapse" : "Expand"}
                         >
                           {isExpanded ? (
@@ -1387,7 +1387,7 @@ export function ThreadPlannerComposer({
                           <button
                             onClick={() => removePost(index)}
                             className="rounded p-1 transition-colors hover:opacity-80"
-                            style={{ color: "var(--bsky-error)" }}
+                            style={{ color: "var(--asph-error)" }}
                             title="Remove post"
                           >
                             <Trash2 size={14} />
@@ -1424,7 +1424,7 @@ export function ThreadPlannerComposer({
                         className={`w-full resize-none rounded-lg border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-0 ${
                           isExpanded ? "min-h-[100px]" : "min-h-[40px]"
                         }`}
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       />
 
                       {/* Media preview */}
@@ -1465,7 +1465,7 @@ export function ThreadPlannerComposer({
                       {isExpanded && (
                         <div
                           className="mt-3 flex items-center gap-2 border-t pt-3"
-                          style={{ borderColor: "var(--bsky-border-primary)" }}
+                          style={{ borderColor: "var(--asph-border-primary)" }}
                         >
                           {/* Add image button */}
                           <input
@@ -1490,7 +1490,7 @@ export function ThreadPlannerComposer({
                             }
                             disabled={post.media.length >= MAX_IMAGES_PER_POST}
                             className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-black/10 disabled:opacity-50"
-                            style={{ color: "var(--bsky-text-secondary)" }}
+                            style={{ color: "var(--asph-text-secondary)" }}
                             title={`Add image (${post.media.length}/${MAX_IMAGES_PER_POST})`}
                           >
                             <Image size={14} />
@@ -1498,7 +1498,7 @@ export function ThreadPlannerComposer({
                           </button>
                           <span
                             className="text-xs"
-                            style={{ color: "var(--bsky-text-tertiary)" }}
+                            style={{ color: "var(--asph-text-tertiary)" }}
                           >
                             Ctrl/Cmd + Enter to add post
                           </span>
@@ -1512,7 +1512,7 @@ export function ThreadPlannerComposer({
                         className="absolute bottom-0 left-0 right-0 h-8 rounded-b-lg"
                         style={{
                           background:
-                            "linear-gradient(to bottom, transparent, var(--bsky-bg-secondary))",
+                            "linear-gradient(to bottom, transparent, var(--asph-bg-secondary))",
                         }}
                       />
                     )}
@@ -1524,9 +1524,9 @@ export function ThreadPlannerComposer({
                           onClick={() => addPost(index)}
                           className="rounded-full p-1 shadow transition-colors hover:opacity-80"
                           style={{
-                            background: "var(--bsky-bg-primary)",
-                            border: "1px solid var(--bsky-border-primary)",
-                            color: "var(--bsky-text-secondary)",
+                            background: "var(--asph-bg-primary)",
+                            border: "1px solid var(--asph-border-primary)",
+                            color: "var(--asph-text-secondary)",
                           }}
                           title="Add post here"
                         >
@@ -1543,8 +1543,8 @@ export function ThreadPlannerComposer({
                 onClick={() => addPost()}
                 className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed py-4 transition-colors hover:opacity-80"
                 style={{
-                  borderColor: "var(--bsky-border-primary)",
-                  color: "var(--bsky-text-secondary)",
+                  borderColor: "var(--asph-border-primary)",
+                  color: "var(--asph-text-secondary)",
                 }}
               >
                 <Plus size={18} />
@@ -1558,13 +1558,13 @@ export function ThreadPlannerComposer({
         <div
           className="sticky bottom-0 flex items-center justify-between border-t px-4 py-3 md:px-6"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            background: "var(--bsky-bg-primary)",
+            borderColor: "var(--asph-border-primary)",
+            background: "var(--asph-bg-primary)",
           }}
         >
           <div
             className="flex items-center gap-4 text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             <span>
               {validPosts.length} {validPosts.length === 1 ? "post" : "posts"}
@@ -1588,8 +1588,8 @@ export function ThreadPlannerComposer({
               }
               className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
               style={{
-                background: "var(--bsky-bg-secondary)",
-                color: "var(--bsky-text-primary)",
+                background: "var(--asph-bg-secondary)",
+                color: "var(--asph-text-primary)",
               }}
             >
               <Save size={16} />
@@ -1599,7 +1599,7 @@ export function ThreadPlannerComposer({
               onClick={handlePost}
               disabled={isPosting || validPosts.length === 0}
               className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
-              style={{ background: "var(--bsky-primary)" }}
+              style={{ background: "var(--asph-primary)" }}
             >
               {isPosting ? (
                 <>

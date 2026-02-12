@@ -137,10 +137,10 @@ export const StorageManagementSettings: React.FC = () => {
         <div
           className={`rounded-lg border p-3 text-sm ${
             message.type === "success"
-              ? "border-bsky-success/30 bg-bsky-success/10 text-bsky-success"
+              ? "border-asph-success/30 bg-asph-success/10 text-asph-success"
               : message.type === "error"
-                ? "border-bsky-error/30 bg-bsky-error/10 text-bsky-error"
-                : "border-bsky-info/30 bg-bsky-info/10 text-bsky-info"
+                ? "border-asph-error/30 bg-asph-error/10 text-asph-error"
+                : "border-asph-info/30 bg-asph-info/10 text-asph-info"
           }`}
         >
           <div className="flex items-center justify-between">
@@ -148,7 +148,7 @@ export const StorageManagementSettings: React.FC = () => {
             {message.type === "success" && message.text.includes("reload") && (
               <button
                 onClick={() => window.location.reload()}
-                className="ml-4 rounded-md bg-bsky-success px-3 py-1.5 text-xs font-medium text-white transition-colors hover:opacity-90"
+                className="ml-4 rounded-md bg-asph-success px-3 py-1.5 text-xs font-medium text-white transition-colors hover:opacity-90"
               >
                 Reload Page
               </button>
@@ -161,15 +161,15 @@ export const StorageManagementSettings: React.FC = () => {
       <div
         className="rounded-lg p-6"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div className="mb-4 flex items-center gap-3">
           <HardDrive className="h-6 w-6 text-gray-500 dark:text-gray-400" />
           <h2
             className="text-xl font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Storage Overview
           </h2>
@@ -181,7 +181,7 @@ export const StorageManagementSettings: React.FC = () => {
               <div className="mb-2 flex items-center justify-between">
                 <span
                   className="text-sm font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Total Usage
                 </span>
@@ -207,7 +207,7 @@ export const StorageManagementSettings: React.FC = () => {
               </div>
               <div
                 className="mt-2 flex justify-between text-sm"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 <span>{formatBytes(storageStats.usage)} used</span>
                 <span>{formatBytes(storageStats.quota)} total</span>
@@ -233,7 +233,7 @@ export const StorageManagementSettings: React.FC = () => {
             <div className="mt-4">
               <h3
                 className="mb-3 text-sm font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 Database Breakdown
               </h3>
@@ -243,22 +243,22 @@ export const StorageManagementSettings: React.FC = () => {
                     key={db.name}
                     className="flex items-center justify-between rounded-lg p-3"
                     style={{
-                      backgroundColor: "var(--bsky-bg-tertiary)",
-                      border: "1px solid var(--bsky-border-secondary)",
+                      backgroundColor: "var(--asph-bg-tertiary)",
+                      border: "1px solid var(--asph-border-secondary)",
                     }}
                   >
                     <div className="flex items-center gap-2">
                       <Database className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                       <span
                         className="font-mono text-xs"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         {db.name}
                       </span>
                     </div>
                     <span
                       className="text-sm font-medium"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       ~{formatBytes(db.estimatedSize)}
                     </span>
@@ -270,7 +270,7 @@ export const StorageManagementSettings: React.FC = () => {
         ) : (
           <div
             className="text-center text-sm"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             Storage information not available. Your browser may not support the
             Storage API.
@@ -282,15 +282,15 @@ export const StorageManagementSettings: React.FC = () => {
       <div
         className="rounded-lg p-6"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div className="mb-4 flex items-center gap-3">
           <Trash2 className="h-6 w-6 text-gray-500 dark:text-gray-400" />
           <h2
             className="text-xl font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Cleanup Options
           </h2>
@@ -300,13 +300,13 @@ export const StorageManagementSettings: React.FC = () => {
           <div>
             <h3
               className="mb-2 text-sm font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Remove Old Notifications
             </h3>
             <p
               className="mb-3 text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Delete notifications older than a specified number of days to free
               up storage space.
@@ -338,17 +338,17 @@ export const StorageManagementSettings: React.FC = () => {
 
           <div
             className="border-t pt-4"
-            style={{ borderColor: "var(--bsky-border-primary)" }}
+            style={{ borderColor: "var(--asph-border-primary)" }}
           >
             <h3
               className="mb-2 text-sm font-semibold text-red-600 dark:text-red-400"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Clear All Notifications
             </h3>
             <p
               className="mb-3 text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Remove all cached notifications from your device. This is a
               nuclear option that should only be used if you're having serious
@@ -369,9 +369,9 @@ export const StorageManagementSettings: React.FC = () => {
       <div
         className="rounded-lg p-4 text-sm"
         style={{
-          backgroundColor: "var(--bsky-bg-tertiary)",
-          border: "1px solid var(--bsky-border-primary)",
-          color: "var(--bsky-text-secondary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
+          border: "1px solid var(--asph-border-primary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <p className="mb-2 font-medium">About Storage Management:</p>

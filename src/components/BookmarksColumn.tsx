@@ -383,7 +383,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
           {imageEmbed.images.map((img, idx: number) => (
             <div
               key={`bookmark-img-${img.thumb}-${idx}`}
-              className="relative overflow-hidden rounded-lg bg-bsky-bg-tertiary"
+              className="relative overflow-hidden rounded-lg bg-asph-bg-tertiary"
             >
               <img
                 src={proxifyBskyImage(img.thumb)}
@@ -440,7 +440,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
             className="flex-1 bg-black bg-opacity-50"
             onClick={() => setShowCollectionPanel(false)}
           />
-          <div className="w-72 bg-bsky-bg-primary shadow-xl">
+          <div className="w-72 bg-asph-bg-primary shadow-xl">
             <CollectionManager
               selectedCollectionId={selectedCollectionId}
               onSelectCollection={(id) => {
@@ -455,15 +455,15 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
 
       {/* Header */}
       <div
-        className="bsky-glass sticky top-0 z-20 border-b"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        className="asph-glass sticky top-0 z-20 border-b"
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         <div className="group flex items-center justify-between px-4 py-2.5">
           <div className="flex flex-1 items-center gap-2">
-            <Bookmark size={20} style={{ color: "var(--bsky-primary)" }} />
+            <Bookmark size={20} style={{ color: "var(--asph-primary)" }} />
             <h2
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Bookmarks
             </h2>
@@ -471,8 +471,8 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
               <span
                 className="rounded-full px-2 py-0.5 text-sm"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  color: "var(--bsky-text-secondary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  color: "var(--asph-text-secondary)",
                 }}
               >
                 {bookmarkCount}
@@ -488,9 +488,9 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
             >
               <Folder
                 size={14}
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               />
-              <span style={{ color: "var(--bsky-text-secondary)" }}>
+              <span style={{ color: "var(--asph-text-secondary)" }}>
                 Collections
               </span>
             </button>
@@ -502,11 +502,11 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
             >
               <Cloud
                 size={14}
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               />
               <Settings
                 size={12}
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               />
             </button>
 
@@ -514,7 +514,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
               <button
                 onClick={onClose}
                 className="rounded-full p-1.5 opacity-0 transition-all hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
                 aria-label="Close column"
               >
                 <X size={18} />
@@ -528,10 +528,10 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
           <div className="relative" ref={collectionDropdownRef}>
             <button
               onClick={() => setShowCollectionDropdown(!showCollectionDropdown)}
-              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors hover:bg-bsky-bg-secondary"
+              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors hover:bg-asph-bg-secondary"
               style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                border: "1px solid var(--bsky-border-primary)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                border: "1px solid var(--asph-border-primary)",
               }}
             >
               <div className="flex items-center gap-2">
@@ -543,12 +543,12 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                         backgroundColor: getCollectionColor(selectedCollection),
                       }}
                     />
-                    <span style={{ color: "var(--bsky-text-primary)" }}>
+                    <span style={{ color: "var(--asph-text-primary)" }}>
                       {selectedCollection.name}
                     </span>
                     <span
                       className="text-xs"
-                      style={{ color: "var(--bsky-text-tertiary)" }}
+                      style={{ color: "var(--asph-text-tertiary)" }}
                     >
                       ({selectedCollection.bookmarkCount})
                     </span>
@@ -557,9 +557,9 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                   <>
                     <Folder
                       size={14}
-                      style={{ color: "var(--bsky-text-tertiary)" }}
+                      style={{ color: "var(--asph-text-tertiary)" }}
                     />
-                    <span style={{ color: "var(--bsky-text-primary)" }}>
+                    <span style={{ color: "var(--asph-text-primary)" }}>
                       Uncategorized
                     </span>
                   </>
@@ -567,15 +567,15 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                   <>
                     <Bookmark
                       size={14}
-                      style={{ color: "var(--bsky-primary)" }}
+                      style={{ color: "var(--asph-primary)" }}
                     />
-                    <span style={{ color: "var(--bsky-text-primary)" }}>
+                    <span style={{ color: "var(--asph-text-primary)" }}>
                       All Bookmarks
                     </span>
                     {bookmarkCount !== undefined && (
                       <span
                         className="text-xs"
-                        style={{ color: "var(--bsky-text-tertiary)" }}
+                        style={{ color: "var(--asph-text-tertiary)" }}
                       >
                         ({bookmarkCount})
                       </span>
@@ -586,16 +586,16 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
               <ChevronDown
                 size={16}
                 className={`transition-transform ${showCollectionDropdown ? "rotate-180" : ""}`}
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               />
             </button>
 
             {showCollectionDropdown && (
               <div
-                className="bsky-scrollbar absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border shadow-lg"
+                className="asph-scrollbar absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border shadow-lg"
                 style={{
-                  backgroundColor: "var(--bsky-bg-primary)",
-                  borderColor: "var(--bsky-border-primary)",
+                  backgroundColor: "var(--asph-bg-primary)",
+                  borderColor: "var(--asph-border-primary)",
                 }}
               >
                 {/* All Bookmarks option */}
@@ -604,15 +604,15 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                     setSelectedCollectionId(null);
                     setShowCollectionDropdown(false);
                   }}
-                  className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-bsky-bg-secondary ${
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-asph-bg-secondary ${
                     !selectedCollectionId ? "bg-blue-500 bg-opacity-10" : ""
                   }`}
                 >
                   <Bookmark
                     size={14}
-                    style={{ color: "var(--bsky-primary)" }}
+                    style={{ color: "var(--asph-primary)" }}
                   />
-                  <span style={{ color: "var(--bsky-text-primary)" }}>
+                  <span style={{ color: "var(--asph-text-primary)" }}>
                     All Bookmarks
                   </span>
                 </button>
@@ -623,7 +623,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                     setSelectedCollectionId("__uncategorized__");
                     setShowCollectionDropdown(false);
                   }}
-                  className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-bsky-bg-secondary ${
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-asph-bg-secondary ${
                     selectedCollectionId === "__uncategorized__"
                       ? "bg-blue-500 bg-opacity-10"
                       : ""
@@ -631,9 +631,9 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                 >
                   <Folder
                     size={14}
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   />
-                  <span style={{ color: "var(--bsky-text-secondary)" }}>
+                  <span style={{ color: "var(--asph-text-secondary)" }}>
                     Uncategorized
                   </span>
                 </button>
@@ -641,7 +641,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                 {collections.length > 0 && (
                   <div
                     className="my-1 border-t"
-                    style={{ borderColor: "var(--bsky-border-primary)" }}
+                    style={{ borderColor: "var(--asph-border-primary)" }}
                   />
                 )}
 
@@ -653,7 +653,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                       setSelectedCollectionId(collection.id);
                       setShowCollectionDropdown(false);
                     }}
-                    className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-bsky-bg-secondary ${
+                    className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-asph-bg-secondary ${
                       selectedCollectionId === collection.id
                         ? "bg-blue-500 bg-opacity-10"
                         : ""
@@ -667,13 +667,13 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                     />
                     <span
                       className="flex-1 text-left"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       {collection.name}
                     </span>
                     <span
                       className="text-xs"
-                      style={{ color: "var(--bsky-text-tertiary)" }}
+                      style={{ color: "var(--asph-text-tertiary)" }}
                     >
                       {collection.bookmarkCount}
                     </span>
@@ -690,7 +690,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
             <Search
               size={18}
               className="absolute left-3 top-1/2 -translate-y-1/2 transform"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             />
             <input
               type="text"
@@ -699,9 +699,9 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-full py-2 pl-10 pr-4 text-sm"
               style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                border: "1px solid var(--bsky-border-primary)",
-                color: "var(--bsky-text-primary)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                border: "1px solid var(--asph-border-primary)",
+                color: "var(--asph-text-primary)",
               }}
             />
           </div>
@@ -717,14 +717,14 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
             <Bookmark
               size={48}
               className="mx-auto mb-4"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             />
-            <p style={{ color: "var(--bsky-text-primary)" }}>
+            <p style={{ color: "var(--asph-text-primary)" }}>
               {searchQuery ? "No bookmarks found" : "No bookmarks yet"}
             </p>
             <p
               className="mt-2 text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Save posts to view them here
             </p>
@@ -753,7 +753,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                         ? "border-l-4 border-l-blue-500 bg-blue-500 bg-opacity-10 pl-3"
                         : ""
                     }`}
-                    style={{ borderColor: "var(--bsky-border-primary)" }}
+                    style={{ borderColor: "var(--asph-border-primary)" }}
                     onClick={() => handlePostClick(post)}
                   >
                     <div className="p-4">
@@ -770,7 +770,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                           <div className="flex items-baseline gap-2">
                             <span
                               className="font-semibold"
-                              style={{ color: "var(--bsky-text-primary)" }}
+                              style={{ color: "var(--asph-text-primary)" }}
                             >
                               {post.author?.displayName ||
                                 post.author?.handle ||
@@ -778,13 +778,13 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                             </span>
                             <span
                               className="text-sm"
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                             >
                               @{post.author?.handle || "unknown"}
                             </span>
                             <span
                               className="text-xs"
-                              style={{ color: "var(--bsky-text-tertiary)" }}
+                              style={{ color: "var(--asph-text-tertiary)" }}
                             >
                               {formatDistanceToNow(new Date(bookmark.savedAt), {
                                 addSuffix: true,
@@ -814,7 +814,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
 
                           <div
                             className="mt-2 whitespace-pre-wrap break-words"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                           >
                             {(post.record as { text?: string })?.text || ""}
                           </div>

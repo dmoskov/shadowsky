@@ -390,22 +390,22 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
     (node: MinimapNode, idx: number): string => {
       // Current position - bright blue
       if (idx === currentIndex) {
-        return "var(--bsky-primary)";
+        return "var(--asph-primary)";
       }
       // Root post - gold/amber
       if (node.isRoot) {
-        return "var(--bsky-warning)";
+        return "var(--asph-warning)";
       }
       // User's posts - green
       if (userPostIndices.has(idx)) {
-        return "var(--bsky-success)";
+        return "var(--asph-success)";
       }
       // Branch points - purple
       if (node.hasMultipleReplies) {
-        return "var(--bsky-accent)";
+        return "var(--asph-accent)";
       }
       // Default - muted
-      return "var(--bsky-text-tertiary)";
+      return "var(--asph-text-tertiary)";
     },
     [currentIndex, userPostIndices],
   );
@@ -437,8 +437,8 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
       <div
         className="relative rounded-xl shadow-lg transition-all duration-200"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
           width: isCollapsed ? "40px" : `${Math.min(svgWidth + 8, 120)}px`,
         }}
       >
@@ -446,19 +446,19 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
         <div
           className="flex cursor-pointer items-center justify-between rounded-t-xl px-2 py-1.5"
           style={{
-            backgroundColor: "var(--bsky-bg-tertiary)",
+            backgroundColor: "var(--asph-bg-tertiary)",
             borderBottom: isCollapsed
               ? "none"
-              : "1px solid var(--bsky-border-primary)",
+              : "1px solid var(--asph-border-primary)",
           }}
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {!isCollapsed && (
             <div className="flex items-center gap-1">
-              <Map size={12} style={{ color: "var(--bsky-text-secondary)" }} />
+              <Map size={12} style={{ color: "var(--asph-text-secondary)" }} />
               <span
                 className="text-xs font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Map
               </span>
@@ -468,7 +468,7 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
             {isCollapsed ? (
               <ChevronDown
                 size={14}
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               />
             ) : (
               <>
@@ -480,11 +480,11 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
                   className="rounded p-0.5 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
                   title="Close minimap"
                 >
-                  <X size={12} style={{ color: "var(--bsky-text-tertiary)" }} />
+                  <X size={12} style={{ color: "var(--asph-text-tertiary)" }} />
                 </button>
                 <ChevronUp
                   size={14}
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 />
               </>
             )}
@@ -535,7 +535,7 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
                       key={`line-${idx}`}
                       d={pathD}
                       fill="none"
-                      stroke="var(--bsky-border-secondary)"
+                      stroke="var(--asph-border-secondary)"
                       strokeWidth={1}
                       strokeOpacity={getNodeOpacity(idx) * 0.6}
                     />
@@ -688,9 +688,9 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
                         nodeSpacing +
                       nodeSpacing
                     }
-                    fill="var(--bsky-primary)"
+                    fill="var(--asph-primary)"
                     opacity={0.15}
-                    stroke="var(--bsky-primary)"
+                    stroke="var(--asph-primary)"
                     strokeWidth={1}
                     strokeOpacity={0.3}
                     rx={4}
@@ -704,13 +704,13 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
             <div
               className="flex flex-wrap items-center justify-center gap-2 rounded-b-xl px-2 py-1.5"
               style={{
-                backgroundColor: "var(--bsky-bg-tertiary)",
-                borderTop: "1px solid var(--bsky-border-primary)",
+                backgroundColor: "var(--asph-bg-tertiary)",
+                borderTop: "1px solid var(--asph-border-primary)",
               }}
             >
               <span
                 className="text-center text-[10px]"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 {reason}
               </span>
@@ -724,17 +724,17 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
         <div
           className="mt-2 rounded-lg px-2 py-1.5 text-[10px]"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
-            color: "var(--bsky-text-tertiary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
+            color: "var(--asph-text-tertiary)",
           }}
         >
           <div className="flex items-center gap-1.5">
             <span
               className="inline-block h-2.5 w-2.5 rounded-full"
               style={{
-                backgroundColor: "var(--bsky-bg-tertiary)",
-                border: "2px solid var(--bsky-primary)",
+                backgroundColor: "var(--asph-bg-tertiary)",
+                border: "2px solid var(--asph-primary)",
               }}
             />
             Current
@@ -743,8 +743,8 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
             <span
               className="inline-block h-2.5 w-2.5 rounded-full"
               style={{
-                backgroundColor: "var(--bsky-bg-tertiary)",
-                border: "2px solid var(--bsky-warning)",
+                backgroundColor: "var(--asph-bg-tertiary)",
+                border: "2px solid var(--asph-warning)",
               }}
             />
             Root
@@ -754,8 +754,8 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
               <span
                 className="inline-block h-2.5 w-2.5 rounded-full"
                 style={{
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                  border: "2px solid var(--bsky-success)",
+                  backgroundColor: "var(--asph-bg-tertiary)",
+                  border: "2px solid var(--asph-success)",
                 }}
               />
               You
@@ -765,8 +765,8 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
             <span
               className="inline-block h-2.5 w-2.5 rounded-full"
               style={{
-                backgroundColor: "var(--bsky-bg-tertiary)",
-                border: "2px solid var(--bsky-accent)",
+                backgroundColor: "var(--asph-bg-tertiary)",
+                border: "2px solid var(--asph-accent)",
               }}
             />
             Branch
@@ -777,7 +777,7 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
             <>
               <div
                 className="my-1.5 border-t"
-                style={{ borderColor: "var(--bsky-border-primary)" }}
+                style={{ borderColor: "var(--asph-border-primary)" }}
               />
               <div className="space-y-1">
                 {topParticipants.map((participant) => (
@@ -801,14 +801,14 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
                     <span className="truncate" style={{ maxWidth: "70px" }}>
                       {participant.displayName || participant.handle}
                     </span>
-                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    <span style={{ color: "var(--asph-text-secondary)" }}>
                       {participant.count}
                     </span>
                     {participant.isOP && (
                       <span
                         className="rounded px-1 text-[8px] font-medium"
                         style={{
-                          backgroundColor: "var(--bsky-warning)",
+                          backgroundColor: "var(--asph-warning)",
                           color: "white",
                         }}
                       >

@@ -1360,7 +1360,7 @@ export function ComposerRefactored() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 md:px-6">
-      <div className="bsky-card mb-6 p-4 md:p-6">
+      <div className="asph-card mb-6 p-4 md:p-6">
         {/* Settings Section */}
         <ComposerSettings
           showSettings={state.showSettings}
@@ -1385,14 +1385,14 @@ export function ComposerRefactored() {
         {/* Post Button and Thread Composer Button */}
         <div className="mb-4 flex items-center justify-between">
           <button
-            className="bsky-button-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium"
+            className="asph-button-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium"
             onClick={() => state.setShowThreadComposer(true)}
           >
             <MessageSquare size={16} />
             Create Thread
           </button>
           <button
-            className="bsky-button-primary flex items-center gap-2 px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+            className="asph-button-primary flex items-center gap-2 px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleSend}
             disabled={state.posts.length === 0 || state.isPosting}
             aria-label={
@@ -1446,15 +1446,15 @@ export function ComposerRefactored() {
             onChange={(e) => state.setDraftTitle(e.target.value)}
             className="flex-1 rounded-lg p-2 text-sm"
             style={{
-              background: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
-              color: "var(--bsky-text-primary)",
+              background: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border-primary)",
+              color: "var(--asph-text-primary)",
               outline: "none",
             }}
           />
 
           <button
-            className="bsky-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
+            className="asph-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
             onClick={saveDraftHandler}
             disabled={!state.text.trim()}
           >
@@ -1465,7 +1465,7 @@ export function ComposerRefactored() {
           </button>
 
           <button
-            className="bsky-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
+            className="asph-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
             onClick={() => state.setShowDrafts(!state.showDrafts)}
           >
             <FileText size={14} />
@@ -1476,7 +1476,7 @@ export function ComposerRefactored() {
 
           {state.currentDraftId && (
             <button
-              className="bsky-button-secondary p-2 text-sm"
+              className="asph-button-secondary p-2 text-sm"
               onClick={() => {
                 state.resetComposer();
                 state.setPostStatus({
@@ -1495,16 +1495,16 @@ export function ComposerRefactored() {
         {/* Character Count and Post Count */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 text-sm">
-            <span style={{ color: "var(--bsky-text-secondary)" }}>
+            <span style={{ color: "var(--asph-text-secondary)" }}>
               {state.text.length}{" "}
               <span className="hidden sm:inline">characters</span>
             </span>
             {state.posts.length > 1 && (
               <>
-                <span style={{ color: "var(--bsky-text-tertiary)" }}>•</span>
+                <span style={{ color: "var(--asph-text-tertiary)" }}>•</span>
                 <span
                   className="flex items-center gap-1.5 font-medium"
-                  style={{ color: "var(--bsky-primary)" }}
+                  style={{ color: "var(--asph-primary)" }}
                 >
                   <Split size={14} />
                   {state.posts.length} posts
@@ -1608,16 +1608,16 @@ export function ComposerRefactored() {
 
       {/* Drafts Section */}
       {state.showDrafts && (
-        <div className="bsky-card mb-6 p-4 md:p-6">
+        <div className="asph-card mb-6 p-4 md:p-6">
           <div className="mb-4 flex items-center justify-between">
             <h3
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Saved Drafts
             </h3>
             <button
-              className="bsky-button-secondary p-2"
+              className="asph-button-secondary p-2"
               onClick={() => state.setShowDrafts(false)}
             >
               <X size={20} />
@@ -1628,7 +1628,7 @@ export function ComposerRefactored() {
             {state.drafts.length === 0 ? (
               <p
                 className="py-8 text-center"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 No saved drafts
               </p>
@@ -1775,14 +1775,14 @@ const DraftCard: React.FC<DraftCardProps> = ({ draft, onLoad, onDelete }) => {
     <div
       className="cursor-pointer rounded-lg border p-4 transition-all hover:shadow-sm"
       style={{
-        borderColor: "var(--bsky-border-primary)",
-        background: "var(--bsky-bg-secondary)",
+        borderColor: "var(--asph-border-primary)",
+        background: "var(--asph-bg-secondary)",
       }}
     >
       <div className="mb-2 flex items-start justify-between">
         <h4
           className="font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {draft.title}
         </h4>
@@ -1798,7 +1798,7 @@ const DraftCard: React.FC<DraftCardProps> = ({ draft, onLoad, onDelete }) => {
       </div>
       <p
         className="mb-2 line-clamp-2 text-sm"
-        style={{ color: "var(--bsky-text-secondary)" }}
+        style={{ color: "var(--asph-text-secondary)" }}
       >
         {draft.content}
       </p>
@@ -1807,8 +1807,8 @@ const DraftCard: React.FC<DraftCardProps> = ({ draft, onLoad, onDelete }) => {
           <span
             className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
             style={{
-              background: "var(--bsky-bg-tertiary)",
-              color: "var(--bsky-primary)",
+              background: "var(--asph-bg-tertiary)",
+              color: "var(--asph-primary)",
             }}
           >
             <Split size={12} />
@@ -1819,8 +1819,8 @@ const DraftCard: React.FC<DraftCardProps> = ({ draft, onLoad, onDelete }) => {
           <span
             className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
             style={{
-              background: "var(--bsky-bg-tertiary)",
-              color: "var(--bsky-text-secondary)",
+              background: "var(--asph-bg-tertiary)",
+              color: "var(--asph-text-secondary)",
             }}
           >
             <Image size={12} />
@@ -1831,12 +1831,12 @@ const DraftCard: React.FC<DraftCardProps> = ({ draft, onLoad, onDelete }) => {
       <div className="flex items-center justify-between">
         <span
           className="text-xs"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           Updated {new Date(draft.updatedAt).toLocaleString()}
         </span>
         <button
-          className="bsky-button-secondary px-3 py-1 text-sm"
+          className="asph-button-secondary px-3 py-1 text-sm"
           onClick={onLoad}
         >
           Load

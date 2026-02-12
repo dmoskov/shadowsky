@@ -251,9 +251,9 @@ export const LabelBadge: React.FC<LabelBadgeProps> = ({
           <span
             className={`inline-flex items-center rounded-full font-medium ${sizeClasses[size]}`}
             style={{
-              color: "var(--bsky-text-secondary)",
-              backgroundColor: "var(--bsky-bg-tertiary)",
-              border: "1px solid var(--bsky-border-primary)",
+              color: "var(--asph-text-secondary)",
+              backgroundColor: "var(--asph-bg-tertiary)",
+              border: "1px solid var(--asph-border-primary)",
             }}
           >
             +{remainingCount}

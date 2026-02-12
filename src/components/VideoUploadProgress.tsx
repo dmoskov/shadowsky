@@ -81,7 +81,7 @@ export function VideoUploadProgress({
     return (
       <div
         className="flex items-center gap-2 rounded-lg px-3 py-2"
-        style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+        style={{ backgroundColor: "var(--asph-bg-secondary)" }}
       >
         {/* Icon */}
         {isActive && (
@@ -94,7 +94,7 @@ export function VideoUploadProgress({
         <div className="flex-1">
           <div
             className="h-1.5 overflow-hidden rounded-full"
-            style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+            style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
           >
             <div
               className={`h-full transition-all duration-300 ${
@@ -112,7 +112,7 @@ export function VideoUploadProgress({
         {/* Progress text */}
         <span
           className="text-xs tabular-nums"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           {overallProgress}%
         </span>
@@ -124,7 +124,7 @@ export function VideoUploadProgress({
             className="ml-1 rounded-full p-1 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
             title="Cancel upload"
           >
-            <X size={14} style={{ color: "var(--bsky-text-secondary)" }} />
+            <X size={14} style={{ color: "var(--asph-text-secondary)" }} />
           </button>
         )}
       </div>
@@ -135,8 +135,8 @@ export function VideoUploadProgress({
     <div
       className="overflow-hidden rounded-lg border"
       style={{
-        backgroundColor: "var(--bsky-bg-secondary)",
-        borderColor: "var(--bsky-border-primary)",
+        backgroundColor: "var(--asph-bg-secondary)",
+        borderColor: "var(--asph-border-primary)",
       }}
     >
       {/* Header */}
@@ -160,13 +160,13 @@ export function VideoUploadProgress({
         <div className="min-w-0 flex-1">
           <div
             className="truncate text-sm font-medium"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             {stageLabels[stage]}
           </div>
           <div
             className="truncate text-xs"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {error || stageDescriptions[stage]}
           </div>
@@ -177,7 +177,7 @@ export function VideoUploadProgress({
           {isActive && (
             <span
               className="text-sm tabular-nums"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               {overallProgress}%
             </span>
@@ -189,7 +189,7 @@ export function VideoUploadProgress({
               className="rounded-full p-1.5 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
               title="Cancel upload"
             >
-              <X size={18} style={{ color: "var(--bsky-text-secondary)" }} />
+              <X size={18} style={{ color: "var(--asph-text-secondary)" }} />
             </button>
           )}
 
@@ -207,7 +207,7 @@ export function VideoUploadProgress({
       {/* Progress bar */}
       <div
         className="h-1 overflow-hidden"
-        style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+        style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
       >
         <div
           className={`h-full transition-all duration-300 ${
@@ -221,12 +221,12 @@ export function VideoUploadProgress({
       {fileName && (
         <div
           className="flex items-center gap-2 border-t px-3 py-2"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
-          <Film size={14} style={{ color: "var(--bsky-text-tertiary)" }} />
+          <Film size={14} style={{ color: "var(--asph-text-tertiary)" }} />
           <span
             className="truncate text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             {fileName}
           </span>
@@ -237,7 +237,7 @@ export function VideoUploadProgress({
       {isActive && (
         <div
           className="flex items-center justify-center gap-4 border-t px-3 py-2"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
           <StageIndicator
             label="Compress"
@@ -253,7 +253,7 @@ export function VideoUploadProgress({
           />
           <div
             className="h-px w-8"
-            style={{ backgroundColor: "var(--bsky-border-primary)" }}
+            style={{ backgroundColor: "var(--asph-border-primary)" }}
           />
           <StageIndicator
             label="Upload"
@@ -269,7 +269,7 @@ export function VideoUploadProgress({
           />
           <div
             className="h-px w-8"
-            style={{ backgroundColor: "var(--bsky-border-primary)" }}
+            style={{ backgroundColor: "var(--asph-border-primary)" }}
           />
           <StageIndicator
             label="Process"
@@ -291,8 +291,8 @@ export function VideoUploadProgress({
         <div
           className="border-t px-3 py-2 text-xs"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            color: "var(--bsky-text-tertiary)",
+            borderColor: "var(--asph-border-primary)",
+            color: "var(--asph-text-tertiary)",
           }}
         >
           {compressionProgress.stage === "analyzing" && "Analyzing video..."}
@@ -336,7 +336,7 @@ function StageIndicator({
         }`}
         style={
           !isComplete && !isActive
-            ? { color: "var(--bsky-text-tertiary)" }
+            ? { color: "var(--asph-text-tertiary)" }
             : undefined
         }
       >
@@ -353,8 +353,8 @@ function StageIndicator({
         style={{
           color:
             isActive || isComplete
-              ? "var(--bsky-text-primary)"
-              : "var(--bsky-text-tertiary)",
+              ? "var(--asph-text-primary)"
+              : "var(--asph-text-tertiary)",
         }}
       >
         {label}

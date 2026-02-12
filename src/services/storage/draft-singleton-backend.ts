@@ -1,6 +1,6 @@
 import { AtpAgent } from "@atproto/api";
 import { createLogger } from "../../utils/logger";
-import { ShadowSkyDrafts } from "../app-preferences-service";
+import { AsphodelDrafts } from "../app-preferences-service";
 import { ThreadDraft } from "../drafts";
 import { DraftStorageBackend } from "./draft-storage-backend";
 import { AT_PROTO_COLLECTIONS, AT_PROTO_RKEYS } from "./storage-constants";
@@ -52,7 +52,7 @@ export class DraftSingletonBackend extends DraftStorageBackend {
       });
 
       if (response.data.value) {
-        const draftsData = response.data.value as unknown as ShadowSkyDrafts;
+        const draftsData = response.data.value as unknown as AsphodelDrafts;
         this.recordUri = response.data.uri;
 
         // Convert to ThreadDraft format and load into cache
@@ -145,7 +145,7 @@ export class DraftSingletonBackend extends DraftStorageBackend {
         throw new Error("No DID available");
       }
 
-      const draftsData: ShadowSkyDrafts = {
+      const draftsData: AsphodelDrafts = {
         $type: AT_PROTO_COLLECTIONS.DRAFTS,
         drafts: Array.from(this.draftsCache.values()).map((draft) => ({
           id: draft.id,

@@ -1,8 +1,8 @@
-# AI Agent Context Guide for ShadowSky
+# AI Agent Context Guide for Asphodel
 
 ## Quick Start for AI Agents
 
-**You are working on ShadowSky**: An advanced Bluesky client with TweetDeck-style multi-column interface. Think of it as "TweetDeck for Bluesky" with enhanced analytics, dual storage options, and privacy-focused features.
+**You are working on Asphodel**: An advanced Bluesky client with TweetDeck-style multi-column interface. Think of it as "TweetDeck for Bluesky" with enhanced analytics, dual storage options, and privacy-focused features.
 
 **Your primary directive**: Follow the patterns already established in the codebase. This is a production application with real users - maintain stability and consistency.
 
@@ -39,7 +39,7 @@
 - Feeds: Custom algorithmic or chronological timelines
 - App Passwords: Scoped authentication tokens
 
-**ShadowSky Features**:
+**Asphodel Features**:
 
 - SkyDeck: Multi-column dashboard (main differentiator)
 - Dual Storage: Local (device) or AT Protocol (synced)

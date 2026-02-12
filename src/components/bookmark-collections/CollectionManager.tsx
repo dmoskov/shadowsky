@@ -161,17 +161,17 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-bsky-border-primary px-4 py-3">
+      <div className="flex items-center justify-between border-b border-asph-border-primary px-4 py-3">
         <div className="flex items-center gap-2">
-          <Folder size={20} className="text-bsky-primary" />
-          <h3 className="text-lg font-semibold text-bsky-text-primary">
+          <Folder size={20} className="text-asph-primary" />
+          <h3 className="text-lg font-semibold text-asph-text-primary">
             Collections
           </h3>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="rounded-full p-1.5 text-bsky-text-secondary transition-colors hover:bg-bsky-bg-secondary"
+            className="rounded-full p-1.5 text-asph-text-secondary transition-colors hover:bg-asph-bg-secondary"
           >
             <X size={18} />
           </button>
@@ -179,14 +179,14 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
       </div>
 
       {/* Collection List */}
-      <div className="bsky-scrollbar flex-1 overflow-y-auto">
+      <div className="asph-scrollbar flex-1 overflow-y-auto">
         {/* All Bookmarks option */}
         <button
           onClick={() => onSelectCollection(null)}
-          className={`flex w-full items-center gap-3 border-b border-bsky-border-primary px-4 py-3 transition-colors hover:bg-bsky-bg-secondary ${
+          className={`flex w-full items-center gap-3 border-b border-asph-border-primary px-4 py-3 transition-colors hover:bg-asph-bg-secondary ${
             selectedCollectionId === null
               ? "bg-blue-500 bg-opacity-10 text-blue-500"
-              : "text-bsky-text-primary"
+              : "text-asph-text-primary"
           }`}
         >
           <Folder size={18} />
@@ -196,10 +196,10 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
         {/* Uncategorized option */}
         <button
           onClick={() => onSelectCollection("__uncategorized__")}
-          className={`flex w-full items-center gap-3 border-b border-bsky-border-primary px-4 py-3 transition-colors hover:bg-bsky-bg-secondary ${
+          className={`flex w-full items-center gap-3 border-b border-asph-border-primary px-4 py-3 transition-colors hover:bg-asph-bg-secondary ${
             selectedCollectionId === "__uncategorized__"
               ? "bg-blue-500 bg-opacity-10 text-blue-500"
-              : "text-bsky-text-secondary"
+              : "text-asph-text-secondary"
           }`}
         >
           <Folder size={18} />
@@ -210,7 +210,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
         {collections.map((collection) => (
           <div
             key={collection.id}
-            className={`group flex items-center gap-3 border-b border-bsky-border-primary px-4 py-3 transition-colors hover:bg-bsky-bg-secondary ${
+            className={`group flex items-center gap-3 border-b border-asph-border-primary px-4 py-3 transition-colors hover:bg-asph-bg-secondary ${
               selectedCollectionId === collection.id
                 ? "bg-blue-500 bg-opacity-10"
                 : ""
@@ -229,18 +229,18 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
                   className={`font-medium ${
                     selectedCollectionId === collection.id
                       ? "text-blue-500"
-                      : "text-bsky-text-primary"
+                      : "text-asph-text-primary"
                   }`}
                 >
                   {collection.name}
                 </span>
                 {collection.description && (
-                  <p className="mt-0.5 text-xs text-bsky-text-tertiary">
+                  <p className="mt-0.5 text-xs text-asph-text-tertiary">
                     {collection.description}
                   </p>
                 )}
               </div>
-              <span className="text-sm text-bsky-text-tertiary">
+              <span className="text-sm text-asph-text-tertiary">
                 {collection.bookmarkCount}
               </span>
             </button>
@@ -254,19 +254,19 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
                     activeDropdown === collection.id ? null : collection.id,
                   );
                 }}
-                className="rounded p-1 text-bsky-text-tertiary opacity-0 transition-all hover:bg-bsky-bg-hover hover:text-bsky-text-primary group-hover:opacity-100"
+                className="rounded p-1 text-asph-text-tertiary opacity-0 transition-all hover:bg-asph-bg-hover hover:text-asph-text-primary group-hover:opacity-100"
               >
                 <MoreVertical size={16} />
               </button>
 
               {activeDropdown === collection.id && (
-                <div className="absolute right-0 top-full z-50 mt-1 min-w-32 rounded-lg border border-bsky-border-primary bg-bsky-bg-primary shadow-lg">
+                <div className="absolute right-0 top-full z-50 mt-1 min-w-32 rounded-lg border border-asph-border-primary bg-asph-bg-primary shadow-lg">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       startEditing(collection);
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-bsky-text-primary transition-colors hover:bg-bsky-bg-secondary"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-asph-text-primary transition-colors hover:bg-asph-bg-secondary"
                   >
                     <Edit2 size={14} />
                     Edit
@@ -293,10 +293,10 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
           <div className="p-8 text-center">
             <Folder
               size={48}
-              className="mx-auto mb-4 text-bsky-text-tertiary"
+              className="mx-auto mb-4 text-asph-text-tertiary"
             />
-            <p className="text-bsky-text-primary">No collections yet</p>
-            <p className="mt-2 text-sm text-bsky-text-secondary">
+            <p className="text-asph-text-primary">No collections yet</p>
+            <p className="mt-2 text-sm text-asph-text-secondary">
               Create a collection to organize your bookmarks
             </p>
           </div>
@@ -305,7 +305,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
 
       {/* Create/Edit Form */}
       {(showCreateForm || editingCollection) && (
-        <div className="border-t border-bsky-border-primary p-4">
+        <div className="border-t border-asph-border-primary p-4">
           <form
             onSubmit={
               editingCollection
@@ -313,7 +313,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
                 : handleCreateCollection
             }
           >
-            <h4 className="mb-3 font-medium text-bsky-text-primary">
+            <h4 className="mb-3 font-medium text-asph-text-primary">
               {editingCollection ? "Edit Collection" : "New Collection"}
             </h4>
 
@@ -323,7 +323,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
               value={collectionName}
               onChange={(e) => setCollectionName(e.target.value)}
               placeholder="Collection name"
-              className="mb-3 w-full rounded-md border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 text-sm text-bsky-text-primary focus-visible:border-blue-500 focus-visible:outline-none"
+              className="mb-3 w-full rounded-md border border-asph-border-primary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary focus-visible:border-blue-500 focus-visible:outline-none"
               disabled={isCreating || isUpdating}
             />
 
@@ -332,12 +332,12 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
               value={collectionDescription}
               onChange={(e) => setCollectionDescription(e.target.value)}
               placeholder="Description (optional)"
-              className="mb-3 w-full rounded-md border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 text-sm text-bsky-text-primary focus-visible:border-blue-500 focus-visible:outline-none"
+              className="mb-3 w-full rounded-md border border-asph-border-primary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary focus-visible:border-blue-500 focus-visible:outline-none"
               disabled={isCreating || isUpdating}
             />
 
             <div className="mb-4">
-              <p className="mb-2 text-xs text-bsky-text-secondary">Color</p>
+              <p className="mb-2 text-xs text-asph-text-secondary">Color</p>
               <div className="flex gap-2">
                 {COLLECTION_COLORS.map((color) => (
                   <button
@@ -346,7 +346,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
                     onClick={() => setSelectedColor(color.id)}
                     className={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${
                       selectedColor === color.id
-                        ? "border-bsky-text-primary ring-2 ring-blue-500 ring-offset-1"
+                        ? "border-asph-text-primary ring-2 ring-blue-500 ring-offset-1"
                         : "border-transparent"
                     }`}
                     style={{ backgroundColor: color.value }}
@@ -361,7 +361,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
               <button
                 type="button"
                 onClick={cancelEditing}
-                className="flex-1 rounded-md bg-bsky-bg-secondary px-3 py-2 text-sm text-bsky-text-secondary transition-colors hover:bg-bsky-bg-hover"
+                className="flex-1 rounded-md bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-secondary transition-colors hover:bg-asph-bg-hover"
               >
                 Cancel
               </button>
@@ -383,10 +383,10 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
 
       {/* Create Button */}
       {!showCreateForm && !editingCollection && (
-        <div className="border-t border-bsky-border-primary p-4">
+        <div className="border-t border-asph-border-primary p-4">
           <button
             onClick={() => setShowCreateForm(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-bsky-border-primary py-2.5 text-sm text-bsky-text-secondary transition-colors hover:border-blue-500 hover:text-blue-500"
+            className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-asph-border-primary py-2.5 text-sm text-asph-text-secondary transition-colors hover:border-blue-500 hover:text-blue-500"
           >
             <Plus size={16} />
             Create Collection

@@ -16,9 +16,9 @@ import { SyncStatusBadge } from "./SyncStatusBadge";
 
 // Extracted constant styles to avoid creating new objects on every render
 const repostMenuStyle: React.CSSProperties = {
-  backgroundColor: "var(--bsky-bg-secondary)",
-  borderColor: "var(--bsky-border-primary)",
-  boxShadow: "var(--bsky-shadow-lg)",
+  backgroundColor: "var(--asph-bg-secondary)",
+  borderColor: "var(--asph-border-primary)",
+  boxShadow: "var(--asph-shadow-lg)",
 };
 
 interface PostActionBarProps {
@@ -136,7 +136,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
     >
       {/* Reply */}
       <button
-        className={`touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary spring-icon hover:text-blue-600 ${
+        className={`touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-asph-text-secondary spring-icon hover:text-blue-600 ${
           isReplying ? "text-blue-500" : ""
         }`}
         onClick={(e) => handleAction(e, onReply)}
@@ -158,7 +158,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
       <div className="relative">
         <button
           ref={repostButtonRef}
-          className={`touch-target-sm relative flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary spring-icon hover:text-green-600 ${
+          className={`touch-target-sm relative flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-asph-text-secondary spring-icon hover:text-green-600 ${
             isReposted ? "text-green-500" : ""
           }`}
           onClick={(e) => {
@@ -217,7 +217,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
               >
                 <button
                   role="menuitem"
-                  className="flex min-h-[44px] w-full items-center gap-3 rounded-t-lg bg-transparent px-4 py-3 text-left text-sm text-bsky-text-primary transition-all hover:bg-bsky-bg-hover"
+                  className="flex min-h-[44px] w-full items-center gap-3 rounded-t-lg bg-transparent px-4 py-3 text-left text-sm text-asph-text-primary transition-all hover:bg-asph-bg-hover"
                   onClick={(e) => {
                     handleAction(e, onRepost);
                     setShowRepostMenu(false);
@@ -228,7 +228,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
                 </button>
                 <button
                   role="menuitem"
-                  className="flex min-h-[44px] w-full items-center gap-3 rounded-b-lg bg-transparent px-4 py-3 text-left text-sm text-bsky-text-primary transition-all hover:bg-bsky-bg-hover"
+                  className="flex min-h-[44px] w-full items-center gap-3 rounded-b-lg bg-transparent px-4 py-3 text-left text-sm text-asph-text-primary transition-all hover:bg-asph-bg-hover"
                   onClick={(e) => {
                     handleAction(e, onQuote);
                     setShowRepostMenu(false);
@@ -245,7 +245,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
 
       {/* Like */}
       <button
-        className={`touch-target-sm relative flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary spring-icon hover:text-red-600 ${
+        className={`touch-target-sm relative flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-asph-text-secondary spring-icon hover:text-red-600 ${
           isLiked ? "text-red-500" : ""
         }`}
         onClick={(e) => handleAction(e, onLike)}
@@ -272,7 +272,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
 
       {/* Bookmark */}
       <button
-        className={`touch-target-sm relative flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary spring-icon hover:text-amber-600 ${
+        className={`touch-target-sm relative flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-asph-text-secondary spring-icon hover:text-amber-600 ${
           bookmarked ? "text-amber-500" : ""
         }`}
         onClick={handleBookmark}
@@ -297,7 +297,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
       {/* Share */}
       {onShare && (
         <button
-          className="touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-bsky-text-secondary spring-icon hover:text-blue-600"
+          className="touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-asph-text-secondary spring-icon hover:text-blue-600"
           onClick={(e) => handleAction(e, onShare)}
           aria-label="Share post"
         >

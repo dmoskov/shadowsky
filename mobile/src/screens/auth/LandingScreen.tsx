@@ -62,7 +62,7 @@ export function LandingScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
-          <Text style={styles.title}>ShadowSky</Text>
+          <Text style={styles.title}>Asphodel</Text>
           <Text style={styles.subtitle}>
             A powerful Bluesky client with advanced features
           </Text>
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   oauthButton: {
-    backgroundColor: "#1185fe",
+    backgroundColor: "#c9a84c",
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   loginButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#c9a84c",
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   loginButtonDisabled: {
-    backgroundColor: "#1e3a8a",
+    backgroundColor: "#a68a3a",
   },
   loginButtonText: {
     color: "#ffffff",
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   linkText: {
-    color: "#3b82f6",
+    color: "#c9a84c",
     fontWeight: "600",
   },
   disclaimer: {

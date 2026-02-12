@@ -74,14 +74,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         id="main-navigation"
         role="navigation"
         aria-label="Main navigation"
-        className={`bsky-glass fixed bottom-0 top-16 z-40 overflow-y-auto lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] ${isCollapsed ? "w-16" : "w-64"} max-w-[80vw] transform transition-all duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
+        className={`asph-glass fixed bottom-0 top-16 z-40 overflow-y-auto lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] ${isCollapsed ? "w-16" : "w-64"} max-w-[80vw] transform transition-all duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
         style={{
-          borderRight: "1px solid var(--bsky-border-primary)",
+          borderRight: "1px solid var(--asph-border-primary)",
           left: isOpen ? "0" : undefined,
         }}
       >
         <div className="flex items-center justify-between p-4 lg:hidden">
-          <h2 className="bsky-gradient-text text-lg font-bold">Menu</h2>
+          <h2 className="asph-gradient-text text-lg font-bold">Menu</h2>
           <button
             onClick={onClose}
             aria-label="Close menu"
@@ -89,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <CloseIcon
               size={20}
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
               aria-hidden="true"
             />
           </button>
@@ -118,9 +118,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   } `
                 }
                 style={({ isActive }) => ({
-                  color: isActive ? "white" : "var(--bsky-text-secondary)",
+                  color: isActive ? "white" : "var(--asph-text-secondary)",
                   backgroundColor: isActive
-                    ? "var(--bsky-primary)"
+                    ? "var(--asph-primary)"
                     : "transparent",
                 })}
                 title={isCollapsed ? item.label : undefined}
@@ -137,7 +137,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <span
                         className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full"
                         style={{
-                          backgroundColor: "var(--bsky-accent)",
+                          backgroundColor: "var(--asph-accent)",
                         }}
                       />
                     )}
@@ -155,7 +155,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Divider */}
         <div
           className="mx-4 my-4 border-t"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         ></div>
 
         {/* External Links */}
@@ -165,7 +165,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             className={`group flex min-h-[44px] items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 hover:bg-blue-500 hover:bg-opacity-10`}
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
             title={isCollapsed ? "Open Bluesky" : undefined}
           >
             <ExternalLink
@@ -183,13 +183,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {!isCollapsed && (
           <div
             className="absolute bottom-0 left-0 right-0 border-t p-6"
-            style={{ borderColor: "var(--bsky-border-primary)" }}
+            style={{ borderColor: "var(--asph-border-primary)" }}
           >
             <div
               className="text-center text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
-              <div className="bsky-gradient-text mb-1 font-bold">ShadowSky</div>
+              <div className="asph-gradient-text mb-1 font-bold">Asphodel</div>
               <div className="tracking-wide">Version 0.7.4</div>
             </div>
           </div>

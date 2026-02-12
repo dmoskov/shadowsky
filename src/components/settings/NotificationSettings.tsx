@@ -149,13 +149,13 @@ export const NotificationSettings: React.FC = () => {
       <div>
         <h2
           className="text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Notification Preferences
         </h2>
         <p
           className="mt-1 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Choose what notifications you want to receive
         </p>
@@ -169,19 +169,19 @@ export const NotificationSettings: React.FC = () => {
               index !== notificationTypes.length - 1 ? "border-b" : ""
             }`}
             style={{
-              borderColor: "var(--bsky-border-primary)",
+              borderColor: "var(--asph-border-primary)",
             }}
           >
             <div className="flex-1">
               <div
                 className="font-medium"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {type.label}
               </div>
               <div
                 className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 {type.description}
               </div>
@@ -216,8 +216,8 @@ export const NotificationSettings: React.FC = () => {
         <div
           className={`rounded-lg border p-3 text-sm ${
             message.type === "success"
-              ? "border-bsky-success/30 bg-bsky-success/10 text-bsky-success"
-              : "border-bsky-error/30 bg-bsky-error/10 text-bsky-error"
+              ? "border-asph-success/30 bg-asph-success/10 text-asph-success"
+              : "border-asph-error/30 bg-asph-error/10 text-asph-error"
           }`}
         >
           {message.text}
@@ -230,7 +230,7 @@ export const NotificationSettings: React.FC = () => {
           disabled={isLoading}
           className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
           style={{
-            backgroundColor: "var(--bsky-primary)",
+            backgroundColor: "var(--asph-primary)",
           }}
         >
           {isLoading ? "Saving..." : "Save Preferences"}

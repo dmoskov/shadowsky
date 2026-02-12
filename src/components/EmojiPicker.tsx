@@ -1980,16 +1980,16 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
     >
       <div
         className="flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-lg"
-        style={{ background: "var(--bsky-bg-primary)" }}
+        style={{ background: "var(--asph-bg-primary)" }}
       >
         <div
           className="border-b p-4"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
           <div className="mb-3 flex items-center justify-between">
             <h3
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Choose an Emoji
             </h3>
@@ -2006,7 +2006,7 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 transform"
               size={20}
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             />
             <input
               ref={searchInputRef}
@@ -2016,16 +2016,16 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full rounded-lg py-2 pl-10 pr-4"
               style={{
-                background: "var(--bsky-bg-secondary)",
-                border: "1px solid var(--bsky-border-primary)",
-                color: "var(--bsky-text-primary)",
+                background: "var(--asph-bg-secondary)",
+                border: "1px solid var(--asph-border-primary)",
+                color: "var(--asph-text-primary)",
                 outline: "none",
               }}
               onFocus={(e) =>
-                (e.target.style.borderColor = "var(--bsky-primary)")
+                (e.target.style.borderColor = "var(--asph-primary)")
               }
               onBlur={(e) =>
-                (e.target.style.borderColor = "var(--bsky-border-primary)")
+                (e.target.style.borderColor = "var(--asph-border-primary)")
               }
               autoFocus
             />
@@ -2035,7 +2035,7 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
         {!searchTerm && (
           <div
             className="flex overflow-x-auto border-b"
-            style={{ borderColor: "var(--bsky-border-primary)" }}
+            style={{ borderColor: "var(--asph-border-primary)" }}
           >
             {Object.entries(EMOJI_CATEGORIES).map(([key, category]) => {
               if (key === "recent" && recentEmojis.length === 0) return null;
@@ -2049,12 +2049,12 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
                   style={{
                     borderColor:
                       selectedCategory === key
-                        ? "var(--bsky-primary)"
+                        ? "var(--asph-primary)"
                         : "transparent",
                     color:
                       selectedCategory === key
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-text-secondary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-text-secondary)",
                   }}
                   title={category.name}
                 >
@@ -2068,7 +2068,7 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
         <div ref={gridContainerRef} className="flex-1 overflow-hidden p-2">
           {displayEmojis.length === 0 && debouncedSearchTerm && (
             <div className="py-8 text-center">
-              <p style={{ color: "var(--bsky-text-secondary)" }}>
+              <p style={{ color: "var(--asph-text-secondary)" }}>
                 No emojis found
               </p>
             </div>

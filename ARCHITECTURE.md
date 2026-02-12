@@ -1,4 +1,4 @@
-# ShadowSky Architecture Documentation
+# Asphodel Architecture Documentation
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@
 
 ## System Overview
 
-ShadowSky is a progressive web application built as an advanced Bluesky client with TweetDeck-style multi-column interface. It's designed with a focus on performance, privacy, and user control over data storage.
+Asphodel is a progressive web application built as an advanced Bluesky client with TweetDeck-style multi-column interface. It's designed with a focus on performance, privacy, and user control over data storage.
 
 ### Core Design Principles
 
@@ -553,7 +553,7 @@ Graceful error handling at component tree levels.
 
 ## Contact & Maintenance
 
-**Primary Maintainer**: ShadowSky Team
+**Primary Maintainer**: Asphodel Team
 **Architecture Reviews**: Monthly architecture review meetings
 **Documentation Updates**: Updated with each major feature
 **Contact**: architecture@shadowsky.app

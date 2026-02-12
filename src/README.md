@@ -1,7 +1,7 @@
 # Source Code Directory (`/src`)
 
 ## Overview
-This directory contains all the application source code for ShadowSky. The code is organized by feature and responsibility, following React and TypeScript best practices.
+This directory contains all the application source code for Asphodel. The code is organized by feature and responsibility, following React and TypeScript best practices.
 
 ## Directory Structure
 

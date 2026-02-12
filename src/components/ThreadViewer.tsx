@@ -529,35 +529,35 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     : isHighlighted && !hasShownInitialHighlight
                       ? "rgba(251, 146, 60, 0.1)" // Orange highlight background (only initially)
                       : node.isRoot
-                        ? "var(--bsky-bg-secondary)"
+                        ? "var(--asph-bg-secondary)"
                         : isUnread
-                          ? "var(--bsky-bg-primary)"
+                          ? "var(--asph-bg-primary)"
                           : node.depth > 0
                             ? depthBgColor // Subtle depth-based background
-                            : "var(--bsky-bg-secondary)",
+                            : "var(--asph-bg-secondary)",
                   borderColor: isCurrentUser
-                    ? "var(--bsky-success-light)" // Green left border for user's posts
+                    ? "var(--asph-success-light)" // Green left border for user's posts
                     : undefined,
                   border:
                     isHighlighted && !hasShownInitialHighlight
-                      ? "2px solid var(--bsky-orange-light)"
+                      ? "2px solid var(--asph-orange-light)"
                       : isCurrentUser
                         ? undefined
-                        : "1px solid var(--bsky-border-primary)",
+                        : "1px solid var(--asph-border-primary)",
                   // Depth-colored left border for visual hierarchy
                   borderLeft: isCurrentUser
-                    ? "4px solid var(--bsky-success-light)"
+                    ? "4px solid var(--asph-success-light)"
                     : node.depth > 0 && !node.isRoot
                       ? `3px solid ${depthBorderColor}`
                       : undefined,
                   borderTop: isCurrentUser
-                    ? "1px solid var(--bsky-border-primary)"
+                    ? "1px solid var(--asph-border-primary)"
                     : undefined,
                   borderRight: isCurrentUser
-                    ? "1px solid var(--bsky-border-primary)"
+                    ? "1px solid var(--asph-border-primary)"
                     : undefined,
                   borderBottom: isCurrentUser
-                    ? "1px solid var(--bsky-border-primary)"
+                    ? "1px solid var(--asph-border-primary)"
                     : undefined,
                   overflow: "hidden",
                   fontSize:
@@ -567,7 +567,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                         ? "0.875rem"
                         : "1rem",
                   outline: isFocused
-                    ? "2px solid var(--bsky-info-light)"
+                    ? "2px solid var(--asph-info-light)"
                     : undefined,
                   outlineOffset: isFocused ? "2px" : undefined,
                 }}
@@ -598,22 +598,22 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       <span
                         className="rounded-full px-2 py-1 text-xs font-medium"
                         style={{
-                          backgroundColor: "var(--bsky-bg-primary)",
-                          color: "var(--bsky-text-secondary)",
-                          border: "1px solid var(--bsky-border-primary)",
+                          backgroundColor: "var(--asph-bg-primary)",
+                          color: "var(--asph-text-secondary)",
+                          border: "1px solid var(--asph-border-primary)",
                         }}
                       >
                         Original Post
                       </span>
                     )}
                     {isCurrentUser && !node.isRoot && (
-                      <span className="border-bsky-success/30 bg-bsky-success/15 flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium text-bsky-success">
+                      <span className="border-asph-success/30 bg-asph-success/15 flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium text-asph-success">
                         <User size={10} />
                         Your reply
                       </span>
                     )}
                     {hasBranches && (
-                      <span className="border-bsky-quote/20 bg-bsky-quote/10 flex items-center gap-1 rounded border px-2 py-0.5 text-xs font-medium text-bsky-quote">
+                      <span className="border-asph-quote/20 bg-asph-quote/10 flex items-center gap-1 rounded border px-2 py-0.5 text-xs font-medium text-asph-quote">
                         <GitBranch size={10} />
                         {node.children.length} branches
                       </span>
@@ -622,8 +622,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       <span
                         className="rounded px-2 py-0.5 text-xs font-medium"
                         style={{
-                          backgroundColor: "var(--bsky-bg-tertiary)",
-                          color: "var(--bsky-text-tertiary)",
+                          backgroundColor: "var(--asph-bg-tertiary)",
+                          color: "var(--asph-text-tertiary)",
                           opacity: 0.8,
                         }}
                       >
@@ -633,7 +633,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     {isHighlighted &&
                       hasShownInitialHighlight &&
                       !node.isRoot && (
-                        <span className="border-bsky-orange/30 bg-bsky-orange/10 text-bsky-orange flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium">
+                        <span className="border-asph-orange/30 bg-asph-orange/10 text-asph-orange flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium">
                           <ExternalLink size={10} />
                           Opened here
                         </span>
@@ -642,7 +642,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       <span
                         className="text-xs"
                         style={{
-                          color: "var(--bsky-text-secondary)",
+                          color: "var(--asph-text-secondary)",
                         }}
                       >
                         {formatDistanceToNow(
@@ -683,7 +683,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                           <ProfileHoverCard handle={author.handle}>
                             <span
                               className="cursor-pointer truncate text-sm font-semibold hover:underline"
-                              style={{ color: "var(--bsky-text-primary)" }}
+                              style={{ color: "var(--asph-text-primary)" }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(`/profile/${author.handle}`);
@@ -697,7 +697,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                         ) : (
                           <span
                             className="truncate text-sm font-semibold"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                           >
                             {author?.displayName || author?.handle || "Unknown"}
                           </span>
@@ -706,7 +706,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                           <ProfileHoverCard handle={author.handle}>
                             <span
                               className="flex-shrink-0 cursor-pointer text-xs hover:underline"
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(`/profile/${author.handle}`);
@@ -718,7 +718,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                         ) : (
                           <span
                             className="flex-shrink-0 text-xs"
-                            style={{ color: "var(--bsky-text-secondary)" }}
+                            style={{ color: "var(--asph-text-secondary)" }}
                           >
                             @{author?.handle || "unknown"}
                           </span>
@@ -728,7 +728,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                         <time
                           className="text-xs"
                           style={{
-                            color: "var(--bsky-text-secondary)",
+                            color: "var(--asph-text-secondary)",
                           }}
                         >
                           {formatDistanceToNow(
@@ -755,7 +755,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                           >
                             <ExternalLink
                               size={14}
-                              style={{ color: "var(--bsky-text-tertiary)" }}
+                              style={{ color: "var(--asph-text-tertiary)" }}
                             />
                           </button>
                         )}
@@ -778,7 +778,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     <p
                       className="overflow-wrap-anywhere break-words text-sm"
                       style={{
-                        color: "var(--bsky-text-primary)",
+                        color: "var(--asph-text-primary)",
                         lineHeight: "1.5",
                         wordBreak: "break-word",
                         overflowWrap: "anywhere",
@@ -790,7 +790,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                           facets={(post.record as any)?.facets}
                         />
                       ) : (
-                        <span style={{ color: "var(--bsky-text-secondary)" }}>
+                        <span style={{ color: "var(--asph-text-secondary)" }}>
                           <Loader2
                             size={14}
                             className="mr-1 inline animate-spin"
@@ -806,7 +806,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       <span
                         className="mt-2 inline-block rounded-full px-2 py-0.5 text-xs"
                         style={{
-                          backgroundColor: "var(--bsky-primary)",
+                          backgroundColor: "var(--asph-primary)",
                           color: "white",
                         }}
                       >
@@ -844,7 +844,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                         }}
                         className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all hover:bg-red-500 hover:bg-opacity-10"
                         style={{
-                          color: "var(--bsky-error, #ef4444)",
+                          color: "var(--asph-error, #ef4444)",
                         }}
                         title="Delete this post"
                       >
@@ -916,7 +916,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       e.stopPropagation();
                       // Store scroll position before expanding
                       const scrollContainer =
-                        containerRef.current?.closest(".bsky-scrollbar");
+                        containerRef.current?.closest(".asph-scrollbar");
                       const scrollTop = scrollContainer?.scrollTop || 0;
 
                       toggleBranch(nodeUri);
@@ -930,9 +930,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     }}
                     className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10"
                     style={{
-                      backgroundColor: "var(--bsky-bg-tertiary)",
-                      color: "var(--bsky-primary)",
-                      border: "1px solid var(--bsky-border-primary)",
+                      backgroundColor: "var(--asph-bg-tertiary)",
+                      color: "var(--asph-primary)",
+                      border: "1px solid var(--asph-border-primary)",
                     }}
                   >
                     <ChevronDown size={16} />
@@ -974,9 +974,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     }}
                     className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10"
                     style={{
-                      backgroundColor: "var(--bsky-bg-tertiary)",
-                      color: "var(--bsky-text-secondary)",
-                      border: "1px solid var(--bsky-border-primary)",
+                      backgroundColor: "var(--asph-bg-tertiary)",
+                      color: "var(--asph-text-secondary)",
+                      border: "1px solid var(--asph-border-primary)",
                     }}
                   >
                     <ChevronUp size={16} />
@@ -1032,9 +1032,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
               disabled={isLoadingMoreAbove}
               className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-3 transition-colors hover:border-solid disabled:cursor-not-allowed disabled:opacity-50"
               style={{
-                borderColor: "var(--bsky-border-primary)",
-                backgroundColor: "var(--bsky-bg-secondary)",
-                color: "var(--bsky-text-secondary)",
+                borderColor: "var(--asph-border-primary)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                color: "var(--asph-text-secondary)",
               }}
             >
               {isLoadingMoreAbove ? (
@@ -1056,7 +1056,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             </button>
             <div
               className="mt-2 text-center text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               This thread continues above
             </div>
@@ -1084,7 +1084,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                 <ProfileHoverCard handle={rootPostObject.author?.handle || ""}>
                   <div
                     className="cursor-pointer truncate font-semibold hover:underline"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                     onClick={() =>
                       navigate(`/profile/${rootPostObject.author?.handle}`)
                     }
@@ -1095,7 +1095,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                 </ProfileHoverCard>
                 <div
                   className="text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   @{rootPostObject.author?.handle} ·{" "}
                   {formatDistanceToNow(
@@ -1112,7 +1112,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             {/* Post content - large typography */}
             <div
               className="mb-4 text-lg leading-relaxed"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               <RichText
                 text={
@@ -1175,14 +1175,14 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                 onClick={() => setShowReplies(!showReplies)}
                 className="mt-4 flex w-full items-center justify-between rounded-lg px-4 py-3 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  border: "1px solid var(--bsky-border-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  border: "1px solid var(--asph-border-primary)",
                 }}
               >
                 <div className="flex items-center gap-2">
                   <span
                     className="text-sm font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {replyCount} {replyCount === 1 ? "reply" : "replies"}
                     {userParticipationStats.count > 0 && (
@@ -1200,8 +1200,8 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     <span
                       className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
                         complexityScore.level === "extreme"
-                          ? "border-bsky-error/20 bg-bsky-error/10 border text-bsky-error"
-                          : "border-bsky-orange/20 bg-bsky-orange/10 text-bsky-orange border"
+                          ? "border-asph-error/20 bg-asph-error/10 border text-asph-error"
+                          : "border-asph-orange/20 bg-asph-orange/10 text-asph-orange border"
                       }`}
                       title={`Complexity score: ${complexityScore.score}/100`}
                     >
@@ -1215,12 +1215,12 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                 {showReplies ? (
                   <ChevronUp
                     size={20}
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   />
                 ) : (
                   <ChevronDown
                     size={20}
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   />
                 )}
               </button>
@@ -1232,7 +1232,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
         {(showReplies || !rootPostObject) && threadTree.length > 0 && (
           <div
             className={rootPostObject ? "border-t pt-4" : ""}
-            style={{ borderColor: "var(--bsky-border-primary)" }}
+            style={{ borderColor: "var(--asph-border-primary)" }}
           >
             {/* Render non-root nodes only when we have a hero root */}
             {rootPostObject
@@ -1258,7 +1258,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                 }}
                 className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-all hover:scale-105"
                 style={{
-                  backgroundColor: "var(--bsky-primary)",
+                  backgroundColor: "var(--asph-primary)",
                   color: "white",
                   boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
                 }}
@@ -1285,9 +1285,9 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                 }}
                 className="flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-all hover:scale-105"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  borderColor: "var(--asph-border-primary)",
+                  color: "var(--asph-text-primary)",
                 }}
               >
                 <Plus size={18} />

@@ -29,18 +29,18 @@ export function PollDisplay({ postUri, onVote }: PollDisplayProps) {
     return (
       <div
         className="mt-3 animate-pulse rounded-lg border p-4"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         <div
           className="mb-3 h-4 w-1/3 rounded"
-          style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+          style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
         />
         <div className="space-y-2">
           {[1, 2].map((i) => (
             <div
               key={`poll-skeleton-${i}`}
               className="h-10 rounded-lg"
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
             />
           ))}
         </div>
@@ -98,8 +98,8 @@ export function PollDisplay({ postUri, onVote }: PollDisplayProps) {
     <div
       className="mt-3 rounded-lg border p-3"
       style={{
-        backgroundColor: "var(--bsky-bg-secondary)",
-        borderColor: "var(--bsky-border-primary)",
+        backgroundColor: "var(--asph-bg-secondary)",
+        borderColor: "var(--asph-border-primary)",
       }}
     >
       <div className="space-y-2">
@@ -126,7 +126,7 @@ export function PollDisplay({ postUri, onVote }: PollDisplayProps) {
               style={{
                 borderColor: isSelected
                   ? undefined
-                  : "var(--bsky-border-primary)",
+                  : "var(--asph-border-primary)",
               }}
             >
               {showResults && (
@@ -135,8 +135,8 @@ export function PollDisplay({ postUri, onVote }: PollDisplayProps) {
                   style={{
                     width: `${percentage}%`,
                     backgroundColor: isWinning
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-bg-tertiary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-bg-tertiary)",
                     opacity: 0.2,
                   }}
                 />
@@ -149,7 +149,7 @@ export function PollDisplay({ postUri, onVote }: PollDisplayProps) {
                   )}
                   <span
                     className={`text-sm ${isWinning ? "font-medium" : ""}`}
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {option.text}
                   </span>
@@ -158,7 +158,7 @@ export function PollDisplay({ postUri, onVote }: PollDisplayProps) {
                 {showResults && (
                   <span
                     className="text-sm font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     {percentage}%
                   </span>
@@ -171,7 +171,7 @@ export function PollDisplay({ postUri, onVote }: PollDisplayProps) {
 
       <div
         className="mt-3 flex items-center gap-3 text-xs"
-        style={{ color: "var(--bsky-text-tertiary)" }}
+        style={{ color: "var(--asph-text-tertiary)" }}
       >
         <span className="flex items-center gap-1">
           <Users size={12} />

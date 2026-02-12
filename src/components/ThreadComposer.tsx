@@ -470,22 +470,22 @@ export function ThreadComposer({
         aria-modal="true"
         aria-labelledby="thread-composer-title"
         className="relative w-full max-w-2xl overflow-hidden rounded-xl shadow-xl"
-        style={{ background: "var(--bsky-bg-primary)" }}
+        style={{ background: "var(--asph-bg-primary)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
           className="sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3 md:px-6"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            background: "var(--bsky-bg-primary)",
+            borderColor: "var(--asph-border-primary)",
+            background: "var(--asph-bg-primary)",
           }}
         >
           <div className="flex items-center gap-3">
             <h2
               id="thread-composer-title"
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Create Thread
             </h2>
@@ -496,7 +496,7 @@ export function ThreadComposer({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 text-sm hover:underline"
-                  style={{ color: "var(--bsky-success)" }}
+                  style={{ color: "var(--asph-success)" }}
                 >
                   <CheckCircle size={14} />
                   {status.message}
@@ -508,10 +508,10 @@ export function ThreadComposer({
                   style={{
                     color:
                       status.type === "error"
-                        ? "var(--bsky-error)"
+                        ? "var(--asph-error)"
                         : status.type === "success"
-                          ? "var(--bsky-success)"
-                          : "var(--bsky-text-secondary)",
+                          ? "var(--asph-success)"
+                          : "var(--asph-text-secondary)",
                   }}
                 >
                   {status.type === "saving" && (
@@ -529,9 +529,9 @@ export function ThreadComposer({
               className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors"
               style={{
                 background: showPreview
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-bg-secondary)",
-                color: showPreview ? "white" : "var(--bsky-text-secondary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-bg-secondary)",
+                color: showPreview ? "white" : "var(--asph-text-secondary)",
               }}
             >
               <Eye size={14} />
@@ -540,7 +540,7 @@ export function ThreadComposer({
             <button
               onClick={onClose}
               className="rounded-lg p-2 transition-colors hover:opacity-80"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
               aria-label="Close"
             >
               <X size={20} />
@@ -549,13 +549,13 @@ export function ThreadComposer({
         </div>
 
         {/* Content */}
-        <div className="bsky-scrollbar max-h-[calc(100vh-200px)] overflow-y-auto p-4 md:p-6">
+        <div className="asph-scrollbar max-h-[calc(100vh-200px)] overflow-y-auto p-4 md:p-6">
           {showPreview ? (
             // Preview mode
             <div className="space-y-4">
               <h3
                 className="text-sm font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Thread Preview ({validPostCount}{" "}
                 {validPostCount === 1 ? "post" : "posts"})
@@ -568,14 +568,14 @@ export function ThreadComposer({
                       key={post.id}
                       className="rounded-lg border p-4"
                       style={{
-                        borderColor: "var(--bsky-border-primary)",
-                        background: "var(--bsky-bg-secondary)",
+                        borderColor: "var(--asph-border-primary)",
+                        background: "var(--asph-bg-secondary)",
                       }}
                     >
                       <div className="mb-2 flex items-center justify-between">
                         <span
                           className="text-sm font-medium"
-                          style={{ color: "var(--bsky-primary)" }}
+                          style={{ color: "var(--asph-primary)" }}
                         >
                           Post {index + 1}
                         </span>
@@ -584,8 +584,8 @@ export function ThreadComposer({
                           style={{
                             color:
                               post.text.length > MAX_POST_LENGTH
-                                ? "var(--bsky-error)"
-                                : "var(--bsky-text-tertiary)",
+                                ? "var(--asph-error)"
+                                : "var(--asph-text-tertiary)",
                           }}
                         >
                           {post.text.length}/{MAX_POST_LENGTH}
@@ -593,7 +593,7 @@ export function ThreadComposer({
                       </div>
                       <p
                         className="whitespace-pre-wrap"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {post.text}
                       </p>
@@ -617,9 +617,9 @@ export function ThreadComposer({
                   style={{
                     borderColor:
                       dragOverIndex === index
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-border-primary)",
-                    background: "var(--bsky-bg-secondary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-border-primary)",
+                    background: "var(--asph-bg-secondary)",
                     opacity: draggedIndex === index ? 0.5 : 1,
                   }}
                   draggable
@@ -635,11 +635,11 @@ export function ThreadComposer({
                       <GripVertical
                         size={16}
                         className="cursor-grab"
-                        style={{ color: "var(--bsky-text-tertiary)" }}
+                        style={{ color: "var(--asph-text-tertiary)" }}
                       />
                       <span
                         className="text-sm font-medium"
-                        style={{ color: "var(--bsky-primary)" }}
+                        style={{ color: "var(--asph-primary)" }}
                       >
                         Post {index + 1}
                       </span>
@@ -650,10 +650,10 @@ export function ThreadComposer({
                         style={{
                           color:
                             post.text.length > MAX_POST_LENGTH
-                              ? "var(--bsky-error)"
+                              ? "var(--asph-error)"
                               : post.text.length > MAX_POST_LENGTH * 0.9
-                                ? "var(--bsky-warning)"
-                                : "var(--bsky-text-tertiary)",
+                                ? "var(--asph-warning)"
+                                : "var(--asph-text-tertiary)",
                         }}
                       >
                         {post.text.length}/{MAX_POST_LENGTH}
@@ -662,7 +662,7 @@ export function ThreadComposer({
                         <button
                           onClick={() => removePost(index)}
                           className="rounded p-1 transition-colors hover:opacity-80"
-                          style={{ color: "var(--bsky-error)" }}
+                          style={{ color: "var(--asph-error)" }}
                           aria-label="Remove post"
                         >
                           <Trash2 size={14} />
@@ -689,7 +689,7 @@ export function ThreadComposer({
                         : "Continue your thread..."
                     }
                     className="min-h-[100px] w-full resize-none rounded-lg border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-0"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                     maxLength={MAX_POST_LENGTH + 50} // Allow slight overflow for editing
                   />
 
@@ -700,9 +700,9 @@ export function ThreadComposer({
                         onClick={() => addPost(index)}
                         className="rounded-full p-1 shadow transition-colors hover:opacity-80"
                         style={{
-                          background: "var(--bsky-bg-primary)",
-                          border: "1px solid var(--bsky-border-primary)",
-                          color: "var(--bsky-text-secondary)",
+                          background: "var(--asph-bg-primary)",
+                          border: "1px solid var(--asph-border-primary)",
+                          color: "var(--asph-text-secondary)",
                         }}
                         aria-label="Add post here"
                       >
@@ -718,8 +718,8 @@ export function ThreadComposer({
                 onClick={() => addPost()}
                 className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed py-4 transition-colors hover:opacity-80"
                 style={{
-                  borderColor: "var(--bsky-border-primary)",
-                  color: "var(--bsky-text-secondary)",
+                  borderColor: "var(--asph-border-primary)",
+                  color: "var(--asph-text-secondary)",
                 }}
               >
                 <Plus size={18} />
@@ -729,7 +729,7 @@ export function ThreadComposer({
               {/* Keyboard hints */}
               <p
                 className="text-center text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 Tip: Press Ctrl/Cmd + Enter to add a new post, or drag to
                 reorder
@@ -742,13 +742,13 @@ export function ThreadComposer({
         <div
           className="sticky bottom-0 flex items-center justify-between border-t px-4 py-3 md:px-6"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            background: "var(--bsky-bg-primary)",
+            borderColor: "var(--asph-border-primary)",
+            background: "var(--asph-bg-primary)",
           }}
         >
           <div
             className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {validPostCount} {validPostCount === 1 ? "post" : "posts"} &bull;{" "}
             {totalChars} characters total
@@ -761,8 +761,8 @@ export function ThreadComposer({
               }
               className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
               style={{
-                background: "var(--bsky-bg-secondary)",
-                color: "var(--bsky-text-primary)",
+                background: "var(--asph-bg-secondary)",
+                color: "var(--asph-text-primary)",
               }}
             >
               <Save size={16} />
@@ -772,7 +772,7 @@ export function ThreadComposer({
               onClick={handlePost}
               disabled={isPosting || validPostCount === 0}
               className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
-              style={{ background: "var(--bsky-primary)" }}
+              style={{ background: "var(--asph-primary)" }}
             >
               {isPosting ? (
                 <>
@@ -845,8 +845,8 @@ const ThreadPostLinkPreview: React.FC<{ postText: string }> = ({
       <div
         className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
         style={{
-          borderColor: "var(--bsky-border-primary)",
-          color: "var(--bsky-text-secondary)",
+          borderColor: "var(--asph-border-primary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <Loader size={14} className="animate-spin" />
@@ -861,8 +861,8 @@ const ThreadPostLinkPreview: React.FC<{ postText: string }> = ({
         <div
           className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            color: "var(--bsky-text-tertiary)",
+            borderColor: "var(--asph-border-primary)",
+            color: "var(--asph-text-tertiary)",
           }}
         >
           <Link size={14} />
@@ -883,7 +883,7 @@ const ThreadPostLinkPreview: React.FC<{ postText: string }> = ({
   return (
     <div
       className="mt-2 overflow-hidden rounded-lg border"
-      style={{ borderColor: "var(--bsky-border-primary)" }}
+      style={{ borderColor: "var(--asph-border-primary)" }}
     >
       {metadata.imageUrl && (
         <div
@@ -894,20 +894,20 @@ const ThreadPostLinkPreview: React.FC<{ postText: string }> = ({
       <div className="p-3">
         <div
           className="mb-1 text-xs"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           {domain}
         </div>
         <div
           className="line-clamp-2 text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {metadata.title}
         </div>
         {metadata.description && (
           <div
             className="mt-1 line-clamp-2 text-xs"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {metadata.description}
           </div>
@@ -989,8 +989,8 @@ const ThreadPostQuotePreview: React.FC<{ postText: string }> = ({
       <div
         className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
         style={{
-          borderColor: "var(--bsky-border-primary)",
-          color: "var(--bsky-text-secondary)",
+          borderColor: "var(--asph-border-primary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <Loader size={14} className="animate-spin" />
@@ -1005,14 +1005,14 @@ const ThreadPostQuotePreview: React.FC<{ postText: string }> = ({
   return (
     <div
       className="mt-2 overflow-hidden rounded-lg border"
-      style={{ borderColor: "var(--bsky-border-primary)" }}
+      style={{ borderColor: "var(--asph-border-primary)" }}
     >
       <div
         className="flex items-center gap-2 px-3 py-1.5 text-xs"
         style={{
-          backgroundColor: "var(--bsky-bg-tertiary)",
-          borderBottom: "1px solid var(--bsky-border-primary)",
-          color: "var(--bsky-text-secondary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
+          borderBottom: "1px solid var(--asph-border-primary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <MessageCircle size={12} />
@@ -1030,21 +1030,21 @@ const ThreadPostQuotePreview: React.FC<{ postText: string }> = ({
           <ProfileHoverCard handle={quotedPost.author.handle}>
             <span
               className="cursor-pointer text-sm font-semibold hover:underline"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               {quotedPost.author.displayName || quotedPost.author.handle}
             </span>
           </ProfileHoverCard>
           <span
             className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             @{quotedPost.author.handle}
           </span>
         </div>
         <p
           className="line-clamp-3 text-sm"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {record?.text || ""}
         </p>

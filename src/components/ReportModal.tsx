@@ -343,7 +343,7 @@ export function ReportModal({
             </div>
 
             {/* Category Selection */}
-            <div className="bsky-scrollbar max-h-96 overflow-y-auto border-t border-gray-200 dark:border-gray-700">
+            <div className="asph-scrollbar max-h-96 overflow-y-auto border-t border-gray-200 dark:border-gray-700">
               {REPORT_CATEGORIES.map((category) => (
                 <button
                   key={category.id}

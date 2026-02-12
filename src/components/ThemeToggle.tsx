@@ -14,13 +14,13 @@ export function ThemeToggle() {
       {theme === "dark" ? (
         <Sun
           size={20}
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
           aria-hidden="true"
         />
       ) : (
         <Moon
           size={20}
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
           aria-hidden="true"
         />
       )}

@@ -94,14 +94,14 @@ export const AccessibilitySettings: React.FC = () => {
       <div>
         <h2
           className="flex items-center gap-2 text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           <Accessibility size={24} />
           Accessibility
         </h2>
         <p
           className="mt-1 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Customize accessibility settings to improve your experience
         </p>
@@ -111,7 +111,7 @@ export const AccessibilitySettings: React.FC = () => {
       <div className="space-y-4">
         <h3
           className="flex items-center gap-2 text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           <Contrast size={18} />
           High Contrast Mode
@@ -119,21 +119,21 @@ export const AccessibilitySettings: React.FC = () => {
         <div
           className="rounded-lg p-4"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <p
                 className="font-medium"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 Enable High Contrast
               </p>
               <p
                 className="mt-1 text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Increases color contrast for better readability. Meets WCAG AAA
                 standards (7:1 contrast ratio).
@@ -150,8 +150,8 @@ export const AccessibilitySettings: React.FC = () => {
               }`}
               style={{
                 backgroundColor: settings.highContrast
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-bg-tertiary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-bg-tertiary)",
               }}
             >
               <span
@@ -166,26 +166,26 @@ export const AccessibilitySettings: React.FC = () => {
           <div
             className="mt-4 rounded-lg p-3"
             style={{
-              backgroundColor: "var(--bsky-bg-tertiary)",
-              border: "1px solid var(--bsky-border-secondary)",
+              backgroundColor: "var(--asph-bg-tertiary)",
+              border: "1px solid var(--asph-border-secondary)",
             }}
           >
             <p
               className="mb-2 text-xs font-medium"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Preview
             </p>
             <div className="space-y-2">
               <p
                 className="text-sm font-medium"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 Primary Text
               </p>
               <p
                 className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Secondary text for descriptions
               </p>
@@ -193,7 +193,7 @@ export const AccessibilitySettings: React.FC = () => {
                 <span
                   className="rounded px-2 py-1 text-xs font-medium"
                   style={{
-                    backgroundColor: "var(--bsky-primary)",
+                    backgroundColor: "var(--asph-primary)",
                     color: "white",
                   }}
                 >
@@ -202,7 +202,7 @@ export const AccessibilitySettings: React.FC = () => {
                 <span
                   className="rounded px-2 py-1 text-xs"
                   style={{
-                    backgroundColor: "var(--bsky-success)",
+                    backgroundColor: "var(--asph-success)",
                     color: "white",
                   }}
                 >
@@ -211,7 +211,7 @@ export const AccessibilitySettings: React.FC = () => {
                 <span
                   className="rounded px-2 py-1 text-xs"
                   style={{
-                    backgroundColor: "var(--bsky-error)",
+                    backgroundColor: "var(--asph-error)",
                     color: "white",
                   }}
                 >
@@ -227,7 +227,7 @@ export const AccessibilitySettings: React.FC = () => {
       <div className="space-y-4">
         <h3
           className="flex items-center gap-2 text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           <Gauge size={18} />
           Motion & Animations
@@ -235,13 +235,13 @@ export const AccessibilitySettings: React.FC = () => {
         <div
           className="rounded-lg p-4"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <p
             className="mb-4 text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Control how animations and transitions appear. Reducing motion can
             help with motion sensitivity or vestibular disorders.
@@ -259,9 +259,9 @@ export const AccessibilitySettings: React.FC = () => {
                   }`}
                   style={{
                     backgroundColor: isSelected
-                      ? "var(--bsky-bg-tertiary)"
+                      ? "var(--asph-bg-tertiary)"
                       : "transparent",
-                    border: `1px solid ${isSelected ? "var(--bsky-primary)" : "var(--bsky-border-primary)"}`,
+                    border: `1px solid ${isSelected ? "var(--asph-primary)" : "var(--asph-border-primary)"}`,
                   }}
                   aria-pressed={isSelected}
                 >
@@ -269,8 +269,8 @@ export const AccessibilitySettings: React.FC = () => {
                     size={20}
                     style={{
                       color: isSelected
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-text-secondary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-text-secondary)",
                     }}
                   />
                   <div className="flex-1">
@@ -278,15 +278,15 @@ export const AccessibilitySettings: React.FC = () => {
                       className="font-medium"
                       style={{
                         color: isSelected
-                          ? "var(--bsky-primary)"
-                          : "var(--bsky-text-primary)",
+                          ? "var(--asph-primary)"
+                          : "var(--asph-text-primary)",
                       }}
                     >
                       {option.label}
                     </p>
                     <p
                       className="text-xs"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       {option.description}
                     </p>
@@ -294,7 +294,7 @@ export const AccessibilitySettings: React.FC = () => {
                   {isSelected && (
                     <div
                       className="flex h-5 w-5 items-center justify-center rounded-full"
-                      style={{ backgroundColor: "var(--bsky-primary)" }}
+                      style={{ backgroundColor: "var(--asph-primary)" }}
                     >
                       <svg
                         className="h-3 w-3 text-white"
@@ -320,7 +320,7 @@ export const AccessibilitySettings: React.FC = () => {
       <div className="space-y-4">
         <h3
           className="flex items-center gap-2 text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           <Focus size={18} />
           Focus Indicators
@@ -328,13 +328,13 @@ export const AccessibilitySettings: React.FC = () => {
         <div
           className="rounded-lg p-4"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <p
             className="mb-4 text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Adjust the visibility of focus indicators when using keyboard
             navigation.
@@ -353,9 +353,9 @@ export const AccessibilitySettings: React.FC = () => {
                   }`}
                   style={{
                     backgroundColor: isSelected
-                      ? "var(--bsky-bg-tertiary)"
+                      ? "var(--asph-bg-tertiary)"
                       : "transparent",
-                    border: `1px solid ${isSelected ? "var(--bsky-primary)" : "var(--bsky-border-primary)"}`,
+                    border: `1px solid ${isSelected ? "var(--asph-primary)" : "var(--asph-border-primary)"}`,
                   }}
                   aria-pressed={isSelected}
                 >
@@ -363,15 +363,15 @@ export const AccessibilitySettings: React.FC = () => {
                     className="font-medium"
                     style={{
                       color: isSelected
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-text-primary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-text-primary)",
                     }}
                   >
                     {option.label}
                   </p>
                   <p
                     className="mt-1 text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     {option.description}
                   </p>
@@ -386,7 +386,7 @@ export const AccessibilitySettings: React.FC = () => {
       <div className="space-y-4">
         <h3
           className="flex items-center gap-2 text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           <Video size={18} />
           Video Autoplay
@@ -394,13 +394,13 @@ export const AccessibilitySettings: React.FC = () => {
         <div
           className="rounded-lg p-4"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <p
             className="mb-4 text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Control how videos behave when scrolling through your feed. Muted
             autoplay helps you preview content without sudden sounds.
@@ -420,9 +420,9 @@ export const AccessibilitySettings: React.FC = () => {
                   }`}
                   style={{
                     backgroundColor: isSelected
-                      ? "var(--bsky-bg-tertiary)"
+                      ? "var(--asph-bg-tertiary)"
                       : "transparent",
-                    border: `1px solid ${isSelected ? "var(--bsky-primary)" : "var(--bsky-border-primary)"}`,
+                    border: `1px solid ${isSelected ? "var(--asph-primary)" : "var(--asph-border-primary)"}`,
                   }}
                   aria-pressed={isSelected}
                 >
@@ -430,8 +430,8 @@ export const AccessibilitySettings: React.FC = () => {
                     size={20}
                     style={{
                       color: isSelected
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-text-secondary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-text-secondary)",
                     }}
                   />
                   <div className="flex-1">
@@ -439,15 +439,15 @@ export const AccessibilitySettings: React.FC = () => {
                       className="font-medium"
                       style={{
                         color: isSelected
-                          ? "var(--bsky-primary)"
-                          : "var(--bsky-text-primary)",
+                          ? "var(--asph-primary)"
+                          : "var(--asph-text-primary)",
                       }}
                     >
                       {option.label}
                     </p>
                     <p
                       className="text-xs"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       {option.description}
                     </p>
@@ -455,7 +455,7 @@ export const AccessibilitySettings: React.FC = () => {
                   {isSelected && (
                     <div
                       className="flex h-5 w-5 items-center justify-center rounded-full"
-                      style={{ backgroundColor: "var(--bsky-primary)" }}
+                      style={{ backgroundColor: "var(--asph-primary)" }}
                     >
                       <svg
                         className="h-3 w-3 text-white"
@@ -481,22 +481,22 @@ export const AccessibilitySettings: React.FC = () => {
       <div
         className="rounded-lg p-4"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <h3
           className="mb-2 text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Keyboard Navigation
         </h3>
-        <p className="text-sm" style={{ color: "var(--bsky-text-secondary)" }}>
+        <p className="text-sm" style={{ color: "var(--asph-text-secondary)" }}>
           Press{" "}
           <kbd className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-700">
             ?
           </kbd>{" "}
-          to view all available keyboard shortcuts for navigating ShadowSky.
+          to view all available keyboard shortcuts for navigating Asphodel.
         </p>
       </div>
     </div>

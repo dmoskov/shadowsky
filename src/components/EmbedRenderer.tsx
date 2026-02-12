@@ -141,7 +141,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
                         embedData.images.length === 1 ? "400px" : "300px",
                       maxWidth:
                         embedData.images.length === 1 ? "600px" : "100%",
-                      backgroundColor: "var(--bsky-bg-tertiary)",
+                      backgroundColor: "var(--asph-bg-tertiary)",
                     }}
                   />
 
@@ -202,7 +202,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
         return (
           <div
             className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-blue-500 hover:bg-opacity-5"
-            style={{ borderColor: "var(--bsky-border-primary)" }}
+            style={{ borderColor: "var(--asph-border-primary)" }}
             onClick={(e) => {
               e.stopPropagation();
               if (embedData.external.uri) {
@@ -221,19 +221,19 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
                 className="mb-1 h-auto w-full rounded object-contain"
                 style={{
                   maxHeight: "200px",
-                  backgroundColor: "var(--bsky-bg-tertiary)",
+                  backgroundColor: "var(--asph-bg-tertiary)",
                 }}
               />
             )}
             <div
               className="font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               {embedData.external.title}
             </div>
             <div
               className="mt-0.5 opacity-80"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               {embedData.external.description}
             </div>
@@ -266,7 +266,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
           return (
             <div
               className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-500 hover:bg-opacity-5"
-              style={{ borderColor: "var(--bsky-border-primary)" }}
+              style={{ borderColor: "var(--asph-border-primary)" }}
               onClick={(e) => {
                 e.stopPropagation();
                 if (quotedPost.uri && quotedPost.author?.handle) {
@@ -303,7 +303,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
                   <ProfileHoverCard handle={quotedPost.author.handle}>
                     <span
                       className="cursor-pointer font-semibold hover:underline"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       {quotedPost.author?.displayName ||
                         quotedPost.author?.handle ||
@@ -313,7 +313,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
                 ) : (
                   <span
                     className="font-semibold"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {quotedPost.author?.displayName ||
                       quotedPost.author?.handle ||
@@ -324,18 +324,18 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
                   <ProfileHoverCard handle={quotedPost.author.handle}>
                     <span
                       className="cursor-pointer hover:underline"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       @{quotedPost.author?.handle || "unknown"}
                     </span>
                   </ProfileHoverCard>
                 ) : (
-                  <span style={{ color: "var(--bsky-text-secondary)" }}>
+                  <span style={{ color: "var(--asph-text-secondary)" }}>
                     @{quotedPost.author?.handle || "unknown"}
                   </span>
                 )}
               </div>
-              <div style={{ color: "var(--bsky-text-primary)" }}>
+              <div style={{ color: "var(--asph-text-primary)" }}>
                 <RichText
                   text={quotedPost.value?.text || ""}
                   facets={quotedPost.value?.facets}

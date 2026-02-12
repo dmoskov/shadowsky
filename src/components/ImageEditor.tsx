@@ -681,24 +681,24 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
       <div
         className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl"
-        style={{ backgroundColor: "var(--bsky-bg-primary)" }}
+        style={{ backgroundColor: "var(--asph-bg-primary)" }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between border-b px-4 py-3"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
           <div className="flex items-center gap-3">
             <button
               onClick={onCancel}
               className="rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               <X size={20} />
             </button>
             <h2
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Edit Image{" "}
               {images.length > 1
@@ -712,8 +712,8 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
               onClick={resetAdjustments}
               className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               style={{
-                borderColor: "var(--bsky-border-primary)",
-                color: "var(--bsky-text-secondary)",
+                borderColor: "var(--asph-border-primary)",
+                color: "var(--asph-text-secondary)",
               }}
             >
               <Undo2 size={16} />
@@ -723,7 +723,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
               onClick={handleSave}
               disabled={isSaving}
               className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium text-white transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: "var(--bsky-primary)" }}
+              style={{ backgroundColor: "var(--asph-primary)" }}
             >
               {isSaving ? (
                 <Loader size={16} className="animate-spin" />
@@ -844,14 +844,14 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
           <div
             className="flex w-80 flex-col border-l"
             style={{
-              borderColor: "var(--bsky-border-primary)",
-              backgroundColor: "var(--bsky-bg-secondary)",
+              borderColor: "var(--asph-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
             }}
           >
             {/* Tabs */}
             <div
               className="flex border-b"
-              style={{ borderColor: "var(--bsky-border-primary)" }}
+              style={{ borderColor: "var(--asph-border-primary)" }}
             >
               {[
                 { id: "adjust", label: "Adjust", icon: Sun },
@@ -868,11 +868,11 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                   }`}
                   style={{
                     borderColor:
-                      activeTab === id ? "var(--bsky-primary)" : "transparent",
+                      activeTab === id ? "var(--asph-primary)" : "transparent",
                     color:
                       activeTab === id
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-text-secondary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-text-secondary)",
                   }}
                 >
                   <Icon size={16} />
@@ -882,7 +882,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
             </div>
 
             {/* Tab content */}
-            <div className="bsky-scrollbar flex-1 overflow-y-auto p-4">
+            <div className="asph-scrollbar flex-1 overflow-y-auto p-4">
               {activeTab === "adjust" && (
                 <div className="space-y-6">
                   {/* Brightness slider */}
@@ -890,14 +890,14 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                     <div className="mb-2 flex items-center justify-between">
                       <label
                         className="flex items-center gap-1.5 text-sm font-medium"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         <Sun size={16} />
                         Brightness
                       </label>
                       <span
                         className="text-xs"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         {adjustments.brightness}
                       </span>
@@ -922,14 +922,14 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                     <div className="mb-2 flex items-center justify-between">
                       <label
                         className="flex items-center gap-1.5 text-sm font-medium"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         <Contrast size={16} />
                         Contrast
                       </label>
                       <span
                         className="text-xs"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         {adjustments.contrast}
                       </span>
@@ -953,7 +953,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                   <div>
                     <label
                       className="mb-2 block text-sm font-medium"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       Rotate & Flip
                     </label>
@@ -962,8 +962,8 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                         onClick={() => rotate("ccw")}
                         className="flex-1 rounded-lg border p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                         style={{
-                          borderColor: "var(--bsky-border-primary)",
-                          color: "var(--bsky-text-primary)",
+                          borderColor: "var(--asph-border-primary)",
+                          color: "var(--asph-text-primary)",
                         }}
                         title="Rotate counter-clockwise"
                       >
@@ -973,8 +973,8 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                         onClick={() => rotate("cw")}
                         className="flex-1 rounded-lg border p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                         style={{
-                          borderColor: "var(--bsky-border-primary)",
-                          color: "var(--bsky-text-primary)",
+                          borderColor: "var(--asph-border-primary)",
+                          color: "var(--asph-text-primary)",
                         }}
                         title="Rotate clockwise"
                       >
@@ -989,9 +989,9 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                         }`}
                         style={{
                           borderColor: adjustments.flipH
-                            ? "var(--bsky-primary)"
-                            : "var(--bsky-border-primary)",
-                          color: "var(--bsky-text-primary)",
+                            ? "var(--asph-primary)"
+                            : "var(--asph-border-primary)",
+                          color: "var(--asph-text-primary)",
                         }}
                         title="Flip horizontal"
                       >
@@ -1006,9 +1006,9 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                         }`}
                         style={{
                           borderColor: adjustments.flipV
-                            ? "var(--bsky-primary)"
-                            : "var(--bsky-border-primary)",
-                          color: "var(--bsky-text-primary)",
+                            ? "var(--asph-primary)"
+                            : "var(--asph-border-primary)",
+                          color: "var(--asph-text-primary)",
                         }}
                         title="Flip vertical"
                       >
@@ -1039,8 +1039,8 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                         style={{
                           borderColor:
                             adjustments.filter === key
-                              ? "var(--bsky-primary)"
-                              : "var(--bsky-border-primary)",
+                              ? "var(--asph-primary)"
+                              : "var(--asph-border-primary)",
                         }}
                       >
                         <img
@@ -1064,7 +1064,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                   <div>
                     <label
                       className="mb-2 block text-sm font-medium"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       Aspect Ratio
                     </label>
@@ -1084,16 +1084,16 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                           style={{
                             borderColor:
                               selectedAspectRatio === key
-                                ? "var(--bsky-primary)"
-                                : "var(--bsky-border-primary)",
+                                ? "var(--asph-primary)"
+                                : "var(--asph-border-primary)",
                             backgroundColor:
                               selectedAspectRatio === key
-                                ? "var(--bsky-primary)"
+                                ? "var(--asph-primary)"
                                 : "transparent",
                             color:
                               selectedAspectRatio === key
                                 ? "white"
-                                : "var(--bsky-text-primary)",
+                                : "var(--asph-text-primary)",
                           }}
                         >
                           {name}
@@ -1108,7 +1108,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                       <button
                         onClick={initCrop}
                         className="flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
-                        style={{ backgroundColor: "var(--bsky-primary)" }}
+                        style={{ backgroundColor: "var(--asph-primary)" }}
                       >
                         Start Crop
                       </button>
@@ -1121,8 +1121,8 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                           }}
                           className="flex-1 rounded-lg border px-4 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                           style={{
-                            borderColor: "var(--bsky-border-primary)",
-                            color: "var(--bsky-text-primary)",
+                            borderColor: "var(--asph-border-primary)",
+                            color: "var(--asph-text-primary)",
                           }}
                         >
                           Cancel
@@ -1130,7 +1130,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                         <button
                           onClick={() => setIsCropping(false)}
                           className="flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
-                          style={{ backgroundColor: "var(--bsky-primary)" }}
+                          style={{ backgroundColor: "var(--asph-primary)" }}
                         >
                           Apply Crop
                         </button>
@@ -1145,11 +1145,11 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
             {images.length > 1 && (
               <div
                 className="border-t p-3"
-                style={{ borderColor: "var(--bsky-border-primary)" }}
+                style={{ borderColor: "var(--asph-border-primary)" }}
               >
                 <div
                   className="mb-2 text-xs font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Images ({images.length})
                 </div>
@@ -1168,8 +1168,8 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                         style={{
                           borderColor:
                             currentIndex === index
-                              ? "var(--bsky-primary)"
-                              : "var(--bsky-border-primary)",
+                              ? "var(--asph-primary)"
+                              : "var(--asph-border-primary)",
                         }}
                       >
                         <img

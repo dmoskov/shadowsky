@@ -126,11 +126,11 @@ export const DMMessage = forwardRef<HTMLDivElement, DMMessageProps>(
                 ? isFailed
                   ? "bg-red-500/80 text-white"
                   : isRetrying
-                    ? "bg-bsky-primary/70 text-white"
+                    ? "bg-asph-primary/70 text-white"
                     : isSending
-                      ? "bg-bsky-primary/80 text-white"
-                      : "bg-bsky-primary text-white"
-                : "bg-bsky-bg-secondary text-bsky-text-primary"
+                      ? "bg-asph-primary/80 text-white"
+                      : "bg-asph-primary text-white"
+                : "bg-asph-bg-secondary text-asph-text-primary"
             } ${isSending ? "opacity-80" : ""}`}
           >
             <div className="break-words">{text}</div>

@@ -215,7 +215,7 @@ export function UserListModal({
               el;
             infiniteScrollRef(el);
           }}
-          className="bsky-scrollbar max-h-[calc(80vh-73px)] overflow-y-auto"
+          className="asph-scrollbar max-h-[calc(80vh-73px)] overflow-y-auto"
           role="listbox"
           aria-label={`${title} list`}
           tabIndex={0}

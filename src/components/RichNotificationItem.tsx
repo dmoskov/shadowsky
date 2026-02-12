@@ -106,8 +106,8 @@ export const RichNotificationItem: React.FC<RichNotificationItemProps> =
 
       return (
         <div
-          className={`bsky-notification cursor-pointer ${
-            !notification.isRead ? "bsky-notification-unread" : ""
+          className={`asph-notification cursor-pointer ${
+            !notification.isRead ? "asph-notification-unread" : ""
           } ${compact ? "px-2 py-2" : "px-3 py-3"}`}
           onClick={handleClick}
         >
@@ -137,7 +137,7 @@ export const RichNotificationItem: React.FC<RichNotificationItemProps> =
                   <NotificationSummary notification={notification} />
                   <span
                     className="ml-1 text-xs"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   >
                     ·{" "}
                     {formatDistanceToNow(
@@ -157,8 +157,8 @@ export const RichNotificationItem: React.FC<RichNotificationItemProps> =
                         e.stopPropagation();
                         setActionsOpen(!actionsOpen);
                       }}
-                      className="rounded p-1 transition-colors hover:bg-bsky-bg-secondary"
-                      style={{ color: "var(--bsky-text-tertiary)" }}
+                      className="rounded p-1 transition-colors hover:bg-asph-bg-secondary"
+                      style={{ color: "var(--asph-text-tertiary)" }}
                       aria-label="More actions"
                     >
                       <MoreHorizontal size={16} />
@@ -209,7 +209,7 @@ export const RichNotificationItem: React.FC<RichNotificationItemProps> =
               {!notification.isRead && (
                 <div
                   className="mt-1 h-2 w-2 animate-pulse rounded-full"
-                  style={{ backgroundColor: "var(--bsky-primary)" }}
+                  style={{ backgroundColor: "var(--asph-primary)" }}
                 />
               )}
             </div>
@@ -244,31 +244,31 @@ const NotificationIcon: React.FC<{ reason: string }> = React.memo(
         return (
           <Heart
             {...iconProps}
-            style={{ color: "var(--bsky-like)" }}
+            style={{ color: "var(--asph-like)" }}
             fill="currentColor"
           />
         );
       case "repost":
         return (
-          <Repeat2 {...iconProps} style={{ color: "var(--bsky-repost)" }} />
+          <Repeat2 {...iconProps} style={{ color: "var(--asph-repost)" }} />
         );
       case "follow":
         return (
-          <UserPlus {...iconProps} style={{ color: "var(--bsky-follow)" }} />
+          <UserPlus {...iconProps} style={{ color: "var(--asph-follow)" }} />
         );
       case "mention":
         return (
-          <AtSign {...iconProps} style={{ color: "var(--bsky-mention)" }} />
+          <AtSign {...iconProps} style={{ color: "var(--asph-mention)" }} />
         );
       case "reply":
         return (
           <MessageCircle
             {...iconProps}
-            style={{ color: "var(--bsky-reply)" }}
+            style={{ color: "var(--asph-reply)" }}
           />
         );
       case "quote":
-        return <Quote {...iconProps} style={{ color: "var(--bsky-quote)" }} />;
+        return <Quote {...iconProps} style={{ color: "var(--asph-quote)" }} />;
       default:
         return null;
     }
@@ -308,15 +308,15 @@ const UserAvatarStack: React.FC<{
               <img
                 src={proxifyBskyImage(user.avatar)}
                 alt={user.handle}
-                className={`bsky-avatar border-2 ${avatarSize}`}
-                style={{ borderColor: "var(--bsky-bg-primary)" }}
+                className={`asph-avatar border-2 ${avatarSize}`}
+                style={{ borderColor: "var(--asph-bg-primary)" }}
               />
             ) : (
               <div
-                className={`bsky-avatar flex items-center justify-center border-2 ${avatarSize}`}
+                className={`asph-avatar flex items-center justify-center border-2 ${avatarSize}`}
                 style={{
-                  background: "var(--bsky-bg-tertiary)",
-                  borderColor: "var(--bsky-bg-primary)",
+                  background: "var(--asph-bg-tertiary)",
+                  borderColor: "var(--asph-bg-primary)",
                 }}
               >
                 <span className="text-xs font-semibold">
@@ -333,10 +333,10 @@ const UserAvatarStack: React.FC<{
               e.stopPropagation();
               onToggle();
             }}
-            className={`bsky-avatar flex items-center justify-center border-2 ${avatarSize}`}
+            className={`asph-avatar flex items-center justify-center border-2 ${avatarSize}`}
             style={{
-              background: "var(--bsky-bg-secondary)",
-              borderColor: "var(--bsky-bg-primary)",
+              background: "var(--asph-bg-secondary)",
+              borderColor: "var(--asph-bg-primary)",
               zIndex: 0,
             }}
             title={`+${remainingCount} more`}
@@ -363,7 +363,7 @@ const NotificationSummary: React.FC<{ notification: GroupedNotification }> =
         return (
           <span
             className="inline-block max-w-[150px] truncate align-bottom font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             {users[0].displayName || users[0].handle}
           </span>
@@ -375,11 +375,11 @@ const NotificationSummary: React.FC<{ notification: GroupedNotification }> =
           <>
             <span
               className="inline-block max-w-[150px] truncate align-bottom font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               {users[0].displayName || users[0].handle}
             </span>
-            <span style={{ color: "var(--bsky-text-secondary)" }}>
+            <span style={{ color: "var(--asph-text-secondary)" }}>
               {" "}
               and {count - 1} others
             </span>
@@ -392,14 +392,14 @@ const NotificationSummary: React.FC<{ notification: GroupedNotification }> =
           <>
             <span
               className="inline-block max-w-[120px] truncate align-bottom font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               {users[0].displayName || users[0].handle}
             </span>
-            <span style={{ color: "var(--bsky-text-secondary)" }}> and </span>
+            <span style={{ color: "var(--asph-text-secondary)" }}> and </span>
             <span
               className="inline-block max-w-[120px] truncate align-bottom font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               {users[1].displayName || users[1].handle}
             </span>
@@ -411,7 +411,7 @@ const NotificationSummary: React.FC<{ notification: GroupedNotification }> =
         <>
           <span
             className="font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             {count} people
           </span>
@@ -441,7 +441,7 @@ const NotificationSummary: React.FC<{ notification: GroupedNotification }> =
     return (
       <>
         {formatUserNames()}{" "}
-        <span style={{ color: "var(--bsky-text-secondary)" }}>
+        <span style={{ color: "var(--asph-text-secondary)" }}>
           {getActionText()}
         </span>
       </>
@@ -459,8 +459,8 @@ const PostPreviewCard: React.FC<{ preview: PostPreview }> = React.memo(
       <div
         className="mt-2 rounded-lg p-3"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         {/* Author info */}
@@ -469,12 +469,12 @@ const PostPreviewCard: React.FC<{ preview: PostPreview }> = React.memo(
             <img
               src={proxifyBskyImage(preview.authorAvatar)}
               alt={preview.authorHandle}
-              className="bsky-avatar h-5 w-5"
+              className="asph-avatar h-5 w-5"
             />
           )}
           <span
             className="max-w-[200px] truncate text-xs font-medium"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {preview.authorDisplayName || preview.authorHandle}
           </span>
@@ -484,7 +484,7 @@ const PostPreviewCard: React.FC<{ preview: PostPreview }> = React.memo(
         {preview.text && (
           <p
             className="line-clamp-3 text-sm"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             {preview.text}
           </p>
@@ -505,7 +505,7 @@ const PostPreviewCard: React.FC<{ preview: PostPreview }> = React.memo(
         {preview.hasVideo && (
           <div
             className="mt-2 flex items-center gap-1 text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             <Play size={14} />
             <span>Video</span>
@@ -587,8 +587,8 @@ const InlineActions: React.FC<{
             e.stopPropagation();
             if (notification.postUri) onView(notification.postUri);
           }}
-          className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors hover:bg-bsky-bg-secondary"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors hover:bg-asph-bg-secondary"
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           <ExternalLink size={12} />
           View
@@ -598,8 +598,8 @@ const InlineActions: React.FC<{
       {showReply && onReply && (
         <button
           onClick={onReply}
-          className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors hover:bg-bsky-bg-secondary"
-          style={{ color: "var(--bsky-primary)" }}
+          className="flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors hover:bg-asph-bg-secondary"
+          style={{ color: "var(--asph-primary)" }}
         >
           <MessageCircle size={12} />
           Reply
@@ -636,8 +636,8 @@ const ActionsMenu: React.FC<{
       <div
         className="absolute right-0 top-full z-50 mt-1 w-40 rounded-lg border shadow-lg"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          borderColor: "var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          borderColor: "var(--asph-border-primary)",
         }}
       >
         {onView && (
@@ -646,8 +646,8 @@ const ActionsMenu: React.FC<{
               e.stopPropagation();
               onView();
             }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover"
-            style={{ color: "var(--bsky-text-primary)" }}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-asph-bg-hover"
+            style={{ color: "var(--asph-text-primary)" }}
           >
             <ExternalLink size={14} />
             View Post
@@ -660,8 +660,8 @@ const ActionsMenu: React.FC<{
               e.stopPropagation();
               onReply();
             }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover"
-            style={{ color: "var(--bsky-text-primary)" }}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-asph-bg-hover"
+            style={{ color: "var(--asph-text-primary)" }}
           >
             <MessageCircle size={14} />
             Reply
@@ -671,10 +671,10 @@ const ActionsMenu: React.FC<{
         {onDismiss && (
           <button
             onClick={onDismiss}
-            className="flex w-full items-center gap-2 border-t px-3 py-2 text-left text-sm hover:bg-bsky-bg-hover"
+            className="flex w-full items-center gap-2 border-t px-3 py-2 text-left text-sm hover:bg-asph-bg-hover"
             style={{
-              color: "var(--bsky-text-secondary)",
-              borderColor: "var(--bsky-border-primary)",
+              color: "var(--asph-text-secondary)",
+              borderColor: "var(--asph-border-primary)",
             }}
           >
             Dismiss
@@ -734,8 +734,8 @@ const NotificationLinkPreview: React.FC<{ postText: string }> = React.memo(
         <div
           className="mt-2 flex items-center gap-2 rounded border p-2 text-xs"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            color: "var(--bsky-text-secondary)",
+            borderColor: "var(--asph-border-primary)",
+            color: "var(--asph-text-secondary)",
           }}
         >
           <Loader size={12} className="animate-spin" />
@@ -756,7 +756,7 @@ const NotificationLinkPreview: React.FC<{ postText: string }> = React.memo(
     return (
       <div
         className="mt-2 overflow-hidden rounded border"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         {metadata.imageUrl && (
           <div
@@ -767,20 +767,20 @@ const NotificationLinkPreview: React.FC<{ postText: string }> = React.memo(
         <div className="p-2">
           <div
             className="mb-0.5 text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             {domain}
           </div>
           <div
             className="line-clamp-1 text-xs font-medium"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             {metadata.title}
           </div>
           {metadata.description && (
             <div
               className="mt-0.5 line-clamp-1 text-xs"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               {metadata.description}
             </div>
@@ -863,8 +863,8 @@ const NotificationQuotePreview: React.FC<{ postText: string }> = React.memo(
         <div
           className="mt-2 flex items-center gap-2 rounded border p-2 text-xs"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            color: "var(--bsky-text-secondary)",
+            borderColor: "var(--asph-border-primary)",
+            color: "var(--asph-text-secondary)",
           }}
         >
           <Loader size={12} className="animate-spin" />
@@ -879,14 +879,14 @@ const NotificationQuotePreview: React.FC<{ postText: string }> = React.memo(
     return (
       <div
         className="mt-2 overflow-hidden rounded border"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         <div
           className="flex items-center gap-1.5 px-2 py-1 text-xs"
           style={{
-            backgroundColor: "var(--bsky-bg-tertiary)",
-            borderBottom: "1px solid var(--bsky-border-primary)",
-            color: "var(--bsky-text-secondary)",
+            backgroundColor: "var(--asph-bg-tertiary)",
+            borderBottom: "1px solid var(--asph-border-primary)",
+            color: "var(--asph-text-secondary)",
           }}
         >
           <MessageCircle size={10} />
@@ -904,7 +904,7 @@ const NotificationQuotePreview: React.FC<{ postText: string }> = React.memo(
             <ProfileHoverCard handle={quotedPost.author.handle}>
               <span
                 className="max-w-[150px] cursor-pointer truncate text-xs font-medium hover:underline"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {quotedPost.author.displayName || quotedPost.author.handle}
               </span>
@@ -912,7 +912,7 @@ const NotificationQuotePreview: React.FC<{ postText: string }> = React.memo(
           </div>
           <p
             className="line-clamp-2 text-xs"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             {record?.text || ""}
           </p>

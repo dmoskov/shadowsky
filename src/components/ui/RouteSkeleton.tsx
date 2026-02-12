@@ -42,9 +42,9 @@ export const HomeSkeleton: React.FC = () => {
  */
 export const ColumnSkeleton: React.FC = () => {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary">
+    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-asph-border-primary bg-asph-bg-secondary">
       {/* Column header */}
-      <div className="flex items-center justify-between border-b border-bsky-border-primary p-3">
+      <div className="flex items-center justify-between border-b border-asph-border-primary p-3">
         <div className="flex items-center gap-2">
           <SkeletonLoader variant="circular" width={24} height={24} />
           <SkeletonLoader width={100} height={18} variant="rounded" />
@@ -81,7 +81,7 @@ export const NotificationsSkeleton: React.FC = () => {
       aria-label="Loading notifications"
     >
       {/* Filter tabs */}
-      <div className="flex gap-2 border-b border-bsky-border-primary p-3">
+      <div className="flex gap-2 border-b border-asph-border-primary p-3">
         <SkeletonLoader width={60} height={32} variant="rounded" />
         <SkeletonLoader width={80} height={32} variant="rounded" />
         <SkeletonLoader width={70} height={32} variant="rounded" />
@@ -102,17 +102,17 @@ export const SearchSkeleton: React.FC = () => {
       aria-label="Loading search"
     >
       {/* Search input */}
-      <div className="border-b border-bsky-border-primary p-4">
+      <div className="border-b border-asph-border-primary p-4">
         <SkeletonLoader width="100%" height={40} variant="rounded" />
       </div>
       {/* Tab bar */}
-      <div className="flex gap-4 border-b border-bsky-border-primary px-4 py-2">
+      <div className="flex gap-4 border-b border-asph-border-primary px-4 py-2">
         <SkeletonLoader width={60} height={28} variant="rounded" />
         <SkeletonLoader width={60} height={28} variant="rounded" />
         <SkeletonLoader width={60} height={28} variant="rounded" />
       </div>
       {/* Results */}
-      <div className="divide-y divide-bsky-border-primary">
+      <div className="divide-y divide-asph-border-primary">
         {Array.from({ length: 5 }).map((_, i) => (
           <SearchResultSkeleton key={`search-result-${i}`} />
         ))}
@@ -132,7 +132,7 @@ export const BookmarksSkeleton: React.FC = () => {
       aria-label="Loading bookmarks"
     >
       {/* Header with filter */}
-      <div className="flex items-center justify-between border-b border-bsky-border-primary p-4">
+      <div className="flex items-center justify-between border-b border-asph-border-primary p-4">
         <SkeletonLoader width={100} height={24} variant="rounded" />
         <SkeletonLoader width={120} height={36} variant="rounded" />
       </div>
@@ -164,12 +164,12 @@ export const ListsSkeleton: React.FC = () => {
   return (
     <div className="mx-auto max-w-2xl" role="status" aria-label="Loading lists">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-bsky-border-primary p-4">
+      <div className="flex items-center justify-between border-b border-asph-border-primary p-4">
         <SkeletonLoader width={80} height={24} />
         <SkeletonLoader width={100} height={36} variant="rounded" />
       </div>
       {/* List items */}
-      <div className="divide-y divide-bsky-border-primary">
+      <div className="divide-y divide-asph-border-primary">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={`list-item-${i}`} className="flex items-center gap-3 p-4">
             <SkeletonLoader variant="circular" width={44} height={44} />
@@ -210,7 +210,7 @@ export const SettingsSkeleton: React.FC = () => {
         {/* Main content */}
         <div className="flex-1 space-y-6">
           <SkeletonLoader width={200} height={28} />
-          <div className="space-y-4 rounded-lg border border-bsky-border-primary p-4">
+          <div className="space-y-4 rounded-lg border border-asph-border-primary p-4">
             <SkeletonLoader width="60%" height={20} />
             <SkeletonLoader width="100%" height={16} />
             <SkeletonLoader width="90%" height={16} />
@@ -219,7 +219,7 @@ export const SettingsSkeleton: React.FC = () => {
               <SkeletonLoader width={80} height={36} variant="rounded" />
             </div>
           </div>
-          <div className="space-y-4 rounded-lg border border-bsky-border-primary p-4">
+          <div className="space-y-4 rounded-lg border border-asph-border-primary p-4">
             <SkeletonLoader width="50%" height={20} />
             <SkeletonLoader width="100%" height={16} />
             <SkeletonLoader width="80%" height={16} />
@@ -240,7 +240,7 @@ export const ComposerSkeleton: React.FC = () => {
       role="status"
       aria-label="Loading composer"
     >
-      <div className="rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-4">
+      <div className="rounded-lg border border-asph-border-primary bg-asph-bg-secondary p-4">
         <div className="flex gap-3">
           <SkeletonLoader variant="circular" width={48} height={48} />
           <div className="flex-1">
@@ -280,7 +280,7 @@ export const AnalyticsSkeleton: React.FC = () => {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={`analytics-stat-${i}`}
-            className="rounded-lg border border-bsky-border-primary p-4"
+            className="rounded-lg border border-asph-border-primary p-4"
           >
             <SkeletonLoader width={60} height={14} className="mb-2" />
             <SkeletonLoader width={80} height={28} />
@@ -288,7 +288,7 @@ export const AnalyticsSkeleton: React.FC = () => {
         ))}
       </div>
       {/* Chart placeholder */}
-      <div className="rounded-lg border border-bsky-border-primary p-4">
+      <div className="rounded-lg border border-asph-border-primary p-4">
         <SkeletonLoader width={150} height={20} className="mb-4" />
         <SkeletonLoader width="100%" height={200} variant="rounded" />
       </div>

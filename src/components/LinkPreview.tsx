@@ -18,16 +18,16 @@ export function LinkPreview({
     return (
       <div
         className="mt-2 flex items-center gap-2 rounded-lg border p-3"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         <Loader2
           size={16}
           className="animate-spin"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         />
         <span
           className="text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Loading link preview...
         </span>
@@ -39,13 +39,13 @@ export function LinkPreview({
     return (
       <div
         className="mt-2 flex items-center justify-between gap-2 rounded-lg border p-3"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         <div className="flex items-center gap-2">
-          <Link size={16} style={{ color: "var(--bsky-text-secondary)" }} />
+          <Link size={16} style={{ color: "var(--asph-text-secondary)" }} />
           <span
             className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Could not load preview
           </span>
@@ -59,7 +59,7 @@ export function LinkPreview({
           className="rounded p-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
           title="Remove link preview"
         >
-          <X size={16} style={{ color: "var(--bsky-text-secondary)" }} />
+          <X size={16} style={{ color: "var(--asph-text-secondary)" }} />
         </button>
       </div>
     );
@@ -72,7 +72,7 @@ export function LinkPreview({
   return (
     <div
       className="group relative mt-2 rounded-lg border"
-      style={{ borderColor: "var(--bsky-border-primary)" }}
+      style={{ borderColor: "var(--asph-border-primary)" }}
     >
       <button
         onClick={(e) => {
@@ -93,7 +93,7 @@ export function LinkPreview({
           className="h-auto w-full rounded-t-lg object-cover"
           style={{
             maxHeight: "200px",
-            backgroundColor: "var(--bsky-bg-tertiary)",
+            backgroundColor: "var(--asph-bg-tertiary)",
           }}
           onError={(e) => {
             // Hide broken images
@@ -105,21 +105,21 @@ export function LinkPreview({
       <div className="p-3">
         <div
           className="line-clamp-2 text-sm font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {metadata.title}
         </div>
         {metadata.description && (
           <div
             className="mt-1 line-clamp-2 text-xs"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {metadata.description}
           </div>
         )}
         <div
           className="mt-1 flex items-center gap-1 text-xs"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           <Link size={12} />
           <span className="truncate">{new URL(metadata.url).hostname}</span>

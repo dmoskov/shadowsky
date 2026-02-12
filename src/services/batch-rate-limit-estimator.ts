@@ -422,12 +422,12 @@ export function getRiskLevelDescription(riskLevel: RiskLevel): string {
 export function getRiskLevelColor(riskLevel: RiskLevel): string {
   switch (riskLevel) {
     case "safe":
-      return "var(--bsky-success-light)";
+      return "var(--asph-success-light)";
     case "moderate":
-      return "var(--bsky-yellow)";
+      return "var(--asph-yellow)";
     case "high":
-      return "var(--bsky-orange)";
+      return "var(--asph-orange)";
     case "dangerous":
-      return "var(--bsky-error)";
+      return "var(--asph-error)";
   }
 }

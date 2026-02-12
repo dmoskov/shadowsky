@@ -172,16 +172,16 @@ export function WebSocketStressPanel() {
   ): string => {
     switch (connectionState) {
       case WebSocketConnectionState.CONNECTED:
-        return "var(--bsky-success)";
+        return "var(--asph-success)";
       case WebSocketConnectionState.DEGRADED:
         return "#f59e0b";
       case WebSocketConnectionState.CONNECTING:
       case WebSocketConnectionState.RECONNECTING:
-        return "var(--bsky-primary)";
+        return "var(--asph-primary)";
       case WebSocketConnectionState.ERROR:
-        return "var(--bsky-error)";
+        return "var(--asph-error)";
       default:
-        return "var(--bsky-text-tertiary)";
+        return "var(--asph-text-tertiary)";
     }
   };
 
@@ -211,9 +211,9 @@ export function WebSocketStressPanel() {
           top: "50%",
           transform: "translateY(-50%)",
           zIndex: 1001,
-          background: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border)",
-          borderRight: isOpen ? "1px solid var(--bsky-border)" : "none",
+          background: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border)",
+          borderRight: isOpen ? "1px solid var(--asph-border)" : "none",
           borderRadius: isOpen ? "8px 0 0 8px" : "8px 0 0 8px",
           padding: "12px 8px",
           cursor: "pointer",
@@ -228,12 +228,12 @@ export function WebSocketStressPanel() {
         {isOpen ? (
           <ChevronRight
             size={16}
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           />
         ) : (
           <ChevronLeft
             size={16}
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           />
         )}
         <Zap
@@ -241,10 +241,10 @@ export function WebSocketStressPanel() {
           style={{
             color:
               state?.connectionState === WebSocketConnectionState.CONNECTED
-                ? "var(--bsky-success)"
+                ? "var(--asph-success)"
                 : state?.connectionState === WebSocketConnectionState.ERROR
-                  ? "var(--bsky-error)"
-                  : "var(--bsky-primary)",
+                  ? "var(--asph-error)"
+                  : "var(--asph-primary)",
           }}
         />
       </button>
@@ -257,8 +257,8 @@ export function WebSocketStressPanel() {
           top: 0,
           bottom: 0,
           width: "360px",
-          background: "var(--bsky-bg-secondary)",
-          borderLeft: "1px solid var(--bsky-border)",
+          background: "var(--asph-bg-secondary)",
+          borderLeft: "1px solid var(--asph-border)",
           zIndex: 1000,
           transition: "right 0.3s ease",
           display: "flex",
@@ -270,19 +270,19 @@ export function WebSocketStressPanel() {
         <div
           style={{
             padding: "16px",
-            borderBottom: "1px solid var(--bsky-border)",
+            borderBottom: "1px solid var(--asph-border)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Zap size={20} style={{ color: "var(--bsky-primary)" }} />
+            <Zap size={20} style={{ color: "var(--asph-primary)" }} />
             <span
               style={{
                 fontSize: "16px",
                 fontWeight: 600,
-                color: "var(--bsky-text-primary)",
+                color: "var(--asph-text-primary)",
               }}
             >
               WS Stress Test
@@ -300,7 +300,7 @@ export function WebSocketStressPanel() {
               justifyContent: "center",
             }}
           >
-            <X size={20} style={{ color: "var(--bsky-text-secondary)" }} />
+            <X size={20} style={{ color: "var(--asph-text-secondary)" }} />
           </button>
         </div>
 
@@ -321,7 +321,7 @@ export function WebSocketStressPanel() {
               style={{
                 fontSize: "12px",
                 fontWeight: 600,
-                color: "var(--bsky-text-secondary)",
+                color: "var(--asph-text-secondary)",
                 marginBottom: "8px",
                 textTransform: "uppercase",
                 letterSpacing: "0.5px",
@@ -331,7 +331,7 @@ export function WebSocketStressPanel() {
             </h3>
             <div
               style={{
-                background: "var(--bsky-bg-primary)",
+                background: "var(--asph-bg-primary)",
                 borderRadius: "8px",
                 padding: "12px",
                 display: "grid",
@@ -343,7 +343,7 @@ export function WebSocketStressPanel() {
                 <span
                   style={{
                     fontSize: "11px",
-                    color: "var(--bsky-text-tertiary)",
+                    color: "var(--asph-text-tertiary)",
                   }}
                 >
                   Status
@@ -385,7 +385,7 @@ export function WebSocketStressPanel() {
                 <span
                   style={{
                     fontSize: "11px",
-                    color: "var(--bsky-text-tertiary)",
+                    color: "var(--asph-text-tertiary)",
                   }}
                 >
                   WebSocket
@@ -393,7 +393,7 @@ export function WebSocketStressPanel() {
                 <div
                   style={{
                     fontSize: "13px",
-                    color: "var(--bsky-text-primary)",
+                    color: "var(--asph-text-primary)",
                     marginTop: "2px",
                   }}
                 >
@@ -404,7 +404,7 @@ export function WebSocketStressPanel() {
                 <span
                   style={{
                     fontSize: "11px",
-                    color: "var(--bsky-text-tertiary)",
+                    color: "var(--asph-text-tertiary)",
                   }}
                 >
                   Authenticated
@@ -413,8 +413,8 @@ export function WebSocketStressPanel() {
                   style={{
                     fontSize: "13px",
                     color: state?.isAuthenticated
-                      ? "var(--bsky-success)"
-                      : "var(--bsky-text-secondary)",
+                      ? "var(--asph-success)"
+                      : "var(--asph-text-secondary)",
                     marginTop: "2px",
                   }}
                 >
@@ -425,7 +425,7 @@ export function WebSocketStressPanel() {
                 <span
                   style={{
                     fontSize: "11px",
-                    color: "var(--bsky-text-tertiary)",
+                    color: "var(--asph-text-tertiary)",
                   }}
                 >
                   Reconnects
@@ -433,7 +433,7 @@ export function WebSocketStressPanel() {
                 <div
                   style={{
                     fontSize: "13px",
-                    color: "var(--bsky-text-primary)",
+                    color: "var(--asph-text-primary)",
                     marginTop: "2px",
                   }}
                 >
@@ -444,7 +444,7 @@ export function WebSocketStressPanel() {
                 <span
                   style={{
                     fontSize: "11px",
-                    color: "var(--bsky-text-tertiary)",
+                    color: "var(--asph-text-tertiary)",
                   }}
                 >
                   Sent / Received
@@ -452,7 +452,7 @@ export function WebSocketStressPanel() {
                 <div
                   style={{
                     fontSize: "13px",
-                    color: "var(--bsky-text-primary)",
+                    color: "var(--asph-text-primary)",
                     marginTop: "2px",
                   }}
                 >
@@ -463,7 +463,7 @@ export function WebSocketStressPanel() {
                 <span
                   style={{
                     fontSize: "11px",
-                    color: "var(--bsky-text-tertiary)",
+                    color: "var(--asph-text-tertiary)",
                   }}
                 >
                   Latency (avg)
@@ -471,7 +471,7 @@ export function WebSocketStressPanel() {
                 <div
                   style={{
                     fontSize: "13px",
-                    color: "var(--bsky-text-primary)",
+                    color: "var(--asph-text-primary)",
                     marginTop: "2px",
                   }}
                 >
@@ -487,7 +487,7 @@ export function WebSocketStressPanel() {
               style={{
                 fontSize: "12px",
                 fontWeight: 600,
-                color: "var(--bsky-text-secondary)",
+                color: "var(--asph-text-secondary)",
                 marginBottom: "8px",
                 textTransform: "uppercase",
                 letterSpacing: "0.5px",
@@ -501,7 +501,7 @@ export function WebSocketStressPanel() {
             </h3>
             <div
               style={{
-                background: "var(--bsky-bg-primary)",
+                background: "var(--asph-bg-primary)",
                 borderRadius: "8px",
                 padding: "12px",
               }}
@@ -517,7 +517,7 @@ export function WebSocketStressPanel() {
                 <span
                   style={{
                     fontSize: "13px",
-                    color: "var(--bsky-text-primary)",
+                    color: "var(--asph-text-primary)",
                   }}
                 >
                   Delay: {latencyInput}ms
@@ -546,7 +546,7 @@ export function WebSocketStressPanel() {
                 onChange={(e) => handleSetLatency(Number(e.target.value))}
                 style={{
                   width: "100%",
-                  accentColor: "var(--bsky-primary)",
+                  accentColor: "var(--asph-primary)",
                 }}
               />
               <div
@@ -554,7 +554,7 @@ export function WebSocketStressPanel() {
                   display: "flex",
                   justifyContent: "space-between",
                   fontSize: "10px",
-                  color: "var(--bsky-text-tertiary)",
+                  color: "var(--asph-text-tertiary)",
                   marginTop: "4px",
                 }}
               >
@@ -570,7 +570,7 @@ export function WebSocketStressPanel() {
                   style={{
                     marginTop: "8px",
                     fontSize: "11px",
-                    color: "var(--bsky-text-secondary)",
+                    color: "var(--asph-text-secondary)",
                   }}
                 >
                   Queued messages: {state.queuedMessages}
@@ -585,7 +585,7 @@ export function WebSocketStressPanel() {
               style={{
                 fontSize: "12px",
                 fontWeight: 600,
-                color: "var(--bsky-text-secondary)",
+                color: "var(--asph-text-secondary)",
                 marginBottom: "8px",
                 textTransform: "uppercase",
                 letterSpacing: "0.5px",
@@ -599,7 +599,7 @@ export function WebSocketStressPanel() {
             </h3>
             <div
               style={{
-                background: "var(--bsky-bg-primary)",
+                background: "var(--asph-bg-primary)",
                 borderRadius: "8px",
                 padding: "12px",
               }}
@@ -615,7 +615,7 @@ export function WebSocketStressPanel() {
                 <span
                   style={{
                     fontSize: "13px",
-                    color: "var(--bsky-text-primary)",
+                    color: "var(--asph-text-primary)",
                   }}
                 >
                   Drop Rate: {packetLossInput}%
@@ -624,8 +624,8 @@ export function WebSocketStressPanel() {
                   <span
                     style={{
                       fontSize: "11px",
-                      color: "var(--bsky-error)",
-                      background: "var(--bsky-error)20",
+                      color: "var(--asph-error)",
+                      background: "var(--asph-error)20",
                       padding: "2px 6px",
                       borderRadius: "4px",
                     }}
@@ -644,7 +644,7 @@ export function WebSocketStressPanel() {
                 onChange={(e) => handleSetPacketLoss(Number(e.target.value))}
                 style={{
                   width: "100%",
-                  accentColor: "var(--bsky-error)",
+                  accentColor: "var(--asph-error)",
                 }}
               />
               <div
@@ -652,7 +652,7 @@ export function WebSocketStressPanel() {
                   display: "flex",
                   justifyContent: "space-between",
                   fontSize: "10px",
-                  color: "var(--bsky-text-tertiary)",
+                  color: "var(--asph-text-tertiary)",
                   marginTop: "4px",
                 }}
               >
@@ -671,7 +671,7 @@ export function WebSocketStressPanel() {
               style={{
                 fontSize: "12px",
                 fontWeight: 600,
-                color: "var(--bsky-text-secondary)",
+                color: "var(--asph-text-secondary)",
                 marginBottom: "8px",
                 textTransform: "uppercase",
                 letterSpacing: "0.5px",
@@ -685,7 +685,7 @@ export function WebSocketStressPanel() {
             </h3>
             <div
               style={{
-                background: "var(--bsky-bg-primary)",
+                background: "var(--asph-bg-primary)",
                 borderRadius: "8px",
                 padding: "12px",
               }}
@@ -694,7 +694,7 @@ export function WebSocketStressPanel() {
                 <label
                   style={{
                     fontSize: "12px",
-                    color: "var(--bsky-text-secondary)",
+                    color: "var(--asph-text-secondary)",
                     display: "block",
                     marginBottom: "4px",
                   }}
@@ -708,9 +708,9 @@ export function WebSocketStressPanel() {
                     width: "100%",
                     padding: "8px",
                     borderRadius: "4px",
-                    border: "1px solid var(--bsky-border)",
-                    background: "var(--bsky-bg-secondary)",
-                    color: "var(--bsky-text-primary)",
+                    border: "1px solid var(--asph-border)",
+                    background: "var(--asph-bg-secondary)",
+                    color: "var(--asph-text-primary)",
                     fontSize: "13px",
                   }}
                 >
@@ -728,9 +728,9 @@ export function WebSocketStressPanel() {
                     flex: 1,
                     padding: "8px 12px",
                     borderRadius: "6px",
-                    border: "1px solid var(--bsky-error)",
+                    border: "1px solid var(--asph-error)",
                     background: "transparent",
-                    color: "var(--bsky-error)",
+                    color: "var(--asph-error)",
                     fontSize: "13px",
                     fontWeight: 500,
                     cursor: "pointer",
@@ -749,9 +749,9 @@ export function WebSocketStressPanel() {
                     flex: 1,
                     padding: "8px 12px",
                     borderRadius: "6px",
-                    border: "1px solid var(--bsky-primary)",
+                    border: "1px solid var(--asph-primary)",
                     background: "transparent",
-                    color: "var(--bsky-primary)",
+                    color: "var(--asph-primary)",
                     fontSize: "13px",
                     fontWeight: 500,
                     cursor: "pointer",
@@ -774,7 +774,7 @@ export function WebSocketStressPanel() {
               style={{
                 fontSize: "12px",
                 fontWeight: 600,
-                color: "var(--bsky-text-secondary)",
+                color: "var(--asph-text-secondary)",
                 marginBottom: "8px",
                 textTransform: "uppercase",
                 letterSpacing: "0.5px",
@@ -788,7 +788,7 @@ export function WebSocketStressPanel() {
             </h3>
             <div
               style={{
-                background: "var(--bsky-bg-primary)",
+                background: "var(--asph-bg-primary)",
                 borderRadius: "8px",
                 padding: "12px",
               }}
@@ -805,7 +805,7 @@ export function WebSocketStressPanel() {
                   <label
                     style={{
                       fontSize: "12px",
-                      color: "var(--bsky-text-secondary)",
+                      color: "var(--asph-text-secondary)",
                       display: "block",
                       marginBottom: "4px",
                     }}
@@ -823,9 +823,9 @@ export function WebSocketStressPanel() {
                       width: "100%",
                       padding: "8px",
                       borderRadius: "4px",
-                      border: "1px solid var(--bsky-border)",
-                      background: "var(--bsky-bg-secondary)",
-                      color: "var(--bsky-text-primary)",
+                      border: "1px solid var(--asph-border)",
+                      background: "var(--asph-bg-secondary)",
+                      color: "var(--asph-text-primary)",
                       fontSize: "13px",
                     }}
                   />
@@ -834,7 +834,7 @@ export function WebSocketStressPanel() {
                   <label
                     style={{
                       fontSize: "12px",
-                      color: "var(--bsky-text-secondary)",
+                      color: "var(--asph-text-secondary)",
                       display: "block",
                       marginBottom: "4px",
                     }}
@@ -852,9 +852,9 @@ export function WebSocketStressPanel() {
                       width: "100%",
                       padding: "8px",
                       borderRadius: "4px",
-                      border: "1px solid var(--bsky-border)",
-                      background: "var(--bsky-bg-secondary)",
-                      color: "var(--bsky-text-primary)",
+                      border: "1px solid var(--asph-border)",
+                      background: "var(--asph-bg-secondary)",
+                      color: "var(--asph-text-primary)",
                       fontSize: "13px",
                     }}
                   />
@@ -865,7 +865,7 @@ export function WebSocketStressPanel() {
                   <div
                     style={{
                       height: "4px",
-                      background: "var(--bsky-bg-tertiary)",
+                      background: "var(--asph-bg-tertiary)",
                       borderRadius: "2px",
                       overflow: "hidden",
                     }}
@@ -873,7 +873,7 @@ export function WebSocketStressPanel() {
                     <div
                       style={{
                         height: "100%",
-                        background: "var(--bsky-primary)",
+                        background: "var(--asph-primary)",
                         width: `${floodProgress}%`,
                         transition: "width 0.1s ease",
                       }}
@@ -893,8 +893,8 @@ export function WebSocketStressPanel() {
                   borderRadius: "6px",
                   border: "none",
                   background: isFlooding
-                    ? "var(--bsky-bg-tertiary)"
-                    : "var(--bsky-primary)",
+                    ? "var(--asph-bg-tertiary)"
+                    : "var(--asph-primary)",
                   color: "white",
                   fontSize: "13px",
                   fontWeight: 500,
@@ -921,14 +921,14 @@ export function WebSocketStressPanel() {
         <div
           style={{
             padding: "12px 16px",
-            borderTop: "1px solid var(--bsky-border)",
+            borderTop: "1px solid var(--asph-border)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
           }}
         >
           <span
-            style={{ fontSize: "11px", color: "var(--bsky-text-tertiary)" }}
+            style={{ fontSize: "11px", color: "var(--asph-text-tertiary)" }}
           >
             Ctrl+Shift+W to toggle
           </span>
@@ -937,9 +937,9 @@ export function WebSocketStressPanel() {
             style={{
               padding: "6px 12px",
               borderRadius: "4px",
-              border: "1px solid var(--bsky-border)",
+              border: "1px solid var(--asph-border)",
               background: "transparent",
-              color: "var(--bsky-text-secondary)",
+              color: "var(--asph-text-secondary)",
               fontSize: "12px",
               cursor: "pointer",
               display: "flex",

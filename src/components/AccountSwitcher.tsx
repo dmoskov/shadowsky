@@ -84,7 +84,7 @@ export const AccountSwitcher: React.FC = () => {
           setIsOpen(!isOpen);
         }}
         className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-all hover:bg-white hover:bg-opacity-10"
-        style={{ color: "var(--bsky-text-primary)" }}
+        style={{ color: "var(--asph-text-primary)" }}
       >
         {currentAccount?.avatar ? (
           <img
@@ -95,7 +95,7 @@ export const AccountSwitcher: React.FC = () => {
         ) : (
           <div
             className="flex h-6 w-6 items-center justify-center rounded-full"
-            style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+            style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
           >
             <User size={14} />
           </div>
@@ -111,22 +111,22 @@ export const AccountSwitcher: React.FC = () => {
         ReactDOM.createPortal(
           <div
             ref={menuRef}
-            className="bsky-glass fixed z-[9999] w-64 overflow-hidden rounded-lg shadow-lg"
+            className="asph-glass fixed z-[9999] w-64 overflow-hidden rounded-lg shadow-lg"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border-primary)",
               top: `${menuPosition.top}px`,
               right: `${menuPosition.right}px`,
             }}
           >
             <div
               className="px-3 py-2 text-xs font-medium"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               Switch Account
             </div>
 
-            <div className="bsky-scrollbar max-h-80 overflow-y-auto">
+            <div className="asph-scrollbar max-h-80 overflow-y-auto">
               {accounts.map((account) => {
                 const isActive = account.did === session?.did;
                 return (
@@ -136,7 +136,7 @@ export const AccountSwitcher: React.FC = () => {
                     className="flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-blue-50 hover:bg-opacity-10"
                     style={{
                       backgroundColor: isActive
-                        ? "rgba(var(--bsky-primary-rgb), 0.1)"
+                        ? "rgba(var(--asph-primary-rgb), 0.1)"
                         : "transparent",
                     }}
                   >
@@ -149,7 +149,7 @@ export const AccountSwitcher: React.FC = () => {
                     ) : (
                       <div
                         className="flex h-10 w-10 items-center justify-center rounded-full"
-                        style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                        style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
                       >
                         <User size={20} />
                       </div>
@@ -157,13 +157,13 @@ export const AccountSwitcher: React.FC = () => {
                     <div className="flex-1 text-left">
                       <p
                         className="text-sm font-medium"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {account.displayName || account.handle}
                       </p>
                       <p
                         className="text-xs"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         @{account.handle}
                       </p>
@@ -171,7 +171,7 @@ export const AccountSwitcher: React.FC = () => {
                     {isActive && (
                       <Check
                         size={18}
-                        style={{ color: "var(--bsky-primary)" }}
+                        style={{ color: "var(--asph-primary)" }}
                       />
                     )}
                   </button>
@@ -181,16 +181,16 @@ export const AccountSwitcher: React.FC = () => {
 
             <div
               className="border-t"
-              style={{ borderColor: "var(--bsky-border-primary)" }}
+              style={{ borderColor: "var(--asph-border-primary)" }}
             >
               <button
                 onClick={handleAddAccount}
                 className="flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-blue-50 hover:bg-opacity-10"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 <div
                   className="flex h-10 w-10 items-center justify-center rounded-full"
-                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                  style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
                 >
                   <Plus size={20} />
                 </div>

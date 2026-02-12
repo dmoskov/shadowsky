@@ -103,8 +103,8 @@ export function InlineReplyComposer({
     <div
       className="mt-2 rounded-lg border p-3"
       style={{
-        backgroundColor: "var(--bsky-bg-primary)",
-        borderColor: "var(--bsky-border-primary)",
+        backgroundColor: "var(--asph-bg-primary)",
+        borderColor: "var(--asph-border-primary)",
       }}
       onClick={(e) => e.stopPropagation()}
       role="form"
@@ -113,7 +113,7 @@ export function InlineReplyComposer({
       <div className="mb-2 flex items-center justify-between">
         <span
           className="text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
           id="reply-to-label"
         >
           Replying to @{replyTo.author.handle}
@@ -125,7 +125,7 @@ export function InlineReplyComposer({
         >
           <X
             size={16}
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
             aria-hidden="true"
           />
         </button>
@@ -139,9 +139,9 @@ export function InlineReplyComposer({
         placeholder="Write your reply..."
         className="w-full resize-none rounded border p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          borderColor: "var(--bsky-border-primary)",
-          color: "var(--bsky-text-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          borderColor: "var(--asph-border-primary)",
+          color: "var(--asph-text-primary)",
           minHeight: "60px",
         }}
         rows={2}
@@ -158,8 +158,8 @@ export function InlineReplyComposer({
           style={{
             color:
               text.length > 280
-                ? "var(--bsky-danger)"
-                : "var(--bsky-text-tertiary)",
+                ? "var(--asph-danger)"
+                : "var(--asph-text-tertiary)",
           }}
           aria-live="polite"
           aria-atomic="true"
@@ -171,7 +171,7 @@ export function InlineReplyComposer({
           {error && (
             <span
               className="text-xs"
-              style={{ color: "var(--bsky-danger)" }}
+              style={{ color: "var(--asph-danger)" }}
               role="alert"
             >
               {error}
@@ -183,7 +183,7 @@ export function InlineReplyComposer({
             disabled={!text.trim() || isPosting || text.length > 300}
             className="flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50"
             style={{
-              backgroundColor: "var(--bsky-primary)",
+              backgroundColor: "var(--asph-primary)",
               color: "white",
             }}
             aria-label={isPosting ? "Posting reply..." : "Send reply"}
@@ -210,7 +210,7 @@ export function InlineReplyComposer({
 
       <div
         className="mt-1 text-xs"
-        style={{ color: "var(--bsky-text-tertiary)" }}
+        style={{ color: "var(--asph-text-tertiary)" }}
         aria-hidden="true"
       >
         Tip: Press Ctrl+Enter to send • Esc to cancel

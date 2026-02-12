@@ -102,16 +102,16 @@
   <!-- Gradients for bright blue effect -->
   <defs>
     <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00f0ff"/>
-      <stop offset="30%" stop-color="#00c8ff"/>
-      <stop offset="60%" stop-color="#0099ff"/>
-      <stop offset="90%" stop-color="#0066cc"/>
+      <stop offset="0%" stop-color="#f0dfa0"/>
+      <stop offset="30%" stop-color="#ddc472"/>
+      <stop offset="60%" stop-color="#c9a84c"/>
+      <stop offset="90%" stop-color="#a68a3a"/>
     </linearGradient>
     
     <linearGradient id="blueGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00d4ff"/>
-      <stop offset="40%" stop-color="#00a8ff"/>
-      <stop offset="80%" stop-color="#0077cc"/>
+      <stop offset="0%" stop-color="#f0dfa0"/>
+      <stop offset="40%" stop-color="#ddc472"/>
+      <stop offset="80%" stop-color="#a68a3a"/>
     </linearGradient>
   </defs>
 </svg>

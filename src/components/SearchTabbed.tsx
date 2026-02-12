@@ -1313,8 +1313,8 @@ export const SearchTabbed: React.FC = React.memo(() => {
       {/* Thread Viewer */}
       {showThreadViewer ? (
         <div
-          className="bsky-glass mb-4 rounded-xl p-4"
-          style={{ border: "1px solid var(--bsky-border-primary)" }}
+          className="asph-glass mb-4 rounded-xl p-4"
+          style={{ border: "1px solid var(--asph-border-primary)" }}
         >
           <div className="mb-4 flex items-center justify-between">
             <button
@@ -1325,7 +1325,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                 setHighlightPostUri(null);
               }}
               className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all hover:bg-white hover:bg-opacity-10"
-              style={{ color: "var(--bsky-primary)" }}
+              style={{ color: "var(--asph-primary)" }}
             >
               <ArrowLeft size={16} />
               Back to search
@@ -1337,7 +1337,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-all"
                 style={{
-                  backgroundColor: "var(--bsky-primary)",
+                  backgroundColor: "var(--asph-primary)",
                   color: "white",
                 }}
               >
@@ -1350,11 +1350,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
             <div className="py-8 text-center">
               <div
                 className="mx-auto h-10 w-10 animate-spin rounded-full border-b-2"
-                style={{ borderColor: "var(--bsky-primary)" }}
+                style={{ borderColor: "var(--asph-primary)" }}
               ></div>
               <p
                 className="mt-3 text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Loading thread...
               </p>
@@ -1364,7 +1364,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
               posts={threadPosts}
               rootUri={selectedPostUri || undefined}
               highlightUri={highlightPostUri || undefined}
-              className="bsky-scrollbar max-h-[70vh] overflow-y-auto"
+              className="asph-scrollbar max-h-[70vh] overflow-y-auto"
             />
           )}
         </div>
@@ -1372,14 +1372,14 @@ export const SearchTabbed: React.FC = React.memo(() => {
         <>
           {/* Search Input Box */}
           <div
-            className={`bsky-glass relative mb-6 rounded-xl p-3 sm:p-4 ${showMainTypeahead ? "z-[100]" : ""}`}
-            style={{ border: "1px solid var(--bsky-border-primary)" }}
+            className={`asph-glass relative mb-6 rounded-xl p-3 sm:p-4 ${showMainTypeahead ? "z-[100]" : ""}`}
+            style={{ border: "1px solid var(--asph-border-primary)" }}
           >
             <div className="relative flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
               <div className="flex flex-1 items-center gap-2">
                 <SearchIcon
                   size={20}
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                   className="hidden sm:block"
                 />
                 <input
@@ -1423,10 +1423,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   }}
                   className="flex-1 rounded-lg border px-3 py-2 text-sm transition-all focus-visible:outline-none focus-visible:ring-2"
                   style={{
-                    backgroundColor: "var(--bsky-bg-secondary)",
-                    borderColor: "var(--bsky-border-primary)",
-                    color: "var(--bsky-text-primary)",
-                    ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                    backgroundColor: "var(--asph-bg-secondary)",
+                    borderColor: "var(--asph-border-primary)",
+                    color: "var(--asph-text-primary)",
+                    ["--tw-ring-color" as any]: "var(--asph-primary)",
                   }}
                   aria-label="Search"
                   aria-autocomplete="list"
@@ -1440,10 +1440,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     (mainTypeaheadUsers && mainTypeaheadUsers.length > 0)) && (
                     <div
                       ref={mainTypeaheadRef}
-                      className="bsky-scrollbar absolute left-0 right-0 top-full z-50 mt-1 max-h-80 overflow-y-auto rounded-lg border shadow-lg sm:left-8"
+                      className="asph-scrollbar absolute left-0 right-0 top-full z-50 mt-1 max-h-80 overflow-y-auto rounded-lg border shadow-lg sm:left-8"
                       style={{
-                        backgroundColor: "var(--bsky-bg-secondary)",
-                        borderColor: "var(--bsky-border-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                       role="listbox"
                     >
@@ -1451,12 +1451,12 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       {savedSearches.length > 0 && (
                         <div
                           className="border-b"
-                          style={{ borderColor: "var(--bsky-border-primary)" }}
+                          style={{ borderColor: "var(--asph-border-primary)" }}
                         >
                           <div className="flex items-center justify-between px-3 py-2">
                             <span
                               className="flex items-center gap-1.5 text-xs font-medium"
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                             >
                               <Bookmark size={12} />
                               Saved Searches
@@ -1482,11 +1482,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               >
                                 <Bookmark
                                   size={14}
-                                  style={{ color: "var(--bsky-primary)" }}
+                                  style={{ color: "var(--asph-primary)" }}
                                 />
                                 <span
                                   className="text-sm"
-                                  style={{ color: "var(--bsky-text-primary)" }}
+                                  style={{ color: "var(--asph-text-primary)" }}
                                 >
                                   {saved.query}
                                 </span>
@@ -1498,7 +1498,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                   removeSavedSearch(saved.id);
                                 }}
                                 className="rounded p-1 transition-opacity hover:opacity-70"
-                                style={{ color: "var(--bsky-text-secondary)" }}
+                                style={{ color: "var(--asph-text-secondary)" }}
                               >
                                 <X size={14} />
                               </button>
@@ -1511,12 +1511,12 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       {searchHistory.length > 0 && (
                         <div
                           className="border-b"
-                          style={{ borderColor: "var(--bsky-border-primary)" }}
+                          style={{ borderColor: "var(--asph-border-primary)" }}
                         >
                           <div className="flex items-center justify-between px-3 py-2">
                             <span
                               className="flex items-center gap-1.5 text-xs font-medium"
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                             >
                               <Clock size={12} />
                               Recent
@@ -1527,7 +1527,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 clearSearchHistory();
                               }}
                               className="text-xs transition-opacity hover:opacity-70"
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                             >
                               Clear
                             </button>
@@ -1546,11 +1546,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
                             >
                               <Clock
                                 size={14}
-                                style={{ color: "var(--bsky-text-tertiary)" }}
+                                style={{ color: "var(--asph-text-tertiary)" }}
                               />
                               <span
                                 className="text-sm"
-                                style={{ color: "var(--bsky-text-primary)" }}
+                                style={{ color: "var(--asph-text-primary)" }}
                               >
                                 {query}
                               </span>
@@ -1565,7 +1565,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           <div className="px-3 py-2">
                             <span
                               className="flex items-center gap-1.5 text-xs font-medium"
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                             >
                               <User size={12} />
                               Users
@@ -1592,13 +1592,13 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 <div
                                   className="flex h-8 w-8 items-center justify-center rounded-full"
                                   style={{
-                                    backgroundColor: "var(--bsky-bg-tertiary)",
+                                    backgroundColor: "var(--asph-bg-tertiary)",
                                   }}
                                 >
                                   <User
                                     size={16}
                                     style={{
-                                      color: "var(--bsky-text-secondary)",
+                                      color: "var(--asph-text-secondary)",
                                     }}
                                   />
                                 </div>
@@ -1606,14 +1606,14 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               <div className="min-w-0 flex-1">
                                 <div
                                   className="truncate text-sm font-medium"
-                                  style={{ color: "var(--bsky-text-primary)" }}
+                                  style={{ color: "var(--asph-text-primary)" }}
                                 >
                                   {user.displayName || user.handle}
                                 </div>
                                 <div
                                   className="truncate text-xs"
                                   style={{
-                                    color: "var(--bsky-text-secondary)",
+                                    color: "var(--asph-text-secondary)",
                                   }}
                                 >
                                   @{user.handle}
@@ -1643,15 +1643,15 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     className="flex items-center justify-center rounded-lg px-2 py-2 transition-all hover:opacity-80"
                     style={{
                       backgroundColor: isSearchSaved
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-bg-secondary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-bg-secondary)",
                       color: isSearchSaved
                         ? "white"
-                        : "var(--bsky-text-secondary)",
+                        : "var(--asph-text-secondary)",
                       borderWidth: "1px",
                       borderColor: isSearchSaved
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-border-primary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-border-primary)",
                     }}
                     title={isSearchSaved ? "Remove from saved" : "Save search"}
                     aria-label={
@@ -1671,7 +1671,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   onClick={handleSearch}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all sm:flex-none sm:px-4"
                   style={{
-                    backgroundColor: "var(--bsky-primary)",
+                    backgroundColor: "var(--asph-primary)",
                     color: "white",
                   }}
                 >
@@ -1687,13 +1687,13 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       }`}
                       style={{
                         backgroundColor: showAdvanced
-                          ? "var(--bsky-primary)"
-                          : "var(--bsky-bg-secondary)",
+                          ? "var(--asph-primary)"
+                          : "var(--asph-bg-secondary)",
                         color: showAdvanced
                           ? "white"
-                          : "var(--bsky-text-secondary)",
+                          : "var(--asph-text-secondary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       <Filter size={16} />
@@ -1709,17 +1709,17 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       style={{
                         backgroundColor:
                           showFacetedFilters || hasFacetedFiltersActive
-                            ? "var(--bsky-primary)"
-                            : "var(--bsky-bg-secondary)",
+                            ? "var(--asph-primary)"
+                            : "var(--asph-bg-secondary)",
                         color:
                           showFacetedFilters || hasFacetedFiltersActive
                             ? "white"
-                            : "var(--bsky-text-secondary)",
+                            : "var(--asph-text-secondary)",
                         borderWidth: "1px",
                         borderColor:
                           showFacetedFilters || hasFacetedFiltersActive
-                            ? "var(--bsky-primary)"
-                            : "var(--bsky-border-primary)",
+                            ? "var(--asph-primary)"
+                            : "var(--asph-border-primary)",
                       }}
                       title="Media, date, and engagement filters"
                     >
@@ -1729,7 +1729,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         <span
                           className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold"
                           style={{
-                            backgroundColor: "var(--bsky-error)",
+                            backgroundColor: "var(--asph-error)",
                             color: "white",
                           }}
                         >
@@ -1746,8 +1746,8 @@ export const SearchTabbed: React.FC = React.memo(() => {
           {/* Faceted Search Filter Panel */}
           {activeTab === "posts" && showFacetedFilters && (
             <div
-              className="bsky-glass mb-4 rounded-xl"
-              style={{ border: "1px solid var(--bsky-border-primary)" }}
+              className="asph-glass mb-4 rounded-xl"
+              style={{ border: "1px solid var(--asph-border-primary)" }}
             >
               <SearchFilterPanel
                 filters={facetedFilters}
@@ -1763,14 +1763,14 @@ export const SearchTabbed: React.FC = React.memo(() => {
               <div className="mb-2 flex items-center justify-between">
                 <span
                   className="text-xs font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Recent searches
                 </span>
                 <button
                   onClick={clearSearchHistory}
                   className="text-xs transition-opacity hover:opacity-70"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Clear all
                 </button>
@@ -1785,10 +1785,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     }}
                     className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs transition-all hover:opacity-80"
                     style={{
-                      backgroundColor: "var(--bsky-bg-secondary)",
-                      color: "var(--bsky-text-secondary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      color: "var(--asph-text-secondary)",
                       borderWidth: "1px",
-                      borderColor: "var(--bsky-border-primary)",
+                      borderColor: "var(--asph-border-primary)",
                     }}
                   >
                     <SearchIcon size={12} />
@@ -1802,17 +1802,17 @@ export const SearchTabbed: React.FC = React.memo(() => {
           {/* Trending Topics Section - Show when no active search */}
           {!activeSearchQuery && trendingTopics && (
             <div
-              className="bsky-glass mb-6 rounded-xl p-4"
-              style={{ border: "1px solid var(--bsky-border-primary)" }}
+              className="asph-glass mb-6 rounded-xl p-4"
+              style={{ border: "1px solid var(--asph-border-primary)" }}
             >
               <div className="mb-4 flex items-center gap-2">
                 <TrendingUp
                   size={20}
-                  style={{ color: "var(--bsky-primary)" }}
+                  style={{ color: "var(--asph-primary)" }}
                 />
                 <h2
                   className="text-base font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   Trending on Bluesky
                 </h2>
@@ -1822,7 +1822,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                 <div className="flex items-center justify-center py-4">
                   <div
                     className="h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"
-                    style={{ borderColor: "var(--bsky-primary)" }}
+                    style={{ borderColor: "var(--asph-primary)" }}
                   />
                 </div>
               ) : (
@@ -1834,11 +1834,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         <div className="mb-2 flex items-center gap-1.5">
                           <Flame
                             size={14}
-                            style={{ color: "var(--bsky-error)" }}
+                            style={{ color: "var(--asph-error)" }}
                           />
                           <span
                             className="text-xs font-medium"
-                            style={{ color: "var(--bsky-text-secondary)" }}
+                            style={{ color: "var(--asph-text-secondary)" }}
                           >
                             Hot right now
                           </span>
@@ -1859,19 +1859,19 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               }}
                               className="group flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-all hover:shadow-md"
                               style={{
-                                backgroundColor: "var(--bsky-bg-secondary)",
+                                backgroundColor: "var(--asph-bg-secondary)",
                                 borderWidth: "1px",
-                                borderColor: "var(--bsky-border-primary)",
+                                borderColor: "var(--asph-border-primary)",
                               }}
                             >
                               <Hash
                                 size={14}
-                                className="transition-colors group-hover:text-[var(--bsky-primary)]"
-                                style={{ color: "var(--bsky-text-tertiary)" }}
+                                className="transition-colors group-hover:text-[var(--asph-primary)]"
+                                style={{ color: "var(--asph-text-tertiary)" }}
                               />
                               <span
-                                className="font-medium transition-colors group-hover:text-[var(--bsky-primary)]"
-                                style={{ color: "var(--bsky-text-primary)" }}
+                                className="font-medium transition-colors group-hover:text-[var(--asph-primary)]"
+                                style={{ color: "var(--asph-text-primary)" }}
                               >
                                 {topic.displayName || topic.topic}
                               </span>
@@ -1888,11 +1888,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         <div className="mb-2 flex items-center gap-1.5">
                           <TrendingUp
                             size={14}
-                            style={{ color: "var(--bsky-text-secondary)" }}
+                            style={{ color: "var(--asph-text-secondary)" }}
                           />
                           <span
                             className="text-xs font-medium"
-                            style={{ color: "var(--bsky-text-secondary)" }}
+                            style={{ color: "var(--asph-text-secondary)" }}
                           >
                             Suggested for you
                           </span>
@@ -1915,16 +1915,16 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               style={{
                                 backgroundColor: "transparent",
                                 borderWidth: "1px",
-                                borderColor: "var(--bsky-border-primary)",
+                                borderColor: "var(--asph-border-primary)",
                               }}
                             >
                               <Hash
                                 size={12}
-                                style={{ color: "var(--bsky-text-tertiary)" }}
+                                style={{ color: "var(--asph-text-tertiary)" }}
                               />
                               <span
                                 style={{
-                                  color: "var(--bsky-text-secondary)",
+                                  color: "var(--asph-text-secondary)",
                                 }}
                               >
                                 {topic.displayName || topic.topic}
@@ -1942,7 +1942,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       trendingTopics.suggested.length === 0) && (
                       <div
                         className="py-4 text-center text-sm"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         No trending topics available right now
                       </div>
@@ -1963,11 +1963,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
               }`}
               style={{
                 backgroundColor:
-                  activeTab === "posts" ? "var(--bsky-primary)" : "transparent",
+                  activeTab === "posts" ? "var(--asph-primary)" : "transparent",
                 color:
                   activeTab === "posts"
                     ? "white"
-                    : "var(--bsky-text-secondary)",
+                    : "var(--asph-text-secondary)",
               }}
             >
               <FileText size={16} />
@@ -1978,7 +1978,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   <span
                     className="ml-1 rounded-full px-1.5 py-0.5 text-xs font-normal"
                     style={{
-                      backgroundColor: "var(--bsky-primary)",
+                      backgroundColor: "var(--asph-primary)",
                       color: "white",
                       opacity: 0.9,
                     }}
@@ -2004,11 +2004,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
               }`}
               style={{
                 backgroundColor:
-                  activeTab === "users" ? "var(--bsky-primary)" : "transparent",
+                  activeTab === "users" ? "var(--asph-primary)" : "transparent",
                 color:
                   activeTab === "users"
                     ? "white"
-                    : "var(--bsky-text-secondary)",
+                    : "var(--asph-text-secondary)",
               }}
             >
               <Users size={16} />
@@ -2019,7 +2019,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   <span
                     className="ml-1 rounded-full px-1.5 py-0.5 text-xs font-normal"
                     style={{
-                      backgroundColor: "var(--bsky-primary)",
+                      backgroundColor: "var(--asph-primary)",
                       color: "white",
                       opacity: 0.9,
                     }}
@@ -2042,11 +2042,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
               }`}
               style={{
                 backgroundColor:
-                  activeTab === "feeds" ? "var(--bsky-primary)" : "transparent",
+                  activeTab === "feeds" ? "var(--asph-primary)" : "transparent",
                 color:
                   activeTab === "feeds"
                     ? "white"
-                    : "var(--bsky-text-secondary)",
+                    : "var(--asph-text-secondary)",
               }}
             >
               <List size={16} />
@@ -2057,7 +2057,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   <span
                     className="ml-1 rounded-full px-1.5 py-0.5 text-xs font-normal"
                     style={{
-                      backgroundColor: "var(--bsky-primary)",
+                      backgroundColor: "var(--asph-primary)",
                       color: "white",
                       opacity: 0.9,
                     }}
@@ -2073,7 +2073,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
             <div className="mb-3 flex items-center gap-2">
               <span
                 className="text-xs font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Sort by:
               </span>
@@ -2086,17 +2086,17 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   style={{
                     backgroundColor:
                       sortOrder === "latest"
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-bg-secondary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-bg-secondary)",
                     color:
                       sortOrder === "latest"
                         ? "white"
-                        : "var(--bsky-text-secondary)",
+                        : "var(--asph-text-secondary)",
                     borderWidth: "1px",
                     borderColor:
                       sortOrder === "latest"
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-border-primary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-border-primary)",
                   }}
                 >
                   Latest
@@ -2109,17 +2109,17 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   style={{
                     backgroundColor:
                       sortOrder === "top"
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-bg-secondary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-bg-secondary)",
                     color:
                       sortOrder === "top"
                         ? "white"
-                        : "var(--bsky-text-secondary)",
+                        : "var(--asph-text-secondary)",
                     borderWidth: "1px",
                     borderColor:
                       sortOrder === "top"
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-border-primary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-border-primary)",
                   }}
                 >
                   Top
@@ -2153,14 +2153,14 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   style={{
                     color: filters.hasMedia
                       ? "white"
-                      : "var(--bsky-text-secondary)",
+                      : "var(--asph-text-secondary)",
                     backgroundColor: filters.hasMedia
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-bg-secondary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-bg-secondary)",
                     borderWidth: "1px",
                     borderColor: filters.hasMedia
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-border-primary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-border-primary)",
                   }}
                 >
                   <Image size={14} />
@@ -2170,10 +2170,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   onClick={() => addToArrayFilter("from", "")}
                   className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm opacity-60 transition-all hover:opacity-100"
                   style={{
-                    color: "var(--bsky-text-secondary)",
-                    backgroundColor: "var(--bsky-bg-secondary)",
+                    color: "var(--asph-text-secondary)",
+                    backgroundColor: "var(--asph-bg-secondary)",
                     borderWidth: "1px",
-                    borderColor: "var(--bsky-border-primary)",
+                    borderColor: "var(--asph-border-primary)",
                   }}
                 >
                   <User size={14} />
@@ -2191,10 +2191,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   }}
                   className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm opacity-60 transition-all hover:opacity-100"
                   style={{
-                    color: "var(--bsky-text-secondary)",
-                    backgroundColor: "var(--bsky-bg-secondary)",
+                    color: "var(--asph-text-secondary)",
+                    backgroundColor: "var(--asph-bg-secondary)",
                     borderWidth: "1px",
-                    borderColor: "var(--bsky-border-primary)",
+                    borderColor: "var(--asph-border-primary)",
                   }}
                 >
                   <Calendar size={14} />
@@ -2215,8 +2215,8 @@ export const SearchTabbed: React.FC = React.memo(() => {
               filters.language ||
               showAdvanced) && (
               <div
-                className="bsky-glass mb-4 rounded-xl p-3 sm:p-4"
-                style={{ border: "1px solid var(--bsky-border-primary)" }}
+                className="asph-glass mb-4 rounded-xl p-3 sm:p-4"
+                style={{ border: "1px solid var(--asph-border-primary)" }}
               >
                 {/* Filter Action Buttons - Compact when no filters (only for posts) */}
                 {activeTab === "posts" &&
@@ -2243,15 +2243,15 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       style={{
                         color: filters.hasMedia
                           ? "white"
-                          : "var(--bsky-text-secondary)",
+                          : "var(--asph-text-secondary)",
                         backgroundColor: filters.hasMedia
-                          ? "var(--bsky-primary)"
-                          : "var(--bsky-bg-secondary)",
+                          ? "var(--asph-primary)"
+                          : "var(--asph-bg-secondary)",
                         borderWidth: "1px",
                         borderColor: filters.hasMedia
-                          ? "var(--bsky-primary)"
-                          : "var(--bsky-border-primary)",
-                        ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                          ? "var(--asph-primary)"
+                          : "var(--asph-border-primary)",
+                        ["--tw-ring-color" as any]: "var(--asph-primary)",
                       }}
                     >
                       <Image size={12} />
@@ -2261,10 +2261,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       onClick={() => addToArrayFilter("from", "")}
                       className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                       style={{
-                        color: "var(--bsky-text-secondary)",
-                        backgroundColor: "var(--bsky-bg-secondary)",
+                        color: "var(--asph-text-secondary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       <User size={12} />
@@ -2282,10 +2282,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       }}
                       className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                       style={{
-                        color: "var(--bsky-text-secondary)",
-                        backgroundColor: "var(--bsky-bg-secondary)",
+                        color: "var(--asph-text-secondary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       <Calendar size={12} />
@@ -2298,10 +2298,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           onClick={() => addToArrayFilter("phrases", "")}
                           className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                           style={{
-                            color: "var(--bsky-text-secondary)",
-                            backgroundColor: "var(--bsky-bg-secondary)",
+                            color: "var(--asph-text-secondary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
                             borderWidth: "1px",
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                           }}
                         >
                           <SearchIcon size={12} />
@@ -2312,10 +2312,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           onClick={() => addToArrayFilter("hashtags", "")}
                           className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                           style={{
-                            color: "var(--bsky-text-secondary)",
-                            backgroundColor: "var(--bsky-bg-secondary)",
+                            color: "var(--asph-text-secondary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
                             borderWidth: "1px",
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                           }}
                         >
                           <Hash size={12} />
@@ -2326,10 +2326,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           onClick={() => addToArrayFilter("mentions", "")}
                           className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                           style={{
-                            color: "var(--bsky-text-secondary)",
-                            backgroundColor: "var(--bsky-bg-secondary)",
+                            color: "var(--asph-text-secondary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
                             borderWidth: "1px",
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                           }}
                         >
                           <User size={12} />
@@ -2340,10 +2340,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           onClick={() => addToArrayFilter("domains", "")}
                           className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                           style={{
-                            color: "var(--bsky-text-secondary)",
-                            backgroundColor: "var(--bsky-bg-secondary)",
+                            color: "var(--asph-text-secondary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
                             borderWidth: "1px",
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                           }}
                         >
                           <Link size={12} />
@@ -2356,10 +2356,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           }
                           className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                           style={{
-                            color: "var(--bsky-text-secondary)",
-                            backgroundColor: "var(--bsky-bg-secondary)",
+                            color: "var(--asph-text-secondary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
                             borderWidth: "1px",
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                           }}
                         >
                           <Globe size={12} />
@@ -2375,7 +2375,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     <div>
                       <label
                         className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         <Image size={16} />
                         Media Filter
@@ -2393,15 +2393,15 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           }`}
                           style={{
                             backgroundColor: filters.hasMedia
-                              ? "var(--bsky-primary)"
-                              : "var(--bsky-bg-secondary)",
+                              ? "var(--asph-primary)"
+                              : "var(--asph-bg-secondary)",
                             borderColor: filters.hasMedia
-                              ? "var(--bsky-primary)"
-                              : "var(--bsky-border-primary)",
+                              ? "var(--asph-primary)"
+                              : "var(--asph-border-primary)",
                             color: filters.hasMedia
                               ? "white"
-                              : "var(--bsky-text-primary)",
-                            ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                              : "var(--asph-text-primary)",
+                            ["--tw-ring-color" as any]: "var(--asph-primary)",
                           }}
                         >
                           {filters.hasMedia ? "✓ " : ""}Show only posts with
@@ -2414,7 +2414,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     <div>
                       <label
                         className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         <User size={16} />
                         From Users
@@ -2466,17 +2466,17 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 placeholder="e.g., jay.bsky.team or me"
                                 className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                                 style={{
-                                  backgroundColor: "var(--bsky-bg-secondary)",
-                                  borderColor: "var(--bsky-border-primary)",
-                                  color: "var(--bsky-text-primary)",
+                                  backgroundColor: "var(--asph-bg-secondary)",
+                                  borderColor: "var(--asph-border-primary)",
+                                  color: "var(--asph-text-primary)",
                                   ["--tw-ring-color" as any]:
-                                    "var(--bsky-primary)",
+                                    "var(--asph-primary)",
                                 }}
                               />
                               <button
                                 onClick={() => removeFromArrayFilter("from", i)}
                                 className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                                style={{ color: "var(--bsky-text-secondary)" }}
+                                style={{ color: "var(--asph-text-secondary)" }}
                               >
                                 <X size={16} />
                               </button>
@@ -2492,8 +2492,8 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                   ref={suggestionsRef}
                                   className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border shadow-lg"
                                   style={{
-                                    backgroundColor: "var(--bsky-bg-secondary)",
-                                    borderColor: "var(--bsky-border-primary)",
+                                    backgroundColor: "var(--asph-bg-secondary)",
+                                    borderColor: "var(--asph-border-primary)",
                                   }}
                                 >
                                   {userSuggestions.map((suggestion, idx) => {
@@ -2518,7 +2518,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                         style={{
                                           backgroundColor:
                                             idx === selectedSuggestionIndex
-                                              ? "rgba(0, 133, 255, 0.1)"
+                                              ? "rgba(201, 168, 76, 0.1)"
                                               : "transparent",
                                         }}
                                       >
@@ -2544,7 +2544,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                                 className="truncate font-medium"
                                                 style={{
                                                   color:
-                                                    "var(--bsky-text-primary)",
+                                                    "var(--asph-text-primary)",
                                                 }}
                                               >
                                                 {suggestion.displayName ||
@@ -2556,7 +2556,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                                 className="rounded px-1.5 py-0.5 text-xs"
                                                 style={{
                                                   backgroundColor:
-                                                    "var(--bsky-primary)",
+                                                    "var(--asph-primary)",
                                                   color: "white",
                                                   opacity: 0.8,
                                                 }}
@@ -2569,7 +2569,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                             className="truncate text-sm"
                                             style={{
                                               color:
-                                                "var(--bsky-text-secondary)",
+                                                "var(--asph-text-secondary)",
                                             }}
                                           >
                                             @{suggestion.handle}
@@ -2586,10 +2586,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           onClick={() => addToArrayFilter("from", "")}
                           className="rounded-lg px-3 py-1.5 text-sm transition-colors"
                           style={{
-                            color: "var(--bsky-primary)",
-                            backgroundColor: "var(--bsky-bg-secondary)",
+                            color: "var(--asph-primary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
                             borderWidth: "1px",
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                           }}
                         >
                           + Add user
@@ -2601,7 +2601,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     <div>
                       <label
                         className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         <Calendar size={16} />
                         Date Range
@@ -2621,10 +2621,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           }}
                           className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                           style={{
-                            backgroundColor: "var(--bsky-bg-secondary)",
-                            color: "var(--bsky-primary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
+                            color: "var(--asph-primary)",
                             borderWidth: "1px",
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                           }}
                         >
                           7d
@@ -2641,10 +2641,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           }}
                           className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                           style={{
-                            backgroundColor: "var(--bsky-bg-secondary)",
-                            color: "var(--bsky-primary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
+                            color: "var(--asph-primary)",
                             borderWidth: "1px",
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                           }}
                         >
                           30d
@@ -2661,10 +2661,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           }}
                           className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                           style={{
-                            backgroundColor: "var(--bsky-bg-secondary)",
-                            color: "var(--bsky-primary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
+                            color: "var(--asph-primary)",
                             borderWidth: "1px",
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                           }}
                         >
                           3m
@@ -2681,10 +2681,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           }}
                           className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                           style={{
-                            backgroundColor: "var(--bsky-bg-secondary)",
-                            color: "var(--bsky-primary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
+                            color: "var(--asph-primary)",
                             borderWidth: "1px",
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                           }}
                         >
                           1y
@@ -2700,8 +2700,8 @@ export const SearchTabbed: React.FC = React.memo(() => {
                             }
                             className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                             style={{
-                              backgroundColor: "var(--bsky-border-primary)",
-                              color: "var(--bsky-text-secondary)",
+                              backgroundColor: "var(--asph-border-primary)",
+                              color: "var(--asph-text-secondary)",
                             }}
                           >
                             Clear
@@ -2713,7 +2713,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       <div className="flex items-center gap-2 text-xs">
                         <label
                           htmlFor="search-date-from"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           from
                         </label>
@@ -2731,10 +2731,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                             }
                             className="cursor-pointer rounded-md border px-2 py-1 pr-7 text-xs focus-visible:outline-none focus-visible:ring-2"
                             style={{
-                              backgroundColor: "var(--bsky-bg-secondary)",
-                              borderColor: "var(--bsky-border-primary)",
-                              color: "var(--bsky-text-primary)",
-                              ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                              backgroundColor: "var(--asph-bg-secondary)",
+                              borderColor: "var(--asph-border-primary)",
+                              color: "var(--asph-text-primary)",
+                              ["--tw-ring-color" as any]: "var(--asph-primary)",
                               colorScheme: "dark",
                               width: "140px",
                             }}
@@ -2756,7 +2756,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 }))
                               }
                               className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 transition-opacity hover:opacity-70"
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                               aria-label="Clear from date"
                             >
                               <X size={12} aria-hidden="true" />
@@ -2765,7 +2765,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         </div>
                         <label
                           htmlFor="search-date-to"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           to
                         </label>
@@ -2783,10 +2783,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                             }
                             className="cursor-pointer rounded-md border px-2 py-1 pr-7 text-xs focus-visible:outline-none focus-visible:ring-2"
                             style={{
-                              backgroundColor: "var(--bsky-bg-secondary)",
-                              borderColor: "var(--bsky-border-primary)",
-                              color: "var(--bsky-text-primary)",
-                              ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                              backgroundColor: "var(--asph-bg-secondary)",
+                              borderColor: "var(--asph-border-primary)",
+                              color: "var(--asph-text-primary)",
+                              ["--tw-ring-color" as any]: "var(--asph-primary)",
                               colorScheme: "dark",
                               width: "140px",
                             }}
@@ -2808,7 +2808,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 }))
                               }
                               className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 transition-opacity hover:opacity-70"
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                               aria-label="Clear to date"
                             >
                               <X size={12} aria-hidden="true" />
@@ -2826,7 +2826,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                             id="date-error"
                             role="alert"
                             className="mt-2 text-xs"
-                            style={{ color: "var(--bsky-error)" }}
+                            style={{ color: "var(--asph-error)" }}
                           >
                             "From" date must be before "To" date
                           </p>
@@ -2839,13 +2839,13 @@ export const SearchTabbed: React.FC = React.memo(() => {
                 {showAdvanced && activeTab === "posts" && (
                   <div
                     className="mt-6 space-y-4 border-t pt-6"
-                    style={{ borderColor: "var(--bsky-border-primary)" }}
+                    style={{ borderColor: "var(--asph-border-primary)" }}
                   >
                     {/* Exact Phrases */}
                     <div>
                       <label
                         className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         <SearchIcon size={16} />
                         Exact Phrases
@@ -2870,11 +2870,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               placeholder='e.g., "hello world"'
                               className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                               style={{
-                                backgroundColor: "var(--bsky-bg-secondary)",
-                                borderColor: "var(--bsky-border-primary)",
-                                color: "var(--bsky-text-primary)",
+                                backgroundColor: "var(--asph-bg-secondary)",
+                                borderColor: "var(--asph-border-primary)",
+                                color: "var(--asph-text-primary)",
                                 ["--tw-ring-color" as any]:
-                                  "var(--bsky-primary)",
+                                  "var(--asph-primary)",
                               }}
                             />
                             <button
@@ -2882,7 +2882,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 removeFromArrayFilter("phrases", i)
                               }
                               className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                             >
                               <X size={16} />
                             </button>
@@ -2892,10 +2892,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           onClick={() => addToArrayFilter("phrases", "")}
                           className="rounded-lg px-3 py-1.5 text-sm transition-colors"
                           style={{
-                            color: "var(--bsky-primary)",
-                            backgroundColor: "var(--bsky-bg-secondary)",
+                            color: "var(--asph-primary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
                             borderWidth: "1px",
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                           }}
                         >
                           + Add phrase
@@ -2907,7 +2907,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     <div>
                       <label
                         className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         <Hash size={16} />
                         Hashtags
@@ -2932,11 +2932,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               placeholder="e.g., bluesky"
                               className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                               style={{
-                                backgroundColor: "var(--bsky-bg-secondary)",
-                                borderColor: "var(--bsky-border-primary)",
-                                color: "var(--bsky-text-primary)",
+                                backgroundColor: "var(--asph-bg-secondary)",
+                                borderColor: "var(--asph-border-primary)",
+                                color: "var(--asph-text-primary)",
                                 ["--tw-ring-color" as any]:
-                                  "var(--bsky-primary)",
+                                  "var(--asph-primary)",
                               }}
                             />
                             <button
@@ -2944,7 +2944,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 removeFromArrayFilter("hashtags", i)
                               }
                               className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                             >
                               <X size={16} />
                             </button>
@@ -2954,10 +2954,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           onClick={() => addToArrayFilter("hashtags", "")}
                           className="rounded-lg px-3 py-1.5 text-sm transition-colors"
                           style={{
-                            color: "var(--bsky-primary)",
-                            backgroundColor: "var(--bsky-bg-secondary)",
+                            color: "var(--asph-primary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
                             borderWidth: "1px",
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                           }}
                         >
                           + Add hashtag
@@ -2969,7 +2969,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     <div>
                       <label
                         className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         <User size={16} />
                         Mentions
@@ -3021,11 +3021,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 placeholder="e.g., alice.bsky.social or me"
                                 className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                                 style={{
-                                  backgroundColor: "var(--bsky-bg-secondary)",
-                                  borderColor: "var(--bsky-border-primary)",
-                                  color: "var(--bsky-text-primary)",
+                                  backgroundColor: "var(--asph-bg-secondary)",
+                                  borderColor: "var(--asph-border-primary)",
+                                  color: "var(--asph-text-primary)",
                                   ["--tw-ring-color" as any]:
-                                    "var(--bsky-primary)",
+                                    "var(--asph-primary)",
                                 }}
                               />
                               <button
@@ -3033,7 +3033,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                   removeFromArrayFilter("mentions", i)
                                 }
                                 className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                                style={{ color: "var(--bsky-text-secondary)" }}
+                                style={{ color: "var(--asph-text-secondary)" }}
                               >
                                 <X size={16} />
                               </button>
@@ -3049,8 +3049,8 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                   ref={suggestionsRef}
                                   className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border shadow-lg"
                                   style={{
-                                    backgroundColor: "var(--bsky-bg-secondary)",
-                                    borderColor: "var(--bsky-border-primary)",
+                                    backgroundColor: "var(--asph-bg-secondary)",
+                                    borderColor: "var(--asph-border-primary)",
                                   }}
                                 >
                                   {userSuggestions.map((suggestion, idx) => {
@@ -3075,7 +3075,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                         style={{
                                           backgroundColor:
                                             idx === selectedSuggestionIndex
-                                              ? "rgba(0, 133, 255, 0.1)"
+                                              ? "rgba(201, 168, 76, 0.1)"
                                               : "transparent",
                                         }}
                                       >
@@ -3101,7 +3101,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                                 className="truncate font-medium"
                                                 style={{
                                                   color:
-                                                    "var(--bsky-text-primary)",
+                                                    "var(--asph-text-primary)",
                                                 }}
                                               >
                                                 {suggestion.displayName ||
@@ -3113,7 +3113,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                                 className="rounded px-1.5 py-0.5 text-xs"
                                                 style={{
                                                   backgroundColor:
-                                                    "var(--bsky-primary)",
+                                                    "var(--asph-primary)",
                                                   color: "white",
                                                   opacity: 0.8,
                                                 }}
@@ -3126,7 +3126,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                             className="truncate text-sm"
                                             style={{
                                               color:
-                                                "var(--bsky-text-secondary)",
+                                                "var(--asph-text-secondary)",
                                             }}
                                           >
                                             @{suggestion.handle}
@@ -3143,10 +3143,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           onClick={() => addToArrayFilter("mentions", "")}
                           className="rounded-lg px-3 py-1.5 text-sm transition-colors"
                           style={{
-                            color: "var(--bsky-primary)",
-                            backgroundColor: "var(--bsky-bg-secondary)",
+                            color: "var(--asph-primary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
                             borderWidth: "1px",
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                           }}
                         >
                           + Add mention
@@ -3158,7 +3158,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     <div>
                       <label
                         className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         <Link size={16} />
                         Domains
@@ -3183,11 +3183,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               placeholder="e.g., npr.org"
                               className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                               style={{
-                                backgroundColor: "var(--bsky-bg-secondary)",
-                                borderColor: "var(--bsky-border-primary)",
-                                color: "var(--bsky-text-primary)",
+                                backgroundColor: "var(--asph-bg-secondary)",
+                                borderColor: "var(--asph-border-primary)",
+                                color: "var(--asph-text-primary)",
                                 ["--tw-ring-color" as any]:
-                                  "var(--bsky-primary)",
+                                  "var(--asph-primary)",
                               }}
                             />
                             <button
@@ -3195,7 +3195,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 removeFromArrayFilter("domains", i)
                               }
                               className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                             >
                               <X size={16} />
                             </button>
@@ -3205,10 +3205,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           onClick={() => addToArrayFilter("domains", "")}
                           className="rounded-lg px-3 py-1.5 text-sm transition-colors"
                           style={{
-                            color: "var(--bsky-primary)",
-                            backgroundColor: "var(--bsky-bg-secondary)",
+                            color: "var(--asph-primary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
                             borderWidth: "1px",
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                           }}
                         >
                           + Add domain
@@ -3220,7 +3220,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     <div>
                       <label
                         className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         <Globe size={16} />
                         Language
@@ -3235,10 +3235,10 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         }
                         className="w-full rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                         style={{
-                          backgroundColor: "var(--bsky-bg-secondary)",
-                          borderColor: "var(--bsky-border-primary)",
-                          color: "var(--bsky-text-primary)",
-                          ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                          backgroundColor: "var(--asph-bg-secondary)",
+                          borderColor: "var(--asph-border-primary)",
+                          color: "var(--asph-text-primary)",
+                          ["--tw-ring-color" as any]: "var(--asph-primary)",
                         }}
                       >
                         <option value="">Any language</option>
@@ -3263,11 +3263,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   searchQuery !== filters.query && (
                     <div
                       className="mt-3 rounded-md p-2 text-xs"
-                      style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+                      style={{ backgroundColor: "var(--asph-bg-secondary)" }}
                     >
                       <code
                         className="break-all"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {searchQuery}
                       </code>
@@ -3281,22 +3281,22 @@ export const SearchTabbed: React.FC = React.memo(() => {
             {!activeSearchQuery && !isLoading && (
               <div
                 className="rounded-xl border bg-white bg-opacity-5 p-8 text-center"
-                style={{ borderColor: "var(--bsky-border-primary)" }}
+                style={{ borderColor: "var(--asph-border-primary)" }}
               >
                 <SearchIcon
                   size={48}
                   className="mx-auto mb-4 opacity-10"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 />
                 <p
                   className="text-base font-medium"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   Search for {activeTab}
                 </p>
                 <p
                   className="mt-1 text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Enter a search query above and press Enter
                 </p>
@@ -3316,9 +3316,9 @@ export const SearchTabbed: React.FC = React.memo(() => {
             {error && (
               <div
                 className="rounded-xl border bg-red-500 bg-opacity-5 p-6 text-center"
-                style={{ borderColor: "var(--bsky-error)" }}
+                style={{ borderColor: "var(--asph-error)" }}
               >
-                <p className="text-sm" style={{ color: "var(--bsky-error)" }}>
+                <p className="text-sm" style={{ color: "var(--asph-error)" }}>
                   Error searching. Please try again.
                 </p>
               </div>
@@ -3330,28 +3330,28 @@ export const SearchTabbed: React.FC = React.memo(() => {
               filteredPostsSearchResults?.posts.length === 0 && (
                 <div
                   className="rounded-xl border bg-white bg-opacity-5 p-6 text-center"
-                  style={{ borderColor: "var(--bsky-border-primary)" }}
+                  style={{ borderColor: "var(--asph-border-primary)" }}
                 >
                   <FileText
                     size={32}
                     className="mx-auto mb-3 opacity-10"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   />
                   <p
                     className="mb-3 text-sm font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     No posts found matching your search
                   </p>
                   <p
                     className="mb-4 text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Try these suggestions:
                   </p>
                   <ul
                     className="space-y-2 text-left text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     <li className="flex items-start gap-2">
                       <span>•</span>
@@ -3383,7 +3383,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   <div className="mb-2 flex items-center justify-between">
                     <p
                       className="text-sm"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       {
                         filteredPostsSearchResults.posts.filter(
@@ -3409,9 +3409,9 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     .map((post) => (
                       <div
                         key={post.uri}
-                        className="bsky-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
+                        className="asph-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
                         style={{
-                          border: "1px solid var(--bsky-border-primary)",
+                          border: "1px solid var(--asph-border-primary)",
                         }}
                         onClick={() => handlePostClick(post)}
                       >
@@ -3428,7 +3428,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               <ProfileHoverCard handle={post.author.handle}>
                                 <span
                                   className="cursor-pointer truncate text-sm font-medium hover:underline"
-                                  style={{ color: "var(--bsky-text-primary)" }}
+                                  style={{ color: "var(--asph-text-primary)" }}
                                 >
                                   {post.author.displayName}
                                 </span>
@@ -3436,14 +3436,14 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               <span
                                 className="truncate text-xs"
                                 style={{
-                                  color: "var(--bsky-text-secondary)",
+                                  color: "var(--asph-text-secondary)",
                                 }}
                               >
                                 @{post.author?.handle || "unknown"}
                               </span>
                               <span
                                 className="whitespace-nowrap text-xs"
-                                style={{ color: "var(--bsky-text-tertiary)" }}
+                                style={{ color: "var(--asph-text-tertiary)" }}
                               >
                                 ·{" "}
                                 {formatDistanceToNow(new Date(post.indexedAt))}{" "}
@@ -3452,7 +3452,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                             </div>
                             <div
                               className="break-words text-sm"
-                              style={{ color: "var(--bsky-text-primary)" }}
+                              style={{ color: "var(--asph-text-primary)" }}
                             >
                               {(post.record as any).text}
                             </div>
@@ -3476,7 +3476,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                   "app.bsky.embed.record#viewRecord"
                               ) {
                                 return (
-                                  <div className="mt-2 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-2.5">
+                                  <div className="mt-2 rounded-lg border border-asph-border-primary bg-asph-bg-secondary p-2.5">
                                     <div className="mb-1 flex items-center gap-1.5">
                                       {quotedPost.author?.avatar &&
                                         quotedPost.author?.handle && (
@@ -3496,22 +3496,22 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                         <ProfileHoverCard
                                           handle={quotedPost.author.handle}
                                         >
-                                          <span className="cursor-pointer text-xs font-medium text-bsky-text-secondary hover:underline">
+                                          <span className="cursor-pointer text-xs font-medium text-asph-text-secondary hover:underline">
                                             {quotedPost.author?.displayName ||
                                               quotedPost.author?.handle}
                                           </span>
                                         </ProfileHoverCard>
                                       ) : (
-                                        <span className="text-xs font-medium text-bsky-text-secondary">
+                                        <span className="text-xs font-medium text-asph-text-secondary">
                                           Unknown
                                         </span>
                                       )}
-                                      <span className="text-xs text-bsky-text-tertiary">
+                                      <span className="text-xs text-asph-text-tertiary">
                                         @
                                         {quotedPost.author?.handle || "unknown"}
                                       </span>
                                     </div>
-                                    <p className="text-xs leading-relaxed text-bsky-text-primary">
+                                    <p className="text-xs leading-relaxed text-asph-text-primary">
                                       {quotedPost.value?.text || "[No text]"}
                                     </p>
 
@@ -3544,7 +3544,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                             <div className="mt-2 flex items-center gap-3">
                               <span
                                 className="text-xs"
-                                style={{ color: "var(--bsky-text-tertiary)" }}
+                                style={{ color: "var(--asph-text-tertiary)" }}
                               >
                                 Click to view thread
                               </span>
@@ -3558,7 +3558,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                   );
                                 }}
                                 className="inline-flex cursor-pointer items-center gap-1 text-xs hover:underline"
-                                style={{ color: "var(--bsky-primary)" }}
+                                style={{ color: "var(--asph-primary)" }}
                               >
                                 <ExternalLink size={12} />
                               </a>
@@ -3576,28 +3576,28 @@ export const SearchTabbed: React.FC = React.memo(() => {
               usersSearchResults?.actors.length === 0 && (
                 <div
                   className="rounded-xl border bg-white bg-opacity-5 p-6 text-center"
-                  style={{ borderColor: "var(--bsky-border-primary)" }}
+                  style={{ borderColor: "var(--asph-border-primary)" }}
                 >
                   <Users
                     size={32}
                     className="mx-auto mb-3 opacity-10"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   />
                   <p
                     className="mb-3 text-sm font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     No users found matching your search
                   </p>
                   <p
                     className="mb-4 text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Try these suggestions:
                   </p>
                   <ul
                     className="space-y-2 text-left text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     <li className="flex items-start gap-2">
                       <span>•</span>
@@ -3629,7 +3629,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   <div className="mb-2 flex items-center justify-between">
                     <p
                       className="text-sm"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       {
                         usersSearchResults.actors.filter(
@@ -3649,9 +3649,9 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     .map((user) => (
                       <div
                         key={user.did}
-                        className="bsky-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
+                        className="asph-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
                         style={{
-                          border: "1px solid var(--bsky-border-primary)",
+                          border: "1px solid var(--asph-border-primary)",
                         }}
                         onClick={() => navigate(`/profile/${user.handle}`)}
                       >
@@ -3667,14 +3667,14 @@ export const SearchTabbed: React.FC = React.memo(() => {
                             <div className="mb-1 flex items-baseline gap-2">
                               <span
                                 className="truncate font-medium"
-                                style={{ color: "var(--bsky-text-primary)" }}
+                                style={{ color: "var(--asph-text-primary)" }}
                               >
                                 {user.displayName || user.handle}
                               </span>
                               <span
                                 className="truncate text-sm"
                                 style={{
-                                  color: "var(--bsky-text-secondary)",
+                                  color: "var(--asph-text-secondary)",
                                 }}
                               >
                                 @{user.handle}
@@ -3683,7 +3683,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                             {user.description && (
                               <p
                                 className="mb-2 line-clamp-2 text-sm"
-                                style={{ color: "var(--bsky-text-primary)" }}
+                                style={{ color: "var(--asph-text-primary)" }}
                               >
                                 {user.description}
                               </p>
@@ -3694,7 +3694,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                             <div className="mt-2 flex items-center gap-3">
                               <span
                                 className="text-xs"
-                                style={{ color: "var(--bsky-text-tertiary)" }}
+                                style={{ color: "var(--asph-text-tertiary)" }}
                               >
                                 Click to view profile
                               </span>
@@ -3704,7 +3704,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
                                 className="inline-flex items-center gap-1 text-xs hover:underline"
-                                style={{ color: "var(--bsky-primary)" }}
+                                style={{ color: "var(--asph-primary)" }}
                               >
                                 <ExternalLink size={12} />
                               </a>
@@ -3722,28 +3722,28 @@ export const SearchTabbed: React.FC = React.memo(() => {
               feedsSearchResults?.feeds.length === 0 && (
                 <div
                   className="rounded-xl border bg-white bg-opacity-5 p-6 text-center"
-                  style={{ borderColor: "var(--bsky-border-primary)" }}
+                  style={{ borderColor: "var(--asph-border-primary)" }}
                 >
                   <List
                     size={32}
                     className="mx-auto mb-3 opacity-10"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   />
                   <p
                     className="mb-3 text-sm font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     No feeds found matching your search
                   </p>
                   <p
                     className="mb-4 text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Try these suggestions:
                   </p>
                   <ul
                     className="space-y-2 text-left text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     <li className="flex items-start gap-2">
                       <span>•</span>
@@ -3773,7 +3773,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   <div className="mb-2 flex items-center justify-between">
                     <p
                       className="text-sm"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       {feedsSearchResults.feeds.length} results
                     </p>
@@ -3782,9 +3782,9 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   {feedsSearchResults.feeds.map((feed) => (
                     <div
                       key={feed.uri}
-                      className="bsky-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
+                      className="asph-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
                       style={{
-                        border: "1px solid var(--bsky-border-primary)",
+                        border: "1px solid var(--asph-border-primary)",
                       }}
                       onClick={() => {
                         // Navigate to home and set the selected feed
@@ -3808,7 +3808,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           <div className="mb-1">
                             <h3
                               className="font-medium"
-                              style={{ color: "var(--bsky-text-primary)" }}
+                              style={{ color: "var(--asph-text-primary)" }}
                             >
                               {feed.displayName}
                             </h3>
@@ -3816,21 +3816,21 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           {feed.description && (
                             <p
                               className="mb-2 line-clamp-2 text-sm"
-                              style={{ color: "var(--bsky-text-primary)" }}
+                              style={{ color: "var(--asph-text-primary)" }}
                             >
                               {feed.description}
                             </p>
                           )}
                           <div className="mb-2 flex items-center gap-4 text-xs">
                             <span
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                             >
                               by @{feed.creator.handle}
                             </span>
                             {feed.likeCount !== undefined && (
                               <span
                                 style={{
-                                  color: "var(--bsky-text-secondary)",
+                                  color: "var(--asph-text-secondary)",
                                 }}
                               >
                                 <strong>
@@ -3843,7 +3843,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           <div className="flex items-center gap-3">
                             <span
                               className="text-xs"
-                              style={{ color: "var(--bsky-text-tertiary)" }}
+                              style={{ color: "var(--asph-text-tertiary)" }}
                             >
                               Click to view feed
                             </span>
@@ -3853,7 +3853,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
                               className="inline-flex items-center gap-1 text-xs hover:underline"
-                              style={{ color: "var(--bsky-primary)" }}
+                              style={{ color: "var(--asph-primary)" }}
                             >
                               <ExternalLink size={12} />
                             </a>

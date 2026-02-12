@@ -189,13 +189,13 @@ export const DraftStorageSettings: React.FC = () => {
       <div>
         <h2
           className="text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Post Drafts Storage
         </h2>
         <p
           className="mt-1 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Choose how your post drafts are stored
         </p>
@@ -212,8 +212,8 @@ export const DraftStorageSettings: React.FC = () => {
         <div
           className={`rounded-lg border p-3 text-sm ${
             message.type === "success"
-              ? "border-bsky-success/30 bg-bsky-success/10 text-bsky-success"
-              : "border-bsky-error/30 bg-bsky-error/10 text-bsky-error"
+              ? "border-asph-success/30 bg-asph-success/10 text-asph-success"
+              : "border-asph-error/30 bg-asph-error/10 text-asph-error"
           }`}
         >
           {message.text}
@@ -223,22 +223,22 @@ export const DraftStorageSettings: React.FC = () => {
       <div
         className="rounded-lg p-4"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div className="flex items-center gap-2">
-          <FileText size={16} style={{ color: "var(--bsky-text-secondary)" }} />
+          <FileText size={16} style={{ color: "var(--asph-text-secondary)" }} />
           <span
             className="text-sm font-medium"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Current Drafts
           </span>
         </div>
         <p
           className="mt-1 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           You have {draftCount} drafts stored using{" "}
           {getStorageName(storageType)}.

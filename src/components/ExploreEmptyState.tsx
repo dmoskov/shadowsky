@@ -43,18 +43,18 @@ export const ExploreEmptyState: React.FC<ExploreEmptyStateProps> = ({
         <div
           className="rounded-lg border p-6 text-center"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            borderColor: "var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            borderColor: "var(--asph-border-primary)",
           }}
         >
           <Sparkles
             size={32}
             className="mx-auto mb-3"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           />
           <p
             className="mb-2 text-sm"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Unable to load trending content
           </p>
@@ -62,7 +62,7 @@ export const ExploreEmptyState: React.FC<ExploreEmptyStateProps> = ({
             onClick={() => refetchAll()}
             className="mx-auto flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors"
             style={{
-              backgroundColor: "var(--bsky-primary)",
+              backgroundColor: "var(--asph-primary)",
               color: "white",
             }}
           >
@@ -82,10 +82,10 @@ export const ExploreEmptyState: React.FC<ExploreEmptyStateProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <TrendingUp size={20} style={{ color: "var(--bsky-primary)" }} />
+          <TrendingUp size={20} style={{ color: "var(--asph-primary)" }} />
           <h3
             className="font-medium"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Explore
           </h3>
@@ -94,7 +94,7 @@ export const ExploreEmptyState: React.FC<ExploreEmptyStateProps> = ({
           <button
             onClick={() => refetchAll()}
             className="rounded-full p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
             aria-label="Refresh trending content"
           >
             <RefreshCw size={16} />
@@ -123,10 +123,10 @@ export const ExploreEmptyState: React.FC<ExploreEmptyStateProps> = ({
       {suggested.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <Sparkles size={16} style={{ color: "var(--bsky-primary)" }} />
+            <Sparkles size={16} style={{ color: "var(--asph-primary)" }} />
             <span
               className="text-sm font-medium"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Suggested Topics
             </span>
@@ -138,9 +138,9 @@ export const ExploreEmptyState: React.FC<ExploreEmptyStateProps> = ({
                 onClick={() => onTopicClick(item.topic)}
                 className="rounded-full border px-3 py-1.5 text-sm transition-all hover:border-blue-400 hover:shadow-sm"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  borderColor: "var(--asph-border-primary)",
+                  color: "var(--asph-text-primary)",
                 }}
               >
                 {item.topic}
@@ -154,8 +154,8 @@ export const ExploreEmptyState: React.FC<ExploreEmptyStateProps> = ({
       <div
         className="rounded-lg p-3 text-center text-xs"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          color: "var(--bsky-text-tertiary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          color: "var(--asph-text-tertiary)",
         }}
       >
         <p>Type a query above to search posts</p>

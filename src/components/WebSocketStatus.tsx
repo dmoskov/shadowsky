@@ -76,14 +76,14 @@ export const WebSocketStatus: React.FC = () => {
       <div
         className={`rounded-lg border shadow-lg transition-all duration-200 ${isExpanded ? "w-64" : "w-auto"} `}
         style={{
-          background: "var(--bsky-bg-secondary)",
-          borderColor: "var(--bsky-border)",
+          background: "var(--asph-bg-secondary)",
+          borderColor: "var(--asph-border)",
         }}
       >
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="flex w-full items-center gap-2 p-3 text-left hover:opacity-80"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {getStatusIcon()}
           {/* Connection quality badge - only visible in debug mode */}
@@ -111,8 +111,8 @@ export const WebSocketStatus: React.FC = () => {
           <div
             className="border-t px-3 py-2 text-xs"
             style={{
-              borderColor: "var(--bsky-border)",
-              color: "var(--bsky-text-secondary)",
+              borderColor: "var(--asph-border)",
+              color: "var(--asph-text-secondary)",
             }}
           >
             <div className="space-y-1">
@@ -132,7 +132,7 @@ export const WebSocketStatus: React.FC = () => {
                 <>
                   <div
                     className="mt-2 border-t pt-2"
-                    style={{ borderColor: "var(--bsky-border)" }}
+                    style={{ borderColor: "var(--asph-border)" }}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-medium">Health Metrics</span>
@@ -185,7 +185,7 @@ export const WebSocketStatus: React.FC = () => {
                 onClick={reconnect}
                 className="mt-2 w-full rounded px-2 py-1 text-xs font-medium transition-colors"
                 style={{
-                  background: "var(--bsky-primary)",
+                  background: "var(--asph-primary)",
                   color: "white",
                 }}
               >

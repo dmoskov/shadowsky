@@ -254,17 +254,17 @@ export function useScheduledPostsGroupedByDate(startDate: Date, endDate: Date) {
 export function getStatusColor(status: ScheduledPostStatus): string {
   switch (status) {
     case "pending":
-      return "var(--bsky-primary)"; // Blue
+      return "var(--asph-primary)"; // Blue
     case "processing":
-      return "var(--bsky-warning, #f59e0b)"; // Amber
+      return "var(--asph-warning, #f59e0b)"; // Amber
     case "completed":
-      return "var(--bsky-success, #22c55e)"; // Green
+      return "var(--asph-success, #22c55e)"; // Green
     case "failed":
-      return "var(--bsky-error, #ef4444)"; // Red
+      return "var(--asph-error, #ef4444)"; // Red
     case "cancelled":
-      return "var(--bsky-text-tertiary)"; // Gray
+      return "var(--asph-text-tertiary)"; // Gray
     default:
-      return "var(--bsky-text-secondary)";
+      return "var(--asph-text-secondary)";
   }
 }
 

@@ -64,13 +64,13 @@ export const AccountsSettings: React.FC = () => {
       <div>
         <h2
           className="text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Manage Accounts
         </h2>
         <p
           className="mt-1 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Switch between your accounts or add a new one
         </p>
@@ -84,14 +84,14 @@ export const AccountsSettings: React.FC = () => {
           return (
             <div
               key={account.did}
-              className="bsky-glass flex items-center gap-4 rounded-lg p-4 transition-all"
+              className="asph-glass flex items-center gap-4 rounded-lg p-4 transition-all"
               style={{
                 border: isActive
-                  ? "2px solid var(--bsky-primary)"
-                  : "1px solid var(--bsky-border-primary)",
+                  ? "2px solid var(--asph-primary)"
+                  : "1px solid var(--asph-border-primary)",
                 backgroundColor: isActive
-                  ? "rgba(var(--bsky-primary-rgb), 0.05)"
-                  : "var(--bsky-bg-secondary)",
+                  ? "rgba(var(--asph-primary-rgb), 0.05)"
+                  : "var(--asph-bg-secondary)",
               }}
             >
               {account.avatar ? (
@@ -103,11 +103,11 @@ export const AccountsSettings: React.FC = () => {
               ) : (
                 <div
                   className="flex h-12 w-12 items-center justify-center rounded-full"
-                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                  style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
                 >
                   <User
                     size={24}
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   />
                 </div>
               )}
@@ -116,7 +116,7 @@ export const AccountsSettings: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <p
                     className="font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {account.displayName || account.handle}
                   </p>
@@ -124,7 +124,7 @@ export const AccountsSettings: React.FC = () => {
                     <span
                       className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
                       style={{
-                        backgroundColor: "var(--bsky-primary)",
+                        backgroundColor: "var(--asph-primary)",
                         color: "white",
                       }}
                     >
@@ -135,7 +135,7 @@ export const AccountsSettings: React.FC = () => {
                 </div>
                 <p
                   className="text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   @{account.handle}
                 </p>
@@ -149,9 +149,9 @@ export const AccountsSettings: React.FC = () => {
                         onClick={handleAddAccount}
                         className="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:bg-opacity-90"
                         style={{
-                          backgroundColor: "var(--bsky-bg-tertiary)",
-                          color: "var(--bsky-text-primary)",
-                          border: "1px solid var(--bsky-border-primary)",
+                          backgroundColor: "var(--asph-bg-tertiary)",
+                          color: "var(--asph-text-primary)",
+                          border: "1px solid var(--asph-border-primary)",
                         }}
                         title="OAuth accounts require re-authentication"
                       >
@@ -162,7 +162,7 @@ export const AccountsSettings: React.FC = () => {
                         onClick={() => handleSwitchAccount(account.did)}
                         className="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:bg-opacity-90"
                         style={{
-                          backgroundColor: "var(--bsky-primary)",
+                          backgroundColor: "var(--asph-primary)",
                           color: "white",
                         }}
                       >
@@ -176,7 +176,7 @@ export const AccountsSettings: React.FC = () => {
                   onClick={() => handleRemoveAccount(account.did)}
                   disabled={isRemoving}
                   className="rounded-lg p-2 transition-colors hover:bg-red-50 hover:bg-opacity-10 disabled:opacity-50"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                   title="Remove account"
                 >
                   {isRemoving ? (
@@ -196,7 +196,7 @@ export const AccountsSettings: React.FC = () => {
           onClick={handleAddAccount}
           className="flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
           style={{
-            backgroundColor: "var(--bsky-primary)",
+            backgroundColor: "var(--asph-primary)",
             color: "white",
           }}
         >
@@ -223,12 +223,12 @@ export const AccountsSettings: React.FC = () => {
         style={{
           backgroundColor: "rgba(59, 130, 246, 0.1)",
           border: "1px solid rgba(59, 130, 246, 0.3)",
-          color: "var(--bsky-text-secondary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <p
           className="font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           About Multi-Account Support
         </p>

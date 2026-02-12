@@ -135,9 +135,9 @@ export const MediaCacheSettings: React.FC = () => {
   };
 
   const getUsageBarColor = (percentage: number): string => {
-    if (percentage < 70) return "var(--bsky-success-light)";
-    if (percentage < 90) return "var(--bsky-yellow)";
-    return "var(--bsky-error)";
+    if (percentage < 70) return "var(--asph-success-light)";
+    if (percentage < 90) return "var(--asph-yellow)";
+    return "var(--asph-error)";
   };
 
   return (
@@ -145,13 +145,13 @@ export const MediaCacheSettings: React.FC = () => {
       <div>
         <h2
           className="text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Media Cache
         </h2>
         <p
           className="mt-1 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Manage cached media for offline viewing and faster load times
         </p>
@@ -161,8 +161,8 @@ export const MediaCacheSettings: React.FC = () => {
         <div
           className={`rounded-lg border p-3 text-sm ${
             message.type === "success"
-              ? "border-bsky-success/30 bg-bsky-success/10 text-bsky-success"
-              : "border-bsky-error/30 bg-bsky-error/10 text-bsky-error"
+              ? "border-asph-success/30 bg-asph-success/10 text-asph-success"
+              : "border-asph-error/30 bg-asph-error/10 text-asph-error"
           }`}
         >
           {message.text}
@@ -175,18 +175,18 @@ export const MediaCacheSettings: React.FC = () => {
           <div
             className="rounded-lg p-4"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border-primary)",
             }}
           >
             <div className="mb-3 flex items-center gap-2">
               <Database
                 size={16}
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               />
               <span
                 className="text-sm font-medium"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 Cache Usage
               </span>
@@ -196,7 +196,7 @@ export const MediaCacheSettings: React.FC = () => {
             <div className="mb-2">
               <div
                 className="h-2 w-full overflow-hidden rounded-full"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
                 <div
                   className="h-full transition-all duration-300"
@@ -211,30 +211,30 @@ export const MediaCacheSettings: React.FC = () => {
             <div className="space-y-1 text-sm">
               <div
                 className="flex justify-between"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 <span>Used</span>
-                <span style={{ color: "var(--bsky-text-primary)" }}>
+                <span style={{ color: "var(--asph-text-primary)" }}>
                   {formatBytes(stats.totalSize)} / {formatBytes(stats.maxSize)}{" "}
                   ({Math.round(stats.usedPercentage)}%)
                 </span>
               </div>
               <div
                 className="flex justify-between"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 <span>Total Items</span>
-                <span style={{ color: "var(--bsky-text-primary)" }}>
+                <span style={{ color: "var(--asph-text-primary)" }}>
                   {stats.totalItems.toLocaleString()}
                 </span>
               </div>
               {stats.oldestItem && (
                 <div
                   className="flex justify-between"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   <span>Oldest Item</span>
-                  <span style={{ color: "var(--bsky-text-primary)" }}>
+                  <span style={{ color: "var(--asph-text-primary)" }}>
                     {stats.oldestItem.toLocaleDateString()}
                   </span>
                 </div>
@@ -247,18 +247,18 @@ export const MediaCacheSettings: React.FC = () => {
             <div
               className="rounded-lg p-4"
               style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                border: "1px solid var(--bsky-border-primary)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                border: "1px solid var(--asph-border-primary)",
               }}
             >
               <div className="mb-3 flex items-center gap-2">
                 <HardDrive
                   size={16}
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 />
                 <span
                   className="text-sm font-medium"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   Media by Type
                 </span>
@@ -274,25 +274,25 @@ export const MediaCacheSettings: React.FC = () => {
                       {type.startsWith("image/") ? (
                         <Image
                           size={14}
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         />
                       ) : type.startsWith("video/") ? (
                         <Video
                           size={14}
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         />
                       ) : (
                         <Database
                           size={14}
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         />
                       )}
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      <span style={{ color: "var(--asph-text-secondary)" }}>
                         {type}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span style={{ color: "var(--bsky-text-primary)" }}>
+                      <span style={{ color: "var(--asph-text-primary)" }}>
                         {data.count} items • {formatBytes(data.size)}
                       </span>
                       <button
@@ -300,9 +300,9 @@ export const MediaCacheSettings: React.FC = () => {
                         disabled={isLoading}
                         className="rounded px-2 py-1 text-xs transition-colors"
                         style={{
-                          backgroundColor: "var(--bsky-bg-tertiary)",
-                          color: "var(--bsky-text-secondary)",
-                          border: "1px solid var(--bsky-border-primary)",
+                          backgroundColor: "var(--asph-bg-tertiary)",
+                          color: "var(--asph-text-secondary)",
+                          border: "1px solid var(--asph-border-primary)",
                         }}
                       >
                         Clear
@@ -320,20 +320,20 @@ export const MediaCacheSettings: React.FC = () => {
       <div
         className="rounded-lg p-4"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div className="mb-3">
           <label
             className="mb-1 block text-sm font-medium"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Maximum Cache Size (MB)
           </label>
           <p
             className="text-xs"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             The cache will automatically remove old items when this limit is
             reached
@@ -349,9 +349,9 @@ export const MediaCacheSettings: React.FC = () => {
             max={1000}
             className="flex-1 rounded-lg px-3 py-2 text-sm"
             style={{
-              backgroundColor: "var(--bsky-bg-primary)",
-              color: "var(--bsky-text-primary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-primary)",
+              color: "var(--asph-text-primary)",
+              border: "1px solid var(--asph-border-primary)",
             }}
           />
           <button
@@ -359,9 +359,9 @@ export const MediaCacheSettings: React.FC = () => {
             disabled={isLoading}
             className="rounded-lg px-4 py-2 text-sm transition-colors"
             style={{
-              backgroundColor: "var(--bsky-accent-blue)",
+              backgroundColor: "var(--asph-accent-blue)",
               color: "white",
-              border: "1px solid var(--bsky-accent-blue)",
+              border: "1px solid var(--asph-accent-blue)",
             }}
           >
             Update
@@ -372,25 +372,25 @@ export const MediaCacheSettings: React.FC = () => {
       {/* Clear Cache Button */}
       <div
         className="border-t pt-6"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         <h3
           className="mb-4 text-lg font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Cache Management
         </h3>
         <button
           onClick={handleClearCache}
           disabled={isLoading}
-          className="border-bsky-error/30 bg-bsky-error/10 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm text-bsky-error transition-colors"
+          className="border-asph-error/30 bg-asph-error/10 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm text-asph-error transition-colors"
         >
           <Trash2 className="h-4 w-4" />
           {isLoading ? "Clearing..." : "Clear All Cached Media"}
         </button>
         <p
           className="mt-2 text-xs"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           This will remove all cached images and videos. They will be
           re-downloaded when needed.

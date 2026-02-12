@@ -365,7 +365,7 @@ export function DisclosureTrigger({
     onClick: disabled ? undefined : handleClick,
     onKeyDown: disabled ? undefined : handleKeyDown,
     className: `flex items-center gap-2 ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${className}`,
-    style: { color: "var(--bsky-text-primary)" } as React.CSSProperties,
+    style: { color: "var(--asph-text-primary)" } as React.CSSProperties,
     "data-disclosure-trigger": true,
   };
 

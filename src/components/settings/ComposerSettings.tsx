@@ -57,14 +57,14 @@ export const ComposerSettings: React.FC = () => {
       <div>
         <h2
           className="mb-4 flex items-center gap-2 text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           <Wand2 size={24} />
           Composer & AI Features
         </h2>
         <p
           className="mb-6 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Configure your posting experience and AI-powered features.
         </p>
@@ -80,13 +80,13 @@ export const ComposerSettings: React.FC = () => {
       <div
         className="rounded-lg border p-4"
         style={{
-          borderColor: "var(--bsky-border-primary)",
-          backgroundColor: "var(--bsky-bg-secondary)",
+          borderColor: "var(--asph-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
         }}
       >
         <h3
           className="mb-4 text-lg font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Thread Settings
         </h3>
@@ -96,7 +96,7 @@ export const ComposerSettings: React.FC = () => {
             <label
               htmlFor="numbering-format"
               className="mb-2 block font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Numbering Format
             </label>
@@ -106,9 +106,9 @@ export const ComposerSettings: React.FC = () => {
               onChange={(e) => handleChange("numberingFormat", e.target.value)}
               className="w-full rounded-lg border p-2"
               style={{
-                backgroundColor: "var(--bsky-bg-primary)",
-                borderColor: "var(--bsky-border-primary)",
-                color: "var(--bsky-text-primary)",
+                backgroundColor: "var(--asph-bg-primary)",
+                borderColor: "var(--asph-border-primary)",
+                color: "var(--asph-text-primary)",
               }}
             >
               <option value="none">No numbering</option>
@@ -123,7 +123,7 @@ export const ComposerSettings: React.FC = () => {
             <label
               htmlFor="numbering-position"
               className="mb-2 block font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Numbering Position
             </label>
@@ -135,9 +135,9 @@ export const ComposerSettings: React.FC = () => {
               }
               className="w-full rounded-lg border p-2"
               style={{
-                backgroundColor: "var(--bsky-bg-primary)",
-                borderColor: "var(--bsky-border-primary)",
-                color: "var(--bsky-text-primary)",
+                backgroundColor: "var(--asph-bg-primary)",
+                borderColor: "var(--asph-border-primary)",
+                color: "var(--asph-text-primary)",
               }}
             >
               <option value="beginning">Beginning</option>
@@ -149,7 +149,7 @@ export const ComposerSettings: React.FC = () => {
             <label
               htmlFor="delay-seconds"
               className="mb-2 block font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Post Delay (seconds)
             </label>
@@ -167,14 +167,14 @@ export const ComposerSettings: React.FC = () => {
               }
               className="w-full rounded-lg border p-2"
               style={{
-                backgroundColor: "var(--bsky-bg-primary)",
-                borderColor: "var(--bsky-border-primary)",
-                color: "var(--bsky-text-primary)",
+                backgroundColor: "var(--asph-bg-primary)",
+                borderColor: "var(--asph-border-primary)",
+                color: "var(--asph-text-primary)",
               }}
             />
             <p
               className="mt-1 text-sm"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               Time to cancel before posting (0 for instant)
             </p>
@@ -186,9 +186,9 @@ export const ComposerSettings: React.FC = () => {
       <div
         className="rounded-lg border p-4 text-sm"
         style={{
-          borderColor: "var(--bsky-border-primary)",
-          backgroundColor: "var(--bsky-bg-secondary)",
-          color: "var(--bsky-text-secondary)",
+          borderColor: "var(--asph-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <p className="mb-1 font-medium">Privacy Notice</p>
@@ -203,9 +203,9 @@ export const ComposerSettings: React.FC = () => {
         <div
           className="rounded-lg border p-3 text-center text-sm font-medium"
           style={{
-            borderColor: "var(--bsky-success)",
-            backgroundColor: "var(--bsky-success-bg)",
-            color: "var(--bsky-success)",
+            borderColor: "var(--asph-success)",
+            backgroundColor: "var(--asph-success-bg)",
+            color: "var(--asph-success)",
           }}
         >
           Settings saved successfully!

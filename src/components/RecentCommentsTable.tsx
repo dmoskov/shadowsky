@@ -65,9 +65,9 @@ export const RecentCommentsTable: React.FC = () => {
       <div
         className="rounded-lg border p-6 text-center"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          borderColor: "var(--bsky-border-primary)",
-          color: "var(--bsky-text-tertiary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          borderColor: "var(--asph-border-primary)",
+          color: "var(--asph-text-tertiary)",
         }}
       >
         <MessageCircle size={24} className="mx-auto mb-2 opacity-50" />
@@ -88,33 +88,33 @@ export const RecentCommentsTable: React.FC = () => {
     <div
       className="overflow-hidden rounded-lg border"
       style={{
-        backgroundColor: "var(--bsky-bg-secondary)",
-        borderColor: "var(--bsky-border-primary)",
+        backgroundColor: "var(--asph-bg-secondary)",
+        borderColor: "var(--asph-border-primary)",
       }}
     >
       <div
         className="flex items-center gap-2 px-4 py-3 font-medium"
         style={{
-          backgroundColor: "var(--bsky-bg-tertiary)",
-          borderBottom: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
+          borderBottom: "1px solid var(--asph-border-primary)",
         }}
       >
-        <MessageCircle size={18} style={{ color: "var(--bsky-primary)" }} />
-        <h3 style={{ color: "var(--bsky-text-primary)" }}>
+        <MessageCircle size={18} style={{ color: "var(--asph-primary)" }} />
+        <h3 style={{ color: "var(--asph-text-primary)" }}>
           Recent Comments (24h)
         </h3>
       </div>
 
       <div
         className="divide-y"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         {recentComments.map((comment) => (
           <div
             key={comment.uri}
             className="flex gap-3 p-4 transition-colors hover:bg-opacity-50"
             style={{
-              backgroundColor: "var(--bsky-bg-primary)",
+              backgroundColor: "var(--asph-bg-primary)",
             }}
           >
             {/* Author column */}
@@ -133,7 +133,7 @@ export const RecentCommentsTable: React.FC = () => {
                   alt={comment.author.handle}
                   className="h-10 w-10 rounded-full transition-opacity hover:opacity-80"
                   style={{
-                    border: "1px solid var(--bsky-border-primary)",
+                    border: "1px solid var(--asph-border-primary)",
                   }}
                 />
               </div>
@@ -151,7 +151,7 @@ export const RecentCommentsTable: React.FC = () => {
                       )
                     }
                     className="cursor-pointer truncate font-medium hover:underline"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {comment.author.displayName || comment.author.handle}
                   </span>
@@ -163,14 +163,14 @@ export const RecentCommentsTable: React.FC = () => {
                       )
                     }
                     className="cursor-pointer truncate text-xs hover:underline"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   >
                     @{comment.author.handle}
                   </span>
                 </div>
                 <span
                   className="flex-shrink-0 text-xs"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   {formatDistanceToNow(comment.indexedAt, { addSuffix: true })}
                 </span>
@@ -183,7 +183,7 @@ export const RecentCommentsTable: React.FC = () => {
                   }
                 }}
                 className={`line-clamp-2 text-sm ${comment.postUri ? "cursor-pointer hover:opacity-80" : ""}`}
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {comment.text}
               </p>
@@ -196,9 +196,9 @@ export const RecentCommentsTable: React.FC = () => {
         <div
           className="px-4 py-3 text-center text-sm"
           style={{
-            backgroundColor: "var(--bsky-bg-tertiary)",
-            borderTop: "1px solid var(--bsky-border-primary)",
-            color: "var(--bsky-text-tertiary)",
+            backgroundColor: "var(--asph-bg-tertiary)",
+            borderTop: "1px solid var(--asph-border-primary)",
+            color: "var(--asph-text-tertiary)",
           }}
         >
           Showing 20 most recent comments

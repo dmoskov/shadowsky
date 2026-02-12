@@ -18,8 +18,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
     <header
       role="banner"
       aria-label="Site header"
-      className="bsky-glass fixed left-0 right-0 top-0 z-50 h-16"
-      style={{ borderBottom: "1px solid var(--bsky-border-primary)" }}
+      className="asph-glass fixed left-0 right-0 top-0 z-50 h-16"
+      style={{ borderBottom: "1px solid var(--asph-border-primary)" }}
     >
       <div
         className={`flex h-full items-center justify-between px-4 ${isHomeRoute ? "" : "mx-auto 2xl:max-w-[1536px]"}`}
@@ -32,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           >
             <Menu
               size={24}
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
               aria-hidden="true"
             />
           </button>
@@ -40,11 +40,11 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           <div className="flex items-center gap-2">
             <img
               src={butterflyIcon}
-              alt="ShadowSky Logo"
+              alt="Asphodel Logo"
               className="h-7 w-7 self-center"
             />
-            <h1 className="bsky-gradient-text hidden text-xl font-bold sm:block">
-              ShadowSky
+            <h1 className="asph-gradient-text hidden text-xl font-bold sm:block">
+              Asphodel
             </h1>
           </div>
         </div>

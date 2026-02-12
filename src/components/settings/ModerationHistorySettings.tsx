@@ -180,8 +180,8 @@ export const ModerationHistorySettings: React.FC = () => {
       key={entry.id}
       className="flex items-center justify-between rounded-lg p-3"
       style={{
-        backgroundColor: "var(--bsky-bg-secondary)",
-        border: "1px solid var(--bsky-border-primary)",
+        backgroundColor: "var(--asph-bg-secondary)",
+        border: "1px solid var(--asph-border-primary)",
       }}
     >
       <div className="flex items-center gap-3">
@@ -190,7 +190,7 @@ export const ModerationHistorySettings: React.FC = () => {
           style={{
             backgroundColor: entry.isActive
               ? "rgba(239, 68, 68, 0.1)"
-              : "var(--bsky-bg-tertiary)",
+              : "var(--asph-bg-tertiary)",
           }}
         >
           {entry.subjectAvatar ? (
@@ -204,8 +204,8 @@ export const ModerationHistorySettings: React.FC = () => {
               size={20}
               style={{
                 color: entry.isActive
-                  ? "var(--bsky-error)"
-                  : "var(--bsky-text-tertiary)",
+                  ? "var(--asph-error)"
+                  : "var(--asph-text-tertiary)",
               }}
             />
           )}
@@ -214,7 +214,7 @@ export const ModerationHistorySettings: React.FC = () => {
           <div className="flex items-center gap-2">
             <span
               className="font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               {entry.subjectDisplayName || entry.subjectHandle || "Unknown"}
             </span>
@@ -226,8 +226,8 @@ export const ModerationHistorySettings: React.FC = () => {
               <span
                 className="rounded-full px-2 py-0.5 text-xs"
                 style={{
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                  color: "var(--bsky-text-tertiary)",
+                  backgroundColor: "var(--asph-bg-tertiary)",
+                  color: "var(--asph-text-tertiary)",
                 }}
               >
                 Unblocked
@@ -237,14 +237,14 @@ export const ModerationHistorySettings: React.FC = () => {
           {entry.subjectHandle && (
             <div
               className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               @{entry.subjectHandle}
             </div>
           )}
           <div
             className="flex items-center gap-1 text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             <Clock size={12} />
             {formatRelativeTime(entry.createdAt)}
@@ -263,8 +263,8 @@ export const ModerationHistorySettings: React.FC = () => {
       key={entry.id}
       className="flex items-center justify-between rounded-lg p-3"
       style={{
-        backgroundColor: "var(--bsky-bg-secondary)",
-        border: "1px solid var(--bsky-border-primary)",
+        backgroundColor: "var(--asph-bg-secondary)",
+        border: "1px solid var(--asph-border-primary)",
       }}
     >
       <div className="flex items-center gap-3">
@@ -273,7 +273,7 @@ export const ModerationHistorySettings: React.FC = () => {
           style={{
             backgroundColor: entry.isActive
               ? "rgba(234, 179, 8, 0.1)"
-              : "var(--bsky-bg-tertiary)",
+              : "var(--asph-bg-tertiary)",
           }}
         >
           {entry.subjectAvatar ? (
@@ -287,8 +287,8 @@ export const ModerationHistorySettings: React.FC = () => {
               size={20}
               style={{
                 color: entry.isActive
-                  ? "var(--bsky-yellow)"
-                  : "var(--bsky-text-tertiary)",
+                  ? "var(--asph-yellow)"
+                  : "var(--asph-text-tertiary)",
               }}
             />
           )}
@@ -297,7 +297,7 @@ export const ModerationHistorySettings: React.FC = () => {
           <div className="flex items-center gap-2">
             <span
               className="font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               {entry.subjectDisplayName || entry.subjectHandle || "Unknown"}
             </span>
@@ -309,8 +309,8 @@ export const ModerationHistorySettings: React.FC = () => {
               <span
                 className="rounded-full px-2 py-0.5 text-xs"
                 style={{
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                  color: "var(--bsky-text-tertiary)",
+                  backgroundColor: "var(--asph-bg-tertiary)",
+                  color: "var(--asph-text-tertiary)",
                 }}
               >
                 Unmuted
@@ -320,14 +320,14 @@ export const ModerationHistorySettings: React.FC = () => {
           {entry.subjectHandle && (
             <div
               className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               @{entry.subjectHandle}
             </div>
           )}
           <div
             className="flex items-center gap-1 text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             <Clock size={12} />
             {formatRelativeTime(entry.createdAt)}
@@ -343,14 +343,14 @@ export const ModerationHistorySettings: React.FC = () => {
   // Render report entry
   const renderReportEntry = (entry: ReportHistoryEntry) => {
     const statusColors = {
-      pending: { bg: "var(--bsky-warning-10)", text: "var(--bsky-yellow)" },
+      pending: { bg: "var(--asph-warning-10)", text: "var(--asph-yellow)" },
       resolved: {
-        bg: "var(--bsky-success-10)",
-        text: "var(--bsky-success-light)",
+        bg: "var(--asph-success-10)",
+        text: "var(--asph-success-light)",
       },
       unknown: {
-        bg: "var(--bsky-bg-tertiary)",
-        text: "var(--bsky-text-tertiary)",
+        bg: "var(--asph-bg-tertiary)",
+        text: "var(--asph-text-tertiary)",
       },
     };
     const statusColor = statusColors[entry.status];
@@ -360,8 +360,8 @@ export const ModerationHistorySettings: React.FC = () => {
         key={entry.id}
         className="rounded-lg p-3"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div className="flex items-start gap-3">
@@ -375,7 +375,7 @@ export const ModerationHistorySettings: React.FC = () => {
             <div className="flex items-center gap-2">
               <span
                 className="font-medium"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {entry.subjectType === "account"
                   ? entry.subjectDisplayName || entry.subjectHandle || "Account"
@@ -395,7 +395,7 @@ export const ModerationHistorySettings: React.FC = () => {
             {entry.subjectHandle && (
               <div
                 className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 @{entry.subjectHandle}
               </div>
@@ -403,14 +403,14 @@ export const ModerationHistorySettings: React.FC = () => {
             {entry.subjectText && (
               <div
                 className="mt-1 line-clamp-2 text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 "{entry.subjectText}"
               </div>
             )}
             <div
               className="mt-1 flex items-center gap-2 text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               <span className="rounded bg-gray-500 bg-opacity-20 px-1.5 py-0.5 capitalize">
                 {entry.reason}
@@ -422,7 +422,7 @@ export const ModerationHistorySettings: React.FC = () => {
             {entry.reasonText && (
               <div
                 className="mt-1 text-xs italic"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 Note: {entry.reasonText}
               </div>
@@ -439,7 +439,7 @@ export const ModerationHistorySettings: React.FC = () => {
       return (
         <div
           className="py-8 text-center"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           Loading history...
         </div>
@@ -450,7 +450,7 @@ export const ModerationHistorySettings: React.FC = () => {
       return (
         <div
           className="py-8 text-center"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           <AlertTriangle size={48} className="mx-auto mb-2 opacity-50" />
           <p>No moderation history found</p>
@@ -536,13 +536,13 @@ export const ModerationHistorySettings: React.FC = () => {
       <div>
         <h2
           className="text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Moderation History
         </h2>
         <p
           className="mt-1 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           View your block, mute, and report history
         </p>
@@ -554,28 +554,28 @@ export const ModerationHistorySettings: React.FC = () => {
           <div
             className="rounded-lg p-3 text-center"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border-primary)",
             }}
           >
             <div className="flex items-center justify-center gap-1">
               <Ban size={16} className="text-red-500" />
               <span
                 className="text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {stats.activeBlocks}
               </span>
             </div>
             <div
               className="text-xs"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Active Blocks
             </div>
             <div
               className="text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               ({stats.totalBlocks} total)
             </div>
@@ -583,28 +583,28 @@ export const ModerationHistorySettings: React.FC = () => {
           <div
             className="rounded-lg p-3 text-center"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border-primary)",
             }}
           >
             <div className="flex items-center justify-center gap-1">
               <VolumeX size={16} className="text-yellow-500" />
               <span
                 className="text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {stats.activeMutes}
               </span>
             </div>
             <div
               className="text-xs"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Active Mutes
             </div>
             <div
               className="text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               ({stats.totalMutes} total)
             </div>
@@ -612,28 +612,28 @@ export const ModerationHistorySettings: React.FC = () => {
           <div
             className="rounded-lg p-3 text-center"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border-primary)",
             }}
           >
             <div className="flex items-center justify-center gap-1">
               <Flag size={16} className="text-blue-500" />
               <span
                 className="text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {stats.pendingReports}
               </span>
             </div>
             <div
               className="text-xs"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Pending Reports
             </div>
             <div
               className="text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               ({stats.totalReports} total)
             </div>
@@ -644,7 +644,7 @@ export const ModerationHistorySettings: React.FC = () => {
       {/* Tabs */}
       <div
         className="flex gap-1 rounded-lg p-1"
-        style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+        style={{ backgroundColor: "var(--asph-bg-secondary)" }}
       >
         {(["all", "block", "mute", "report"] as const).map((tab) => (
           <button
@@ -655,7 +655,7 @@ export const ModerationHistorySettings: React.FC = () => {
             }`}
             style={
               activeTab !== tab
-                ? { color: "var(--bsky-text-secondary)" }
+                ? { color: "var(--asph-text-secondary)" }
                 : undefined
             }
           >
@@ -673,7 +673,7 @@ export const ModerationHistorySettings: React.FC = () => {
             <Search
               size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             />
             <input
               type="text"
@@ -682,16 +682,16 @@ export const ModerationHistorySettings: React.FC = () => {
               placeholder="Search by handle or name..."
               className="w-full rounded-lg py-2 pl-9 pr-4 text-sm"
               style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                color: "var(--bsky-text-primary)",
-                border: "1px solid var(--bsky-border-primary)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                color: "var(--asph-text-primary)",
+                border: "1px solid var(--asph-border-primary)",
               }}
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
                 className="absolute right-3 top-1/2 -translate-y-1/2"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 <X size={14} />
               </button>
@@ -705,9 +705,9 @@ export const ModerationHistorySettings: React.FC = () => {
             style={
               !showFilters
                 ? {
-                    backgroundColor: "var(--bsky-bg-secondary)",
-                    color: "var(--bsky-text-primary)",
-                    border: "1px solid var(--bsky-border-primary)",
+                    backgroundColor: "var(--asph-bg-secondary)",
+                    color: "var(--asph-text-primary)",
+                    border: "1px solid var(--asph-border-primary)",
                   }
                 : undefined
             }
@@ -722,15 +722,15 @@ export const ModerationHistorySettings: React.FC = () => {
           <div
             className="space-y-3 rounded-lg p-4"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border-primary)",
             }}
           >
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label
                   className="mb-1 block text-xs font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   <Calendar size={12} className="mr-1 inline" />
                   Start Date
@@ -741,16 +741,16 @@ export const ModerationHistorySettings: React.FC = () => {
                   onChange={(e) => setStartDate(e.target.value)}
                   className="w-full rounded px-3 py-1.5 text-sm"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    color: "var(--bsky-text-primary)",
-                    border: "1px solid var(--bsky-border-primary)",
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    color: "var(--asph-text-primary)",
+                    border: "1px solid var(--asph-border-primary)",
                   }}
                 />
               </div>
               <div>
                 <label
                   className="mb-1 block text-xs font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   <Calendar size={12} className="mr-1 inline" />
                   End Date
@@ -761,9 +761,9 @@ export const ModerationHistorySettings: React.FC = () => {
                   onChange={(e) => setEndDate(e.target.value)}
                   className="w-full rounded px-3 py-1.5 text-sm"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    color: "var(--bsky-text-primary)",
-                    border: "1px solid var(--bsky-border-primary)",
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    color: "var(--asph-text-primary)",
+                    border: "1px solid var(--asph-border-primary)",
                   }}
                 />
               </div>
@@ -778,7 +778,7 @@ export const ModerationHistorySettings: React.FC = () => {
                 />
                 <span
                   className="text-sm"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   Active only
                 </span>
@@ -803,7 +803,7 @@ export const ModerationHistorySettings: React.FC = () => {
       <div className="flex items-center justify-between">
         <span
           className="text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           {totalItems} {totalItems === 1 ? "entry" : "entries"}
         </span>
@@ -813,7 +813,7 @@ export const ModerationHistorySettings: React.FC = () => {
             className={`flex items-center gap-1 rounded px-2 py-1 text-xs ${
               sortField === "createdAt" ? "bg-blue-500 bg-opacity-20" : ""
             }`}
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Date
             <SortIndicator field="createdAt" />
@@ -823,7 +823,7 @@ export const ModerationHistorySettings: React.FC = () => {
             className={`flex items-center gap-1 rounded px-2 py-1 text-xs ${
               sortField === "handle" ? "bg-blue-500 bg-opacity-20" : ""
             }`}
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Handle
             <SortIndicator field="handle" />
@@ -832,7 +832,7 @@ export const ModerationHistorySettings: React.FC = () => {
       </div>
 
       {/* History List */}
-      <div className="bsky-scrollbar max-h-[400px] overflow-y-auto">
+      <div className="asph-scrollbar max-h-[400px] overflow-y-auto">
         {renderEntries()}
       </div>
 
@@ -840,7 +840,7 @@ export const ModerationHistorySettings: React.FC = () => {
       {totalItems > 0 && (
         <div
           className="border-t pt-4"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
           <button
             onClick={handleClearHistory}
@@ -854,7 +854,7 @@ export const ModerationHistorySettings: React.FC = () => {
           </button>
           <p
             className="mt-2 text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             This will permanently delete your local moderation history. It will
             not affect your actual blocks, mutes, or reports on Bluesky.

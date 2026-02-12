@@ -217,9 +217,9 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
               style={{
                 top: `${cardPosition.top}px`,
                 left: `${cardPosition.left}px`,
-                backgroundColor: "var(--bsky-bg-secondary)",
-                borderColor: "var(--bsky-border-primary)",
-                boxShadow: "var(--bsky-shadow-lg)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                borderColor: "var(--asph-border-primary)",
+                boxShadow: "var(--asph-shadow-lg)",
               }}
               onMouseEnter={() => {
                 setIsHovering(true);
@@ -234,7 +234,7 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
                 <div className="flex h-48 items-center justify-center">
                   <div
                     className="h-8 w-8 animate-spin rounded-full border-2 border-t-transparent"
-                    style={{ borderColor: "var(--bsky-primary)" }}
+                    style={{ borderColor: "var(--asph-primary)" }}
                   />
                 </div>
               ) : (
@@ -250,7 +250,7 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
                       alt={profile.displayName || profile.handle}
                       className="h-16 w-16 cursor-pointer rounded-full border-2 transition-transform hover:scale-105"
                       style={{
-                        borderColor: "var(--bsky-bg-tertiary)",
+                        borderColor: "var(--asph-bg-tertiary)",
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -262,8 +262,8 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
                         onClick={handleFollow}
                         className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
                           profile.viewer?.following
-                            ? "bsky-button-secondary hover:scale-105"
-                            : "bsky-button-primary hover:scale-105"
+                            ? "asph-button-secondary hover:scale-105"
+                            : "asph-button-primary hover:scale-105"
                         }`}
                       >
                         {profile.viewer?.following ? "Following" : "Follow"}
@@ -282,7 +282,7 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
                     <div className="flex items-center gap-1">
                       <h3
                         className="truncate font-bold hover:underline"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {profile.displayName || profile.handle}
                       </h3>
@@ -290,7 +290,7 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
                     </div>
                     <p
                       className="truncate text-sm hover:underline"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       @{profile.handle}
                     </p>
@@ -300,7 +300,7 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
                   {profile.description && (
                     <p
                       className="mb-3 line-clamp-3 text-sm"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       {profile.description}
                     </p>
@@ -311,13 +311,13 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
                     <div>
                       <span
                         className="font-semibold"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {formatCount(profile.followersCount || 0)}
                       </span>
                       <span
                         className="ml-1"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         Followers
                       </span>
@@ -325,13 +325,13 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
                     <div>
                       <span
                         className="font-semibold"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {formatCount(profile.followsCount || 0)}
                       </span>
                       <span
                         className="ml-1"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         Following
                       </span>

@@ -70,28 +70,28 @@ const COMPLEXITY_STYLES: Record<
   { bg: string; text: string; label: string }
 > = {
   minimal: {
-    bg: "var(--bsky-success-10)",
-    text: "var(--bsky-success-light)",
+    bg: "var(--asph-success-10)",
+    text: "var(--asph-success-light)",
     label: "Simple",
   },
   low: {
-    bg: "var(--bsky-info-10)",
-    text: "var(--bsky-info)",
+    bg: "var(--asph-info-10)",
+    text: "var(--asph-info)",
     label: "Light",
   },
   medium: {
-    bg: "var(--bsky-warning-10)",
-    text: "var(--bsky-warning-light)",
+    bg: "var(--asph-warning-10)",
+    text: "var(--asph-warning-light)",
     label: "Moderate",
   },
   high: {
-    bg: "var(--bsky-orange-10)",
-    text: "var(--bsky-orange)",
+    bg: "var(--asph-orange-10)",
+    text: "var(--asph-orange)",
     label: "Complex",
   },
   extreme: {
-    bg: "var(--bsky-error-10)",
-    text: "var(--bsky-error)",
+    bg: "var(--asph-error-10)",
+    text: "var(--asph-error)",
     label: "Very Complex",
   },
 };
@@ -176,7 +176,7 @@ const ShowMoreButton: React.FC<ShowMoreButtonProps> = ({
           onClick={onShowAll}
           disabled={isRevealing}
           className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10 disabled:cursor-wait disabled:opacity-70"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
           title="Show all remaining items"
         >
           <Eye size={14} />
@@ -209,7 +209,7 @@ const CollapseButton: React.FC<CollapseButtonProps> = ({
       <button
         onClick={onCollapse}
         className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10"
-        style={{ color: "var(--bsky-text-secondary)" }}
+        style={{ color: "var(--asph-text-secondary)" }}
       >
         <ChevronUp size={14} />
         Collapse to {initialCount}
@@ -388,7 +388,7 @@ function ProgressiveRevealInner<T>(
           <ComplexityBadge complexityScore={complexityScore} />
           <span
             className="text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             {revealedCount} of {items.length} shown
           </span>

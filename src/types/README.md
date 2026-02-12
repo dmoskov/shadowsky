@@ -1,7 +1,7 @@
 # Types Directory (`/src/types`)
 
 ## Overview
-This directory contains TypeScript type definitions, interfaces, and type utilities for the ShadowSky application. All shared types across the application should be defined here to ensure consistency and type safety.
+This directory contains TypeScript type definitions, interfaces, and type utilities for the Asphodel application. All shared types across the application should be defined here to ensure consistency and type safety.
 
 ## Directory Structure
 

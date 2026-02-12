@@ -89,26 +89,26 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
         className="modal-container modal-auto-height modal-md"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-bsky-border-primary p-6">
-          <h3 className="m-0 text-lg font-semibold text-bsky-text-primary">
+        <div className="flex items-center justify-between border-b border-asph-border-primary p-6">
+          <h3 className="m-0 text-lg font-semibold text-asph-text-primary">
             Add to Lists
           </h3>
           <button
             onClick={onClose}
-            className="cursor-pointer rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-200 hover:bg-bsky-bg-secondary"
+            className="cursor-pointer rounded-md border-none bg-transparent p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-secondary"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="bsky-scrollbar max-h-96 overflow-y-auto p-4">
+        <div className="asph-scrollbar max-h-96 overflow-y-auto p-4">
           {isLoading && (
             <ListItemSkeleton count={3} aria-label="Loading lists" />
           )}
 
           {!isLoading && lists && lists.length === 0 && (
             <div className="py-8 text-center">
-              <p className="text-sm text-bsky-text-secondary">
+              <p className="text-sm text-asph-text-secondary">
                 No lists yet. Create a list first!
               </p>
             </div>
@@ -125,32 +125,32 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
                     key={list.uri}
                     onClick={() => handleToggleList(list.uri)}
                     disabled={isUpdating}
-                    className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary p-3 text-left transition-all duration-200 hover:border-bsky-primary disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-asph-border-primary bg-asph-bg-secondary p-3 text-left transition-all duration-200 hover:border-asph-primary disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <div className="flex-1">
-                      <div className="font-medium text-bsky-text-primary">
+                      <div className="font-medium text-asph-text-primary">
                         {list.name}
                       </div>
                       {list.description && (
-                        <div className="mt-1 line-clamp-1 text-sm text-bsky-text-secondary">
+                        <div className="mt-1 line-clamp-1 text-sm text-asph-text-secondary">
                           {list.description}
                         </div>
                       )}
-                      <div className="mt-1 text-xs text-bsky-text-tertiary">
+                      <div className="mt-1 text-xs text-asph-text-tertiary">
                         {list.listItemCount || 0}{" "}
                         {list.listItemCount === 1 ? "member" : "members"}
                       </div>
                     </div>
                     <div className="ml-3">
                       {isUpdating ? (
-                        <div className="border-t-bsky-accent-primary h-5 w-5 animate-spin rounded-full border-2 border-bsky-border-primary" />
+                        <div className="border-t-asph-accent-primary h-5 w-5 animate-spin rounded-full border-2 border-asph-border-primary" />
                       ) : inList ? (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-bsky-primary">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-asph-primary">
                           <Check className="h-4 w-4 text-white" />
                         </div>
                       ) : (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-bsky-border-primary">
-                          <Plus className="h-4 w-4 text-bsky-text-secondary" />
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-asph-border-primary">
+                          <Plus className="h-4 w-4 text-asph-text-secondary" />
                         </div>
                       )}
                     </div>

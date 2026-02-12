@@ -173,14 +173,14 @@ function AppContent() {
     return (
       <div
         className="flex min-h-screen items-center justify-center"
-        style={{ background: "var(--bsky-bg-primary)" }}
+        style={{ background: "var(--asph-bg-primary)" }}
       >
         <div className="text-center">
           <div
             className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2"
-            style={{ borderColor: "var(--bsky-primary)" }}
+            style={{ borderColor: "var(--asph-primary)" }}
           ></div>
-          <p className="mt-4" style={{ color: "var(--bsky-text-secondary)" }}>
+          <p className="mt-4" style={{ color: "var(--asph-text-secondary)" }}>
             Loading...
           </p>
         </div>
@@ -199,8 +199,8 @@ function AppContent() {
 
   return (
     <div
-      className="bsky-font min-h-screen"
-      style={{ background: "var(--bsky-bg-primary)" }}
+      className="asph-font min-h-screen"
+      style={{ background: "var(--asph-bg-primary)" }}
       {...swipeHandlers}
     >
       {/* Skip navigation links for keyboard users - WCAG 2.4.1 Bypass Blocks */}

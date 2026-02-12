@@ -364,15 +364,15 @@ export const UserAnalytics: React.FC = () => {
         <div className="animate-pulse space-y-4">
           <div
             className="h-8 w-1/4 rounded"
-            style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+            style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
           />
           <div
             className="h-64 rounded"
-            style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+            style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
           />
           <div
             className="h-64 rounded"
-            style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+            style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
           />
         </div>
       </div>
@@ -385,13 +385,13 @@ export const UserAnalytics: React.FC = () => {
         <div className="flex-1">
           <h1
             className="mb-2 text-2xl font-bold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Performance Analytics
           </h1>
           <p
             className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Track your post engagement over time
           </p>
@@ -404,10 +404,10 @@ export const UserAnalytics: React.FC = () => {
             style={{
               backgroundColor:
                 dateRange === "24h"
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-bg-tertiary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-bg-tertiary)",
               color:
-                dateRange === "24h" ? "white" : "var(--bsky-text-secondary)",
+                dateRange === "24h" ? "white" : "var(--asph-text-secondary)",
             }}
           >
             24 hours
@@ -418,10 +418,10 @@ export const UserAnalytics: React.FC = () => {
             style={{
               backgroundColor:
                 dateRange === "7d"
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-bg-tertiary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-bg-tertiary)",
               color:
-                dateRange === "7d" ? "white" : "var(--bsky-text-secondary)",
+                dateRange === "7d" ? "white" : "var(--asph-text-secondary)",
             }}
           >
             7 days
@@ -432,10 +432,10 @@ export const UserAnalytics: React.FC = () => {
             style={{
               backgroundColor:
                 dateRange === "30d"
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-bg-tertiary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-bg-tertiary)",
               color:
-                dateRange === "30d" ? "white" : "var(--bsky-text-secondary)",
+                dateRange === "30d" ? "white" : "var(--asph-text-secondary)",
             }}
           >
             30 days
@@ -446,10 +446,10 @@ export const UserAnalytics: React.FC = () => {
             style={{
               backgroundColor:
                 dateRange === "90d"
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-bg-tertiary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-bg-tertiary)",
               color:
-                dateRange === "90d" ? "white" : "var(--bsky-text-secondary)",
+                dateRange === "90d" ? "white" : "var(--asph-text-secondary)",
             }}
           >
             90 days
@@ -459,30 +459,30 @@ export const UserAnalytics: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-5">
         <div
-          className="bsky-card p-4"
-          style={{ background: "var(--bsky-bg-secondary)" }}
+          className="asph-card p-4"
+          style={{ background: "var(--asph-bg-secondary)" }}
         >
           <div className="flex items-center gap-2 text-sm">
-            <Users size={16} style={{ color: "var(--bsky-text-secondary)" }} />
-            <span style={{ color: "var(--bsky-text-secondary)" }}>
+            <Users size={16} style={{ color: "var(--asph-text-secondary)" }} />
+            <span style={{ color: "var(--asph-text-secondary)" }}>
               Followers
             </span>
           </div>
           <div
             className="mt-2 text-2xl font-bold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             {profileData?.followersCount?.toLocaleString() || 0}
           </div>
         </div>
 
         <div
-          className="bsky-card p-4"
-          style={{ background: "var(--bsky-bg-secondary)" }}
+          className="asph-card p-4"
+          style={{ background: "var(--asph-bg-secondary)" }}
         >
           <div className="flex items-center gap-2 text-sm">
             <Heart size={16} className="text-red-500" />
-            <span style={{ color: "var(--bsky-text-secondary)" }}>Likes</span>
+            <span style={{ color: "var(--asph-text-secondary)" }}>Likes</span>
           </div>
           <div className="mt-2 text-2xl font-bold text-red-500">
             {postsData?.totalLikes?.toLocaleString() || 0}
@@ -490,12 +490,12 @@ export const UserAnalytics: React.FC = () => {
         </div>
 
         <div
-          className="bsky-card p-4"
-          style={{ background: "var(--bsky-bg-secondary)" }}
+          className="asph-card p-4"
+          style={{ background: "var(--asph-bg-secondary)" }}
         >
           <div className="flex items-center gap-2 text-sm">
             <Repeat2 size={16} className="text-blue-500" />
-            <span style={{ color: "var(--bsky-text-secondary)" }}>Reposts</span>
+            <span style={{ color: "var(--asph-text-secondary)" }}>Reposts</span>
           </div>
           <div className="mt-2 text-2xl font-bold text-blue-500">
             {postsData?.totalReposts?.toLocaleString() || 0}
@@ -503,12 +503,12 @@ export const UserAnalytics: React.FC = () => {
         </div>
 
         <div
-          className="bsky-card p-4"
-          style={{ background: "var(--bsky-bg-secondary)" }}
+          className="asph-card p-4"
+          style={{ background: "var(--asph-bg-secondary)" }}
         >
           <div className="flex items-center gap-2 text-sm">
             <MessageCircle size={16} className="text-green-500" />
-            <span style={{ color: "var(--bsky-text-secondary)" }}>Replies</span>
+            <span style={{ color: "var(--asph-text-secondary)" }}>Replies</span>
           </div>
           <div className="mt-2 text-2xl font-bold text-green-500">
             {postsData?.totalReplies?.toLocaleString() || 0}
@@ -516,12 +516,12 @@ export const UserAnalytics: React.FC = () => {
         </div>
 
         <div
-          className="bsky-card p-4"
-          style={{ background: "var(--bsky-bg-secondary)" }}
+          className="asph-card p-4"
+          style={{ background: "var(--asph-bg-secondary)" }}
         >
           <div className="flex items-center gap-2 text-sm">
             <TrendingUp size={16} className="text-purple-500" />
-            <span style={{ color: "var(--bsky-text-secondary)" }}>
+            <span style={{ color: "var(--asph-text-secondary)" }}>
               Engagement Rate
             </span>
           </div>
@@ -532,7 +532,7 @@ export const UserAnalytics: React.FC = () => {
           </div>
           <div
             className="mt-1 text-xs"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             avg per post
           </div>
@@ -540,12 +540,12 @@ export const UserAnalytics: React.FC = () => {
       </div>
 
       <div
-        className="bsky-card p-6"
-        style={{ background: "var(--bsky-bg-secondary)" }}
+        className="asph-card p-6"
+        style={{ background: "var(--asph-bg-secondary)" }}
       >
         <h2
           className="mb-4 flex items-center gap-2 text-lg font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           <BarChart3 size={20} className="text-purple-500" />
           Engagement Over Time
@@ -553,7 +553,7 @@ export const UserAnalytics: React.FC = () => {
         <div className="relative" style={{ height: "300px" }}>
           <div
             className="absolute bottom-0 left-0 top-0 flex flex-col justify-between text-xs"
-            style={{ width: "40px", color: "var(--bsky-text-secondary)" }}
+            style={{ width: "40px", color: "var(--asph-text-secondary)" }}
           >
             <span>{maxEngagement}</span>
             <span>{Math.round(maxEngagement * 0.75)}</span>
@@ -571,7 +571,7 @@ export const UserAnalytics: React.FC = () => {
                   style={{
                     bottom: `${fraction * 100}%`,
                     borderBottom: "1px solid",
-                    borderColor: "var(--bsky-border-secondary)",
+                    borderColor: "var(--asph-border-secondary)",
                     opacity: fraction === 0 ? 1 : 0.2,
                   }}
                 />
@@ -636,10 +636,10 @@ export const UserAnalytics: React.FC = () => {
                       <div
                         className="whitespace-nowrap rounded-lg px-3 py-2 text-xs"
                         style={{
-                          backgroundColor: "var(--bsky-bg-primary)",
-                          color: "var(--bsky-text-primary)",
+                          backgroundColor: "var(--asph-bg-primary)",
+                          color: "var(--asph-text-primary)",
                           boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-                          border: "1px solid var(--bsky-border-primary)",
+                          border: "1px solid var(--asph-border-primary)",
                         }}
                       >
                         <div className="mb-1 font-bold">{data.total} total</div>
@@ -668,7 +668,7 @@ export const UserAnalytics: React.FC = () => {
                         <span
                           className="text-xs"
                           style={{
-                            color: "var(--bsky-text-secondary)",
+                            color: "var(--asph-text-secondary)",
                             fontSize:
                               engagementChartData.length > 30 ? "9px" : "10px",
                           }}
@@ -689,14 +689,14 @@ export const UserAnalytics: React.FC = () => {
                 className="h-3 w-3 rounded"
                 style={{ backgroundColor: "#ef4444" }}
               />
-              <span style={{ color: "var(--bsky-text-secondary)" }}>Likes</span>
+              <span style={{ color: "var(--asph-text-secondary)" }}>Likes</span>
             </div>
             <div className="flex items-center gap-1">
               <div
                 className="h-3 w-3 rounded"
                 style={{ backgroundColor: "#60a5fa" }}
               />
-              <span style={{ color: "var(--bsky-text-secondary)" }}>
+              <span style={{ color: "var(--asph-text-secondary)" }}>
                 Reposts
               </span>
             </div>
@@ -705,7 +705,7 @@ export const UserAnalytics: React.FC = () => {
                 className="h-3 w-3 rounded"
                 style={{ backgroundColor: "#4ade80" }}
               />
-              <span style={{ color: "var(--bsky-text-secondary)" }}>
+              <span style={{ color: "var(--asph-text-secondary)" }}>
                 Replies
               </span>
             </div>
@@ -716,13 +716,13 @@ export const UserAnalytics: React.FC = () => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {postFrequencyData.length > 0 && (
           <div
-            className="bsky-card min-w-0 overflow-hidden p-6"
-            style={{ background: "var(--bsky-bg-secondary)" }}
+            className="asph-card min-w-0 overflow-hidden p-6"
+            style={{ background: "var(--asph-bg-secondary)" }}
           >
             <div className="mb-4 flex items-center justify-between">
               <h2
                 className="flex items-center gap-2 text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 <Clock size={20} className="text-orange-500" />
                 Posting Frequency
@@ -733,7 +733,7 @@ export const UserAnalytics: React.FC = () => {
                     className="h-3 w-3 rounded-sm"
                     style={{ backgroundColor: "#f97316" }}
                   />
-                  <span style={{ color: "var(--bsky-text-secondary)" }}>
+                  <span style={{ color: "var(--asph-text-secondary)" }}>
                     Posts
                   </span>
                 </div>
@@ -742,7 +742,7 @@ export const UserAnalytics: React.FC = () => {
                     className="h-3 w-3 rounded-sm"
                     style={{ backgroundColor: "#4ade80" }}
                   />
-                  <span style={{ color: "var(--bsky-text-secondary)" }}>
+                  <span style={{ color: "var(--asph-text-secondary)" }}>
                     Replies
                   </span>
                 </div>
@@ -751,7 +751,7 @@ export const UserAnalytics: React.FC = () => {
             <div className="relative" style={{ height: "250px" }}>
               <div
                 className="absolute bottom-0 left-0 top-0 flex flex-col justify-between text-xs"
-                style={{ width: "30px", color: "var(--bsky-text-secondary)" }}
+                style={{ width: "30px", color: "var(--asph-text-secondary)" }}
               >
                 <span>{maxPostsPerDay}</span>
                 <span>{Math.round(maxPostsPerDay * 0.75)}</span>
@@ -769,7 +769,7 @@ export const UserAnalytics: React.FC = () => {
                       style={{
                         bottom: `${fraction * 100}%`,
                         borderBottom: "1px solid",
-                        borderColor: "var(--bsky-border-secondary)",
+                        borderColor: "var(--asph-border-secondary)",
                         opacity: fraction === 0 ? 1 : 0.2,
                       }}
                     />
@@ -840,7 +840,7 @@ export const UserAnalytics: React.FC = () => {
                               <span
                                 className="whitespace-nowrap text-xs"
                                 style={{
-                                  color: "var(--bsky-text-secondary)",
+                                  color: "var(--asph-text-secondary)",
                                   fontSize: len > 60 ? "9px" : "10px",
                                 }}
                               >
@@ -860,12 +860,12 @@ export const UserAnalytics: React.FC = () => {
 
         {postingTimeAnalysis && (
           <div
-            className="bsky-card min-w-0 p-6"
-            style={{ background: "var(--bsky-bg-secondary)" }}
+            className="asph-card min-w-0 p-6"
+            style={{ background: "var(--asph-bg-secondary)" }}
           >
             <h2
               className="mb-4 flex items-center gap-2 text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               <Clock size={20} className="text-purple-500" />
               Best Posting Times
@@ -873,21 +873,21 @@ export const UserAnalytics: React.FC = () => {
             <div className="mb-4 space-y-2 text-sm">
               <div
                 className="rounded-lg p-3"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
-                <div style={{ color: "var(--bsky-text-secondary)" }}>
+                <div style={{ color: "var(--asph-text-secondary)" }}>
                   Highest Engagement
                 </div>
                 <div
                   className="mt-1 text-lg font-semibold"
-                  style={{ color: "var(--bsky-primary)" }}
+                  style={{ color: "var(--asph-primary)" }}
                 >
                   {postingTimeAnalysis.maxEngagementHour}:00 -{" "}
                   {postingTimeAnalysis.maxEngagementHour + 1}:00
                 </div>
                 <div
                   className="mt-1 text-xs"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Avg{" "}
                   {postingTimeAnalysis.avgEngagementByHour[
@@ -898,21 +898,21 @@ export const UserAnalytics: React.FC = () => {
               </div>
               <div
                 className="rounded-lg p-3"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
-                <div style={{ color: "var(--bsky-text-secondary)" }}>
+                <div style={{ color: "var(--asph-text-secondary)" }}>
                   Most Active Hour
                 </div>
                 <div
                   className="mt-1 text-lg font-semibold"
-                  style={{ color: "var(--bsky-primary)" }}
+                  style={{ color: "var(--asph-primary)" }}
                 >
                   {postingTimeAnalysis.maxPostsHour}:00 -{" "}
                   {postingTimeAnalysis.maxPostsHour + 1}:00
                 </div>
                 <div
                   className="mt-1 text-xs"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   {
                     postingTimeAnalysis.hourCounts[
@@ -948,7 +948,7 @@ export const UserAnalytics: React.FC = () => {
                     {hour % 3 === 0 && (
                       <div
                         className="absolute left-0 right-0 top-full mt-1 text-center text-xs"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         {hour}
                       </div>
@@ -962,12 +962,12 @@ export const UserAnalytics: React.FC = () => {
       </div>
 
       <div
-        className="bsky-card p-6"
-        style={{ background: "var(--bsky-bg-secondary)" }}
+        className="asph-card p-6"
+        style={{ background: "var(--asph-bg-secondary)" }}
       >
         <h2
           className="mb-4 flex items-center gap-2 text-lg font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           <TrendingUp size={20} className="text-green-500" />
           Top Performing Posts
@@ -978,12 +978,12 @@ export const UserAnalytics: React.FC = () => {
               <div
                 key={post.uri}
                 className="flex gap-4 rounded-lg p-4 transition-all hover:bg-opacity-50"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
                 <div
                   className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold"
                   style={{
-                    backgroundColor: "var(--bsky-primary)",
+                    backgroundColor: "var(--asph-primary)",
                     color: "white",
                   }}
                 >
@@ -1000,20 +1000,20 @@ export const UserAnalytics: React.FC = () => {
                     )}
                     <span
                       className="text-sm font-medium"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       {post.author.displayName || post.author.handle}
                     </span>
                     <span
                       className="text-xs"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       {format(new Date(post.createdAt), "MMM d, yyyy")}
                     </span>
                   </div>
                   <p
                     className="mb-3 text-sm"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {post.text.length > 200
                       ? `${post.text.substring(0, 200)}...`
@@ -1022,25 +1022,25 @@ export const UserAnalytics: React.FC = () => {
                   <div className="flex flex-wrap gap-4 text-sm">
                     <div className="flex items-center gap-1">
                       <Heart size={14} className="text-red-500" />
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      <span style={{ color: "var(--asph-text-secondary)" }}>
                         {post.likes.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Repeat2 size={14} className="text-blue-500" />
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      <span style={{ color: "var(--asph-text-secondary)" }}>
                         {post.reposts.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <MessageCircle size={14} className="text-green-500" />
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      <span style={{ color: "var(--asph-text-secondary)" }}>
                         {post.replies.toLocaleString()}
                       </span>
                     </div>
                     <div
                       className="ml-auto font-semibold"
-                      style={{ color: "var(--bsky-primary)" }}
+                      style={{ color: "var(--asph-primary)" }}
                     >
                       {post.totalEngagement.toLocaleString()} total
                     </div>
@@ -1052,7 +1052,7 @@ export const UserAnalytics: React.FC = () => {
         ) : (
           <div
             className="py-12 text-center"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             <p>No posts found in this time range</p>
           </div>
@@ -1061,13 +1061,13 @@ export const UserAnalytics: React.FC = () => {
 
       {postsData && postsData.totalPosts > 0 && (
         <div
-          className="bsky-card p-4"
-          style={{ background: "var(--bsky-bg-secondary)" }}
+          className="asph-card p-4"
+          style={{ background: "var(--asph-bg-secondary)" }}
         >
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div
               className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Showing {postsData.totalPosts.toLocaleString()} posts from{" "}
               {format(startDate, "MMM d, yyyy")} to{" "}
@@ -1077,11 +1077,11 @@ export const UserAnalytics: React.FC = () => {
               <div>
                 <span
                   className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {postsData.totalEngagement.toLocaleString()}
                 </span>
-                <span style={{ color: "var(--bsky-text-secondary)" }}>
+                <span style={{ color: "var(--asph-text-secondary)" }}>
                   {" "}
                   total engagement
                 </span>
@@ -1089,7 +1089,7 @@ export const UserAnalytics: React.FC = () => {
               <div>
                 <span
                   className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {postsData.totalPosts > 0
                     ? (
@@ -1097,7 +1097,7 @@ export const UserAnalytics: React.FC = () => {
                       ).toFixed(1)
                     : 0}
                 </span>
-                <span style={{ color: "var(--bsky-text-secondary)" }}>
+                <span style={{ color: "var(--asph-text-secondary)" }}>
                   {" "}
                   avg per post
                 </span>
@@ -1109,13 +1109,13 @@ export const UserAnalytics: React.FC = () => {
 
       {postsData && postsData.totalPosts > 0 && (
         <div
-          className="bsky-card p-6"
-          style={{ background: "var(--bsky-bg-secondary)" }}
+          className="asph-card p-6"
+          style={{ background: "var(--asph-bg-secondary)" }}
         >
           <div className="mb-4 flex items-center justify-between">
             <h2
               className="flex items-center gap-2 text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               <Sparkles size={20} className="text-purple-500" />
               AI Content Analysis
@@ -1125,7 +1125,7 @@ export const UserAnalytics: React.FC = () => {
                 onClick={() => setAnalysisRequested(true)}
                 className="rounded-lg px-4 py-2 text-sm font-medium transition-all hover:opacity-90"
                 style={{
-                  backgroundColor: "var(--bsky-primary)",
+                  backgroundColor: "var(--asph-primary)",
                   color: "white",
                 }}
               >
@@ -1137,7 +1137,7 @@ export const UserAnalytics: React.FC = () => {
           {!analysisRequested && (
             <div
               className="rounded-lg p-6 text-center"
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
             >
               <Sparkles
                 size={48}
@@ -1145,13 +1145,13 @@ export const UserAnalytics: React.FC = () => {
               />
               <p
                 className="mb-2 text-lg font-medium"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 Get AI-Powered Insights
               </p>
               <p
                 className="mb-4 text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Discover content themes, writing style patterns, and engagement
                 insights from your posts
@@ -1162,18 +1162,18 @@ export const UserAnalytics: React.FC = () => {
           {isLoadingAnalysis && (
             <div
               className="rounded-lg p-8 text-center"
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
             >
               <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-500" />
               <p
                 className="text-sm font-medium"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 Analyzing your posts...
               </p>
               <p
                 className="mt-2 text-xs"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 This may take a moment
               </p>
@@ -1184,17 +1184,17 @@ export const UserAnalytics: React.FC = () => {
             <div className="space-y-6">
               <div
                 className="rounded-lg p-6"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
                 <h3
                   className="mb-3 text-base font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   Summary
                 </h3>
                 <p
                   className="text-sm leading-relaxed"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   {analysisData.summary}
                 </p>
@@ -1203,11 +1203,11 @@ export const UserAnalytics: React.FC = () => {
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <div
                   className="rounded-lg p-6"
-                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                  style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
                 >
                   <h3
                     className="mb-4 flex items-center gap-2 text-base font-semibold"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     <BarChart3 size={18} className="text-blue-500" />
                     Content Themes
@@ -1218,7 +1218,7 @@ export const UserAnalytics: React.FC = () => {
                         <div className="flex items-start justify-between gap-2">
                           <h4
                             className="font-medium"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                           >
                             {theme.theme}
                           </h4>
@@ -1239,7 +1239,7 @@ export const UserAnalytics: React.FC = () => {
                         </div>
                         <p
                           className="text-sm"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           {theme.description}
                         </p>
@@ -1249,7 +1249,7 @@ export const UserAnalytics: React.FC = () => {
                               <p
                                 key={example}
                                 className="text-xs italic"
-                                style={{ color: "var(--bsky-text-secondary)" }}
+                                style={{ color: "var(--asph-text-secondary)" }}
                               >
                                 "{example}"
                               </p>
@@ -1263,11 +1263,11 @@ export const UserAnalytics: React.FC = () => {
 
                 <div
                   className="rounded-lg p-6"
-                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                  style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
                 >
                   <h3
                     className="mb-4 flex items-center gap-2 text-base font-semibold"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     <MessageCircle size={18} className="text-green-500" />
                     Writing Style
@@ -1276,13 +1276,13 @@ export const UserAnalytics: React.FC = () => {
                     <div>
                       <p
                         className="mb-1 text-xs font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         Tone
                       </p>
                       <p
                         className="text-sm font-medium"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {analysisData.writingStyle.tone}
                       </p>
@@ -1290,7 +1290,7 @@ export const UserAnalytics: React.FC = () => {
                     <div>
                       <p
                         className="mb-2 text-xs font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         Characteristics
                       </p>
@@ -1300,7 +1300,7 @@ export const UserAnalytics: React.FC = () => {
                             <li
                               key={char}
                               className="flex items-start gap-2 text-sm"
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                             >
                               <span className="text-green-500">•</span>
                               {char}
@@ -1312,13 +1312,13 @@ export const UserAnalytics: React.FC = () => {
                     <div>
                       <p
                         className="mb-1 text-xs font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         Voice
                       </p>
                       <p
                         className="text-sm"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         {analysisData.writingStyle.voiceDescription}
                       </p>
@@ -1329,11 +1329,11 @@ export const UserAnalytics: React.FC = () => {
 
               <div
                 className="rounded-lg p-6"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
                 <h3
                   className="mb-4 flex items-center gap-2 text-base font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   <Lightbulb size={18} className="text-yellow-500" />
                   Engagement Insights
@@ -1342,7 +1342,7 @@ export const UserAnalytics: React.FC = () => {
                   <div>
                     <p
                       className="mb-3 text-xs font-medium"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       Top Performers
                     </p>
@@ -1352,7 +1352,7 @@ export const UserAnalytics: React.FC = () => {
                           <li
                             key={item}
                             className="text-sm"
-                            style={{ color: "var(--bsky-text-secondary)" }}
+                            style={{ color: "var(--asph-text-secondary)" }}
                           >
                             <span className="text-yellow-500">★</span> {item}
                           </li>
@@ -1363,7 +1363,7 @@ export const UserAnalytics: React.FC = () => {
                   <div>
                     <p
                       className="mb-3 text-xs font-medium"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       Your Strengths
                     </p>
@@ -1373,7 +1373,7 @@ export const UserAnalytics: React.FC = () => {
                           <li
                             key={item}
                             className="text-sm"
-                            style={{ color: "var(--bsky-text-secondary)" }}
+                            style={{ color: "var(--asph-text-secondary)" }}
                           >
                             <span className="text-green-500">✓</span> {item}
                           </li>
@@ -1384,7 +1384,7 @@ export const UserAnalytics: React.FC = () => {
                   <div>
                     <p
                       className="mb-3 text-xs font-medium"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       Observations
                     </p>
@@ -1397,7 +1397,7 @@ export const UserAnalytics: React.FC = () => {
                         <li
                           key={item}
                           className="text-sm"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <span className="text-purple-500">•</span> {item}
                         </li>
@@ -1411,18 +1411,18 @@ export const UserAnalytics: React.FC = () => {
                 analysisData.optimalPostingTimes.recommendations.length > 0 && (
                   <div
                     className="rounded-lg p-6"
-                    style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                    style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
                   >
                     <h3
                       className="mb-4 flex items-center gap-2 text-base font-semibold"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       <Clock size={18} className="text-blue-500" />
                       Optimal Posting Times
                     </h3>
                     <p
                       className="mb-4 text-sm"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       Based on your last{" "}
                       {dateRange === "90d"
@@ -1465,18 +1465,18 @@ export const UserAnalytics: React.FC = () => {
                               key={`posting-time-${rec.dayOfWeek}-${rec.hour}`}
                               className="flex flex-col rounded-lg p-4"
                               style={{
-                                backgroundColor: "var(--bsky-bg-secondary)",
+                                backgroundColor: "var(--asph-bg-secondary)",
                                 border:
                                   i === 0
-                                    ? "2px solid var(--bsky-primary)"
-                                    : "1px solid var(--bsky-border-primary)",
+                                    ? "2px solid var(--asph-primary)"
+                                    : "1px solid var(--asph-border-primary)",
                               }}
                             >
                               <div className="mb-2 flex items-center justify-between">
                                 <span
                                   className="text-xs font-medium"
                                   style={{
-                                    color: "var(--bsky-text-secondary)",
+                                    color: "var(--asph-text-secondary)",
                                   }}
                                 >
                                   {i === 0 ? "Best Time" : `#${i + 1}`}
@@ -1493,13 +1493,13 @@ export const UserAnalytics: React.FC = () => {
                               </div>
                               <div
                                 className="text-lg font-bold"
-                                style={{ color: "var(--bsky-text-primary)" }}
+                                style={{ color: "var(--asph-text-primary)" }}
                               >
                                 {formatHour(rec.hour)}
                               </div>
                               <div
                                 className="text-sm"
-                                style={{ color: "var(--bsky-text-secondary)" }}
+                                style={{ color: "var(--asph-text-secondary)" }}
                               >
                                 {rec.dayOfWeek === -1
                                   ? "Any day"
@@ -1507,7 +1507,7 @@ export const UserAnalytics: React.FC = () => {
                               </div>
                               <div
                                 className="mt-2 text-xs"
-                                style={{ color: "var(--bsky-primary)" }}
+                                style={{ color: "var(--asph-primary)" }}
                               >
                                 ~{rec.avgEngagement} avg engagement
                               </div>
@@ -1523,8 +1523,8 @@ export const UserAnalytics: React.FC = () => {
                 onClick={() => setAnalysisRequested(false)}
                 className="w-full rounded-lg px-4 py-2 text-sm transition-all hover:opacity-80"
                 style={{
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                  color: "var(--bsky-text-secondary)",
+                  backgroundColor: "var(--asph-bg-tertiary)",
+                  color: "var(--asph-text-secondary)",
                 }}
               >
                 Hide Analysis

@@ -1,4 +1,4 @@
-# ShadowSky - Advanced Bluesky Client
+# Asphodel - Advanced Bluesky Client
 
 A full-featured Bluesky client with TweetDeck-style multi-column interface, advanced analytics, and real-time updates. Built with React, TypeScript, and Vite.
 
@@ -57,7 +57,7 @@ The app uses AT Protocol authentication with support for:
 
 ## 💾 Storage System
 
-ShadowSky features a sophisticated dual storage system that lets users choose where their data is stored.
+Asphodel features a sophisticated dual storage system that lets users choose where their data is stored.
 
 ### Storage Types
 

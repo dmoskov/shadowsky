@@ -186,8 +186,8 @@ export function ThreadContextBar({
         isVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"
       } ${className}`}
       style={{
-        backgroundColor: "var(--bsky-bg-primary)",
-        borderBottom: "1px solid var(--bsky-border-primary)",
+        backgroundColor: "var(--asph-bg-primary)",
+        borderBottom: "1px solid var(--asph-border-primary)",
         backdropFilter: "blur(8px)",
       }}
     >
@@ -203,7 +203,7 @@ export function ThreadContextBar({
               />
               <span
                 className="truncate text-xs italic"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
                 title={haikuSummary || undefined}
               >
                 {truncatedHaiku}
@@ -216,12 +216,12 @@ export function ThreadContextBar({
         <div className="flex flex-shrink-0 items-center gap-3">
           <div
             className="flex items-center gap-1 text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
             title={`${totalPosts} posts in thread`}
           >
             <span
               className="font-medium"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               {totalPosts}
             </span>
@@ -230,13 +230,13 @@ export function ThreadContextBar({
 
           <div
             className="flex items-center gap-1 text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
             title={`${uniqueParticipants} participants`}
           >
             <Users size={12} className="flex-shrink-0" />
             <span
               className="font-medium"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               {uniqueParticipants}
             </span>
@@ -245,13 +245,13 @@ export function ThreadContextBar({
           {maxDepth > 2 && (
             <div
               className="flex items-center gap-1 text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
               title={`Max depth: ${maxDepth} levels`}
             >
               <GitBranch size={12} className="flex-shrink-0" />
               <span
                 className="font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 {maxDepth}
               </span>
@@ -262,8 +262,8 @@ export function ThreadContextBar({
           <div
             className="rounded-full px-2 py-0.5 text-xs"
             style={{
-              backgroundColor: "var(--bsky-bg-tertiary)",
-              color: "var(--bsky-text-secondary)",
+              backgroundColor: "var(--asph-bg-tertiary)",
+              color: "var(--asph-text-secondary)",
             }}
           >
             {currentIndex + 1}/{totalPosts}
@@ -278,7 +278,7 @@ export function ThreadContextBar({
               onClick={() => setJumpMenuOpen(!jumpMenuOpen)}
               onKeyDown={handleMenuKeyDown}
               className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
               title="Jump to..."
               aria-expanded={jumpMenuOpen}
               aria-haspopup="true"
@@ -296,8 +296,8 @@ export function ThreadContextBar({
               <div
                 className="absolute right-0 top-full z-10 mt-1 min-w-[200px] rounded-lg border py-1 shadow-lg"
                 style={{
-                  backgroundColor: "var(--bsky-bg-primary)",
-                  borderColor: "var(--bsky-border-primary)",
+                  backgroundColor: "var(--asph-bg-primary)",
+                  borderColor: "var(--asph-border-primary)",
                 }}
               >
                 {jumpTargets.map((target) => (
@@ -305,13 +305,13 @@ export function ThreadContextBar({
                     key={`${target.label}-${target.index}`}
                     onClick={() => handleJumpSelect(target)}
                     className="flex w-full items-center justify-between px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     <span>{target.label}</span>
                     {target.description && (
                       <span
                         className="ml-2 text-xs"
-                        style={{ color: "var(--bsky-text-tertiary)" }}
+                        style={{ color: "var(--asph-text-tertiary)" }}
                       >
                         {target.description}
                       </span>
@@ -326,7 +326,7 @@ export function ThreadContextBar({
           <button
             onClick={onJumpToStart}
             className="rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
             title="Jump to start (Home)"
             disabled={currentIndex === 0}
           >
@@ -336,7 +336,7 @@ export function ThreadContextBar({
           <button
             onClick={onJumpToParent}
             className="rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
             title="Jump to parent post"
           >
             <ArrowUp size={16} />
@@ -345,7 +345,7 @@ export function ThreadContextBar({
           <button
             onClick={onJumpToEnd}
             className="rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
             title="Jump to end (End)"
             disabled={currentIndex === totalPosts - 1}
           >

@@ -1,7 +1,7 @@
 # Storage Conventions and Key Reference
 
 ## Overview
-This document defines the storage conventions used throughout the ShadowSky application to ensure consistency and prevent key naming conflicts.
+This document defines the storage conventions used throughout the Asphodel application to ensure consistency and prevent key naming conflicts.
 
 ## Key Naming Conventions
 
@@ -53,7 +53,7 @@ All collections now use singleton pattern with rkey `self`:
 }
 ```
 
-### ShadowSkyPreferences (AT Protocol)
+### AsphodelPreferences (AT Protocol)
 ```typescript
 {
   bookmarkStorageType: "local" | "custom"

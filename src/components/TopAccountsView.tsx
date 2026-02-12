@@ -186,13 +186,13 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
         <div className="mb-6 flex items-center justify-between">
           <h2
             className="text-xl font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Top Accounts
           </h2>
           <button
             onClick={onConfigClick}
-            className="bsky-button-secondary flex items-center gap-2"
+            className="asph-button-secondary flex items-center gap-2"
           >
             <Settings size={16} />
             Settings
@@ -203,7 +203,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
           {[...Array(5)].map((_, i) => (
             <div
               key={`account-skeleton-${i}`}
-              className="bsky-card bsky-loading h-24 p-4"
+              className="asph-card asph-loading h-24 p-4"
             ></div>
           ))}
         </div>
@@ -217,13 +217,13 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
         <div className="mb-6 flex items-center justify-between">
           <h2
             className="text-xl font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Top Accounts
           </h2>
           <button
             onClick={onConfigClick}
-            className="bsky-button-secondary flex items-center gap-2"
+            className="asph-button-secondary flex items-center gap-2"
           >
             <Settings size={16} />
             Settings
@@ -234,11 +234,11 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
           <div className="mb-4 text-5xl opacity-20">👥</div>
           <p
             className="mb-2 text-lg"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             No accounts with {minFollowerCount.toLocaleString()}+ followers
           </p>
-          <p className="text-sm" style={{ color: "var(--bsky-text-tertiary)" }}>
+          <p className="text-sm" style={{ color: "var(--asph-text-tertiary)" }}>
             Try lowering the follower threshold in settings
           </p>
         </div>
@@ -252,12 +252,12 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
         <div>
           <h2
             className="text-xl font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Top Accounts
             <span
               className="ml-2 text-sm font-normal"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               {topAccounts.length} accounts with{" "}
               {minFollowerCount.toLocaleString()}+ followers
@@ -267,7 +267,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
             <div className="mt-1 space-y-1">
               <div
                 className="flex items-center gap-2 text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 <Database size={12} />
                 <span>
@@ -281,7 +281,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
         </div>
         <button
           onClick={onConfigClick}
-          className="bsky-button-secondary flex items-center gap-2"
+          className="asph-button-secondary flex items-center gap-2"
         >
           <Settings size={16} />
           Settings
@@ -295,7 +295,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
             href={getBskyProfileUrl(account.handle)}
             target="_blank"
             rel="noopener noreferrer"
-            className="bsky-card block p-4 no-underline transition-opacity hover:opacity-90"
+            className="asph-card block p-4 no-underline transition-opacity hover:opacity-90"
           >
             <div className="flex items-start gap-4">
               {/* Rank badge */}
@@ -304,9 +304,9 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
                 style={{
                   backgroundColor:
                     index < 3
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-bg-tertiary)",
-                  color: index < 3 ? "white" : "var(--bsky-text-secondary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-bg-tertiary)",
+                  color: index < 3 ? "white" : "var(--asph-text-secondary)",
                 }}
               >
                 {index + 1}
@@ -319,12 +319,12 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
                     <img
                       src={proxifyBskyImage(account.avatar)}
                       alt={account.handle}
-                      className="bsky-avatar h-12 w-12 cursor-pointer transition-opacity hover:opacity-80"
+                      className="asph-avatar h-12 w-12 cursor-pointer transition-opacity hover:opacity-80"
                     />
                   ) : (
                     <div
-                      className="bsky-avatar flex h-12 w-12 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
-                      style={{ background: "var(--bsky-bg-tertiary)" }}
+                      className="asph-avatar flex h-12 w-12 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
+                      style={{ background: "var(--asph-bg-tertiary)" }}
                     >
                       <span className="text-lg font-semibold">
                         {account.handle?.charAt(0).toUpperCase() || "U"}
@@ -340,7 +340,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
                   <ProfileHoverCard handle={account.handle}>
                     <h3
                       className="cursor-pointer truncate font-semibold hover:underline"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       {account.displayName || account.handle}
                     </h3>
@@ -350,7 +350,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
 
                 <p
                   className="mb-2 flex items-center text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   <ProfileHoverCard handle={account.handle}>
                     <span className="cursor-pointer hover:underline">
@@ -365,12 +365,12 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
                   <div className="flex items-center gap-1">
                     <Users
                       size={14}
-                      style={{ color: "var(--bsky-text-tertiary)" }}
+                      style={{ color: "var(--asph-text-tertiary)" }}
                     />
-                    <span style={{ color: "var(--bsky-text-primary)" }}>
+                    <span style={{ color: "var(--asph-text-primary)" }}>
                       {account.followerCount.toLocaleString()}
                     </span>
-                    <span style={{ color: "var(--bsky-text-tertiary)" }}>
+                    <span style={{ color: "var(--asph-text-tertiary)" }}>
                       followers
                     </span>
                   </div>
@@ -378,12 +378,12 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
                   <div className="flex items-center gap-1">
                     <TrendingUp
                       size={14}
-                      style={{ color: "var(--bsky-text-tertiary)" }}
+                      style={{ color: "var(--asph-text-tertiary)" }}
                     />
-                    <span style={{ color: "var(--bsky-text-primary)" }}>
+                    <span style={{ color: "var(--asph-text-primary)" }}>
                       {account.interactionCount}
                     </span>
-                    <span style={{ color: "var(--bsky-text-tertiary)" }}>
+                    <span style={{ color: "var(--asph-text-tertiary)" }}>
                       interactions
                     </span>
                   </div>
@@ -392,32 +392,32 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
                 {/* Interaction breakdown */}
                 <div className="mt-2 flex flex-wrap gap-2">
                   {account.interactions.likes > 0 && (
-                    <span className="bsky-badge text-xs">
+                    <span className="asph-badge text-xs">
                       ❤️ {account.interactions.likes}
                     </span>
                   )}
                   {account.interactions.reposts > 0 && (
-                    <span className="bsky-badge text-xs">
+                    <span className="asph-badge text-xs">
                       🔁 {account.interactions.reposts}
                     </span>
                   )}
                   {account.interactions.follows > 0 && (
-                    <span className="bsky-badge text-xs">
+                    <span className="asph-badge text-xs">
                       ➕ {account.interactions.follows}
                     </span>
                   )}
                   {account.interactions.replies > 0 && (
-                    <span className="bsky-badge text-xs">
+                    <span className="asph-badge text-xs">
                       💬 {account.interactions.replies}
                     </span>
                   )}
                   {account.interactions.mentions > 0 && (
-                    <span className="bsky-badge text-xs">
+                    <span className="asph-badge text-xs">
                       @ {account.interactions.mentions}
                     </span>
                   )}
                   {account.interactions.quotes > 0 && (
-                    <span className="bsky-badge text-xs">
+                    <span className="asph-badge text-xs">
                       " {account.interactions.quotes}
                     </span>
                   )}
@@ -425,7 +425,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
 
                 <div
                   className="mt-2 flex items-center gap-2 text-xs"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   <span>
                     Last interaction{" "}
@@ -441,7 +441,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
                         style={{
                           color:
                             account.fromCache === false
-                              ? "var(--bsky-green)"
+                              ? "var(--asph-green)"
                               : "inherit",
                         }}
                       >

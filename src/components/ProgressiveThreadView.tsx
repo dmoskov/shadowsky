@@ -228,7 +228,7 @@ function ThreadStatsBar({
   return (
     <div
       className="mb-3 flex items-center gap-4 text-sm"
-      style={{ color: "var(--bsky-text-secondary)" }}
+      style={{ color: "var(--asph-text-secondary)" }}
     >
       {config.showParticipants && stats.participantCount > 1 && (
         <div className="flex items-center gap-2">
@@ -240,7 +240,7 @@ function ThreadStatsBar({
                 alt={author.handle}
                 className="h-6 w-6 border-2"
                 style={{
-                  borderColor: "var(--bsky-bg-primary)",
+                  borderColor: "var(--asph-bg-primary)",
                   zIndex: stats.authorAvatars.length - idx,
                 }}
                 fallbackInitial={author.handle?.charAt(0).toUpperCase()}

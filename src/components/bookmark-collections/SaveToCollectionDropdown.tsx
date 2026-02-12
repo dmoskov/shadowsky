@@ -136,7 +136,7 @@ export const SaveToCollectionDropdown: React.FC<
         <button
           ref={triggerRef}
           onClick={handleToggle}
-          className="flex items-center gap-1 rounded p-1.5 text-bsky-text-secondary transition-colors hover:bg-bsky-bg-secondary hover:text-bsky-text-primary"
+          className="flex items-center gap-1 rounded p-1.5 text-asph-text-secondary transition-colors hover:bg-asph-bg-secondary hover:text-asph-text-primary"
           title="Add to collection"
           aria-label="Add to collection"
           aria-haspopup="menu"
@@ -152,16 +152,16 @@ export const SaveToCollectionDropdown: React.FC<
             id={menuId}
             role="menu"
             aria-label="Collections"
-            className="absolute right-0 top-full z-50 mt-1 min-w-56 rounded-lg border border-bsky-border-primary bg-bsky-bg-primary shadow-lg"
+            className="absolute right-0 top-full z-50 mt-1 min-w-56 rounded-lg border border-asph-border-primary bg-asph-bg-primary shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-2">
-              <p className="mb-2 px-2 text-xs font-medium text-bsky-text-secondary">
+              <p className="mb-2 px-2 text-xs font-medium text-asph-text-secondary">
                 Save to collection
               </p>
 
               {collections.length === 0 && !showNewCollectionForm && (
-                <p className="px-2 py-2 text-sm text-bsky-text-tertiary">
+                <p className="px-2 py-2 text-sm text-asph-text-tertiary">
                   No collections yet
                 </p>
               )}
@@ -171,7 +171,7 @@ export const SaveToCollectionDropdown: React.FC<
                   key={collection.id}
                   role="menuitem"
                   onClick={(e) => handleToggleCollection(e, collection.id)}
-                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-bsky-text-primary transition-colors hover:bg-bsky-bg-secondary focus-visible:bg-bsky-bg-secondary focus-visible:outline-none"
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-asph-text-primary transition-colors hover:bg-asph-bg-secondary focus-visible:bg-asph-bg-secondary focus-visible:outline-none"
                 >
                   <div
                     className="h-3 w-3 rounded-full"
@@ -197,7 +197,7 @@ export const SaveToCollectionDropdown: React.FC<
                     value={newCollectionName}
                     onChange={(e) => setNewCollectionName(e.target.value)}
                     placeholder="Collection name"
-                    className="mb-2 w-full rounded border border-bsky-border-primary bg-bsky-bg-secondary px-2 py-1.5 text-sm text-bsky-text-primary focus-visible:border-blue-500 focus-visible:outline-none"
+                    className="mb-2 w-full rounded border border-asph-border-primary bg-asph-bg-secondary px-2 py-1.5 text-sm text-asph-text-primary focus-visible:border-blue-500 focus-visible:outline-none"
                     disabled={isCreating}
                   />
                   <div className="mb-2 flex gap-1">
@@ -211,7 +211,7 @@ export const SaveToCollectionDropdown: React.FC<
                         }}
                         className={`h-5 w-5 rounded-full border-2 ${
                           selectedColor === color.id
-                            ? "border-bsky-text-primary"
+                            ? "border-asph-text-primary"
                             : "border-transparent"
                         }`}
                         style={{ backgroundColor: color.value }}
@@ -226,7 +226,7 @@ export const SaveToCollectionDropdown: React.FC<
                         e.stopPropagation();
                         setShowNewCollectionForm(false);
                       }}
-                      className="flex-1 rounded bg-bsky-bg-secondary px-2 py-1 text-sm text-bsky-text-secondary hover:bg-bsky-bg-hover"
+                      className="flex-1 rounded bg-asph-bg-secondary px-2 py-1 text-sm text-asph-text-secondary hover:bg-asph-bg-hover"
                     >
                       Cancel
                     </button>
@@ -246,7 +246,7 @@ export const SaveToCollectionDropdown: React.FC<
                     e.stopPropagation();
                     setShowNewCollectionForm(true);
                   }}
-                  className="mt-2 flex w-full items-center gap-2 rounded-md border border-dashed border-bsky-border-primary px-2 py-1.5 text-sm text-bsky-text-secondary transition-colors hover:border-blue-500 hover:text-blue-500 focus-visible:border-blue-500 focus-visible:text-blue-500 focus-visible:outline-none"
+                  className="mt-2 flex w-full items-center gap-2 rounded-md border border-dashed border-asph-border-primary px-2 py-1.5 text-sm text-asph-text-secondary transition-colors hover:border-blue-500 hover:text-blue-500 focus-visible:border-blue-500 focus-visible:text-blue-500 focus-visible:outline-none"
                 >
                   <Plus size={14} aria-hidden="true" />
                   New collection
@@ -264,7 +264,7 @@ export const SaveToCollectionDropdown: React.FC<
       <button
         ref={triggerRef}
         onClick={handleToggle}
-        className="flex items-center gap-2 rounded-md border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-1.5 text-sm text-bsky-text-primary transition-colors hover:bg-bsky-bg-hover"
+        className="flex items-center gap-2 rounded-md border border-asph-border-primary bg-asph-bg-secondary px-3 py-1.5 text-sm text-asph-text-primary transition-colors hover:bg-asph-bg-hover"
         aria-label="Add to collection"
         aria-haspopup="menu"
         aria-expanded={isOpen}
@@ -285,38 +285,38 @@ export const SaveToCollectionDropdown: React.FC<
           id={menuId}
           role="menu"
           aria-label="Collections"
-          className="absolute left-0 top-full z-50 mt-1 min-w-64 rounded-lg border border-bsky-border-primary bg-bsky-bg-primary shadow-lg"
+          className="absolute left-0 top-full z-50 mt-1 min-w-64 rounded-lg border border-asph-border-primary bg-asph-bg-primary shadow-lg"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="p-3">
-            <p className="mb-3 text-sm font-medium text-bsky-text-primary">
+            <p className="mb-3 text-sm font-medium text-asph-text-primary">
               Collections
             </p>
 
             {collections.length === 0 && !showNewCollectionForm && (
-              <p className="py-4 text-center text-sm text-bsky-text-tertiary">
+              <p className="py-4 text-center text-sm text-asph-text-tertiary">
                 No collections yet. Create one to get started.
               </p>
             )}
 
-            <div className="bsky-scrollbar max-h-60 space-y-1 overflow-y-auto">
+            <div className="asph-scrollbar max-h-60 space-y-1 overflow-y-auto">
               {collections.map((collection) => (
                 <button
                   key={collection.id}
                   role="menuitem"
                   onClick={(e) => handleToggleCollection(e, collection.id)}
-                  className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors hover:bg-bsky-bg-secondary focus-visible:bg-bsky-bg-secondary focus-visible:outline-none"
+                  className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors hover:bg-asph-bg-secondary focus-visible:bg-asph-bg-secondary focus-visible:outline-none"
                 >
                   <div
                     className="h-4 w-4 rounded-full"
                     style={{ backgroundColor: getCollectionColor(collection) }}
                     aria-hidden="true"
                   />
-                  <span className="flex-1 text-left text-bsky-text-primary">
+                  <span className="flex-1 text-left text-asph-text-primary">
                     {collection.name}
                   </span>
                   <span
-                    className="text-xs text-bsky-text-tertiary"
+                    className="text-xs text-asph-text-tertiary"
                     aria-hidden="true"
                   >
                     {collection.bookmarkCount}
@@ -332,7 +332,7 @@ export const SaveToCollectionDropdown: React.FC<
               ))}
             </div>
 
-            <div className="mt-3 border-t border-bsky-border-primary pt-3">
+            <div className="mt-3 border-t border-asph-border-primary pt-3">
               {showNewCollectionForm ? (
                 <form onSubmit={handleCreateCollection}>
                   <input
@@ -341,7 +341,7 @@ export const SaveToCollectionDropdown: React.FC<
                     value={newCollectionName}
                     onChange={(e) => setNewCollectionName(e.target.value)}
                     placeholder="Collection name"
-                    className="mb-3 w-full rounded-md border border-bsky-border-primary bg-bsky-bg-secondary px-3 py-2 text-sm text-bsky-text-primary focus-visible:border-blue-500 focus-visible:outline-none"
+                    className="mb-3 w-full rounded-md border border-asph-border-primary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary focus-visible:border-blue-500 focus-visible:outline-none"
                     disabled={isCreating}
                   />
                   <div className="mb-3 flex gap-2">
@@ -355,7 +355,7 @@ export const SaveToCollectionDropdown: React.FC<
                         }}
                         className={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${
                           selectedColor === color.id
-                            ? "border-bsky-text-primary ring-2 ring-blue-500 ring-offset-1"
+                            ? "border-asph-text-primary ring-2 ring-blue-500 ring-offset-1"
                             : "border-transparent"
                         }`}
                         style={{ backgroundColor: color.value }}
@@ -371,7 +371,7 @@ export const SaveToCollectionDropdown: React.FC<
                         setShowNewCollectionForm(false);
                         setNewCollectionName("");
                       }}
-                      className="flex-1 rounded-md bg-bsky-bg-secondary px-3 py-2 text-sm text-bsky-text-secondary transition-colors hover:bg-bsky-bg-hover"
+                      className="flex-1 rounded-md bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-secondary transition-colors hover:bg-asph-bg-hover"
                     >
                       Cancel
                     </button>
@@ -391,7 +391,7 @@ export const SaveToCollectionDropdown: React.FC<
                     e.stopPropagation();
                     setShowNewCollectionForm(true);
                   }}
-                  className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-bsky-border-primary py-2 text-sm text-bsky-text-secondary transition-colors hover:border-blue-500 hover:text-blue-500 focus-visible:border-blue-500 focus-visible:text-blue-500 focus-visible:outline-none"
+                  className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-asph-border-primary py-2 text-sm text-asph-text-secondary transition-colors hover:border-blue-500 hover:text-blue-500 focus-visible:border-blue-500 focus-visible:text-blue-500 focus-visible:outline-none"
                 >
                   <Plus size={16} aria-hidden="true" />
                   New collection

@@ -38,11 +38,11 @@ const ModalLoadingFallback: React.FC = () => (
     style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
   >
     <div
-      className="bsky-card flex items-center gap-3 p-6"
-      style={{ background: "var(--bsky-bg-primary)" }}
+      className="asph-card flex items-center gap-3 p-6"
+      style={{ background: "var(--asph-bg-primary)" }}
     >
       <Loader className="animate-spin" size={20} />
-      <span style={{ color: "var(--bsky-text-primary)" }}>Loading...</span>
+      <span style={{ color: "var(--asph-text-primary)" }}>Loading...</span>
     </div>
   </div>
 );

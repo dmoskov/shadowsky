@@ -84,7 +84,7 @@ export const ComposerThreadPreview: React.FC<ComposerThreadPreviewProps> = ({
       {posts.length > 1 && (
         <h3
           className="mb-4 text-lg font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Thread Preview
         </h3>
@@ -211,7 +211,7 @@ const PostPreviewCard: React.FC<PostPreviewCardProps> = ({
 
   return (
     <div
-      className={`bsky-card relative cursor-move p-4 transition-all hover:shadow-sm ${
+      className={`asph-card relative cursor-move p-4 transition-all hover:shadow-sm ${
         dragOverPostIndex === originalIndex ? "ring-2 ring-blue-400" : ""
       } ${dragOverPostOrderIndex === displayIndex ? "border-t-4 border-blue-500" : ""}`}
       draggable
@@ -235,7 +235,7 @@ const PostPreviewCard: React.FC<PostPreviewCardProps> = ({
           {totalPosts > 1 && (
             <span
               className="font-semibold"
-              style={{ color: "var(--bsky-primary)" }}
+              style={{ color: "var(--asph-primary)" }}
             >
               Post {displayIndex + 1}
             </span>
@@ -244,8 +244,8 @@ const PostPreviewCard: React.FC<PostPreviewCardProps> = ({
             <span
               className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
               style={{
-                background: "var(--bsky-bg-secondary)",
-                color: "var(--bsky-text-secondary)",
+                background: "var(--asph-bg-secondary)",
+                color: "var(--asph-text-secondary)",
               }}
             >
               {media.some(
@@ -268,7 +268,7 @@ const PostPreviewCard: React.FC<PostPreviewCardProps> = ({
         </span>
         <span
           className="font-mono text-xs"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           {post.length}/{MAX_POST_LENGTH}
         </span>
@@ -278,7 +278,7 @@ const PostPreviewCard: React.FC<PostPreviewCardProps> = ({
       <div
         className="mb-3 whitespace-pre-wrap break-words"
         style={{
-          color: "var(--bsky-text-primary)",
+          color: "var(--asph-text-primary)",
           lineHeight: "1.5",
         }}
       >
@@ -289,7 +289,7 @@ const PostPreviewCard: React.FC<PostPreviewCardProps> = ({
       {text.includes("\n---\n") && originalIndex > 0 && (
         <div
           className="mb-2 flex items-center gap-2 text-xs"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           <Split size={14} />
           <span>Manual split</span>
@@ -309,7 +309,7 @@ const PostPreviewCard: React.FC<PostPreviewCardProps> = ({
       ).length > 0 && (
         <div
           className="mt-3 grid grid-cols-4 gap-2 border-t pt-3"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
           {(originalIndex === 0
             ? media.filter(
@@ -323,9 +323,9 @@ const PostPreviewCard: React.FC<PostPreviewCardProps> = ({
               style={{
                 borderColor:
                   dragOverMediaId === m.id
-                    ? "var(--bsky-primary)"
-                    : "var(--bsky-border-primary)",
-                background: "var(--bsky-bg-secondary)",
+                    ? "var(--asph-primary)"
+                    : "var(--asph-border-primary)",
+                background: "var(--asph-bg-secondary)",
                 transition: "border-color 0.2s",
               }}
               draggable
@@ -420,8 +420,8 @@ const PostLinkPreview: React.FC<{ postText: string }> = ({ postText }) => {
       <div
         className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
         style={{
-          borderColor: "var(--bsky-border-primary)",
-          color: "var(--bsky-text-secondary)",
+          borderColor: "var(--asph-border-primary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <Loader size={14} className="animate-spin" />
@@ -436,8 +436,8 @@ const PostLinkPreview: React.FC<{ postText: string }> = ({ postText }) => {
         <div
           className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            color: "var(--bsky-text-tertiary)",
+            borderColor: "var(--asph-border-primary)",
+            color: "var(--asph-text-tertiary)",
           }}
         >
           <Link size={14} />
@@ -459,7 +459,7 @@ const PostLinkPreview: React.FC<{ postText: string }> = ({ postText }) => {
   return (
     <div
       className="mt-2 overflow-hidden rounded-lg border"
-      style={{ borderColor: "var(--bsky-border-primary)" }}
+      style={{ borderColor: "var(--asph-border-primary)" }}
     >
       {metadata.imageUrl && (
         <div
@@ -470,20 +470,20 @@ const PostLinkPreview: React.FC<{ postText: string }> = ({ postText }) => {
       <div className="p-3">
         <div
           className="mb-1 text-xs"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           {domain}
         </div>
         <div
           className="line-clamp-2 text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {metadata.title}
         </div>
         {metadata.description && (
           <div
             className="mt-1 line-clamp-2 text-xs"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {metadata.description}
           </div>
@@ -567,8 +567,8 @@ const PostQuotePreview: React.FC<{ postText: string }> = ({ postText }) => {
       <div
         className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
         style={{
-          borderColor: "var(--bsky-border-primary)",
-          color: "var(--bsky-text-secondary)",
+          borderColor: "var(--asph-border-primary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <Loader size={14} className="animate-spin" />
@@ -583,14 +583,14 @@ const PostQuotePreview: React.FC<{ postText: string }> = ({ postText }) => {
   return (
     <div
       className="mt-2 overflow-hidden rounded-lg border"
-      style={{ borderColor: "var(--bsky-border-primary)" }}
+      style={{ borderColor: "var(--asph-border-primary)" }}
     >
       <div
         className="flex items-center gap-2 px-3 py-1.5 text-xs"
         style={{
-          backgroundColor: "var(--bsky-bg-tertiary)",
-          borderBottom: "1px solid var(--bsky-border-primary)",
-          color: "var(--bsky-text-secondary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
+          borderBottom: "1px solid var(--asph-border-primary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <MessageCircle size={12} />
@@ -608,21 +608,21 @@ const PostQuotePreview: React.FC<{ postText: string }> = ({ postText }) => {
           <ProfileHoverCard handle={quotedPost.author.handle}>
             <span
               className="cursor-pointer text-sm font-semibold hover:underline"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               {quotedPost.author.displayName || quotedPost.author.handle}
             </span>
           </ProfileHoverCard>
           <span
             className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             @{quotedPost.author.handle}
           </span>
         </div>
         <p
           className="line-clamp-3 text-sm"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {record?.text || ""}
         </p>

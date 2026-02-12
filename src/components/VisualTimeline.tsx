@@ -867,70 +867,70 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
       switch (reason) {
         case "like":
           return (
-            <Heart size={14} style={{ color: "var(--bsky-text-secondary)" }} />
+            <Heart size={14} style={{ color: "var(--asph-text-secondary)" }} />
           );
         case "repost":
           return (
             <Repeat2
               size={14}
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             />
           );
         case "follow":
           return (
             <UserPlus
               size={14}
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             />
           );
         case "reply":
           return (
             <MessageCircle
               size={14}
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             />
           );
         case "quote":
           return (
-            <Quote size={14} style={{ color: "var(--bsky-text-secondary)" }} />
+            <Quote size={14} style={{ color: "var(--asph-text-secondary)" }} />
           );
         case "starterpack-joined":
           return (
             <UserPlus
               size={14}
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             />
           );
         case "verified":
           return (
             <MessageCircle
               size={14}
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             />
           );
         case "unverified":
           return (
             <MessageCircle
               size={14}
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             />
           );
         case "like-via-repost":
           return (
-            <Heart size={14} style={{ color: "var(--bsky-text-secondary)" }} />
+            <Heart size={14} style={{ color: "var(--asph-text-secondary)" }} />
           );
         case "repost-via-repost":
           return (
             <Repeat2
               size={14}
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             />
           );
         default:
           return (
             <MessageCircle
               size={14}
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             />
           );
       }
@@ -1278,11 +1278,11 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
               <div key={`timeline-skeleton-${i}`} className="flex gap-4">
                 <div
                   className="h-6 w-24 rounded"
-                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                  style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
                 ></div>
                 <div
                   className="h-20 flex-1 rounded"
-                  style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                  style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
                 ></div>
               </div>
             ))}
@@ -1319,15 +1319,15 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
               <div
                 className="sticky top-0 z-40 mb-2 px-4 py-2 backdrop-blur-md sm:px-6"
                 style={{
-                  backgroundColor: "var(--bsky-bg-primary)",
-                  borderBottom: "1px solid var(--bsky-primary)",
+                  backgroundColor: "var(--asph-bg-primary)",
+                  borderBottom: "1px solid var(--asph-primary)",
                 }}
               >
                 <button
                   onClick={refreshNotifications}
                   className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all hover:opacity-90"
                   style={{
-                    backgroundColor: "var(--bsky-primary)",
+                    backgroundColor: "var(--asph-primary)",
                     color: "white",
                   }}
                 >
@@ -1354,8 +1354,8 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                           zIndex: 30,
                         }
                       : {}),
-                    backgroundColor: "var(--bsky-bg-primary)",
-                    borderBottom: "1px solid var(--bsky-border-primary)",
+                    backgroundColor: "var(--asph-bg-primary)",
+                    borderBottom: "1px solid var(--asph-border-primary)",
                     backdropFilter: "blur(10px)",
                     WebkitBackdropFilter: "blur(10px)",
                     boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
@@ -1377,7 +1377,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                             ? getTimeOfDayColor(
                                 dayGroup.events[0].time,
                               ).borderColor.replace(/[\d.]+\)$/, "1)")
-                            : "var(--bsky-primary)",
+                            : "var(--asph-primary)",
                         boxShadow: dayGroupColors.get(dayGroup.label)?.color
                           ? `0 0 8px ${dayGroupColors.get(dayGroup.label)!.color.replace(/[\d.]+\)$/, "0.4)")}`
                           : "none",
@@ -1386,7 +1386,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                     />
                     <h2
                       className="text-sm font-semibold uppercase tracking-wide"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       {dayGroup.label}
                     </h2>
@@ -1477,25 +1477,25 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                         <div
                           className={`flex-1 cursor-pointer rounded-lg p-3 transition-all duration-200 ease-out ${
                             event.notifications.length > 1
-                              ? "bg-bsky-bg-secondary"
+                              ? "bg-asph-bg-secondary"
                               : ""
                           } ${
                             event.aggregationType === "follow"
-                              ? "border-l-[3px] border-l-bsky-follow pl-3"
+                              ? "border-l-[3px] border-l-asph-follow pl-3"
                               : event.aggregationType === "post" ||
                                   event.aggregationType === "post-burst"
-                                ? "border-l-[3px] border-l-bsky-primary pl-3"
+                                ? "border-l-[3px] border-l-asph-primary pl-3"
                                 : event.aggregationType === "user-activity"
-                                  ? "relative overflow-hidden bg-bsky-bg-secondary"
+                                  ? "relative overflow-hidden bg-asph-bg-secondary"
                                   : ""
-                          } ${isSelected ? "relative translate-x-1 transform before:absolute before:-left-1 before:bottom-0 before:top-0 before:w-[3px] before:rounded-r-[3px] before:bg-bsky-primary before:opacity-80 before:content-['']" : ""} hover:translate-x-0.5 hover:transform hover:shadow-lg`}
+                          } ${isSelected ? "relative translate-x-1 transform before:absolute before:-left-1 before:bottom-0 before:top-0 before:w-[3px] before:rounded-r-[3px] before:bg-asph-primary before:opacity-80 before:content-['']" : ""} hover:translate-x-0.5 hover:transform hover:shadow-lg`}
                           style={{
                             backgroundColor: getTimeOfDayColor(event.time)
                               .backgroundColor,
-                            border: `1px solid ${isSelected ? "var(--bsky-primary)" : getTimeOfDayColor(event.time).borderColor}`,
+                            border: `1px solid ${isSelected ? "var(--asph-primary)" : getTimeOfDayColor(event.time).borderColor}`,
                             borderRadius: "8px",
                             boxShadow: isSelected
-                              ? `0 0 0 2px var(--bsky-primary), 0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`
+                              ? `0 0 0 2px var(--asph-primary), 0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`
                               : `0 1px 3px ${getTimeOfDayColor(event.time).shadowColor}`,
                           }}
                           tabIndex={isSelected ? 0 : -1}
@@ -1602,7 +1602,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         )
                                       }
                                       className="cursor-pointer text-sm font-medium hover:underline"
-                                      style={{ color: "var(--bsky-primary)" }}
+                                      style={{ color: "var(--asph-primary)" }}
                                     >
                                       {event.notifications[0].author
                                         ?.displayName ||
@@ -1613,7 +1613,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                   <div
                                     className="mt-0.5 text-xs sm:text-sm"
                                     style={{
-                                      color: "var(--bsky-text-secondary)",
+                                      color: "var(--asph-text-secondary)",
                                     }}
                                   >
                                     {getActionText(
@@ -1653,19 +1653,19 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                           e.stopPropagation();
                                           setSelectedPostUri(postUri);
                                         }}
-                                        className="relative ml-11 mt-2 block cursor-pointer overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
+                                        className="relative ml-11 mt-2 block cursor-pointer overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-asph-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
                                         style={{
                                           backgroundColor:
-                                            "var(--bsky-bg-tertiary)",
+                                            "var(--asph-bg-tertiary)",
                                           border:
-                                            "1px solid var(--bsky-border-primary)",
+                                            "1px solid var(--asph-border-primary)",
                                           textDecoration: "none",
                                         }}
                                       >
                                         <p
                                           className="mb-1 flex items-center gap-1 text-xs font-medium"
                                           style={{
-                                            color: "var(--bsky-text-tertiary)",
+                                            color: "var(--asph-text-tertiary)",
                                           }}
                                         >
                                           {notification.reason === "reply"
@@ -1678,7 +1678,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         <p
                                           className="line-clamp-2 text-xs"
                                           style={{
-                                            color: "var(--bsky-text-primary)",
+                                            color: "var(--asph-text-primary)",
                                           }}
                                         >
                                           {post.record?.text ||
@@ -1727,18 +1727,18 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
 
                                   return (
                                     <div
-                                      className="relative ml-11 mt-2 overflow-hidden rounded p-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-['']"
+                                      className="relative ml-11 mt-2 overflow-hidden rounded p-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-asph-primary before:opacity-50 before:content-['']"
                                       style={{
                                         backgroundColor:
-                                          "var(--bsky-bg-tertiary)",
+                                          "var(--asph-bg-tertiary)",
                                         border:
-                                          "1px solid var(--bsky-border-primary)",
+                                          "1px solid var(--asph-border-primary)",
                                       }}
                                     >
                                       <p
                                         className="mb-1 text-xs font-medium"
                                         style={{
-                                          color: "var(--bsky-text-tertiary)",
+                                          color: "var(--asph-text-tertiary)",
                                         }}
                                       >
                                         {notification.reason === "mention"
@@ -1748,7 +1748,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                       <p
                                         className="line-clamp-2 text-xs"
                                         style={{
-                                          color: "var(--bsky-text-primary)",
+                                          color: "var(--asph-text-primary)",
                                         }}
                                       >
                                         {postText}
@@ -1784,7 +1784,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         className="h-10 w-10 rounded-full"
                                         style={{
                                           border:
-                                            "1px solid var(--bsky-border-primary)",
+                                            "1px solid var(--asph-border-primary)",
                                         }}
                                       />
                                     </div>
@@ -1801,7 +1801,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                           }
                                           className="cursor-pointer text-base font-bold hover:underline"
                                           style={{
-                                            color: "var(--bsky-primary)",
+                                            color: "var(--asph-primary)",
                                           }}
                                         >
                                           {event.primaryActor!.displayName ||
@@ -1810,7 +1810,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         <span
                                           className="text-xs"
                                           style={{
-                                            color: "var(--bsky-text-tertiary)",
+                                            color: "var(--asph-text-tertiary)",
                                           }}
                                         >
                                           • active
@@ -1819,7 +1819,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                       <p
                                         className="text-sm"
                                         style={{
-                                          color: "var(--bsky-text-secondary)",
+                                          color: "var(--asph-text-secondary)",
                                         }}
                                       >
                                         {event.notifications.length}{" "}
@@ -1838,7 +1838,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                   <div
                                     className="mb-3 flex flex-wrap gap-3 text-sm"
                                     style={{
-                                      color: "var(--bsky-text-secondary)",
+                                      color: "var(--asph-text-secondary)",
                                     }}
                                   >
                                     {event.notifications.filter(
@@ -1899,7 +1899,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         <p
                                           className="text-xs font-medium"
                                           style={{
-                                            color: "var(--bsky-text-tertiary)",
+                                            color: "var(--asph-text-tertiary)",
                                           }}
                                         >
                                           Posts they interacted with:
@@ -1920,12 +1920,12 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                                   className="line-clamp-2 block cursor-pointer rounded p-2 text-xs transition-all duration-200 ease-out hover:opacity-90"
                                                   style={{
                                                     backgroundColor:
-                                                      "var(--bsky-bg-tertiary)",
+                                                      "var(--asph-bg-tertiary)",
                                                     border:
-                                                      "1px solid var(--bsky-border-primary)",
+                                                      "1px solid var(--asph-border-primary)",
                                                     textDecoration: "none",
                                                     color:
-                                                      "var(--bsky-text-primary)",
+                                                      "var(--asph-text-primary)",
                                                   }}
                                                 >
                                                   {post.text ||
@@ -1944,7 +1944,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                               className="text-xs"
                                               style={{
                                                 color:
-                                                  "var(--bsky-text-tertiary)",
+                                                  "var(--asph-text-tertiary)",
                                               }}
                                             >
                                               ...and{" "}
@@ -1965,15 +1965,15 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         className="flex h-10 w-10 items-center justify-center rounded-full"
                                         style={{
                                           backgroundColor:
-                                            "var(--bsky-bg-tertiary)",
+                                            "var(--asph-bg-tertiary)",
                                           border:
-                                            "1px solid var(--bsky-border-primary)",
+                                            "1px solid var(--asph-border-primary)",
                                         }}
                                       >
                                         <MessageCircle
                                           size={20}
                                           style={{
-                                            color: "var(--bsky-text-secondary)",
+                                            color: "var(--asph-text-secondary)",
                                           }}
                                         />
                                       </div>
@@ -1983,7 +1983,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         <span
                                           className="text-sm font-medium"
                                           style={{
-                                            color: "var(--bsky-text-primary)",
+                                            color: "var(--asph-text-primary)",
                                           }}
                                         >
                                           Popular Post
@@ -1993,11 +1993,11 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                             className="rounded-full px-2 py-0.5 text-xs font-medium"
                                             style={{
                                               backgroundColor:
-                                                "var(--bsky-bg-tertiary)",
+                                                "var(--asph-bg-tertiary)",
                                               color:
-                                                "var(--bsky-text-secondary)",
+                                                "var(--asph-text-secondary)",
                                               border:
-                                                "1px solid var(--bsky-border-primary)",
+                                                "1px solid var(--asph-border-primary)",
                                             }}
                                           >
                                             {event.notifications.length}+
@@ -2008,7 +2008,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                       <p
                                         className="text-sm"
                                         style={{
-                                          color: "var(--bsky-text-secondary)",
+                                          color: "var(--asph-text-secondary)",
                                         }}
                                       >
                                         {event.actors.size}{" "}
@@ -2035,12 +2035,12 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         <Heart
                                           size={16}
                                           style={{
-                                            color: "var(--bsky-text-secondary)",
+                                            color: "var(--asph-text-secondary)",
                                           }}
                                         />
                                         <span
                                           style={{
-                                            color: "var(--bsky-text-secondary)",
+                                            color: "var(--asph-text-secondary)",
                                           }}
                                         >
                                           {
@@ -2058,12 +2058,12 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         <Repeat2
                                           size={16}
                                           style={{
-                                            color: "var(--bsky-text-secondary)",
+                                            color: "var(--asph-text-secondary)",
                                           }}
                                         />
                                         <span
                                           style={{
-                                            color: "var(--bsky-text-secondary)",
+                                            color: "var(--asph-text-secondary)",
                                           }}
                                         >
                                           {
@@ -2081,12 +2081,12 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         <MessageCircle
                                           size={16}
                                           style={{
-                                            color: "var(--bsky-text-secondary)",
+                                            color: "var(--asph-text-secondary)",
                                           }}
                                         />
                                         <span
                                           style={{
-                                            color: "var(--bsky-text-secondary)",
+                                            color: "var(--asph-text-secondary)",
                                           }}
                                         >
                                           {
@@ -2104,12 +2104,12 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         <Quote
                                           size={16}
                                           style={{
-                                            color: "var(--bsky-text-secondary)",
+                                            color: "var(--asph-text-secondary)",
                                           }}
                                         />
                                         <span
                                           style={{
-                                            color: "var(--bsky-text-secondary)",
+                                            color: "var(--asph-text-secondary)",
                                           }}
                                         >
                                           {
@@ -2163,8 +2163,8 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                           className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold"
                                           style={{
                                             backgroundColor:
-                                              "var(--bsky-bg-tertiary)",
-                                            color: "var(--bsky-text-primary)",
+                                              "var(--asph-bg-tertiary)",
+                                            color: "var(--asph-text-primary)",
                                           }}
                                         >
                                           +{event.notifications.length - 12}
@@ -2182,21 +2182,21 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                       className="flex h-10 w-10 items-center justify-center rounded-full"
                                       style={{
                                         backgroundColor:
-                                          "var(--bsky-bg-tertiary)",
+                                          "var(--asph-bg-tertiary)",
                                         border:
-                                          "1px solid var(--bsky-border-primary)",
+                                          "1px solid var(--asph-border-primary)",
                                       }}
                                     >
                                       <MessageCircle
                                         size={20}
-                                        style={{ color: "var(--bsky-primary)" }}
+                                        style={{ color: "var(--asph-primary)" }}
                                       />
                                     </div>
                                     <div>
                                       <h3
                                         className="text-base font-bold"
                                         style={{
-                                          color: "var(--bsky-text-primary)",
+                                          color: "var(--asph-text-primary)",
                                         }}
                                       >
                                         Recent Comments
@@ -2204,7 +2204,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                       <p
                                         className="text-sm"
                                         style={{
-                                          color: "var(--bsky-text-tertiary)",
+                                          color: "var(--asph-text-tertiary)",
                                         }}
                                       >
                                         {event.notifications.length} comments
@@ -2239,8 +2239,8 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                     className="rounded-lg border"
                                     style={{
                                       backgroundColor:
-                                        "var(--bsky-bg-tertiary)",
-                                      borderColor: "var(--bsky-border-primary)",
+                                        "var(--asph-bg-tertiary)",
+                                      borderColor: "var(--asph-border-primary)",
                                     }}
                                   >
                                     {event.notifications
@@ -2253,7 +2253,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                           }`}
                                           style={{
                                             borderColor:
-                                              "var(--bsky-border-primary)",
+                                              "var(--asph-border-primary)",
                                           }}
                                         >
                                           {/* Author avatar */}
@@ -2277,7 +2277,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                                 className="h-8 w-8 rounded-full transition-opacity hover:opacity-80"
                                                 style={{
                                                   border:
-                                                    "1px solid var(--bsky-border-primary)",
+                                                    "1px solid var(--asph-border-primary)",
                                                 }}
                                               />
                                             </div>
@@ -2299,7 +2299,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                                 className="cursor-pointer truncate font-medium hover:underline"
                                                 style={{
                                                   color:
-                                                    "var(--bsky-text-primary)",
+                                                    "var(--asph-text-primary)",
                                                 }}
                                               >
                                                 {notification.author
@@ -2310,7 +2310,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                                 className="flex-shrink-0 text-xs"
                                                 style={{
                                                   color:
-                                                    "var(--bsky-text-tertiary)",
+                                                    "var(--asph-text-tertiary)",
                                                 }}
                                               >
                                                 {formatDistanceToNow(
@@ -2334,7 +2334,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                               className="line-clamp-2 cursor-pointer text-sm hover:opacity-80"
                                               style={{
                                                 color:
-                                                  "var(--bsky-text-primary)",
+                                                  "var(--asph-text-primary)",
                                               }}
                                             >
                                               {(notification.record as any)
@@ -2349,8 +2349,8 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         className="border-t px-3 py-2 text-center text-sm"
                                         style={{
                                           borderColor:
-                                            "var(--bsky-border-primary)",
-                                          color: "var(--bsky-text-tertiary)",
+                                            "var(--asph-border-primary)",
+                                          color: "var(--asph-text-tertiary)",
                                         }}
                                       >
                                         +{event.notifications.length - 5} more
@@ -2390,7 +2390,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                             className="h-6 w-6 rounded-full border-2"
                                             style={{
                                               borderColor:
-                                                "var(--bsky-bg-secondary)",
+                                                "var(--asph-bg-secondary)",
                                             }}
                                             title={
                                               notif.author?.displayName ||
@@ -2405,9 +2405,9 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         className="flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-medium"
                                         style={{
                                           backgroundColor:
-                                            "var(--bsky-bg-tertiary)",
+                                            "var(--asph-bg-tertiary)",
                                           borderColor:
-                                            "var(--bsky-bg-secondary)",
+                                            "var(--asph-bg-secondary)",
                                           fontSize: "10px",
                                         }}
                                       >
@@ -2441,7 +2441,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                             className="text-sm"
                                             style={{
                                               color:
-                                                "var(--bsky-text-secondary)",
+                                                "var(--asph-text-secondary)",
                                             }}
                                           >
                                             •
@@ -2456,7 +2456,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                                 <span
                                                   style={{
                                                     color:
-                                                      "var(--bsky-text-secondary)",
+                                                      "var(--asph-text-secondary)",
                                                   }}
                                                 >
                                                   {getActionCount(
@@ -2468,7 +2468,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                                   <span
                                                     style={{
                                                       color:
-                                                        "var(--bsky-text-secondary)",
+                                                        "var(--asph-text-secondary)",
                                                     }}
                                                   >
                                                     •
@@ -2509,19 +2509,19 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                           e.stopPropagation();
                                           setSelectedPostUri(postUri);
                                         }}
-                                        className="relative mt-3 block cursor-pointer overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
+                                        className="relative mt-3 block cursor-pointer overflow-hidden rounded p-3 transition-all duration-200 ease-out before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-asph-primary before:opacity-50 before:content-[''] hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md"
                                         style={{
                                           backgroundColor:
-                                            "var(--bsky-bg-tertiary)",
+                                            "var(--asph-bg-tertiary)",
                                           border:
-                                            "1px solid var(--bsky-border-primary)",
+                                            "1px solid var(--asph-border-primary)",
                                           textDecoration: "none",
                                         }}
                                       >
                                         <p
                                           className="mb-1 flex items-center gap-1 text-xs font-medium"
                                           style={{
-                                            color: "var(--bsky-text-tertiary)",
+                                            color: "var(--asph-text-tertiary)",
                                           }}
                                         >
                                           Your post:
@@ -2530,7 +2530,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         <p
                                           className="line-clamp-3 text-sm"
                                           style={{
-                                            color: "var(--bsky-text-primary)",
+                                            color: "var(--asph-text-primary)",
                                           }}
                                         >
                                           {post.record?.text ||
@@ -2561,7 +2561,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                         <div
                                           className="mt-2 flex items-center gap-2 text-xs"
                                           style={{
-                                            color: "var(--bsky-text-tertiary)",
+                                            color: "var(--asph-text-tertiary)",
                                           }}
                                         >
                                           <span>
@@ -2618,18 +2618,18 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
 
                                   return (
                                     <div
-                                      className="relative mt-3 overflow-hidden rounded p-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-bsky-primary before:opacity-50 before:content-['']"
+                                      className="relative mt-3 overflow-hidden rounded p-3 before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-asph-primary before:opacity-50 before:content-['']"
                                       style={{
                                         backgroundColor:
-                                          "var(--bsky-bg-tertiary)",
+                                          "var(--asph-bg-tertiary)",
                                         border:
-                                          "1px solid var(--bsky-border-primary)",
+                                          "1px solid var(--asph-border-primary)",
                                       }}
                                     >
                                       <p
                                         className="mb-1 text-xs font-medium"
                                         style={{
-                                          color: "var(--bsky-text-tertiary)",
+                                          color: "var(--asph-text-tertiary)",
                                         }}
                                       >
                                         Your post:
@@ -2637,7 +2637,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                       <p
                                         className="line-clamp-3 text-sm"
                                         style={{
-                                          color: "var(--bsky-text-primary)",
+                                          color: "var(--asph-text-primary)",
                                         }}
                                       >
                                         {postText}
@@ -2645,7 +2645,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                                       <div
                                         className="mt-2 flex items-center gap-2 text-xs"
                                         style={{
-                                          color: "var(--bsky-text-tertiary)",
+                                          color: "var(--asph-text-tertiary)",
                                         }}
                                       >
                                         <span>
@@ -2694,9 +2694,9 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                         differenceInHours(previousEvent.time, event.time) >=
                           12 && (
                           <div
-                            className="absolute -top-3 left-[5rem] whitespace-nowrap rounded-[10px] bg-bsky-bg-secondary px-1.5 py-0.5 text-xs sm:left-[7.5rem]"
+                            className="absolute -top-3 left-[5rem] whitespace-nowrap rounded-[10px] bg-asph-bg-secondary px-1.5 py-0.5 text-xs sm:left-[7.5rem]"
                             style={{
-                              color: "var(--bsky-text-tertiary)",
+                              color: "var(--asph-text-tertiary)",
                               transform: "translateX(-50%)",
                               fontSize: "10px",
                             }}
@@ -2721,13 +2721,13 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                   className={`h-3 w-3 rounded-full ${isLoadingMore ? "animate-pulse" : ""}`}
                   style={{
                     backgroundColor: isLoadingMore
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-border-primary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-border-primary)",
                   }}
                 />
                 <span
                   className="text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   {isLoadingMore
                     ? "Loading more notifications..."
@@ -2746,9 +2746,9 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                     onClick={loadMore}
                     className="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-90"
                     style={{
-                      backgroundColor: "var(--bsky-bg-secondary)",
-                      color: "var(--bsky-text-primary)",
-                      border: "1px solid var(--bsky-border-primary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      color: "var(--asph-text-primary)",
+                      border: "1px solid var(--asph-border-primary)",
                     }}
                   >
                     Load More Notifications

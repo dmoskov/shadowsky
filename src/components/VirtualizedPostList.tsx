@@ -759,7 +759,7 @@ export const VirtualizedPostList = React.forwardRef<
             onClick={handleNewPostsClick}
             className="absolute left-1/2 top-4 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 shadow-lg transition-all duration-200 hover:scale-105"
             style={{
-              backgroundColor: "var(--bsky-primary)",
+              backgroundColor: "var(--asph-primary)",
               color: "white",
             }}
           >
@@ -787,7 +787,7 @@ export const VirtualizedPostList = React.forwardRef<
           <div className="absolute left-0 right-0 top-0 z-10 flex justify-center p-2">
             <div
               className="h-4 w-4 animate-spin rounded-full border-2 border-t-transparent"
-              style={{ borderColor: "var(--bsky-primary)" }}
+              style={{ borderColor: "var(--asph-primary)" }}
             />
           </div>
         )}
@@ -844,7 +844,7 @@ export const VirtualizedPostList = React.forwardRef<
           <div className="flex justify-center p-4">
             <div
               className="h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"
-              style={{ borderColor: "var(--bsky-primary)" }}
+              style={{ borderColor: "var(--asph-primary)" }}
             />
           </div>
         ) : null}
@@ -852,7 +852,7 @@ export const VirtualizedPostList = React.forwardRef<
           <div className="flex justify-center p-4">
             <div
               className="h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"
-              style={{ borderColor: "var(--bsky-primary)" }}
+              style={{ borderColor: "var(--asph-primary)" }}
             />
           </div>
         )}

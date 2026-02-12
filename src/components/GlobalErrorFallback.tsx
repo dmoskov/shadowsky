@@ -24,7 +24,7 @@ export function GlobalErrorFallback({
   return (
     <div
       className="flex min-h-screen flex-col items-center justify-center p-8"
-      style={{ backgroundColor: "var(--bsky-bg-primary)" }}
+      style={{ backgroundColor: "var(--asph-bg-primary)" }}
       role="alert"
       aria-live="assertive"
       aria-labelledby="global-error-title"

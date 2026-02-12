@@ -354,18 +354,18 @@ function ProgressiveThreadSummaryContent({
       <div
         className={`flex items-center gap-2 px-3 py-2 ${className}`}
         style={{
-          backgroundColor: "var(--bsky-bg-tertiary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
           borderRadius: "8px",
         }}
       >
         <Loader2
           size={14}
           className="animate-spin"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         />
         <span
           className="text-sm"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           Generating {config.description.toLowerCase()}...
         </span>
@@ -380,14 +380,14 @@ function ProgressiveThreadSummaryContent({
       <div
         className={`flex items-center gap-2 px-3 py-2 ${className}`}
         style={{
-          backgroundColor: "var(--bsky-bg-tertiary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
           borderRadius: "8px",
         }}
       >
-        <AlertCircle size={14} style={{ color: "var(--bsky-text-tertiary)" }} />
+        <AlertCircle size={14} style={{ color: "var(--asph-text-tertiary)" }} />
         <span
           className="text-sm"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           Summary unavailable
         </span>
@@ -412,7 +412,7 @@ function ProgressiveThreadSummaryContent({
     <div
       className={`${className}`}
       style={{
-        backgroundColor: "var(--bsky-bg-tertiary)",
+        backgroundColor: "var(--asph-bg-tertiary)",
         borderRadius: "8px",
       }}
     >
@@ -426,11 +426,11 @@ function ProgressiveThreadSummaryContent({
         <Sparkles
           size={14}
           className="flex-shrink-0"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         />
         <span
           className="flex-1 text-left text-xs font-medium"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           {config.description}
           {summary.metadata?.postCount && (
@@ -443,7 +443,7 @@ function ProgressiveThreadSummaryContent({
           )}
         </span>
         {isComprehensive && (
-          <span style={{ color: "var(--bsky-text-tertiary)" }}>
+          <span style={{ color: "var(--asph-text-tertiary)" }}>
             {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </span>
         )}
@@ -454,7 +454,7 @@ function ProgressiveThreadSummaryContent({
         <div className="px-3 pb-3">
           <div
             className="text-sm leading-relaxed"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {renderMarkdown(summary.summary)}
           </div>
@@ -463,11 +463,11 @@ function ProgressiveThreadSummaryContent({
           {isComprehensive && highlights && highlights.length > 0 && (
             <div
               className="mt-3 border-t pt-3"
-              style={{ borderColor: "var(--bsky-border)" }}
+              style={{ borderColor: "var(--asph-border)" }}
             >
               <div
                 className="mb-2 text-xs font-medium"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 Notable discussions
               </div>
@@ -480,14 +480,14 @@ function ProgressiveThreadSummaryContent({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors hover:opacity-80"
                     style={{
-                      backgroundColor: "var(--bsky-bg-secondary)",
-                      color: "var(--bsky-text-secondary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      color: "var(--asph-text-secondary)",
                     }}
                   >
-                    <span style={{ color: "var(--bsky-link)" }}>
+                    <span style={{ color: "var(--asph-link)" }}>
                       @{hl.authorHandle}
                     </span>
-                    <span style={{ color: "var(--bsky-text-tertiary)" }}>
+                    <span style={{ color: "var(--asph-text-tertiary)" }}>
                       ({hl.engagement} interactions)
                     </span>
                   </a>
@@ -501,7 +501,7 @@ function ProgressiveThreadSummaryContent({
             summary.metadata?.totalEngagement && (
               <div
                 className="mt-2 text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 {summary.metadata.totalEngagement.toLocaleString()} total
                 interactions

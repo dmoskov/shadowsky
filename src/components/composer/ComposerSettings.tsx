@@ -52,7 +52,7 @@ export const ComposerSettings: React.FC<ComposerSettingsProps> = ({
   return (
     <div
       className="mb-3 flex items-center justify-between border-b pb-3"
-      style={{ borderColor: "var(--bsky-border-primary)" }}
+      style={{ borderColor: "var(--asph-border-primary)" }}
     >
       <div className="flex flex-wrap items-center gap-3 text-sm md:gap-4">
         {showSettings ? (
@@ -78,7 +78,7 @@ export const ComposerSettings: React.FC<ComposerSettingsProps> = ({
       </div>
 
       <button
-        className="bsky-button-secondary p-1.5"
+        className="asph-button-secondary p-1.5"
         onClick={onToggleSettings}
         aria-label="Toggle settings"
       >
@@ -121,7 +121,7 @@ const ExpandedSettings: React.FC<ExpandedSettingsProps> = ({
         <label
           htmlFor="numbering-format"
           className="text-xs"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Format:
         </label>
@@ -133,9 +133,9 @@ const ExpandedSettings: React.FC<ExpandedSettingsProps> = ({
           }
           className="rounded px-2 py-1 text-sm"
           style={{
-            background: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
-            color: "var(--bsky-text-primary)",
+            background: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
+            color: "var(--asph-text-primary)",
             outline: "none",
           }}
         >
@@ -152,7 +152,7 @@ const ExpandedSettings: React.FC<ExpandedSettingsProps> = ({
         <label
           htmlFor="numbering-position"
           className="text-xs"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Position:
         </label>
@@ -164,9 +164,9 @@ const ExpandedSettings: React.FC<ExpandedSettingsProps> = ({
           }
           className="rounded px-2 py-1 text-sm"
           style={{
-            background: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
-            color: "var(--bsky-text-primary)",
+            background: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
+            color: "var(--asph-text-primary)",
             outline: "none",
           }}
         >
@@ -178,7 +178,7 @@ const ExpandedSettings: React.FC<ExpandedSettingsProps> = ({
       {/* AI Settings */}
       <div
         className="mt-2 border-t pt-2"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         <AISettingsPanel
           settings={{
@@ -195,7 +195,7 @@ const ExpandedSettings: React.FC<ExpandedSettingsProps> = ({
         <label
           htmlFor="send-delay"
           className="text-xs"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Delay:
         </label>
@@ -212,14 +212,14 @@ const ExpandedSettings: React.FC<ExpandedSettingsProps> = ({
           max="300"
           className="w-16 rounded px-2 py-1 text-center text-sm"
           style={{
-            background: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
-            color: "var(--bsky-text-primary)",
+            background: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
+            color: "var(--asph-text-primary)",
           }}
         />
         <span
           className="text-xs"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           sec
         </span>
@@ -246,7 +246,7 @@ const CollapsedSettings: React.FC<CollapsedSettingsProps> = ({
   )?.name;
 
   return (
-    <span className="text-xs" style={{ color: "var(--bsky-text-tertiary)" }}>
+    <span className="text-xs" style={{ color: "var(--asph-text-tertiary)" }}>
       {numberingFormat !== "none" && `${formatName} • `}
       {numberingPosition === "beginning" ? "Start" : "End"} •
       {delaySeconds > 0 ? ` ${delaySeconds}s delay` : " Instant"}

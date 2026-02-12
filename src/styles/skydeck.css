@@ -13,7 +13,7 @@
   cursor: pointer;
   overflow: hidden;
   border-radius: 8px;
-  background-color: var(--bsky-bg-tertiary);
+  background-color: var(--asph-bg-tertiary);
   transition: opacity 0.2s ease;
 }
 
@@ -180,14 +180,14 @@
 }
 
 .skydeck-columns-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.5);
+  background: rgba(201, 168, 76, 0.5);
   border-radius: 10px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
 
 .skydeck-columns-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.7);
+  background: rgba(201, 168, 76, 0.7);
   background-clip: content-box;
 }
 

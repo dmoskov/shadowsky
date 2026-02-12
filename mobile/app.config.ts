@@ -2,7 +2,7 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "ShadowSky",
+  name: "Asphodel",
   slug: "shadowsky",
   version: "0.7.0",
   orientation: "portrait",
@@ -27,7 +27,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   notification: {
     icon: "./assets/notification-icon.png",
-    color: "#1d9bf0",
+    color: "#c9a84c",
     androidMode: "default",
     androidCollapsedTitle: "{{unread_count}} new notifications",
   },
@@ -61,7 +61,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "expo-notifications",
       {
         icon: "./assets/notification-icon.png",
-        color: "#1d9bf0",
+        color: "#c9a84c",
         sounds: [],
       },
     ],

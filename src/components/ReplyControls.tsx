@@ -70,9 +70,9 @@ export function ReplyControls({
           disabled={disabled}
           className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-gray-800"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            backgroundColor: "var(--bsky-bg-secondary)",
-            color: "var(--bsky-text-primary)",
+            borderColor: "var(--asph-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            color: "var(--asph-text-primary)",
           }}
         >
           {selectedOption.icon}
@@ -87,8 +87,8 @@ export function ReplyControls({
           <div
             className="absolute bottom-full left-0 z-[70] mb-2 w-64 rounded-lg border shadow-lg"
             style={{
-              backgroundColor: "var(--bsky-bg-primary)",
-              borderColor: "var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-primary)",
+              borderColor: "var(--asph-border-primary)",
             }}
           >
             <div className="p-2">
@@ -109,8 +109,8 @@ export function ReplyControls({
                     style={{
                       color:
                         option.id === value
-                          ? "var(--bsky-primary)"
-                          : "var(--bsky-text-secondary)",
+                          ? "var(--asph-primary)"
+                          : "var(--asph-text-secondary)",
                     }}
                   >
                     {option.icon}
@@ -118,13 +118,13 @@ export function ReplyControls({
                   <div className="flex-1">
                     <div
                       className="font-medium"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       {option.label}
                     </div>
                     <div
                       className="text-xs"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       {option.description}
                     </div>
@@ -132,7 +132,7 @@ export function ReplyControls({
                   {option.id === value && (
                     <CheckCircle2
                       size={18}
-                      style={{ color: "var(--bsky-primary)" }}
+                      style={{ color: "var(--asph-primary)" }}
                     />
                   )}
                 </button>
@@ -148,7 +148,7 @@ export function ReplyControls({
     <div className="space-y-2">
       <label
         className="text-sm font-medium"
-        style={{ color: "var(--bsky-text-primary)" }}
+        style={{ color: "var(--asph-text-primary)" }}
       >
         Who can reply?
       </label>
@@ -167,25 +167,25 @@ export function ReplyControls({
             style={{
               borderColor:
                 option.id === value
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-border-primary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-border-primary)",
               backgroundColor:
-                option.id === value ? undefined : "var(--bsky-bg-secondary)",
+                option.id === value ? undefined : "var(--asph-bg-secondary)",
             }}
           >
             <div
               style={{
                 color:
                   option.id === value
-                    ? "var(--bsky-primary)"
-                    : "var(--bsky-text-secondary)",
+                    ? "var(--asph-primary)"
+                    : "var(--asph-text-secondary)",
               }}
             >
               {option.icon}
             </div>
             <span
               className="text-xs font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               {option.label}
             </span>
@@ -214,7 +214,7 @@ export function ReplyRestrictionsDisplay({
   return (
     <div
       className={`flex items-center gap-1.5 text-xs ${className}`}
-      style={{ color: "var(--bsky-text-secondary)" }}
+      style={{ color: "var(--asph-text-secondary)" }}
     >
       {option.icon}
       <span>{option.label} can reply</span>

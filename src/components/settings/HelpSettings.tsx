@@ -56,7 +56,7 @@ const renderContent = (content: string): React.ReactNode => {
         <h1
           key={`h1-${index}`}
           className="mb-4 mt-6 text-2xl font-bold first:mt-0"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {line.slice(2)}
         </h1>
@@ -67,7 +67,7 @@ const renderContent = (content: string): React.ReactNode => {
         <h2
           key={`h2-${index}`}
           className="mb-3 mt-5 text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {line.slice(3)}
         </h2>
@@ -78,7 +78,7 @@ const renderContent = (content: string): React.ReactNode => {
         <h3
           key={`h3-${index}`}
           className="mb-2 mt-4 text-lg font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {line.slice(4)}
         </h3>
@@ -107,7 +107,7 @@ const renderContent = (content: string): React.ReactNode => {
     // Inline code
     processed = processed.replace(
       /`([^`]+)`/g,
-      '<code class="rounded bg-bsky-bg-secondary px-1.5 py-0.5 text-sm font-mono">$1</code>',
+      '<code class="rounded bg-asph-bg-secondary px-1.5 py-0.5 text-sm font-mono">$1</code>',
     );
 
     // List items
@@ -116,7 +116,7 @@ const renderContent = (content: string): React.ReactNode => {
         <li
           key={`li-${index}`}
           className="ml-4 list-disc"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
           dangerouslySetInnerHTML={{ __html: processed.slice(2) }}
         />
       );
@@ -129,7 +129,7 @@ const renderContent = (content: string): React.ReactNode => {
         <li
           key={`oli-${index}`}
           className="ml-4 list-decimal"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
           dangerouslySetInnerHTML={{
             __html: processed.slice(numberedMatch[0].length),
           }}
@@ -147,7 +147,7 @@ const renderContent = (content: string): React.ReactNode => {
       <p
         key={`p-${index}`}
         className="mb-2"
-        style={{ color: "var(--bsky-text-secondary)" }}
+        style={{ color: "var(--asph-text-secondary)" }}
         dangerouslySetInnerHTML={{ __html: processed }}
       />
     );
@@ -189,9 +189,9 @@ const renderContent = (content: string): React.ReactNode => {
                     key={`th-${header}-${idx}`}
                     className="border px-3 py-2 text-left font-medium"
                     style={{
-                      borderColor: "var(--bsky-border-primary)",
-                      backgroundColor: "var(--bsky-bg-secondary)",
-                      color: "var(--bsky-text-primary)",
+                      borderColor: "var(--asph-border-primary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      color: "var(--asph-text-primary)",
                     }}
                   >
                     {header}
@@ -207,8 +207,8 @@ const renderContent = (content: string): React.ReactNode => {
                       key={`cell-${i}-${rowIdx}-${cellIdx}`}
                       className="border px-3 py-2"
                       style={{
-                        borderColor: "var(--bsky-border-primary)",
-                        color: "var(--bsky-text-secondary)",
+                        borderColor: "var(--asph-border-primary)",
+                        color: "var(--asph-text-secondary)",
                       }}
                     >
                       {cell}
@@ -241,9 +241,9 @@ const renderContent = (content: string): React.ReactNode => {
                   key={`th-final-${header}-${idx}`}
                   className="border px-3 py-2 text-left font-medium"
                   style={{
-                    borderColor: "var(--bsky-border-primary)",
-                    backgroundColor: "var(--bsky-bg-secondary)",
-                    color: "var(--bsky-text-primary)",
+                    borderColor: "var(--asph-border-primary)",
+                    backgroundColor: "var(--asph-bg-secondary)",
+                    color: "var(--asph-text-primary)",
                   }}
                 >
                   {header}
@@ -259,8 +259,8 @@ const renderContent = (content: string): React.ReactNode => {
                     key={`cell-final-${rowIdx}-${cellIdx}`}
                     className="border px-3 py-2"
                     style={{
-                      borderColor: "var(--bsky-border-primary)",
-                      color: "var(--bsky-text-secondary)",
+                      borderColor: "var(--asph-border-primary)",
+                      color: "var(--asph-text-secondary)",
                     }}
                   >
                     {cell}
@@ -285,18 +285,18 @@ interface ArticleCardProps {
 const ArticleCard: React.FC<ArticleCardProps> = ({ article, onClick }) => (
   <button
     onClick={onClick}
-    className="w-full rounded-lg p-4 text-left transition-colors hover:bg-bsky-bg-secondary"
+    className="w-full rounded-lg p-4 text-left transition-colors hover:bg-asph-bg-secondary"
     style={{
-      border: "1px solid var(--bsky-border-primary)",
+      border: "1px solid var(--asph-border-primary)",
     }}
   >
     <h3
       className="mb-1 font-medium"
-      style={{ color: "var(--bsky-text-primary)" }}
+      style={{ color: "var(--asph-text-primary)" }}
     >
       {article.title}
     </h3>
-    <p className="text-sm" style={{ color: "var(--bsky-text-secondary)" }}>
+    <p className="text-sm" style={{ color: "var(--asph-text-secondary)" }}>
       {article.summary}
     </p>
   </button>
@@ -318,35 +318,35 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-4 rounded-lg p-4 text-left transition-colors hover:bg-bsky-bg-secondary"
+      className="flex w-full items-center gap-4 rounded-lg p-4 text-left transition-colors hover:bg-asph-bg-secondary"
       style={{
-        border: "1px solid var(--bsky-border-primary)",
+        border: "1px solid var(--asph-border-primary)",
       }}
     >
       <div
         className="rounded-lg p-3"
-        style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+        style={{ backgroundColor: "var(--asph-bg-secondary)" }}
       >
-        <Icon size={24} style={{ color: "var(--bsky-primary)" }} />
+        <Icon size={24} style={{ color: "var(--asph-primary)" }} />
       </div>
       <div className="flex-1">
         <h3
           className="font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {category.name}
         </h3>
-        <p className="text-sm" style={{ color: "var(--bsky-text-secondary)" }}>
+        <p className="text-sm" style={{ color: "var(--asph-text-secondary)" }}>
           {category.description}
         </p>
         <p
           className="mt-1 text-xs"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           {articleCount} article{articleCount !== 1 ? "s" : ""}
         </p>
       </div>
-      <ChevronRight size={20} style={{ color: "var(--bsky-text-tertiary)" }} />
+      <ChevronRight size={20} style={{ color: "var(--asph-text-tertiary)" }} />
     </button>
   );
 };
@@ -426,8 +426,8 @@ export const HelpSettings: React.FC = () => {
       <div className="space-y-4">
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 text-sm transition-colors hover:text-bsky-primary"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          className="flex items-center gap-2 text-sm transition-colors hover:text-asph-primary"
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           <ArrowLeft size={16} />
           Back to {currentCategory?.name || "Help"}
@@ -437,9 +437,9 @@ export const HelpSettings: React.FC = () => {
 
         <div
           className="mt-6 border-t pt-4"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
-          <p className="text-sm" style={{ color: "var(--bsky-text-tertiary)" }}>
+          <p className="text-sm" style={{ color: "var(--asph-text-tertiary)" }}>
             Was this article helpful? If you need more assistance, check out the{" "}
             <a
               href="https://bsky.social"
@@ -462,8 +462,8 @@ export const HelpSettings: React.FC = () => {
       <div className="space-y-4">
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 text-sm transition-colors hover:text-bsky-primary"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          className="flex items-center gap-2 text-sm transition-colors hover:text-asph-primary"
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           <ArrowLeft size={16} />
           Back to Help
@@ -472,13 +472,13 @@ export const HelpSettings: React.FC = () => {
         <div>
           <h2
             className="text-xl font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             {currentCategory.name}
           </h2>
           <p
             className="mt-1 text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {currentCategory.description}
           </p>
@@ -505,8 +505,8 @@ export const HelpSettings: React.FC = () => {
       <div className="space-y-4">
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 text-sm transition-colors hover:text-bsky-primary"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          className="flex items-center gap-2 text-sm transition-colors hover:text-asph-primary"
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           <ArrowLeft size={16} />
           Back to Help
@@ -517,7 +517,7 @@ export const HelpSettings: React.FC = () => {
           <Search
             size={18}
             className="absolute left-3 top-1/2 -translate-y-1/2"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           />
           <input
             type="text"
@@ -526,9 +526,9 @@ export const HelpSettings: React.FC = () => {
             onChange={(e) => handleSearch(e.target.value)}
             className="w-full rounded-lg py-3 pl-10 pr-4 text-sm"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              color: "var(--bsky-text-primary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              color: "var(--asph-text-primary)",
+              border: "1px solid var(--asph-border-primary)",
             }}
             autoFocus
           />
@@ -537,7 +537,7 @@ export const HelpSettings: React.FC = () => {
         <div>
           <h2
             className="mb-3 text-lg font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Search Results for "{searchQuery}"
           </h2>
@@ -556,7 +556,7 @@ export const HelpSettings: React.FC = () => {
           ) : (
             <p
               className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               No articles found. Try different keywords.
             </p>
@@ -572,15 +572,15 @@ export const HelpSettings: React.FC = () => {
       <div>
         <h2
           className="text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Help & Documentation
         </h2>
         <p
           className="mt-1 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
-          Find answers to common questions and learn how to use ShadowSky
+          Find answers to common questions and learn how to use Asphodel
         </p>
       </div>
 
@@ -589,7 +589,7 @@ export const HelpSettings: React.FC = () => {
         <Search
           size={18}
           className="absolute left-3 top-1/2 -translate-y-1/2"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         />
         <input
           type="text"
@@ -598,9 +598,9 @@ export const HelpSettings: React.FC = () => {
           onChange={(e) => handleSearch(e.target.value)}
           className="w-full rounded-lg py-3 pl-10 pr-4 text-sm"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            color: "var(--bsky-text-primary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            color: "var(--asph-text-primary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         />
       </div>
@@ -609,24 +609,24 @@ export const HelpSettings: React.FC = () => {
       <div
         className="rounded-lg p-4"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <h3
           className="mb-3 text-sm font-semibold uppercase tracking-wide"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           Quick Actions
         </h3>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setIsShortcutsHelpOpen(true)}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-bsky-bg-tertiary"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-asph-bg-tertiary"
             style={{
-              backgroundColor: "var(--bsky-bg-primary)",
-              color: "var(--bsky-text-primary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-primary)",
+              color: "var(--asph-text-primary)",
+              border: "1px solid var(--asph-border-primary)",
             }}
           >
             <Keyboard size={16} />
@@ -636,11 +636,11 @@ export const HelpSettings: React.FC = () => {
             href="https://bsky.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-bsky-bg-tertiary"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-asph-bg-tertiary"
             style={{
-              backgroundColor: "var(--bsky-bg-primary)",
-              color: "var(--bsky-text-primary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-primary)",
+              color: "var(--asph-text-primary)",
+              border: "1px solid var(--asph-border-primary)",
             }}
           >
             <ExternalLink size={16} />
@@ -648,11 +648,11 @@ export const HelpSettings: React.FC = () => {
           </a>
           <button
             onClick={() => setIsBugReportOpen(true)}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-bsky-bg-tertiary"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-asph-bg-tertiary"
             style={{
-              backgroundColor: "var(--bsky-bg-primary)",
-              color: "var(--bsky-text-primary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-primary)",
+              color: "var(--asph-text-primary)",
+              border: "1px solid var(--asph-border-primary)",
             }}
           >
             <Bug size={16} />
@@ -665,7 +665,7 @@ export const HelpSettings: React.FC = () => {
       <div>
         <h3
           className="mb-3 text-sm font-semibold uppercase tracking-wide"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           Browse by Topic
         </h3>
@@ -689,11 +689,11 @@ export const HelpSettings: React.FC = () => {
       {/* Footer */}
       <div
         className="border-t pt-4"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         <p
           className="text-center text-sm"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           Can't find what you're looking for?{" "}
           <button

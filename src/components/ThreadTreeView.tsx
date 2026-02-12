@@ -568,18 +568,18 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
             style={{
               marginLeft: `calc(${node.depth} * ${indentCssVar})`,
               backgroundColor: node.isRoot
-                ? "var(--bsky-bg-secondary)"
+                ? "var(--asph-bg-secondary)"
                 : isCurrentUser
                   ? "rgba(34, 197, 94, 0.05)"
                   : node.depth > 0
                     ? branchBgColor
                     : "transparent",
               border: node.isRoot
-                ? "1px solid var(--bsky-border-primary)"
+                ? "1px solid var(--asph-border-primary)"
                 : "none",
               // Left border color based on depth for visual grouping
               borderLeft: isCurrentUser
-                ? "4px solid var(--bsky-success-light)"
+                ? "4px solid var(--asph-success-light)"
                 : node.depth > 0
                   ? `3px solid ${branchBorderColor}`
                   : "none",
@@ -598,7 +598,7 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
                 <span
                   className="rounded-full px-2 py-0.5 text-xs font-medium"
                   style={{
-                    backgroundColor: "var(--bsky-primary)",
+                    backgroundColor: "var(--asph-primary)",
                     color: "white",
                   }}
                 >
@@ -608,14 +608,14 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
               {node.depth > 0 && !node.isRoot && (
                 <span
                   className="flex items-center gap-1 text-xs"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   <CornerDownRight size={12} />
                   Depth {node.depth}
                 </span>
               )}
               {(node.totalSiblings ?? 0) > 1 && (
-                <span className="bg-bsky-quote/10 flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-bsky-quote">
+                <span className="bg-asph-quote/10 flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-asph-quote">
                   <GitBranch size={10} />
                   {(node.siblingIndex ?? 0) + 1}/{node.totalSiblings}
                 </span>
@@ -630,11 +630,11 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
                   style={{
                     backgroundColor: isCollapsed
                       ? `${branchBorderColor}20`
-                      : "var(--bsky-bg-tertiary)",
+                      : "var(--asph-bg-tertiary)",
                     color: isCollapsed
                       ? branchBorderColor
-                      : "var(--bsky-text-secondary)",
-                    border: `1px solid ${isCollapsed ? branchBorderColor : "var(--bsky-border-primary)"}`,
+                      : "var(--asph-text-secondary)",
+                    border: `1px solid ${isCollapsed ? branchBorderColor : "var(--asph-border-primary)"}`,
                   }}
                   aria-label={isCollapsed ? "Expand branch" : "Collapse branch"}
                 >
@@ -650,10 +650,10 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
                     style={{
                       backgroundColor: isCollapsed
                         ? branchBorderColor
-                        : "var(--bsky-bg-secondary)",
+                        : "var(--asph-bg-secondary)",
                       color: isCollapsed
                         ? "white"
-                        : "var(--bsky-text-tertiary)",
+                        : "var(--asph-text-tertiary)",
                     }}
                   >
                     {isCollapsed && hiddenCount > 0
@@ -685,8 +685,8 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
                         <div
                           className="flex h-4 w-4 items-center justify-center rounded-full border border-white text-[8px] font-bold dark:border-gray-800"
                           style={{
-                            backgroundColor: "var(--bsky-bg-secondary)",
-                            color: "var(--bsky-text-tertiary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
+                            color: "var(--asph-text-tertiary)",
                           }}
                           title={`+${node.children.length - 3} more`}
                         >
@@ -720,7 +720,7 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
                   <ProfileHoverCard handle={node.post.author.handle}>
                     <span
                       className="cursor-pointer truncate text-sm font-semibold hover:underline"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                       onClick={(e) => {
                         e.stopPropagation();
                         navigate(`/profile/${node.post.author.handle}`);
@@ -731,19 +731,19 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
                   </ProfileHoverCard>
                   <span
                     className="text-xs"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   >
                     @{node.post.author.handle}
                   </span>
                   <span
                     className="text-xs"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   >
                     &middot;
                   </span>
                   <time
                     className="text-xs"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                     dateTime={node.post.indexedAt}
                   >
                     {formatDistanceToNow(new Date(node.post.indexedAt), {
@@ -757,7 +757,7 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
             {/* Post content */}
             <div
               className="mt-2 text-sm"
-              style={{ color: "var(--bsky-text-primary)", lineHeight: 1.5 }}
+              style={{ color: "var(--asph-text-primary)", lineHeight: 1.5 }}
             >
               <RichText
                 text={postRecord?.text || "[No text]"}
@@ -783,7 +783,7 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
             {showEngagementStats && (
               <div
                 className="mt-3 flex items-center gap-4 text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 <span className="flex items-center gap-1">
                   <MessageCircle size={12} />
@@ -841,21 +841,21 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
       <div
         className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg px-4 py-3"
         style={{
-          backgroundColor: "var(--bsky-bg-tertiary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div className="flex flex-wrap items-center gap-3">
           <span
             className="flex items-center gap-1.5 text-sm font-medium"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             <MessageCircle size={16} />
             {stats.totalPosts} posts
           </span>
           <span
             className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {stats.uniqueAuthors} participant
             {stats.uniqueAuthors !== 1 ? "s" : ""}
@@ -863,7 +863,7 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
           {stats.branchCount > 0 && (
             <span
               className="flex items-center gap-1 text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               <GitBranch size={14} />
               {stats.branchCount} branch{stats.branchCount !== 1 ? "es" : ""}
@@ -871,7 +871,7 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
           )}
           <span
             className="text-sm"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             Depth: {stats.maxDepth}
           </span>
@@ -881,14 +881,14 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
           <button
             onClick={expandAll}
             className="rounded px-2 py-1 text-xs transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Expand all
           </button>
           <button
             onClick={collapseAll}
             className="rounded px-2 py-1 text-xs transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Collapse all
           </button>
@@ -900,9 +900,9 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
         <div
           className="mb-4 flex flex-wrap items-center gap-3 rounded-lg px-3 py-2 text-xs"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            color: "var(--bsky-text-tertiary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            color: "var(--asph-text-tertiary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <span className="flex items-center gap-1">
@@ -943,21 +943,21 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
         <div
           className="mb-4 flex items-center justify-around rounded-lg px-4 py-3"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <div className="flex flex-col items-center">
             <span
               className="flex items-center gap-1.5 text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
-              <Eye size={18} style={{ color: "var(--bsky-text-secondary)" }} />
+              <Eye size={18} style={{ color: "var(--asph-text-secondary)" }} />
               {stats.totalReplies}
             </span>
             <span
               className="text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               Total replies
             </span>
@@ -965,14 +965,14 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
           <div className="flex flex-col items-center">
             <span
               className="flex items-center gap-1.5 text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
-              <Heart size={18} className="text-bsky-like" />
+              <Heart size={18} className="text-asph-like" />
               {stats.totalLikes}
             </span>
             <span
               className="text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               Total likes
             </span>
@@ -980,14 +980,14 @@ const ThreadTreeViewComponent: React.FC<ThreadTreeViewProps> = ({
           <div className="flex flex-col items-center">
             <span
               className="flex items-center gap-1.5 text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
-              <Repeat2 size={18} className="text-bsky-repost" />
+              <Repeat2 size={18} className="text-asph-repost" />
               {stats.totalReposts}
             </span>
             <span
               className="text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               Total reposts
             </span>

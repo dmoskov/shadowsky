@@ -169,7 +169,7 @@ const ToneOptionsModal: React.FC<ToneOptionsModalProps> = ({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descId}
-        className="bsky-card w-full max-w-md p-4 shadow-lg"
+        className="asph-card w-full max-w-md p-4 shadow-lg"
         onClick={(e) => e.stopPropagation()}
         style={{ maxHeight: "80vh", overflowY: "auto" }}
       >
@@ -177,7 +177,7 @@ const ToneOptionsModal: React.FC<ToneOptionsModalProps> = ({
           <h3
             id={titleId}
             className="flex items-center gap-2 text-lg font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             <Wand2 size={20} aria-hidden="true" />
             Choose a Tone
@@ -205,8 +205,8 @@ const ToneOptionsModal: React.FC<ToneOptionsModalProps> = ({
                   : "hover:border-blue-400"
               }`}
               style={{
-                borderColor: "var(--bsky-border-primary)",
-                background: "var(--bsky-bg-secondary)",
+                borderColor: "var(--asph-border-primary)",
+                background: "var(--asph-bg-secondary)",
               }}
               onClick={() => onSelectTone(option.value)}
               disabled={isAdjustingTone}
@@ -219,13 +219,13 @@ const ToneOptionsModal: React.FC<ToneOptionsModalProps> = ({
                 <div className="flex-1">
                   <div
                     className="font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {option.label}
                   </div>
                   <div
                     className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     {option.description}
                   </div>
@@ -234,7 +234,7 @@ const ToneOptionsModal: React.FC<ToneOptionsModalProps> = ({
                   <Loader
                     size={16}
                     className="animate-spin"
-                    style={{ color: "var(--bsky-primary)" }}
+                    style={{ color: "var(--asph-primary)" }}
                     aria-label="Adjusting tone"
                   />
                 )}
@@ -285,7 +285,7 @@ const TonePreviewModal: React.FC<TonePreviewModalProps> = ({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descId}
-        className="bsky-card w-full max-w-2xl p-6 shadow-xl"
+        className="asph-card w-full max-w-2xl p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
         style={{ maxHeight: "80vh", overflowY: "auto" }}
       >
@@ -293,7 +293,7 @@ const TonePreviewModal: React.FC<TonePreviewModalProps> = ({
           <h3
             id={titleId}
             className="flex items-center gap-2 text-lg font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             <Wand2 size={20} aria-hidden="true" />
             Tone Adjusted - {toneConfig?.label}
@@ -318,15 +318,15 @@ const TonePreviewModal: React.FC<TonePreviewModalProps> = ({
           <div>
             <h4
               className="mb-2 text-sm font-medium"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Original:
             </h4>
             <div
               className="rounded-lg p-3"
               style={{
-                background: "var(--bsky-bg-secondary)",
-                color: "var(--bsky-text-primary)",
+                background: "var(--asph-bg-secondary)",
+                color: "var(--asph-text-primary)",
               }}
             >
               {originalText}
@@ -336,16 +336,16 @@ const TonePreviewModal: React.FC<TonePreviewModalProps> = ({
           <div>
             <h4
               className="mb-2 text-sm font-medium"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Adjusted:
             </h4>
             <div
               className="rounded-lg border-2 p-3"
               style={{
-                background: "var(--bsky-bg-secondary)",
-                color: "var(--bsky-text-primary)",
-                borderColor: "var(--bsky-primary)",
+                background: "var(--asph-bg-secondary)",
+                color: "var(--asph-text-primary)",
+                borderColor: "var(--asph-primary)",
               }}
             >
               {adjustedText}
@@ -355,13 +355,13 @@ const TonePreviewModal: React.FC<TonePreviewModalProps> = ({
 
         <div className="mt-6 flex justify-end gap-3">
           <button
-            className="bsky-button-secondary px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="asph-button-secondary px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onCancel}
           >
             Cancel
           </button>
           <button
-            className="bsky-button-primary flex items-center gap-2 px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="asph-button-primary flex items-center gap-2 px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onApply}
           >
             <CheckCircle size={16} aria-hidden="true" />
@@ -405,7 +405,7 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descId}
-        className="bsky-card w-full max-w-3xl p-6 shadow-xl"
+        className="asph-card w-full max-w-3xl p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
         style={{ maxHeight: "90vh", overflowY: "auto" }}
       >
@@ -413,7 +413,7 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
           <h3
             id={titleId}
             className="flex items-center gap-2 text-lg font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             <Sparkles size={20} aria-hidden="true" />
             Thread Optimization - {result.totalPosts} Posts
@@ -430,13 +430,13 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
         <div id={descId} className="mb-4">
           <p
             className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {result.summary}
           </p>
           <p
             className="mt-2 text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             Suggested format:{" "}
             {result.suggestedFormat === "simple"
@@ -467,16 +467,16 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
                 role="listitem"
                 className="rounded-lg border p-4"
                 style={{
-                  background: "var(--bsky-bg-secondary)",
+                  background: "var(--asph-bg-secondary)",
                   borderColor: segment.isStandalone
-                    ? "var(--bsky-primary)"
-                    : "var(--bsky-border-primary)",
+                    ? "var(--asph-primary)"
+                    : "var(--asph-border-primary)",
                 }}
               >
                 <div className="mb-2 flex items-center justify-between">
                   <span
                     className="text-xs font-medium"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   >
                     Post {index + 1} • {numbering}
                     {segment.text.length} characters
@@ -485,7 +485,7 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
                     <span
                       className="rounded-full px-2 py-0.5 text-xs"
                       style={{
-                        background: "var(--bsky-primary)",
+                        background: "var(--asph-primary)",
                         color: "white",
                       }}
                     >
@@ -495,7 +495,7 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
                 </div>
                 <p
                   className="whitespace-pre-wrap"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {numbering}
                   {segment.text}
@@ -507,13 +507,13 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
 
         <div className="mt-6 flex justify-end gap-3">
           <button
-            className="bsky-button-secondary px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="asph-button-secondary px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onCancel}
           >
             Cancel
           </button>
           <button
-            className="bsky-button-primary flex items-center gap-2 px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="asph-button-primary flex items-center gap-2 px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onApply}
           >
             <CheckCircle size={16} aria-hidden="true" />
@@ -561,7 +561,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descId}
-        className="bsky-card w-full max-w-2xl p-6 shadow-xl"
+        className="asph-card w-full max-w-2xl p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
         style={{ maxHeight: "90vh", overflowY: "auto" }}
       >
@@ -569,7 +569,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
           <h3
             id={titleId}
             className="flex items-center gap-2 text-lg font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             <MessageSquare size={20} aria-hidden="true" />
             Writing Feedback
@@ -615,8 +615,8 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
           <div
             className="rounded-lg border p-4"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              borderColor: "var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              borderColor: "var(--asph-border-primary)",
             }}
           >
             <h4 className="mb-3 flex items-center gap-2 font-semibold">
@@ -632,8 +632,8 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
           <div
             className="rounded-lg border p-4"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              borderColor: "var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              borderColor: "var(--asph-border-primary)",
             }}
           >
             <h4 className="mb-3 flex items-center justify-between font-semibold">
@@ -642,7 +642,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
                 Corrected Version
               </span>
               <button
-                className="bsky-button-secondary flex items-center gap-1 px-3 py-1 text-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                className="asph-button-secondary flex items-center gap-1 px-3 py-1 text-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 onClick={onApplyCorrected}
               >
                 <Undo size={14} aria-hidden="true" />
@@ -668,8 +668,8 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
           <div
             className="rounded-lg border p-4"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              borderColor: "var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              borderColor: "var(--asph-border-primary)",
             }}
           >
             <h4 className="mb-3 flex items-center justify-between font-semibold">
@@ -678,7 +678,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
                 Enhanced Version
               </span>
               <button
-                className="bsky-button-primary flex items-center gap-1 px-3 py-1 text-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                className="asph-button-primary flex items-center gap-1 px-3 py-1 text-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 onClick={onApplyEnhanced}
               >
                 <Undo size={14} aria-hidden="true" />
@@ -712,8 +712,8 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
               <div
                 className="rounded-lg border p-4"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  borderColor: "var(--asph-border-primary)",
                 }}
               >
                 <h4 className="mb-3 flex items-center gap-2 font-semibold">
@@ -751,7 +751,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
 
         <div className="mt-6 flex justify-end">
           <button
-            className="bsky-button-primary px-6 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="asph-button-primary px-6 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onClose}
           >
             Got it!

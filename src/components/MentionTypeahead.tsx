@@ -347,18 +347,18 @@ export const MentionTypeahead = forwardRef<
               id={listboxId}
               role="listbox"
               aria-label="User suggestions"
-              className="bsky-scrollbar fixed z-[9999] max-h-[240px] w-[280px] overflow-y-auto rounded-lg border shadow-lg"
+              className="asph-scrollbar fixed z-[9999] max-h-[240px] w-[280px] overflow-y-auto rounded-lg border shadow-lg"
               style={{
                 top: dropdownPosition.top,
                 left: dropdownPosition.left,
-                backgroundColor: "var(--bsky-bg-primary)",
-                borderColor: "var(--bsky-border-primary)",
+                backgroundColor: "var(--asph-bg-primary)",
+                borderColor: "var(--asph-border-primary)",
               }}
             >
               {isLoading && suggestions.length === 0 && (
                 <div
                   className="flex items-center justify-center px-3 py-4"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   <span className="text-sm">Searching...</span>
                 </div>
@@ -375,7 +375,7 @@ export const MentionTypeahead = forwardRef<
                   style={{
                     backgroundColor:
                       index === selectedIndex
-                        ? "var(--bsky-bg-secondary)"
+                        ? "var(--asph-bg-secondary)"
                         : "transparent",
                   }}
                   onMouseEnter={() => setSelectedIndex(index)}
@@ -389,11 +389,11 @@ export const MentionTypeahead = forwardRef<
                   ) : (
                     <div
                       className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full"
-                      style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                      style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
                     >
                       <span
                         className="text-sm font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         {suggestion.handle[0]?.toUpperCase()}
                       </span>
@@ -403,14 +403,14 @@ export const MentionTypeahead = forwardRef<
                     {suggestion.displayName && (
                       <div
                         className="truncate text-sm font-medium"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {suggestion.displayName}
                       </div>
                     )}
                     <div
                       className="truncate text-xs"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       @{suggestion.handle}
                     </div>

@@ -8,11 +8,11 @@ export const PageLoader: React.FC = () => {
         <Loader
           className="animate-spin"
           size={48}
-          style={{ color: "var(--bsky-primary)" }}
+          style={{ color: "var(--asph-primary)" }}
         />
         <p
           className="animate-pulse text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Loading...
         </p>

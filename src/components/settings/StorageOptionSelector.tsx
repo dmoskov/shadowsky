@@ -44,11 +44,11 @@ export const StorageOptionSelector: React.FC<StorageOptionSelectorProps> = ({
               isSelected ? "ring-2 ring-offset-2" : "hover:brightness-110"
             } ${isLoading || disabled ? "opacity-50" : ""}`}
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
+              backgroundColor: "var(--asph-bg-secondary)",
               border: `2px solid ${
                 isSelected
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-border-primary)"
+                  ? "var(--asph-primary)"
+                  : "var(--asph-border-primary)"
               }`,
             }}
           >
@@ -57,14 +57,14 @@ export const StorageOptionSelector: React.FC<StorageOptionSelectorProps> = ({
                 className="rounded-lg p-2"
                 style={{
                   backgroundColor: isSelected
-                    ? "var(--bsky-primary)"
-                    : "var(--bsky-bg-tertiary)",
+                    ? "var(--asph-primary)"
+                    : "var(--asph-bg-tertiary)",
                 }}
               >
                 <Icon
                   size={20}
                   style={{
-                    color: isSelected ? "white" : "var(--bsky-text-secondary)",
+                    color: isSelected ? "white" : "var(--asph-text-secondary)",
                   }}
                 />
               </div>
@@ -72,35 +72,35 @@ export const StorageOptionSelector: React.FC<StorageOptionSelectorProps> = ({
               <div className="flex-1">
                 <h3
                   className="font-medium"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {option.name}
                 </h3>
                 <p
                   className="mt-1 text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   {option.description}
                 </p>
 
                 {option.warning && (
-                  <div className="border-bsky-error/30 bg-bsky-error/10 mt-2 rounded border p-2 text-sm font-medium text-bsky-error">
+                  <div className="border-asph-error/30 bg-asph-error/10 mt-2 rounded border p-2 text-sm font-medium text-asph-error">
                     ⚠️ {option.warning}
                   </div>
                 )}
 
                 {option.info && (
-                  <div className="border-bsky-info/30 bg-bsky-info/10 mt-2 rounded border p-2 text-sm text-bsky-info">
+                  <div className="border-asph-info/30 bg-asph-info/10 mt-2 rounded border p-2 text-sm text-asph-info">
                     ℹ️ {option.info}
                   </div>
                 )}
 
                 <div className="mt-3 flex gap-4 text-xs">
                   <div>
-                    <span style={{ color: "var(--bsky-text-tertiary)" }}>
+                    <span style={{ color: "var(--asph-text-tertiary)" }}>
                       Pros:
                     </span>
-                    <ul className="mt-1 text-bsky-success">
+                    <ul className="mt-1 text-asph-success">
                       {option.pros.map((pro, i) => (
                         <li
                           key={`${option.type}-pro-${i}-${pro.substring(0, 10)}`}
@@ -111,10 +111,10 @@ export const StorageOptionSelector: React.FC<StorageOptionSelectorProps> = ({
                     </ul>
                   </div>
                   <div>
-                    <span style={{ color: "var(--bsky-text-tertiary)" }}>
+                    <span style={{ color: "var(--asph-text-tertiary)" }}>
                       Cons:
                     </span>
-                    <ul className="mt-1 text-bsky-error">
+                    <ul className="mt-1 text-asph-error">
                       {option.cons.map((con, i) => (
                         <li
                           key={`${option.type}-con-${i}-${con.substring(0, 10)}`}
@@ -131,7 +131,7 @@ export const StorageOptionSelector: React.FC<StorageOptionSelectorProps> = ({
               {isSelected && (
                 <div
                   className="flex items-center gap-1 text-sm font-semibold"
-                  style={{ color: "var(--bsky-primary)" }}
+                  style={{ color: "var(--asph-primary)" }}
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <circle

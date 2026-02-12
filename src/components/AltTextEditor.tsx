@@ -130,24 +130,24 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
       <div
         className="flex h-[90vh] max-h-[700px] w-full max-w-3xl flex-col overflow-hidden rounded-xl"
-        style={{ backgroundColor: "var(--bsky-bg-primary)" }}
+        style={{ backgroundColor: "var(--asph-bg-primary)" }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between border-b px-4 py-3"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
           <div className="flex items-center gap-3">
             <button
               onClick={onCancel}
               className="rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               <X size={20} />
             </button>
             <h2
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Add Alt Text
             </h2>
@@ -157,7 +157,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
             onClick={handleSave}
             disabled={altText.length > MAX_ALT_TEXT_LENGTH}
             className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium text-white transition-opacity disabled:opacity-50"
-            style={{ backgroundColor: "var(--bsky-primary)" }}
+            style={{ backgroundColor: "var(--asph-primary)" }}
           >
             <Check size={16} />
             Save
@@ -168,7 +168,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
           {/* Image preview */}
           <div
             className="flex w-1/2 items-center justify-center border-r bg-gray-900 p-4"
-            style={{ borderColor: "var(--bsky-border-primary)" }}
+            style={{ borderColor: "var(--asph-border-primary)" }}
           >
             <img
               src={image.preview}
@@ -186,8 +186,8 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
                 disabled={isGenerating}
                 className="flex w-full items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-gray-800"
                 style={{
-                  borderColor: "var(--bsky-primary)",
-                  color: "var(--bsky-primary)",
+                  borderColor: "var(--asph-primary)",
+                  color: "var(--asph-primary)",
                 }}
               >
                 {isGenerating ? (
@@ -217,7 +217,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
               <div className="mb-4">
                 <div
                   className="mb-2 flex items-center gap-1.5 text-xs font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   <Sparkles size={12} />
                   AI Suggestion
@@ -235,9 +235,9 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
                       style={{
                         borderColor:
                           selectedSuggestion === index
-                            ? "var(--bsky-primary)"
-                            : "var(--bsky-border-primary)",
-                        color: "var(--bsky-text-primary)",
+                            ? "var(--asph-primary)"
+                            : "var(--asph-border-primary)",
+                        color: "var(--asph-text-primary)",
                       }}
                     >
                       {suggestion}
@@ -248,7 +248,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
                   onClick={generateAltText}
                   disabled={isGenerating}
                   className="mt-2 flex items-center gap-1 text-xs transition-colors hover:underline"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   <RefreshCw size={12} />
                   Regenerate
@@ -260,7 +260,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
             <div className="mb-4">
               <div
                 className="mb-2 text-xs font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Quick templates
               </div>
@@ -271,8 +271,8 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
                     onClick={() => applyTemplate(template.prefix)}
                     className="rounded-full border px-2.5 py-1 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
                     style={{
-                      borderColor: "var(--bsky-border-primary)",
-                      color: "var(--bsky-text-secondary)",
+                      borderColor: "var(--asph-border-primary)",
+                      color: "var(--asph-text-secondary)",
                     }}
                   >
                     {template.label}
@@ -286,14 +286,14 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
               <div className="mb-2 flex items-center justify-between">
                 <label
                   className="text-sm font-medium"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   Description
                 </label>
                 <button
                   onClick={copyToClipboard}
                   className="flex items-center gap-1 text-xs transition-colors hover:underline"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   <Copy size={12} />
                   Copy
@@ -308,9 +308,9 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
                 placeholder="Describe this image for people who can't see it. Include important details about what's shown."
                 className="h-40 w-full resize-none rounded-lg border p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  borderColor: "var(--asph-border-primary)",
+                  color: "var(--asph-text-primary)",
                 }}
               />
               <div
@@ -318,7 +318,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
                 style={{
                   color: getCharCountStyle()
                     ? undefined
-                    : "var(--bsky-text-tertiary)",
+                    : "var(--asph-text-tertiary)",
                 }}
               >
                 <span>
@@ -338,8 +338,8 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
             <div
               className="mt-4 rounded-lg p-3 text-xs"
               style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                color: "var(--bsky-text-secondary)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                color: "var(--asph-text-secondary)",
               }}
             >
               <div className="mb-1 font-medium">Tips for good alt text:</div>

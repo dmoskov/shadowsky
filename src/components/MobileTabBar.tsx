@@ -53,7 +53,7 @@ export const MobileTabBar: React.FC = () => {
 
         // Try to find the feed container specifically
         const feedContainer =
-          document.querySelector(".bsky-scrollbar") ||
+          document.querySelector(".asph-scrollbar") ||
           document.querySelector('[role="feed"]')?.closest(".overflow-y-auto");
         if (feedContainer) {
           feedContainer.scrollTop = 0;
@@ -70,9 +70,9 @@ export const MobileTabBar: React.FC = () => {
   return (
     <nav
       aria-label="Mobile navigation"
-      className="bsky-glass fixed bottom-0 left-0 right-0 z-40 lg:hidden"
+      className="asph-glass fixed bottom-0 left-0 right-0 z-40 lg:hidden"
       style={{
-        borderTop: "1px solid var(--bsky-border-primary)",
+        borderTop: "1px solid var(--asph-border-primary)",
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
@@ -93,8 +93,8 @@ export const MobileTabBar: React.FC = () => {
                 }`}
                 style={{
                   color: isActive
-                    ? "var(--bsky-primary)"
-                    : "var(--bsky-text-secondary)",
+                    ? "var(--asph-primary)"
+                    : "var(--asph-text-secondary)",
                 }}
               >
                 <div className="relative">
@@ -127,8 +127,8 @@ export const MobileTabBar: React.FC = () => {
               }
               style={({ isActive }) => ({
                 color: isActive
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-text-secondary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-text-secondary)",
               })}
               {...prefetchHandlers}
             >
@@ -144,7 +144,7 @@ export const MobileTabBar: React.FC = () => {
                     <span
                       className="absolute -right-1 -top-1 h-2 w-2 rounded-full"
                       style={{
-                        backgroundColor: "var(--bsky-accent)",
+                        backgroundColor: "var(--asph-accent)",
                       }}
                       aria-label={`${unreadCount} unread notifications`}
                     />

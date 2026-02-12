@@ -440,10 +440,10 @@ export const DataSettings: React.FC = () => {
         <div
           className={`rounded-lg border p-3 text-sm ${
             message.type === "success"
-              ? "border-bsky-success/30 bg-bsky-success/10 text-bsky-success"
+              ? "border-asph-success/30 bg-asph-success/10 text-asph-success"
               : message.type === "error"
-                ? "border-bsky-error/30 bg-bsky-error/10 text-bsky-error"
-                : "border-bsky-info/30 bg-bsky-info/10 text-bsky-info"
+                ? "border-asph-error/30 bg-asph-error/10 text-asph-error"
+                : "border-asph-info/30 bg-asph-info/10 text-asph-info"
           }`}
         >
           <div className="flex items-center justify-between">
@@ -451,7 +451,7 @@ export const DataSettings: React.FC = () => {
             {message.type === "success" && (
               <button
                 onClick={() => window.location.reload()}
-                className="ml-4 rounded-md bg-bsky-success px-3 py-1.5 text-xs font-medium text-white transition-colors hover:opacity-90"
+                className="ml-4 rounded-md bg-asph-success px-3 py-1.5 text-xs font-medium text-white transition-colors hover:opacity-90"
               >
                 Reload Page
               </button>
@@ -472,8 +472,8 @@ export const DataSettings: React.FC = () => {
               key={item.id}
               className="rounded-lg p-6"
               style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                border: "1px solid var(--bsky-border-primary)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                border: "1px solid var(--asph-border-primary)",
               }}
             >
               <div className="flex items-start justify-between">
@@ -482,7 +482,7 @@ export const DataSettings: React.FC = () => {
                     <Icon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
                     <h3
                       className="text-lg font-medium"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       {item.name}
                     </h3>
@@ -490,7 +490,7 @@ export const DataSettings: React.FC = () => {
                   <div className="mt-3 space-y-2">
                     <p
                       className="text-sm"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       {item.id === "settings" ? (
                         isEnabled ? (
@@ -507,7 +507,7 @@ export const DataSettings: React.FC = () => {
                       ) : item.id === "bookmarks" &&
                         item.storageType === "official" ? (
                         <>
-                          <strong className="text-bsky-success">
+                          <strong className="text-asph-success">
                             🔒 PRIVATE (Official):
                           </strong>{" "}
                           Your bookmarks are stored privately using the official
@@ -516,16 +516,16 @@ export const DataSettings: React.FC = () => {
                       ) : item.id === "bookmarks" &&
                         item.storageType === "custom" ? (
                         <>
-                          <strong className="text-bsky-warning">
+                          <strong className="text-asph-warning">
                             ⚠️ CUSTOM AT Protocol:
                           </strong>{" "}
                           Your bookmarks are stored in a custom AT Protocol
-                          record, visible only in ShadowSky. Toggle to migrate
-                          to official Bluesky bookmarks.
+                          record, visible only in Asphodel. Toggle to migrate to
+                          official Bluesky bookmarks.
                         </>
                       ) : isEnabled ? (
                         <>
-                          <strong className="text-bsky-error">
+                          <strong className="text-asph-error">
                             ⚠️ PUBLIC:
                           </strong>{" "}
                           This data is stored in AT Protocol records and can be
@@ -540,7 +540,7 @@ export const DataSettings: React.FC = () => {
                     </p>
                     <div
                       className="font-mono text-xs"
-                      style={{ color: "var(--bsky-text-tertiary)" }}
+                      style={{ color: "var(--asph-text-tertiary)" }}
                     >
                       <div>
                         Local:{" "}
@@ -786,19 +786,19 @@ export const DataSettings: React.FC = () => {
         <div
           className="rounded-lg p-6"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <h3
             className="mb-4 text-lg font-medium"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             AT Protocol Preferences Record
           </h3>
           <div
             className="space-y-3 font-mono text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             <div className="grid grid-cols-2 gap-2">
               <span className="font-semibold">Collection:</span>
@@ -810,7 +810,7 @@ export const DataSettings: React.FC = () => {
             </div>
             <div
               className="border-t pt-3"
-              style={{ borderColor: "var(--bsky-border-primary)" }}
+              style={{ borderColor: "var(--asph-border-primary)" }}
             >
               <span className="mb-2 block font-semibold">Current Values:</span>
               <div className="space-y-2 pl-4">
@@ -829,7 +829,7 @@ export const DataSettings: React.FC = () => {
                 {appPreferences.aiSettings && (
                   <div
                     className="mt-2 border-t pt-2"
-                    style={{ borderColor: "var(--bsky-border-primary)" }}
+                    style={{ borderColor: "var(--asph-border-primary)" }}
                   >
                     <span className="mb-1 block">AI Settings:</span>
                     <div className="space-y-1 pl-4">
@@ -861,9 +861,9 @@ export const DataSettings: React.FC = () => {
       <div
         className="rounded-lg p-4 text-sm"
         style={{
-          backgroundColor: "var(--bsky-bg-tertiary)",
-          border: "1px solid var(--bsky-border-primary)",
-          color: "var(--bsky-text-secondary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
+          border: "1px solid var(--asph-border-primary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <p className="mb-1 font-medium">About Storage Options:</p>

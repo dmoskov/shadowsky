@@ -57,7 +57,7 @@ export const SwipeIndicator: React.FC = () => {
         >
           <div
             className="h-24 w-1 rounded-r-full"
-            style={{ backgroundColor: "var(--bsky-primary)" }}
+            style={{ backgroundColor: "var(--asph-primary)" }}
           />
         </div>
       )}
@@ -71,7 +71,7 @@ export const SwipeIndicator: React.FC = () => {
         >
           <div
             className="h-24 w-1 rounded-l-full"
-            style={{ backgroundColor: "var(--bsky-primary)" }}
+            style={{ backgroundColor: "var(--asph-primary)" }}
           />
         </div>
       )}
@@ -88,8 +88,8 @@ export const SwipeIndicator: React.FC = () => {
               style={{
                 backgroundColor:
                   index === currentIndex
-                    ? "var(--bsky-primary)"
-                    : "var(--bsky-border-primary)",
+                    ? "var(--asph-primary)"
+                    : "var(--asph-border-primary)",
               }}
             />
           ))}

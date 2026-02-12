@@ -695,13 +695,13 @@ export function EnhancedComposer({
         <div
           className="mb-4 rounded-lg border p-3"
           style={{
-            backgroundColor: "var(--bsky-bg-primary)",
-            borderColor: "var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-primary)",
+            borderColor: "var(--asph-border-primary)",
           }}
         >
           <div
             className="mb-1 text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             Replying to
           </div>
@@ -719,17 +719,17 @@ export function EnhancedComposer({
               <div className="flex items-center gap-1 text-sm">
                 <span
                   className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {parentPost.author.displayName || parentPost.author.handle}
                 </span>
-                <span style={{ color: "var(--bsky-text-secondary)" }}>
+                <span style={{ color: "var(--asph-text-secondary)" }}>
                   @{parentPost.author.handle}
                 </span>
               </div>
               <div
                 className="mt-1 line-clamp-2 text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 {(parentPost.record as any)?.text || ""}
               </div>
@@ -743,9 +743,9 @@ export function EnhancedComposer({
         <div
           className="mb-4 flex items-center gap-2 rounded-lg border p-3 text-sm"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            borderColor: "var(--bsky-border-primary)",
-            color: "var(--bsky-text-tertiary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            borderColor: "var(--asph-border-primary)",
+            color: "var(--asph-text-tertiary)",
           }}
         >
           <Loader size={16} className="animate-spin" />
@@ -758,13 +758,13 @@ export function EnhancedComposer({
         <div
           className="mb-4 rounded-lg border p-3"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            borderColor: "var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            borderColor: "var(--asph-border-primary)",
           }}
         >
           <div
             className="mb-1 flex items-center justify-between text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             <span>
               <Quote size={12} className="mr-1 inline" />
@@ -802,18 +802,18 @@ export function EnhancedComposer({
                     <div className="flex items-center gap-1 text-sm">
                       <span
                         className="font-semibold"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {displayPost.author.displayName ||
                           displayPost.author.handle}
                       </span>
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      <span style={{ color: "var(--asph-text-secondary)" }}>
                         @{displayPost.author.handle}
                       </span>
                     </div>
                     <div
                       className="mt-1 line-clamp-3 text-sm"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       {(displayPost.record as any)?.text || ""}
                     </div>
@@ -835,8 +835,8 @@ export function EnhancedComposer({
                             <div
                               className="flex h-16 w-16 items-center justify-center rounded text-sm font-semibold"
                               style={{
-                                backgroundColor: "var(--bsky-bg-tertiary)",
-                                color: "var(--bsky-text-secondary)",
+                                backgroundColor: "var(--asph-bg-tertiary)",
+                                color: "var(--asph-text-secondary)",
                               }}
                             >
                               +{(displayPost.embed as any).images.length - 2}
@@ -872,9 +872,9 @@ export function EnhancedComposer({
         placeholder={placeholder}
         className="min-h-[120px] w-full resize-none rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          borderColor: "var(--bsky-border-primary)",
-          color: "var(--bsky-text-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          borderColor: "var(--asph-border-primary)",
+          color: "var(--asph-text-primary)",
         }}
       />
 
@@ -970,8 +970,8 @@ export function EnhancedComposer({
               onClick={() => setShowImageEditor(true)}
               className="flex h-32 w-full items-center justify-center rounded border-2 border-dashed transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               style={{
-                borderColor: "var(--bsky-border-primary)",
-                color: "var(--bsky-text-secondary)",
+                borderColor: "var(--asph-border-primary)",
+                color: "var(--asph-text-secondary)",
               }}
             >
               <div className="flex flex-col items-center gap-1">
@@ -1009,10 +1009,10 @@ export function EnhancedComposer({
       {showHashtagSuggestions && hashtagSuggestions.length > 0 && (
         <div className="mt-2">
           <div className="mb-1 flex items-center gap-1.5">
-            <Hash size={14} style={{ color: "var(--bsky-text-tertiary)" }} />
+            <Hash size={14} style={{ color: "var(--asph-text-tertiary)" }} />
             <span
               className="text-xs font-medium"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               Suggested Hashtags
             </span>
@@ -1024,9 +1024,9 @@ export function EnhancedComposer({
                 onClick={() => handleSelectHashtag(tag.tag)}
                 className="rounded-full border px-2 py-0.5 text-xs transition-all hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 dark:hover:bg-opacity-20"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  borderColor: "var(--asph-border-primary)",
+                  color: "var(--asph-text-primary)",
                 }}
                 title={`Relevance: ${tag.relevance}${tag.isTrending ? " (Trending)" : ""}`}
               >
@@ -1055,7 +1055,7 @@ export function EnhancedComposer({
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isSubmitting}
                 className="rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
                 title="Add image or video"
               >
                 <Image size={20} />
@@ -1070,7 +1070,7 @@ export function EnhancedComposer({
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                 disabled={isSubmitting}
                 className="rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
                 title="Add emoji"
               >
                 <Smile size={20} />
@@ -1092,7 +1092,7 @@ export function EnhancedComposer({
             style={{
               color:
                 text.length <= maxLength * 0.9
-                  ? "var(--bsky-text-secondary)"
+                  ? "var(--asph-text-secondary)"
                   : undefined,
             }}
           >
@@ -1116,8 +1116,8 @@ export function EnhancedComposer({
               disabled={isSubmitting}
               className="rounded-full border px-4 py-2"
               style={{
-                borderColor: "var(--bsky-border-primary)",
-                color: "var(--bsky-text-secondary)",
+                borderColor: "var(--asph-border-primary)",
+                color: "var(--asph-text-secondary)",
               }}
             >
               Cancel
@@ -1130,7 +1130,7 @@ export function EnhancedComposer({
             disabled={isSubmitting || (!text.trim() && media.length === 0)}
             className="flex items-center gap-2 rounded-full px-4 py-2 transition-all hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
             style={{
-              backgroundColor: "var(--bsky-primary)",
+              backgroundColor: "var(--asph-primary)",
               color: "white",
             }}
             title={

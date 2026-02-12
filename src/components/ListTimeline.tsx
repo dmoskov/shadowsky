@@ -209,7 +209,7 @@ export const ListTimeline: React.FC = () => {
   if (listLoading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="border-t-bsky-accent-primary h-8 w-8 animate-spin rounded-full border-2 border-bsky-border-primary" />
+        <div className="border-t-asph-accent-primary h-8 w-8 animate-spin rounded-full border-2 border-asph-border-primary" />
       </div>
     );
   }
@@ -217,10 +217,10 @@ export const ListTimeline: React.FC = () => {
   if (!list) {
     return (
       <div className="flex h-full flex-col items-center justify-center p-8 text-center">
-        <p className="text-bsky-text-primary">List not found</p>
+        <p className="text-asph-text-primary">List not found</p>
         <button
           onClick={() => navigate("/lists")}
-          className="mt-4 cursor-pointer rounded-lg bg-bsky-primary px-4 py-2 text-white transition-all duration-200 hover:opacity-90"
+          className="mt-4 cursor-pointer rounded-lg bg-asph-primary px-4 py-2 text-white transition-all duration-200 hover:opacity-90"
         >
           Back to Lists
         </button>
@@ -229,25 +229,25 @@ export const ListTimeline: React.FC = () => {
   }
 
   return (
-    <div className="flex h-full flex-col bg-bsky-bg-primary">
-      <div className="sticky top-0 z-10 border-b border-bsky-border-primary bg-bsky-bg-primary p-4">
+    <div className="flex h-full flex-col bg-asph-bg-primary">
+      <div className="sticky top-0 z-10 border-b border-asph-border-primary bg-asph-bg-primary p-4">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/lists")}
-            className="cursor-pointer rounded-full p-2 transition-all duration-200 hover:bg-bsky-bg-secondary"
+            className="cursor-pointer rounded-full p-2 transition-all duration-200 hover:bg-asph-bg-secondary"
           >
-            <ArrowLeft className="h-5 w-5 text-bsky-text-primary" />
+            <ArrowLeft className="h-5 w-5 text-asph-text-primary" />
           </button>
           <div className="flex-1">
-            <h2 className="m-0 text-xl font-semibold text-bsky-text-primary">
+            <h2 className="m-0 text-xl font-semibold text-asph-text-primary">
               {list.name}
             </h2>
             {list.description && (
-              <p className="mt-1 text-sm text-bsky-text-secondary">
+              <p className="mt-1 text-sm text-asph-text-secondary">
                 {list.description}
               </p>
             )}
-            <p className="mt-1 text-xs text-bsky-text-tertiary">
+            <p className="mt-1 text-xs text-asph-text-tertiary">
               {list.listItemCount || 0}{" "}
               {list.listItemCount === 1 ? "member" : "members"}
             </p>
@@ -255,7 +255,7 @@ export const ListTimeline: React.FC = () => {
           <button
             onClick={handleRefresh}
             disabled={loading}
-            className="cursor-pointer rounded-full p-2 text-bsky-text-secondary transition-all duration-200 hover:bg-bsky-bg-secondary disabled:opacity-50"
+            className="cursor-pointer rounded-full p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-secondary disabled:opacity-50"
           >
             <RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
           </button>
@@ -297,12 +297,12 @@ export const ListTimeline: React.FC = () => {
           />
         ) : loading ? (
           <div className="flex justify-center p-4">
-            <div className="border-t-bsky-accent-primary h-6 w-6 animate-spin rounded-full border-2 border-bsky-border-primary" />
+            <div className="border-t-asph-accent-primary h-6 w-6 animate-spin rounded-full border-2 border-asph-border-primary" />
           </div>
         ) : null}
         {posts.length > 0 && loading && (
           <div className="flex justify-center p-4">
-            <div className="border-t-bsky-accent-primary h-6 w-6 animate-spin rounded-full border-2 border-bsky-border-primary" />
+            <div className="border-t-asph-accent-primary h-6 w-6 animate-spin rounded-full border-2 border-asph-border-primary" />
           </div>
         )}
       </div>

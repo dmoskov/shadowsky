@@ -83,7 +83,7 @@ const PostCardComponent: React.FC<PostCardProps> = ({
       data-post-id={postId}
       data-post-uri={post.uri}
       className={`${showBorder ? "border-b" : ""} ${isDeepLinkTarget ? "deep-link-highlight" : ""}`}
-      style={showBorder ? { borderColor: "var(--bsky-border-primary)" } : {}}
+      style={showBorder ? { borderColor: "var(--asph-border-primary)" } : {}}
     >
       <PostRenderer
         post={post}

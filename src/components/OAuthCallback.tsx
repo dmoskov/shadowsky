@@ -37,27 +37,27 @@ export const OAuthCallback: React.FC = () => {
     return (
       <div
         className="flex min-h-screen items-center justify-center"
-        style={{ background: "var(--bsky-bg-primary)" }}
+        style={{ background: "var(--asph-bg-primary)" }}
       >
-        <div className="bsky-card max-w-md p-6 text-center">
-          <div className="mb-4 text-4xl" style={{ color: "var(--bsky-error)" }}>
+        <div className="asph-card max-w-md p-6 text-center">
+          <div className="mb-4 text-4xl" style={{ color: "var(--asph-error)" }}>
             !
           </div>
           <h2
             className="mb-2 text-xl font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Authentication Error
           </h2>
           <p
             className="mb-4 text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {error}
           </p>
           <button
             onClick={() => navigate("/", { replace: true })}
-            className="bsky-button-primary px-4 py-2 text-white"
+            className="asph-button-primary px-4 py-2 text-white"
           >
             Return to Login
           </button>
@@ -69,14 +69,14 @@ export const OAuthCallback: React.FC = () => {
   return (
     <div
       className="flex min-h-screen items-center justify-center"
-      style={{ background: "var(--bsky-bg-primary)" }}
+      style={{ background: "var(--asph-bg-primary)" }}
     >
       <div className="text-center">
         <Loader2
           className="mx-auto h-12 w-12 animate-spin"
-          style={{ color: "var(--bsky-primary)" }}
+          style={{ color: "var(--asph-primary)" }}
         />
-        <p className="mt-4" style={{ color: "var(--bsky-text-secondary)" }}>
+        <p className="mt-4" style={{ color: "var(--asph-text-secondary)" }}>
           Completing sign in...
         </p>
       </div>

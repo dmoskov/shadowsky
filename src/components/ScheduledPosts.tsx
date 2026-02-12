@@ -194,21 +194,21 @@ export const ScheduledPosts: React.FC = () => {
       {/* Stats Banner */}
       <div
         className="mb-6 rounded-xl p-4"
-        style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+        style={{ backgroundColor: "var(--asph-bg-secondary)" }}
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Clock size={24} style={{ color: "var(--bsky-primary)" }} />
+            <Clock size={24} style={{ color: "var(--asph-primary)" }} />
             <div>
               <h2
                 className="text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 Scheduled Posts
               </h2>
               <p
                 className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 {stats?.pending || 0} pending
                 {stats?.nextScheduledAt && (
@@ -221,17 +221,17 @@ export const ScheduledPosts: React.FC = () => {
             <StatBadge
               label="Pending"
               count={stats?.pending || 0}
-              color="var(--bsky-primary)"
+              color="var(--asph-primary)"
             />
             <StatBadge
               label="Failed"
               count={stats?.failed || 0}
-              color="var(--bsky-error, #ef4444)"
+              color="var(--asph-error, #ef4444)"
             />
             <StatBadge
               label="Completed"
               count={stats?.completed || 0}
-              color="var(--bsky-success, #22c55e)"
+              color="var(--asph-success, #22c55e)"
             />
           </div>
         </div>
@@ -242,7 +242,7 @@ export const ScheduledPosts: React.FC = () => {
         {/* Display Mode Toggle */}
         <div
           className="flex rounded-lg p-1"
-          style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+          style={{ backgroundColor: "var(--asph-bg-secondary)" }}
         >
           <button
             onClick={() => setDisplayMode("calendar")}
@@ -252,12 +252,12 @@ export const ScheduledPosts: React.FC = () => {
             style={{
               backgroundColor:
                 displayMode === "calendar"
-                  ? "var(--bsky-bg-primary)"
+                  ? "var(--asph-bg-primary)"
                   : "transparent",
               color:
                 displayMode === "calendar"
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-text-secondary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-text-secondary)",
             }}
           >
             <Calendar size={16} />
@@ -271,12 +271,12 @@ export const ScheduledPosts: React.FC = () => {
             style={{
               backgroundColor:
                 displayMode === "queue"
-                  ? "var(--bsky-bg-primary)"
+                  ? "var(--asph-bg-primary)"
                   : "transparent",
               color:
                 displayMode === "queue"
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-text-secondary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-text-secondary)",
             }}
           >
             <List size={16} />
@@ -290,7 +290,7 @@ export const ScheduledPosts: React.FC = () => {
             {/* View Mode Selector */}
             <div
               className="flex rounded-lg p-1"
-              style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+              style={{ backgroundColor: "var(--asph-bg-secondary)" }}
             >
               {(["day", "week", "month"] as ViewMode[]).map((mode) => (
                 <button
@@ -302,12 +302,12 @@ export const ScheduledPosts: React.FC = () => {
                   style={{
                     backgroundColor:
                       viewMode === mode
-                        ? "var(--bsky-bg-primary)"
+                        ? "var(--asph-bg-primary)"
                         : "transparent",
                     color:
                       viewMode === mode
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-text-secondary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-text-secondary)",
                   }}
                 >
                   {mode}
@@ -320,7 +320,7 @@ export const ScheduledPosts: React.FC = () => {
               <button
                 onClick={navigatePrevious}
                 className="rounded-lg p-2 transition-colors hover:bg-opacity-80"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
                 aria-label="Previous"
               >
                 <ChevronLeft size={20} />
@@ -329,8 +329,8 @@ export const ScheduledPosts: React.FC = () => {
                 onClick={goToToday}
                 className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  color: "var(--bsky-text-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  color: "var(--asph-text-primary)",
                 }}
               >
                 Today
@@ -338,7 +338,7 @@ export const ScheduledPosts: React.FC = () => {
               <button
                 onClick={navigateNext}
                 className="rounded-lg p-2 transition-colors hover:bg-opacity-80"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
                 aria-label="Next"
               >
                 <ChevronRight size={20} />
@@ -352,7 +352,7 @@ export const ScheduledPosts: React.FC = () => {
       {displayMode === "calendar" && (
         <h3
           className="mb-4 text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {viewTitle}
         </h3>
@@ -364,7 +364,7 @@ export const ScheduledPosts: React.FC = () => {
           <RefreshCw
             size={24}
             className="animate-spin"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           />
         </div>
       ) : displayMode === "calendar" ? (
@@ -504,18 +504,18 @@ const CalendarView: React.FC<{
   return (
     <div
       className="rounded-xl border"
-      style={{ borderColor: "var(--bsky-border-primary)" }}
+      style={{ borderColor: "var(--asph-border-primary)" }}
     >
       {/* Day Headers */}
       <div
         className="grid grid-cols-7 border-b"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
           <div
             key={day}
             className="px-2 py-2 text-center text-xs font-semibold"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {day}
           </div>
@@ -536,9 +536,9 @@ const CalendarView: React.FC<{
                 !isCurrentMonth ? "opacity-40" : ""
               }`}
               style={{
-                borderColor: "var(--bsky-border-primary)",
+                borderColor: "var(--asph-border-primary)",
                 backgroundColor: isToday(day)
-                  ? "var(--bsky-primary-light, rgba(59, 130, 246, 0.05))"
+                  ? "var(--asph-primary-light, rgba(59, 130, 246, 0.05))"
                   : "transparent",
               }}
             >
@@ -549,9 +549,9 @@ const CalendarView: React.FC<{
                   }`}
                   style={{
                     backgroundColor: isToday(day)
-                      ? "var(--bsky-primary)"
+                      ? "var(--asph-primary)"
                       : "transparent",
-                    color: isToday(day) ? "white" : "var(--bsky-text-primary)",
+                    color: isToday(day) ? "white" : "var(--asph-text-primary)",
                   }}
                 >
                   {format(day, "d")}
@@ -559,7 +559,7 @@ const CalendarView: React.FC<{
                 {dayPosts.length > 0 && (
                   <span
                     className="text-xs font-medium"
-                    style={{ color: "var(--bsky-primary)" }}
+                    style={{ color: "var(--asph-primary)" }}
                   >
                     {dayPosts.length}
                   </span>
@@ -581,7 +581,7 @@ const CalendarView: React.FC<{
                 {dayPosts.length > 3 && (
                   <span
                     className="block text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     +{dayPosts.length - 3} more
                   </span>
@@ -631,7 +631,7 @@ const DayView: React.FC<{
   return (
     <div
       className="rounded-xl border"
-      style={{ borderColor: "var(--bsky-border-primary)" }}
+      style={{ borderColor: "var(--asph-border-primary)" }}
     >
       {hours.map((hour) => {
         const hourPosts = postsByHour.get(hour) || [];
@@ -641,17 +641,17 @@ const DayView: React.FC<{
           <div
             key={hour}
             className="flex border-b last:border-b-0"
-            style={{ borderColor: "var(--bsky-border-primary)" }}
+            style={{ borderColor: "var(--asph-border-primary)" }}
           >
             <div
               className="w-16 shrink-0 px-2 py-3 text-right text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               {timeLabel}
             </div>
             <div
               className="min-h-[48px] flex-1 border-l p-2"
-              style={{ borderColor: "var(--bsky-border-primary)" }}
+              style={{ borderColor: "var(--asph-border-primary)" }}
             >
               {hourPosts.map((post) => (
                 <PostCard
@@ -710,7 +710,7 @@ const CalendarPostChip: React.FC<{
         />
         <span
           className="truncate"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {time}
         </span>
@@ -721,7 +721,7 @@ const CalendarPostChip: React.FC<{
           onShowMenu(showMenu ? null : post.id);
         }}
         className="absolute right-0 top-0 p-1 opacity-0 group-hover:opacity-100"
-        style={{ color: "var(--bsky-text-secondary)" }}
+        style={{ color: "var(--asph-text-secondary)" }}
       >
         <MoreVertical size={12} />
       </button>
@@ -827,8 +827,8 @@ const PostCard: React.FC<{
         compact ? "p-2" : "p-4"
       }`}
       style={{
-        borderColor: "var(--bsky-border-primary)",
-        backgroundColor: "var(--bsky-bg-primary)",
+        borderColor: "var(--asph-border-primary)",
+        backgroundColor: "var(--asph-bg-primary)",
       }}
       onClick={onClick}
     >
@@ -836,7 +836,7 @@ const PostCard: React.FC<{
       {queuePosition && (
         <div
           className="absolute -left-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white"
-          style={{ backgroundColor: "var(--bsky-primary)" }}
+          style={{ backgroundColor: "var(--asph-primary)" }}
         >
           {queuePosition}
         </div>
@@ -856,7 +856,7 @@ const PostCard: React.FC<{
           <div className="mb-1 flex items-center gap-2">
             <span
               className="text-sm font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               {formatScheduledTime(post.scheduledFor)}
             </span>
@@ -872,7 +872,7 @@ const PostCard: React.FC<{
             {isThread && (
               <span
                 className="text-xs"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 {post.threadPosts!.length} posts
               </span>
@@ -882,7 +882,7 @@ const PostCard: React.FC<{
           {/* Post Content Preview */}
           <p
             className={`${compact ? "line-clamp-1" : "line-clamp-2"}`}
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             {content}
           </p>
@@ -891,7 +891,7 @@ const PostCard: React.FC<{
           {mediaCount > 0 && (
             <span
               className="mt-1 inline-flex items-center gap-1 text-xs"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               📎 {mediaCount} media
             </span>
@@ -901,15 +901,15 @@ const PostCard: React.FC<{
           {post.status === "failed" && post.lastError && (
             <div
               className="mt-2 flex items-start gap-2 rounded-lg p-2"
-              style={{ backgroundColor: "var(--bsky-error-bg, #fef2f2)" }}
+              style={{ backgroundColor: "var(--asph-error-bg, #fef2f2)" }}
             >
               <AlertCircle
                 size={16}
-                style={{ color: "var(--bsky-error, #ef4444)" }}
+                style={{ color: "var(--asph-error, #ef4444)" }}
               />
               <span
                 className="text-xs"
-                style={{ color: "var(--bsky-error, #ef4444)" }}
+                style={{ color: "var(--asph-error, #ef4444)" }}
               >
                 {post.lastError}
               </span>
@@ -925,7 +925,7 @@ const PostCard: React.FC<{
               onShowMenu(showMenu ? null : post.id);
             }}
             className="rounded-lg p-1.5 transition-colors hover:bg-opacity-80"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
             aria-label="Post options"
           >
             <MoreVertical size={18} />
@@ -960,8 +960,8 @@ const PostMenu: React.FC<{
     <div
       className="absolute right-0 top-full z-50 mt-1 min-w-[160px] rounded-lg border py-1 shadow-lg"
       style={{
-        backgroundColor: "var(--bsky-bg-primary)",
-        borderColor: "var(--bsky-border-primary)",
+        backgroundColor: "var(--asph-bg-primary)",
+        borderColor: "var(--asph-border-primary)",
       }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -969,7 +969,7 @@ const PostMenu: React.FC<{
         <button
           onClick={() => onReschedule(post)}
           className="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-opacity-80"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           <Clock size={16} />
           Reschedule
@@ -981,7 +981,7 @@ const PostMenu: React.FC<{
           onClose();
         }}
         className="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-opacity-80"
-        style={{ color: "var(--bsky-text-primary)" }}
+        style={{ color: "var(--asph-text-primary)" }}
       >
         <Edit2 size={16} />
         Edit
@@ -990,7 +990,7 @@ const PostMenu: React.FC<{
         <button
           onClick={() => onCancel(post)}
           className="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-opacity-80"
-          style={{ color: "var(--bsky-warning, #f59e0b)" }}
+          style={{ color: "var(--asph-warning, #f59e0b)" }}
         >
           <X size={16} />
           Cancel
@@ -999,7 +999,7 @@ const PostMenu: React.FC<{
       <button
         onClick={() => onDelete(post)}
         className="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-opacity-80"
-        style={{ color: "var(--bsky-error, #ef4444)" }}
+        style={{ color: "var(--asph-error, #ef4444)" }}
       >
         <Trash2 size={16} />
         Delete
@@ -1045,20 +1045,20 @@ const RescheduleModal: React.FC<{
     >
       <div
         className="w-full max-w-md rounded-xl p-6"
-        style={{ backgroundColor: "var(--bsky-bg-primary)" }}
+        style={{ backgroundColor: "var(--asph-bg-primary)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
           <h3
             className="text-lg font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Reschedule Post
           </h3>
           <button
             onClick={onClose}
             className="rounded-lg p-1 transition-colors hover:bg-opacity-80"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             <X size={20} />
           </button>
@@ -1067,17 +1067,17 @@ const RescheduleModal: React.FC<{
         {/* Post Preview */}
         <div
           className="mb-4 rounded-lg p-3"
-          style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+          style={{ backgroundColor: "var(--asph-bg-secondary)" }}
         >
           <p
             className="line-clamp-2 text-sm"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             {post.text || post.threadPosts?.[0]?.text || "Scheduled post"}
           </p>
           <p
             className="mt-1 text-xs"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Currently: {formatScheduledTime(post.scheduledFor)}
           </p>
@@ -1089,7 +1089,7 @@ const RescheduleModal: React.FC<{
             <div>
               <label
                 className="mb-1 block text-sm font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Date
               </label>
@@ -1100,16 +1100,16 @@ const RescheduleModal: React.FC<{
                 min={format(new Date(), "yyyy-MM-dd")}
                 className="w-full rounded-lg border px-3 py-2 text-sm"
                 style={{
-                  borderColor: "var(--bsky-border-primary)",
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  color: "var(--bsky-text-primary)",
+                  borderColor: "var(--asph-border-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  color: "var(--asph-text-primary)",
                 }}
               />
             </div>
             <div>
               <label
                 className="mb-1 block text-sm font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Time
               </label>
@@ -1119,9 +1119,9 @@ const RescheduleModal: React.FC<{
                 onChange={(e) => setSelectedTime(e.target.value)}
                 className="w-full rounded-lg border px-3 py-2 text-sm"
                 style={{
-                  borderColor: "var(--bsky-border-primary)",
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  color: "var(--bsky-text-primary)",
+                  borderColor: "var(--asph-border-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  color: "var(--asph-text-primary)",
                 }}
               />
             </div>
@@ -1132,7 +1132,7 @@ const RescheduleModal: React.FC<{
             type="button"
             onClick={() => setShowSuggestions(!showSuggestions)}
             className="mb-3 flex items-center gap-2 text-sm font-medium transition-colors"
-            style={{ color: "var(--bsky-primary)" }}
+            style={{ color: "var(--asph-primary)" }}
           >
             <Sparkles size={16} />
             {showSuggestions ? "Hide" : "Show"} optimal times
@@ -1148,9 +1148,9 @@ const RescheduleModal: React.FC<{
                   onClick={() => selectSuggestedTime(time)}
                   className="rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:border-blue-500"
                   style={{
-                    borderColor: "var(--bsky-border-primary)",
-                    backgroundColor: "var(--bsky-bg-secondary)",
-                    color: "var(--bsky-text-primary)",
+                    borderColor: "var(--asph-border-primary)",
+                    backgroundColor: "var(--asph-bg-secondary)",
+                    color: "var(--asph-text-primary)",
                   }}
                 >
                   {formatScheduledTime(time)}
@@ -1166,8 +1166,8 @@ const RescheduleModal: React.FC<{
               onClick={onClose}
               className="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
               style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                color: "var(--bsky-text-primary)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                color: "var(--asph-text-primary)",
               }}
             >
               Cancel
@@ -1176,7 +1176,7 @@ const RescheduleModal: React.FC<{
               type="submit"
               disabled={isLoading}
               className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
-              style={{ backgroundColor: "var(--bsky-primary)" }}
+              style={{ backgroundColor: "var(--asph-primary)" }}
             >
               {isLoading && <RefreshCw size={16} className="animate-spin" />}
               Reschedule

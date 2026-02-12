@@ -57,22 +57,22 @@ export const AppearanceSettings: React.FC = () => {
       <div>
         <h2
           className="text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Appearance
         </h2>
         <p
           className="mt-1 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
-          Customize how ShadowSky looks on your device
+          Customize how Asphodel looks on your device
         </p>
       </div>
 
       <div>
         <label
           className="mb-3 block text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Theme
         </label>
@@ -91,12 +91,12 @@ export const AppearanceSettings: React.FC = () => {
                 style={{
                   backgroundColor:
                     theme === themeOption.value
-                      ? "var(--bsky-bg-tertiary)"
-                      : "var(--bsky-bg-secondary)",
+                      ? "var(--asph-bg-tertiary)"
+                      : "var(--asph-bg-secondary)",
                   borderColor:
                     theme === themeOption.value
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-border-primary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-border-primary)",
                 }}
               >
                 <Icon
@@ -104,8 +104,8 @@ export const AppearanceSettings: React.FC = () => {
                   style={{
                     color:
                       theme === themeOption.value
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-text-secondary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-text-secondary)",
                   }}
                 />
                 <span
@@ -113,8 +113,8 @@ export const AppearanceSettings: React.FC = () => {
                   style={{
                     color:
                       theme === themeOption.value
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-text-primary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-text-primary)",
                   }}
                 >
                   {themeOption.label}
@@ -128,26 +128,26 @@ export const AppearanceSettings: React.FC = () => {
       <div className="space-y-4">
         <h3
           className="text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Preview
         </h3>
         <div
           className="rounded-lg p-4"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <div
             className="mb-2 text-sm font-medium"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Sample Post
           </div>
           <div
             className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             This is how text will appear with your selected theme.
           </div>
@@ -155,7 +155,7 @@ export const AppearanceSettings: React.FC = () => {
             <button
               className="rounded px-3 py-1 text-sm"
               style={{
-                backgroundColor: "var(--bsky-primary)",
+                backgroundColor: "var(--asph-primary)",
                 color: "white",
               }}
             >
@@ -164,9 +164,9 @@ export const AppearanceSettings: React.FC = () => {
             <button
               className="rounded px-3 py-1 text-sm"
               style={{
-                backgroundColor: "var(--bsky-bg-tertiary)",
-                color: "var(--bsky-text-primary)",
-                border: "1px solid var(--bsky-border-primary)",
+                backgroundColor: "var(--asph-bg-tertiary)",
+                color: "var(--asph-text-primary)",
+                border: "1px solid var(--asph-border-primary)",
               }}
             >
               Secondary Button
@@ -178,7 +178,7 @@ export const AppearanceSettings: React.FC = () => {
       <div className="space-y-4">
         <h3
           className="text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           <Columns className="mr-2 inline-block h-4 w-4" />
           Column Width
@@ -186,13 +186,13 @@ export const AppearanceSettings: React.FC = () => {
         <div
           className="rounded-lg p-4"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <p
             className="mb-4 text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Adjust the width of columns in your home feed. Smaller widths allow
             more columns to fit on screen.
@@ -201,13 +201,13 @@ export const AppearanceSettings: React.FC = () => {
             <div className="flex items-center justify-between">
               <label
                 className="text-sm font-medium"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 Width: {selectedWidth}px
               </label>
               <span
                 className="text-xs"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 {selectedWidth === 280 && "Compact"}
                 {selectedWidth === 320 && "Default"}
@@ -224,12 +224,12 @@ export const AppearanceSettings: React.FC = () => {
               onChange={(e) => setSelectedWidth(Number(e.target.value))}
               className="h-2 w-full cursor-pointer appearance-none rounded-lg"
               style={{
-                background: `linear-gradient(to right, var(--bsky-primary) 0%, var(--bsky-primary) ${((selectedWidth - 280) / 120) * 100}%, var(--bsky-bg-tertiary) ${((selectedWidth - 280) / 120) * 100}%, var(--bsky-bg-tertiary) 100%)`,
+                background: `linear-gradient(to right, var(--asph-primary) 0%, var(--asph-primary) ${((selectedWidth - 280) / 120) * 100}%, var(--asph-bg-tertiary) ${((selectedWidth - 280) / 120) * 100}%, var(--asph-bg-tertiary) 100%)`,
               }}
             />
             <div
               className="flex justify-between text-xs"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               <span>280px</span>
               <span>320px</span>
@@ -247,12 +247,12 @@ export const AppearanceSettings: React.FC = () => {
                 backgroundColor:
                   updateColumnWidth.isPending ||
                   selectedWidth === appPreferences?.columnWidth
-                    ? "var(--bsky-bg-tertiary)"
-                    : "var(--bsky-primary)",
+                    ? "var(--asph-bg-tertiary)"
+                    : "var(--asph-primary)",
                 color:
                   updateColumnWidth.isPending ||
                   selectedWidth === appPreferences?.columnWidth
-                    ? "var(--bsky-text-secondary)"
+                    ? "var(--asph-text-secondary)"
                     : "white",
               }}
             >

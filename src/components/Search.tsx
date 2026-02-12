@@ -715,7 +715,7 @@ export const Search: React.FC = () => {
     <div className="mx-auto min-h-screen max-w-4xl p-4">
       {/* Thread Viewer */}
       {showThreadViewer ? (
-        <div className="bsky-glass mb-4 rounded-xl p-4">
+        <div className="asph-glass mb-4 rounded-xl p-4">
           <div className="mb-4 flex items-center justify-between">
             <button
               onClick={() => {
@@ -725,7 +725,7 @@ export const Search: React.FC = () => {
                 setHighlightPostUri(null);
               }}
               className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all hover:bg-white hover:bg-opacity-10"
-              style={{ color: "var(--bsky-primary)" }}
+              style={{ color: "var(--asph-primary)" }}
             >
               <ArrowLeft size={16} />
               Back to search
@@ -737,7 +737,7 @@ export const Search: React.FC = () => {
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-all"
                 style={{
-                  backgroundColor: "var(--bsky-primary)",
+                  backgroundColor: "var(--asph-primary)",
                   color: "white",
                 }}
               >
@@ -750,11 +750,11 @@ export const Search: React.FC = () => {
             <div className="py-8 text-center">
               <div
                 className="mx-auto h-10 w-10 animate-spin rounded-full border-b-2"
-                style={{ borderColor: "var(--bsky-primary)" }}
+                style={{ borderColor: "var(--asph-primary)" }}
               ></div>
               <p
                 className="mt-3 text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Loading thread...
               </p>
@@ -764,19 +764,19 @@ export const Search: React.FC = () => {
               posts={threadPosts}
               rootUri={selectedPostUri || undefined}
               highlightUri={highlightPostUri || undefined}
-              className="bsky-scrollbar max-h-[70vh] overflow-y-auto"
+              className="asph-scrollbar max-h-[70vh] overflow-y-auto"
             />
           )}
         </div>
       ) : (
         <>
           {/* Search Bar */}
-          <div className="bsky-glass mb-4 rounded-xl p-3 sm:p-4">
+          <div className="asph-glass mb-4 rounded-xl p-3 sm:p-4">
             <div className="mb-3 flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
               <div className="flex flex-1 items-center gap-2">
                 <SearchIcon
                   size={20}
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                   className="hidden sm:block"
                 />
                 <input
@@ -793,10 +793,10 @@ export const Search: React.FC = () => {
                   }}
                   className="flex-1 rounded-lg border px-3 py-2 text-sm transition-all focus-visible:outline-none focus-visible:ring-2"
                   style={{
-                    backgroundColor: "var(--bsky-bg-secondary)",
-                    borderColor: "var(--bsky-border-primary)",
-                    color: "var(--bsky-text-primary)",
-                    ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                    backgroundColor: "var(--asph-bg-secondary)",
+                    borderColor: "var(--asph-border-primary)",
+                    color: "var(--asph-text-primary)",
+                    ["--tw-ring-color" as any]: "var(--asph-primary)",
                   }}
                 />
               </div>
@@ -805,7 +805,7 @@ export const Search: React.FC = () => {
                   onClick={handleSearch}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all sm:flex-none sm:px-4"
                   style={{
-                    backgroundColor: "var(--bsky-primary)",
+                    backgroundColor: "var(--asph-primary)",
                     color: "white",
                   }}
                 >
@@ -819,13 +819,13 @@ export const Search: React.FC = () => {
                   }`}
                   style={{
                     backgroundColor: showAdvanced
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-bg-secondary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-bg-secondary)",
                     color: showAdvanced
                       ? "white"
-                      : "var(--bsky-text-secondary)",
+                      : "var(--asph-text-secondary)",
                     borderWidth: "1px",
-                    borderColor: "var(--bsky-border-primary)",
+                    borderColor: "var(--asph-border-primary)",
                   }}
                 >
                   <Filter size={16} />
@@ -846,7 +846,7 @@ export const Search: React.FC = () => {
             !filters.hasMedia ? (
               <div
                 className="mt-3 flex flex-wrap gap-1.5 border-t pt-3"
-                style={{ borderColor: "var(--bsky-border-primary)" }}
+                style={{ borderColor: "var(--asph-border-primary)" }}
               >
                 <button
                   onClick={() =>
@@ -861,15 +861,15 @@ export const Search: React.FC = () => {
                   style={{
                     color: filters.hasMedia
                       ? "white"
-                      : "var(--bsky-text-secondary)",
+                      : "var(--asph-text-secondary)",
                     backgroundColor: filters.hasMedia
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-bg-secondary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-bg-secondary)",
                     borderWidth: "1px",
                     borderColor: filters.hasMedia
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-border-primary)",
-                    ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-border-primary)",
+                    ["--tw-ring-color" as any]: "var(--asph-primary)",
                   }}
                 >
                   <Image size={12} />
@@ -879,10 +879,10 @@ export const Search: React.FC = () => {
                   onClick={() => addToArrayFilter("from", "")}
                   className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                   style={{
-                    color: "var(--bsky-text-secondary)",
-                    backgroundColor: "var(--bsky-bg-secondary)",
+                    color: "var(--asph-text-secondary)",
+                    backgroundColor: "var(--asph-bg-secondary)",
                     borderWidth: "1px",
-                    borderColor: "var(--bsky-border-primary)",
+                    borderColor: "var(--asph-border-primary)",
                   }}
                 >
                   <User size={12} />
@@ -900,10 +900,10 @@ export const Search: React.FC = () => {
                   }}
                   className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                   style={{
-                    color: "var(--bsky-text-secondary)",
-                    backgroundColor: "var(--bsky-bg-secondary)",
+                    color: "var(--asph-text-secondary)",
+                    backgroundColor: "var(--asph-bg-secondary)",
                     borderWidth: "1px",
-                    borderColor: "var(--bsky-border-primary)",
+                    borderColor: "var(--asph-border-primary)",
                   }}
                 >
                   <Calendar size={12} />
@@ -916,10 +916,10 @@ export const Search: React.FC = () => {
                       onClick={() => addToArrayFilter("phrases", "")}
                       className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                       style={{
-                        color: "var(--bsky-text-secondary)",
-                        backgroundColor: "var(--bsky-bg-secondary)",
+                        color: "var(--asph-text-secondary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       <SearchIcon size={12} />
@@ -930,10 +930,10 @@ export const Search: React.FC = () => {
                       onClick={() => addToArrayFilter("hashtags", "")}
                       className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                       style={{
-                        color: "var(--bsky-text-secondary)",
-                        backgroundColor: "var(--bsky-bg-secondary)",
+                        color: "var(--asph-text-secondary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       <Hash size={12} />
@@ -944,10 +944,10 @@ export const Search: React.FC = () => {
                       onClick={() => addToArrayFilter("mentions", "")}
                       className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                       style={{
-                        color: "var(--bsky-text-secondary)",
-                        backgroundColor: "var(--bsky-bg-secondary)",
+                        color: "var(--asph-text-secondary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       <User size={12} />
@@ -958,10 +958,10 @@ export const Search: React.FC = () => {
                       onClick={() => addToArrayFilter("domains", "")}
                       className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                       style={{
-                        color: "var(--bsky-text-secondary)",
-                        backgroundColor: "var(--bsky-bg-secondary)",
+                        color: "var(--asph-text-secondary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       <Link size={12} />
@@ -974,10 +974,10 @@ export const Search: React.FC = () => {
                       }
                       className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                       style={{
-                        color: "var(--bsky-text-secondary)",
-                        backgroundColor: "var(--bsky-bg-secondary)",
+                        color: "var(--asph-text-secondary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       <Globe size={12} />
@@ -990,13 +990,13 @@ export const Search: React.FC = () => {
               /* Expanded Filters */
               <div
                 className="mt-3 space-y-3 border-t pt-3"
-                style={{ borderColor: "var(--bsky-border-primary)" }}
+                style={{ borderColor: "var(--asph-border-primary)" }}
               >
                 {/* Media Filter */}
                 <div>
                   <label
                     className="mb-2 flex items-center gap-2 text-sm font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     <Image size={16} />
                     Media Filter
@@ -1014,15 +1014,15 @@ export const Search: React.FC = () => {
                       }`}
                       style={{
                         backgroundColor: filters.hasMedia
-                          ? "var(--bsky-primary)"
-                          : "var(--bsky-bg-secondary)",
+                          ? "var(--asph-primary)"
+                          : "var(--asph-bg-secondary)",
                         borderColor: filters.hasMedia
-                          ? "var(--bsky-primary)"
-                          : "var(--bsky-border-primary)",
+                          ? "var(--asph-primary)"
+                          : "var(--asph-border-primary)",
                         color: filters.hasMedia
                           ? "white"
-                          : "var(--bsky-text-primary)",
-                        ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                          : "var(--asph-text-primary)",
+                        ["--tw-ring-color" as any]: "var(--asph-primary)",
                       }}
                     >
                       {filters.hasMedia ? "✓ " : ""}Show only posts with media
@@ -1034,7 +1034,7 @@ export const Search: React.FC = () => {
                 <div>
                   <label
                     className="mb-2 flex items-center gap-2 text-sm font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     <User size={16} />
                     From Users
@@ -1073,16 +1073,16 @@ export const Search: React.FC = () => {
                             placeholder="e.g., jay.bsky.team or me"
                             className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                             style={{
-                              backgroundColor: "var(--bsky-bg-secondary)",
-                              borderColor: "var(--bsky-border-primary)",
-                              color: "var(--bsky-text-primary)",
-                              ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                              backgroundColor: "var(--asph-bg-secondary)",
+                              borderColor: "var(--asph-border-primary)",
+                              color: "var(--asph-text-primary)",
+                              ["--tw-ring-color" as any]: "var(--asph-primary)",
                             }}
                           />
                           <button
                             onClick={() => removeFromArrayFilter("from", i)}
                             className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                            style={{ color: "var(--bsky-text-secondary)" }}
+                            style={{ color: "var(--asph-text-secondary)" }}
                           >
                             <X size={16} />
                           </button>
@@ -1098,8 +1098,8 @@ export const Search: React.FC = () => {
                               ref={suggestionsRef}
                               className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border shadow-lg"
                               style={{
-                                backgroundColor: "var(--bsky-bg-secondary)",
-                                borderColor: "var(--bsky-border-primary)",
+                                backgroundColor: "var(--asph-bg-secondary)",
+                                borderColor: "var(--asph-border-primary)",
                               }}
                             >
                               {userSuggestions.map((suggestion, idx) => {
@@ -1124,7 +1124,7 @@ export const Search: React.FC = () => {
                                     style={{
                                       backgroundColor:
                                         idx === selectedSuggestionIndex
-                                          ? "rgba(0, 133, 255, 0.1)"
+                                          ? "rgba(201, 168, 76, 0.1)"
                                           : "transparent",
                                     }}
                                   >
@@ -1142,7 +1142,7 @@ export const Search: React.FC = () => {
                                         <span
                                           className="truncate font-medium"
                                           style={{
-                                            color: "var(--bsky-text-primary)",
+                                            color: "var(--asph-text-primary)",
                                           }}
                                         >
                                           {suggestion.displayName ||
@@ -1153,7 +1153,7 @@ export const Search: React.FC = () => {
                                             className="rounded px-1.5 py-0.5 text-xs"
                                             style={{
                                               backgroundColor:
-                                                "var(--bsky-primary)",
+                                                "var(--asph-primary)",
                                               color: "white",
                                               opacity: 0.8,
                                             }}
@@ -1165,7 +1165,7 @@ export const Search: React.FC = () => {
                                       <div
                                         className="truncate text-sm"
                                         style={{
-                                          color: "var(--bsky-text-secondary)",
+                                          color: "var(--asph-text-secondary)",
                                         }}
                                       >
                                         @{suggestion.handle}
@@ -1182,10 +1182,10 @@ export const Search: React.FC = () => {
                       onClick={() => addToArrayFilter("from", "")}
                       className="rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
-                        color: "var(--bsky-primary)",
-                        backgroundColor: "var(--bsky-bg-secondary)",
+                        color: "var(--asph-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       + Add user
@@ -1197,7 +1197,7 @@ export const Search: React.FC = () => {
                 <div>
                   <label
                     className="mb-2 flex items-center gap-2 text-sm font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     <Calendar size={16} />
                     Date Range
@@ -1217,10 +1217,10 @@ export const Search: React.FC = () => {
                       }}
                       className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                       style={{
-                        backgroundColor: "var(--bsky-bg-secondary)",
-                        color: "var(--bsky-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        color: "var(--asph-primary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       7d
@@ -1237,10 +1237,10 @@ export const Search: React.FC = () => {
                       }}
                       className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                       style={{
-                        backgroundColor: "var(--bsky-bg-secondary)",
-                        color: "var(--bsky-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        color: "var(--asph-primary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       30d
@@ -1257,10 +1257,10 @@ export const Search: React.FC = () => {
                       }}
                       className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                       style={{
-                        backgroundColor: "var(--bsky-bg-secondary)",
-                        color: "var(--bsky-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        color: "var(--asph-primary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       3m
@@ -1277,10 +1277,10 @@ export const Search: React.FC = () => {
                       }}
                       className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                       style={{
-                        backgroundColor: "var(--bsky-bg-secondary)",
-                        color: "var(--bsky-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        color: "var(--asph-primary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       1y
@@ -1296,8 +1296,8 @@ export const Search: React.FC = () => {
                         }
                         className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                         style={{
-                          backgroundColor: "var(--bsky-border-primary)",
-                          color: "var(--bsky-text-secondary)",
+                          backgroundColor: "var(--asph-border-primary)",
+                          color: "var(--asph-text-secondary)",
                         }}
                       >
                         Clear
@@ -1307,7 +1307,7 @@ export const Search: React.FC = () => {
 
                   {/* Date Inputs */}
                   <div className="flex items-center gap-2 text-xs">
-                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    <span style={{ color: "var(--asph-text-secondary)" }}>
                       from
                     </span>
                     <div className="relative">
@@ -1323,10 +1323,10 @@ export const Search: React.FC = () => {
                         }
                         className="cursor-pointer rounded-md border px-2 py-1 pr-7 text-xs focus-visible:outline-none focus-visible:ring-2"
                         style={{
-                          backgroundColor: "var(--bsky-bg-secondary)",
-                          borderColor: "var(--bsky-border-primary)",
-                          color: "var(--bsky-text-primary)",
-                          ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                          backgroundColor: "var(--asph-bg-secondary)",
+                          borderColor: "var(--asph-border-primary)",
+                          color: "var(--asph-text-primary)",
+                          ["--tw-ring-color" as any]: "var(--asph-primary)",
                           colorScheme: "dark",
                           width: "140px",
                         }}
@@ -1337,13 +1337,13 @@ export const Search: React.FC = () => {
                             setFilters((prev) => ({ ...prev, sinceDate: "" }))
                           }
                           className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 transition-opacity hover:opacity-70"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <X size={12} />
                         </button>
                       )}
                     </div>
-                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    <span style={{ color: "var(--asph-text-secondary)" }}>
                       to
                     </span>
                     <div className="relative">
@@ -1359,10 +1359,10 @@ export const Search: React.FC = () => {
                         }
                         className="cursor-pointer rounded-md border px-2 py-1 pr-7 text-xs focus-visible:outline-none focus-visible:ring-2"
                         style={{
-                          backgroundColor: "var(--bsky-bg-secondary)",
-                          borderColor: "var(--bsky-border-primary)",
-                          color: "var(--bsky-text-primary)",
-                          ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                          backgroundColor: "var(--asph-bg-secondary)",
+                          borderColor: "var(--asph-border-primary)",
+                          color: "var(--asph-text-primary)",
+                          ["--tw-ring-color" as any]: "var(--asph-primary)",
                           colorScheme: "dark",
                           width: "140px",
                         }}
@@ -1373,7 +1373,7 @@ export const Search: React.FC = () => {
                             setFilters((prev) => ({ ...prev, untilDate: "" }))
                           }
                           className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 transition-opacity hover:opacity-70"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <X size={12} />
                         </button>
@@ -1388,7 +1388,7 @@ export const Search: React.FC = () => {
                       new Date(filters.untilDate) && (
                       <p
                         className="mt-2 text-xs"
-                        style={{ color: "var(--bsky-error)" }}
+                        style={{ color: "var(--asph-error)" }}
                       >
                         "From" date must be before "To" date
                       </p>
@@ -1401,13 +1401,13 @@ export const Search: React.FC = () => {
             {showAdvanced && (
               <div
                 className="mt-6 space-y-4 border-t pt-6"
-                style={{ borderColor: "var(--bsky-border-primary)" }}
+                style={{ borderColor: "var(--asph-border-primary)" }}
               >
                 {/* Exact Phrases */}
                 <div>
                   <label
                     className="mb-2 flex items-center gap-2 text-sm font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     <SearchIcon size={16} />
                     Exact Phrases
@@ -1432,16 +1432,16 @@ export const Search: React.FC = () => {
                           placeholder='e.g., "hello world"'
                           className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                           style={{
-                            backgroundColor: "var(--bsky-bg-secondary)",
-                            borderColor: "var(--bsky-border-primary)",
-                            color: "var(--bsky-text-primary)",
-                            ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
+                            borderColor: "var(--asph-border-primary)",
+                            color: "var(--asph-text-primary)",
+                            ["--tw-ring-color" as any]: "var(--asph-primary)",
                           }}
                         />
                         <button
                           onClick={() => removeFromArrayFilter("phrases", i)}
                           className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <X size={16} />
                         </button>
@@ -1451,10 +1451,10 @@ export const Search: React.FC = () => {
                       onClick={() => addToArrayFilter("phrases", "")}
                       className="rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
-                        color: "var(--bsky-primary)",
-                        backgroundColor: "var(--bsky-bg-secondary)",
+                        color: "var(--asph-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       + Add phrase
@@ -1466,7 +1466,7 @@ export const Search: React.FC = () => {
                 <div>
                   <label
                     className="mb-2 flex items-center gap-2 text-sm font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     <Hash size={16} />
                     Hashtags
@@ -1491,16 +1491,16 @@ export const Search: React.FC = () => {
                           placeholder="e.g., bluesky"
                           className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                           style={{
-                            backgroundColor: "var(--bsky-bg-secondary)",
-                            borderColor: "var(--bsky-border-primary)",
-                            color: "var(--bsky-text-primary)",
-                            ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
+                            borderColor: "var(--asph-border-primary)",
+                            color: "var(--asph-text-primary)",
+                            ["--tw-ring-color" as any]: "var(--asph-primary)",
                           }}
                         />
                         <button
                           onClick={() => removeFromArrayFilter("hashtags", i)}
                           className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <X size={16} />
                         </button>
@@ -1510,10 +1510,10 @@ export const Search: React.FC = () => {
                       onClick={() => addToArrayFilter("hashtags", "")}
                       className="rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
-                        color: "var(--bsky-primary)",
-                        backgroundColor: "var(--bsky-bg-secondary)",
+                        color: "var(--asph-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       + Add hashtag
@@ -1525,7 +1525,7 @@ export const Search: React.FC = () => {
                 <div>
                   <label
                     className="mb-2 flex items-center gap-2 text-sm font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     <User size={16} />
                     Mentions
@@ -1576,16 +1576,16 @@ export const Search: React.FC = () => {
                             placeholder="e.g., alice.bsky.social or me"
                             className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                             style={{
-                              backgroundColor: "var(--bsky-bg-secondary)",
-                              borderColor: "var(--bsky-border-primary)",
-                              color: "var(--bsky-text-primary)",
-                              ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                              backgroundColor: "var(--asph-bg-secondary)",
+                              borderColor: "var(--asph-border-primary)",
+                              color: "var(--asph-text-primary)",
+                              ["--tw-ring-color" as any]: "var(--asph-primary)",
                             }}
                           />
                           <button
                             onClick={() => removeFromArrayFilter("mentions", i)}
                             className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                            style={{ color: "var(--bsky-text-secondary)" }}
+                            style={{ color: "var(--asph-text-secondary)" }}
                           >
                             <X size={16} />
                           </button>
@@ -1601,8 +1601,8 @@ export const Search: React.FC = () => {
                               ref={suggestionsRef}
                               className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border shadow-lg"
                               style={{
-                                backgroundColor: "var(--bsky-bg-secondary)",
-                                borderColor: "var(--bsky-border-primary)",
+                                backgroundColor: "var(--asph-bg-secondary)",
+                                borderColor: "var(--asph-border-primary)",
                               }}
                             >
                               {userSuggestions.map((suggestion, idx) => {
@@ -1627,7 +1627,7 @@ export const Search: React.FC = () => {
                                     style={{
                                       backgroundColor:
                                         idx === selectedSuggestionIndex
-                                          ? "rgba(0, 133, 255, 0.1)"
+                                          ? "rgba(201, 168, 76, 0.1)"
                                           : "transparent",
                                     }}
                                   >
@@ -1645,7 +1645,7 @@ export const Search: React.FC = () => {
                                         <span
                                           className="truncate font-medium"
                                           style={{
-                                            color: "var(--bsky-text-primary)",
+                                            color: "var(--asph-text-primary)",
                                           }}
                                         >
                                           {suggestion.displayName ||
@@ -1656,7 +1656,7 @@ export const Search: React.FC = () => {
                                             className="rounded px-1.5 py-0.5 text-xs"
                                             style={{
                                               backgroundColor:
-                                                "var(--bsky-primary)",
+                                                "var(--asph-primary)",
                                               color: "white",
                                               opacity: 0.8,
                                             }}
@@ -1668,7 +1668,7 @@ export const Search: React.FC = () => {
                                       <div
                                         className="truncate text-sm"
                                         style={{
-                                          color: "var(--bsky-text-secondary)",
+                                          color: "var(--asph-text-secondary)",
                                         }}
                                       >
                                         @{suggestion.handle}
@@ -1685,10 +1685,10 @@ export const Search: React.FC = () => {
                       onClick={() => addToArrayFilter("mentions", "")}
                       className="rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
-                        color: "var(--bsky-primary)",
-                        backgroundColor: "var(--bsky-bg-secondary)",
+                        color: "var(--asph-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       + Add mention
@@ -1700,7 +1700,7 @@ export const Search: React.FC = () => {
                 <div>
                   <label
                     className="mb-2 flex items-center gap-2 text-sm font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     <Link size={16} />
                     Domains
@@ -1725,16 +1725,16 @@ export const Search: React.FC = () => {
                           placeholder="e.g., npr.org"
                           className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                           style={{
-                            backgroundColor: "var(--bsky-bg-secondary)",
-                            borderColor: "var(--bsky-border-primary)",
-                            color: "var(--bsky-text-primary)",
-                            ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
+                            borderColor: "var(--asph-border-primary)",
+                            color: "var(--asph-text-primary)",
+                            ["--tw-ring-color" as any]: "var(--asph-primary)",
                           }}
                         />
                         <button
                           onClick={() => removeFromArrayFilter("domains", i)}
                           className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <X size={16} />
                         </button>
@@ -1744,10 +1744,10 @@ export const Search: React.FC = () => {
                       onClick={() => addToArrayFilter("domains", "")}
                       className="rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
-                        color: "var(--bsky-primary)",
-                        backgroundColor: "var(--bsky-bg-secondary)",
+                        color: "var(--asph-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
                         borderWidth: "1px",
-                        borderColor: "var(--bsky-border-primary)",
+                        borderColor: "var(--asph-border-primary)",
                       }}
                     >
                       + Add domain
@@ -1759,7 +1759,7 @@ export const Search: React.FC = () => {
                 <div>
                   <label
                     className="mb-2 flex items-center gap-2 text-sm font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     <Globe size={16} />
                     Language
@@ -1774,10 +1774,10 @@ export const Search: React.FC = () => {
                     }
                     className="w-full rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                     style={{
-                      backgroundColor: "var(--bsky-bg-secondary)",
-                      borderColor: "var(--bsky-border-primary)",
-                      color: "var(--bsky-text-primary)",
-                      ["--tw-ring-color" as any]: "var(--bsky-primary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      borderColor: "var(--asph-border-primary)",
+                      color: "var(--asph-text-primary)",
+                      ["--tw-ring-color" as any]: "var(--asph-primary)",
                     }}
                   >
                     <option value="">Any language</option>
@@ -1800,11 +1800,11 @@ export const Search: React.FC = () => {
             {searchQuery && (
               <div
                 className="mt-3 rounded-md p-2 text-xs"
-                style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+                style={{ backgroundColor: "var(--asph-bg-secondary)" }}
               >
                 <code
                   className="break-all"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {searchQuery}
                 </code>
@@ -1815,15 +1815,15 @@ export const Search: React.FC = () => {
           {/* Search Results */}
           <div className="space-y-3">
             {!activeSearchQuery && !isLoading && (
-              <div className="bsky-glass rounded-xl p-6 text-center">
+              <div className="asph-glass rounded-xl p-6 text-center">
                 <SearchIcon
                   size={32}
                   className="mx-auto mb-3 opacity-20"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 />
                 <p
                   className="text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Enter a search query and press Enter or click Search
                 </p>
@@ -1834,11 +1834,11 @@ export const Search: React.FC = () => {
               <div className="py-6 text-center">
                 <div
                   className="mx-auto h-10 w-10 animate-spin rounded-full border-b-2"
-                  style={{ borderColor: "var(--bsky-primary)" }}
+                  style={{ borderColor: "var(--asph-primary)" }}
                 ></div>
                 <p
                   className="mt-3 text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Searching...
                 </p>
@@ -1846,10 +1846,10 @@ export const Search: React.FC = () => {
             )}
 
             {error && (
-              <div className="bsky-glass rounded-xl p-4 text-center">
+              <div className="asph-glass rounded-xl p-4 text-center">
                 <p
                   className="text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Error searching posts. Please try again.
                 </p>
@@ -1869,7 +1869,7 @@ export const Search: React.FC = () => {
                 <div className="mb-2 flex items-center justify-between">
                   <p
                     className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     {
                       searchResults.posts.filter(
@@ -1895,7 +1895,7 @@ export const Search: React.FC = () => {
                   .map((post) => (
                     <div
                       key={post.uri}
-                      className="bsky-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
+                      className="asph-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
                       onClick={() => handlePostClick(post)}
                     >
                       <div className="flex items-start gap-2.5">
@@ -1908,19 +1908,19 @@ export const Search: React.FC = () => {
                           <div className="mb-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                             <span
                               className="truncate text-sm font-medium"
-                              style={{ color: "var(--bsky-text-primary)" }}
+                              style={{ color: "var(--asph-text-primary)" }}
                             >
                               {post.author.displayName}
                             </span>
                             <span
                               className="truncate text-xs"
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                             >
                               @{post.author?.handle || "unknown"}
                             </span>
                             <span
                               className="whitespace-nowrap text-xs"
-                              style={{ color: "var(--bsky-text-tertiary)" }}
+                              style={{ color: "var(--asph-text-tertiary)" }}
                             >
                               · {formatDistanceToNow(new Date(post.indexedAt))}{" "}
                               ago
@@ -1928,7 +1928,7 @@ export const Search: React.FC = () => {
                           </div>
                           <div
                             className="break-words text-sm"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                           >
                             {(post.record as any).text}
                           </div>
@@ -1951,7 +1951,7 @@ export const Search: React.FC = () => {
                                       className="w-full cursor-pointer rounded-lg border object-cover transition-opacity hover:opacity-90"
                                       style={{
                                         borderColor:
-                                          "var(--bsky-border-primary)",
+                                          "var(--asph-border-primary)",
                                         height:
                                           images.length === 1
                                             ? "200px"
@@ -1985,14 +1985,14 @@ export const Search: React.FC = () => {
                                 );
                               }}
                               className="flex items-center gap-1 text-xs hover:underline"
-                              style={{ color: "var(--bsky-primary)" }}
+                              style={{ color: "var(--asph-primary)" }}
                             >
                               View on Bluesky
                               <ExternalLink size={12} />
                             </button>
                             <span
                               className="text-xs"
-                              style={{ color: "var(--bsky-text-tertiary)" }}
+                              style={{ color: "var(--asph-text-tertiary)" }}
                             >
                               Click to view thread
                             </span>

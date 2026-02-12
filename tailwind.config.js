@@ -6,60 +6,60 @@ export default {
     extend: {
       colors: {
         // Dynamic theme colors using CSS variables
-        bsky: {
+        asph: {
           primary: {
-            DEFAULT: "var(--bsky-primary)",
-            dark: "var(--bsky-primary-dark)",
-            light: "var(--bsky-primary-light)",
-            10: "var(--bsky-primary-10)",
+            DEFAULT: "var(--asph-primary)",
+            dark: "var(--asph-primary-dark)",
+            light: "var(--asph-primary-light)",
+            10: "var(--asph-primary-10)",
           },
-          accent: "var(--bsky-accent)",
+          accent: "var(--asph-accent)",
           bg: {
-            primary: "var(--bsky-bg-primary)",
-            secondary: "var(--bsky-bg-secondary)",
-            tertiary: "var(--bsky-bg-tertiary)",
-            hover: "var(--bsky-bg-hover)",
-            active: "var(--bsky-bg-active)",
+            primary: "var(--asph-bg-primary)",
+            secondary: "var(--asph-bg-secondary)",
+            tertiary: "var(--asph-bg-tertiary)",
+            hover: "var(--asph-bg-hover)",
+            active: "var(--asph-bg-active)",
           },
           text: {
-            primary: "var(--bsky-text-primary)",
-            secondary: "var(--bsky-text-secondary)",
-            tertiary: "var(--bsky-text-tertiary)",
-            link: "var(--bsky-text-link)",
+            primary: "var(--asph-text-primary)",
+            secondary: "var(--asph-text-secondary)",
+            tertiary: "var(--asph-text-tertiary)",
+            link: "var(--asph-text-link)",
           },
           border: {
-            primary: "var(--bsky-border-primary)",
-            secondary: "var(--bsky-border-secondary)",
-            light: "var(--bsky-border-light)",
+            primary: "var(--asph-border-primary)",
+            secondary: "var(--asph-border-secondary)",
+            light: "var(--asph-border-light)",
           },
           // Notification colors
-          like: "var(--bsky-like)",
-          repost: "var(--bsky-repost)",
-          follow: "var(--bsky-follow)",
-          mention: "var(--bsky-mention)",
-          reply: "var(--bsky-reply)",
-          quote: "var(--bsky-quote)",
+          like: "var(--asph-like)",
+          repost: "var(--asph-repost)",
+          follow: "var(--asph-follow)",
+          mention: "var(--asph-mention)",
+          reply: "var(--asph-reply)",
+          quote: "var(--asph-quote)",
           // Status colors
           success: {
-            DEFAULT: "var(--bsky-success)",
-            10: "var(--bsky-success-10)",
+            DEFAULT: "var(--asph-success)",
+            10: "var(--asph-success-10)",
           },
-          warning: "var(--bsky-warning)",
-          error: "var(--bsky-error)",
-          info: "var(--bsky-info)",
+          warning: "var(--asph-warning)",
+          error: "var(--asph-error)",
+          info: "var(--asph-info)",
         },
       },
       boxShadow: {
-        "bsky-sm": "var(--bsky-shadow-sm)",
-        "bsky-md": "var(--bsky-shadow-md)",
-        "bsky-lg": "var(--bsky-shadow-lg)",
-        "bsky-glow": "var(--bsky-glow)",
+        "asph-sm": "var(--asph-shadow-sm)",
+        "asph-md": "var(--asph-shadow-md)",
+        "asph-lg": "var(--asph-shadow-lg)",
+        "asph-glow": "var(--asph-glow)",
       },
       animation: {
         // Existing animations
         "fade-in": "fadeIn 0.3s ease-out",
         "fade-in-up": "fadeInUp 0.3s ease-out",
-        pulse: "bskyPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        pulse: "asphPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         slide: "slide 2s linear infinite",
         shimmer: "shimmer 2s linear infinite",
         // Bookmark animations
@@ -127,7 +127,7 @@ export default {
             transform: "translateY(0)",
           },
         },
-        bskyPulse: {
+        asphPulse: {
           "0%, 100%": {
             opacity: "1",
           },
@@ -216,7 +216,7 @@ export default {
         },
         highlight: {
           "0%": {
-            backgroundColor: "rgba(0, 133, 255, 0.2)",
+            backgroundColor: "rgba(201, 168, 76, 0.2)",
           },
           "100%": {
             backgroundColor: "transparent",
@@ -224,15 +224,15 @@ export default {
         },
         highlightFlash: {
           "0%": {
-            boxShadow: "0 0 0 0 rgba(0, 133, 255, 0.8)",
+            boxShadow: "0 0 0 0 rgba(201, 168, 76, 0.8)",
             transform: "scale(1)",
           },
           "50%": {
-            boxShadow: "0 0 20px 10px rgba(0, 133, 255, 0.3)",
+            boxShadow: "0 0 20px 10px rgba(201, 168, 76, 0.3)",
             transform: "scale(1.01)",
           },
           "100%": {
-            boxShadow: "0 0 0 0 rgba(0, 133, 255, 0)",
+            boxShadow: "0 0 0 0 rgba(201, 168, 76, 0)",
             transform: "scale(1)",
           },
         },
@@ -316,11 +316,11 @@ export default {
         cardLift: {
           "0%": {
             transform: "translateY(0) scale(1)",
-            boxShadow: "var(--bsky-shadow-sm)",
+            boxShadow: "var(--asph-shadow-sm)",
           },
           "100%": {
             transform: "translateY(-2px) scale(1.01)",
-            boxShadow: "var(--bsky-shadow-md)",
+            boxShadow: "var(--asph-shadow-md)",
           },
         },
       },
@@ -328,10 +328,10 @@ export default {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-        "bsky-gradient":
-          "linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)",
-        "bsky-gradient-text":
-          "linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)",
+        "asph-gradient":
+          "linear-gradient(135deg, var(--asph-primary) 0%, var(--asph-accent) 100%)",
+        "asph-gradient-text":
+          "linear-gradient(135deg, var(--asph-primary) 0%, var(--asph-accent) 100%)",
         "shimmer-gradient":
           "linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)",
       },
@@ -422,13 +422,13 @@ export default {
             "transform var(--transition-fast) var(--ease-out), box-shadow var(--transition-fast) var(--ease-out)",
           "&:hover": {
             transform: "translateY(-1px)",
-            boxShadow: "var(--bsky-shadow-md)",
+            boxShadow: "var(--asph-shadow-md)",
           },
         },
         ".hover-glow": {
           transition: "box-shadow var(--transition-normal) var(--ease-out)",
           "&:hover": {
-            boxShadow: "var(--bsky-glow)",
+            boxShadow: "var(--asph-glow)",
           },
         },
         ".press-feedback": {
@@ -484,7 +484,7 @@ export default {
           "@media (prefers-reduced-motion: no-preference)": {
             "&:hover": {
               transform: "translateY(-2px) scale(1.005)",
-              boxShadow: "var(--bsky-shadow-md)",
+              boxShadow: "var(--asph-shadow-md)",
             },
           },
         },
@@ -530,7 +530,7 @@ export default {
     function ({ addComponents }) {
       addComponents({
         // Glass morphism effect with subtle gradient overlay
-        ".bsky-glass": {
+        ".asph-glass": {
           background:
             "linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.92) 100%)",
           backdropFilter: "blur(12px)",
@@ -538,41 +538,41 @@ export default {
           border: "1px solid rgba(0, 0, 0, 0.08)",
           boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.03)",
         },
-        ".dark .bsky-glass": {
+        ".dark .asph-glass": {
           background:
             "linear-gradient(180deg, rgba(17, 24, 39, 0.98) 0%, rgba(17, 24, 39, 0.92) 100%)",
           border: "1px solid rgba(255, 255, 255, 0.12)",
           boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3)",
         },
-        '[data-theme="dark"] .bsky-glass': {
+        '[data-theme="dark"] .asph-glass': {
           background:
             "linear-gradient(180deg, rgba(17, 24, 39, 0.88) 0%, rgba(17, 24, 39, 0.82) 100%)",
           border: "1px solid rgba(255, 255, 255, 0.12)",
           boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3)",
         },
         // Custom scrollbar
-        ".bsky-scrollbar": {
+        ".asph-scrollbar": {
           "&::-webkit-scrollbar": {
             width: "10px",
             height: "10px",
           },
           "&::-webkit-scrollbar-track": {
-            background: "var(--bsky-bg-primary)",
+            background: "var(--asph-bg-primary)",
             borderRadius: "5px",
           },
           "&::-webkit-scrollbar-thumb": {
-            background: "var(--bsky-bg-tertiary)",
+            background: "var(--asph-bg-tertiary)",
             borderRadius: "5px",
-            border: "2px solid var(--bsky-bg-primary)",
+            border: "2px solid var(--asph-bg-primary)",
           },
           "&::-webkit-scrollbar-thumb:hover": {
-            background: "var(--bsky-bg-hover)",
+            background: "var(--asph-bg-hover)",
           },
         },
         // Gradient text utility
-        ".bsky-gradient-text": {
+        ".asph-gradient-text": {
           background:
-            "linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)",
+            "linear-gradient(135deg, var(--asph-primary) 0%, var(--asph-accent) 100%)",
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",

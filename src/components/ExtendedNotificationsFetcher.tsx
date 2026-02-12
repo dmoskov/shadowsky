@@ -598,11 +598,11 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
   ) {
     return (
       <div
-        className="bsky-card mb-6 p-6"
+        className="asph-card mb-6 p-6"
         style={{
           background:
-            "linear-gradient(135deg, var(--bsky-bg-secondary) 0%, rgba(59, 130, 246, 0.05) 100%)",
-          borderColor: "var(--bsky-primary)",
+            "linear-gradient(135deg, var(--asph-bg-secondary) 0%, rgba(59, 130, 246, 0.05) 100%)",
+          borderColor: "var(--asph-primary)",
           borderWidth: "2px",
         }}
       >
@@ -615,7 +615,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
               </h2>
               <p
                 className="mt-1 text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Fetching 4 weeks of notification history...
               </p>
@@ -626,7 +626,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
         <div className="space-y-3">
           <div className="flex justify-between text-sm">
             <span className="font-medium">Progress</span>
-            <span style={{ color: "var(--bsky-text-secondary)" }}>
+            <span style={{ color: "var(--asph-text-secondary)" }}>
               {progress.totalNotifications} notifications •{" "}
               {progress.daysReached} days
             </span>
@@ -634,14 +634,14 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
 
           <div
             className="h-3 w-full rounded-full"
-            style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+            style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
           >
             <div
               className="relative h-3 overflow-hidden rounded-full transition-all duration-300"
               style={{
                 width: `${Math.min((progress.daysReached / 28) * 100, 100)}%`,
                 background:
-                  "linear-gradient(90deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)",
+                  "linear-gradient(90deg, var(--asph-primary) 0%, var(--asph-accent) 100%)",
               }}
             >
               <div
@@ -658,7 +658,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           {progress.oldestDate && (
             <p
               className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Reached: {format(progress.oldestDate, "MMM d, yyyy")}
             </p>
@@ -670,14 +670,14 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
 
   return (
     <div
-      className="bsky-card mb-6 p-6"
+      className="asph-card mb-6 p-6"
       style={{
         background: hasCachedData
-          ? "linear-gradient(135deg, var(--bsky-bg-secondary) 0%, rgba(0, 133, 255, 0.05) 100%)"
-          : "var(--bsky-bg-secondary)",
+          ? "linear-gradient(135deg, var(--asph-bg-secondary) 0%, rgba(201, 168, 76, 0.05) 100%)"
+          : "var(--asph-bg-secondary)",
         borderColor: hasCachedData
-          ? "var(--bsky-primary)"
-          : "var(--bsky-border-primary)",
+          ? "var(--asph-primary)"
+          : "var(--asph-border-primary)",
         borderWidth: hasCachedData ? "2px" : "1px",
       }}
     >
@@ -693,7 +693,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
                 className="rounded-full px-2 py-1 text-xs"
                 style={{
                   backgroundColor: "rgba(16, 185, 129, 0.1)",
-                  color: "var(--bsky-success)",
+                  color: "var(--asph-success)",
                   border: "1px solid rgba(16, 185, 129, 0.3)",
                 }}
               >
@@ -705,7 +705,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
                 className="rounded-full px-2 py-1 text-xs"
                 style={{
                   backgroundColor: "rgba(59, 130, 246, 0.1)",
-                  color: "var(--bsky-primary)",
+                  color: "var(--asph-primary)",
                   border: "1px solid rgba(59, 130, 246, 0.3)",
                 }}
               >
@@ -715,7 +715,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           </h2>
           <p
             className="mt-1 text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {hasCachedData
               ? `Currently viewing ${cachedStats?.totalNotifications || 0} notifications from ${cachedStats?.daysReached || 0} days`
@@ -729,11 +729,11 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           {(fetchingStatus === "complete" || hasCachedData) && (
             <button
               onClick={handleClearData}
-              className="bsky-button-secondary flex items-center gap-2"
+              className="asph-button-secondary flex items-center gap-2"
               style={{
                 background: "rgba(239, 68, 68, 0.1)",
                 borderColor: "rgba(239, 68, 68, 0.3)",
-                color: "var(--bsky-error)",
+                color: "var(--asph-error)",
               }}
             >
               Clear Data
@@ -744,10 +744,10 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
             <button
               onClick={handleFetch4Weeks}
               disabled={!session || fetchingStatus === "fetching"}
-              className="bsky-button-primary flex items-center gap-2"
+              className="asph-button-primary flex items-center gap-2"
               style={{
                 background:
-                  "linear-gradient(135deg, var(--bsky-success) 0%, #059669 100%)",
+                  "linear-gradient(135deg, var(--asph-success) 0%, #059669 100%)",
               }}
             >
               {fetchingStatus === "fetching" ? (
@@ -772,13 +772,13 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           <div
             className="mt-4 rounded-lg p-4"
             style={{
-              backgroundColor: "rgba(0, 133, 255, 0.05)",
-              border: "1px solid rgba(0, 133, 255, 0.1)",
+              backgroundColor: "rgba(201, 168, 76, 0.05)",
+              border: "1px solid rgba(201, 168, 76, 0.1)",
             }}
           >
             <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
               <div>
-                <p style={{ color: "var(--bsky-text-secondary)" }}>
+                <p style={{ color: "var(--asph-text-secondary)" }}>
                   Total Notifications
                 </p>
                 <p className="text-lg font-semibold">
@@ -786,7 +786,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
                 </p>
               </div>
               <div>
-                <p style={{ color: "var(--bsky-text-secondary)" }}>
+                <p style={{ color: "var(--asph-text-secondary)" }}>
                   Days Covered
                 </p>
                 <p className="text-lg font-semibold">
@@ -794,13 +794,13 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
                 </p>
               </div>
               <div>
-                <p style={{ color: "var(--bsky-text-secondary)" }}>From</p>
+                <p style={{ color: "var(--asph-text-secondary)" }}>From</p>
                 <p className="text-lg font-semibold">
                   {format(cachedStats.oldestDate, "MMM d")}
                 </p>
               </div>
               <div>
-                <p style={{ color: "var(--bsky-text-secondary)" }}>To</p>
+                <p style={{ color: "var(--asph-text-secondary)" }}>To</p>
                 <p className="text-lg font-semibold">
                   {format(cachedStats.newestDate, "MMM d")}
                 </p>
@@ -809,7 +809,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
             {loadedFromStorage && (
               <p
                 className="mt-2 text-xs"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 ✅ Data loaded from browser cache • No API calls required
               </p>
@@ -827,7 +827,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
             >
               <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
                 <div>
-                  <p style={{ color: "var(--bsky-text-secondary)" }}>
+                  <p style={{ color: "var(--asph-text-secondary)" }}>
                     Previously Fetched
                   </p>
                   <p className="text-lg font-semibold">
@@ -835,7 +835,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
                   </p>
                 </div>
                 <div>
-                  <p style={{ color: "var(--bsky-text-secondary)" }}>
+                  <p style={{ color: "var(--asph-text-secondary)" }}>
                     Days Covered
                   </p>
                   <p className="text-lg font-semibold">
@@ -843,7 +843,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
                   </p>
                 </div>
                 <div>
-                  <p style={{ color: "var(--bsky-text-secondary)" }}>From</p>
+                  <p style={{ color: "var(--asph-text-secondary)" }}>From</p>
                   <p className="text-lg font-semibold">
                     {format(
                       new Date(fetchInfo.metadata.oldestNotificationDate),
@@ -852,7 +852,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
                   </p>
                 </div>
                 <div>
-                  <p style={{ color: "var(--bsky-text-secondary)" }}>To</p>
+                  <p style={{ color: "var(--asph-text-secondary)" }}>To</p>
                   <p className="text-lg font-semibold">
                     {format(
                       new Date(fetchInfo.metadata.newestNotificationDate),
@@ -863,7 +863,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
               </div>
               <p
                 className="mt-2 text-xs"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 ⚠️ Data not in memory. Click "Refresh Full History" to reload or
                 it will auto-update with new notifications.
@@ -885,7 +885,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
               <RefreshCw className="animate-spin text-blue-500" size={16} />
               <p className="text-sm">
                 <span className="font-medium">Auto-updating notifications</span>
-                <span style={{ color: "var(--bsky-text-secondary)" }}>
+                <span style={{ color: "var(--asph-text-secondary)" }}>
                   {" "}
                   • Fetching notifications since your last 4-week download
                 </span>
@@ -895,7 +895,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
 
           <div className="flex justify-between text-sm">
             <span className="font-medium">Fetching Progress</span>
-            <span style={{ color: "var(--bsky-text-secondary)" }}>
+            <span style={{ color: "var(--asph-text-secondary)" }}>
               {progress.totalNotifications} notifications •{" "}
               {progress.daysReached} days
             </span>
@@ -903,14 +903,14 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
 
           <div
             className="h-3 w-full rounded-full"
-            style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+            style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
           >
             <div
               className="relative h-3 overflow-hidden rounded-full transition-all duration-300"
               style={{
                 width: `${Math.min((progress.daysReached / 28) * 100, 100)}%`,
                 background:
-                  "linear-gradient(90deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)",
+                  "linear-gradient(90deg, var(--asph-primary) 0%, var(--asph-accent) 100%)",
               }}
             >
               <div
@@ -927,7 +927,7 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
           {progress.oldestDate && (
             <p
               className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Oldest notification: {format(progress.oldestDate, "MMM d, yyyy")}
             </p>
@@ -937,12 +937,12 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
             <div className="mt-4 space-y-3">
               <div
                 className="rounded-lg p-4"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
                 <p className="mb-2 text-sm font-medium">Fetch Complete!</p>
                 <p
                   className="text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Successfully fetched {allNotifications.length} notifications
                   spanning{" "}
@@ -968,10 +968,10 @@ export const ExtendedNotificationsFetcher: React.FC = () => {
                   border: "1px solid rgba(59, 130, 246, 0.2)",
                 }}
               >
-                <Database size={16} style={{ color: "var(--bsky-primary)" }} />
+                <Database size={16} style={{ color: "var(--asph-primary)" }} />
                 <div className="text-sm">
                   <p className="font-medium">IndexedDB Storage</p>
-                  <p style={{ color: "var(--bsky-text-secondary)" }}>
+                  <p style={{ color: "var(--asph-text-secondary)" }}>
                     Data stored in high-performance IndexedDB for instant access
                   </p>
                 </div>

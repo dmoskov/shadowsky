@@ -108,7 +108,7 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
               className={`media-placeholder-wrapper relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-95 ${colSpan}`}
               onClick={(e) => handleImageClick(e, idx)}
               style={{
-                backgroundColor: "var(--bsky-bg-tertiary)",
+                backgroundColor: "var(--asph-bg-tertiary)",
                 // Use CSS aspect-ratio for CLS prevention - reserves exact space before image loads
                 aspectRatio: aspectRatioValue,
                 // Maximum height constraints
@@ -118,7 +118,7 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
             >
               {/* Loading state placeholder - uses CSS animation from placeholder-system.css */}
               <div
-                className="placeholder-layer placeholder-animated absolute inset-0 bg-bsky-bg-tertiary"
+                className="placeholder-layer placeholder-animated absolute inset-0 bg-asph-bg-tertiary"
                 aria-hidden="true"
               />
 
@@ -166,9 +166,9 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
               onClick={handleShowSensitive}
               className="rounded-lg px-6 py-3 text-sm font-medium shadow-lg transition-colors"
               style={{
-                backgroundColor: "var(--bsky-bg-primary)",
-                color: "var(--bsky-text-primary)",
-                border: "2px solid var(--bsky-border-primary)",
+                backgroundColor: "var(--asph-bg-primary)",
+                color: "var(--asph-text-primary)",
+                border: "2px solid var(--asph-border-primary)",
               }}
             >
               {getWarningText(labels)} - Click to Show

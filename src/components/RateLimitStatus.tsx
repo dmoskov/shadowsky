@@ -31,17 +31,17 @@ export const RateLimitStatus: React.FC = () => {
     const updateStats = () => {
       const limiterStats = getRateLimiterStats();
       setStats([
-        { name: "API", stats: limiterStats.api, color: "var(--bsky-primary)" },
+        { name: "API", stats: limiterStats.api, color: "var(--asph-primary)" },
         {
           name: "Profiles",
           stats: limiterStats.profile,
-          color: "var(--bsky-green)",
+          color: "var(--asph-green)",
         },
-        { name: "Posts", stats: limiterStats.post, color: "var(--bsky-blue)" },
+        { name: "Posts", stats: limiterStats.post, color: "var(--asph-blue)" },
         {
           name: "Notifications",
           stats: limiterStats.notification,
-          color: "var(--bsky-purple)",
+          color: "var(--asph-purple)",
         },
       ]);
     };
@@ -60,27 +60,27 @@ export const RateLimitStatus: React.FC = () => {
     <div className="fixed bottom-4 right-4 z-50" style={{ maxWidth: "300px" }}>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="bsky-card flex items-center gap-2 p-3 transition-opacity hover:opacity-90"
+        className="asph-card flex items-center gap-2 p-3 transition-opacity hover:opacity-90"
         style={{
           background: hasThrottling
-            ? "var(--bsky-red-subtle)"
-            : "var(--bsky-bg-secondary)",
+            ? "var(--asph-red-subtle)"
+            : "var(--asph-bg-secondary)",
           border: hasThrottling
-            ? "1px solid var(--bsky-red)"
-            : "1px solid var(--bsky-border)",
+            ? "1px solid var(--asph-red)"
+            : "1px solid var(--asph-border)",
         }}
       >
         {hasThrottling ? (
-          <AlertTriangle size={16} style={{ color: "var(--bsky-red)" }} />
+          <AlertTriangle size={16} style={{ color: "var(--asph-red)" }} />
         ) : (
-          <Shield size={16} style={{ color: "var(--bsky-green)" }} />
+          <Shield size={16} style={{ color: "var(--asph-green)" }} />
         )}
         <span
           className="text-sm font-medium"
           style={{
             color: hasThrottling
-              ? "var(--bsky-red)"
-              : "var(--bsky-text-primary)",
+              ? "var(--asph-red)"
+              : "var(--asph-text-primary)",
           }}
         >
           {hasThrottling ? "Rate Limiting Active" : "Rate Limits OK"}
@@ -89,12 +89,12 @@ export const RateLimitStatus: React.FC = () => {
 
       {isExpanded && (
         <div
-          className="bsky-card mt-2 p-4 shadow-lg"
-          style={{ background: "var(--bsky-bg-primary)" }}
+          className="asph-card mt-2 p-4 shadow-lg"
+          style={{ background: "var(--asph-bg-primary)" }}
         >
           <h3
             className="mb-3 text-sm font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             API Rate Limits
           </h3>
@@ -105,13 +105,13 @@ export const RateLimitStatus: React.FC = () => {
                 <div className="mb-1 flex items-center justify-between">
                   <span
                     className="text-xs font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     {bucket.name}
                   </span>
                   <span
                     className="text-xs"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   >
                     {bucket.stats.availableTokens}/{bucket.stats.maxTokens}{" "}
                     tokens
@@ -120,7 +120,7 @@ export const RateLimitStatus: React.FC = () => {
 
                 <div
                   className="h-2 w-full overflow-hidden rounded-full"
-                  style={{ background: "var(--bsky-bg-tertiary)" }}
+                  style={{ background: "var(--asph-bg-tertiary)" }}
                 >
                   <div
                     className="h-full transition-all duration-300"
@@ -137,7 +137,7 @@ export const RateLimitStatus: React.FC = () => {
                     {bucket.stats.throttledRequests > 0 && (
                       <span
                         className="text-xs"
-                        style={{ color: "var(--bsky-red)" }}
+                        style={{ color: "var(--asph-red)" }}
                       >
                         {bucket.stats.throttledRequests} throttled
                       </span>
@@ -145,7 +145,7 @@ export const RateLimitStatus: React.FC = () => {
                     {bucket.stats.queueLength > 0 && (
                       <span
                         className="text-xs"
-                        style={{ color: "var(--bsky-orange)" }}
+                        style={{ color: "var(--asph-orange)" }}
                       >
                         {bucket.stats.queueLength} queued
                       </span>
@@ -158,7 +158,7 @@ export const RateLimitStatus: React.FC = () => {
 
           <p
             className="mt-3 text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             Rate limiting ensures respectful API usage. The app will slow down
             rather than spam the API.

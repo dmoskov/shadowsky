@@ -170,13 +170,13 @@ export const AccountSettings: React.FC = () => {
       <div>
         <h2
           className="text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Account Settings
         </h2>
         <p
           className="mt-1 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Manage your account information and preferences
         </p>
@@ -187,7 +187,7 @@ export const AccountSettings: React.FC = () => {
         <div>
           <label
             className="mb-2 block text-sm font-medium"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Profile Pictures
           </label>
@@ -274,12 +274,12 @@ export const AccountSettings: React.FC = () => {
             </div>
             <div
               className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               <p>Click to upload a new profile picture</p>
               <p
                 className="text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 Recommended: 400x400px or larger
               </p>
@@ -291,7 +291,7 @@ export const AccountSettings: React.FC = () => {
       <div>
         <label
           className="mb-2 block text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Handle
         </label>
@@ -301,14 +301,14 @@ export const AccountSettings: React.FC = () => {
           disabled
           className="w-full rounded-lg px-4 py-2 text-sm"
           style={{
-            backgroundColor: "var(--bsky-bg-tertiary)",
-            color: "var(--bsky-text-tertiary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-tertiary)",
+            color: "var(--asph-text-tertiary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         />
         <p
           className="mt-1 text-xs"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           Your handle cannot be changed
         </p>
@@ -317,7 +317,7 @@ export const AccountSettings: React.FC = () => {
       <div>
         <label
           className="mb-2 block text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Display Name
         </label>
@@ -328,9 +328,9 @@ export const AccountSettings: React.FC = () => {
           placeholder="Enter your display name"
           className="w-full rounded-lg px-4 py-2 text-sm"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            color: "var(--bsky-text-primary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            color: "var(--asph-text-primary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         />
       </div>
@@ -338,7 +338,7 @@ export const AccountSettings: React.FC = () => {
       <div>
         <label
           className="mb-2 block text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Bio
         </label>
@@ -349,9 +349,9 @@ export const AccountSettings: React.FC = () => {
           rows={4}
           className="w-full rounded-lg px-4 py-2 text-sm"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            color: "var(--bsky-text-primary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            color: "var(--asph-text-primary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         />
       </div>
@@ -360,8 +360,8 @@ export const AccountSettings: React.FC = () => {
         <div
           className={`rounded-lg border p-3 text-sm ${
             message.type === "success"
-              ? "border-bsky-success/30 bg-bsky-success/10 text-bsky-success"
-              : "border-bsky-error/30 bg-bsky-error/10 text-bsky-error"
+              ? "border-asph-success/30 bg-asph-success/10 text-asph-success"
+              : "border-asph-error/30 bg-asph-error/10 text-asph-error"
           }`}
         >
           {message.text}
@@ -382,9 +382,9 @@ export const AccountSettings: React.FC = () => {
           disabled={!hasChanges() || isLoading}
           className="rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
           style={{
-            backgroundColor: "var(--bsky-bg-tertiary)",
-            color: "var(--bsky-text-primary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-tertiary)",
+            color: "var(--asph-text-primary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           Cancel
@@ -394,7 +394,7 @@ export const AccountSettings: React.FC = () => {
           disabled={!hasChanges() || isLoading}
           className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
           style={{
-            backgroundColor: "var(--bsky-primary)",
+            backgroundColor: "var(--asph-primary)",
           }}
         >
           {isLoading ? "Saving..." : "Save Changes"}

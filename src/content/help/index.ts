@@ -19,13 +19,13 @@ export const helpCategories: HelpCategory[] = [
     id: "getting-started",
     name: "Getting Started",
     icon: "Rocket",
-    description: "Learn the basics of ShadowSky",
+    description: "Learn the basics of Asphodel",
   },
   {
     id: "features",
     name: "Features",
     icon: "Layout",
-    description: "Explore ShadowSky's powerful features",
+    description: "Explore Asphodel's powerful features",
   },
   {
     id: "keyboard-shortcuts",
@@ -51,14 +51,14 @@ export const helpArticles: HelpArticle[] = [
   // Getting Started
   {
     id: "what-is-shadowsky",
-    title: "What is ShadowSky?",
+    title: "What is Asphodel?",
     category: "getting-started",
     summary:
-      "ShadowSky is a powerful alternative client for Bluesky with advanced features.",
+      "Asphodel is a powerful alternative client for Bluesky with advanced features.",
     content: `
-# What is ShadowSky?
+# What is Asphodel?
 
-ShadowSky is an advanced alternative client for the Bluesky social network. It provides a multi-column interface similar to TweetDeck, allowing you to view multiple feeds, notifications, and conversations simultaneously.
+Asphodel is an advanced alternative client for the Bluesky social network. It provides a multi-column interface similar to TweetDeck, allowing you to view multiple feeds, notifications, and conversations simultaneously.
 
 ## Key Features
 
@@ -75,7 +75,7 @@ ShadowSky is an advanced alternative client for the Bluesky social network. It p
 2. Customize your columns to show the feeds you want
 3. Explore the settings to personalize your experience
 
-ShadowSky uses your existing Bluesky account - no separate registration required.
+Asphodel uses your existing Bluesky account - no separate registration required.
     `,
     keywords: [
       "shadowsky",
@@ -94,7 +94,7 @@ ShadowSky uses your existing Bluesky account - no separate registration required
     content: `
 # How to Sign In
 
-ShadowSky uses secure OAuth authentication to connect with your Bluesky account. Your password is never stored by ShadowSky.
+Asphodel uses secure OAuth authentication to connect with your Bluesky account. Your password is never stored by Asphodel.
 
 ## Steps to Sign In
 
@@ -102,12 +102,12 @@ ShadowSky uses secure OAuth authentication to connect with your Bluesky account.
 2. Enter your Bluesky handle (e.g., @yourname.bsky.social)
 3. You'll be redirected to Bluesky's official login page
 4. Enter your Bluesky password on the official page
-5. Authorize ShadowSky to access your account
-6. You'll be redirected back to ShadowSky, logged in
+5. Authorize Asphodel to access your account
+6. You'll be redirected back to Asphodel, logged in
 
 ## Security Notes
 
-- ShadowSky never sees or stores your password
+- Asphodel never sees or stores your password
 - You can revoke access at any time from Bluesky's settings
 - Your session is stored locally and encrypted
 - Multiple accounts are supported
@@ -137,7 +137,7 @@ If you have issues signing in:
     content: `
 # Understanding Columns
 
-ShadowSky's multi-column layout lets you view multiple feeds simultaneously, similar to TweetDeck.
+Asphodel's multi-column layout lets you view multiple feeds simultaneously, similar to TweetDeck.
 
 ## Default Columns
 
@@ -189,7 +189,7 @@ Each column has its own settings:
     content: `
 # AI Features
 
-ShadowSky includes optional AI-powered features to enhance your experience. All AI features require an Anthropic API key.
+Asphodel includes optional AI-powered features to enhance your experience. All AI features require an Anthropic API key.
 
 ## Available AI Features
 
@@ -214,7 +214,7 @@ ShadowSky includes optional AI-powered features to enhance your experience. All 
 
 - AI features are processed locally when possible
 - Your API key is stored only in your browser
-- No post content is stored by ShadowSky
+- No post content is stored by Asphodel
 - You can disable AI features at any time
     `,
     keywords: [
@@ -250,7 +250,7 @@ Access your bookmarks from:
 
 ## Bookmark Storage
 
-ShadowSky offers two storage options:
+Asphodel offers two storage options:
 
 ### Local Storage (Default)
 - Stored in your browser
@@ -364,11 +364,11 @@ View and manage scheduled posts from:
     id: "keyboard-shortcuts-overview",
     title: "Keyboard Shortcuts Overview",
     category: "keyboard-shortcuts",
-    summary: "Master ShadowSky with comprehensive keyboard shortcuts.",
+    summary: "Master Asphodel with comprehensive keyboard shortcuts.",
     content: `
 # Keyboard Shortcuts
 
-Navigate ShadowSky efficiently using keyboard shortcuts. Press **?** (Shift + /) to see all shortcuts anytime.
+Navigate Asphodel efficiently using keyboard shortcuts. Press **?** (Shift + /) to see all shortcuts anytime.
 
 ## Navigation
 
@@ -518,7 +518,7 @@ Push notifications require:
 
 To enable:
 1. Click the notification icon in your browser's address bar
-2. Allow notifications for ShadowSky
+2. Allow notifications for Asphodel
 3. Enable push notifications in Settings > Notifications
 
 ## Missing Notifications
@@ -546,7 +546,7 @@ If the unread count seems wrong:
     content: `
 # Storage & Data Issues
 
-ShadowSky stores data locally for offline access and performance. Here's how to manage storage issues.
+Asphodel stores data locally for offline access and performance. Here's how to manage storage issues.
 
 ## Data Not Syncing
 
@@ -569,13 +569,13 @@ If you see storage warnings:
 To prevent data loss:
 - Enable AT Protocol storage for important data
 - Export your data periodically
-- Use a browser profile for ShadowSky
+- Use a browser profile for Asphodel
 
 ## IndexedDB Errors
 
 If you see database errors:
-1. Close all ShadowSky tabs
-2. Clear site data for ShadowSky
+1. Close all Asphodel tabs
+2. Clear site data for Asphodel
 3. Sign back in
 4. Contact support if errors persist
 
@@ -593,13 +593,13 @@ If the app behaves strangely:
   // Privacy & Security
   {
     id: "privacy-overview",
-    title: "Privacy in ShadowSky",
+    title: "Privacy in Asphodel",
     category: "privacy-security",
-    summary: "Understand how ShadowSky handles your data and protects privacy.",
+    summary: "Understand how Asphodel handles your data and protects privacy.",
     content: `
-# Privacy in ShadowSky
+# Privacy in Asphodel
 
-ShadowSky is designed with privacy in mind. Here's how we protect your data.
+Asphodel is designed with privacy in mind. Here's how we protect your data.
 
 ## What We Don't Collect
 
@@ -625,7 +625,7 @@ If you enable AT Protocol storage:
 
 ## Security Features
 
-- OAuth authentication (your password never touches ShadowSky)
+- OAuth authentication (your password never touches Asphodel)
 - All connections use HTTPS
 - Session tokens are stored securely
 - Automatic session timeout options
@@ -635,7 +635,7 @@ If you enable AT Protocol storage:
 You can at any time:
 - Export all your local data
 - Delete all stored data
-- Revoke ShadowSky's access to your Bluesky account
+- Revoke Asphodel's access to your Bluesky account
 - Request information about stored data
     `,
     keywords: [
@@ -655,7 +655,7 @@ You can at any time:
     content: `
 # Content Moderation
 
-ShadowSky provides tools to control what content you see.
+Asphodel provides tools to control what content you see.
 
 ## Content Warnings
 
@@ -721,7 +721,7 @@ Keep your account secure by managing your active sessions.
 
 ## Active Sessions
 
-ShadowSky stores your session locally. To see active sessions:
+Asphodel stores your session locally. To see active sessions:
 1. Go to Settings > Account
 2. View your current session information
 
@@ -734,7 +734,7 @@ To sign out:
 
 ## Multiple Accounts
 
-ShadowSky supports multiple Bluesky accounts:
+Asphodel supports multiple Bluesky accounts:
 1. Click your avatar
 2. Click "Add Account"
 3. Sign in with another account
@@ -742,11 +742,11 @@ ShadowSky supports multiple Bluesky accounts:
 
 ## Revoking Access
 
-To completely revoke ShadowSky's access:
-1. Sign out of ShadowSky
+To completely revoke Asphodel's access:
+1. Sign out of Asphodel
 2. Go to Bluesky's official app
 3. Go to Settings > App Passwords or Connected Apps
-4. Revoke ShadowSky's access
+4. Revoke Asphodel's access
 
 ## Security Best Practices
 

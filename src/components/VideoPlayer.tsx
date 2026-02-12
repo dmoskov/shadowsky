@@ -708,7 +708,7 @@ function VideoPlayerComponent({
       >
         {/* Placeholder layer for CLS prevention */}
         <div
-          className="placeholder-layer placeholder-animated absolute inset-0 bg-bsky-bg-tertiary"
+          className="placeholder-layer placeholder-animated absolute inset-0 bg-asph-bg-tertiary"
           aria-hidden="true"
         />
 
@@ -750,7 +750,7 @@ function VideoPlayerComponent({
       >
         {/* Placeholder layer for CLS prevention */}
         <div
-          className="placeholder-layer placeholder-animated absolute inset-0 bg-bsky-bg-tertiary"
+          className="placeholder-layer placeholder-animated absolute inset-0 bg-asph-bg-tertiary"
           aria-hidden="true"
         />
 

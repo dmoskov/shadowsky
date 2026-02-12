@@ -313,23 +313,23 @@ export const DirectMessages: React.FC = () => {
 
   return (
     <div
-      className="flex h-[calc(100vh-8rem)] w-full overflow-hidden bg-bsky-bg-primary lg:h-[calc(100vh-4rem)]"
+      className="flex h-[calc(100vh-8rem)] w-full overflow-hidden bg-asph-bg-primary lg:h-[calc(100vh-4rem)]"
       role="main"
       aria-label="Direct Messages"
     >
       {/* Conversations list */}
       <nav
-        className={`flex h-full flex-col overflow-hidden border-r border-bsky-border-primary ${selectedConversation ? "hidden md:flex" : "flex"}`}
+        className={`flex h-full flex-col overflow-hidden border-r border-asph-border-primary ${selectedConversation ? "hidden md:flex" : "flex"}`}
         style={{
           width: selectedConversation ? "320px" : "100%",
           maxWidth: selectedConversation ? "320px" : "100%",
         }}
         aria-label="Conversations"
       >
-        <div className="flex items-center justify-between border-b border-bsky-border-primary p-4">
+        <div className="flex items-center justify-between border-b border-asph-border-primary p-4">
           <h1
             className="text-xl font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
             id="messages-heading"
           >
             Messages
@@ -338,8 +338,8 @@ export const DirectMessages: React.FC = () => {
             onClick={() => setShowSearch(!showSearch)}
             className={`rounded-lg p-2 transition-colors ${
               showSearch
-                ? "bg-bsky-primary text-white"
-                : "text-bsky-text-secondary hover:bg-bsky-bg-secondary"
+                ? "bg-asph-primary text-white"
+                : "text-asph-text-secondary hover:bg-asph-bg-secondary"
             }`}
             aria-label={showSearch ? "Close search" : "Search messages"}
             title="Search messages"
@@ -354,7 +354,7 @@ export const DirectMessages: React.FC = () => {
 
         {/* Search panel */}
         {showSearch && (
-          <div className="h-80 border-b border-bsky-border-primary">
+          <div className="h-80 border-b border-asph-border-primary">
             <DmSearch
               conversationId={selectedConversation || undefined}
               onResultClick={handleSearchResultClick}
@@ -364,7 +364,7 @@ export const DirectMessages: React.FC = () => {
         )}
 
         <div
-          className="bsky-scrollbar flex-1 overflow-y-auto overflow-x-hidden"
+          className="asph-scrollbar flex-1 overflow-y-auto overflow-x-hidden"
           role="list"
           aria-label="Conversation list"
         >
@@ -400,7 +400,7 @@ export const DirectMessages: React.FC = () => {
                       Create a new app password with "Direct Messages" enabled
                     </li>
                     <li>
-                      Log out of shadowsky (click your profile → Settings → Log
+                      Log out of Asphodel (click your profile → Settings → Log
                       out)
                     </li>
                     <li>
@@ -422,7 +422,7 @@ export const DirectMessages: React.FC = () => {
           ) : !conversations || conversations.length === 0 ? (
             <div
               className="p-4 text-center"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               No conversations yet
             </div>
@@ -433,7 +433,7 @@ export const DirectMessages: React.FC = () => {
                 <button
                   key={conversation.id}
                   onClick={() => setSelectedConversation(conversation.id)}
-                  className={`w-full cursor-pointer overflow-hidden border-b border-bsky-border-primary p-4 text-left transition-colors duration-200 hover:bg-bsky-bg-secondary ${selectedConversation === conversation.id ? "bg-bsky-bg-secondary" : ""}`}
+                  className={`w-full cursor-pointer overflow-hidden border-b border-asph-border-primary p-4 text-left transition-colors duration-200 hover:bg-asph-bg-secondary ${selectedConversation === conversation.id ? "bg-asph-bg-secondary" : ""}`}
                   role="listitem"
                   aria-label={`Conversation with ${otherMember.displayName || otherMember.handle || "Unknown User"}${conversation.unreadCount > 0 ? `, ${conversation.unreadCount} unread messages` : ""}`}
                   aria-current={
@@ -461,25 +461,25 @@ export const DirectMessages: React.FC = () => {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="line-clamp-1 break-words font-semibold text-bsky-text-primary">
+                      <div className="line-clamp-1 break-words font-semibold text-asph-text-primary">
                         {otherMember.displayName ||
                           otherMember.handle ||
                           "Unknown User"}
                       </div>
                       {otherMember.handle && (
-                        <div className="line-clamp-1 break-words text-sm text-bsky-text-secondary">
+                        <div className="line-clamp-1 break-words text-sm text-asph-text-secondary">
                           @{otherMember.handle}
                         </div>
                       )}
                       {conversation.lastMessage && (
-                        <div className="mt-1 line-clamp-1 break-words text-sm text-bsky-text-secondary">
+                        <div className="mt-1 line-clamp-1 break-words text-sm text-asph-text-secondary">
                           {conversation.lastMessage.text}
                         </div>
                       )}
                     </div>
                     {conversation.unreadCount > 0 && (
                       <div
-                        className="flex-shrink-0 rounded-full bg-bsky-primary px-2 py-0.5 text-center text-xs text-white"
+                        className="flex-shrink-0 rounded-full bg-asph-primary px-2 py-0.5 text-center text-xs text-white"
                         aria-hidden="true"
                       >
                         {conversation.unreadCount}
@@ -505,9 +505,9 @@ export const DirectMessages: React.FC = () => {
         {selectedConversation && conversationData ? (
           <>
             {/* Chat header */}
-            <header className="flex items-center gap-3 border-b border-bsky-border-primary p-4">
+            <header className="flex items-center gap-3 border-b border-asph-border-primary p-4">
               <button
-                className="mr-4 inline-flex cursor-pointer items-center gap-2 border-none bg-transparent p-2 text-bsky-primary md:hidden"
+                className="mr-4 inline-flex cursor-pointer items-center gap-2 border-none bg-transparent p-2 text-asph-primary md:hidden"
                 onClick={() => setSelectedConversation(null)}
                 aria-label="Back to conversations list"
               >
@@ -534,7 +534,7 @@ export const DirectMessages: React.FC = () => {
               <div className="flex-1">
                 <div
                   className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {getOtherMember(conversationData.conversation).displayName ||
                     getOtherMember(conversationData.conversation).handle ||
@@ -543,7 +543,7 @@ export const DirectMessages: React.FC = () => {
                 {getOtherMember(conversationData.conversation).handle && (
                   <div
                     className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     @{getOtherMember(conversationData.conversation).handle}
                   </div>
@@ -554,8 +554,8 @@ export const DirectMessages: React.FC = () => {
                 onClick={() => setShowSearch(!showSearch)}
                 className={`rounded-lg p-2 transition-colors md:hidden ${
                   showSearch
-                    ? "bg-bsky-primary text-white"
-                    : "text-bsky-text-secondary hover:bg-bsky-bg-secondary"
+                    ? "bg-asph-primary text-white"
+                    : "text-asph-text-secondary hover:bg-asph-bg-secondary"
                 }`}
                 aria-label={showSearch ? "Close search" : "Search messages"}
               >
@@ -569,7 +569,7 @@ export const DirectMessages: React.FC = () => {
 
             {/* Mobile search panel */}
             {showSearch && (
-              <div className="h-64 border-b border-bsky-border-primary md:hidden">
+              <div className="h-64 border-b border-asph-border-primary md:hidden">
                 <DmSearch
                   conversationId={selectedConversation}
                   onResultClick={handleSearchResultClick}
@@ -581,7 +581,7 @@ export const DirectMessages: React.FC = () => {
             {/* Messages */}
             <div
               ref={messagesContainerRef}
-              className="bsky-scrollbar flex-1 overflow-y-auto p-4"
+              className="asph-scrollbar flex-1 overflow-y-auto p-4"
               role="log"
               aria-label="Message history"
               aria-live="polite"
@@ -591,7 +591,7 @@ export const DirectMessages: React.FC = () => {
               ) : combinedMessages.length === 0 ? (
                 <div
                   className="text-center"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   No messages yet. Start the conversation!
                 </div>
@@ -627,7 +627,7 @@ export const DirectMessages: React.FC = () => {
             </div>
 
             {/* Message input */}
-            <div className="border-t border-bsky-border-primary p-4">
+            <div className="border-t border-asph-border-primary p-4">
               <form
                 onSubmit={handleSendMessage}
                 className="flex gap-2"
@@ -638,13 +638,13 @@ export const DirectMessages: React.FC = () => {
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-4 py-2 text-base text-bsky-text-primary focus-visible:border-bsky-primary focus-visible:shadow-sm focus-visible:outline-none"
+                  className="flex-1 rounded-lg border border-asph-border-primary bg-asph-bg-secondary px-4 py-2 text-base text-asph-text-primary focus-visible:border-asph-primary focus-visible:shadow-sm focus-visible:outline-none"
                   aria-label="Message text"
                 />
                 <button
                   type="submit"
                   disabled={!messageText.trim() || isSending}
-                  className="cursor-pointer rounded-lg border-none bg-bsky-primary px-6 py-2 font-semibold text-white transition-colors duration-200 hover:bg-bsky-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
+                  className="cursor-pointer rounded-lg border-none bg-asph-primary px-6 py-2 font-semibold text-white transition-colors duration-200 hover:bg-asph-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                   aria-label={isSending ? "Sending message..." : "Send message"}
                 >
                   Send
@@ -653,7 +653,7 @@ export const DirectMessages: React.FC = () => {
             </div>
           </>
         ) : (
-          <div className="flex flex-1 items-center justify-center text-bsky-text-secondary">
+          <div className="flex flex-1 items-center justify-center text-asph-text-secondary">
             <div className="text-center">
               <h3 className="mb-2 text-xl font-semibold">Your Messages</h3>
               <p>Select a conversation to start messaging</p>

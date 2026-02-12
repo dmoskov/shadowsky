@@ -28,8 +28,8 @@ export const AISettingsPanel: React.FC<AISettingsPanelProps> = ({
   const containerStyle = compact
     ? {}
     : {
-        borderColor: "var(--bsky-border-primary)",
-        backgroundColor: "var(--bsky-bg-secondary)",
+        borderColor: "var(--asph-border-primary)",
+        backgroundColor: "var(--asph-bg-secondary)",
       };
 
   return (
@@ -37,7 +37,7 @@ export const AISettingsPanel: React.FC<AISettingsPanelProps> = ({
       {!compact && (
         <h3
           className="mb-4 flex items-center gap-2 text-lg font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           <Sparkles size={20} />
           AI-Powered Features
@@ -49,14 +49,14 @@ export const AISettingsPanel: React.FC<AISettingsPanelProps> = ({
           <div className="flex-1">
             <div
               className={compact ? "text-sm font-medium" : "font-medium"}
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Auto-generate Alt Text
             </div>
             {!compact && (
               <div
                 className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Automatically generate descriptive alt text for images
               </div>
@@ -76,14 +76,14 @@ export const AISettingsPanel: React.FC<AISettingsPanelProps> = ({
           <div className="flex-1">
             <div
               className={compact ? "text-sm font-medium" : "font-medium"}
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Hashtag Suggestions
             </div>
             {!compact && (
               <div
                 className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Get relevant hashtag suggestions based on your post content
               </div>

@@ -115,26 +115,26 @@ export const Lists: React.FC = () => {
 
   return (
     <div
-      className="mx-auto flex h-full max-w-4xl flex-col bg-bsky-bg-primary"
+      className="mx-auto flex h-full max-w-4xl flex-col bg-asph-bg-primary"
       role="main"
       aria-label="Lists"
     >
-      <div className="sticky top-0 z-10 border-b border-bsky-border-primary bg-bsky-bg-primary p-4">
+      <div className="sticky top-0 z-10 border-b border-asph-border-primary bg-asph-bg-primary p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ListIcon
-              className="h-5 w-5 text-bsky-text-primary"
+              className="h-5 w-5 text-asph-text-primary"
               aria-hidden="true"
             />
             <h1
-              className="m-0 text-xl font-semibold text-bsky-text-primary"
+              className="m-0 text-xl font-semibold text-asph-text-primary"
               id="lists-heading"
             >
               Lists
             </h1>
             {lists && lists.length > 0 && (
               <span
-                className="rounded-full bg-bsky-bg-secondary px-2 py-0.5 text-sm text-bsky-text-secondary"
+                className="rounded-full bg-asph-bg-secondary px-2 py-0.5 text-sm text-asph-text-secondary"
                 aria-label={`${lists.length} lists`}
               >
                 {lists.length}
@@ -143,7 +143,7 @@ export const Lists: React.FC = () => {
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex cursor-pointer items-center gap-2 rounded-full bg-bsky-primary px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90"
+            className="flex cursor-pointer items-center gap-2 rounded-full bg-asph-primary px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90"
             aria-label="Create new list"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
@@ -159,10 +159,10 @@ export const Lists: React.FC = () => {
           aria-label="Loading lists"
         >
           <div
-            className="border-t-bsky-accent-primary h-8 w-8 animate-spin rounded-full border-2 border-bsky-border-primary"
+            className="border-t-asph-accent-primary h-8 w-8 animate-spin rounded-full border-2 border-asph-border-primary"
             aria-hidden="true"
           />
-          <p className="mt-4 text-bsky-text-secondary">Loading lists...</p>
+          <p className="mt-4 text-asph-text-secondary">Loading lists...</p>
         </div>
       )}
 
@@ -177,15 +177,15 @@ export const Lists: React.FC = () => {
       {!isLoading && !error && lists?.length === 0 && (
         <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
           <ListIcon className="h-12 w-12 text-gray-400" aria-hidden="true" />
-          <p className="mb-2 mt-4 text-base font-medium text-bsky-text-primary">
+          <p className="mb-2 mt-4 text-base font-medium text-asph-text-primary">
             No lists yet
           </p>
-          <p className="mb-4 text-sm text-bsky-text-secondary">
+          <p className="mb-4 text-sm text-asph-text-secondary">
             Create lists to organize accounts into custom groups
           </p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex cursor-pointer items-center gap-2 rounded-full bg-bsky-primary px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90"
+            className="flex cursor-pointer items-center gap-2 rounded-full bg-asph-primary px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90"
             aria-label="Create your first list"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
@@ -195,7 +195,7 @@ export const Lists: React.FC = () => {
       )}
 
       <div
-        className="bsky-scrollbar flex-1 overflow-y-auto p-4"
+        className="asph-scrollbar flex-1 overflow-y-auto p-4"
         aria-labelledby="lists-heading"
       >
         <div
@@ -207,17 +207,17 @@ export const Lists: React.FC = () => {
             <article
               key={list.uri}
               role="listitem"
-              className="group relative cursor-pointer rounded-xl border border-bsky-border-primary bg-bsky-bg-secondary p-4 transition-all duration-200 hover:border-bsky-primary hover:shadow-lg"
+              className="group relative cursor-pointer rounded-xl border border-asph-border-primary bg-asph-bg-secondary p-4 transition-all duration-200 hover:border-asph-primary hover:shadow-lg"
               onClick={() => navigate(`/lists/${encodeURIComponent(list.uri)}`)}
               aria-label={`${list.name} list with ${list.listItemCount || 0} members`}
             >
               <div className="mb-3 flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-bsky-text-primary">
+                  <h3 className="text-lg font-semibold text-asph-text-primary">
                     {list.name}
                   </h3>
                   {list.description && (
-                    <p className="mt-1 line-clamp-2 text-sm text-bsky-text-secondary">
+                    <p className="mt-1 line-clamp-2 text-sm text-asph-text-secondary">
                       {list.description}
                     </p>
                   )}
@@ -230,7 +230,7 @@ export const Lists: React.FC = () => {
                         menuOpenForList === list.uri ? null : list.uri,
                       );
                     }}
-                    className="cursor-pointer rounded-md border-none bg-transparent p-2 text-bsky-text-secondary transition-all duration-200 hover:bg-bsky-bg-hover"
+                    className="cursor-pointer rounded-md border-none bg-transparent p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-hover"
                     aria-label={`Options for ${list.name}`}
                     aria-expanded={menuOpenForList === list.uri}
                     aria-haspopup="menu"
@@ -248,7 +248,7 @@ export const Lists: React.FC = () => {
                         aria-hidden="true"
                       />
                       <div
-                        className="absolute right-0 top-10 z-20 min-w-[160px] rounded-lg border border-bsky-border-primary bg-bsky-bg-primary shadow-xl"
+                        className="absolute right-0 top-10 z-20 min-w-[160px] rounded-lg border border-asph-border-primary bg-asph-bg-primary shadow-xl"
                         role="menu"
                         aria-label={`Actions for ${list.name}`}
                       >
@@ -258,7 +258,7 @@ export const Lists: React.FC = () => {
                             setEditingList(list);
                             setMenuOpenForList(null);
                           }}
-                          className="flex w-full cursor-pointer items-center gap-2 border-none bg-transparent px-4 py-2.5 text-left text-sm text-bsky-text-primary transition-all duration-200 hover:bg-bsky-bg-hover"
+                          className="flex w-full cursor-pointer items-center gap-2 border-none bg-transparent px-4 py-2.5 text-left text-sm text-asph-text-primary transition-all duration-200 hover:bg-asph-bg-hover"
                           role="menuitem"
                         >
                           <Edit2 className="h-4 w-4" aria-hidden="true" />
@@ -283,14 +283,14 @@ export const Lists: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-1 text-bsky-text-secondary">
+                <div className="flex items-center gap-1 text-asph-text-secondary">
                   <Users className="h-4 w-4" aria-hidden="true" />
                   <span>
                     {list.listItemCount || 0}{" "}
                     {list.listItemCount === 1 ? "member" : "members"}
                   </span>
                 </div>
-                <span className="text-xs text-bsky-text-tertiary">
+                <span className="text-xs text-asph-text-tertiary">
                   Updated{" "}
                   {formatDistanceToNow(new Date(list.indexedAt), {
                     addSuffix: true,

@@ -353,7 +353,7 @@ export async function inspectDatabaseIndexes(
 }
 
 /**
- * Get a summary of all compound indexes across all ShadowSky databases.
+ * Get a summary of all compound indexes across all Asphodel databases.
  */
 export async function getAllCompoundIndexes(): Promise<CompoundIndexInfo[]> {
   const dbNames = [

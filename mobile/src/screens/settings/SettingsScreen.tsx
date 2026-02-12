@@ -502,7 +502,7 @@ export function SettingsScreen({ section }: SettingsScreenProps) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>ABOUT</Text>
 
-        <SettingRow label="App Name" value="ShadowSky" />
+        <SettingRow label="App Name" value="Asphodel" />
 
         <SettingRow label="Version" value={APP_VERSION} />
 
@@ -520,7 +520,7 @@ export function SettingsScreen({ section }: SettingsScreenProps) {
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>ShadowSky v{APP_VERSION}</Text>
+        <Text style={styles.footerText}>Asphodel v{APP_VERSION}</Text>
         <Text style={styles.footerSubtext}>
           A third-party Bluesky client
         </Text>

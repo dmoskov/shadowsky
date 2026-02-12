@@ -506,7 +506,7 @@ export function BaseComposer({
       {replyTo && (
         <div
           className="mb-2 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Replying to @{replyTo.author.handle}
         </div>
@@ -533,9 +533,9 @@ export function BaseComposer({
               isInline ? "min-h-[40px]" : "min-h-[100px]"
             }`}
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              borderColor: "var(--bsky-border-primary)",
-              color: "var(--bsky-text-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              borderColor: "var(--asph-border-primary)",
+              color: "var(--asph-text-primary)",
             }}
           />
 
@@ -578,9 +578,9 @@ export function BaseComposer({
                         placeholder="Alt text"
                         className="flex-1 rounded border px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         style={{
-                          backgroundColor: "var(--bsky-bg-secondary)",
-                          borderColor: "var(--bsky-border-primary)",
-                          color: "var(--bsky-text-primary)",
+                          backgroundColor: "var(--asph-bg-secondary)",
+                          borderColor: "var(--asph-border-primary)",
+                          color: "var(--asph-text-primary)",
                         }}
                       />
                       {features.altTextGeneration && (
@@ -588,7 +588,7 @@ export function BaseComposer({
                           onClick={() => handleGenerateAlt(item.id)}
                           disabled={generatingAlt === item.id}
                           className="rounded border px-2 py-1 text-xs transition-all duration-200 ease-in-out hover:bg-gray-100 dark:hover:bg-gray-800"
-                          style={{ borderColor: "var(--bsky-border-primary)" }}
+                          style={{ borderColor: "var(--asph-border-primary)" }}
                         >
                           {generatingAlt === item.id ? (
                             <Loader size={12} className="animate-spin" />
@@ -608,8 +608,8 @@ export function BaseComposer({
                   onClick={() => setShowImageEditor(true)}
                   className="flex h-32 w-full items-center justify-center rounded border-2 border-dashed transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
                   style={{
-                    borderColor: "var(--bsky-border-primary)",
-                    color: "var(--bsky-text-secondary)",
+                    borderColor: "var(--asph-border-primary)",
+                    color: "var(--asph-text-secondary)",
                   }}
                 >
                   <div className="flex flex-col items-center gap-1">
@@ -652,7 +652,7 @@ export function BaseComposer({
                 style={{
                   color:
                     text.length <= maxLength * 0.9
-                      ? "var(--bsky-text-secondary)"
+                      ? "var(--asph-text-secondary)"
                       : undefined,
                 }}
               >
@@ -689,8 +689,8 @@ export function BaseComposer({
                   isInline ? "h-8 w-8" : ""
                 }`}
                 style={{
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                  color: "var(--bsky-text-secondary)",
+                  backgroundColor: "var(--asph-bg-tertiary)",
+                  color: "var(--asph-text-secondary)",
                 }}
                 title="Add image or video"
               >
@@ -708,8 +708,8 @@ export function BaseComposer({
                   isInline ? "h-8 w-8" : ""
                 }`}
                 style={{
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                  color: "var(--bsky-text-secondary)",
+                  backgroundColor: "var(--asph-bg-tertiary)",
+                  color: "var(--asph-text-secondary)",
                 }}
                 title="Add emoji"
               >
@@ -736,7 +736,7 @@ export function BaseComposer({
                 : "flex items-center gap-2 rounded-full px-4 py-2"
             } transition-all hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50`}
             style={{
-              backgroundColor: "var(--bsky-primary)",
+              backgroundColor: "var(--asph-primary)",
               color: "white",
             }}
             title={
@@ -761,8 +761,8 @@ export function BaseComposer({
               disabled={isSubmitting}
               className="rounded-full border px-4 py-2"
               style={{
-                borderColor: "var(--bsky-border-primary)",
-                color: "var(--bsky-text-secondary)",
+                borderColor: "var(--asph-border-primary)",
+                color: "var(--asph-text-secondary)",
               }}
             >
               Cancel

@@ -95,7 +95,7 @@ export const ThreadBreadcrumb: React.FC<ThreadBreadcrumbProps> = ({
     <div
       className={`flex items-center gap-1 overflow-x-auto ${className}`}
       style={{
-        backgroundColor: "var(--bsky-bg-tertiary)",
+        backgroundColor: "var(--asph-bg-tertiary)",
         borderRadius: "8px",
         padding: "8px 12px",
       }}
@@ -105,7 +105,7 @@ export const ThreadBreadcrumb: React.FC<ThreadBreadcrumbProps> = ({
         <span
           className="mr-2 flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
           style={{
-            backgroundColor: "var(--bsky-primary)",
+            backgroundColor: "var(--asph-primary)",
             color: "white",
           }}
           title={`Depth: ${depth} ${depth === 1 ? "level" : "levels"} deep`}
@@ -124,11 +124,11 @@ export const ThreadBreadcrumb: React.FC<ThreadBreadcrumbProps> = ({
                 <ChevronRight
                   size={14}
                   className="flex-shrink-0"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 />
                 <span
                   className="hidden flex-shrink-0 rounded px-1 py-0.5 text-xs sm:inline-flex"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                   title={`${displayPath.hiddenCount} posts hidden`}
                 >
                   <MoreHorizontal size={14} />
@@ -149,7 +149,7 @@ export const ThreadBreadcrumb: React.FC<ThreadBreadcrumbProps> = ({
                 <ChevronRight
                   size={14}
                   className="flex-shrink-0"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 />
               )}
               <button
@@ -162,8 +162,8 @@ export const ThreadBreadcrumb: React.FC<ThreadBreadcrumbProps> = ({
                 }`}
                 style={{
                   color: isCurrent
-                    ? "var(--bsky-text-primary)"
-                    : "var(--bsky-text-secondary)",
+                    ? "var(--asph-text-primary)"
+                    : "var(--asph-text-secondary)",
                 }}
                 title={`@${actualItem.post.author.handle}${
                   actualItem.post.author.displayName

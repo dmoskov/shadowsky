@@ -298,17 +298,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         aria-label="Command palette"
         className="relative z-10 w-full max-w-2xl rounded-lg shadow-2xl"
         style={{
-          backgroundColor: "var(--bsky-bg-primary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-primary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div
           className="flex items-center gap-3 border-b px-4 py-3"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
           <Search
             size={20}
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
             aria-hidden="true"
           />
           <input
@@ -319,14 +319,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             placeholder="Type a command or search..."
             aria-label="Search commands"
             className="flex-1 bg-transparent text-base outline-none placeholder:text-gray-500"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           />
           <kbd
             className="rounded px-2 py-1 text-xs font-medium"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              color: "var(--bsky-text-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              color: "var(--asph-text-secondary)",
+              border: "1px solid var(--asph-border-primary)",
             }}
           >
             ESC
@@ -335,13 +335,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
         <div
           ref={listRef}
-          className="bsky-scrollbar max-h-96 overflow-y-auto py-2"
-          style={{ borderTop: "1px solid var(--bsky-border-primary)" }}
+          className="asph-scrollbar max-h-96 overflow-y-auto py-2"
+          style={{ borderTop: "1px solid var(--asph-border-primary)" }}
         >
           {filteredCommands.length === 0 ? (
             <div
               className="px-4 py-8 text-center text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               No commands found
             </div>
@@ -351,7 +351,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                 <div key={section}>
                   <div
                     className="px-4 py-2 text-xs font-medium uppercase"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   >
                     {section}
                   </div>
@@ -369,11 +369,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                         }`}
                         style={{
                           backgroundColor: isSelected
-                            ? "var(--bsky-primary)"
+                            ? "var(--asph-primary)"
                             : "transparent",
                           color: isSelected
-                            ? "var(--bsky-text-primary)"
-                            : "var(--bsky-text-secondary)",
+                            ? "var(--asph-text-primary)"
+                            : "var(--asph-text-secondary)",
                         }}
                         onClick={() => {
                           cmd.action();
@@ -386,7 +386,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                           {cmd.description && (
                             <div
                               className="text-xs"
-                              style={{ color: "var(--bsky-text-tertiary)" }}
+                              style={{ color: "var(--asph-text-tertiary)" }}
                             >
                               {cmd.description}
                             </div>
@@ -396,9 +396,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                           <kbd
                             className="rounded px-2 py-1 text-xs font-medium"
                             style={{
-                              backgroundColor: "var(--bsky-bg-secondary)",
-                              color: "var(--bsky-text-secondary)",
-                              border: "1px solid var(--bsky-border-primary)",
+                              backgroundColor: "var(--asph-bg-secondary)",
+                              color: "var(--asph-text-secondary)",
+                              border: "1px solid var(--asph-border-primary)",
                             }}
                           >
                             {cmd.shortcut}
@@ -417,8 +417,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         <div
           className="flex items-center justify-between border-t px-4 py-2 text-xs"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            color: "var(--bsky-text-tertiary)",
+            borderColor: "var(--asph-border-primary)",
+            color: "var(--asph-text-tertiary)",
           }}
         >
           <div className="flex items-center gap-4">

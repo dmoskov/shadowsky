@@ -57,22 +57,22 @@ export const MultiAccountConfirmDialog: React.FC<
       }}
     >
       <div
-        className="bsky-card relative max-h-[90vh] w-full max-w-md overflow-hidden rounded-xl p-0"
+        className="asph-card relative max-h-[90vh] w-full max-w-md overflow-hidden rounded-xl p-0"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between px-4 py-3"
-          style={{ borderBottom: "1px solid var(--bsky-border-primary)" }}
+          style={{ borderBottom: "1px solid var(--asph-border-primary)" }}
         >
           <div className="flex items-center gap-2">
-            <AlertTriangle size={20} style={{ color: "var(--bsky-warning)" }} />
+            <AlertTriangle size={20} style={{ color: "var(--asph-warning)" }} />
             <h2
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Confirm Multi-Account Post
             </h2>
@@ -81,7 +81,7 @@ export const MultiAccountConfirmDialog: React.FC<
             onClick={onClose}
             className="rounded p-1 transition-colors hover:bg-white hover:bg-opacity-10"
           >
-            <X size={20} style={{ color: "var(--bsky-text-secondary)" }} />
+            <X size={20} style={{ color: "var(--asph-text-secondary)" }} />
           </button>
         </div>
 
@@ -89,7 +89,7 @@ export const MultiAccountConfirmDialog: React.FC<
         <div className="p-4">
           <p
             className="mb-4 text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             You are about to post{" "}
             {postCount > 1 ? `a ${postCount}-post thread` : "a post"}
@@ -100,7 +100,7 @@ export const MultiAccountConfirmDialog: React.FC<
 
           <div
             className="mb-4 max-h-48 overflow-y-auto rounded-lg p-2"
-            style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+            style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
           >
             {accounts.map((account) => (
               <div
@@ -120,7 +120,7 @@ export const MultiAccountConfirmDialog: React.FC<
                 ) : (
                   <div
                     className="flex h-8 w-8 items-center justify-center rounded-full"
-                    style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+                    style={{ backgroundColor: "var(--asph-bg-secondary)" }}
                   >
                     <User size={16} />
                   </div>
@@ -128,13 +128,13 @@ export const MultiAccountConfirmDialog: React.FC<
                 <div className="min-w-0 flex-1">
                   <p
                     className="truncate text-sm font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {account.displayName || account.handle}
                   </p>
                   <p
                     className="truncate text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     @{account.handle}
                   </p>
@@ -150,11 +150,11 @@ export const MultiAccountConfirmDialog: React.FC<
               checked={dontShowAgain}
               onChange={(e) => setDontShowAgain(e.target.checked)}
               className="h-4 w-4 rounded"
-              style={{ accentColor: "var(--bsky-primary)" }}
+              style={{ accentColor: "var(--asph-primary)" }}
             />
             <span
               className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Don't show this confirmation again
             </span>
@@ -166,8 +166,8 @@ export const MultiAccountConfirmDialog: React.FC<
               onClick={onClose}
               className="flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
               style={{
-                backgroundColor: "var(--bsky-bg-tertiary)",
-                color: "var(--bsky-text-primary)",
+                backgroundColor: "var(--asph-bg-tertiary)",
+                color: "var(--asph-text-primary)",
               }}
             >
               Cancel
@@ -175,7 +175,7 @@ export const MultiAccountConfirmDialog: React.FC<
             <button
               onClick={handleConfirm}
               className="flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
-              style={{ backgroundColor: "var(--bsky-primary)" }}
+              style={{ backgroundColor: "var(--asph-primary)" }}
             >
               Post to {accounts.length} Account{accounts.length > 1 ? "s" : ""}
             </button>

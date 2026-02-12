@@ -24,10 +24,10 @@ export const SuggestedAccounts: React.FC<SuggestedAccountsProps> = ({
     return (
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Users size={16} style={{ color: "var(--bsky-primary)" }} />
+          <Users size={16} style={{ color: "var(--asph-primary)" }} />
           <span
             className="text-sm font-medium"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {title}
           </span>
@@ -37,20 +37,20 @@ export const SuggestedAccounts: React.FC<SuggestedAccountsProps> = ({
             <div
               key={`suggested-skeleton-${i}`}
               className="flex animate-pulse items-center gap-2 rounded-lg p-2"
-              style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+              style={{ backgroundColor: "var(--asph-bg-secondary)" }}
             >
               <div
                 className="h-8 w-8 rounded-full"
-                style={{ backgroundColor: "var(--bsky-border-primary)" }}
+                style={{ backgroundColor: "var(--asph-border-primary)" }}
               />
               <div className="flex-1 space-y-1">
                 <div
                   className="h-3 w-16 rounded"
-                  style={{ backgroundColor: "var(--bsky-border-primary)" }}
+                  style={{ backgroundColor: "var(--asph-border-primary)" }}
                 />
                 <div
                   className="h-2 w-12 rounded"
-                  style={{ backgroundColor: "var(--bsky-border-primary)" }}
+                  style={{ backgroundColor: "var(--asph-border-primary)" }}
                 />
               </div>
             </div>
@@ -77,10 +77,10 @@ export const SuggestedAccounts: React.FC<SuggestedAccountsProps> = ({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Users size={16} style={{ color: "var(--bsky-primary)" }} />
+        <Users size={16} style={{ color: "var(--asph-primary)" }} />
         <span
           className="text-sm font-medium"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           {title}
         </span>
@@ -93,8 +93,8 @@ export const SuggestedAccounts: React.FC<SuggestedAccountsProps> = ({
             onClick={() => onAccountClick(actor.handle)}
             className="flex items-center gap-2 rounded-lg border p-2 text-left transition-all hover:border-blue-400 hover:shadow-sm"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              borderColor: "var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              borderColor: "var(--asph-border-primary)",
             }}
           >
             {actor.avatar ? (
@@ -106,7 +106,7 @@ export const SuggestedAccounts: React.FC<SuggestedAccountsProps> = ({
             ) : (
               <div
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                style={{ backgroundColor: "var(--bsky-primary)" }}
+                style={{ backgroundColor: "var(--asph-primary)" }}
               >
                 <span className="text-xs font-medium text-white">
                   {(actor.displayName || actor.handle).charAt(0).toUpperCase()}
@@ -116,13 +116,13 @@ export const SuggestedAccounts: React.FC<SuggestedAccountsProps> = ({
             <div className="min-w-0 flex-1">
               <div
                 className="truncate text-sm font-medium"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {actor.displayName || actor.handle}
               </div>
               <div
                 className="truncate text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 @{actor.handle}
               </div>

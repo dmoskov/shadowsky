@@ -141,16 +141,16 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div
         className="mx-4 flex max-h-[80vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl shadow-xl"
-        style={{ backgroundColor: "var(--bsky-bg-primary)" }}
+        style={{ backgroundColor: "var(--asph-bg-primary)" }}
       >
         <div
           className="border-b p-4"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
           <div className="mb-4 flex items-center justify-between">
             <h2
               className="text-xl font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Discover Feeds
             </h2>
@@ -158,7 +158,7 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
               onClick={onClose}
               className="rounded-full p-2 transition-colors hover:bg-gray-500 hover:bg-opacity-10"
             >
-              <X size={20} style={{ color: "var(--bsky-text-secondary)" }} />
+              <X size={20} style={{ color: "var(--asph-text-secondary)" }} />
             </button>
           </div>
 
@@ -166,7 +166,7 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
             <Search
               size={18}
               className="absolute left-3 top-1/2 -translate-y-1/2 transform"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             />
             <input
               type="text"
@@ -175,9 +175,9 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-lg border py-2 pl-10 pr-4 focus-visible:outline-none focus-visible:ring-2"
               style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                borderColor: "var(--bsky-border-primary)",
-                color: "var(--bsky-text-primary)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                borderColor: "var(--asph-border-primary)",
+                color: "var(--asph-text-primary)",
               }}
             />
           </div>
@@ -191,12 +191,12 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
               style={{
                 backgroundColor:
                   activeTab === "suggested"
-                    ? "var(--bsky-primary)"
+                    ? "var(--asph-primary)"
                     : "transparent",
                 color:
                   activeTab === "suggested"
                     ? "white"
-                    : "var(--bsky-text-secondary)",
+                    : "var(--asph-text-secondary)",
               }}
             >
               Suggested
@@ -209,12 +209,12 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
               style={{
                 backgroundColor:
                   activeTab === "popular"
-                    ? "var(--bsky-primary)"
+                    ? "var(--asph-primary)"
                     : "transparent",
                 color:
                   activeTab === "popular"
                     ? "white"
-                    : "var(--bsky-text-secondary)",
+                    : "var(--asph-text-secondary)",
               }}
             >
               Popular
@@ -222,11 +222,11 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
           </div>
         </div>
 
-        <div className="bsky-scrollbar flex-1 overflow-y-auto p-4">
+        <div className="asph-scrollbar flex-1 overflow-y-auto p-4">
           {isLoading ? (
             <div
               className="py-8 text-center"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Loading feeds...
             </div>
@@ -236,7 +236,7 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
                 <div
                   key={feed.uri}
                   className="flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
-                  style={{ borderColor: "var(--bsky-border-primary)" }}
+                  style={{ borderColor: "var(--asph-border-primary)" }}
                 >
                   {feed.avatar ? (
                     <img
@@ -247,11 +247,11 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
                   ) : (
                     <div
                       className="flex h-12 w-12 items-center justify-center rounded-lg"
-                      style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+                      style={{ backgroundColor: "var(--asph-bg-secondary)" }}
                     >
                       <Hash
                         size={20}
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       />
                     </div>
                   )}
@@ -261,13 +261,13 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
                       <div>
                         <h3
                           className="font-semibold"
-                          style={{ color: "var(--bsky-text-primary)" }}
+                          style={{ color: "var(--asph-text-primary)" }}
                         >
                           {feed.displayName}
                         </h3>
                         <p
                           className="mt-1 text-sm"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           by @{feed.creator.handle}
                         </p>
@@ -284,12 +284,12 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
                         style={{
                           backgroundColor: isFeedSaved(feed.uri)
                             ? "transparent"
-                            : "var(--bsky-primary)",
+                            : "var(--asph-primary)",
                           borderColor: isFeedSaved(feed.uri)
-                            ? "var(--bsky-border-primary)"
+                            ? "var(--asph-border-primary)"
                             : "transparent",
                           color: isFeedSaved(feed.uri)
-                            ? "var(--bsky-text-secondary)"
+                            ? "var(--asph-text-secondary)"
                             : "white",
                         }}
                       >
@@ -310,7 +310,7 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
                     {feed.description && (
                       <p
                         className="mt-2 text-sm"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         {feed.description}
                       </p>
@@ -319,7 +319,7 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
                     <div className="mt-2 flex items-center gap-4">
                       <span
                         className="text-sm"
-                        style={{ color: "var(--bsky-text-tertiary)" }}
+                        style={{ color: "var(--asph-text-tertiary)" }}
                       >
                         <Users size={14} className="mr-1 inline" />
                         {feed.likeCount || 0} likes
@@ -332,7 +332,7 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
           ) : (
             <div
               className="py-8 text-center"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               No feeds found
             </div>

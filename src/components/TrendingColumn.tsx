@@ -51,15 +51,15 @@ const TrendingColumnComponent: React.FC<TrendingColumnProps> = ({
     <div className="flex h-full flex-col">
       {/* Header */}
       <div
-        className="bsky-glass sticky top-0 z-20 border-b"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        className="asph-glass sticky top-0 z-20 border-b"
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         <div className="flex items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-2">
-            <TrendingUp size={20} style={{ color: "var(--bsky-primary)" }} />
+            <TrendingUp size={20} style={{ color: "var(--asph-primary)" }} />
             <h2
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Trending
             </h2>
@@ -67,7 +67,7 @@ const TrendingColumnComponent: React.FC<TrendingColumnProps> = ({
           <div className="flex items-center gap-2">
             <span
               className="text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               {formatLastRefresh()}
             </span>
@@ -77,7 +77,7 @@ const TrendingColumnComponent: React.FC<TrendingColumnProps> = ({
               className={`rounded-full p-1.5 transition-all hover:bg-gray-200 dark:hover:bg-gray-700 ${
                 isLoading ? "animate-spin" : ""
               }`}
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
               aria-label="Refresh trending"
               title="Refresh trending"
             >
@@ -88,7 +88,7 @@ const TrendingColumnComponent: React.FC<TrendingColumnProps> = ({
       </div>
 
       {/* Content */}
-      <div className="bsky-scrollbar flex-1 overflow-y-auto">
+      <div className="asph-scrollbar flex-1 overflow-y-auto">
         {/* Loading State */}
         {isLoading && trends.length === 0 && (
           <div className="flex items-center justify-center p-8">
@@ -101,7 +101,7 @@ const TrendingColumnComponent: React.FC<TrendingColumnProps> = ({
           <div className="p-4 text-center">
             <p
               className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Failed to load trending topics
             </p>
@@ -118,7 +118,7 @@ const TrendingColumnComponent: React.FC<TrendingColumnProps> = ({
         {!isLoading && !error && (
           <div
             className="divide-y"
-            style={{ borderColor: "var(--bsky-border-primary)" }}
+            style={{ borderColor: "var(--asph-border-primary)" }}
           >
             {/* Detailed Trends */}
             {trends.length > 0 && (
@@ -126,7 +126,7 @@ const TrendingColumnComponent: React.FC<TrendingColumnProps> = ({
                 <div className="px-4 py-2">
                   <span
                     className="text-xs font-medium uppercase tracking-wide"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   >
                     Trending Now
                   </span>
@@ -151,7 +151,7 @@ const TrendingColumnComponent: React.FC<TrendingColumnProps> = ({
                 <div className="px-4 py-2">
                   <span
                     className="text-xs font-medium uppercase tracking-wide"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   >
                     Popular Topics
                   </span>
@@ -173,11 +173,11 @@ const TrendingColumnComponent: React.FC<TrendingColumnProps> = ({
                 <TrendingUp
                   size={48}
                   className="mx-auto mb-4 opacity-30"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 />
                 <p
                   className="text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   No trending topics available
                 </p>
@@ -190,11 +190,11 @@ const TrendingColumnComponent: React.FC<TrendingColumnProps> = ({
       {/* Footer with auto-refresh info */}
       <div
         className="border-t px-4 py-2 text-center"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         <span
           className="text-xs"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           Auto-refreshes every {Math.round(TRENDING_CACHE_TTL / 60000)} minutes
         </span>
@@ -250,8 +250,8 @@ const TrendingItem: React.FC<TrendingItemProps> = ({
         className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium"
         style={{
           backgroundColor:
-            rank <= 3 ? "var(--bsky-primary)" : "var(--bsky-bg-secondary)",
-          color: rank <= 3 ? "white" : "var(--bsky-text-secondary)",
+            rank <= 3 ? "var(--asph-primary)" : "var(--asph-bg-secondary)",
+          color: rank <= 3 ? "white" : "var(--asph-text-secondary)",
         }}
       >
         {rank}
@@ -262,7 +262,7 @@ const TrendingItem: React.FC<TrendingItemProps> = ({
         <div className="flex items-center gap-2">
           <span
             className="truncate font-medium"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             {topic}
           </span>
@@ -276,7 +276,7 @@ const TrendingItem: React.FC<TrendingItemProps> = ({
           {category && (
             <span
               className="text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               {category}
             </span>
@@ -284,7 +284,7 @@ const TrendingItem: React.FC<TrendingItemProps> = ({
           {postCount && (
             <span
               className="text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               {formatCount(postCount)} posts
             </span>
@@ -296,7 +296,7 @@ const TrendingItem: React.FC<TrendingItemProps> = ({
       <Search
         size={16}
         className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-        style={{ color: "var(--bsky-text-tertiary)" }}
+        style={{ color: "var(--asph-text-tertiary)" }}
       />
     </button>
   );

@@ -1,7 +1,7 @@
 {
   "@context": "https://www.w3.org/ns/solid/oidc-context.jsonld",
   "client_id": "https://shadowsky.io/client-metadata.json",
-  "client_name": "ShadowSky",
+  "client_name": "Asphodel",
   "client_uri": "https://shadowsky.io",
   "logo_uri": "https://shadowsky.io/butterfly-icon.svg",
   "tos_uri": "https://shadowsky.io/terms",

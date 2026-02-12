@@ -231,7 +231,7 @@ export const ComposerToolbar: React.FC<ComposerToolbarProps> = ({
         {/* Progressive disclosure toggle */}
         {enableProgressiveDisclosure && (
           <button
-            className="bsky-button-secondary flex items-center gap-1 px-2 py-1 text-xs"
+            className="asph-button-secondary flex items-center gap-1 px-2 py-1 text-xs"
             onClick={toggleDisclosure}
             aria-label={`Switch to ${disclosureLevel === "advanced" ? "basic" : "more"} features`}
           >
@@ -259,7 +259,7 @@ export const ComposerToolbar: React.FC<ComposerToolbarProps> = ({
       {enableProgressiveDisclosure && disclosureLevel !== "primary" && (
         <div
           className="flex items-center gap-2 text-xs"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           <div className="flex gap-1">
             <span className="h-1.5 w-6 rounded-full bg-blue-500 transition-colors" />
@@ -313,7 +313,7 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
   return (
     <div className="group relative">
       <button
-        className={`bsky-button-secondary relative flex items-center gap-2 ${
+        className={`asph-button-secondary relative flex items-center gap-2 ${
           active ? "ring-2 ring-blue-400" : ""
         } ${loading ? "animate-pulse" : ""}`}
         onClick={onClick}
@@ -325,7 +325,7 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
         {badge !== undefined && (
           <span
             className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium text-white"
-            style={{ background: "var(--bsky-primary)" }}
+            style={{ background: "var(--asph-primary)" }}
           >
             {badge}
           </span>

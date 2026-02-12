@@ -30,7 +30,7 @@ export interface MultiAccountPostingSettings {
 }
 
 // Define the app preferences stored as custom record
-export interface ShadowSkyPreferences {
+export interface AsphodelPreferences {
   $type: "com.shadowsky.preferences";
   columnStorageType: "local" | "atproto";
   draftStorageType: "local" | "custom";
@@ -52,7 +52,7 @@ export interface ShadowSkyPreferences {
 }
 
 // Column data stored in preferences
-export interface ShadowSkyColumns {
+export interface AsphodelColumns {
   $type: "com.shadowsky.columns";
   columns: Array<{
     id: string;
@@ -68,7 +68,7 @@ export interface ShadowSkyColumns {
 }
 
 // Bookmark data stored as singleton
-export interface ShadowSkyBookmarks {
+export interface AsphodelBookmarks {
   $type: "com.shadowsky.bookmarks";
   bookmarks: Array<{
     uri: string;
@@ -87,7 +87,7 @@ export interface ShadowSkyBookmarks {
 }
 
 // Draft data stored as singleton
-export interface ShadowSkyDrafts {
+export interface AsphodelDrafts {
   $type: "com.shadowsky.drafts";
   drafts: Array<{
     id: string;
@@ -191,7 +191,7 @@ export class AppPreferencesService {
 
       if (response.data.value) {
         const shadowSkyPref = response.data
-          .value as unknown as ShadowSkyPreferences;
+          .value as unknown as AsphodelPreferences;
         logger.log("Loaded from AT Protocol:", shadowSkyPref);
         // Convert from stored format
         const prefs: AppPreferencesRecord = {
@@ -275,7 +275,7 @@ export class AppPreferencesService {
       });
 
       // Save to AT Protocol as custom record
-      const shadowSkyPref: ShadowSkyPreferences = {
+      const shadowSkyPref: AsphodelPreferences = {
         $type: PREFERENCES_COLLECTION,
         columnStorageType: updatedPrefs.columnStorageType || "local",
         draftStorageType: updatedPrefs.draftStorageType || "local",
@@ -374,7 +374,7 @@ export class AppPreferencesService {
         this.saveToLocalStorage(defaultPrefs);
       } else {
         try {
-          const shadowSkyPref: ShadowSkyPreferences = {
+          const shadowSkyPref: AsphodelPreferences = {
             $type: AT_PROTO_COLLECTIONS.PREFERENCES,
             columnStorageType: defaultPrefs.columnStorageType,
             draftStorageType: defaultPrefs.draftStorageType,
@@ -432,7 +432,7 @@ export class AppPreferencesService {
   }
 
   // Column data methods
-  async getColumns(): Promise<ShadowSkyColumns | null> {
+  async getColumns(): Promise<AsphodelColumns | null> {
     if (!this.agent) {
       logger.log("No agent available, cannot fetch columns");
       return null;
@@ -458,7 +458,7 @@ export class AppPreferencesService {
       }, "getColumns");
 
       if (response.data.value) {
-        return response.data.value as unknown as ShadowSkyColumns;
+        return response.data.value as unknown as AsphodelColumns;
       }
     } catch (error: unknown) {
       // 400 error means record doesn't exist yet
@@ -476,14 +476,14 @@ export class AppPreferencesService {
     };
   }
 
-  async updateColumns(columns: ShadowSkyColumns["columns"]): Promise<boolean> {
+  async updateColumns(columns: AsphodelColumns["columns"]): Promise<boolean> {
     if (!this.agent) {
       logger.log("No agent available, cannot update columns");
       return false;
     }
 
     try {
-      const columnsPref: ShadowSkyColumns = {
+      const columnsPref: AsphodelColumns = {
         $type: COLUMNS_COLLECTION,
         columns: columns,
         version: 1,

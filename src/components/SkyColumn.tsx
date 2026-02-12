@@ -396,7 +396,7 @@ const SkyColumn = memo(
                 ).current = el;
                 gpuScrollRef(el);
               }}
-              className="gpu-scroll-container bsky-scrollbar h-full overflow-y-auto overflow-x-hidden"
+              className="gpu-scroll-container asph-scrollbar h-full overflow-y-auto overflow-x-hidden"
             >
               {content}
             </div>

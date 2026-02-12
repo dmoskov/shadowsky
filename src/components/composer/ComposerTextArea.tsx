@@ -68,9 +68,9 @@ export const ComposerTextArea: React.FC<ComposerTextAreaProps> = ({
           placeholder="What's on your mind?"
           className="composer-textarea font-inherit w-full rounded-lg p-4 transition-all focus-visible:border-blue-500"
           style={{
-            background: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
-            color: "var(--bsky-text-primary)",
+            background: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
+            color: "var(--asph-text-primary)",
             outline: "none",
           }}
           disabled={isPosting}
@@ -83,11 +83,11 @@ export const ComposerTextArea: React.FC<ComposerTextAreaProps> = ({
           <div className="mb-2 flex items-center gap-2">
             <Sparkles
               size={14}
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             />
             <span
               className="text-xs font-medium"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               Suggested Hashtags
             </span>
@@ -101,19 +101,19 @@ export const ComposerTextArea: React.FC<ComposerTextAreaProps> = ({
                 disabled={isPosting}
                 className="group relative flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-all hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 dark:hover:bg-opacity-20"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
                   borderColor:
                     suggestion.relevance > 0.7
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-border-primary)",
+                  color: "var(--asph-text-primary)",
                 }}
               >
                 <span>#{suggestion.tag}</span>
                 {suggestion.isTrending && (
                   <span
                     className="text-xs"
-                    style={{ color: "var(--bsky-primary)" }}
+                    style={{ color: "var(--asph-primary)" }}
                     title="Trending"
                   >
                     🔥
@@ -122,7 +122,7 @@ export const ComposerTextArea: React.FC<ComposerTextAreaProps> = ({
                 {suggestion.relevance > 0.7 && (
                   <span
                     className="absolute -right-1 -top-1 flex h-2 w-2 rounded-full"
-                    style={{ background: "var(--bsky-primary)" }}
+                    style={{ background: "var(--asph-primary)" }}
                     title="Highly relevant"
                   />
                 )}

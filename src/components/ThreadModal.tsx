@@ -1003,19 +1003,19 @@ export function ThreadModal({
         {...swipeHandlers}
         className="modal-backdrop thread-modal-container z-[101] p-0 sm:p-4 md:p-8"
       >
-        <div className="modal-container modal-5xl flex flex-col bg-bsky-bg-primary sm:max-h-[90vh] sm:rounded-2xl sm:shadow-2xl">
+        <div className="modal-container modal-5xl flex flex-col bg-asph-bg-primary sm:max-h-[90vh] sm:rounded-2xl sm:shadow-2xl">
           {/* Header with close button */}
           <div
             className="flex flex-shrink-0 items-center justify-between border-b px-3 py-2 sm:px-4 sm:py-3 md:px-6 md:py-4"
             style={{
-              backgroundColor: "var(--bsky-bg-primary)",
-              borderColor: "var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-primary)",
+              borderColor: "var(--asph-border-primary)",
             }}
           >
             <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
               <h2
                 className="text-base font-semibold sm:text-lg md:text-xl"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 Thread
               </h2>
@@ -1025,8 +1025,8 @@ export function ThreadModal({
                   <span
                     className="xs:inline-block hidden rounded-full px-2 py-0.5 text-xs"
                     style={{
-                      backgroundColor: "var(--bsky-bg-tertiary)",
-                      color: "var(--bsky-text-secondary)",
+                      backgroundColor: "var(--asph-bg-tertiary)",
+                      color: "var(--asph-text-secondary)",
                     }}
                   >
                     {posts.length} posts
@@ -1034,11 +1034,11 @@ export function ThreadModal({
                   {/* Mobile progress indicator - shows current position */}
                   <div
                     className="flex items-center gap-1.5 text-xs sm:hidden"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   >
                     <span
                       className="font-medium"
-                      style={{ color: "var(--bsky-primary)" }}
+                      style={{ color: "var(--asph-primary)" }}
                     >
                       {focusedPostIndex + 1}
                     </span>
@@ -1060,7 +1060,7 @@ export function ThreadModal({
                   }`}
                   style={
                     !showAnalytics
-                      ? { color: "var(--bsky-text-secondary)" }
+                      ? { color: "var(--asph-text-secondary)" }
                       : {}
                   }
                   title="Toggle thread analytics"
@@ -1077,7 +1077,7 @@ export function ThreadModal({
                   handleClose();
                 }}
                 className="-mr-1 rounded-full p-3 transition-all hover:scale-110 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700 sm:mr-0 sm:p-2"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
                 aria-label="Close thread"
               >
                 <X size={24} className="sm:h-6 sm:w-6" />
@@ -1094,7 +1094,7 @@ export function ThreadModal({
               ).current = el;
               gpuScrollRef(el);
             }}
-            className="gpu-scroll-container bsky-scrollbar flex-1 overflow-y-auto"
+            className="gpu-scroll-container asph-scrollbar flex-1 overflow-y-auto"
             style={{ minHeight: 0 }}
           >
             <div className="mx-auto max-w-3xl p-4 md:p-8">
@@ -1107,11 +1107,11 @@ export function ThreadModal({
                   <div className="mx-auto max-w-md space-y-4">
                     <div
                       className="rounded-lg p-6"
-                      style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+                      style={{ backgroundColor: "var(--asph-bg-secondary)" }}
                     >
                       <p
                         className="mb-2 text-lg font-medium"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {error.message === "POST_NOT_FOUND"
                           ? "Post Not Found"
@@ -1125,7 +1125,7 @@ export function ThreadModal({
                       </p>
                       <p
                         className="text-sm"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         {error.message === "POST_NOT_FOUND"
                           ? "This post may have been deleted or is no longer available."
@@ -1143,7 +1143,7 @@ export function ThreadModal({
                         <details className="mt-4">
                           <summary
                             className="cursor-pointer text-xs"
-                            style={{ color: "var(--bsky-text-tertiary)" }}
+                            style={{ color: "var(--asph-text-tertiary)" }}
                           >
                             Debug Info
                           </summary>
@@ -1173,7 +1173,7 @@ export function ThreadModal({
                           onClick={() => refetch()}
                           className="mt-4 rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-80"
                           style={{
-                            backgroundColor: "var(--bsky-primary)",
+                            backgroundColor: "var(--asph-primary)",
                             color: "white",
                           }}
                         >
@@ -1185,7 +1185,7 @@ export function ThreadModal({
                     <button
                       onClick={onClose}
                       className="text-sm underline"
-                      style={{ color: "var(--bsky-text-tertiary)" }}
+                      style={{ color: "var(--asph-text-tertiary)" }}
                     >
                       Close
                     </button>
@@ -1308,8 +1308,8 @@ export function ThreadModal({
                 ref={composerRef}
                 className="flex-shrink-0 border-t"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  borderColor: "var(--asph-border-primary)",
                 }}
               >
                 <div className="mx-auto max-w-3xl p-4 md:p-6">
@@ -1413,12 +1413,12 @@ export function ThreadModal({
               disabled={focusedPostIndex === 0}
               className="flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all active:scale-95 disabled:opacity-40"
               style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                border: "1px solid var(--bsky-border-primary)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                border: "1px solid var(--asph-border-primary)",
                 color:
                   focusedPostIndex === 0
-                    ? "var(--bsky-text-tertiary)"
-                    : "var(--bsky-text-primary)",
+                    ? "var(--asph-text-tertiary)"
+                    : "var(--asph-text-primary)",
               }}
               aria-label="Previous post"
             >
@@ -1429,12 +1429,12 @@ export function ThreadModal({
               disabled={focusedPostIndex >= posts.length - 1}
               className="flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all active:scale-95 disabled:opacity-40"
               style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                border: "1px solid var(--bsky-border-primary)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                border: "1px solid var(--asph-border-primary)",
                 color:
                   focusedPostIndex >= posts.length - 1
-                    ? "var(--bsky-text-tertiary)"
-                    : "var(--bsky-text-primary)",
+                    ? "var(--asph-text-tertiary)"
+                    : "var(--asph-text-primary)",
               }}
               aria-label="Next post"
             >

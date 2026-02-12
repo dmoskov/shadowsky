@@ -37,17 +37,17 @@ const TOAST_ICONS: Record<ToastType, typeof CheckCircle> = {
 };
 
 const TOAST_COLORS: Record<ToastType, string> = {
-  success: "bg-bsky-success",
-  error: "bg-bsky-error",
-  warning: "bg-bsky-warning",
-  info: "bg-bsky-info",
+  success: "bg-asph-success",
+  error: "bg-asph-error",
+  warning: "bg-asph-warning",
+  info: "bg-asph-info",
 };
 
 const TOAST_BORDER_COLORS: Record<ToastType, string> = {
-  success: "border-l-bsky-success",
-  error: "border-l-bsky-error",
-  warning: "border-l-bsky-warning",
-  info: "border-l-bsky-info",
+  success: "border-l-asph-success",
+  error: "border-l-asph-error",
+  warning: "border-l-asph-warning",
+  info: "border-l-asph-info",
 };
 
 /** Priority indicator styling */
@@ -57,8 +57,8 @@ const PRIORITY_INDICATORS: Record<
 > = {
   low: null, // No indicator for low priority
   normal: null, // No indicator for normal priority
-  high: { label: "High Priority", className: "bg-bsky-warning text-white" },
-  urgent: { label: "Urgent", className: "bg-bsky-error text-white" },
+  high: { label: "High Priority", className: "bg-asph-warning text-white" },
+  urgent: { label: "Urgent", className: "bg-asph-error text-white" },
 };
 
 const SWIPE_THRESHOLD = 100;
@@ -235,7 +235,7 @@ export function Toast({
       role="status"
       aria-live="polite"
       aria-atomic="true"
-      className={`pointer-events-auto relative flex w-full max-w-sm items-start gap-3 rounded-lg border border-l-4 border-bsky-border-primary bg-bsky-bg-secondary p-4 shadow-lg ${borderColorClass} ${isExiting ? "animate-toast-out" : "animate-toast-in"} ${isDragging ? "cursor-grabbing" : "cursor-grab"} `}
+      className={`pointer-events-auto relative flex w-full max-w-sm items-start gap-3 rounded-lg border border-l-4 border-asph-border-primary bg-asph-bg-secondary p-4 shadow-lg ${borderColorClass} ${isExiting ? "animate-toast-out" : "animate-toast-in"} ${isDragging ? "cursor-grabbing" : "cursor-grab"} `}
       style={{
         transform: `translateX(${translateX}px)`,
         opacity: translateX > 0 ? 1 - translateX / 300 : 1,
@@ -267,12 +267,12 @@ export function Toast({
           </span>
         )}
         <div className="flex items-center gap-2">
-          <p className="flex-1 break-words text-sm font-medium text-bsky-text-primary">
+          <p className="flex-1 break-words text-sm font-medium text-asph-text-primary">
             {toast.message}
           </p>
           {/* Countdown timer */}
           {toast.showCountdown && remainingTime > 0 && (
-            <span className="flex-shrink-0 font-mono text-xs text-bsky-text-secondary">
+            <span className="flex-shrink-0 font-mono text-xs text-asph-text-secondary">
               {Math.ceil(remainingTime / 1000)}s
             </span>
           )}
@@ -286,16 +286,16 @@ export function Toast({
               handleAction();
             }}
             disabled={actionTriggered}
-            className="hover:bg-bsky-primary-hover mt-2 min-h-[44px] rounded-md bg-bsky-primary px-4 py-2 text-sm font-medium text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bsky-primary disabled:cursor-not-allowed disabled:opacity-50"
+            className="hover:bg-asph-primary-hover mt-2 min-h-[44px] rounded-md bg-asph-primary px-4 py-2 text-sm font-medium text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-asph-primary disabled:cursor-not-allowed disabled:opacity-50"
           >
             {toast.action.label}
           </button>
         )}
         {/* Progress bar for countdown */}
         {toast.showCountdown && toast.duration > 0 && (
-          <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-bsky-bg-tertiary">
+          <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-asph-bg-tertiary">
             <div
-              className="h-full bg-bsky-warning transition-all duration-100 ease-linear"
+              className="h-full bg-asph-warning transition-all duration-100 ease-linear"
               style={{
                 width: `${(remainingTime / toast.duration) * 100}%`,
               }}
@@ -311,7 +311,7 @@ export function Toast({
             e.stopPropagation();
             dismiss(true);
           }}
-          className="flex min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-md p-2 text-bsky-text-tertiary transition-colors duration-150 hover:bg-bsky-bg-hover hover:text-bsky-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bsky-primary"
+          className="flex min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-md p-2 text-asph-text-tertiary transition-colors duration-150 hover:bg-asph-bg-hover hover:text-asph-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-asph-primary"
           aria-label="Dismiss notification"
         >
           <X className="h-4 w-4" aria-hidden="true" />
@@ -350,7 +350,7 @@ export function ToastContainer({
         {/* Queue indicator - shows when there are more toasts waiting */}
         {queuedCount > 0 && (
           <div
-            className="pointer-events-auto flex w-full max-w-sm items-center justify-center gap-2 rounded-lg border border-bsky-border-primary bg-bsky-bg-tertiary px-3 py-2 text-xs text-bsky-text-secondary shadow-sm"
+            className="pointer-events-auto flex w-full max-w-sm items-center justify-center gap-2 rounded-lg border border-asph-border-primary bg-asph-bg-tertiary px-3 py-2 text-xs text-asph-text-secondary shadow-sm"
             role="status"
             aria-label={`${queuedCount} more notification${queuedCount > 1 ? "s" : ""} waiting`}
           >

@@ -42,8 +42,8 @@ export const ColumnMigrationNotice: React.FC = () => {
     <div
       className="fixed bottom-4 right-4 max-w-md rounded-lg p-4 shadow-lg"
       style={{
-        backgroundColor: "var(--bsky-bg-secondary)",
-        border: "1px solid var(--bsky-border-primary)",
+        backgroundColor: "var(--asph-bg-secondary)",
+        border: "1px solid var(--asph-border-primary)",
         zIndex: 1000,
       }}
     >
@@ -52,13 +52,13 @@ export const ColumnMigrationNotice: React.FC = () => {
         <div className="flex-1">
           <h3
             className="mb-1 font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Column Storage Updated
           </h3>
           <p
             className="mb-3 text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Your columns have been migrated to the new storage system. You can
             now sync them across devices using AT Protocol!
@@ -74,7 +74,7 @@ export const ColumnMigrationNotice: React.FC = () => {
             <button
               onClick={handleDismiss}
               className="rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Later
             </button>
@@ -87,7 +87,7 @@ export const ColumnMigrationNotice: React.FC = () => {
         >
           <X
             className="h-4 w-4"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           />
         </button>
       </div>

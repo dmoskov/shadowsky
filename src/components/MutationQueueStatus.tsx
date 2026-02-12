@@ -149,7 +149,7 @@ export const MutationQueueStatus: React.FC = () => {
             <>
               <span
                 className="text-xs font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 {getCompactLabel()}
               </span>
@@ -161,11 +161,11 @@ export const MutationQueueStatus: React.FC = () => {
         {isExpanded && (
           <div
             className="border-t px-3 pb-3 pt-2"
-            style={{ borderColor: "var(--bsky-border)" }}
+            style={{ borderColor: "var(--asph-border)" }}
           >
             <p
               className="mb-3 text-xs"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               {config.message}
             </p>
@@ -173,7 +173,7 @@ export const MutationQueueStatus: React.FC = () => {
             {/* Status details */}
             <div
               className="mb-3 flex items-center gap-3 text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               <div className="flex items-center gap-1">
                 <Wifi
@@ -203,7 +203,7 @@ export const MutationQueueStatus: React.FC = () => {
                   <button
                     onClick={handleSync}
                     className="flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors"
-                    style={{ backgroundColor: "var(--bsky-primary)" }}
+                    style={{ backgroundColor: "var(--asph-primary)" }}
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
                     Sync now
@@ -214,9 +214,9 @@ export const MutationQueueStatus: React.FC = () => {
                   onClick={handleClear}
                   className="flex items-center justify-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-80"
                   style={{
-                    backgroundColor: "var(--bsky-bg-secondary)",
-                    borderColor: "var(--bsky-border)",
-                    color: "var(--bsky-text-secondary)",
+                    backgroundColor: "var(--asph-bg-secondary)",
+                    borderColor: "var(--asph-border)",
+                    color: "var(--asph-text-secondary)",
                   }}
                   title="Discard unsaved changes"
                 >
@@ -230,7 +230,7 @@ export const MutationQueueStatus: React.FC = () => {
             {failedCount > 0 && (
               <div
                 className="mt-3 flex items-start gap-1.5 text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 <HelpCircle className="mt-0.5 h-3 w-3 flex-shrink-0" />
                 <span>

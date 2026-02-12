@@ -1,8 +1,8 @@
-# Contributing to ShadowSky
+# Contributing to Asphodel
 
 ## Welcome Contributors!
 
-Thank you for your interest in contributing to ShadowSky! This document provides guidelines and instructions for contributing to the project. Please read through this guide before submitting your first contribution.
+Thank you for your interest in contributing to Asphodel! This document provides guidelines and instructions for contributing to the project. Please read through this guide before submitting your first contribution.
 
 ## Table of Contents
 
@@ -702,7 +702,7 @@ Contributors are recognized in:
 
 ## Thank You!
 
-Your contributions make ShadowSky better for everyone. We appreciate your time and effort in improving the project!
+Your contributions make Asphodel better for everyone. We appreciate your time and effort in improving the project!
 
 ---
 

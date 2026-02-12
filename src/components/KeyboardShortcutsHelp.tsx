@@ -106,26 +106,26 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="shortcuts-title"
-        className="modal-container modal-auto-height modal-4xl z-10 border border-bsky-border-primary bg-bsky-bg-primary"
+        className="modal-container modal-auto-height modal-4xl z-10 border border-asph-border-primary bg-asph-bg-primary"
       >
         {/* Header */}
         <div
           className="sticky top-0 z-10 flex items-center justify-between border-b px-6 py-4"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            backgroundColor: "var(--bsky-bg-primary)",
+            borderColor: "var(--asph-border-primary)",
+            backgroundColor: "var(--asph-bg-primary)",
           }}
         >
           <div className="flex items-center gap-3">
             <Command
               size={24}
-              style={{ color: "var(--bsky-primary)" }}
+              style={{ color: "var(--asph-primary)" }}
               aria-hidden="true"
             />
             <h2
               id="shortcuts-title"
               className="text-xl font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Keyboard Shortcuts
             </h2>
@@ -135,7 +135,7 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
             aria-label="Close keyboard shortcuts help"
             className="rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
           >
-            <X size={20} style={{ color: "var(--bsky-text-secondary)" }} />
+            <X size={20} style={{ color: "var(--asph-text-secondary)" }} />
           </button>
         </div>
 
@@ -145,7 +145,7 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
             <div key={group.category}>
               <h3
                 className="mb-3 text-sm font-semibold uppercase tracking-wide"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 {group.category}
               </h3>
@@ -157,7 +157,7 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
                   >
                     <span
                       className="text-sm"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       {shortcut.description}
                     </span>
@@ -167,7 +167,7 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
                           {key === "then" ? (
                             <span
                               className="px-1 text-xs"
-                              style={{ color: "var(--bsky-text-tertiary)" }}
+                              style={{ color: "var(--asph-text-tertiary)" }}
                             >
                               then
                             </span>
@@ -176,10 +176,10 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
                               <kbd
                                 className="min-w-[2rem] rounded px-2 py-1 text-center text-xs font-medium"
                                 style={{
-                                  backgroundColor: "var(--bsky-bg-secondary)",
-                                  color: "var(--bsky-text-primary)",
+                                  backgroundColor: "var(--asph-bg-secondary)",
+                                  color: "var(--asph-text-primary)",
                                   border:
-                                    "1px solid var(--bsky-border-primary)",
+                                    "1px solid var(--asph-border-primary)",
                                 }}
                               >
                                 {key}
@@ -189,7 +189,7 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
                                   <span
                                     className="text-xs"
                                     style={{
-                                      color: "var(--bsky-text-tertiary)",
+                                      color: "var(--asph-text-tertiary)",
                                     }}
                                   >
                                     +
@@ -211,8 +211,8 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
         <div
           className="border-t px-6 py-4 text-center text-xs"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            color: "var(--bsky-text-tertiary)",
+            borderColor: "var(--asph-border-primary)",
+            color: "var(--asph-text-tertiary)",
           }}
         >
           <p>

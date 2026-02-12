@@ -261,7 +261,7 @@ export const Spinner: React.FC<SpinnerProps> = ({
   return (
     <Loader
       size={SPINNER_SIZES[size]}
-      className={`animate-spin text-bsky-primary ${className}`}
+      className={`animate-spin text-asph-primary ${className}`}
       aria-label={ariaLabel}
       role="status"
     />
@@ -311,7 +311,7 @@ export const BorderSpinner: React.FC<BorderSpinnerProps> = ({
   color = "primary",
 }) => {
   const colorClasses = {
-    primary: "border-bsky-border-primary border-t-bsky-primary",
+    primary: "border-asph-border-primary border-t-asph-primary",
     current: "border-current/20 border-t-current",
     white: "border-white/30 border-t-white",
   };
@@ -368,20 +368,20 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
       case "skeleton":
         return (
           <div className="w-full animate-pulse space-y-3">
-            <div className="h-4 w-3/4 rounded bg-bsky-bg-tertiary" />
-            <div className="h-4 w-full rounded bg-bsky-bg-tertiary" />
-            <div className="h-4 w-2/3 rounded bg-bsky-bg-tertiary" />
+            <div className="h-4 w-3/4 rounded bg-asph-bg-tertiary" />
+            <div className="h-4 w-full rounded bg-asph-bg-tertiary" />
+            <div className="h-4 w-2/3 rounded bg-asph-bg-tertiary" />
           </div>
         );
 
       case "overlay":
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="flex flex-col items-center gap-3 rounded-lg bg-bsky-bg-secondary p-6 shadow-bsky-lg">
+            <div className="flex flex-col items-center gap-3 rounded-lg bg-asph-bg-secondary p-6 shadow-asph-lg">
               <Spinner size={size} aria-label={ariaLabel} />
               {message && (
                 <p
-                  className={`text-bsky-text-secondary ${TEXT_SIZES[size]} animate-pulse`}
+                  className={`text-asph-text-secondary ${TEXT_SIZES[size]} animate-pulse`}
                 >
                   {message}
                 </p>
@@ -397,7 +397,7 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
             <Spinner size={size} aria-label={ariaLabel} />
             {message && (
               <p
-                className={`text-bsky-text-secondary ${TEXT_SIZES[size]} animate-pulse`}
+                className={`text-asph-text-secondary ${TEXT_SIZES[size]} animate-pulse`}
               >
                 {message}
               </p>
@@ -442,15 +442,15 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
             blur ? "backdrop-blur-sm" : ""
           } ${
             blocking ? "pointer-events-auto" : "pointer-events-none"
-          } bg-bsky-bg-primary/60 transition-opacity duration-200 ${className}`}
+          } bg-asph-bg-primary/60 transition-opacity duration-200 ${className}`}
           role="status"
           aria-live="polite"
           aria-busy="true"
         >
-          <div className="bg-bsky-bg-secondary/90 flex flex-col items-center gap-3 rounded-lg p-4 shadow-bsky-md">
+          <div className="bg-asph-bg-secondary/90 flex flex-col items-center gap-3 rounded-lg p-4 shadow-asph-md">
             <Spinner size="lg" />
             {message && (
-              <p className="text-sm text-bsky-text-secondary">{message}</p>
+              <p className="text-sm text-asph-text-secondary">{message}</p>
             )}
           </div>
         </div>
@@ -677,14 +677,14 @@ class SuspenseErrorBoundary extends React.Component<
           aria-live="assertive"
         >
           <div className="text-center">
-            <p className="text-sm text-bsky-text-secondary">
+            <p className="text-sm text-asph-text-secondary">
               {this.props.componentName
                 ? `Failed to load ${this.props.componentName}`
                 : "Failed to load content"}
             </p>
             <button
               onClick={() => this.setState({ hasError: false, error: null })}
-              className="mt-2 text-sm text-bsky-primary hover:underline"
+              className="mt-2 text-sm text-asph-primary hover:underline"
             >
               Try again
             </button>
@@ -708,12 +708,12 @@ export const ColumnHeaderSkeleton: React.FC<{ className?: string }> = ({
     <div className={`animate-pulse p-4 ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-6 w-6 rounded-full bg-bsky-bg-tertiary" />
-          <div className="h-5 w-32 rounded bg-bsky-bg-tertiary" />
+          <div className="h-6 w-6 rounded-full bg-asph-bg-tertiary" />
+          <div className="h-5 w-32 rounded bg-asph-bg-tertiary" />
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-bsky-bg-tertiary" />
-          <div className="h-8 w-8 rounded-lg bg-bsky-bg-tertiary" />
+          <div className="h-8 w-8 rounded-lg bg-asph-bg-tertiary" />
+          <div className="h-8 w-8 rounded-lg bg-asph-bg-tertiary" />
         </div>
       </div>
     </div>

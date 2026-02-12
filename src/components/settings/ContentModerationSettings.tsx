@@ -520,13 +520,13 @@ export const ContentModerationSettings: React.FC = () => {
       <div>
         <h2
           className="text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Content Moderation
         </h2>
         <p
           className="mt-1 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Manage your content filtering using AT Protocol native features
         </p>
@@ -536,14 +536,14 @@ export const ContentModerationSettings: React.FC = () => {
       <div>
         <label
           className="mb-2 flex items-center gap-2 text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           <Shield size={16} />
           Muted Words
         </label>
         <p
           className="mb-3 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Hide posts containing these words or phrases. Syncs across all Bluesky
           apps.
@@ -560,9 +560,9 @@ export const ContentModerationSettings: React.FC = () => {
               placeholder="Add word or phrase to mute"
               className="flex-1 rounded-lg px-4 py-2 text-sm"
               style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                color: "var(--bsky-text-primary)",
-                border: "1px solid var(--bsky-border-primary)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                color: "var(--asph-text-primary)",
+                border: "1px solid var(--asph-border-primary)",
               }}
             />
             <button
@@ -570,7 +570,7 @@ export const ContentModerationSettings: React.FC = () => {
               disabled={!newMutedWord.trim() || isLoading}
               className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
               style={{
-                backgroundColor: "var(--bsky-primary)",
+                backgroundColor: "var(--asph-primary)",
               }}
             >
               <Plus size={16} />
@@ -581,8 +581,8 @@ export const ContentModerationSettings: React.FC = () => {
           <div
             className="rounded-lg p-3"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border-primary)",
             }}
           >
             <div className="flex flex-wrap gap-4">
@@ -590,11 +590,11 @@ export const ContentModerationSettings: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Tag
                   size={14}
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 />
                 <span
                   className="text-xs"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Match in:
                 </span>
@@ -608,8 +608,8 @@ export const ContentModerationSettings: React.FC = () => {
                   style={
                     !newWordTargets.includes("content")
                       ? {
-                          backgroundColor: "var(--bsky-bg-tertiary)",
-                          color: "var(--bsky-text-secondary)",
+                          backgroundColor: "var(--asph-bg-tertiary)",
+                          color: "var(--asph-text-secondary)",
                         }
                       : {}
                   }
@@ -626,8 +626,8 @@ export const ContentModerationSettings: React.FC = () => {
                   style={
                     !newWordTargets.includes("tag")
                       ? {
-                          backgroundColor: "var(--bsky-bg-tertiary)",
-                          color: "var(--bsky-text-secondary)",
+                          backgroundColor: "var(--asph-bg-tertiary)",
+                          color: "var(--asph-text-secondary)",
                         }
                       : {}
                   }
@@ -640,7 +640,7 @@ export const ContentModerationSettings: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Users
                   size={14}
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 />
                 <select
                   value={newWordActorTarget}
@@ -649,9 +649,9 @@ export const ContentModerationSettings: React.FC = () => {
                   }
                   className="rounded px-2 py-0.5 text-xs"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    color: "var(--bsky-text-primary)",
-                    border: "1px solid var(--bsky-border-primary)",
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    color: "var(--asph-text-primary)",
+                    border: "1px solid var(--asph-border-primary)",
                   }}
                 >
                   <option value="all">Everyone</option>
@@ -665,16 +665,16 @@ export const ContentModerationSettings: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Clock
                   size={14}
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 />
                 <select
                   value={newWordExpiration}
                   onChange={(e) => setNewWordExpiration(e.target.value)}
                   className="rounded px-2 py-0.5 text-xs"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    color: "var(--bsky-text-primary)",
-                    border: "1px solid var(--bsky-border-primary)",
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    color: "var(--asph-text-primary)",
+                    border: "1px solid var(--asph-border-primary)",
                   }}
                 >
                   <option value="never">Forever</option>
@@ -696,25 +696,25 @@ export const ContentModerationSettings: React.FC = () => {
                 key={word.id || `${word.value}-${index}`}
                 className="flex items-center gap-2 rounded-full px-3 py-1 text-sm"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  border: "1px solid var(--bsky-border-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  border: "1px solid var(--asph-border-primary)",
                 }}
                 title={`Targets: ${word.targets.join(", ")} | Applies to: ${word.actorTarget === "all" ? "Everyone" : "Except following"} | Expires: ${formatExpiration(word.expiresAt)}`}
               >
-                <span style={{ color: "var(--bsky-text-primary)" }}>
+                <span style={{ color: "var(--asph-text-primary)" }}>
                   {word.value}
                 </span>
                 {word.expiresAt && (
                   <Clock
                     size={12}
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   />
                 )}
                 <button
                   onClick={() => handleRemoveMutedWord(word)}
                   disabled={isLoading}
                   className="transition-colors hover:text-red-500 disabled:opacity-50"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   <X size={14} />
                 </button>
@@ -728,13 +728,13 @@ export const ContentModerationSettings: React.FC = () => {
       <div>
         <label
           className="mb-2 block text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Content Labels
         </label>
         <p
           className="mb-3 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Control how labeled content is displayed. These settings sync with
           Bluesky.
@@ -746,20 +746,20 @@ export const ContentModerationSettings: React.FC = () => {
               key={label.id}
               className="flex items-center justify-between rounded-lg p-3"
               style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                border: "1px solid var(--bsky-border-primary)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                border: "1px solid var(--asph-border-primary)",
               }}
             >
               <div>
                 <div
                   className="font-medium"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {label.name}
                 </div>
                 <div
                   className="text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   {label.description}
                 </div>
@@ -775,9 +775,9 @@ export const ContentModerationSettings: React.FC = () => {
                 disabled={isLoading}
                 className="rounded-lg px-3 py-1.5 text-sm"
                 style={{
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                  color: "var(--bsky-text-primary)",
-                  border: "1px solid var(--bsky-border-primary)",
+                  backgroundColor: "var(--asph-bg-tertiary)",
+                  color: "var(--asph-text-primary)",
+                  border: "1px solid var(--asph-border-primary)",
                 }}
               >
                 <option value="hide">Hide</option>
@@ -794,20 +794,20 @@ export const ContentModerationSettings: React.FC = () => {
         <div
           className="flex items-center justify-between rounded-lg p-4"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <div>
             <div
               className="font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Enable Adult Content
             </div>
             <div
               className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Allow viewing of adult-only content (you must be 18+)
             </div>
@@ -832,13 +832,13 @@ export const ContentModerationSettings: React.FC = () => {
       <div>
         <label
           className="mb-2 block text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Muted Users
         </label>
         <p
           className="mb-3 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           You won&apos;t see posts from muted users in your feeds
         </p>
@@ -852,9 +852,9 @@ export const ContentModerationSettings: React.FC = () => {
             placeholder="@handle"
             className="flex-1 rounded-lg px-4 py-2 text-sm"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              color: "var(--bsky-text-primary)",
-              border: "1px solid var(--bsky-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              color: "var(--asph-text-primary)",
+              border: "1px solid var(--asph-border-primary)",
             }}
           />
           <button
@@ -862,7 +862,7 @@ export const ContentModerationSettings: React.FC = () => {
             disabled={!newMuteHandle.trim() || isLoading}
             className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
             style={{
-              backgroundColor: "var(--bsky-primary)",
+              backgroundColor: "var(--asph-primary)",
             }}
           >
             Mute
@@ -876,20 +876,20 @@ export const ContentModerationSettings: React.FC = () => {
                 key={user.did}
                 className="flex items-center justify-between rounded-lg p-3"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  border: "1px solid var(--bsky-border-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  border: "1px solid var(--asph-border-primary)",
                 }}
               >
                 <div>
                   <div
                     className="font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {user.displayName || user.handle}
                   </div>
                   <div
                     className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     @{user.handle}
                   </div>
@@ -899,9 +899,9 @@ export const ContentModerationSettings: React.FC = () => {
                   disabled={isLoading}
                   className="rounded-lg px-3 py-1 text-sm font-medium transition-colors disabled:opacity-50"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    color: "var(--bsky-text-primary)",
-                    border: "1px solid var(--bsky-border-primary)",
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    color: "var(--asph-text-primary)",
+                    border: "1px solid var(--asph-border-primary)",
                   }}
                 >
                   Unmute
@@ -912,7 +912,7 @@ export const ContentModerationSettings: React.FC = () => {
         ) : (
           <p
             className="text-center text-sm"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             No muted users
           </p>
@@ -923,13 +923,13 @@ export const ContentModerationSettings: React.FC = () => {
       <div>
         <label
           className="mb-2 block text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Blocked Users
         </label>
         <p
           className="mb-3 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Blocked users cannot see your posts or interact with you
         </p>
@@ -941,20 +941,20 @@ export const ContentModerationSettings: React.FC = () => {
                 key={user.did}
                 className="flex items-center justify-between rounded-lg p-3"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  border: "1px solid var(--bsky-border-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  border: "1px solid var(--asph-border-primary)",
                 }}
               >
                 <div>
                   <div
                     className="font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {user.displayName || user.handle}
                   </div>
                   <div
                     className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     @{user.handle}
                   </div>
@@ -967,9 +967,9 @@ export const ContentModerationSettings: React.FC = () => {
                   disabled={isLoading || !user.blockUri}
                   className="rounded-lg px-3 py-1 text-sm font-medium transition-colors disabled:opacity-50"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    color: "var(--bsky-text-primary)",
-                    border: "1px solid var(--bsky-border-primary)",
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    color: "var(--asph-text-primary)",
+                    border: "1px solid var(--asph-border-primary)",
                   }}
                 >
                   Unblock
@@ -980,7 +980,7 @@ export const ContentModerationSettings: React.FC = () => {
         ) : (
           <p
             className="text-center text-sm"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             No blocked users
           </p>
@@ -992,8 +992,8 @@ export const ContentModerationSettings: React.FC = () => {
         <div
           className={`rounded-lg border p-3 text-sm ${
             message.type === "success"
-              ? "border-bsky-success/30 bg-bsky-success/10 text-bsky-success"
-              : "border-bsky-error/30 bg-bsky-error/10 text-bsky-error"
+              ? "border-asph-success/30 bg-asph-success/10 text-asph-success"
+              : "border-asph-error/30 bg-asph-error/10 text-asph-error"
           }`}
         >
           {message.text}

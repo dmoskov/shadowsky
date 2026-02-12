@@ -225,36 +225,36 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
               <HeartIcon
                 size={18}
                 filled
-                style={{ color: "var(--bsky-like)" }}
+                style={{ color: "var(--asph-like)" }}
               />
             );
           case "repost":
             return (
-              <RepostIcon size={18} style={{ color: "var(--bsky-repost)" }} />
+              <RepostIcon size={18} style={{ color: "var(--asph-repost)" }} />
             );
           case "follow":
             return (
-              <FollowIcon size={18} style={{ color: "var(--bsky-follow)" }} />
+              <FollowIcon size={18} style={{ color: "var(--asph-follow)" }} />
             );
           case "quote":
             return (
-              <QuoteIcon size={18} style={{ color: "var(--bsky-quote)" }} />
+              <QuoteIcon size={18} style={{ color: "var(--asph-quote)" }} />
             );
           case "starterpack-joined":
             return (
-              <FollowIcon size={18} style={{ color: "var(--bsky-follow)" }} />
+              <FollowIcon size={18} style={{ color: "var(--asph-follow)" }} />
             );
           case "like-via-repost":
             return (
               <HeartIcon
                 size={18}
                 filled
-                style={{ color: "var(--bsky-like)" }}
+                style={{ color: "var(--asph-like)" }}
               />
             );
           case "repost-via-repost":
             return (
-              <RepostIcon size={18} style={{ color: "var(--bsky-repost)" }} />
+              <RepostIcon size={18} style={{ color: "var(--asph-repost)" }} />
             );
           default:
             return null;
@@ -381,8 +381,8 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
 
       return (
         <div
-          className={`bsky-notification cursor-pointer px-3 py-3 ${
-            hasUnread ? "bsky-notification-unread" : ""
+          className={`asph-notification cursor-pointer px-3 py-3 ${
+            hasUnread ? "asph-notification-unread" : ""
           }`}
           onClick={handleClick}
           title="Cmd/Ctrl+Click to open in Bluesky"
@@ -409,15 +409,15 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                       <img
                         src={proxifyBskyImage(user.avatar)}
                         alt={user.handle}
-                        className={`bsky-avatar border-2 ${item.reason === "follow" ? "h-7 w-7" : "h-8 w-8"}`}
-                        style={{ borderColor: "var(--bsky-bg-primary)" }}
+                        className={`asph-avatar border-2 ${item.reason === "follow" ? "h-7 w-7" : "h-8 w-8"}`}
+                        style={{ borderColor: "var(--asph-bg-primary)" }}
                       />
                     ) : (
                       <div
-                        className={`bsky-avatar flex items-center justify-center border-2 ${item.reason === "follow" ? "h-7 w-7" : "h-8 w-8"}`}
+                        className={`asph-avatar flex items-center justify-center border-2 ${item.reason === "follow" ? "h-7 w-7" : "h-8 w-8"}`}
                         style={{
-                          background: "var(--bsky-bg-tertiary)",
-                          borderColor: "var(--bsky-bg-primary)",
+                          background: "var(--asph-bg-tertiary)",
+                          borderColor: "var(--asph-bg-primary)",
                         }}
                       >
                         <span className="text-xs font-semibold">
@@ -429,10 +429,10 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                 ))}
                 {remainingCount > 0 && (
                   <div
-                    className={`bsky-avatar flex items-center justify-center border-2 ${item.reason === "follow" ? "h-7 w-7" : "h-8 w-8"}`}
+                    className={`asph-avatar flex items-center justify-center border-2 ${item.reason === "follow" ? "h-7 w-7" : "h-8 w-8"}`}
                     style={{
-                      background: "var(--bsky-bg-secondary)",
-                      borderColor: "var(--bsky-bg-primary)",
+                      background: "var(--asph-bg-secondary)",
+                      borderColor: "var(--asph-bg-primary)",
                       zIndex: 0,
                     }}
                   >
@@ -452,9 +452,9 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                   <span
                     className="rounded-full px-2 py-0.5 text-xs font-medium"
                     style={{
-                      backgroundColor: "var(--bsky-bg-secondary)",
-                      color: "var(--bsky-text-secondary)",
-                      border: "1px solid var(--bsky-border-primary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      color: "var(--asph-text-secondary)",
+                      border: "1px solid var(--asph-border-primary)",
                     }}
                   >
                     {getNotificationTypeLabel(item.reason)}
@@ -466,16 +466,16 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
               <p className="text-sm">
                 <span
                   className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {formatUserSummary()}
                 </span>{" "}
-                <span style={{ color: "var(--bsky-text-secondary)" }}>
+                <span style={{ color: "var(--asph-text-secondary)" }}>
                   {getActionText()}
                 </span>
                 <span
                   className="ml-1 text-xs"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   ·{" "}
                   {formatDistanceToNow(new Date(item.latestTimestamp), {
@@ -488,7 +488,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
               {item.count > 2 && (
                 <p
                   className="mt-0.5 text-xs"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   {displayUsers.map((user, idx) => (
                     <span key={user.did}>
@@ -517,8 +517,8 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                     e.stopPropagation();
                     onExpand();
                   }}
-                  className="mt-2 flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-bsky-bg-secondary"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  className="mt-2 flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-asph-bg-secondary"
+                  style={{ color: "var(--asph-text-secondary)" }}
                   aria-expanded={isExpanded}
                   aria-label={
                     isExpanded
@@ -543,7 +543,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
               {hasUnread && (
                 <div
                   className="mt-1 h-2 w-2 animate-pulse rounded-full"
-                  style={{ backgroundColor: "var(--bsky-primary)" }}
+                  style={{ backgroundColor: "var(--asph-primary)" }}
                 ></div>
               )}
             </div>
@@ -563,8 +563,8 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                   <div
                     className="mt-3 rounded-lg p-4"
                     style={{
-                      backgroundColor: "var(--bsky-bg-secondary)",
-                      border: "1px solid var(--bsky-border-primary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      border: "1px solid var(--asph-border-primary)",
                       boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                     }}
                   >
@@ -572,7 +572,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500"></div>
                       <span
                         className="text-sm"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         Loading post content...
                       </span>
@@ -645,15 +645,15 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                   <div
                     className="mt-3 rounded-lg p-4"
                     style={{
-                      backgroundColor: "var(--bsky-bg-secondary)",
-                      border: "1px solid var(--bsky-border-primary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      border: "1px solid var(--asph-border-primary)",
                       boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                     }}
                   >
                     <div className="mb-2 flex items-center gap-2">
                       <span
                         className="text-xs font-medium"
-                        style={{ color: "var(--bsky-text-tertiary)" }}
+                        style={{ color: "var(--asph-text-tertiary)" }}
                       >
                         {item.reason === "quote"
                           ? "Quoting your post:"
@@ -663,26 +663,26 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                         <img
                           src={proxifyBskyImage(postAuthor.avatar)}
                           alt={postAuthor.handle}
-                          className="bsky-avatar h-5 w-5"
+                          className="asph-avatar h-5 w-5"
                         />
                       ) : (
                         <div
-                          className="bsky-avatar flex h-5 w-5 items-center justify-center text-xs"
-                          style={{ background: "var(--bsky-bg-tertiary)" }}
+                          className="asph-avatar flex h-5 w-5 items-center justify-center text-xs"
+                          style={{ background: "var(--asph-bg-tertiary)" }}
                         >
                           {postAuthor?.handle?.charAt(0).toUpperCase()}
                         </div>
                       )}
                       <span
                         className="text-xs font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         {postAuthor?.displayName || postAuthor?.handle || "You"}
                       </span>
                       {hasMedia && (
                         <span
                           className="flex items-center gap-1 text-xs"
-                          style={{ color: "var(--bsky-text-tertiary)" }}
+                          style={{ color: "var(--asph-text-tertiary)" }}
                         >
                           · {hasVideo ? "🎬" : hasExternal ? "🔗" : "📷"}
                         </span>
@@ -692,7 +692,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                       <p
                         className="text-sm"
                         style={{
-                          color: "var(--bsky-text-primary)",
+                          color: "var(--asph-text-primary)",
                           lineHeight: "1.5",
                         }}
                       >
@@ -713,7 +713,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                               alt={img.alt || ""}
                               className="w-full rounded-lg border object-cover"
                               style={{
-                                borderColor: "var(--bsky-border-primary)",
+                                borderColor: "var(--asph-border-primary)",
                                 height: images.length === 1 ? "160px" : "100px",
                               }}
                               loading="lazy"
@@ -729,7 +729,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                         <div
                           className="relative overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
                           style={{
-                            borderColor: "var(--bsky-border-primary)",
+                            borderColor: "var(--asph-border-primary)",
                             aspectRatio: "16/9",
                             maxHeight: "160px",
                           }}
@@ -744,7 +744,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                           ) : (
                             <div className="flex h-full w-full items-center justify-center">
                               <span
-                                style={{ color: "var(--bsky-text-tertiary)" }}
+                                style={{ color: "var(--asph-text-tertiary)" }}
                               >
                                 Video
                               </span>
@@ -786,7 +786,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                             <div
                               className="overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
                               style={{
-                                borderColor: "var(--bsky-border-primary)",
+                                borderColor: "var(--asph-border-primary)",
                               }}
                             >
                               <img
@@ -800,7 +800,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                                 <div
                                   className="p-2 text-xs"
                                   style={{
-                                    color: "var(--bsky-text-secondary)",
+                                    color: "var(--asph-text-secondary)",
                                   }}
                                 >
                                   {externalEmbed.title}
@@ -822,15 +822,15 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                   <div
                     className="mt-3 rounded-lg p-4"
                     style={{
-                      backgroundColor: "var(--bsky-bg-secondary)",
-                      border: "1px solid var(--bsky-border-primary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      border: "1px solid var(--asph-border-primary)",
                       boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                     }}
                   >
                     <p
                       className="text-sm"
                       style={{
-                        color: "var(--bsky-text-primary)",
+                        color: "var(--asph-text-primary)",
                         lineHeight: "1.5",
                       }}
                     >
@@ -844,14 +844,14 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                   <div
                     className="mt-3 rounded-lg p-4"
                     style={{
-                      backgroundColor: "var(--bsky-bg-secondary)",
-                      border: "1px solid var(--bsky-border-primary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      border: "1px solid var(--asph-border-primary)",
                       boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
                     }}
                   >
                     <p
                       className="text-sm italic"
-                      style={{ color: "var(--bsky-text-tertiary)" }}
+                      style={{ color: "var(--asph-text-tertiary)" }}
                     >
                       Post unavailable
                     </p>

@@ -463,13 +463,13 @@ export function FormattedComposer({
         <div
           className="mb-4 rounded-lg border p-3"
           style={{
-            backgroundColor: "var(--bsky-bg-primary)",
-            borderColor: "var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-primary)",
+            borderColor: "var(--asph-border-primary)",
           }}
         >
           <div
             className="mb-1 text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             Replying to
           </div>
@@ -487,17 +487,17 @@ export function FormattedComposer({
               <div className="flex items-center gap-1 text-sm">
                 <span
                   className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {parentPost.author.displayName || parentPost.author.handle}
                 </span>
-                <span style={{ color: "var(--bsky-text-secondary)" }}>
+                <span style={{ color: "var(--asph-text-secondary)" }}>
                   @{parentPost.author.handle}
                 </span>
               </div>
               <div
                 className="mt-1 line-clamp-2 text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 {(parentPost.record as any)?.text || ""}
               </div>
@@ -510,9 +510,9 @@ export function FormattedComposer({
         <div
           className="mb-4 flex items-center gap-2 rounded-lg border p-3 text-sm"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            borderColor: "var(--bsky-border-primary)",
-            color: "var(--bsky-text-tertiary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            borderColor: "var(--asph-border-primary)",
+            color: "var(--asph-text-tertiary)",
           }}
         >
           <Loader size={16} className="animate-spin" />
@@ -524,13 +524,13 @@ export function FormattedComposer({
         <div
           className="mb-4 rounded-lg border p-3"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            borderColor: "var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            borderColor: "var(--asph-border-primary)",
           }}
         >
           <div
             className="mb-1 flex items-center justify-between text-xs"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             <span>
               <Quote size={12} className="mr-1 inline" />
@@ -568,18 +568,18 @@ export function FormattedComposer({
                     <div className="flex items-center gap-1 text-sm">
                       <span
                         className="font-semibold"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {displayPost.author.displayName ||
                           displayPost.author.handle}
                       </span>
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      <span style={{ color: "var(--asph-text-secondary)" }}>
                         @{displayPost.author.handle}
                       </span>
                     </div>
                     <div
                       className="mt-1 line-clamp-3 text-sm"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       {(displayPost.record as any)?.text || ""}
                     </div>
@@ -620,9 +620,9 @@ export function FormattedComposer({
             placeholder={placeholder}
             className="min-h-[120px] w-full resize-none rounded-lg border px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              borderColor: "var(--bsky-border-primary)",
-              color: "var(--bsky-text-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              borderColor: "var(--asph-border-primary)",
+              color: "var(--asph-text-primary)",
             }}
           />
           <div className="mt-1 flex items-center justify-end">
@@ -631,7 +631,7 @@ export function FormattedComposer({
               style={{
                 color:
                   plainTextLength <= maxLength * 0.9
-                    ? "var(--bsky-text-secondary)"
+                    ? "var(--asph-text-secondary)"
                     : undefined,
               }}
             >
@@ -727,7 +727,7 @@ export function FormattedComposer({
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isSubmitting}
                 className="rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
                 title="Add image or video"
               >
                 <Image size={20} />
@@ -741,7 +741,7 @@ export function FormattedComposer({
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                 disabled={isSubmitting}
                 className="rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
                 title="Add emoji"
               >
                 <Smile size={20} />
@@ -765,7 +765,7 @@ export function FormattedComposer({
                 poll ? "text-blue-500" : ""
               }`}
               style={{
-                color: poll ? undefined : "var(--bsky-text-secondary)",
+                color: poll ? undefined : "var(--asph-text-secondary)",
               }}
               title={poll ? "Remove poll" : "Add poll"}
             >
@@ -781,7 +781,7 @@ export function FormattedComposer({
                 useRichText ? "text-blue-500" : ""
               }`}
               style={{
-                color: useRichText ? undefined : "var(--bsky-text-secondary)",
+                color: useRichText ? undefined : "var(--asph-text-secondary)",
               }}
               title={useRichText ? "Plain text mode" : "Rich text mode"}
             >
@@ -803,8 +803,8 @@ export function FormattedComposer({
               disabled={isSubmitting}
               className="rounded-full border px-4 py-2"
               style={{
-                borderColor: "var(--bsky-border-primary)",
-                color: "var(--bsky-text-secondary)",
+                borderColor: "var(--asph-border-primary)",
+                color: "var(--asph-text-secondary)",
               }}
             >
               Cancel
@@ -821,7 +821,7 @@ export function FormattedComposer({
             }
             className="flex items-center gap-2 rounded-full px-4 py-2 transition-all hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
             style={{
-              backgroundColor: "var(--bsky-primary)",
+              backgroundColor: "var(--asph-primary)",
               color: "white",
             }}
             title={

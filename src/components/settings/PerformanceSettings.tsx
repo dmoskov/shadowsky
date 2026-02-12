@@ -56,7 +56,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
   return (
     <div
       className={`rounded-lg border p-4 ${rating ? getRatingBgColor(rating) : "bg-gray-100 dark:bg-gray-800"}`}
-      style={{ borderColor: "var(--bsky-border-primary)" }}
+      style={{ borderColor: "var(--asph-border-primary)" }}
     >
       <div className="mb-2 flex items-center justify-between">
         <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
@@ -246,8 +246,8 @@ export const PerformanceSettings: React.FC = () => {
       <div
         className="flex items-center justify-between rounded-lg p-4"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div className="flex items-center gap-3">
@@ -282,21 +282,21 @@ export const PerformanceSettings: React.FC = () => {
         <div
           className="rounded-lg p-6"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <div className="flex items-center justify-between">
             <div>
               <h2
                 className="text-lg font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 Performance Score
               </h2>
               <p
                 className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Based on Core Web Vitals metrics
               </p>
@@ -344,15 +344,15 @@ export const PerformanceSettings: React.FC = () => {
       <div
         className="rounded-lg p-6"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div className="mb-4 flex items-center gap-2">
           <Gauge className="h-5 w-5 text-gray-500" aria-hidden="true" />
           <h2
             className="text-lg font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Core Web Vitals
           </h2>
@@ -376,7 +376,7 @@ export const PerformanceSettings: React.FC = () => {
             <p
               key={metric}
               className="text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               <strong>{METRIC_INFO[metric].shortName}:</strong>{" "}
               {METRIC_INFO[metric].description}
@@ -389,15 +389,15 @@ export const PerformanceSettings: React.FC = () => {
       <div
         className="rounded-lg p-6"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div className="mb-4 flex items-center gap-2">
           <Clock className="h-5 w-5 text-gray-500" aria-hidden="true" />
           <h2
             className="text-lg font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Performance Budget
           </h2>
@@ -406,7 +406,7 @@ export const PerformanceSettings: React.FC = () => {
         <div className="mb-4">
           <label
             className="mb-2 block text-sm font-medium"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Budget Preset
           </label>
@@ -435,7 +435,7 @@ export const PerformanceSettings: React.FC = () => {
               <div key={metric}>
                 <label
                   className="mb-1 block text-xs font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   {METRIC_INFO[metric].shortName} (
                   {METRIC_INFO[metric].unit || "score"})
@@ -449,7 +449,7 @@ export const PerformanceSettings: React.FC = () => {
                   step={metric === "cls" ? 0.01 : 100}
                   min={0}
                   className="w-full rounded-md border bg-white px-2 py-1.5 text-sm dark:bg-gray-800"
-                  style={{ borderColor: "var(--bsky-border-primary)" }}
+                  style={{ borderColor: "var(--asph-border-primary)" }}
                 />
               </div>
             ))}
@@ -462,15 +462,15 @@ export const PerformanceSettings: React.FC = () => {
         <div
           className="rounded-lg p-6"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <div className="mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-gray-500" aria-hidden="true" />
             <h2
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Trend Analysis
             </h2>
@@ -488,8 +488,8 @@ export const PerformanceSettings: React.FC = () => {
       <div
         className="rounded-lg p-6"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -497,13 +497,13 @@ export const PerformanceSettings: React.FC = () => {
             <BarChart3 className="h-5 w-5 text-gray-500" aria-hidden="true" />
             <h2
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Historical Data
             </h2>
             <span
               className="text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               ({history.length} sessions)
             </span>
@@ -522,7 +522,7 @@ export const PerformanceSettings: React.FC = () => {
         {history.length === 0 ? (
           <p
             className="text-center text-sm"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           >
             No historical data yet. Continue using the app to collect
             performance metrics.
@@ -533,41 +533,41 @@ export const PerformanceSettings: React.FC = () => {
               <thead>
                 <tr
                   className="border-b"
-                  style={{ borderColor: "var(--bsky-border-primary)" }}
+                  style={{ borderColor: "var(--asph-border-primary)" }}
                 >
                   <th
                     className="py-2 text-left font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Date
                   </th>
                   <th
                     className="py-2 text-right font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     LCP
                   </th>
                   <th
                     className="py-2 text-right font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     FCP
                   </th>
                   <th
                     className="py-2 text-right font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     CLS
                   </th>
                   <th
                     className="py-2 text-right font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     TTFB
                   </th>
                   <th
                     className="py-2 text-right font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     INP
                   </th>
@@ -582,18 +582,18 @@ export const PerformanceSettings: React.FC = () => {
                     <tr
                       key={`perf-entry-${entry.timestamp}-${idx}`}
                       className="border-b last:border-0"
-                      style={{ borderColor: "var(--bsky-border-primary)" }}
+                      style={{ borderColor: "var(--asph-border-primary)" }}
                     >
                       <td
                         className="py-1.5"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {new Date(entry.timestamp).toLocaleDateString()}{" "}
                         {new Date(entry.timestamp).toLocaleTimeString()}
                       </td>
                       <td
                         className="py-1.5 text-right"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {entry.lcp !== null
                           ? formatMetricValue("lcp", entry.lcp)
@@ -601,7 +601,7 @@ export const PerformanceSettings: React.FC = () => {
                       </td>
                       <td
                         className="py-1.5 text-right"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {entry.fcp !== null
                           ? formatMetricValue("fcp", entry.fcp)
@@ -609,7 +609,7 @@ export const PerformanceSettings: React.FC = () => {
                       </td>
                       <td
                         className="py-1.5 text-right"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {entry.cls !== null
                           ? formatMetricValue("cls", entry.cls)
@@ -617,7 +617,7 @@ export const PerformanceSettings: React.FC = () => {
                       </td>
                       <td
                         className="py-1.5 text-right"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {entry.ttfb !== null
                           ? formatMetricValue("ttfb", entry.ttfb)
@@ -625,7 +625,7 @@ export const PerformanceSettings: React.FC = () => {
                       </td>
                       <td
                         className="py-1.5 text-right"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {entry.inp !== null
                           ? formatMetricValue("inp", entry.inp)
@@ -643,15 +643,15 @@ export const PerformanceSettings: React.FC = () => {
       <div
         className="rounded-lg p-6"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div className="mb-4 flex items-center gap-2">
           <Zap className="h-5 w-5 text-amber-500" aria-hidden="true" />
           <h2
             className="text-lg font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Real-Time Engagement
           </h2>
@@ -662,7 +662,7 @@ export const PerformanceSettings: React.FC = () => {
 
         <p
           className="mb-4 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Receive live updates for like, repost, and reply counts on posts
           visible in your feed. Requires an active WebSocket connection.
@@ -673,13 +673,13 @@ export const PerformanceSettings: React.FC = () => {
           <div>
             <span
               className="font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Enable Real-Time Engagement
             </span>
             <p
               className="text-sm"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               Updates engagement counts automatically as they change
             </p>
@@ -707,7 +707,7 @@ export const PerformanceSettings: React.FC = () => {
           <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
             <div
               className="rounded-lg p-3"
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
             >
               <div className="flex items-center gap-2">
                 <Wifi
@@ -715,14 +715,14 @@ export const PerformanceSettings: React.FC = () => {
                 />
                 <span
                   className="text-xs font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Status
                 </span>
               </div>
               <p
                 className="mt-1 text-sm font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {engagementMetrics.isActive ? "Active" : "Inactive"}
               </p>
@@ -730,20 +730,20 @@ export const PerformanceSettings: React.FC = () => {
 
             <div
               className="rounded-lg p-3"
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
             >
               <div className="flex items-center gap-2">
                 <Heart className="h-4 w-4 text-red-500" />
                 <span
                   className="text-xs font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Subscriptions
                 </span>
               </div>
               <p
                 className="mt-1 text-sm font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {engagementMetrics.activeSubscriptions} posts
               </p>
@@ -751,20 +751,20 @@ export const PerformanceSettings: React.FC = () => {
 
             <div
               className="rounded-lg p-3"
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
             >
               <div className="flex items-center gap-2">
                 <Activity className="h-4 w-4 text-blue-500" />
                 <span
                   className="text-xs font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Updates Received
                 </span>
               </div>
               <p
                 className="mt-1 text-sm font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {engagementMetrics.updatesReceived}
               </p>
@@ -772,20 +772,20 @@ export const PerformanceSettings: React.FC = () => {
 
             <div
               className="rounded-lg p-3"
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
             >
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-purple-500" />
                 <span
                   className="text-xs font-medium"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Viewport Update
                 </span>
               </div>
               <p
                 className="mt-1 text-sm font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {Math.round(engagementMetrics.avgViewportUpdateIntervalMs)}ms
               </p>
@@ -816,9 +816,9 @@ export const PerformanceSettings: React.FC = () => {
       <div
         className="rounded-lg p-4 text-sm"
         style={{
-          backgroundColor: "var(--bsky-bg-tertiary)",
-          border: "1px solid var(--bsky-border-primary)",
-          color: "var(--bsky-text-secondary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
+          border: "1px solid var(--asph-border-primary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <p className="mb-1 font-medium">About Web Vitals:</p>

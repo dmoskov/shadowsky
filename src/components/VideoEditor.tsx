@@ -635,10 +635,10 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
         <div
           className="flex flex-col items-center gap-4 rounded-xl p-8"
-          style={{ backgroundColor: "var(--bsky-bg-primary)" }}
+          style={{ backgroundColor: "var(--asph-bg-primary)" }}
         >
           <Loader size={40} className="animate-spin text-blue-500" />
-          <span style={{ color: "var(--bsky-text-primary)" }}>
+          <span style={{ color: "var(--asph-text-primary)" }}>
             Loading video...
           </span>
         </div>
@@ -650,24 +650,24 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
       <div
         className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl"
-        style={{ backgroundColor: "var(--bsky-bg-primary)" }}
+        style={{ backgroundColor: "var(--asph-bg-primary)" }}
       >
         {/* Header */}
         <div
           className="flex items-center justify-between border-b px-4 py-3"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
           <div className="flex items-center gap-3">
             <button
               onClick={onCancel}
               className="rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               <X size={20} />
             </button>
             <h2
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Edit Video
             </h2>
@@ -678,8 +678,8 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
               onClick={resetAll}
               className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               style={{
-                borderColor: "var(--bsky-border-primary)",
-                color: "var(--bsky-text-secondary)",
+                borderColor: "var(--asph-border-primary)",
+                color: "var(--asph-text-secondary)",
               }}
             >
               <Undo2 size={16} />
@@ -689,7 +689,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
               onClick={handleSave}
               disabled={isSaving}
               className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium text-white transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: "var(--bsky-primary)" }}
+              style={{ backgroundColor: "var(--asph-primary)" }}
             >
               {isSaving ? (
                 <>
@@ -738,7 +738,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                       cursor: "pointer",
                       border:
                         editingTextId === overlay.id
-                          ? "2px solid var(--bsky-primary)"
+                          ? "2px solid var(--asph-primary)"
                           : "2px solid transparent",
                     }}
                     onClick={(e) => {
@@ -764,12 +764,12 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
             {/* Timeline and controls */}
             <div
               className="border-t p-4"
-              style={{ borderColor: "var(--bsky-border-primary)" }}
+              style={{ borderColor: "var(--asph-border-primary)" }}
             >
               {/* Time display */}
               <div
                 className="mb-3 flex items-center justify-between text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 <span>
                   Trim: {formatTime(trim.start)} - {formatTime(trim.end)}
@@ -796,7 +796,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
               <div
                 ref={timelineRef}
                 className="relative mb-4 h-16 cursor-pointer overflow-hidden rounded-lg"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
                 {/* Thumbnail strip */}
                 <div className="absolute inset-0 flex">
@@ -885,7 +885,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                 <div className="flex items-center gap-2">
                   <span
                     className="text-xs font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Start
                   </span>
@@ -894,13 +894,13 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                       onClick={() => adjustTrim("start", "left")}
                       disabled={trim.start <= 0}
                       className="touch-target-icon rounded transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       <ChevronLeft size={16} />
                     </button>
                     <span
                       className="w-12 text-center font-mono text-sm"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       {formatTime(trim.start)}
                     </span>
@@ -908,7 +908,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                       onClick={() => adjustTrim("start", "right")}
                       disabled={trim.start >= trim.end - 1}
                       className="touch-target-icon rounded transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       <ChevronRight size={16} />
                     </button>
@@ -919,7 +919,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                 <button
                   onClick={togglePlay}
                   className="rounded-full p-3 text-white transition-transform hover:scale-110"
-                  style={{ backgroundColor: "var(--bsky-primary)" }}
+                  style={{ backgroundColor: "var(--asph-primary)" }}
                 >
                   {isPlaying ? <Pause size={24} /> : <Play size={24} />}
                 </button>
@@ -928,7 +928,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                 <div className="flex items-center gap-2">
                   <span
                     className="text-xs font-medium"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     End
                   </span>
@@ -937,13 +937,13 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                       onClick={() => adjustTrim("end", "left")}
                       disabled={trim.end <= trim.start + 1}
                       className="touch-target-icon rounded transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       <ChevronLeft size={16} />
                     </button>
                     <span
                       className="w-12 text-center font-mono text-sm"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       {formatTime(trim.end)}
                     </span>
@@ -951,7 +951,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                       onClick={() => adjustTrim("end", "right")}
                       disabled={!metadata || trim.end >= metadata.duration}
                       className="touch-target-icon rounded transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       <ChevronRight size={16} />
                     </button>
@@ -972,14 +972,14 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
           <div
             className="flex w-72 flex-col border-l"
             style={{
-              borderColor: "var(--bsky-border-primary)",
-              backgroundColor: "var(--bsky-bg-secondary)",
+              borderColor: "var(--asph-border-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
             }}
           >
             {/* Tabs */}
             <div
               className="flex border-b"
-              style={{ borderColor: "var(--bsky-border-primary)" }}
+              style={{ borderColor: "var(--asph-border-primary)" }}
             >
               {[
                 { id: "trim" as const, label: "Trim", icon: Scissors },
@@ -997,11 +997,11 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                   }`}
                   style={{
                     borderColor:
-                      activeTab === id ? "var(--bsky-primary)" : "transparent",
+                      activeTab === id ? "var(--asph-primary)" : "transparent",
                     color:
                       activeTab === id
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-text-secondary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-text-secondary)",
                   }}
                 >
                   <Icon size={16} />
@@ -1011,48 +1011,48 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
             </div>
 
             {/* Tab content */}
-            <div className="bsky-scrollbar flex-1 overflow-y-auto p-4">
+            <div className="asph-scrollbar flex-1 overflow-y-auto p-4">
               {activeTab === "trim" && (
                 <div className="space-y-4">
                   <p
                     className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Use the timeline below or the controls to set trim points.
                   </p>
                   <div
                     className="rounded-lg p-3"
-                    style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                    style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
                   >
                     <div className="flex justify-between text-sm">
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      <span style={{ color: "var(--asph-text-secondary)" }}>
                         Start:
                       </span>
                       <span
                         className="font-mono"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {formatTime(trim.start)}
                       </span>
                     </div>
                     <div className="mt-2 flex justify-between text-sm">
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      <span style={{ color: "var(--asph-text-secondary)" }}>
                         End:
                       </span>
                       <span
                         className="font-mono"
-                        style={{ color: "var(--bsky-text-primary)" }}
+                        style={{ color: "var(--asph-text-primary)" }}
                       >
                         {formatTime(trim.end)}
                       </span>
                     </div>
                     <div className="mt-2 flex justify-between text-sm">
-                      <span style={{ color: "var(--bsky-text-secondary)" }}>
+                      <span style={{ color: "var(--asph-text-secondary)" }}>
                         Duration:
                       </span>
                       <span
                         className="font-mono font-medium"
-                        style={{ color: "var(--bsky-primary)" }}
+                        style={{ color: "var(--asph-primary)" }}
                       >
                         {formatTime(trimmedDuration)}
                       </span>
@@ -1065,7 +1065,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                 <div className="space-y-4">
                   <label
                     className="block text-sm font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     Playback Speed
                   </label>
@@ -1082,16 +1082,16 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                         style={{
                           borderColor:
                             playbackSpeed === value
-                              ? "var(--bsky-primary)"
-                              : "var(--bsky-border-primary)",
+                              ? "var(--asph-primary)"
+                              : "var(--asph-border-primary)",
                           backgroundColor:
                             playbackSpeed === value
-                              ? "var(--bsky-primary)"
+                              ? "var(--asph-primary)"
                               : "transparent",
                           color:
                             playbackSpeed === value
                               ? "white"
-                              : "var(--bsky-text-primary)",
+                              : "var(--asph-text-primary)",
                         }}
                       >
                         {label}
@@ -1100,7 +1100,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                   </div>
                   <p
                     className="text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Adjust the playback speed. The final video duration will be{" "}
                     {formatTime(trimmedDuration / playbackSpeed)}.
@@ -1112,7 +1112,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                 <div className="space-y-4">
                   <label
                     className="block text-sm font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     Video Filters
                   </label>
@@ -1130,8 +1130,8 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                           style={{
                             borderColor:
                               selectedFilter === key
-                                ? "var(--bsky-primary)"
-                                : "var(--bsky-border-primary)",
+                                ? "var(--asph-primary)"
+                                : "var(--asph-border-primary)",
                           }}
                         >
                           {/* Use first thumbnail as preview */}
@@ -1146,7 +1146,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                             <div
                               className="aspect-square w-full"
                               style={{
-                                backgroundColor: "var(--bsky-bg-tertiary)",
+                                backgroundColor: "var(--asph-bg-tertiary)",
                                 filter,
                               }}
                             />
@@ -1166,14 +1166,14 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                   <div className="flex items-center justify-between">
                     <label
                       className="text-sm font-medium"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       Text Overlays
                     </label>
                     <button
                       onClick={addTextOverlay}
                       className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-white transition-colors"
-                      style={{ backgroundColor: "var(--bsky-primary)" }}
+                      style={{ backgroundColor: "var(--asph-primary)" }}
                     >
                       <Plus size={14} />
                       Add Text
@@ -1183,7 +1183,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                   {textOverlays.length === 0 ? (
                     <p
                       className="text-sm"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       No text overlays added. Click "Add Text" to add one.
                     </p>
@@ -1200,15 +1200,15 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                           style={{
                             borderColor:
                               editingTextId === overlay.id
-                                ? "var(--bsky-primary)"
-                                : "var(--bsky-border-primary)",
+                                ? "var(--asph-primary)"
+                                : "var(--asph-border-primary)",
                           }}
                           onClick={() => setEditingTextId(overlay.id)}
                         >
                           <div className="flex items-center justify-between">
                             <span
                               className="truncate text-sm"
-                              style={{ color: "var(--bsky-text-primary)" }}
+                              style={{ color: "var(--asph-text-primary)" }}
                             >
                               {overlay.text}
                             </span>
@@ -1231,11 +1231,11 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                   {editingOverlay && (
                     <div
                       className="space-y-3 rounded-lg border p-3"
-                      style={{ borderColor: "var(--bsky-border-primary)" }}
+                      style={{ borderColor: "var(--asph-border-primary)" }}
                     >
                       <h4
                         className="text-xs font-semibold uppercase"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         Edit Text
                       </h4>
@@ -1251,9 +1251,9 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                         }
                         className="w-full rounded-lg border px-3 py-2 text-sm"
                         style={{
-                          borderColor: "var(--bsky-border-primary)",
-                          backgroundColor: "var(--bsky-bg-primary)",
-                          color: "var(--bsky-text-primary)",
+                          borderColor: "var(--asph-border-primary)",
+                          backgroundColor: "var(--asph-bg-primary)",
+                          color: "var(--asph-text-primary)",
                         }}
                         placeholder="Enter text..."
                       />
@@ -1262,7 +1262,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                       <div>
                         <label
                           className="mb-1 block text-xs"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           Position
                         </label>
@@ -1292,16 +1292,16 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                               style={{
                                 borderColor:
                                   editingOverlay.position === pos
-                                    ? "var(--bsky-primary)"
-                                    : "var(--bsky-border-primary)",
+                                    ? "var(--asph-primary)"
+                                    : "var(--asph-border-primary)",
                                 backgroundColor:
                                   editingOverlay.position === pos
-                                    ? "var(--bsky-primary)"
+                                    ? "var(--asph-primary)"
                                     : "transparent",
                                 color:
                                   editingOverlay.position === pos
                                     ? "white"
-                                    : "var(--bsky-text-primary)",
+                                    : "var(--asph-text-primary)",
                               }}
                             >
                               {pos.replace("-", " ")}
@@ -1321,16 +1321,16 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                             style={{
                               borderColor:
                                 editingOverlay.position === "center"
-                                  ? "var(--bsky-primary)"
-                                  : "var(--bsky-border-primary)",
+                                  ? "var(--asph-primary)"
+                                  : "var(--asph-border-primary)",
                               backgroundColor:
                                 editingOverlay.position === "center"
-                                  ? "var(--bsky-primary)"
+                                  ? "var(--asph-primary)"
                                   : "transparent",
                               color:
                                 editingOverlay.position === "center"
                                   ? "white"
-                                  : "var(--bsky-text-primary)",
+                                  : "var(--asph-text-primary)",
                             }}
                           >
                             Center
@@ -1342,7 +1342,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                       <div>
                         <label
                           className="mb-1 block text-xs"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           Font Size: {editingOverlay.fontSize}px
                         </label>
@@ -1375,9 +1375,9 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                           }`}
                           style={{
                             borderColor: editingOverlay.bold
-                              ? "var(--bsky-primary)"
-                              : "var(--bsky-border-primary)",
-                            color: "var(--bsky-text-primary)",
+                              ? "var(--asph-primary)"
+                              : "var(--asph-border-primary)",
+                            color: "var(--asph-text-primary)",
                           }}
                         >
                           <Bold size={16} className="mx-auto" />
@@ -1395,9 +1395,9 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                           }`}
                           style={{
                             borderColor: editingOverlay.italic
-                              ? "var(--bsky-primary)"
-                              : "var(--bsky-border-primary)",
-                            color: "var(--bsky-text-primary)",
+                              ? "var(--asph-primary)"
+                              : "var(--asph-border-primary)",
+                            color: "var(--asph-text-primary)",
                           }}
                         >
                           <Italic size={16} className="mx-auto" />
@@ -1423,9 +1423,9 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                               style={{
                                 borderColor:
                                   editingOverlay.align === align
-                                    ? "var(--bsky-primary)"
-                                    : "var(--bsky-border-primary)",
-                                color: "var(--bsky-text-primary)",
+                                    ? "var(--asph-primary)"
+                                    : "var(--asph-border-primary)",
+                                color: "var(--asph-text-primary)",
                               }}
                             >
                               <Icon size={16} className="mx-auto" />
@@ -1439,7 +1439,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                         <div className="flex-1">
                           <label
                             className="mb-1 block text-xs"
-                            style={{ color: "var(--bsky-text-secondary)" }}
+                            style={{ color: "var(--asph-text-secondary)" }}
                           >
                             Text Color
                           </label>
@@ -1457,7 +1457,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                         <div className="flex-1">
                           <label
                             className="mb-1 block text-xs"
-                            style={{ color: "var(--bsky-text-secondary)" }}
+                            style={{ color: "var(--asph-text-secondary)" }}
                           >
                             Background
                           </label>
@@ -1483,7 +1483,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                                 style={{
                                   backgroundColor:
                                     bg === "transparent" ? "transparent" : bg,
-                                  borderColor: "var(--bsky-border-primary)",
+                                  borderColor: "var(--asph-border-primary)",
                                 }}
                                 title={
                                   bg === "transparent"

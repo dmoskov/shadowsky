@@ -134,7 +134,7 @@ function getSeverityStyles(severity: UserFriendlyError["severity"]) {
   }
 }
 
-/** Default GitHub issues URL for ShadowSky */
+/** Default GitHub issues URL for Asphodel */
 const DEFAULT_REPORT_URL = "https://github.com/user/shadowsky/issues/new";
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -227,7 +227,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div
           className="flex h-full min-h-[200px] flex-col items-center justify-center p-8"
-          style={{ backgroundColor: "var(--bsky-bg-primary)" }}
+          style={{ backgroundColor: "var(--asph-bg-primary)" }}
           role="alert"
           aria-live="assertive"
           aria-labelledby="error-title"

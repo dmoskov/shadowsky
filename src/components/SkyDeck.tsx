@@ -188,7 +188,7 @@ export default function SkyDeck() {
         const columnElements =
           columnsContainerRef.current?.querySelectorAll(".column-wrapper");
         const focusedColumn = columnElements?.[focusedColumnIndex];
-        const scrollContainer = focusedColumn?.querySelector(".bsky-scrollbar");
+        const scrollContainer = focusedColumn?.querySelector(".asph-scrollbar");
         if (scrollContainer) {
           scrollContainer.scrollBy({
             top: scrollContainer.clientHeight * 0.8,
@@ -527,7 +527,7 @@ export default function SkyDeck() {
           <div className="h-full" style={{ width: `${columnWidth}px` }}>
             {isAddingColumn ? (
               <div className="flex h-full animate-fade-in flex-col rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
-                <div className="bsky-scrollbar flex-1 overflow-y-auto p-3">
+                <div className="asph-scrollbar flex-1 overflow-y-auto p-3">
                   <div className="grid gap-2">
                     {columnOptions.map((option) => {
                       const Icon = option.icon;

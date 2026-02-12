@@ -303,11 +303,11 @@ export const DirectMessagesColumn: React.FC = () => {
   if (!selectedConversation) {
     // Show conversations list
     return (
-      <div className="flex h-full flex-col overflow-hidden bg-bsky-bg-primary">
-        <div className="flex items-center justify-between border-b border-bsky-border-primary p-4">
+      <div className="flex h-full flex-col overflow-hidden bg-asph-bg-primary">
+        <div className="flex items-center justify-between border-b border-asph-border-primary p-4">
           <h2
             className="text-xl font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Messages
           </h2>
@@ -315,8 +315,8 @@ export const DirectMessagesColumn: React.FC = () => {
             onClick={() => setShowSearch(!showSearch)}
             className={`rounded-lg p-2 transition-colors ${
               showSearch
-                ? "bg-bsky-primary text-white"
-                : "text-bsky-text-secondary hover:bg-bsky-bg-secondary"
+                ? "bg-asph-primary text-white"
+                : "text-asph-text-secondary hover:bg-asph-bg-secondary"
             }`}
             aria-label={showSearch ? "Close search" : "Search messages"}
             title="Search messages"
@@ -331,7 +331,7 @@ export const DirectMessagesColumn: React.FC = () => {
 
         {/* Search panel */}
         {showSearch && (
-          <div className="h-80 border-b border-bsky-border-primary">
+          <div className="h-80 border-b border-asph-border-primary">
             <DmSearch
               onResultClick={handleSearchResultClick}
               senders={indexedSenders}
@@ -339,7 +339,7 @@ export const DirectMessagesColumn: React.FC = () => {
           </div>
         )}
 
-        <div className="bsky-scrollbar flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="asph-scrollbar flex-1 overflow-y-auto overflow-x-hidden">
           {chatError ? (
             <div className="p-4">
               <div
@@ -371,7 +371,7 @@ export const DirectMessagesColumn: React.FC = () => {
                       Create a new app password with "Direct Messages" enabled
                     </li>
                     <li>
-                      Log out of shadowsky (click your profile → Settings → Log
+                      Log out of Asphodel (click your profile → Settings → Log
                       out)
                     </li>
                     <li>
@@ -388,14 +388,14 @@ export const DirectMessagesColumn: React.FC = () => {
           ) : loadingConversations ? (
             <div
               className="p-4 text-center"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Loading conversations...
             </div>
           ) : !conversations || conversations.length === 0 ? (
             <div
               className="p-4 text-center"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               No conversations yet
             </div>
@@ -413,7 +413,7 @@ export const DirectMessagesColumn: React.FC = () => {
                   }}
                   tabIndex={0}
                   role="button"
-                  className={`cursor-pointer overflow-hidden border-b border-bsky-border-primary p-4 transition-colors duration-200 hover:bg-bsky-bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bsky-primary`}
+                  className={`cursor-pointer overflow-hidden border-b border-asph-border-primary p-4 transition-colors duration-200 hover:bg-asph-bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-asph-primary`}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
                     <div className="flex-shrink-0">
@@ -434,24 +434,24 @@ export const DirectMessagesColumn: React.FC = () => {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="line-clamp-1 break-words font-semibold text-bsky-text-primary">
+                      <div className="line-clamp-1 break-words font-semibold text-asph-text-primary">
                         {otherMember.displayName ||
                           otherMember.handle ||
                           "Unknown User"}
                       </div>
                       {otherMember.handle && (
-                        <div className="line-clamp-1 break-words text-sm text-bsky-text-secondary">
+                        <div className="line-clamp-1 break-words text-sm text-asph-text-secondary">
                           @{otherMember.handle}
                         </div>
                       )}
                       {conversation.lastMessage && (
-                        <div className="mt-1 line-clamp-1 break-words text-sm text-bsky-text-secondary">
+                        <div className="mt-1 line-clamp-1 break-words text-sm text-asph-text-secondary">
                           {conversation.lastMessage.text}
                         </div>
                       )}
                     </div>
                     {conversation.unreadCount > 0 && (
-                      <div className="flex-shrink-0 rounded-full bg-bsky-primary px-2 py-0.5 text-center text-xs text-white">
+                      <div className="flex-shrink-0 rounded-full bg-asph-primary px-2 py-0.5 text-center text-xs text-white">
                         {conversation.unreadCount}
                       </div>
                     )}
@@ -468,8 +468,8 @@ export const DirectMessagesColumn: React.FC = () => {
   // Show chat view
   if (!conversationData) {
     return (
-      <div className="flex h-full items-center justify-center bg-bsky-bg-primary">
-        <div className="text-center text-bsky-text-secondary">
+      <div className="flex h-full items-center justify-center bg-asph-bg-primary">
+        <div className="text-center text-asph-text-secondary">
           <p>Loading conversation...</p>
         </div>
       </div>
@@ -477,11 +477,11 @@ export const DirectMessagesColumn: React.FC = () => {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-bsky-bg-primary">
+    <div className="flex h-full flex-col overflow-hidden bg-asph-bg-primary">
       {/* Chat header */}
-      <div className="flex items-center gap-3 border-b border-bsky-border-primary p-4">
+      <div className="flex items-center gap-3 border-b border-asph-border-primary p-4">
         <button
-          className="inline-flex cursor-pointer items-center gap-2 border-none bg-transparent p-2 text-bsky-primary"
+          className="inline-flex cursor-pointer items-center gap-2 border-none bg-transparent p-2 text-asph-primary"
           onClick={() => setSelectedConversation(null)}
         >
           ← Back
@@ -530,7 +530,7 @@ export const DirectMessagesColumn: React.FC = () => {
                 <ProfileHoverCard handle={memberHandle}>
                   <div
                     className="cursor-pointer font-semibold hover:underline"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {member.displayName || memberHandle || "Unknown User"}
                   </div>
@@ -538,7 +538,7 @@ export const DirectMessagesColumn: React.FC = () => {
               ) : (
                 <div
                   className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {member.displayName || "Unknown User"}
                 </div>
@@ -547,7 +547,7 @@ export const DirectMessagesColumn: React.FC = () => {
                 <ProfileHoverCard handle={memberHandle}>
                   <div
                     className="cursor-pointer text-sm hover:underline"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     @{memberHandle}
                   </div>
@@ -561,8 +561,8 @@ export const DirectMessagesColumn: React.FC = () => {
           onClick={() => setShowSearch(!showSearch)}
           className={`rounded-lg p-2 transition-colors ${
             showSearch
-              ? "bg-bsky-primary text-white"
-              : "text-bsky-text-secondary hover:bg-bsky-bg-secondary"
+              ? "bg-asph-primary text-white"
+              : "text-asph-text-secondary hover:bg-asph-bg-secondary"
           }`}
           aria-label={showSearch ? "Close search" : "Search messages"}
           title="Search messages"
@@ -577,7 +577,7 @@ export const DirectMessagesColumn: React.FC = () => {
 
       {/* Search panel */}
       {showSearch && (
-        <div className="h-64 border-b border-bsky-border-primary">
+        <div className="h-64 border-b border-asph-border-primary">
           <DmSearch
             conversationId={selectedConversation}
             onResultClick={handleSearchResultClick}
@@ -587,18 +587,18 @@ export const DirectMessagesColumn: React.FC = () => {
       )}
 
       {/* Messages */}
-      <div className="bsky-scrollbar flex-1 overflow-y-auto overflow-x-hidden p-4">
+      <div className="asph-scrollbar flex-1 overflow-y-auto overflow-x-hidden p-4">
         {loadingMessages && !isQueueInitialized ? (
           <div
             className="text-center"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Loading messages...
           </div>
         ) : combinedMessages.length === 0 ? (
           <div
             className="text-center"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             No messages yet. Start the conversation!
           </div>
@@ -634,19 +634,19 @@ export const DirectMessagesColumn: React.FC = () => {
       </div>
 
       {/* Message input */}
-      <div className="border-t border-bsky-border-primary p-4">
+      <div className="border-t border-asph-border-primary p-4">
         <form onSubmit={handleSendMessage} className="flex gap-2">
           <input
             type="text"
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             placeholder="Type a message..."
-            className="min-w-0 flex-1 rounded-lg border border-bsky-border-primary bg-bsky-bg-secondary px-4 py-2 text-base text-bsky-text-primary focus-visible:border-bsky-primary focus-visible:shadow-sm focus-visible:outline-none"
+            className="min-w-0 flex-1 rounded-lg border border-asph-border-primary bg-asph-bg-secondary px-4 py-2 text-base text-asph-text-primary focus-visible:border-asph-primary focus-visible:shadow-sm focus-visible:outline-none"
           />
           <button
             type="submit"
             disabled={!messageText.trim() || isSending}
-            className="flex-shrink-0 cursor-pointer rounded-lg border-none bg-bsky-primary px-4 py-2 font-semibold text-white transition-colors duration-200 hover:bg-bsky-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-shrink-0 cursor-pointer rounded-lg border-none bg-asph-primary px-4 py-2 font-semibold text-white transition-colors duration-200 hover:bg-asph-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
           >
             Send
           </button>

@@ -104,11 +104,11 @@ const BskyUrlEmbed: React.FC<{
     return (
       <div
         className="mt-2 rounded-lg border p-4"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         <div
           className="flex items-center gap-2 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
           <span>Loading quoted post...</span>
@@ -123,7 +123,7 @@ const BskyUrlEmbed: React.FC<{
   return (
     <div
       className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
-      style={{ borderColor: "var(--bsky-border-primary)" }}
+      style={{ borderColor: "var(--asph-border-primary)" }}
       onClick={(e) => {
         e.stopPropagation();
         if (onQuoteClick && quotedPost.uri) {
@@ -134,9 +134,9 @@ const BskyUrlEmbed: React.FC<{
       <div
         className="flex items-center gap-2 px-3 py-1.5 text-xs"
         style={{
-          backgroundColor: "var(--bsky-bg-tertiary)",
-          borderBottom: "1px solid var(--bsky-border-primary)",
-          color: "var(--bsky-text-secondary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
+          borderBottom: "1px solid var(--asph-border-primary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <MessageCircle size={12} />
@@ -162,7 +162,7 @@ const BskyUrlEmbed: React.FC<{
           <ProfileHoverCard handle={quotedPost.author.handle}>
             <span
               className="cursor-pointer text-sm hover:underline"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               @{quotedPost.author.handle}
             </span>
@@ -239,8 +239,8 @@ const ExternalLinkEmbed: React.FC<{
       <div
         className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
         style={{
-          borderColor: "var(--bsky-border-primary)",
-          color: "var(--bsky-text-secondary)",
+          borderColor: "var(--asph-border-primary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <Loader size={14} className="animate-spin" />
@@ -268,7 +268,7 @@ const ExternalLinkEmbed: React.FC<{
   return (
     <div
       className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
-      style={{ borderColor: "var(--bsky-border-primary)" }}
+      style={{ borderColor: "var(--asph-border-primary)" }}
       onClick={handleClick}
     >
       {metadata.imageUrl && (
@@ -281,20 +281,20 @@ const ExternalLinkEmbed: React.FC<{
       <div className="p-3">
         <div
           className="mb-1 text-xs"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           {domain}
         </div>
         <div
           className="line-clamp-2 text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {metadata.title}
         </div>
         {metadata.description && (
           <div
             className="mt-1 line-clamp-2 text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {metadata.description}
           </div>
@@ -565,9 +565,9 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                 }}
                 className="rounded-lg px-6 py-3 text-sm font-medium shadow-lg transition-colors"
                 style={{
-                  backgroundColor: "var(--bsky-bg-primary)",
-                  color: "var(--bsky-text-primary)",
-                  border: "2px solid var(--bsky-border-primary)",
+                  backgroundColor: "var(--asph-bg-primary)",
+                  color: "var(--asph-text-primary)",
+                  border: "2px solid var(--asph-border-primary)",
                 }}
               >
                 <LabelBadge
@@ -614,8 +614,8 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
           <div
             className="mt-2 overflow-hidden rounded-lg border p-3 text-sm italic"
             style={{
-              borderColor: "var(--bsky-border-primary)",
-              color: "var(--bsky-text-secondary)",
+              borderColor: "var(--asph-border-primary)",
+              color: "var(--asph-text-secondary)",
             }}
           >
             Post not found or deleted
@@ -628,8 +628,8 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
           <div
             className="mt-2 overflow-hidden rounded-lg border p-3 text-sm italic"
             style={{
-              borderColor: "var(--bsky-border-primary)",
-              color: "var(--bsky-text-secondary)",
+              borderColor: "var(--asph-border-primary)",
+              color: "var(--asph-text-secondary)",
             }}
           >
             Post from blocked user
@@ -641,7 +641,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
       return (
         <div
           className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
           onClick={(e) => {
             e.stopPropagation();
             if (onQuoteClick && quotedPost.uri) {
@@ -652,9 +652,9 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
           <div
             className="flex items-center gap-2 px-3 py-1.5 text-xs"
             style={{
-              backgroundColor: "var(--bsky-bg-tertiary)",
-              borderBottom: "1px solid var(--bsky-border-primary)",
-              color: "var(--bsky-text-secondary)",
+              backgroundColor: "var(--asph-bg-tertiary)",
+              borderBottom: "1px solid var(--asph-border-primary)",
+              color: "var(--asph-text-secondary)",
             }}
           >
             <MessageCircle size={12} />
@@ -711,7 +711,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
       return (
         <div
           className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
           onClick={(e) => {
             e.stopPropagation();
             if (onQuoteClick && quotedPost.uri) {
@@ -722,9 +722,9 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
           <div
             className="flex items-center gap-2 px-3 py-1.5 text-xs"
             style={{
-              backgroundColor: "var(--bsky-bg-tertiary)",
-              borderBottom: "1px solid var(--bsky-border-primary)",
-              color: "var(--bsky-text-secondary)",
+              backgroundColor: "var(--asph-bg-tertiary)",
+              borderBottom: "1px solid var(--asph-border-primary)",
+              color: "var(--asph-text-secondary)",
             }}
           >
             <MessageCircle size={12} />
@@ -781,8 +781,8 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
         <div
           className="relative mt-2 cursor-pointer overflow-hidden rounded-lg border p-2.5 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            backgroundColor: "var(--bsky-bg-primary)",
+            borderColor: "var(--asph-border-primary)",
+            backgroundColor: "var(--asph-bg-primary)",
           }}
           onClick={(e) => {
             e.stopPropagation();
@@ -806,19 +806,19 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               className="mb-2 h-auto w-full rounded object-cover"
               style={{
                 maxHeight: "200px",
-                backgroundColor: "var(--bsky-bg-tertiary)",
+                backgroundColor: "var(--asph-bg-tertiary)",
               }}
             />
           )}
           <div
             className="line-clamp-2 text-sm font-semibold"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             {embed.external.title}
           </div>
           <div
             className="mt-1 line-clamp-2 text-xs"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {embed.external.description}
           </div>
@@ -840,7 +840,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
         {reason && reason.$type === "app.bsky.feed.defs#reasonRepost" && (
           <div
             className="mb-2 flex items-center gap-2 text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             <Repeat2 size={16} />
             <span className="inline-flex items-center">
@@ -895,7 +895,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                 <ProfileHoverCard handle={post.author.handle}>
                   <span
                     className="max-w-[200px] cursor-pointer truncate font-semibold hover:underline"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                     onClick={handleAuthorClick}
                     {...authorPrefetchHandlers}
                   >
@@ -905,7 +905,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                 <ProfileHoverCard handle={post.author.handle}>
                   <span
                     className="max-w-[200px] cursor-pointer truncate hover:underline"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                     onClick={handleAuthorClick}
                     {...authorPrefetchHandlers}
                   >
@@ -913,10 +913,10 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                   </span>
                 </ProfileHoverCard>
                 <DomainVerifiedBadgeInline handle={post.author.handle} />
-                <span style={{ color: "var(--bsky-text-secondary)" }}>·</span>
+                <span style={{ color: "var(--asph-text-secondary)" }}>·</span>
                 <span
                   className="cursor-pointer text-sm hover:underline"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                   onClick={(e) => {
                     e.stopPropagation();
                     const postId = post.uri.split("/").pop();
@@ -938,7 +938,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                 >
                   <MoreVertical
                     size={16}
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                     aria-hidden="true"
                   />
                 </button>
@@ -959,7 +959,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               )}
               <p
                 className="whitespace-pre-wrap break-words"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 <RichText text={record?.text || ""} facets={record?.facets} />
               </p>
@@ -989,7 +989,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                     onReply?.();
                   }}
                   className="flex items-center gap-1 text-sm transition-colors hover:text-blue-500"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                   aria-label={`Reply to post, ${post.replyCount || 0} replies`}
                 >
                   <MessageCircle size={18} aria-hidden="true" />
@@ -1007,7 +1007,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                   style={{
                     color: post.viewer?.repost
                       ? undefined
-                      : "var(--bsky-text-secondary)",
+                      : "var(--asph-text-secondary)",
                   }}
                   aria-label={`${post.viewer?.repost ? "Undo repost" : "Repost"}, ${post.repostCount || 0} reposts`}
                   aria-pressed={!!post.viewer?.repost}
@@ -1027,7 +1027,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                   style={{
                     color: post.viewer?.like
                       ? undefined
-                      : "var(--bsky-text-secondary)",
+                      : "var(--asph-text-secondary)",
                   }}
                   aria-label={`${post.viewer?.like ? "Unlike" : "Like"}, ${post.likeCount || 0} likes`}
                   aria-pressed={!!post.viewer?.like}
@@ -1052,7 +1052,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                     style={{
                       color: isBookmarked
                         ? undefined
-                        : "var(--bsky-text-secondary)",
+                        : "var(--asph-text-secondary)",
                     }}
                     aria-label={
                       isBookmarked ? "Remove bookmark" : "Bookmark post"

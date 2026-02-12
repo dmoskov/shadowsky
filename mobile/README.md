@@ -1,4 +1,4 @@
-# ShadowSky Mobile Apps
+# Asphodel Mobile Apps
 
 React Native mobile applications for iOS and Android.
 
@@ -184,7 +184,7 @@ npm run lint
 
 ## 🏗️ EAS Build & Updates
 
-ShadowSky uses Expo Application Services (EAS) for building iOS and Android binaries and delivering over-the-air (OTA) updates.
+Asphodel uses Expo Application Services (EAS) for building iOS and Android binaries and delivering over-the-air (OTA) updates.
 
 ### Prerequisites
 

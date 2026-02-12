@@ -673,7 +673,7 @@ export default function ProfilePage() {
           className="h-48 bg-gradient-to-br"
           style={{
             backgroundImage:
-              "linear-gradient(135deg, var(--bsky-primary) 0%, var(--bsky-accent) 100%)",
+              "linear-gradient(135deg, var(--asph-primary) 0%, var(--asph-accent) 100%)",
           }}
         >
           {profile.banner && (
@@ -686,7 +686,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Profile Info */}
-        <div className="bsky-card border-0 px-6 pb-6">
+        <div className="asph-card border-0 px-6 pb-6">
           <div className="-mt-20 mb-4 flex items-end justify-between">
             <img
               src={
@@ -697,8 +697,8 @@ export default function ProfilePage() {
               alt={profile.displayName || profile.handle}
               className="h-36 w-36 rounded-full border-4 shadow-lg transition-transform hover:scale-105"
               style={{
-                borderColor: "var(--bsky-bg-secondary)",
-                backgroundColor: "var(--bsky-bg-tertiary)",
+                borderColor: "var(--asph-bg-secondary)",
+                backgroundColor: "var(--asph-bg-tertiary)",
               }}
             />
             <div className="flex items-center gap-2">
@@ -707,8 +707,8 @@ export default function ProfilePage() {
                   onClick={handleFollow}
                   className={`rounded-full px-6 py-2.5 font-medium transition-all ${
                     profile.viewer?.following
-                      ? "bsky-button-secondary hover:scale-105"
-                      : "bsky-button-primary hover:scale-105"
+                      ? "asph-button-secondary hover:scale-105"
+                      : "asph-button-primary hover:scale-105"
                   }`}
                 >
                   {profile.viewer?.following ? "Following" : "Follow"}
@@ -730,11 +730,11 @@ export default function ProfilePage() {
                   }}
                   className="rounded-full p-2 transition-all hover:scale-110"
                   style={{
-                    color: "var(--bsky-text-secondary)",
+                    color: "var(--asph-text-secondary)",
                   }}
                   onMouseEnter={(e) =>
                     (e.currentTarget.style.backgroundColor =
-                      "var(--bsky-bg-hover)")
+                      "var(--asph-bg-hover)")
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.backgroundColor = "transparent")
@@ -749,9 +749,9 @@ export default function ProfilePage() {
                       ref={profileMenuRef}
                       className="fixed z-[9999] w-48 rounded-lg border py-2 shadow-lg"
                       style={{
-                        backgroundColor: "var(--bsky-bg-secondary)",
-                        borderColor: "var(--bsky-border-primary)",
-                        boxShadow: "var(--bsky-shadow-lg)",
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        borderColor: "var(--asph-border-primary)",
+                        boxShadow: "var(--asph-shadow-lg)",
                         top: `${profileMenuPosition.top}px`,
                         right: `${profileMenuPosition.right}px`,
                       }}
@@ -766,10 +766,10 @@ export default function ProfilePage() {
                               navigate("/settings/account");
                             }}
                             className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-all"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                                "var(--asph-bg-hover)")
                             }
                             onMouseLeave={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -786,10 +786,10 @@ export default function ProfilePage() {
                               setShowProfileAnalysis(true);
                             }}
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                                "var(--asph-bg-hover)")
                             }
                             onMouseLeave={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -805,10 +805,10 @@ export default function ProfilePage() {
                           <button
                             onClick={handleShare}
                             className="flex w-full items-center gap-3 rounded-t-lg px-4 py-2.5 text-sm transition-all"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                                "var(--asph-bg-hover)")
                             }
                             onMouseLeave={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -821,10 +821,10 @@ export default function ProfilePage() {
                           <button
                             onClick={handleOpenInBluesky}
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                                "var(--asph-bg-hover)")
                             }
                             onMouseLeave={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -837,10 +837,10 @@ export default function ProfilePage() {
                           <button
                             onClick={handleOpenAddToListModal}
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                                "var(--asph-bg-hover)")
                             }
                             onMouseLeave={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -857,10 +857,10 @@ export default function ProfilePage() {
                               setShowProfileAnalysis(true);
                             }}
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                                "var(--asph-bg-hover)")
                             }
                             onMouseLeave={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -873,10 +873,10 @@ export default function ProfilePage() {
                           <button
                             onClick={handleMute}
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                                "var(--asph-bg-hover)")
                             }
                             onMouseLeave={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -892,10 +892,10 @@ export default function ProfilePage() {
                           <button
                             onClick={handleOpenReportModal}
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                                "var(--asph-bg-hover)")
                             }
                             onMouseLeave={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -912,7 +912,7 @@ export default function ProfilePage() {
                             className="flex w-full items-center gap-3 rounded-b-lg px-4 py-2.5 text-sm text-red-600 transition-all"
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
-                                "var(--bsky-bg-hover)")
+                                "var(--asph-bg-hover)")
                             }
                             onMouseLeave={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -937,12 +937,12 @@ export default function ProfilePage() {
           <div className="mb-4">
             <h1
               className="text-2xl font-bold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               {profile.displayName || profile.handle}
             </h1>
             <div className="flex items-center gap-1">
-              <p style={{ color: "var(--bsky-text-secondary)" }}>
+              <p style={{ color: "var(--asph-text-secondary)" }}>
                 @{profile.handle}
               </p>
               <DomainVerifiedBadge handle={profile.handle} size="md" />
@@ -962,7 +962,7 @@ export default function ProfilePage() {
           {profile.description && (
             <p
               className="mb-4 whitespace-pre-wrap"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               {profile.description}
             </p>
@@ -972,13 +972,13 @@ export default function ProfilePage() {
             <div>
               <span
                 className="font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {formatCount(profile.postsCount || 0)}
               </span>
               <span
                 className="ml-1"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 posts
               </span>
@@ -989,13 +989,13 @@ export default function ProfilePage() {
             >
               <span
                 className="font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {formatCount(profile.followersCount || 0)}
               </span>
               <span
                 className="ml-1"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 followers
               </span>
@@ -1006,13 +1006,13 @@ export default function ProfilePage() {
             >
               <span
                 className="font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {formatCount(profile.followsCount || 0)}
               </span>
               <span
                 className="ml-1"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 following
               </span>
@@ -1025,10 +1025,10 @@ export default function ProfilePage() {
       <div
         className="sticky top-16 z-10 mt-4 rounded-t-xl"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          borderTop: "1px solid var(--bsky-border-primary)",
-          borderLeft: "1px solid var(--bsky-border-primary)",
-          borderRight: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          borderTop: "1px solid var(--asph-border-primary)",
+          borderLeft: "1px solid var(--asph-border-primary)",
+          borderRight: "1px solid var(--asph-border-primary)",
         }}
       >
         <div className="flex">
@@ -1040,15 +1040,15 @@ export default function ProfilePage() {
             style={{
               color:
                 activeTab === "posts"
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-text-secondary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-text-secondary)",
             }}
           >
             Posts
             {activeTab === "posts" && (
               <div
                 className="absolute bottom-0 left-0 right-0 h-0.5"
-                style={{ backgroundColor: "var(--bsky-primary)" }}
+                style={{ backgroundColor: "var(--asph-primary)" }}
               />
             )}
           </button>
@@ -1060,15 +1060,15 @@ export default function ProfilePage() {
             style={{
               color:
                 activeTab === "replies"
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-text-secondary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-text-secondary)",
             }}
           >
             Replies
             {activeTab === "replies" && (
               <div
                 className="absolute bottom-0 left-0 right-0 h-0.5"
-                style={{ backgroundColor: "var(--bsky-primary)" }}
+                style={{ backgroundColor: "var(--asph-primary)" }}
               />
             )}
           </button>
@@ -1080,15 +1080,15 @@ export default function ProfilePage() {
             style={{
               color:
                 activeTab === "media"
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-text-secondary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-text-secondary)",
             }}
           >
             Media
             {activeTab === "media" && (
               <div
                 className="absolute bottom-0 left-0 right-0 h-0.5"
-                style={{ backgroundColor: "var(--bsky-primary)" }}
+                style={{ backgroundColor: "var(--asph-primary)" }}
               />
             )}
           </button>
@@ -1100,15 +1100,15 @@ export default function ProfilePage() {
             style={{
               color:
                 activeTab === "top"
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-text-secondary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-text-secondary)",
             }}
           >
             Top Posts
             {activeTab === "top" && (
               <div
                 className="absolute bottom-0 left-0 right-0 h-0.5"
-                style={{ backgroundColor: "var(--bsky-primary)" }}
+                style={{ backgroundColor: "var(--asph-primary)" }}
               />
             )}
           </button>
@@ -1121,12 +1121,12 @@ export default function ProfilePage() {
           <div className="mb-4">
             <div
               className="rounded-lg p-6"
-              style={{ background: "var(--bsky-bg-secondary)" }}
+              style={{ background: "var(--asph-bg-secondary)" }}
             >
               <div className="mb-4 flex items-center justify-between">
                 <h2
                   className="flex items-center gap-2 text-lg font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   <Sparkles size={20} className="text-purple-500" />
                   Profile Analysis
@@ -1138,8 +1138,8 @@ export default function ProfilePage() {
                   }}
                   className="rounded px-3 py-1 text-sm transition-all hover:opacity-80"
                   style={{
-                    backgroundColor: "var(--bsky-bg-tertiary)",
-                    color: "var(--bsky-text-secondary)",
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    color: "var(--asph-text-secondary)",
                   }}
                 >
                   Hide
@@ -1149,7 +1149,7 @@ export default function ProfilePage() {
               {isLoadingAnalysis ? (
                 <div className="py-8 text-center">
                   <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-500" />
-                  <p style={{ color: "var(--bsky-text-primary)" }}>
+                  <p style={{ color: "var(--asph-text-primary)" }}>
                     Analyzing profile...
                   </p>
                 </div>
@@ -1163,13 +1163,13 @@ export default function ProfilePage() {
                   </div>
                   <p
                     className="mb-2 font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     Analysis Failed
                   </p>
                   <p
                     className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     {analysisError instanceof Error
                       ? analysisError.message.includes("Rate limit")
@@ -1188,8 +1188,8 @@ export default function ProfilePage() {
                     <div
                       className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm"
                       style={{
-                        backgroundColor: "var(--bsky-bg-tertiary)",
-                        color: "var(--bsky-text-secondary)",
+                        backgroundColor: "var(--asph-bg-tertiary)",
+                        color: "var(--asph-text-secondary)",
                       }}
                     >
                       <div className="h-2 w-2 animate-pulse rounded-full bg-purple-500" />
@@ -1204,7 +1204,7 @@ export default function ProfilePage() {
                       className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm font-medium"
                       style={{
                         backgroundColor: "rgba(168, 85, 247, 0.1)",
-                        color: "var(--bsky-primary)",
+                        color: "var(--asph-primary)",
                       }}
                     >
                       ✨ Full analysis complete ({postsForSonnet?.length || 0}{" "}
@@ -1213,7 +1213,7 @@ export default function ProfilePage() {
                   )}
 
                   {/* Summary (always shown) */}
-                  <p style={{ color: "var(--bsky-text-secondary)" }}>
+                  <p style={{ color: "var(--asph-text-secondary)" }}>
                     {analysisData?.summary}
                   </p>
 
@@ -1226,7 +1226,7 @@ export default function ProfilePage() {
                           <div>
                             <h3
                               className="mb-3 text-sm font-semibold"
-                              style={{ color: "var(--bsky-text-primary)" }}
+                              style={{ color: "var(--asph-text-primary)" }}
                             >
                               Content Themes
                             </h3>
@@ -1236,14 +1236,14 @@ export default function ProfilePage() {
                                   key={theme.theme}
                                   className="rounded-lg p-3"
                                   style={{
-                                    backgroundColor: "var(--bsky-bg-tertiary)",
+                                    backgroundColor: "var(--asph-bg-tertiary)",
                                   }}
                                 >
                                   <div className="mb-1 flex items-center gap-2">
                                     <span
                                       className="font-medium"
                                       style={{
-                                        color: "var(--bsky-text-primary)",
+                                        color: "var(--asph-text-primary)",
                                       }}
                                     >
                                       {theme.theme}
@@ -1266,7 +1266,7 @@ export default function ProfilePage() {
                                   <p
                                     className="text-sm"
                                     style={{
-                                      color: "var(--bsky-text-secondary)",
+                                      color: "var(--asph-text-secondary)",
                                     }}
                                   >
                                     {theme.description}
@@ -1282,19 +1282,19 @@ export default function ProfilePage() {
                         <div>
                           <h3
                             className="mb-3 text-sm font-semibold"
-                            style={{ color: "var(--bsky-text-primary)" }}
+                            style={{ color: "var(--asph-text-primary)" }}
                           >
                             Writing Style
                           </h3>
                           <div
                             className="rounded-lg p-3"
                             style={{
-                              backgroundColor: "var(--bsky-bg-tertiary)",
+                              backgroundColor: "var(--asph-bg-tertiary)",
                             }}
                           >
                             <p
                               className="mb-2 text-sm font-medium"
-                              style={{ color: "var(--bsky-text-primary)" }}
+                              style={{ color: "var(--asph-text-primary)" }}
                             >
                               {sonnetAnalysis.writingStyle.tone}
                             </p>
@@ -1306,7 +1306,7 @@ export default function ProfilePage() {
                                       key={`char-${char.slice(0, 20)}-${idx}`}
                                       className="text-sm"
                                       style={{
-                                        color: "var(--bsky-text-secondary)",
+                                        color: "var(--asph-text-secondary)",
                                       }}
                                     >
                                       • {char}

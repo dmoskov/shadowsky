@@ -100,13 +100,13 @@ export const PrivacySettings: React.FC = () => {
       <div>
         <h2
           className="text-xl font-semibold"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Privacy & Safety
         </h2>
         <p
           className="mt-1 text-sm"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Control who can interact with you and your content
         </p>
@@ -115,7 +115,7 @@ export const PrivacySettings: React.FC = () => {
       <div>
         <label
           className="mb-2 block text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Profile Visibility
         </label>
@@ -126,9 +126,9 @@ export const PrivacySettings: React.FC = () => {
           }
           className="w-full rounded-lg px-4 py-2 text-sm"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            color: "var(--bsky-text-primary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            color: "var(--asph-text-primary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <option value="public">Public - Anyone can view</option>
@@ -140,7 +140,7 @@ export const PrivacySettings: React.FC = () => {
       <div>
         <label
           className="mb-2 block text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Who can message you
         </label>
@@ -151,9 +151,9 @@ export const PrivacySettings: React.FC = () => {
           }
           className="w-full rounded-lg px-4 py-2 text-sm"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            color: "var(--bsky-text-primary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            color: "var(--asph-text-primary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <option value="everyone">Everyone</option>
@@ -165,7 +165,7 @@ export const PrivacySettings: React.FC = () => {
       <div>
         <label
           className="mb-2 block text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Who can mention you
         </label>
@@ -176,9 +176,9 @@ export const PrivacySettings: React.FC = () => {
           }
           className="w-full rounded-lg px-4 py-2 text-sm"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            color: "var(--bsky-text-primary)",
-            border: "1px solid var(--bsky-border-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            color: "var(--asph-text-primary)",
+            border: "1px solid var(--asph-border-primary)",
           }}
         >
           <option value="everyone">Everyone</option>
@@ -190,20 +190,20 @@ export const PrivacySettings: React.FC = () => {
       <div
         className="flex items-center justify-between rounded-lg p-4"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div>
           <div
             className="font-medium"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Hide from search
           </div>
           <div
             className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Prevent your profile from appearing in search results
           </div>
@@ -227,20 +227,20 @@ export const PrivacySettings: React.FC = () => {
       <div
         className="flex items-center justify-between rounded-lg p-4"
         style={{
-          backgroundColor: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border-primary)",
+          backgroundColor: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border-primary)",
         }}
       >
         <div>
           <div
             className="font-medium"
-            style={{ color: "var(--bsky-text-primary)" }}
+            style={{ color: "var(--asph-text-primary)" }}
           >
             Content filtering
           </div>
           <div
             className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Automatically hide potentially sensitive content
           </div>
@@ -265,8 +265,8 @@ export const PrivacySettings: React.FC = () => {
         <div
           className={`rounded-lg border p-3 text-sm ${
             message.type === "success"
-              ? "border-bsky-success/30 bg-bsky-success/10 text-bsky-success"
-              : "border-bsky-error/30 bg-bsky-error/10 text-bsky-error"
+              ? "border-asph-success/30 bg-asph-success/10 text-asph-success"
+              : "border-asph-error/30 bg-asph-error/10 text-asph-error"
           }`}
         >
           {message.text}
@@ -279,7 +279,7 @@ export const PrivacySettings: React.FC = () => {
           disabled={isLoading}
           className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
           style={{
-            backgroundColor: "var(--bsky-primary)",
+            backgroundColor: "var(--asph-primary)",
           }}
         >
           {isLoading ? "Saving..." : "Save Settings"}

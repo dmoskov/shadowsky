@@ -86,14 +86,14 @@ export function PollComposer({ poll, onChange, onRemove }: PollComposerProps) {
     <div
       className="mt-3 rounded-lg border p-3"
       style={{
-        backgroundColor: "var(--bsky-bg-secondary)",
-        borderColor: "var(--bsky-border-primary)",
+        backgroundColor: "var(--asph-bg-secondary)",
+        borderColor: "var(--asph-border-primary)",
       }}
     >
       <div className="mb-3 flex items-center justify-between">
         <span
           className="text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           Create a Poll
         </span>
@@ -118,14 +118,14 @@ export function PollComposer({ poll, onChange, onRemove }: PollComposerProps) {
                 maxLength={MAX_OPTION_LENGTH}
                 className="w-full rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 style={{
-                  backgroundColor: "var(--bsky-bg-primary)",
-                  borderColor: "var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
+                  backgroundColor: "var(--asph-bg-primary)",
+                  borderColor: "var(--asph-border-primary)",
+                  color: "var(--asph-text-primary)",
                 }}
               />
               <span
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 {option.text.length}/{MAX_OPTION_LENGTH}
               </span>
@@ -138,7 +138,7 @@ export function PollComposer({ poll, onChange, onRemove }: PollComposerProps) {
               >
                 <Minus
                   size={16}
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 />
               </button>
             )}
@@ -158,15 +158,15 @@ export function PollComposer({ poll, onChange, onRemove }: PollComposerProps) {
 
       <div
         className="mt-4 flex items-center justify-between border-t pt-3"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         <div className="relative">
           <button
             onClick={() => setShowDurationDropdown(!showDurationDropdown)}
             className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
             style={{
-              borderColor: "var(--bsky-border-primary)",
-              color: "var(--bsky-text-secondary)",
+              borderColor: "var(--asph-border-primary)",
+              color: "var(--asph-text-secondary)",
             }}
           >
             <Clock size={14} />
@@ -177,8 +177,8 @@ export function PollComposer({ poll, onChange, onRemove }: PollComposerProps) {
             <div
               className="absolute bottom-full left-0 z-10 mb-1 min-w-[120px] rounded-lg border py-1 shadow-lg"
               style={{
-                backgroundColor: "var(--bsky-bg-primary)",
-                borderColor: "var(--bsky-border-primary)",
+                backgroundColor: "var(--asph-bg-primary)",
+                borderColor: "var(--asph-border-primary)",
               }}
             >
               {DURATION_OPTIONS.map((option) => (
@@ -194,7 +194,7 @@ export function PollComposer({ poll, onChange, onRemove }: PollComposerProps) {
                     color:
                       poll.durationHours === option.value
                         ? undefined
-                        : "var(--bsky-text-primary)",
+                        : "var(--asph-text-primary)",
                   }}
                 >
                   {option.label}

@@ -110,8 +110,8 @@ const DegradedIndicator: React.FC<{
       <div
         className="relative flex items-center gap-2 rounded-full px-3 py-2 shadow-lg transition-all duration-300 ease-out"
         style={{
-          background: "var(--bsky-bg-secondary)",
-          border: "1px solid var(--bsky-border)",
+          background: "var(--asph-bg-secondary)",
+          border: "1px solid var(--asph-border)",
           animation: "degraded-fade-in 0.3s ease-out",
         }}
         onMouseEnter={() => setShowTooltip(true)}
@@ -131,7 +131,7 @@ const DegradedIndicator: React.FC<{
         </div>
         <span
           className="text-xs font-medium"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Slow
         </span>
@@ -141,26 +141,26 @@ const DegradedIndicator: React.FC<{
           <div
             className="absolute bottom-full left-0 mb-2 w-56 rounded-lg p-3 shadow-xl"
             style={{
-              background: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border)",
+              background: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border)",
             }}
             role="tooltip"
           >
             <p
               className="mb-1 text-sm font-medium"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Slow connection
             </p>
             <p
               className="mb-2 text-xs"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Notifications may be delayed
             </p>
             <p
               className="text-xs"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               💡 Check your network connection
             </p>
@@ -168,8 +168,8 @@ const DegradedIndicator: React.FC<{
               <p
                 className="mt-2 border-t pt-2 text-xs"
                 style={{
-                  color: "var(--bsky-text-tertiary)",
-                  borderColor: "var(--bsky-border)",
+                  color: "var(--asph-text-tertiary)",
+                  borderColor: "var(--asph-border)",
                 }}
               >
                 {reason}
@@ -179,8 +179,8 @@ const DegradedIndicator: React.FC<{
             <div
               className="absolute -bottom-1.5 left-4 h-3 w-3 rotate-45"
               style={{
-                background: "var(--bsky-bg-secondary)",
-                border: "1px solid var(--bsky-border)",
+                background: "var(--asph-bg-secondary)",
+                border: "1px solid var(--asph-border)",
                 borderTop: "none",
                 borderLeft: "none",
               }}
@@ -206,13 +206,13 @@ const SubsystemRow: React.FC<{ subsystem: SubsystemStatus }> = ({
   return (
     <div
       className="flex items-center justify-between py-2"
-      style={{ borderBottom: "1px solid var(--bsky-border)" }}
+      style={{ borderBottom: "1px solid var(--asph-border)" }}
     >
       <div className="flex items-center gap-2">
         {getSubsystemIcon(subsystem.name, subsystem.level)}
         <span
           className="text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {subsystem.name}
         </span>
@@ -220,7 +220,7 @@ const SubsystemRow: React.FC<{ subsystem: SubsystemStatus }> = ({
       <div className="flex items-center gap-2">
         <span
           className="text-xs"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           {subsystem.message}
         </span>
@@ -232,7 +232,7 @@ const SubsystemRow: React.FC<{ subsystem: SubsystemStatus }> = ({
             }}
             className="rounded px-2 py-0.5 text-xs font-medium transition-colors hover:opacity-80"
             style={{
-              background: "var(--bsky-primary)",
+              background: "var(--asph-primary)",
               color: "white",
             }}
           >
@@ -346,8 +346,8 @@ export const StatusBar: React.FC = () => {
             onClick={() => setIsExpanded(true)}
             className="flex items-center gap-2 rounded-full px-3 py-2 shadow-lg transition-all duration-200 hover:scale-105"
             style={{
-              background: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border)",
+              background: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border)",
             }}
             aria-label={`System status: ${issueCount} issue${issueCount > 1 ? "s" : ""}. Click to expand.`}
             aria-expanded={false}
@@ -358,14 +358,14 @@ export const StatusBar: React.FC = () => {
             {issueCount > 0 && (
               <span
                 className="text-xs font-medium"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 {issueCount}
               </span>
             )}
             <ChevronUp
               className="h-3 w-3"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             />
           </button>
         )}
@@ -375,20 +375,20 @@ export const StatusBar: React.FC = () => {
           <div
             className="w-72 rounded-lg shadow-xl transition-all duration-200"
             style={{
-              background: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border)",
+              background: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border)",
             }}
           >
             {/* Header */}
             <div
               className="flex items-center justify-between p-3"
-              style={{ borderBottom: "1px solid var(--bsky-border)" }}
+              style={{ borderBottom: "1px solid var(--asph-border)" }}
             >
               <div className="flex items-center gap-2">
                 {getHealthIcon(overallHealth)}
                 <span
                   className="text-sm font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   System Status
                 </span>
@@ -401,7 +401,7 @@ export const StatusBar: React.FC = () => {
                 >
                   <RefreshCw
                     className="h-4 w-4"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   />
                 </button>
                 <button
@@ -411,7 +411,7 @@ export const StatusBar: React.FC = () => {
                 >
                   <X
                     className="h-4 w-4"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   />
                 </button>
               </div>
@@ -429,8 +429,8 @@ export const StatusBar: React.FC = () => {
             <div
               className="px-3 py-2 text-center"
               style={{
-                borderTop: "1px solid var(--bsky-border)",
-                color: "var(--bsky-text-tertiary)",
+                borderTop: "1px solid var(--asph-border)",
+                color: "var(--asph-text-tertiary)",
               }}
             >
               <span className="text-xs">

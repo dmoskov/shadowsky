@@ -342,15 +342,15 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
     >
       {/* Header with Search Input */}
       <div
-        className="bsky-glass sticky top-0 z-20 border-b"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        className="asph-glass sticky top-0 z-20 border-b"
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         <div className="flex items-center justify-between px-4 py-2.5">
           <div className="flex items-center gap-2">
-            <Search size={20} style={{ color: "var(--bsky-primary)" }} />
+            <Search size={20} style={{ color: "var(--asph-primary)" }} />
             <h2
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Search
             </h2>
@@ -359,7 +359,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
             <button
               onClick={onClose}
               className="rounded-full p-1.5 transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
               aria-label="Close column"
             >
               <X size={18} />
@@ -374,7 +374,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
               <Search
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 transform"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               />
               <input
                 ref={inputRef}
@@ -386,9 +386,9 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                 onKeyDown={handleKeyDown}
                 className="w-full rounded-lg py-2 pl-10 pr-10 text-sm"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  border: "1px solid var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  border: "1px solid var(--asph-border-primary)",
+                  color: "var(--asph-text-primary)",
                 }}
                 autoComplete="off"
                 aria-label="Search posts"
@@ -410,7 +410,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                 >
                   <X
                     size={14}
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                     aria-hidden="true"
                   />
                 </button>
@@ -422,12 +422,12 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
               className={`relative rounded-lg border p-2 transition-all ${showFilters ? "ring-2" : ""}`}
               style={{
                 backgroundColor: hasActiveFilters
-                  ? "var(--bsky-primary)"
-                  : "var(--bsky-bg-secondary)",
-                borderColor: "var(--bsky-border-primary)",
+                  ? "var(--asph-primary)"
+                  : "var(--asph-bg-secondary)",
+                borderColor: "var(--asph-border-primary)",
                 color: hasActiveFilters
                   ? "white"
-                  : "var(--bsky-text-secondary)",
+                  : "var(--asph-text-secondary)",
               }}
               aria-label={`${showFilters ? "Hide" : "Show"} search filters${hasActiveFilters ? " (filters active)" : ""}`}
               aria-expanded={showFilters}
@@ -453,10 +453,10 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                 id="search-history-dropdown"
                 role="listbox"
                 aria-label="Search suggestions"
-                className="bsky-scrollbar absolute left-4 right-4 top-full z-30 mt-1 max-h-80 overflow-y-auto rounded-lg border shadow-lg"
+                className="asph-scrollbar absolute left-4 right-4 top-full z-30 mt-1 max-h-80 overflow-y-auto rounded-lg border shadow-lg"
                 style={{
-                  backgroundColor: "var(--bsky-bg-primary)",
-                  borderColor: "var(--bsky-border-primary)",
+                  backgroundColor: "var(--asph-bg-primary)",
+                  borderColor: "var(--asph-border-primary)",
                 }}
               >
                 {/* Trending Suggestions */}
@@ -464,15 +464,15 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                   <>
                     <div
                       className="flex items-center gap-1.5 border-b px-3 py-2"
-                      style={{ borderColor: "var(--bsky-border-primary)" }}
+                      style={{ borderColor: "var(--asph-border-primary)" }}
                     >
                       <TrendingUp
                         size={12}
-                        style={{ color: "var(--bsky-primary)" }}
+                        style={{ color: "var(--asph-primary)" }}
                       />
                       <span
                         className="text-xs font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         Trending
                       </span>
@@ -490,9 +490,9 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                               }}
                               className="rounded-full border px-2.5 py-1 text-xs transition-all hover:border-blue-400"
                               style={{
-                                backgroundColor: "var(--bsky-bg-secondary)",
-                                borderColor: "var(--bsky-border-primary)",
-                                color: "var(--bsky-text-primary)",
+                                backgroundColor: "var(--asph-bg-secondary)",
+                                borderColor: "var(--asph-border-primary)",
+                                color: "var(--asph-text-primary)",
                               }}
                             >
                               {trend.displayName || trend.topic}
@@ -509,9 +509,9 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                               }}
                               className="rounded-full border px-2.5 py-1 text-xs transition-all hover:border-blue-400"
                               style={{
-                                backgroundColor: "var(--bsky-bg-secondary)",
-                                borderColor: "var(--bsky-border-primary)",
-                                color: "var(--bsky-text-primary)",
+                                backgroundColor: "var(--asph-bg-secondary)",
+                                borderColor: "var(--asph-border-primary)",
+                                color: "var(--asph-text-primary)",
                               }}
                             >
                               {topic.topic}
@@ -526,11 +526,11 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                   <>
                     <div
                       className="flex items-center justify-between border-b px-3 py-2"
-                      style={{ borderColor: "var(--bsky-border-primary)" }}
+                      style={{ borderColor: "var(--asph-border-primary)" }}
                     >
                       <span
                         className="flex items-center gap-1.5 text-xs font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         <Clock size={12} />
                         Recent Searches
@@ -542,7 +542,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                           clearHistory();
                         }}
                         className="flex items-center gap-1 text-xs transition-colors hover:text-red-500"
-                        style={{ color: "var(--bsky-text-tertiary)" }}
+                        style={{ color: "var(--asph-text-tertiary)" }}
                         aria-label="Clear search history"
                       >
                         <Trash2 size={12} aria-hidden="true" />
@@ -569,18 +569,18 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                             <Clock
                               size={14}
                               className="shrink-0"
-                              style={{ color: "var(--bsky-text-tertiary)" }}
+                              style={{ color: "var(--asph-text-tertiary)" }}
                             />
                             <div className="min-w-0 flex-1">
                               <span
                                 className="block truncate"
-                                style={{ color: "var(--bsky-text-primary)" }}
+                                style={{ color: "var(--asph-text-primary)" }}
                               >
                                 {entry.query}
                               </span>
                               <span
                                 className="text-xs"
-                                style={{ color: "var(--bsky-text-tertiary)" }}
+                                style={{ color: "var(--asph-text-tertiary)" }}
                               >
                                 {formatDistanceToNow(new Date(entry.timestamp))}{" "}
                                 ago
@@ -594,7 +594,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                               removeFromHistory(entry.id);
                             }}
                             className="shrink-0 rounded p-1 opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
-                            style={{ color: "var(--bsky-text-tertiary)" }}
+                            style={{ color: "var(--asph-text-tertiary)" }}
                             aria-label={`Remove "${entry.query}" from search history`}
                           >
                             <X size={12} aria-hidden="true" />
@@ -609,8 +609,8 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                 <div
                   className="flex items-center gap-3 border-t px-3 py-2 text-xs"
                   style={{
-                    borderColor: "var(--bsky-border-primary)",
-                    color: "var(--bsky-text-tertiary)",
+                    borderColor: "var(--asph-border-primary)",
+                    color: "var(--asph-text-tertiary)",
                   }}
                   aria-hidden="true"
                 >
@@ -635,17 +635,17 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
         {activeQuery && (
           <div
             className="flex items-center justify-between border-t px-4 py-2"
-            style={{ borderColor: "var(--bsky-border-primary)" }}
+            style={{ borderColor: "var(--asph-border-primary)" }}
           >
             <span
               className="text-xs"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               {filteredResults.length} results
               {fullSearchQuery !== activeQuery && (
                 <span
                   className="ml-1"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   ({fullSearchQuery})
                 </span>
@@ -661,7 +661,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                 }`}
                 style={
                   sortOrder !== "latest"
-                    ? { color: "var(--bsky-text-secondary)" }
+                    ? { color: "var(--asph-text-secondary)" }
                     : {}
                 }
                 aria-label="Sort by latest"
@@ -679,7 +679,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                 }`}
                 style={
                   sortOrder !== "top"
-                    ? { color: "var(--bsky-text-secondary)" }
+                    ? { color: "var(--asph-text-secondary)" }
                     : {}
                 }
                 aria-label="Sort by top engagement"
@@ -696,7 +696,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
       {/* Results */}
       <div
         ref={resultsContainerRef}
-        className="bsky-scrollbar flex-1 overflow-y-auto"
+        className="asph-scrollbar flex-1 overflow-y-auto"
         role="feed"
         aria-label="Search results"
       >
@@ -773,7 +773,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
               <div className="py-4 text-center">
                 <p
                   className="text-xs"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   End of results
                 </p>

@@ -45,7 +45,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
       onClick={handleClick}
       className={`fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg lg:hidden ${prefersReducedMotion ? "" : "transition-all duration-300"} ${className}`}
       style={{
-        backgroundColor: "var(--bsky-primary)",
+        backgroundColor: "var(--asph-primary)",
         color: "white",
         transform: getTransformStyle(),
         opacity: isVisible ? 1 : 0,

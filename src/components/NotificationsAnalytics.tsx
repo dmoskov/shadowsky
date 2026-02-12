@@ -814,11 +814,11 @@ export const NotificationsAnalytics: React.FC = React.memo(
           <div className="animate-pulse space-y-4">
             <div
               className="h-8 w-1/4 rounded"
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
             ></div>
             <div
               className="h-64 rounded"
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
             ></div>
           </div>
         </div>
@@ -847,13 +847,13 @@ export const NotificationsAnalytics: React.FC = React.memo(
           <div>
             <h1
               className="mb-2 text-2xl font-bold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Analytics
             </h1>
             <div
               className="flex items-center gap-4 text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               <span className="flex items-center gap-1">
                 <Bell size={16} />
@@ -875,8 +875,8 @@ export const NotificationsAnalytics: React.FC = React.memo(
             <div
               className="flex items-center gap-2 rounded-lg px-3 py-1 text-sm"
               style={{
-                backgroundColor: "var(--bsky-bg-tertiary)",
-                color: "var(--bsky-text-secondary)",
+                backgroundColor: "var(--asph-bg-tertiary)",
+                color: "var(--asph-text-secondary)",
               }}
             >
               <Activity size={14} />
@@ -887,9 +887,9 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
         {/* Activity Chart */}
         <div
-          className="bsky-card p-6"
+          className="asph-card p-6"
           style={{
-            background: "var(--bsky-bg-secondary)",
+            background: "var(--asph-bg-secondary)",
             position: "relative",
           }}
         >
@@ -897,7 +897,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
             className="pointer-events-none absolute right-0 top-0 h-64 w-64 opacity-5"
             style={{
               background:
-                "radial-gradient(circle, var(--bsky-primary) 0%, transparent 70%)",
+                "radial-gradient(circle, var(--asph-primary) 0%, transparent 70%)",
               transform: "translate(30%, -30%)",
               overflow: "hidden",
             }}
@@ -918,12 +918,12 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   style={{
                     backgroundColor:
                       activityView === "received"
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-bg-tertiary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-bg-tertiary)",
                     color:
                       activityView === "received"
                         ? "white"
-                        : "var(--bsky-text-secondary)",
+                        : "var(--asph-text-secondary)",
                   }}
                 >
                   Received
@@ -936,12 +936,12 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   style={{
                     backgroundColor:
                       activityView === "sent"
-                        ? "var(--bsky-primary)"
-                        : "var(--bsky-bg-tertiary)",
+                        ? "var(--asph-primary)"
+                        : "var(--asph-bg-tertiary)",
                     color:
                       activityView === "sent"
                         ? "white"
-                        : "var(--bsky-text-secondary)",
+                        : "var(--asph-text-secondary)",
                   }}
                 >
                   Sent
@@ -961,10 +961,10 @@ export const NotificationsAnalytics: React.FC = React.memo(
                 style={{
                   backgroundColor:
                     timeRange === "1d"
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-bg-tertiary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-bg-tertiary)",
                   color:
-                    timeRange === "1d" ? "white" : "var(--bsky-text-secondary)",
+                    timeRange === "1d" ? "white" : "var(--asph-text-secondary)",
                   border: "none",
                 }}
                 type="button"
@@ -981,10 +981,10 @@ export const NotificationsAnalytics: React.FC = React.memo(
                 style={{
                   backgroundColor:
                     timeRange === "3d"
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-bg-tertiary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-bg-tertiary)",
                   color:
-                    timeRange === "3d" ? "white" : "var(--bsky-text-secondary)",
+                    timeRange === "3d" ? "white" : "var(--asph-text-secondary)",
                   border: "none",
                 }}
                 type="button"
@@ -1001,10 +1001,10 @@ export const NotificationsAnalytics: React.FC = React.memo(
                 style={{
                   backgroundColor:
                     timeRange === "7d"
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-bg-tertiary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-bg-tertiary)",
                   color:
-                    timeRange === "7d" ? "white" : "var(--bsky-text-secondary)",
+                    timeRange === "7d" ? "white" : "var(--asph-text-secondary)",
                   border: "none",
                 }}
                 type="button"
@@ -1021,10 +1021,10 @@ export const NotificationsAnalytics: React.FC = React.memo(
                 style={{
                   backgroundColor:
                     timeRange === "4w"
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-bg-tertiary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-bg-tertiary)",
                   color:
-                    timeRange === "4w" ? "white" : "var(--bsky-text-secondary)",
+                    timeRange === "4w" ? "white" : "var(--asph-text-secondary)",
                   border: "none",
                 }}
                 type="button"
@@ -1041,7 +1041,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
             {/* Y-axis labels */}
             <div
               className="absolute bottom-0 left-0 top-0 flex flex-col justify-between text-xs"
-              style={{ width: "40px", color: "var(--bsky-text-secondary)" }}
+              style={{ width: "40px", color: "var(--asph-text-secondary)" }}
             >
               <span>{currentMaxValue}</span>
               <span>{Math.round(currentMaxValue * 0.75)}</span>
@@ -1061,7 +1061,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                     style={{
                       bottom: `${fraction * 100}%`,
                       borderBottom: "1px solid",
-                      borderColor: "var(--bsky-border-secondary)",
+                      borderColor: "var(--asph-border-secondary)",
                       opacity: fraction === 0 ? 1 : 0.2,
                     }}
                   />
@@ -1162,10 +1162,10 @@ export const NotificationsAnalytics: React.FC = React.memo(
                             <div
                               className="whitespace-nowrap rounded-lg px-3 py-2 text-xs"
                               style={{
-                                backgroundColor: "var(--bsky-bg-primary)",
-                                color: "var(--bsky-text-primary)",
+                                backgroundColor: "var(--asph-bg-primary)",
+                                color: "var(--asph-text-primary)",
                                 boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-                                border: "1px solid var(--bsky-border-primary)",
+                                border: "1px solid var(--asph-border-primary)",
                               }}
                             >
                               <div className="mb-1 font-bold">
@@ -1207,7 +1207,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                               <span
                                 className="text-xs"
                                 style={{
-                                  color: "var(--bsky-text-secondary)",
+                                  color: "var(--asph-text-secondary)",
                                   fontSize: timeRange === "4w" ? "9px" : "10px",
                                 }}
                               >
@@ -1298,11 +1298,11 @@ export const NotificationsAnalytics: React.FC = React.memo(
                               <div
                                 className="whitespace-nowrap rounded-lg px-3 py-2 text-xs"
                                 style={{
-                                  backgroundColor: "var(--bsky-bg-primary)",
-                                  color: "var(--bsky-text-primary)",
+                                  backgroundColor: "var(--asph-bg-primary)",
+                                  color: "var(--asph-text-primary)",
                                   boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
                                   border:
-                                    "1px solid var(--bsky-border-primary)",
+                                    "1px solid var(--asph-border-primary)",
                                 }}
                               >
                                 <div className="mb-1 font-bold">
@@ -1339,7 +1339,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                 <span
                                   className="text-xs"
                                   style={{
-                                    color: "var(--bsky-text-tertiary)",
+                                    color: "var(--asph-text-tertiary)",
                                     fontSize:
                                       timeRange === "4w" ? "10px" : "12px",
                                   }}
@@ -1363,7 +1363,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                       className="h-3 w-3 rounded"
                       style={{ backgroundColor: "#ef4444" }}
                     ></div>
-                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    <span style={{ color: "var(--asph-text-secondary)" }}>
                       Likes
                     </span>
                   </div>
@@ -1372,7 +1372,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                       className="h-3 w-3 rounded"
                       style={{ backgroundColor: "#60a5fa" }}
                     ></div>
-                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    <span style={{ color: "var(--asph-text-secondary)" }}>
                       Reposts
                     </span>
                   </div>
@@ -1381,7 +1381,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                       className="h-3 w-3 rounded"
                       style={{ backgroundColor: "#a78bfa" }}
                     ></div>
-                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    <span style={{ color: "var(--asph-text-secondary)" }}>
                       Follows
                     </span>
                   </div>
@@ -1390,7 +1390,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                       className="h-3 w-3 rounded"
                       style={{ backgroundColor: "#4ade80" }}
                     ></div>
-                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    <span style={{ color: "var(--asph-text-secondary)" }}>
                       Replies
                     </span>
                   </div>
@@ -1399,7 +1399,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                       className="h-3 w-3 rounded"
                       style={{ backgroundColor: "#fb7185" }}
                     ></div>
-                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    <span style={{ color: "var(--asph-text-secondary)" }}>
                       Mentions
                     </span>
                   </div>
@@ -1411,7 +1411,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                       className="h-3 w-3 rounded"
                       style={{ backgroundColor: "#3b82f6" }}
                     ></div>
-                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    <span style={{ color: "var(--asph-text-secondary)" }}>
                       Posts
                     </span>
                   </div>
@@ -1420,7 +1420,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                       className="h-3 w-3 rounded"
                       style={{ backgroundColor: "#4ade80" }}
                     ></div>
-                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    <span style={{ color: "var(--asph-text-secondary)" }}>
                       Replies
                     </span>
                   </div>
@@ -1429,7 +1429,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                       className="h-3 w-3 rounded"
                       style={{ backgroundColor: "#a78bfa" }}
                     ></div>
-                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    <span style={{ color: "var(--asph-text-secondary)" }}>
                       Reposts
                     </span>
                   </div>
@@ -1438,7 +1438,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                       className="h-3 w-3 rounded"
                       style={{ backgroundColor: "#fb7185" }}
                     ></div>
-                    <span style={{ color: "var(--bsky-text-secondary)" }}>
+                    <span style={{ color: "var(--asph-text-secondary)" }}>
                       Quotes
                     </span>
                   </div>
@@ -1449,10 +1449,10 @@ export const NotificationsAnalytics: React.FC = React.memo(
         </div>
 
         {/* Top Users */}
-        <div className="bsky-card p-6">
+        <div className="asph-card p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <Heart style={{ color: "var(--bsky-like)" }} size={20} />
+              <Heart style={{ color: "var(--asph-like)" }} size={20} />
               {topUsersView === "received"
                 ? "Top Users Engaging With You"
                 : "Users You Engage With Most"}
@@ -1466,12 +1466,12 @@ export const NotificationsAnalytics: React.FC = React.memo(
                 style={{
                   backgroundColor:
                     topUsersView === "received"
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-bg-tertiary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-bg-tertiary)",
                   color:
                     topUsersView === "received"
                       ? "white"
-                      : "var(--bsky-text-secondary)",
+                      : "var(--asph-text-secondary)",
                 }}
               >
                 Received
@@ -1484,12 +1484,12 @@ export const NotificationsAnalytics: React.FC = React.memo(
                 style={{
                   backgroundColor:
                     topUsersView === "sent"
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-bg-tertiary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-bg-tertiary)",
                   color:
                     topUsersView === "sent"
                       ? "white"
-                      : "var(--bsky-text-secondary)",
+                      : "var(--asph-text-secondary)",
                 }}
               >
                 Sent
@@ -1505,14 +1505,14 @@ export const NotificationsAnalytics: React.FC = React.memo(
                       src={proxifyBskyImage(user.avatar)}
                       alt={handle}
                       className="h-10 w-10 rounded-full border-2"
-                      style={{ borderColor: "var(--bsky-border-primary)" }}
+                      style={{ borderColor: "var(--asph-border-primary)" }}
                     />
                   ) : (
                     <div
                       className="flex h-10 w-10 items-center justify-center rounded-full"
                       style={{
-                        backgroundColor: "var(--bsky-bg-tertiary)",
-                        color: "var(--bsky-text-secondary)",
+                        backgroundColor: "var(--asph-bg-tertiary)",
+                        color: "var(--asph-text-secondary)",
                       }}
                     >
                       {handle.charAt(0).toUpperCase()}
@@ -1521,20 +1521,20 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   <div className="flex-1">
                     <p
                       className="text-sm font-medium"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       {user?.displayName || handle}
                     </p>
                     <p
                       className="text-xs"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       @{handle}
                     </p>
                   </div>
                   <span
                     className="text-sm"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {count} interactions
                   </span>
@@ -1548,14 +1548,14 @@ export const NotificationsAnalytics: React.FC = React.memo(
                       src={proxifyBskyImage(user.avatar)}
                       alt={user.handle}
                       className="h-10 w-10 rounded-full border-2"
-                      style={{ borderColor: "var(--bsky-border-primary)" }}
+                      style={{ borderColor: "var(--asph-border-primary)" }}
                     />
                   ) : (
                     <div
                       className="flex h-10 w-10 items-center justify-center rounded-full"
                       style={{
-                        backgroundColor: "var(--bsky-bg-tertiary)",
-                        color: "var(--bsky-text-secondary)",
+                        backgroundColor: "var(--asph-bg-tertiary)",
+                        color: "var(--asph-text-secondary)",
                       }}
                     >
                       {user.handle?.charAt(0).toUpperCase() || "U"}
@@ -1564,13 +1564,13 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   <div className="flex-1">
                     <p
                       className="text-sm font-medium"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       {user.displayName || user.handle}
                     </p>
                     <p
                       className="text-xs"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       @{user.handle}
                     </p>
@@ -1578,7 +1578,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                       {user.likes > 0 && (
                         <span
                           className="text-xs"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <span style={{ color: "#ef4444" }}>♥</span>{" "}
                           {user.likes}
@@ -1587,7 +1587,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                       {user.replies > 0 && (
                         <span
                           className="text-xs"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <span style={{ color: "#4ade80" }}>↩</span>{" "}
                           {user.replies}
@@ -1596,7 +1596,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                       {user.reposts > 0 && (
                         <span
                           className="text-xs"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <span style={{ color: "#60a5fa" }}>⟲</span>{" "}
                           {user.reposts}
@@ -1606,7 +1606,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   </div>
                   <span
                     className="text-sm font-medium"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {user.total}
                   </span>
@@ -1615,7 +1615,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
             ) : (
               <div
                 className="py-8 text-center"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 <p className="text-sm">Loading...</p>
               </div>
@@ -1625,10 +1625,10 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
         {/* Your Activity */}
         {userActivity && (
-          <div className="bsky-card p-4">
+          <div className="asph-card p-4">
             <h2
               className="mb-4 flex items-center gap-2 text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               <Send size={20} className="text-blue-500" />
               Your Activity
@@ -1636,7 +1636,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
             <div
               className="mb-3 text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Showing cumulative engagement on original posts (not reposts) from
               the last{" "}
@@ -1652,17 +1652,17 @@ export const NotificationsAnalytics: React.FC = React.memo(
             <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4">
               <div
                 className="rounded-lg p-3 text-center"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
                 <div
                   className="text-2xl font-bold"
-                  style={{ color: "var(--bsky-primary)" }}
+                  style={{ color: "var(--asph-primary)" }}
                 >
                   {userActivity.postsCount}
                 </div>
                 <div
                   className="text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Posts
                 </div>
@@ -1670,14 +1670,14 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
               <div
                 className="rounded-lg p-3 text-center"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
                 <div className="text-2xl font-bold text-red-500">
                   {userActivity.likesReceived}
                 </div>
                 <div
                   className="text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Total Likes on Posts
                 </div>
@@ -1685,14 +1685,14 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
               <div
                 className="rounded-lg p-3 text-center"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
                 <div className="text-2xl font-bold text-blue-500">
                   {userActivity.repostsReceived}
                 </div>
                 <div
                   className="text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Total Reposts
                 </div>
@@ -1700,14 +1700,14 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
               <div
                 className="rounded-lg p-3 text-center"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
                 <div className="text-2xl font-bold text-green-500">
                   {userActivity.repliesReceived}
                 </div>
                 <div
                   className="text-sm"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   Total Replies
                 </div>
@@ -1718,33 +1718,33 @@ export const NotificationsAnalytics: React.FC = React.memo(
               <div className="text-center">
                 <div
                   className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {userActivity.followersCount}
                 </div>
-                <div style={{ color: "var(--bsky-text-secondary)" }}>
+                <div style={{ color: "var(--asph-text-secondary)" }}>
                   Followers
                 </div>
               </div>
               <div className="text-center">
                 <div
                   className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {userActivity.followingCount}
                 </div>
-                <div style={{ color: "var(--bsky-text-secondary)" }}>
+                <div style={{ color: "var(--asph-text-secondary)" }}>
                   Following
                 </div>
               </div>
               <div className="text-center">
                 <div
                   className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {userActivity.postsTotal}
                 </div>
-                <div style={{ color: "var(--bsky-text-secondary)" }}>
+                <div style={{ color: "var(--asph-text-secondary)" }}>
                   Total Posts
                 </div>
               </div>
@@ -1753,13 +1753,13 @@ export const NotificationsAnalytics: React.FC = React.memo(
             {userActivity.postsCount > 0 && (
               <div
                 className="mt-4 text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 <div className="flex items-center justify-between">
                   <span>Engagement Rate</span>
                   <span
                     className="font-semibold"
-                    style={{ color: "var(--bsky-text-primary)" }}
+                    style={{ color: "var(--asph-text-primary)" }}
                   >
                     {(
                       (userActivity.likesReceived +
@@ -1776,13 +1776,13 @@ export const NotificationsAnalytics: React.FC = React.memo(
         )}
 
         {/* Engagement Summary */}
-        <div className="bsky-card p-4">
+        <div className="asph-card p-4">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Calendar size={20} className="text-blue-500" />
               <span
                 className="text-sm font-medium"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 {timeRange === "1d"
                   ? "Last 24 hours"
@@ -1797,11 +1797,11 @@ export const NotificationsAnalytics: React.FC = React.memo(
               <div>
                 <span
                   className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {analytics.totalEngagement}
                 </span>
-                <span style={{ color: "var(--bsky-text-secondary)" }}>
+                <span style={{ color: "var(--asph-text-secondary)" }}>
                   {" "}
                   total interactions
                 </span>
@@ -1809,13 +1809,13 @@ export const NotificationsAnalytics: React.FC = React.memo(
               <div>
                 <span
                   className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   {timeRange === "1d"
                     ? analytics.averagePerHour.toFixed(1)
                     : Math.round(analytics.averagePerDay)}
                 </span>
-                <span style={{ color: "var(--bsky-text-secondary)" }}>
+                <span style={{ color: "var(--asph-text-secondary)" }}>
                   {" "}
                   {timeRange === "1d" ? "per hour" : "per day"}
                 </span>
@@ -1824,7 +1824,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
           </div>
           <div
             className="mt-2 text-xs"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {(() => {
               const now = new Date();

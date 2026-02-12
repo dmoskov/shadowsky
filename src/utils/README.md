@@ -1,7 +1,7 @@
 # Utils Directory (`/src/utils`)
 
 ## Overview
-This directory contains utility functions, helpers, and common tools used throughout the ShadowSky application. These are pure functions and utilities that don't depend on React or application-specific business logic.
+This directory contains utility functions, helpers, and common tools used throughout the Asphodel application. These are pure functions and utilities that don't depend on React or application-specific business logic.
 
 ## Directory Structure
 

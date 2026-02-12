@@ -364,8 +364,8 @@ export function BugReportModal({
                   id="bug-report-description"
                   className="text-gray-600 dark:text-gray-300"
                 >
-                  Thank you for helping us improve ShadowSky! We&apos;ve
-                  received your bug report and will investigate the issue.
+                  Thank you for helping us improve Asphodel! We&apos;ve received
+                  your bug report and will investigate the issue.
                 </p>
                 {referenceId && (
                   <div className="mt-4 rounded-md bg-gray-100 p-3 dark:bg-gray-800">
@@ -413,7 +413,7 @@ export function BugReportModal({
                   id="bug-report-description"
                   className="text-sm text-gray-600 dark:text-gray-300"
                 >
-                  Help us improve ShadowSky by reporting issues you encounter.
+                  Help us improve Asphodel by reporting issues you encounter.
                   Diagnostic information will be automatically included to help
                   us investigate.
                 </p>
@@ -428,7 +428,7 @@ export function BugReportModal({
             </div>
 
             {/* Form */}
-            <div className="bsky-scrollbar max-h-[60vh] overflow-y-auto border-t border-gray-200 p-6 dark:border-gray-700">
+            <div className="asph-scrollbar max-h-[60vh] overflow-y-auto border-t border-gray-200 p-6 dark:border-gray-700">
               <div className="space-y-4">
                 {/* Bug Description */}
                 <div>

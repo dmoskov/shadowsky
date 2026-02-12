@@ -192,17 +192,17 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       >
         <Icon
           className="mb-2 h-8 w-8"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         />
         <p
           className="text-sm font-medium"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           {title}
         </p>
         <p
           className="mt-1 text-xs"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           {message}
         </p>
@@ -222,12 +222,12 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                   style={
                     action.variant === "secondary"
                       ? {
-                          backgroundColor: "var(--bsky-bg-secondary)",
-                          borderColor: "var(--bsky-border)",
-                          color: "var(--bsky-text-primary)",
+                          backgroundColor: "var(--asph-bg-secondary)",
+                          borderColor: "var(--asph-border)",
+                          color: "var(--asph-text-primary)",
                         }
                       : {
-                          backgroundColor: "var(--bsky-primary)",
+                          backgroundColor: "var(--asph-primary)",
                         }
                   }
                 >
@@ -250,14 +250,14 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
       <h3
         className="mb-2 text-lg font-semibold"
-        style={{ color: "var(--bsky-text-primary)" }}
+        style={{ color: "var(--asph-text-primary)" }}
       >
         {title}
       </h3>
 
       <p
         className="mb-6 max-w-sm text-sm"
-        style={{ color: "var(--bsky-text-secondary)" }}
+        style={{ color: "var(--asph-text-secondary)" }}
       >
         {message}
       </p>
@@ -278,12 +278,12 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
                 style={
                   action.variant === "secondary"
                     ? {
-                        backgroundColor: "var(--bsky-bg-secondary)",
-                        borderColor: "var(--bsky-border)",
-                        color: "var(--bsky-text-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        borderColor: "var(--asph-border)",
+                        color: "var(--asph-text-primary)",
                       }
                     : {
-                        backgroundColor: "var(--bsky-primary)",
+                        backgroundColor: "var(--asph-primary)",
                       }
                 }
               >

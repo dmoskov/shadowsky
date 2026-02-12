@@ -375,12 +375,12 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
   if (hasError) {
     return (
       <div
-        className={`flex items-center justify-center bg-bsky-bg-tertiary ${className}`}
+        className={`flex items-center justify-center bg-asph-bg-tertiary ${className}`}
         style={{ width: width || "100%", height: height || "100%", ...style }}
         role="img"
         aria-label={`Failed to load: ${alt}`}
       >
-        <div className="flex flex-col items-center gap-2 text-bsky-text-tertiary">
+        <div className="flex flex-col items-center gap-2 text-asph-text-tertiary">
           <svg
             className="h-8 w-8"
             fill="none"
@@ -445,7 +445,7 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
       {/* Skeleton overlay - fades out when LQIP loads or image loads */}
       {showSkeleton && (
         <div
-          className="absolute inset-0 animate-pulse bg-bsky-bg-tertiary"
+          className="absolute inset-0 animate-pulse bg-asph-bg-tertiary"
           style={{
             opacity: lqipLoaded || imageLoaded ? 0 : 1,
             transition:

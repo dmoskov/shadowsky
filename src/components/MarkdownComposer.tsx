@@ -127,8 +127,8 @@ export function renderMarkdownPreview(markdown: string): React.ReactNode {
             key={`code-${i}`}
             className="my-2 overflow-x-auto rounded-lg p-3 text-sm"
             style={{
-              backgroundColor: "var(--bsky-bg-tertiary)",
-              color: "var(--bsky-text-primary)",
+              backgroundColor: "var(--asph-bg-tertiary)",
+              color: "var(--asph-text-primary)",
             }}
           >
             <code>{codeBlockContent.join("\n")}</code>
@@ -200,7 +200,7 @@ function renderInlineMarkdown(
         <code
           key={key}
           className="rounded px-1 py-0.5 text-sm"
-          style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+          style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
         >
           {content}
         </code>
@@ -384,7 +384,7 @@ export const MarkdownComposer = forwardRef<
     <div className="w-full">
       <div
         className="mb-2 flex flex-wrap items-center gap-1 border-b pb-2"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         {FORMATTING_BUTTONS.map((button) => (
           <button
@@ -392,7 +392,7 @@ export const MarkdownComposer = forwardRef<
             onClick={() => applyFormatting(button)}
             disabled={isPreviewMode}
             className="rounded p-1.5 transition-colors hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-gray-800"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
             title={button.label}
           >
             {button.icon}
@@ -401,7 +401,7 @@ export const MarkdownComposer = forwardRef<
 
         <div
           className="mx-1 h-5 w-px"
-          style={{ backgroundColor: "var(--bsky-border-primary)" }}
+          style={{ backgroundColor: "var(--asph-border-primary)" }}
         />
 
         {BLOCK_BUTTONS.map((button) => (
@@ -410,7 +410,7 @@ export const MarkdownComposer = forwardRef<
             onClick={() => applyFormatting(button)}
             disabled={isPreviewMode}
             className="rounded p-1.5 transition-colors hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-gray-800"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
             title={button.label}
           >
             {button.icon}
@@ -427,7 +427,7 @@ export const MarkdownComposer = forwardRef<
               : "hover:bg-gray-100 dark:hover:bg-gray-800"
           }`}
           style={{
-            color: isPreviewMode ? undefined : "var(--bsky-text-secondary)",
+            color: isPreviewMode ? undefined : "var(--asph-text-secondary)",
           }}
           title={isPreviewMode ? "Edit" : "Preview"}
         >
@@ -441,15 +441,15 @@ export const MarkdownComposer = forwardRef<
           className={`min-h-[120px] rounded-lg border p-3 ${className}`}
           style={{
             ...style,
-            backgroundColor: "var(--bsky-bg-secondary)",
-            borderColor: "var(--bsky-border-primary)",
-            color: "var(--bsky-text-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            borderColor: "var(--asph-border-primary)",
+            color: "var(--asph-text-primary)",
           }}
         >
           {value.trim() ? (
             renderMarkdownPreview(value)
           ) : (
-            <span style={{ color: "var(--bsky-text-tertiary)" }}>
+            <span style={{ color: "var(--asph-text-tertiary)" }}>
               Nothing to preview
             </span>
           )}
@@ -468,9 +468,9 @@ export const MarkdownComposer = forwardRef<
           className={`min-h-[120px] w-full resize-none rounded-lg border px-3 py-2 font-mono text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${className}`}
           style={{
             ...style,
-            backgroundColor: "var(--bsky-bg-secondary)",
-            borderColor: "var(--bsky-border-primary)",
-            color: "var(--bsky-text-primary)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            borderColor: "var(--asph-border-primary)",
+            color: "var(--asph-text-primary)",
           }}
         />
       )}
@@ -478,7 +478,7 @@ export const MarkdownComposer = forwardRef<
       <div className="mt-1 flex items-center justify-between">
         <span
           className="text-xs"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           Supports **bold**, _italic_, `code`, [links](url), and more
         </span>
@@ -489,7 +489,7 @@ export const MarkdownComposer = forwardRef<
           style={{
             color:
               plainTextLength <= maxLength
-                ? "var(--bsky-text-secondary)"
+                ? "var(--asph-text-secondary)"
                 : undefined,
           }}
         >

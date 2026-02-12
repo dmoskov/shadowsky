@@ -90,8 +90,8 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div
-      className="bsky-font min-h-screen"
-      style={{ background: "var(--bsky-bg-primary)" }}
+      className="asph-font min-h-screen"
+      style={{ background: "var(--asph-bg-primary)" }}
     >
       {/* Skip to main content link for landing page */}
       <a href="#login-form" className="skip-link">
@@ -100,7 +100,7 @@ export const LandingPage: React.FC = () => {
       <main
         id="main-content"
         role="main"
-        aria-label="ShadowSky landing page"
+        aria-label="Asphodel landing page"
         className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"
       >
         <div className="grid grid-cols-1 items-start gap-6 sm:gap-12 lg:grid-cols-2">
@@ -110,16 +110,16 @@ export const LandingPage: React.FC = () => {
               <div className="mb-4 flex items-center justify-center gap-3 lg:justify-start">
                 <img
                   src={butterflyIcon}
-                  alt="ShadowSky Logo"
+                  alt="Asphodel Logo"
                   className="h-16 w-16 rounded-xl shadow-md"
                 />
                 <div>
-                  <h1 className="bsky-gradient-text text-3xl font-bold">
-                    ShadowSky
+                  <h1 className="asph-gradient-text text-3xl font-bold">
+                    Asphodel
                   </h1>
                   <p
                     className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Free Bluesky Analytics & Notifications
                   </p>
@@ -130,14 +130,14 @@ export const LandingPage: React.FC = () => {
             {/* Login Form */}
             <div
               id="login-form"
-              className="bsky-card mb-6 p-6 shadow-md"
+              className="asph-card mb-6 p-6 shadow-md"
               role="form"
               aria-labelledby="login-heading"
             >
               <h2
                 id="login-heading"
                 className="mb-4 text-xl font-semibold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 Sign in with your Bluesky account
               </h2>
@@ -145,7 +145,7 @@ export const LandingPage: React.FC = () => {
               {/* Login Mode Toggle */}
               <div
                 className="mb-4 flex rounded-lg p-1"
-                style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
                 <button
                   type="button"
@@ -162,12 +162,12 @@ export const LandingPage: React.FC = () => {
                   style={{
                     backgroundColor:
                       loginMode === "oauth"
-                        ? "var(--bsky-bg-secondary)"
+                        ? "var(--asph-bg-secondary)"
                         : "transparent",
                     color:
                       loginMode === "oauth"
-                        ? "var(--bsky-text-primary)"
-                        : "var(--bsky-text-tertiary)",
+                        ? "var(--asph-text-primary)"
+                        : "var(--asph-text-tertiary)",
                   }}
                   title={!isOAuthAvailable ? "OAuth not available yet" : ""}
                 >
@@ -186,12 +186,12 @@ export const LandingPage: React.FC = () => {
                   style={{
                     backgroundColor:
                       loginMode === "app-password"
-                        ? "var(--bsky-bg-secondary)"
+                        ? "var(--asph-bg-secondary)"
                         : "transparent",
                     color:
                       loginMode === "app-password"
-                        ? "var(--bsky-text-primary)"
-                        : "var(--bsky-text-tertiary)",
+                        ? "var(--asph-text-primary)"
+                        : "var(--asph-text-tertiary)",
                   }}
                 >
                   <Key size={16} />
@@ -207,11 +207,11 @@ export const LandingPage: React.FC = () => {
                       ? "rgba(59, 130, 246, 0.1)"
                       : "rgba(239, 68, 68, 0.1)",
                     border: showEmailCode
-                      ? "1px solid var(--bsky-primary)"
-                      : "1px solid var(--bsky-error)",
+                      ? "1px solid var(--asph-primary)"
+                      : "1px solid var(--asph-error)",
                     color: showEmailCode
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-error)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-error)",
                   }}
                 >
                   {showEmailCode && (
@@ -228,7 +228,7 @@ export const LandingPage: React.FC = () => {
                     <label
                       htmlFor="handle"
                       className="mb-2 block text-sm font-medium"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       Handle
                     </label>
@@ -239,23 +239,23 @@ export const LandingPage: React.FC = () => {
                       onChange={(e) => setHandle(e.target.value)}
                       className="w-full rounded-xl px-4 py-3 text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                       style={{
-                        backgroundColor: "var(--bsky-bg-tertiary)",
-                        border: "1px solid var(--bsky-border-primary)",
-                        color: "var(--bsky-text-primary)",
+                        backgroundColor: "var(--asph-bg-tertiary)",
+                        border: "1px solid var(--asph-border-primary)",
+                        color: "var(--asph-text-primary)",
                       }}
                       onFocus={(e) =>
-                        (e.target.style.borderColor = "var(--bsky-primary)")
+                        (e.target.style.borderColor = "var(--asph-primary)")
                       }
                       onBlur={(e) =>
                         (e.target.style.borderColor =
-                          "var(--bsky-border-primary)")
+                          "var(--asph-border-primary)")
                       }
                       placeholder="@handle.bsky.social"
                       required
                     />
                     <p
                       className="mt-1 text-xs"
-                      style={{ color: "var(--bsky-text-tertiary)" }}
+                      style={{ color: "var(--asph-text-tertiary)" }}
                     >
                       You'll be redirected to Bluesky to authorize
                     </p>
@@ -264,7 +264,7 @@ export const LandingPage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="bsky-button-primary flex w-full items-center justify-center gap-2 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    className="asph-button-primary flex w-full items-center justify-center gap-2 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isLoading ? (
                       "Redirecting..."
@@ -285,7 +285,7 @@ export const LandingPage: React.FC = () => {
                     <label
                       htmlFor="identifier"
                       className="mb-2 block text-sm font-medium"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       Handle or Email
                     </label>
@@ -296,16 +296,16 @@ export const LandingPage: React.FC = () => {
                       onChange={(e) => setIdentifier(e.target.value)}
                       className="w-full rounded-xl px-4 py-3 text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                       style={{
-                        backgroundColor: "var(--bsky-bg-tertiary)",
-                        border: "1px solid var(--bsky-border-primary)",
-                        color: "var(--bsky-text-primary)",
+                        backgroundColor: "var(--asph-bg-tertiary)",
+                        border: "1px solid var(--asph-border-primary)",
+                        color: "var(--asph-text-primary)",
                       }}
                       onFocus={(e) =>
-                        (e.target.style.borderColor = "var(--bsky-primary)")
+                        (e.target.style.borderColor = "var(--asph-primary)")
                       }
                       onBlur={(e) =>
                         (e.target.style.borderColor =
-                          "var(--bsky-border-primary)")
+                          "var(--asph-border-primary)")
                       }
                       placeholder="@handle.bsky.social"
                       required
@@ -316,7 +316,7 @@ export const LandingPage: React.FC = () => {
                     <label
                       htmlFor="password"
                       className="mb-2 block text-sm font-medium"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       App Password
                     </label>
@@ -327,23 +327,23 @@ export const LandingPage: React.FC = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full rounded-xl px-4 py-3 text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                       style={{
-                        backgroundColor: "var(--bsky-bg-tertiary)",
-                        border: "1px solid var(--bsky-border-primary)",
-                        color: "var(--bsky-text-primary)",
+                        backgroundColor: "var(--asph-bg-tertiary)",
+                        border: "1px solid var(--asph-border-primary)",
+                        color: "var(--asph-text-primary)",
                       }}
                       onFocus={(e) =>
-                        (e.target.style.borderColor = "var(--bsky-primary)")
+                        (e.target.style.borderColor = "var(--asph-primary)")
                       }
                       onBlur={(e) =>
                         (e.target.style.borderColor =
-                          "var(--bsky-border-primary)")
+                          "var(--asph-border-primary)")
                       }
                       placeholder="xxxx-xxxx-xxxx-xxxx"
                       required
                     />
                     <p
                       className="mt-1 text-xs"
-                      style={{ color: "var(--bsky-text-tertiary)" }}
+                      style={{ color: "var(--asph-text-tertiary)" }}
                     >
                       Create an app password at{" "}
                       <a
@@ -351,7 +351,7 @@ export const LandingPage: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="underline hover:no-underline"
-                        style={{ color: "var(--bsky-primary-dark)" }}
+                        style={{ color: "var(--asph-primary-dark)" }}
                       >
                         bsky.app/settings/app-passwords
                       </a>
@@ -363,7 +363,7 @@ export const LandingPage: React.FC = () => {
                       <label
                         htmlFor="emailCode"
                         className="mb-2 block text-sm font-medium"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         Email Verification Code
                       </label>
@@ -374,16 +374,16 @@ export const LandingPage: React.FC = () => {
                         onChange={(e) => setEmailCode(e.target.value)}
                         className="w-full rounded-xl px-4 py-3 text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                         style={{
-                          backgroundColor: "var(--bsky-bg-tertiary)",
-                          border: "1px solid var(--bsky-border-primary)",
-                          color: "var(--bsky-text-primary)",
+                          backgroundColor: "var(--asph-bg-tertiary)",
+                          border: "1px solid var(--asph-border-primary)",
+                          color: "var(--asph-text-primary)",
                         }}
                         onFocus={(e) =>
-                          (e.target.style.borderColor = "var(--bsky-primary)")
+                          (e.target.style.borderColor = "var(--asph-primary)")
                         }
                         onBlur={(e) =>
                           (e.target.style.borderColor =
-                            "var(--bsky-border-primary)")
+                            "var(--asph-border-primary)")
                         }
                         placeholder="Enter the code from your email"
                         required
@@ -392,7 +392,7 @@ export const LandingPage: React.FC = () => {
                       <div className="mt-1 flex items-center justify-between">
                         <p
                           className="text-xs"
-                          style={{ color: "var(--bsky-text-tertiary)" }}
+                          style={{ color: "var(--asph-text-tertiary)" }}
                         >
                           Check your email for the verification code
                         </p>
@@ -404,7 +404,7 @@ export const LandingPage: React.FC = () => {
                             setError("");
                           }}
                           className="text-xs hover:underline"
-                          style={{ color: "var(--bsky-primary)" }}
+                          style={{ color: "var(--asph-primary)" }}
                         >
                           Try different credentials
                         </button>
@@ -417,7 +417,7 @@ export const LandingPage: React.FC = () => {
                       type="button"
                       onClick={() => setShowAdvanced(!showAdvanced)}
                       className="flex items-center gap-1 text-sm transition-opacity hover:opacity-80"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       <span
                         className={`transition-transform ${showAdvanced ? "rotate-90" : ""}`}
@@ -432,7 +432,7 @@ export const LandingPage: React.FC = () => {
                         <label
                           htmlFor="pdsUrl"
                           className="mb-2 block text-sm font-medium"
-                          style={{ color: "var(--bsky-text-secondary)" }}
+                          style={{ color: "var(--asph-text-secondary)" }}
                         >
                           PDS Server URL
                         </label>
@@ -443,22 +443,22 @@ export const LandingPage: React.FC = () => {
                           onChange={(e) => setPdsUrl(e.target.value)}
                           className="w-full rounded-xl px-4 py-3 text-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-opacity-50"
                           style={{
-                            backgroundColor: "var(--bsky-bg-tertiary)",
-                            border: "1px solid var(--bsky-border-primary)",
-                            color: "var(--bsky-text-primary)",
+                            backgroundColor: "var(--asph-bg-tertiary)",
+                            border: "1px solid var(--asph-border-primary)",
+                            color: "var(--asph-text-primary)",
                           }}
                           onFocus={(e) =>
-                            (e.target.style.borderColor = "var(--bsky-primary)")
+                            (e.target.style.borderColor = "var(--asph-primary)")
                           }
                           onBlur={(e) =>
                             (e.target.style.borderColor =
-                              "var(--bsky-border-primary)")
+                              "var(--asph-border-primary)")
                           }
                           placeholder="https://bsky.social"
                         />
                         <p
                           className="mt-1 text-xs"
-                          style={{ color: "var(--bsky-text-tertiary)" }}
+                          style={{ color: "var(--asph-text-tertiary)" }}
                         >
                           Default is https://bsky.social. Only change if you use
                           a different PDS.
@@ -470,7 +470,7 @@ export const LandingPage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="bsky-button-primary w-full px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    className="asph-button-primary w-full px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isLoading
                       ? "Signing in..."
@@ -486,18 +486,18 @@ export const LandingPage: React.FC = () => {
             <aside className="space-y-3" aria-label="Security information">
               <div
                 className="flex items-start gap-3 rounded-lg p-3"
-                style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+                style={{ backgroundColor: "var(--asph-bg-secondary)" }}
               >
                 <Shield
                   size={18}
-                  style={{ color: "var(--bsky-success)" }}
+                  style={{ color: "var(--asph-success)" }}
                   className="mt-0.5 flex-shrink-0"
                   aria-hidden="true"
                 />
                 <div>
                   <p
                     className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Your credentials go directly to Bluesky. We never store
                     passwords.
@@ -507,18 +507,18 @@ export const LandingPage: React.FC = () => {
 
               <div
                 className="flex items-start gap-3 rounded-lg p-3"
-                style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+                style={{ backgroundColor: "var(--asph-bg-secondary)" }}
               >
                 <Database
                   size={18}
-                  style={{ color: "var(--bsky-primary)" }}
+                  style={{ color: "var(--asph-primary)" }}
                   className="mt-0.5 flex-shrink-0"
                   aria-hidden="true"
                 />
                 <div>
                   <p
                     className="text-sm"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     All data stored locally on your device. Nothing sent to
                     external servers.
@@ -534,13 +534,13 @@ export const LandingPage: React.FC = () => {
               <h2
                 id="features-heading"
                 className="mb-4 text-2xl font-bold"
-                style={{ color: "var(--bsky-text-primary)" }}
+                style={{ color: "var(--asph-text-primary)" }}
               >
                 What you'll get
               </h2>
               <p
                 className="mb-6 text-lg"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 Transform your Bluesky notifications into insights. Track
                 conversations, analyze engagement, never miss what matters.
@@ -549,24 +549,24 @@ export const LandingPage: React.FC = () => {
 
             <ul className="list-none space-y-4" aria-label="Features list">
               {/* Key Features */}
-              <li className="bsky-card p-4 transition-shadow hover:shadow-md">
+              <li className="asph-card p-4 transition-shadow hover:shadow-md">
                 <div className="flex items-start gap-3">
                   <Bell
                     size={20}
-                    style={{ color: "var(--bsky-primary)" }}
+                    style={{ color: "var(--asph-primary)" }}
                     className="mt-0.5 flex-shrink-0"
                     aria-hidden="true"
                   />
                   <div>
                     <h3
                       className="mb-1 font-semibold"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       Smart Notifications Feed
                     </h3>
                     <p
                       className="text-sm"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       All notifications organized with filters, aggregation, and
                       unread tracking. See likes, reposts, follows, mentions,
@@ -576,24 +576,24 @@ export const LandingPage: React.FC = () => {
                 </div>
               </li>
 
-              <li className="bsky-card p-4 transition-shadow hover:shadow-md">
+              <li className="asph-card p-4 transition-shadow hover:shadow-md">
                 <div className="flex items-start gap-3">
                   <MessageSquare
                     size={20}
-                    style={{ color: "var(--bsky-success)" }}
+                    style={{ color: "var(--asph-success)" }}
                     className="mt-0.5 flex-shrink-0"
                     aria-hidden="true"
                   />
                   <div>
                     <h3
                       className="mb-1 font-semibold"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       Conversation Tracking
                     </h3>
                     <p
                       className="text-sm"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       Never lose track of replies. See all conversations in
                       threaded view with search and unread indicators.
@@ -602,7 +602,7 @@ export const LandingPage: React.FC = () => {
                 </div>
               </li>
 
-              <li className="bsky-card p-4 transition-shadow hover:shadow-md">
+              <li className="asph-card p-4 transition-shadow hover:shadow-md">
                 <div className="flex items-start gap-3">
                   <BarChart3
                     size={20}
@@ -613,13 +613,13 @@ export const LandingPage: React.FC = () => {
                   <div>
                     <h3
                       className="mb-1 font-semibold"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       Engagement Analytics
                     </h3>
                     <p
                       className="text-sm"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       See trends, top engagers, and activity patterns.
                       Understand when and how people interact with your content.
@@ -628,7 +628,7 @@ export const LandingPage: React.FC = () => {
                 </div>
               </li>
 
-              <li className="bsky-card p-4 transition-shadow hover:shadow-md">
+              <li className="asph-card p-4 transition-shadow hover:shadow-md">
                 <div className="flex items-start gap-3">
                   <Zap
                     size={20}
@@ -639,13 +639,13 @@ export const LandingPage: React.FC = () => {
                   <div>
                     <h3
                       className="mb-1 font-semibold"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       Lightning Fast & Works Offline
                     </h3>
                     <p
                       className="text-sm"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       Loads instantly with intelligent caching. Pre-fetches 4
                       weeks of data for offline access.
@@ -654,7 +654,7 @@ export const LandingPage: React.FC = () => {
                 </div>
               </li>
 
-              <li className="bsky-card p-4 transition-shadow hover:shadow-md">
+              <li className="asph-card p-4 transition-shadow hover:shadow-md">
                 <div className="flex items-start gap-3">
                   <Activity
                     size={20}
@@ -665,13 +665,13 @@ export const LandingPage: React.FC = () => {
                   <div>
                     <h3
                       className="mb-1 font-semibold"
-                      style={{ color: "var(--bsky-text-primary)" }}
+                      style={{ color: "var(--asph-text-primary)" }}
                     >
                       Visual Timeline
                     </h3>
                     <p
                       className="text-sm"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       Beautiful chronological view of your notifications with
                       activity bursts and time gaps.
@@ -683,25 +683,25 @@ export const LandingPage: React.FC = () => {
 
             <aside
               className="mt-6 rounded-lg p-4"
-              style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+              style={{ backgroundColor: "var(--asph-bg-secondary)" }}
               aria-label="Additional information"
             >
               <div className="mb-2 flex items-center gap-2">
                 <Sparkles
                   size={18}
-                  style={{ color: "var(--bsky-primary)" }}
+                  style={{ color: "var(--asph-primary)" }}
                   aria-hidden="true"
                 />
                 <span
                   className="font-semibold"
-                  style={{ color: "var(--bsky-text-primary)" }}
+                  style={{ color: "var(--asph-text-primary)" }}
                 >
                   100% Free & Open
                 </span>
               </div>
               <p
                 className="text-sm"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               >
                 No ads, no tracking, no premium tiers. Just a useful tool for
                 the Bluesky community.

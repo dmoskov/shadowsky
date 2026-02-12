@@ -56,15 +56,15 @@ export const ComposerMediaUpload: React.FC<ComposerMediaUploadProps> = ({
   const hasMissingAltText = media.some((m) => m.type === "image" && !m.alt);
 
   return (
-    <div className="bsky-card mb-6 p-4 md:p-6">
+    <div className="asph-card mb-6 p-4 md:p-6">
       <h3
         className="mb-4 text-lg font-semibold"
-        style={{ color: "var(--bsky-text-primary)" }}
+        style={{ color: "var(--asph-text-primary)" }}
       >
         {hasVideo ? "Video" : "Images"}
         <span
           className="text-sm font-normal"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           {posts.length > 1
             ? " (drag to reorder or assign to posts)"
@@ -78,16 +78,16 @@ export const ComposerMediaUpload: React.FC<ComposerMediaUploadProps> = ({
       {hasVideo && (
         <div
           className="mb-4 flex items-start gap-2 rounded-lg p-3"
-          style={{ background: "var(--bsky-bg-tertiary)" }}
+          style={{ background: "var(--asph-bg-tertiary)" }}
         >
           <AlertCircle
             size={16}
             className="mt-0.5 flex-shrink-0"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           />
           <p
             className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Videos will be uploaded to Bluesky's servers for processing. This
             may take a few moments depending on file size and server load.
@@ -99,7 +99,7 @@ export const ComposerMediaUpload: React.FC<ComposerMediaUploadProps> = ({
       {hasMissingAltText && (
         <div
           className="mb-4 flex items-start gap-2 rounded-lg border-l-4 border-amber-400 p-3"
-          style={{ background: "var(--bsky-bg-tertiary)" }}
+          style={{ background: "var(--asph-bg-tertiary)" }}
           role="alert"
           aria-live="polite"
         >
@@ -110,7 +110,7 @@ export const ComposerMediaUpload: React.FC<ComposerMediaUploadProps> = ({
           />
           <p
             className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Some images are missing alt text. Adding alt text improves
             accessibility for screen reader users.
@@ -183,9 +183,9 @@ const MediaItem: React.FC<MediaItemProps> = ({
       className={`relative cursor-move overflow-hidden rounded-lg border ${isDragOver ? "ring-2 ring-blue-400" : ""}`}
       style={{
         borderColor: isDragOver
-          ? "var(--bsky-primary)"
-          : "var(--bsky-border-primary)",
-        background: "var(--bsky-bg-secondary)",
+          ? "var(--asph-primary)"
+          : "var(--asph-border-primary)",
+        background: "var(--asph-bg-secondary)",
         transition: "transform 0.2s, border-color 0.2s",
       }}
       draggable
@@ -247,7 +247,7 @@ const MediaItem: React.FC<MediaItemProps> = ({
       {/* Alt text input */}
       <div
         className="relative border-t"
-        style={{ borderColor: "var(--bsky-border-primary)" }}
+        style={{ borderColor: "var(--asph-border-primary)" }}
       >
         <label htmlFor={`alt-text-${media.id}`} className="sr-only">
           Alt text for image{" "}
@@ -264,8 +264,8 @@ const MediaItem: React.FC<MediaItemProps> = ({
           rows={2}
           aria-describedby={`alt-text-help-${media.id}`}
           style={{
-            background: "var(--bsky-bg-primary)",
-            color: "var(--bsky-text-primary)",
+            background: "var(--asph-bg-primary)",
+            color: "var(--asph-text-primary)",
             minHeight: "3.5rem",
           }}
         />
@@ -290,13 +290,13 @@ const MediaItem: React.FC<MediaItemProps> = ({
               <Loader
                 size={16}
                 className="animate-spin"
-                style={{ color: "var(--bsky-primary)" }}
+                style={{ color: "var(--asph-primary)" }}
               />
             ) : (
               <Sparkles
                 size={16}
                 className="transition-transform"
-                style={{ color: "var(--bsky-text-secondary)" }}
+                style={{ color: "var(--asph-text-secondary)" }}
               />
             )}
           </button>

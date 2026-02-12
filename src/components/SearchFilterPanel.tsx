@@ -34,7 +34,7 @@ const FilterChip: React.FC<{
   <span
     className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-3 py-2 text-xs"
     style={{
-      backgroundColor: "var(--bsky-primary)",
+      backgroundColor: "var(--asph-primary)",
       color: "white",
     }}
   >
@@ -77,7 +77,7 @@ const EngagementSlider: React.FC<{
       <div className="flex items-center justify-between">
         <label
           className="flex items-center gap-1.5 text-xs font-medium"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           {icon}
           {label}
@@ -86,7 +86,7 @@ const EngagementSlider: React.FC<{
           className="min-w-[32px] text-right text-xs font-medium"
           style={{
             color:
-              value > 0 ? "var(--bsky-primary)" : "var(--bsky-text-tertiary)",
+              value > 0 ? "var(--asph-primary)" : "var(--asph-text-tertiary)",
           }}
         >
           {value > 0 ? `${displayValue}+` : "Any"}
@@ -98,9 +98,9 @@ const EngagementSlider: React.FC<{
         max="100"
         value={valueToSlider(value)}
         onChange={(e) => onChange(sliderToValue(parseInt(e.target.value, 10)))}
-        className="bsky-slider w-full"
+        className="asph-slider w-full"
         style={{
-          accentColor: "var(--bsky-primary)",
+          accentColor: "var(--asph-primary)",
         }}
       />
     </div>
@@ -310,7 +310,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
   return (
     <div
       className="border-t px-4 py-3"
-      style={{ borderColor: "var(--bsky-border-primary)" }}
+      style={{ borderColor: "var(--asph-border-primary)" }}
     >
       <div className="space-y-4">
         {/* Active Filter Chips */}
@@ -318,7 +318,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <span
               className="text-xs font-medium"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               Active:
             </span>
@@ -332,7 +332,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
             <button
               onClick={resetFilters}
               className="min-h-[44px] px-2 text-xs transition-colors hover:underline"
-              style={{ color: "var(--bsky-text-tertiary)" }}
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
               Clear all
             </button>
@@ -343,7 +343,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
         <div>
           <label
             className="mb-1.5 flex items-center gap-1.5 text-xs font-medium"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             <Image size={12} />
             Media Type
@@ -359,19 +359,19 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
                 style={{
                   backgroundColor:
                     filters.mediaType === type.value
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-bg-secondary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-bg-secondary)",
                   color:
                     filters.mediaType === type.value
                       ? "white"
-                      : "var(--bsky-text-secondary)",
+                      : "var(--asph-text-secondary)",
                   borderWidth: "1px",
                   borderColor:
                     filters.mediaType === type.value
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-border-primary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-border-primary)",
                   // @ts-expect-error CSS custom property for focus ring
-                  "--tw-ring-color": "var(--bsky-primary)",
+                  "--tw-ring-color": "var(--asph-primary)",
                 }}
               >
                 {type.icon}
@@ -385,7 +385,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
         <div>
           <label
             className="mb-1.5 flex items-center gap-1.5 text-xs font-medium"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             <Calendar size={12} />
             Date Range
@@ -401,19 +401,19 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
                 style={{
                   backgroundColor:
                     filters.datePreset === preset.value
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-bg-secondary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-bg-secondary)",
                   color:
                     filters.datePreset === preset.value
                       ? "white"
-                      : "var(--bsky-text-secondary)",
+                      : "var(--asph-text-secondary)",
                   borderWidth: "1px",
                   borderColor:
                     filters.datePreset === preset.value
-                      ? "var(--bsky-primary)"
-                      : "var(--bsky-border-primary)",
+                      ? "var(--asph-primary)"
+                      : "var(--asph-border-primary)",
                   // @ts-expect-error CSS custom property for focus ring
-                  "--tw-ring-color": "var(--bsky-primary)",
+                  "--tw-ring-color": "var(--asph-primary)",
                 }}
               >
                 {preset.label}
@@ -424,9 +424,9 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
                 onClick={() => setDateFromPreset(null)}
                 className="min-h-[44px] rounded-md px-3 py-2 text-xs transition-colors hover:bg-gray-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
                 style={{
-                  color: "var(--bsky-text-tertiary)",
+                  color: "var(--asph-text-tertiary)",
                   // @ts-expect-error CSS custom property for focus ring
-                  "--tw-ring-color": "var(--bsky-primary)",
+                  "--tw-ring-color": "var(--asph-primary)",
                 }}
               >
                 Clear
@@ -444,15 +444,15 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
                 onChange={(e) => updateFilter("sinceDate", e.target.value)}
                 className="rounded-md border px-2 py-1 text-xs"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  borderColor: "var(--asph-border-primary)",
+                  color: "var(--asph-text-primary)",
                   colorScheme: "dark",
                 }}
               />
               <span
                 className="text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 to
               </span>
@@ -463,9 +463,9 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
                 onChange={(e) => updateFilter("untilDate", e.target.value)}
                 className="rounded-md border px-2 py-1 text-xs"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  borderColor: "var(--asph-border-primary)",
+                  color: "var(--asph-text-primary)",
                   colorScheme: "dark",
                 }}
               />
@@ -477,7 +477,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
         <div>
           <label
             className="mb-2 flex items-center gap-1.5 text-xs font-medium"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             <Heart size={12} />
             Engagement Thresholds
@@ -511,7 +511,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
         <div>
           <label
             className="mb-1.5 flex items-center gap-1.5 text-xs font-medium"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             <User size={12} />
             From Users
@@ -522,9 +522,9 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
                 key={`from-user-${user}-${i}`}
                 className="flex min-h-[44px] items-center gap-1.5 rounded-md border px-3 py-2 text-xs"
                 style={{
-                  backgroundColor: "var(--bsky-bg-secondary)",
-                  borderColor: "var(--bsky-border-primary)",
-                  color: "var(--bsky-text-primary)",
+                  backgroundColor: "var(--asph-bg-secondary)",
+                  borderColor: "var(--asph-border-primary)",
+                  color: "var(--asph-text-primary)",
                 }}
               >
                 <span>@{user}</span>
@@ -539,7 +539,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
                   aria-label={`Remove @${user}`}
                   style={{
                     // @ts-expect-error CSS custom property for focus ring
-                    "--tw-ring-color": "var(--bsky-primary)",
+                    "--tw-ring-color": "var(--asph-primary)",
                   }}
                 >
                   <X size={14} />
@@ -551,11 +551,11 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
               placeholder="Add user..."
               className="min-h-[44px] w-32 rounded-md border px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
               style={{
-                backgroundColor: "var(--bsky-bg-secondary)",
-                borderColor: "var(--bsky-border-primary)",
-                color: "var(--bsky-text-primary)",
+                backgroundColor: "var(--asph-bg-secondary)",
+                borderColor: "var(--asph-border-primary)",
+                color: "var(--asph-text-primary)",
                 // @ts-expect-error CSS custom property for focus ring
-                "--tw-ring-color": "var(--bsky-primary)",
+                "--tw-ring-color": "var(--asph-primary)",
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && e.currentTarget.value.trim()) {
@@ -575,7 +575,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
         <div>
           <label
             className="mb-1.5 flex items-center gap-1.5 text-xs font-medium"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             <Globe size={12} />
             Language
@@ -585,11 +585,11 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
             onChange={(e) => updateFilter("language", e.target.value)}
             className="min-h-[44px] rounded-md border px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
-              borderColor: "var(--bsky-border-primary)",
-              color: "var(--bsky-text-primary)",
+              backgroundColor: "var(--asph-bg-secondary)",
+              borderColor: "var(--asph-border-primary)",
+              color: "var(--asph-text-primary)",
               // @ts-expect-error CSS custom property for focus ring
-              "--tw-ring-color": "var(--bsky-primary)",
+              "--tw-ring-color": "var(--asph-primary)",
             }}
           >
             <option value="">Any language</option>
@@ -610,11 +610,11 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
             onClick={resetFilters}
             className="min-h-[44px] w-full rounded-md py-2 text-xs transition-colors hover:bg-gray-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
             style={{
-              color: "var(--bsky-text-tertiary)",
+              color: "var(--asph-text-tertiary)",
               borderWidth: "1px",
-              borderColor: "var(--bsky-border-primary)",
+              borderColor: "var(--asph-border-primary)",
               // @ts-expect-error CSS custom property for focus ring
-              "--tw-ring-color": "var(--bsky-primary)",
+              "--tw-ring-color": "var(--asph-primary)",
             }}
           >
             Reset all filters

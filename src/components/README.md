@@ -1,7 +1,7 @@
 # Components Directory (`/src/components`)
 
 ## Overview
-This directory contains all React components for the ShadowSky application. Components are organized by feature and responsibility, with shared UI components in dedicated folders.
+This directory contains all React components for the Asphodel application. Components are organized by feature and responsibility, with shared UI components in dedicated folders.
 
 ## Directory Structure
 

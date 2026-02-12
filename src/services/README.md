@@ -1,7 +1,7 @@
 # Services Directory (`/src/services`)
 
 ## Overview
-The services directory contains all business logic, API integrations, and data management code for ShadowSky. Services abstract complex operations and provide clean interfaces for React components to consume.
+The services directory contains all business logic, API integrations, and data management code for Asphodel. Services abstract complex operations and provide clean interfaces for React components to consume.
 
 ## Directory Structure
 

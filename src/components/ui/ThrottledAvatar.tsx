@@ -112,7 +112,7 @@ const ThrottledAvatarComponent: React.FC<ThrottledAvatarProps> = ({
         ref={imgRef}
         className={`flex items-center justify-center rounded-full ${className}`}
         style={{
-          background: "var(--bsky-bg-tertiary)",
+          background: "var(--asph-bg-tertiary)",
           ...style,
         }}
         onClick={onClick}
@@ -123,7 +123,7 @@ const ThrottledAvatarComponent: React.FC<ThrottledAvatarProps> = ({
           className="font-semibold"
           style={{
             fontSize: "inherit",
-            color: "var(--bsky-text-secondary)",
+            color: "var(--asph-text-secondary)",
           }}
         >
           {initial}
@@ -145,7 +145,7 @@ const ThrottledAvatarComponent: React.FC<ThrottledAvatarProps> = ({
       {!loaded && (
         <div
           className="absolute inset-0 animate-pulse rounded-full"
-          style={{ background: "var(--bsky-bg-tertiary)" }}
+          style={{ background: "var(--asph-bg-tertiary)" }}
         />
       )}
 

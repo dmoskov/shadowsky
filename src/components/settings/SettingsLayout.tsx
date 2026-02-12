@@ -265,9 +265,9 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
         }`
       }
       style={({ isActive }) => ({
-        color: isActive ? "var(--bsky-primary)" : "var(--bsky-text-secondary)",
+        color: isActive ? "var(--asph-primary)" : "var(--asph-text-secondary)",
         borderLeft: isActive
-          ? "3px solid var(--bsky-primary)"
+          ? "3px solid var(--asph-primary)"
           : "3px solid transparent",
       })}
     >
@@ -280,7 +280,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
     <div className="mx-auto max-w-4xl p-4">
       <h1
         className="mb-6 text-2xl font-bold"
-        style={{ color: "var(--bsky-text-primary)" }}
+        style={{ color: "var(--asph-text-primary)" }}
       >
         Settings
       </h1>
@@ -289,19 +289,19 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
         {/* Sidebar Navigation */}
         <nav className="w-full md:w-64">
           <div
-            className="bsky-glass overflow-hidden rounded-lg"
-            style={{ border: "1px solid var(--bsky-border-primary)" }}
+            className="asph-glass overflow-hidden rounded-lg"
+            style={{ border: "1px solid var(--asph-border-primary)" }}
           >
             {/* Search Input */}
             <div
               className="border-b p-2"
-              style={{ borderColor: "var(--bsky-border-primary)" }}
+              style={{ borderColor: "var(--asph-border-primary)" }}
             >
               <div className="relative">
                 <Search
                   size={16}
                   className="absolute left-3 top-1/2 -translate-y-1/2"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 />
                 <input
                   type="text"
@@ -310,8 +310,8 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full rounded-md bg-transparent py-2 pl-9 pr-3 text-sm outline-none"
                   style={{
-                    color: "var(--bsky-text-primary)",
-                    border: "1px solid var(--bsky-border-secondary)",
+                    color: "var(--asph-text-primary)",
+                    border: "1px solid var(--asph-border-secondary)",
                   }}
                 />
               </div>
@@ -328,7 +328,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
                 ) : (
                   <div
                     className="px-4 py-3 text-sm"
-                    style={{ color: "var(--bsky-text-tertiary)" }}
+                    style={{ color: "var(--asph-text-tertiary)" }}
                   >
                     No settings found
                   </div>
@@ -346,7 +346,7 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
                       iconPosition="left"
                       showIcon={true}
                     >
-                      <span style={{ color: "var(--bsky-text-tertiary)" }}>
+                      <span style={{ color: "var(--asph-text-tertiary)" }}>
                         {group.label}
                       </span>
                     </DisclosureTrigger>
@@ -363,8 +363,8 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
         {/* Settings Content */}
         <div className="flex-1">
           <div
-            className="bsky-glass rounded-lg p-6"
-            style={{ border: "1px solid var(--bsky-border-primary)" }}
+            className="asph-glass rounded-lg p-6"
+            style={{ border: "1px solid var(--asph-border-primary)" }}
           >
             {children}
           </div>

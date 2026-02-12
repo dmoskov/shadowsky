@@ -2461,10 +2461,10 @@ export function Composer() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 md:px-6">
-      <div className="bsky-card mb-6 p-4 md:p-6">
+      <div className="asph-card mb-6 p-4 md:p-6">
         <div
           className="mb-3 flex items-center justify-between border-b pb-3"
-          style={{ borderColor: "var(--bsky-border-primary)" }}
+          style={{ borderColor: "var(--asph-border-primary)" }}
         >
           <div className="flex flex-wrap items-center gap-3 text-sm md:gap-4">
             {showSettings ? (
@@ -2473,7 +2473,7 @@ export function Composer() {
                   <label
                     htmlFor="numbering-format"
                     className="text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Format:
                   </label>
@@ -2492,9 +2492,9 @@ export function Composer() {
                     }
                     className="rounded px-2 py-1 text-sm"
                     style={{
-                      background: "var(--bsky-bg-secondary)",
-                      border: "1px solid var(--bsky-border-primary)",
-                      color: "var(--bsky-text-primary)",
+                      background: "var(--asph-bg-secondary)",
+                      border: "1px solid var(--asph-border-primary)",
+                      color: "var(--asph-text-primary)",
                       outline: "none",
                     }}
                   >
@@ -2510,7 +2510,7 @@ export function Composer() {
                   <label
                     htmlFor="numbering-position"
                     className="text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Position:
                   </label>
@@ -2524,9 +2524,9 @@ export function Composer() {
                     }
                     className="rounded px-2 py-1 text-sm"
                     style={{
-                      background: "var(--bsky-bg-secondary)",
-                      border: "1px solid var(--bsky-border-primary)",
-                      color: "var(--bsky-text-primary)",
+                      background: "var(--asph-bg-secondary)",
+                      border: "1px solid var(--asph-border-primary)",
+                      color: "var(--asph-text-primary)",
                       outline: "none",
                     }}
                   >
@@ -2538,7 +2538,7 @@ export function Composer() {
                 {/* AI Settings */}
                 <div
                   className="mt-2 border-t pt-2"
-                  style={{ borderColor: "var(--bsky-border-primary)" }}
+                  style={{ borderColor: "var(--asph-border-primary)" }}
                 >
                   <AISettingsPanel
                     settings={{
@@ -2564,7 +2564,7 @@ export function Composer() {
                   <label
                     htmlFor="send-delay"
                     className="text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     Delay:
                   </label>
@@ -2584,14 +2584,14 @@ export function Composer() {
                     max="300"
                     className="w-16 rounded px-2 py-1 text-center text-sm"
                     style={{
-                      background: "var(--bsky-bg-secondary)",
-                      border: "1px solid var(--bsky-border-primary)",
-                      color: "var(--bsky-text-primary)",
+                      background: "var(--asph-bg-secondary)",
+                      border: "1px solid var(--asph-border-primary)",
+                      color: "var(--asph-text-primary)",
                     }}
                   />
                   <span
                     className="text-xs"
-                    style={{ color: "var(--bsky-text-secondary)" }}
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
                     sec
                   </span>
@@ -2600,7 +2600,7 @@ export function Composer() {
             ) : (
               <span
                 className="text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 {numberingFormat !== "none" &&
                   `${NUMBERING_FORMATS.find((f) => f.id === numberingFormat)?.name} • `}
@@ -2612,7 +2612,7 @@ export function Composer() {
           </div>
 
           <button
-            className="bsky-button-secondary p-1.5"
+            className="asph-button-secondary p-1.5"
             onClick={() => setShowSettings(!showSettings)}
             aria-label="Toggle settings"
           >
@@ -2623,7 +2623,7 @@ export function Composer() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <button
-              className="bsky-button-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium"
+              className="asph-button-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium"
               onClick={() => setShowThreadComposer(true)}
             >
               <MessageSquare size={16} />
@@ -2642,7 +2642,7 @@ export function Composer() {
             />
           </div>
           <button
-            className="bsky-button-primary flex items-center gap-2 px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+            className="asph-button-primary flex items-center gap-2 px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleSend}
             disabled={posts.length === 0 || isPosting}
             aria-label={
@@ -2705,21 +2705,21 @@ export function Composer() {
             onChange={(e) => setDraftTitle(e.target.value)}
             className="flex-1 rounded-lg p-2 text-sm"
             style={{
-              background: "var(--bsky-bg-secondary)",
-              border: "1px solid var(--bsky-border-primary)",
-              color: "var(--bsky-text-primary)",
+              background: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border-primary)",
+              color: "var(--asph-text-primary)",
               outline: "none",
             }}
             onFocus={(e) =>
-              (e.target.style.borderColor = "var(--bsky-primary)")
+              (e.target.style.borderColor = "var(--asph-primary)")
             }
             onBlur={(e) =>
-              (e.target.style.borderColor = "var(--bsky-border-primary)")
+              (e.target.style.borderColor = "var(--asph-border-primary)")
             }
           />
 
           <button
-            className="bsky-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
+            className="asph-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
             onClick={saveDraftHandler}
             disabled={!text.trim()}
           >
@@ -2730,7 +2730,7 @@ export function Composer() {
           </button>
 
           <button
-            className="bsky-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
+            className="asph-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
             onClick={() => setShowDrafts(!showDrafts)}
           >
             <FileText size={14} />
@@ -2739,7 +2739,7 @@ export function Composer() {
 
           {currentDraftId && (
             <button
-              className="bsky-button-secondary p-2 text-sm"
+              className="asph-button-secondary p-2 text-sm"
               onClick={() => {
                 // Clear everything to start a new draft
                 setText("");
@@ -2769,15 +2769,15 @@ export function Composer() {
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 text-sm">
-            <span style={{ color: "var(--bsky-text-secondary)" }}>
+            <span style={{ color: "var(--asph-text-secondary)" }}>
               {text.length} <span className="hidden sm:inline">characters</span>
             </span>
             {posts.length > 1 && (
               <>
-                <span style={{ color: "var(--bsky-text-tertiary)" }}>•</span>
+                <span style={{ color: "var(--asph-text-tertiary)" }}>•</span>
                 <span
                   className="flex items-center gap-1.5 font-medium"
-                  style={{ color: "var(--bsky-primary)" }}
+                  style={{ color: "var(--asph-primary)" }}
                 >
                   <Split size={14} />
                   {posts.length} posts
@@ -2789,7 +2789,7 @@ export function Composer() {
           <div className="flex gap-2">
             <div className="group relative">
               <button
-                className="bsky-button-secondary flex items-center gap-2"
+                className="asph-button-secondary flex items-center gap-2"
                 onClick={insertThreadSplit}
                 disabled={isPosting}
                 aria-label="Insert thread split"
@@ -2810,7 +2810,7 @@ export function Composer() {
 
             <div className="group relative">
               <button
-                className="bsky-button-secondary relative flex items-center gap-2"
+                className="asph-button-secondary relative flex items-center gap-2"
                 onClick={() => {
                   if (fileInputRef.current) {
                     fileInputRef.current.accept = "image/*";
@@ -2830,7 +2830,7 @@ export function Composer() {
                 {media.filter((m) => m.type === "image").length > 0 && (
                   <span
                     className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium text-white"
-                    style={{ background: "var(--bsky-primary)" }}
+                    style={{ background: "var(--asph-primary)" }}
                   >
                     {media.filter((m) => m.type === "image").length}
                   </span>
@@ -2850,7 +2850,7 @@ export function Composer() {
 
             <div className="group relative">
               <button
-                className="bsky-button-secondary relative flex items-center gap-2"
+                className="asph-button-secondary relative flex items-center gap-2"
                 onClick={() => {
                   if (fileInputRef.current) {
                     fileInputRef.current.accept =
@@ -2870,7 +2870,7 @@ export function Composer() {
                 {media.some((m) => m.type === "video") && (
                   <span
                     className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs font-medium text-white"
-                    style={{ background: "var(--bsky-primary)" }}
+                    style={{ background: "var(--asph-primary)" }}
                   >
                     1
                   </span>
@@ -2891,7 +2891,7 @@ export function Composer() {
             {isDev && (
               <div className="group relative">
                 <button
-                  className="bsky-button-secondary flex items-center gap-2"
+                  className="asph-button-secondary flex items-center gap-2"
                   onClick={() => setShowGiphySearch(true)}
                   disabled={
                     isPosting ||
@@ -2919,7 +2919,7 @@ export function Composer() {
 
             <div className="group relative">
               <button
-                className="bsky-button-secondary flex items-center gap-2"
+                className="asph-button-secondary flex items-center gap-2"
                 onClick={() => setShowEmojiPicker(true)}
                 disabled={isPosting}
                 aria-label="Add emoji"
@@ -2937,7 +2937,7 @@ export function Composer() {
 
             <div className="group relative">
               <button
-                className={`bsky-button-secondary flex items-center gap-2 ${selectedTone ? "ring-2 ring-blue-400" : ""}`}
+                className={`asph-button-secondary flex items-center gap-2 ${selectedTone ? "ring-2 ring-blue-400" : ""}`}
                 onClick={() => setShowToneOptions(!showToneOptions)}
                 disabled={isPosting || isAdjustingTone}
                 aria-label="Adjust tone"
@@ -2960,7 +2960,7 @@ export function Composer() {
 
             <div className="group relative">
               <button
-                className={`bsky-button-secondary flex items-center gap-2 ${isLoadingFeedback ? "animate-pulse" : ""}`}
+                className={`asph-button-secondary flex items-center gap-2 ${isLoadingFeedback ? "animate-pulse" : ""}`}
                 onClick={handleWritingFeedback}
                 disabled={isPosting || isLoadingFeedback || !text.trim()}
                 aria-label="Get writing feedback"
@@ -3027,7 +3027,7 @@ export function Composer() {
           {posts.length > 1 && (
             <h3
               className="mb-4 text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Thread Preview
             </h3>
@@ -3048,7 +3048,7 @@ export function Composer() {
               return (
                 <div
                   key={originalIndex}
-                  className={`bsky-card relative cursor-move p-4 transition-all hover:shadow-sm ${
+                  className={`asph-card relative cursor-move p-4 transition-all hover:shadow-sm ${
                     dragOverPostIndex === originalIndex
                       ? "ring-2 ring-blue-400"
                       : ""
@@ -3083,7 +3083,7 @@ export function Composer() {
                       {posts.length > 1 && (
                         <span
                           className="font-semibold"
-                          style={{ color: "var(--bsky-primary)" }}
+                          style={{ color: "var(--asph-primary)" }}
                         >
                           Post {displayIndex + 1}
                         </span>
@@ -3092,8 +3092,8 @@ export function Composer() {
                         <span
                           className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
                           style={{
-                            background: "var(--bsky-bg-secondary)",
-                            color: "var(--bsky-text-secondary)",
+                            background: "var(--asph-bg-secondary)",
+                            color: "var(--asph-text-secondary)",
                           }}
                         >
                           {media.some(
@@ -3119,7 +3119,7 @@ export function Composer() {
                     </span>
                     <span
                       className="font-mono text-xs"
-                      style={{ color: "var(--bsky-text-tertiary)" }}
+                      style={{ color: "var(--asph-text-tertiary)" }}
                     >
                       {post.length}/{MAX_POST_LENGTH}
                     </span>
@@ -3127,7 +3127,7 @@ export function Composer() {
                   <div
                     className="mb-3 whitespace-pre-wrap break-words"
                     style={{
-                      color: "var(--bsky-text-primary)",
+                      color: "var(--asph-text-primary)",
                       lineHeight: "1.5",
                     }}
                   >
@@ -3138,7 +3138,7 @@ export function Composer() {
                   {text.includes("\n---\n") && originalIndex > 0 && (
                     <div
                       className="mb-2 flex items-center gap-2 text-xs"
-                      style={{ color: "var(--bsky-text-secondary)" }}
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
                       <Split size={14} />
                       <span>Manual split</span>
@@ -3160,7 +3160,7 @@ export function Composer() {
                   ).length > 0 && (
                     <div
                       className="mt-3 grid grid-cols-4 gap-2 border-t pt-3"
-                      style={{ borderColor: "var(--bsky-border-primary)" }}
+                      style={{ borderColor: "var(--asph-border-primary)" }}
                     >
                       {(originalIndex === 0
                         ? media.filter(
@@ -3175,9 +3175,9 @@ export function Composer() {
                           style={{
                             borderColor:
                               dragOverMediaId === m.id
-                                ? "var(--bsky-primary)"
-                                : "var(--bsky-border-primary)",
-                            background: "var(--bsky-bg-secondary)",
+                                ? "var(--asph-primary)"
+                                : "var(--asph-border-primary)",
+                            background: "var(--asph-bg-secondary)",
                             transition: "border-color 0.2s",
                           }}
                           draggable
@@ -3224,16 +3224,16 @@ export function Composer() {
       )}
 
       {showDrafts && (
-        <div className="bsky-card mb-6 p-4 md:p-6">
+        <div className="asph-card mb-6 p-4 md:p-6">
           <div className="mb-4 flex items-center justify-between">
             <h3
               className="text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               Saved Drafts
             </h3>
             <button
-              className="bsky-button-secondary p-2"
+              className="asph-button-secondary p-2"
               onClick={() => {
                 setShowDrafts(false);
               }}
@@ -3247,7 +3247,7 @@ export function Composer() {
               {drafts.length === 0 ? (
                 <p
                   className="py-8 text-center"
-                  style={{ color: "var(--bsky-text-secondary)" }}
+                  style={{ color: "var(--asph-text-secondary)" }}
                 >
                   No saved drafts
                 </p>
@@ -3262,14 +3262,14 @@ export function Composer() {
                       key={draft.id}
                       className="cursor-pointer rounded-lg border p-4 transition-all hover:shadow-sm"
                       style={{
-                        borderColor: "var(--bsky-border-primary)",
-                        background: "var(--bsky-bg-secondary)",
+                        borderColor: "var(--asph-border-primary)",
+                        background: "var(--asph-bg-secondary)",
                       }}
                     >
                       <div className="mb-2 flex items-start justify-between">
                         <h4
                           className="font-medium"
-                          style={{ color: "var(--bsky-text-primary)" }}
+                          style={{ color: "var(--asph-text-primary)" }}
                         >
                           {draft.title}
                         </h4>
@@ -3285,7 +3285,7 @@ export function Composer() {
                       </div>
                       <p
                         className="mb-2 line-clamp-2 text-sm"
-                        style={{ color: "var(--bsky-text-secondary)" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         {draft.content}
                       </p>
@@ -3294,8 +3294,8 @@ export function Composer() {
                           <span
                             className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
                             style={{
-                              background: "var(--bsky-bg-tertiary)",
-                              color: "var(--bsky-primary)",
+                              background: "var(--asph-bg-tertiary)",
+                              color: "var(--asph-primary)",
                             }}
                           >
                             <Split size={12} />
@@ -3306,8 +3306,8 @@ export function Composer() {
                           <span
                             className="flex items-center gap-1 rounded-full px-2 py-1 text-xs"
                             style={{
-                              background: "var(--bsky-bg-tertiary)",
-                              color: "var(--bsky-text-secondary)",
+                              background: "var(--asph-bg-tertiary)",
+                              color: "var(--asph-text-secondary)",
                             }}
                           >
                             <Image size={12} />
@@ -3318,12 +3318,12 @@ export function Composer() {
                       <div className="flex items-center justify-between">
                         <span
                           className="text-xs"
-                          style={{ color: "var(--bsky-text-tertiary)" }}
+                          style={{ color: "var(--asph-text-tertiary)" }}
                         >
                           Updated {new Date(draft.updatedAt).toLocaleString()}
                         </span>
                         <button
-                          className="bsky-button-secondary px-3 py-1 text-sm"
+                          className="asph-button-secondary px-3 py-1 text-sm"
                           onClick={() => loadDraft(draft)}
                         >
                           Load
@@ -3519,8 +3519,8 @@ const InlinePostLinkPreview: React.FC<{ postText: string }> = ({
       <div
         className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
         style={{
-          borderColor: "var(--bsky-border-primary)",
-          color: "var(--bsky-text-secondary)",
+          borderColor: "var(--asph-border-primary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <Loader size={14} className="animate-spin" />
@@ -3535,8 +3535,8 @@ const InlinePostLinkPreview: React.FC<{ postText: string }> = ({
         <div
           className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
           style={{
-            borderColor: "var(--bsky-border-primary)",
-            color: "var(--bsky-text-tertiary)",
+            borderColor: "var(--asph-border-primary)",
+            color: "var(--asph-text-tertiary)",
           }}
         >
           <Link size={14} />
@@ -3557,7 +3557,7 @@ const InlinePostLinkPreview: React.FC<{ postText: string }> = ({
   return (
     <div
       className="mt-2 overflow-hidden rounded-lg border"
-      style={{ borderColor: "var(--bsky-border-primary)" }}
+      style={{ borderColor: "var(--asph-border-primary)" }}
     >
       {metadata.imageUrl && (
         <div
@@ -3568,20 +3568,20 @@ const InlinePostLinkPreview: React.FC<{ postText: string }> = ({
       <div className="p-3">
         <div
           className="mb-1 text-xs"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           {domain}
         </div>
         <div
           className="line-clamp-2 text-sm font-medium"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {metadata.title}
         </div>
         {metadata.description && (
           <div
             className="mt-1 line-clamp-2 text-xs"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             {metadata.description}
           </div>
@@ -3663,8 +3663,8 @@ const InlinePostQuotePreview: React.FC<{ postText: string }> = ({
       <div
         className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
         style={{
-          borderColor: "var(--bsky-border-primary)",
-          color: "var(--bsky-text-secondary)",
+          borderColor: "var(--asph-border-primary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <Loader size={14} className="animate-spin" />
@@ -3679,14 +3679,14 @@ const InlinePostQuotePreview: React.FC<{ postText: string }> = ({
   return (
     <div
       className="mt-2 overflow-hidden rounded-lg border"
-      style={{ borderColor: "var(--bsky-border-primary)" }}
+      style={{ borderColor: "var(--asph-border-primary)" }}
     >
       <div
         className="flex items-center gap-2 px-3 py-1.5 text-xs"
         style={{
-          backgroundColor: "var(--bsky-bg-tertiary)",
-          borderBottom: "1px solid var(--bsky-border-primary)",
-          color: "var(--bsky-text-secondary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
+          borderBottom: "1px solid var(--asph-border-primary)",
+          color: "var(--asph-text-secondary)",
         }}
       >
         <MessageCircle size={12} />
@@ -3704,21 +3704,21 @@ const InlinePostQuotePreview: React.FC<{ postText: string }> = ({
           <ProfileHoverCard handle={quotedPost.author.handle}>
             <span
               className="cursor-pointer text-sm font-semibold hover:underline"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               {quotedPost.author.displayName || quotedPost.author.handle}
             </span>
           </ProfileHoverCard>
           <span
             className="text-sm"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             @{quotedPost.author.handle}
           </span>
         </div>
         <p
           className="line-clamp-3 text-sm"
-          style={{ color: "var(--bsky-text-primary)" }}
+          style={{ color: "var(--asph-text-primary)" }}
         >
           {record?.text || ""}
         </p>

@@ -138,26 +138,26 @@ export class ChunkLoadErrorBoundary extends Component<Props, State> {
         <div
           className="w-full max-w-sm rounded-xl border p-6 shadow-lg"
           style={{
-            backgroundColor: "var(--bsky-bg-secondary)",
-            borderColor: "var(--bsky-border)",
+            backgroundColor: "var(--asph-bg-secondary)",
+            borderColor: "var(--asph-border)",
           }}
         >
           <div className="flex flex-col items-center text-center">
             {/* Icon */}
             <div
               className="mb-4 rounded-full p-3"
-              style={{ backgroundColor: "var(--bsky-bg-tertiary)" }}
+              style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
             >
               {!isOnline ? (
                 <WifiOff
                   className="h-8 w-8"
-                  style={{ color: "var(--bsky-warning)" }}
+                  style={{ color: "var(--asph-warning)" }}
                   aria-hidden="true"
                 />
               ) : (
                 <AlertTriangle
                   className="h-8 w-8"
-                  style={{ color: "var(--bsky-warning)" }}
+                  style={{ color: "var(--asph-warning)" }}
                   aria-hidden="true"
                 />
               )}
@@ -166,7 +166,7 @@ export class ChunkLoadErrorBoundary extends Component<Props, State> {
             {/* Title */}
             <h3
               className="mb-2 text-lg font-semibold"
-              style={{ color: "var(--bsky-text-primary)" }}
+              style={{ color: "var(--asph-text-primary)" }}
             >
               {!isOnline
                 ? "You're offline"
@@ -178,7 +178,7 @@ export class ChunkLoadErrorBoundary extends Component<Props, State> {
             {/* Message */}
             <p
               className="mb-4 text-sm"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               {!isOnline
                 ? "Check your internet connection and try again."
@@ -191,7 +191,7 @@ export class ChunkLoadErrorBoundary extends Component<Props, State> {
             {componentName && (
               <p
                 className="mb-4 text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 Affected area: {componentName}
               </p>
@@ -201,7 +201,7 @@ export class ChunkLoadErrorBoundary extends Component<Props, State> {
             {retryCount > 0 && (
               <p
                 className="mb-4 text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 Retry attempt {retryCount} of 3
               </p>
@@ -216,7 +216,7 @@ export class ChunkLoadErrorBoundary extends Component<Props, State> {
                   disabled={isRetrying || !isOnline}
                   className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-white transition-colors disabled:opacity-50"
                   style={{
-                    backgroundColor: "var(--bsky-primary)",
+                    backgroundColor: "var(--asph-primary)",
                   }}
                   aria-busy={isRetrying}
                 >
@@ -242,8 +242,8 @@ export class ChunkLoadErrorBoundary extends Component<Props, State> {
                 onClick={this.handleRefresh}
                 className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium transition-colors"
                 style={{
-                  backgroundColor: "var(--bsky-bg-tertiary)",
-                  color: "var(--bsky-text-primary)",
+                  backgroundColor: "var(--asph-bg-tertiary)",
+                  color: "var(--asph-text-primary)",
                 }}
               >
                 <Wifi className="h-4 w-4" aria-hidden="true" />
@@ -255,11 +255,11 @@ export class ChunkLoadErrorBoundary extends Component<Props, State> {
             {!isOnline && (
               <div
                 className="mt-4 flex items-center gap-2 text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 <div
                   className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: "var(--bsky-error)" }}
+                  style={{ backgroundColor: "var(--asph-error)" }}
                   aria-hidden="true"
                 />
                 <span>Waiting for connection...</span>

@@ -23,10 +23,10 @@ export const TrendingTopics: React.FC<TrendingTopicsProps> = ({
     return (
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <TrendingUp size={16} style={{ color: "var(--bsky-primary)" }} />
+          <TrendingUp size={16} style={{ color: "var(--asph-primary)" }} />
           <span
             className="text-sm font-medium"
-            style={{ color: "var(--bsky-text-secondary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
             Trending
           </span>
@@ -36,7 +36,7 @@ export const TrendingTopics: React.FC<TrendingTopicsProps> = ({
             <div
               key={`trending-skeleton-${i}`}
               className="h-8 w-24 shrink-0 animate-pulse rounded-full"
-              style={{ backgroundColor: "var(--bsky-bg-secondary)" }}
+              style={{ backgroundColor: "var(--asph-bg-secondary)" }}
             />
           ))}
         </div>
@@ -67,10 +67,10 @@ export const TrendingTopics: React.FC<TrendingTopicsProps> = ({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <TrendingUp size={16} style={{ color: "var(--bsky-primary)" }} />
+        <TrendingUp size={16} style={{ color: "var(--asph-primary)" }} />
         <span
           className="text-sm font-medium"
-          style={{ color: "var(--bsky-text-secondary)" }}
+          style={{ color: "var(--asph-text-secondary)" }}
         >
           Trending Now
         </span>
@@ -80,7 +80,7 @@ export const TrendingTopics: React.FC<TrendingTopicsProps> = ({
         className="flex gap-2 overflow-x-auto pb-2"
         style={{
           scrollbarWidth: "thin",
-          scrollbarColor: "var(--bsky-border-primary) transparent",
+          scrollbarColor: "var(--asph-border-primary) transparent",
         }}
       >
         {displayItems.map((item, index) => (
@@ -89,11 +89,11 @@ export const TrendingTopics: React.FC<TrendingTopicsProps> = ({
             onClick={() => onTopicClick(item.topic)}
             className="group flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-all hover:border-blue-400 hover:shadow-sm"
             style={{
-              backgroundColor: "var(--bsky-bg-secondary)",
+              backgroundColor: "var(--asph-bg-secondary)",
               borderColor: item.isHot
-                ? "var(--bsky-primary)"
-                : "var(--bsky-border-primary)",
-              color: "var(--bsky-text-primary)",
+                ? "var(--asph-primary)"
+                : "var(--asph-border-primary)",
+              color: "var(--asph-text-primary)",
             }}
           >
             {item.isHot ? (
@@ -105,7 +105,7 @@ export const TrendingTopics: React.FC<TrendingTopicsProps> = ({
             ) : (
               <Hash
                 size={14}
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
                 aria-hidden="true"
               />
             )}
@@ -113,7 +113,7 @@ export const TrendingTopics: React.FC<TrendingTopicsProps> = ({
             {item.postCount && item.postCount > 1000 && (
               <span
                 className="text-xs"
-                style={{ color: "var(--bsky-text-tertiary)" }}
+                style={{ color: "var(--asph-text-tertiary)" }}
               >
                 {item.postCount >= 1000
                   ? `${(item.postCount / 1000).toFixed(1)}k`

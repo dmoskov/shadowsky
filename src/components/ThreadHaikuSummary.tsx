@@ -289,18 +289,18 @@ function ThreadHaikuSummaryContent({
       <div
         className={`flex items-center gap-2 px-3 py-2 ${className}`}
         style={{
-          backgroundColor: "var(--bsky-bg-tertiary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
           borderRadius: "6px",
         }}
       >
         <Loader2
           size={14}
           className="animate-spin"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         />
         <span
           className="text-sm"
-          style={{ color: "var(--bsky-text-tertiary)" }}
+          style={{ color: "var(--asph-text-tertiary)" }}
         >
           Summarizing thread...
         </span>
@@ -328,7 +328,7 @@ function ThreadHaikuSummaryContent({
       <div
         className={`px-3 py-2 ${className}`}
         style={{
-          backgroundColor: "var(--bsky-bg-tertiary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
           borderRadius: "6px",
         }}
       >
@@ -336,12 +336,12 @@ function ThreadHaikuSummaryContent({
           <Sparkles
             size={14}
             className="mt-0.5 flex-shrink-0"
-            style={{ color: "var(--bsky-text-tertiary)" }}
+            style={{ color: "var(--asph-text-tertiary)" }}
           />
           <div className="min-w-0 flex-1">
             <div
               className="text-sm leading-relaxed"
-              style={{ color: "var(--bsky-text-secondary)" }}
+              style={{ color: "var(--asph-text-secondary)" }}
             >
               {renderMarkdown(summary.summary)}
             </div>
@@ -350,11 +350,11 @@ function ThreadHaikuSummaryContent({
             {isExtended && highlights && highlights.length > 0 && (
               <div
                 className="mt-3 border-t pt-2"
-                style={{ borderColor: "var(--bsky-border)" }}
+                style={{ borderColor: "var(--asph-border)" }}
               >
                 <div
                   className="mb-2 text-xs font-medium"
-                  style={{ color: "var(--bsky-text-tertiary)" }}
+                  style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   Notable replies
                 </div>
@@ -367,14 +367,14 @@ function ThreadHaikuSummaryContent({
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors hover:opacity-80"
                       style={{
-                        backgroundColor: "var(--bsky-bg-secondary)",
-                        color: "var(--bsky-text-secondary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        color: "var(--asph-text-secondary)",
                       }}
                     >
-                      <span style={{ color: "var(--bsky-link)" }}>
+                      <span style={{ color: "var(--asph-link)" }}>
                         @{hl.authorHandle}
                       </span>
-                      <span style={{ color: "var(--bsky-text-tertiary)" }}>
+                      <span style={{ color: "var(--asph-text-tertiary)" }}>
                         ({hl.engagement} interactions)
                       </span>
                     </a>

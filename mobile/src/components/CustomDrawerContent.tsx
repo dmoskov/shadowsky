@@ -55,7 +55,7 @@ export function CustomDrawerContent() {
           </Text>
         </View>
         <Text style={styles.username}>
-          {account?.displayName || "ShadowSky User"}
+          {account?.displayName || "Asphodel User"}
         </Text>
         <Text style={styles.handle}>
           @{account?.handle || "user.bsky.social"}
@@ -112,7 +112,7 @@ export function CustomDrawerContent() {
       </View>
 
       <View style={styles.drawerFooter}>
-        <Text style={styles.version}>ShadowSky v0.7.0</Text>
+        <Text style={styles.version}>Asphodel v0.7.0</Text>
       </View>
     </ScrollView>
   );

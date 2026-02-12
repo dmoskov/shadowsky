@@ -292,14 +292,14 @@ export function DebugConsole() {
   };
 
   const getHealthColor = () => {
-    if (!storageHealth) return "var(--bsky-text-primary)";
+    if (!storageHealth) return "var(--asph-text-primary)";
     switch (storageHealth.status) {
       case "critical":
-        return "var(--bsky-error)";
+        return "var(--asph-error)";
       case "warning":
         return "#f59e0b";
       default:
-        return "var(--bsky-success)";
+        return "var(--asph-success)";
     }
   };
 
@@ -321,8 +321,8 @@ export function DebugConsole() {
         position: "fixed",
         bottom: "20px",
         right: "20px",
-        background: "var(--bsky-bg-secondary)",
-        border: "1px solid var(--bsky-border)",
+        background: "var(--asph-bg-secondary)",
+        border: "1px solid var(--asph-border)",
         borderRadius: "12px",
         padding: "16px",
         boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
@@ -342,10 +342,10 @@ export function DebugConsole() {
         onClick={() => setShowDetails(!showDetails)}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Database size={20} style={{ color: "var(--bsky-primary)" }} />
+          <Database size={20} style={{ color: "var(--asph-primary)" }} />
           <span
             style={{
-              color: "var(--bsky-text-primary)",
+              color: "var(--asph-text-primary)",
               fontSize: "16px",
               fontWeight: 600,
             }}
@@ -365,7 +365,7 @@ export function DebugConsole() {
               display: "flex",
               gap: "8px",
               marginBottom: "12px",
-              borderBottom: "1px solid var(--bsky-border)",
+              borderBottom: "1px solid var(--asph-border)",
               paddingBottom: "8px",
             }}
           >
@@ -376,11 +376,11 @@ export function DebugConsole() {
                 fontSize: "14px",
                 border: "none",
                 background:
-                  activeTab === "cache" ? "var(--bsky-primary)" : "transparent",
+                  activeTab === "cache" ? "var(--asph-primary)" : "transparent",
                 color:
                   activeTab === "cache"
                     ? "white"
-                    : "var(--bsky-text-secondary)",
+                    : "var(--asph-text-secondary)",
                 borderRadius: "4px",
                 cursor: "pointer",
                 transition: "all 0.2s",
@@ -396,12 +396,12 @@ export function DebugConsole() {
                 border: "none",
                 background:
                   activeTab === "storage"
-                    ? "var(--bsky-primary)"
+                    ? "var(--asph-primary)"
                     : "transparent",
                 color:
                   activeTab === "storage"
                     ? "white"
-                    : "var(--bsky-text-secondary)",
+                    : "var(--asph-text-secondary)",
                 borderRadius: "4px",
                 cursor: "pointer",
                 transition: "all 0.2s",
@@ -417,12 +417,12 @@ export function DebugConsole() {
                 border: "none",
                 background:
                   activeTab === "backends"
-                    ? "var(--bsky-primary)"
+                    ? "var(--asph-primary)"
                     : "transparent",
                 color:
                   activeTab === "backends"
                     ? "white"
-                    : "var(--bsky-text-secondary)",
+                    : "var(--asph-text-secondary)",
                 borderRadius: "4px",
                 cursor: "pointer",
                 transition: "all 0.2s",
@@ -438,7 +438,7 @@ export function DebugConsole() {
               <div
                 style={{
                   fontSize: "12px",
-                  color: "var(--bsky-text-secondary)",
+                  color: "var(--asph-text-secondary)",
                   marginBottom: "12px",
                 }}
               >
@@ -456,7 +456,7 @@ export function DebugConsole() {
                 <div
                   style={{
                     padding: "8px",
-                    background: "var(--bsky-bg-primary)",
+                    background: "var(--asph-bg-primary)",
                     borderRadius: "4px",
                   }}
                 >
@@ -470,7 +470,7 @@ export function DebugConsole() {
                     <span
                       style={{
                         fontSize: "12px",
-                        color: "var(--bsky-text-secondary)",
+                        color: "var(--asph-text-secondary)",
                       }}
                     >
                       Priority notifications
@@ -478,7 +478,7 @@ export function DebugConsole() {
                     <span
                       style={{
                         fontSize: "11px",
-                        color: "var(--bsky-primary)",
+                        color: "var(--asph-primary)",
                         fontWeight: 500,
                       }}
                     >
@@ -488,7 +488,7 @@ export function DebugConsole() {
                   <div
                     style={{
                       fontSize: "14px",
-                      color: "var(--bsky-text-primary)",
+                      color: "var(--asph-text-primary)",
                       marginTop: "2px",
                     }}
                   >
@@ -499,7 +499,7 @@ export function DebugConsole() {
                 <div
                   style={{
                     padding: "8px",
-                    background: "var(--bsky-bg-primary)",
+                    background: "var(--asph-bg-primary)",
                     borderRadius: "4px",
                   }}
                 >
@@ -513,7 +513,7 @@ export function DebugConsole() {
                     <span
                       style={{
                         fontSize: "12px",
-                        color: "var(--bsky-text-secondary)",
+                        color: "var(--asph-text-secondary)",
                       }}
                     >
                       All notifications
@@ -521,7 +521,7 @@ export function DebugConsole() {
                     <span
                       style={{
                         fontSize: "11px",
-                        color: "var(--bsky-primary)",
+                        color: "var(--asph-primary)",
                         fontWeight: 500,
                       }}
                     >
@@ -531,7 +531,7 @@ export function DebugConsole() {
                   <div
                     style={{
                       fontSize: "14px",
-                      color: "var(--bsky-text-primary)",
+                      color: "var(--asph-text-primary)",
                       marginTop: "2px",
                     }}
                   >
@@ -543,7 +543,7 @@ export function DebugConsole() {
                   <div
                     style={{
                       padding: "8px",
-                      background: "var(--bsky-bg-primary)",
+                      background: "var(--asph-bg-primary)",
                       borderRadius: "4px",
                     }}
                   >
@@ -557,7 +557,7 @@ export function DebugConsole() {
                       <span
                         style={{
                           fontSize: "12px",
-                          color: "var(--bsky-text-secondary)",
+                          color: "var(--asph-text-secondary)",
                         }}
                       >
                         Notification objects
@@ -565,7 +565,7 @@ export function DebugConsole() {
                       <span
                         style={{
                           fontSize: "11px",
-                          color: "var(--bsky-primary)",
+                          color: "var(--asph-primary)",
                           fontWeight: 500,
                         }}
                       >
@@ -575,7 +575,7 @@ export function DebugConsole() {
                     <div
                       style={{
                         fontSize: "14px",
-                        color: "var(--bsky-text-primary)",
+                        color: "var(--asph-text-primary)",
                         marginTop: "2px",
                       }}
                     >
@@ -589,7 +589,7 @@ export function DebugConsole() {
                   <div
                     style={{
                       padding: "8px",
-                      background: "var(--bsky-bg-primary)",
+                      background: "var(--asph-bg-primary)",
                       borderRadius: "4px",
                     }}
                   >
@@ -603,7 +603,7 @@ export function DebugConsole() {
                       <span
                         style={{
                           fontSize: "12px",
-                          color: "var(--bsky-text-secondary)",
+                          color: "var(--asph-text-secondary)",
                         }}
                       >
                         Post content (localStorage)
@@ -611,7 +611,7 @@ export function DebugConsole() {
                       <span
                         style={{
                           fontSize: "11px",
-                          color: "var(--bsky-primary)",
+                          color: "var(--asph-primary)",
                           fontWeight: 500,
                         }}
                       >
@@ -621,7 +621,7 @@ export function DebugConsole() {
                     <div
                       style={{
                         fontSize: "14px",
-                        color: "var(--bsky-text-primary)",
+                        color: "var(--asph-text-primary)",
                         marginTop: "2px",
                       }}
                     >
@@ -634,9 +634,9 @@ export function DebugConsole() {
                   <div
                     style={{
                       padding: "8px",
-                      background: "var(--bsky-bg-primary)",
+                      background: "var(--asph-bg-primary)",
                       borderRadius: "4px",
-                      border: "1px solid var(--bsky-success)",
+                      border: "1px solid var(--asph-success)",
                     }}
                   >
                     <div
@@ -649,20 +649,20 @@ export function DebugConsole() {
                       <span
                         style={{
                           fontSize: "12px",
-                          color: "var(--bsky-text-secondary)",
+                          color: "var(--asph-text-secondary)",
                         }}
                       >
                         IndexedDB Storage
                       </span>
                       <Database
                         size={14}
-                        style={{ color: "var(--bsky-success)" }}
+                        style={{ color: "var(--asph-success)" }}
                       />
                     </div>
                     <div
                       style={{
                         fontSize: "14px",
-                        color: "var(--bsky-text-primary)",
+                        color: "var(--asph-text-primary)",
                         marginTop: "2px",
                       }}
                     >
@@ -672,7 +672,7 @@ export function DebugConsole() {
                     <div
                       style={{
                         fontSize: "11px",
-                        color: "var(--bsky-text-secondary)",
+                        color: "var(--asph-text-secondary)",
                         marginTop: "2px",
                       }}
                     >
@@ -689,9 +689,9 @@ export function DebugConsole() {
                   <div
                     style={{
                       padding: "8px",
-                      background: "var(--bsky-bg-primary)",
+                      background: "var(--asph-bg-primary)",
                       borderRadius: "4px",
-                      border: "1px solid var(--bsky-success)",
+                      border: "1px solid var(--asph-success)",
                     }}
                   >
                     <div
@@ -704,20 +704,20 @@ export function DebugConsole() {
                       <span
                         style={{
                           fontSize: "12px",
-                          color: "var(--bsky-text-secondary)",
+                          color: "var(--asph-text-secondary)",
                         }}
                       >
                         Post IndexedDB Storage
                       </span>
                       <Package
                         size={14}
-                        style={{ color: "var(--bsky-success)" }}
+                        style={{ color: "var(--asph-success)" }}
                       />
                     </div>
                     <div
                       style={{
                         fontSize: "14px",
-                        color: "var(--bsky-text-primary)",
+                        color: "var(--asph-text-primary)",
                         marginTop: "2px",
                       }}
                     >
@@ -726,7 +726,7 @@ export function DebugConsole() {
                     <div
                       style={{
                         fontSize: "11px",
-                        color: "var(--bsky-text-secondary)",
+                        color: "var(--asph-text-secondary)",
                         marginTop: "2px",
                       }}
                     >
@@ -744,10 +744,10 @@ export function DebugConsole() {
                   style={{
                     padding: "6px 12px",
                     fontSize: "12px",
-                    border: "1px solid var(--bsky-error)",
+                    border: "1px solid var(--asph-error)",
                     borderRadius: "4px",
                     background: "transparent",
-                    color: "var(--bsky-error)",
+                    color: "var(--asph-error)",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
@@ -768,7 +768,7 @@ export function DebugConsole() {
               <div
                 style={{
                   padding: "8px",
-                  background: "var(--bsky-bg-primary)",
+                  background: "var(--asph-bg-primary)",
                   borderRadius: "4px",
                   marginBottom: "12px",
                   border: `1px solid ${getHealthColor()}20`,
@@ -796,7 +796,7 @@ export function DebugConsole() {
                 <div
                   style={{
                     fontSize: "12px",
-                    color: "var(--bsky-text-secondary)",
+                    color: "var(--asph-text-secondary)",
                   }}
                 >
                   {StorageManager.formatBytes(storageMetrics.totalSize)} / ~5MB
@@ -810,7 +810,7 @@ export function DebugConsole() {
                   style={{
                     width: "100%",
                     height: "20px",
-                    background: "var(--bsky-bg-tertiary)",
+                    background: "var(--asph-bg-tertiary)",
                     borderRadius: "4px",
                     overflow: "hidden",
                   }}
@@ -831,10 +831,10 @@ export function DebugConsole() {
                 <div
                   style={{
                     padding: "8px",
-                    background: "var(--bsky-bg-primary)",
+                    background: "var(--asph-bg-primary)",
                     borderRadius: "4px",
                     marginBottom: "12px",
-                    border: "1px solid var(--bsky-success)20",
+                    border: "1px solid var(--asph-success)20",
                   }}
                 >
                   <div
@@ -847,13 +847,13 @@ export function DebugConsole() {
                   >
                     <Database
                       size={16}
-                      style={{ color: "var(--bsky-success)" }}
+                      style={{ color: "var(--asph-success)" }}
                     />
                     <span
                       style={{
                         fontSize: "12px",
                         fontWeight: 500,
-                        color: "var(--bsky-text-primary)",
+                        color: "var(--asph-text-primary)",
                       }}
                     >
                       IndexedDB Storage
@@ -868,12 +868,12 @@ export function DebugConsole() {
                     }}
                   >
                     <div>
-                      <span style={{ color: "var(--bsky-text-tertiary)" }}>
+                      <span style={{ color: "var(--asph-text-tertiary)" }}>
                         Total Notifications:
                       </span>
                       <span
                         style={{
-                          color: "var(--bsky-text-primary)",
+                          color: "var(--asph-text-primary)",
                           marginLeft: "4px",
                         }}
                       >
@@ -881,12 +881,12 @@ export function DebugConsole() {
                       </span>
                     </div>
                     <div>
-                      <span style={{ color: "var(--bsky-text-tertiary)" }}>
+                      <span style={{ color: "var(--asph-text-tertiary)" }}>
                         Unread:
                       </span>
                       <span
                         style={{
-                          color: "var(--bsky-text-primary)",
+                          color: "var(--asph-text-primary)",
                           marginLeft: "4px",
                         }}
                       >
@@ -899,7 +899,7 @@ export function DebugConsole() {
                       <span
                         style={{
                           fontSize: "11px",
-                          color: "var(--bsky-text-tertiary)",
+                          color: "var(--asph-text-tertiary)",
                         }}
                       >
                         By Type:
@@ -920,8 +920,8 @@ export function DebugConsole() {
                                 fontSize: "10px",
                                 padding: "2px 6px",
                                 borderRadius: "4px",
-                                background: "var(--bsky-bg-secondary)",
-                                color: "var(--bsky-text-secondary)",
+                                background: "var(--asph-bg-secondary)",
+                                color: "var(--asph-text-secondary)",
                               }}
                             >
                               {reason}: {String(count)}
@@ -941,7 +941,7 @@ export function DebugConsole() {
                     fontSize: "12px",
                     fontWeight: 500,
                     marginBottom: "8px",
-                    color: "var(--bsky-text-secondary)",
+                    color: "var(--asph-text-secondary)",
                   }}
                 >
                   LocalStorage Breakdown:
@@ -961,7 +961,7 @@ export function DebugConsole() {
                         alignItems: "center",
                         gap: "8px",
                         padding: "4px 8px",
-                        background: "var(--bsky-bg-primary)",
+                        background: "var(--asph-bg-primary)",
                         borderRadius: "4px",
                         fontSize: "12px",
                       }}
@@ -978,14 +978,14 @@ export function DebugConsole() {
                       <span
                         style={{
                           flex: 1,
-                          color: "var(--bsky-text-primary)",
+                          color: "var(--asph-text-primary)",
                         }}
                       >
                         {item.label}
                       </span>
                       <span
                         style={{
-                          color: "var(--bsky-text-secondary)",
+                          color: "var(--asph-text-secondary)",
                           fontSize: "11px",
                         }}
                       >
@@ -994,14 +994,14 @@ export function DebugConsole() {
                       <span
                         style={{
                           fontWeight: 500,
-                          color: "var(--bsky-text-primary)",
+                          color: "var(--asph-text-primary)",
                         }}
                       >
                         {StorageManager.formatBytes(item.size)}
                       </span>
                       <span
                         style={{
-                          color: "var(--bsky-text-tertiary)",
+                          color: "var(--asph-text-tertiary)",
                           fontSize: "11px",
                         }}
                       >
@@ -1019,7 +1019,7 @@ export function DebugConsole() {
                     style={{
                       fontSize: "12px",
                       fontWeight: 500,
-                      color: "var(--bsky-text-secondary)",
+                      color: "var(--asph-text-secondary)",
                       cursor: "pointer",
                       marginBottom: "8px",
                     }}
@@ -1045,14 +1045,14 @@ export function DebugConsole() {
                           padding: "2px 4px",
                           background:
                             idx % 2 === 0
-                              ? "var(--bsky-bg-primary)"
+                              ? "var(--asph-bg-primary)"
                               : "transparent",
                           borderRadius: "2px",
                         }}
                       >
                         <span
                           style={{
-                            color: "var(--bsky-text-tertiary)",
+                            color: "var(--asph-text-tertiary)",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
@@ -1062,7 +1062,7 @@ export function DebugConsole() {
                         >
                           {item.key}
                         </span>
-                        <span style={{ color: "var(--bsky-text-secondary)" }}>
+                        <span style={{ color: "var(--asph-text-secondary)" }}>
                           {StorageManager.formatBytes(item.size)}
                         </span>
                       </div>
@@ -1076,7 +1076,7 @@ export function DebugConsole() {
                 <div
                   style={{
                     padding: "8px",
-                    background: "var(--bsky-bg-primary)",
+                    background: "var(--asph-bg-primary)",
                     borderRadius: "4px",
                     marginBottom: "12px",
                     border: `1px solid ${getHealthColor()}20`,
@@ -1087,7 +1087,7 @@ export function DebugConsole() {
                       fontSize: "12px",
                       fontWeight: 500,
                       marginBottom: "4px",
-                      color: "var(--bsky-text-secondary)",
+                      color: "var(--asph-text-secondary)",
                     }}
                   >
                     Recommendations:
@@ -1097,7 +1097,7 @@ export function DebugConsole() {
                       margin: 0,
                       paddingLeft: "16px",
                       fontSize: "11px",
-                      color: "var(--bsky-text-secondary)",
+                      color: "var(--asph-text-secondary)",
                     }}
                   >
                     {storageHealth.recommendations.map((rec, idx) => (
@@ -1119,10 +1119,10 @@ export function DebugConsole() {
                   style={{
                     padding: "6px 12px",
                     fontSize: "12px",
-                    border: "1px solid var(--bsky-border)",
+                    border: "1px solid var(--asph-border)",
                     borderRadius: "4px",
                     background: "transparent",
-                    color: "var(--bsky-text-secondary)",
+                    color: "var(--asph-text-secondary)",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
@@ -1137,10 +1137,10 @@ export function DebugConsole() {
                   style={{
                     padding: "6px 12px",
                     fontSize: "12px",
-                    border: "1px solid var(--bsky-border)",
+                    border: "1px solid var(--asph-border)",
                     borderRadius: "4px",
                     background: "transparent",
-                    color: "var(--bsky-text-secondary)",
+                    color: "var(--asph-text-secondary)",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
@@ -1161,17 +1161,17 @@ export function DebugConsole() {
               <div
                 style={{
                   padding: "8px",
-                  background: "var(--bsky-bg-primary)",
+                  background: "var(--asph-bg-primary)",
                   borderRadius: "4px",
                   marginBottom: "12px",
                   border: `1px solid ${
                     systemHealth.overall === "healthy"
-                      ? "var(--bsky-success)"
+                      ? "var(--asph-success)"
                       : systemHealth.overall === "degraded"
                         ? "#f59e0b"
                         : systemHealth.overall === "failed"
-                          ? "var(--bsky-error)"
-                          : "var(--bsky-border)"
+                          ? "var(--asph-error)"
+                          : "var(--asph-border)"
                   }20`,
                 }}
               >
@@ -1188,12 +1188,12 @@ export function DebugConsole() {
                     style={{
                       color:
                         systemHealth.overall === "healthy"
-                          ? "var(--bsky-success)"
+                          ? "var(--asph-success)"
                           : systemHealth.overall === "degraded"
                             ? "#f59e0b"
                             : systemHealth.overall === "failed"
-                              ? "var(--bsky-error)"
-                              : "var(--bsky-text-secondary)",
+                              ? "var(--asph-error)"
+                              : "var(--asph-text-secondary)",
                     }}
                   />
                   <span
@@ -1202,12 +1202,12 @@ export function DebugConsole() {
                       fontWeight: 500,
                       color:
                         systemHealth.overall === "healthy"
-                          ? "var(--bsky-success)"
+                          ? "var(--asph-success)"
                           : systemHealth.overall === "degraded"
                             ? "#f59e0b"
                             : systemHealth.overall === "failed"
-                              ? "var(--bsky-error)"
-                              : "var(--bsky-text-secondary)",
+                              ? "var(--asph-error)"
+                              : "var(--asph-text-secondary)",
                     }}
                   >
                     Overall:{" "}
@@ -1218,7 +1218,7 @@ export function DebugConsole() {
                 <div
                   style={{
                     fontSize: "12px",
-                    color: "var(--bsky-text-secondary)",
+                    color: "var(--asph-text-secondary)",
                   }}
                 >
                   Initialization:{" "}
@@ -1229,7 +1229,7 @@ export function DebugConsole() {
                 <div
                   style={{
                     fontSize: "11px",
-                    color: "var(--bsky-text-tertiary)",
+                    color: "var(--asph-text-tertiary)",
                     marginTop: "4px",
                   }}
                 >
@@ -1253,16 +1253,16 @@ export function DebugConsole() {
                       key={name}
                       style={{
                         padding: "8px",
-                        background: "var(--bsky-bg-primary)",
+                        background: "var(--asph-bg-primary)",
                         borderRadius: "4px",
                         border: `1px solid ${
                           backend.status === "healthy"
-                            ? "var(--bsky-success)"
+                            ? "var(--asph-success)"
                             : backend.status === "degraded"
                               ? "#f59e0b"
                               : backend.status === "failed"
-                                ? "var(--bsky-error)"
-                                : "var(--bsky-border)"
+                                ? "var(--asph-error)"
+                                : "var(--asph-border)"
                         }30`,
                       }}
                     >
@@ -1283,7 +1283,7 @@ export function DebugConsole() {
                           {backend.status === "healthy" && (
                             <CheckCircle
                               size={14}
-                              style={{ color: "var(--bsky-success)" }}
+                              style={{ color: "var(--asph-success)" }}
                             />
                           )}
                           {backend.status === "degraded" && (
@@ -1295,20 +1295,20 @@ export function DebugConsole() {
                           {backend.status === "failed" && (
                             <AlertCircle
                               size={14}
-                              style={{ color: "var(--bsky-error)" }}
+                              style={{ color: "var(--asph-error)" }}
                             />
                           )}
                           {backend.status === "pending" && (
                             <RefreshCw
                               size={14}
-                              style={{ color: "var(--bsky-text-secondary)" }}
+                              style={{ color: "var(--asph-text-secondary)" }}
                               className="animate-spin"
                             />
                           )}
                           <span
                             style={{
                               fontSize: "12px",
-                              color: "var(--bsky-text-primary)",
+                              color: "var(--asph-text-primary)",
                               fontWeight: 500,
                             }}
                           >
@@ -1320,12 +1320,12 @@ export function DebugConsole() {
                             fontSize: "11px",
                             color:
                               backend.status === "healthy"
-                                ? "var(--bsky-success)"
+                                ? "var(--asph-success)"
                                 : backend.status === "degraded"
                                   ? "#f59e0b"
                                   : backend.status === "failed"
-                                    ? "var(--bsky-error)"
-                                    : "var(--bsky-text-secondary)",
+                                    ? "var(--asph-error)"
+                                    : "var(--asph-text-secondary)",
                           }}
                         >
                           {backend.status}
@@ -1335,7 +1335,7 @@ export function DebugConsole() {
                         <div
                           style={{
                             fontSize: "10px",
-                            color: "var(--bsky-error)",
+                            color: "var(--asph-error)",
                             marginTop: "4px",
                             wordBreak: "break-word",
                           }}
@@ -1347,7 +1347,7 @@ export function DebugConsole() {
                         <div
                           style={{
                             fontSize: "10px",
-                            color: "var(--bsky-text-tertiary)",
+                            color: "var(--asph-text-tertiary)",
                             marginTop: "2px",
                           }}
                         >
@@ -1370,10 +1370,10 @@ export function DebugConsole() {
                 style={{
                   padding: "6px 12px",
                   fontSize: "12px",
-                  border: "1px solid var(--bsky-border)",
+                  border: "1px solid var(--asph-border)",
                   borderRadius: "4px",
                   background: "transparent",
-                  color: "var(--bsky-text-secondary)",
+                  color: "var(--asph-text-secondary)",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -1391,7 +1391,7 @@ export function DebugConsole() {
               style={{
                 padding: "16px",
                 textAlign: "center",
-                color: "var(--bsky-text-secondary)",
+                color: "var(--asph-text-secondary)",
               }}
             >
               No storage health data available yet.
