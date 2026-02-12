@@ -26,6 +26,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useCallback, useEffect, useRef } from "react";
+import { useGifPicker } from "../../hooks/useGifPicker";
 import { ThreadgateService } from "../../services/atproto/threadgate";
 import {
   deleteDraft,
@@ -34,6 +35,8 @@ import {
   saveDraft,
   type ThreadDraft,
 } from "../../services/drafts";
+import type { TenorGif } from "../../services/tenor";
+import { getBestGifUrl, getGifDimensions } from "../../services/tenor";
 import { debug } from "../../shared/debug";
 import { uploadBlobWithRetry } from "../../utils/blob-upload";
 import { isGifFile } from "../../utils/gif-to-video";
@@ -43,7 +46,7 @@ import {
 } from "../../utils/image-compression";
 import { createLogger } from "../../utils/logger";
 import { EmojiPicker } from "../EmojiPicker";
-import { GiphySearch } from "../GiphySearch";
+import { GifPicker } from "../GifPicker";
 import type { MentionTypeaheadHandle } from "../MentionTypeahead";
 import { ReplyControls } from "../ReplyControls";
 import { ThreadComposer } from "../ThreadComposer";
@@ -73,6 +76,7 @@ export function ComposerRefactored() {
   const state = useComposerState();
   const { enableProgressiveDisclosure, defaultDisclosureLevel } =
     useComposerFeatureFlags();
+  const gifPicker = useGifPicker();
 
   const textareaRef = useRef<MentionTypeaheadHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -93,6 +97,15 @@ export function ComposerRefactored() {
       if (imageItems.length === 0) return;
 
       e.preventDefault();
+
+      // Check for GIF embed
+      if (state.gifEmbed) {
+        state.setPostStatus({
+          type: "error",
+          message: "Cannot add images when GIF is attached",
+        });
+        return;
+      }
 
       const hasVideo = state.media.some((m) => m.type === "video");
       if (hasVideo) {
@@ -176,6 +189,15 @@ export function ComposerRefactored() {
   // Media selection handler
   const handleMediaSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Check for GIF embed
+      if (state.gifEmbed) {
+        state.setPostStatus({
+          type: "error",
+          message: "Cannot add media when GIF is attached",
+        });
+        return;
+      }
+
       const files = Array.from(e.target.files || []);
       const hasVideo = state.media.some((m) => m.type === "video");
 
@@ -957,7 +979,38 @@ export function ComposerRefactored() {
           }
         }
 
-        // Add external link embed for first post
+        // Add GIF embed for first post (mutually exclusive with media)
+        if (i === 0 && !postData.embed && state.gifEmbed) {
+          try {
+            // Fetch the GIF to upload as thumbnail
+            const gifResponse = await fetch(state.gifEmbed.url);
+            if (gifResponse.ok) {
+              const gifBlob = await gifResponse.blob();
+              const gifData = new Uint8Array(await gifBlob.arrayBuffer());
+
+              const uploadResult = await uploadBlobWithRetry(
+                state.agent!,
+                gifData,
+                { encoding: "image/gif" },
+              );
+
+              postData.embed = {
+                $type: "app.bsky.embed.external",
+                external: {
+                  uri: state.gifEmbed.tenorUrl,
+                  title: state.gifEmbed.title,
+                  description: "GIF from Tenor",
+                  thumb: uploadResult.data.blob,
+                },
+              };
+            }
+          } catch (error) {
+            logger.error("Failed to upload GIF:", error);
+            // Continue without GIF embed
+          }
+        }
+
+        // Add external link embed for first post (if no GIF)
         if (
           i === 0 &&
           !postData.embed &&
@@ -1095,61 +1148,33 @@ export function ComposerRefactored() {
 
   // GIF selection handler
   const handleSelectGif = useCallback(
-    async (gifUrl: string) => {
-      try {
-        state.setPostStatus({
-          type: "posting",
-          message: "Converting GIF to video...",
-        });
-
-        const response = await fetch("http://localhost:3002/api/convert-gif", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ gifUrl }),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.details || "Failed to convert GIF");
-        }
-
-        const videoBlob = await response.blob();
-
-        if (videoBlob.size > MAX_VIDEO_SIZE) {
-          state.setPostStatus({
-            type: "error",
-            message: `Converted video is too large (${(videoBlob.size / 1024 / 1024).toFixed(1)}MB).`,
-          });
-          setTimeout(() => state.setPostStatus({ type: "idle" }), 3000);
-          return;
-        }
-
-        const file = new File([videoBlob], "giphy.mp4", { type: "video/mp4" });
-        const previewUrl = URL.createObjectURL(videoBlob);
-        state.mediaUrlsRef.current.add(previewUrl);
-
-        const newMedia: UploadedMedia = {
-          id: generateMediaId(),
-          file,
-          preview: previewUrl,
-          alt: "GIF from Giphy",
-          type: "video",
-        };
-
-        state.setMedia((prev) => [...prev, newMedia]);
-        state.setPostStatus({
-          type: "success",
-          message: "GIF converted to video!",
-        });
-        setTimeout(() => state.setPostStatus({ type: "idle" }), 2000);
-      } catch (error) {
-        logger.error("Error adding GIF:", error);
+    (gif: TenorGif) => {
+      // GIFs are mutually exclusive with images and videos
+      if (state.media.length > 0) {
         state.setPostStatus({
           type: "error",
-          message: `Failed to add GIF: ${error instanceof Error ? error.message : "Unknown error"}`,
+          message: "Cannot add GIF when media is already attached",
         });
-        setTimeout(() => state.setPostStatus({ type: "idle" }), 5000);
+        return;
       }
+
+      const url = getBestGifUrl(gif);
+      const dimensions = getGifDimensions(gif);
+
+      state.setGifEmbed({
+        id: gif.id,
+        url,
+        title: gif.title || gif.content_description,
+        width: dimensions.width,
+        height: dimensions.height,
+        tenorUrl: gif.url,
+      });
+
+      state.setPostStatus({
+        type: "success",
+        message: "GIF added!",
+      });
+      setTimeout(() => state.setPostStatus({ type: "idle" }), 2000);
     },
     [state],
   );
@@ -1518,12 +1543,12 @@ export function ComposerRefactored() {
             enableProgressiveDisclosure={enableProgressiveDisclosure}
             defaultDisclosureLevel={defaultDisclosureLevel}
             isPosting={state.isPosting}
-            isDev={state.isDev}
             media={state.media}
             selectedTone={state.selectedTone}
             isAdjustingTone={state.isAdjustingTone}
             isLoadingFeedback={state.isLoadingFeedback}
             text={state.text}
+            hasGif={state.gifEmbed !== null}
             isVideoUploading={state.videoUploadManager.isUploading}
             onInsertThreadSplit={insertThreadSplit}
             onAddImages={() => {
@@ -1540,7 +1565,7 @@ export function ComposerRefactored() {
                 fileInputRef.current.click();
               }
             }}
-            onOpenGiphy={() => state.setShowGiphySearch(true)}
+            onOpenGiphy={() => gifPicker.open()}
             onOpenEmoji={() => state.setShowEmojiPicker(true)}
             onToggleToneOptions={() =>
               state.setShowToneOptions(!state.showToneOptions)
@@ -1579,6 +1604,36 @@ export function ComposerRefactored() {
         onDragLeave={() => state.setDragOverMediaId(null)}
         generatingAltTextFor={state.generatingAltTextFor}
       />
+
+      {/* GIF Preview Section */}
+      {state.gifEmbed && (
+        <div className="mb-4">
+          <div
+            className="relative inline-block max-w-sm overflow-hidden rounded-lg border"
+            style={{ borderColor: "var(--asph-border-primary)" }}
+          >
+            <img
+              src={state.gifEmbed.url}
+              alt={state.gifEmbed.title}
+              className="h-auto w-full"
+              style={{ maxHeight: "300px", objectFit: "contain" }}
+            />
+            <button
+              onClick={() => state.setGifEmbed(null)}
+              className="absolute right-2 top-2 rounded-full bg-black bg-opacity-60 p-1.5 text-white transition-opacity hover:bg-opacity-80"
+              aria-label="Remove GIF"
+              disabled={state.isPosting}
+            >
+              <X size={16} />
+            </button>
+            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 px-2 py-1">
+              <p className="truncate text-xs text-white">
+                {state.gifEmbed.title}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Thread Preview Section */}
       <ComposerThreadPreview
@@ -1701,10 +1756,15 @@ export function ComposerRefactored() {
       </div>
 
       {/* Modals */}
-      {state.showGiphySearch && (
-        <GiphySearch
+      {gifPicker.isOpen && (
+        <GifPicker
           onSelectGif={handleSelectGif}
-          onClose={() => state.setShowGiphySearch(false)}
+          onClose={gifPicker.close}
+          gifs={gifPicker.gifs}
+          loading={gifPicker.loading}
+          error={gifPicker.error}
+          searchQuery={gifPicker.searchQuery}
+          onSearch={gifPicker.search}
         />
       )}
 

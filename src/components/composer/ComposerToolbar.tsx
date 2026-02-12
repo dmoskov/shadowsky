@@ -23,12 +23,12 @@ interface ComposerToolbarProps {
 
   // State
   isPosting: boolean;
-  isDev: boolean;
   media: UploadedMedia[];
   selectedTone: string | null;
   isAdjustingTone: boolean;
   isLoadingFeedback: boolean;
   text: string;
+  hasGif?: boolean;
 
   // Video upload state
   isVideoUploading: boolean;
@@ -54,12 +54,12 @@ export const ComposerToolbar: React.FC<ComposerToolbarProps> = ({
   enableProgressiveDisclosure,
   defaultDisclosureLevel,
   isPosting,
-  isDev,
   media,
   selectedTone,
   isAdjustingTone,
   isLoadingFeedback,
   text,
+  hasGif = false,
   isVideoUploading,
   onInsertThreadSplit,
   onAddImages,
@@ -134,7 +134,8 @@ export const ComposerToolbar: React.FC<ComposerToolbarProps> = ({
               isPosting ||
               imageCount >= MAX_IMAGES_PER_POST ||
               hasVideo ||
-              isVideoUploading
+              isVideoUploading ||
+              hasGif
             }
             label="Add images"
             badge={imageCount > 0 ? imageCount : undefined}
@@ -149,7 +150,9 @@ export const ComposerToolbar: React.FC<ComposerToolbarProps> = ({
           <ToolbarButton
             icon={<Video size={20} />}
             onClick={onAddVideo}
-            disabled={isPosting || media.length > 0 || isVideoUploading}
+            disabled={
+              isPosting || media.length > 0 || isVideoUploading || hasGif
+            }
             label="Add video"
             badge={hasVideo ? 1 : undefined}
             tooltip={{
@@ -159,22 +162,20 @@ export const ComposerToolbar: React.FC<ComposerToolbarProps> = ({
             }}
           />
 
-          {/* GIF search (dev only) */}
-          {isDev && (
-            <ToolbarButton
-              icon={<span className="text-sm font-bold">GIF</span>}
-              onClick={onOpenGiphy}
-              disabled={
-                isPosting || imageCount >= MAX_IMAGES_PER_POST || hasVideo
-              }
-              label="Search GIFs"
-              tooltip={{
-                title: "Search GIFs (Dev Only)",
-                description: "Powered by GIPHY",
-                detail: "Requires local server",
-              }}
-            />
-          )}
+          {/* GIF search */}
+          <ToolbarButton
+            icon={<span className="text-sm font-bold">GIF</span>}
+            onClick={onOpenGiphy}
+            disabled={isPosting || media.length > 0 || isVideoUploading}
+            label="Search GIFs"
+            badge={hasGif ? 1 : undefined}
+            active={hasGif}
+            tooltip={{
+              title: "Add GIF",
+              description: "Search Tenor for GIFs",
+              detail: "GIF is mutually exclusive with images/videos",
+            }}
+          />
 
           {/* Emoji picker */}
           <ToolbarButton

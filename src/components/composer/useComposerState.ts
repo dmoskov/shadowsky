@@ -141,6 +141,10 @@ export interface UseComposerStateReturn {
   showThreadComposer: boolean;
   setShowThreadComposer: (show: boolean) => void;
 
+  // GIF embed
+  gifEmbed: import("./types").GifEmbed | null;
+  setGifEmbed: (embed: import("./types").GifEmbed | null) => void;
+
   // Drag and drop state
   draggedMedia: UploadedMedia | null;
   setDraggedMedia: (media: UploadedMedia | null) => void;
@@ -280,6 +284,11 @@ export function useComposerState(): UseComposerStateReturn {
   const [showGiphySearch, setShowGiphySearch] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showThreadComposer, setShowThreadComposer] = useState(false);
+
+  // GIF embed state
+  const [gifEmbed, setGifEmbed] = useState<import("./types").GifEmbed | null>(
+    null,
+  );
 
   // Drag and drop state
   const [draggedMedia, setDraggedMedia] = useState<UploadedMedia | null>(null);
@@ -485,6 +494,7 @@ export function useComposerState(): UseComposerStateReturn {
     videoUploadManager.resetUpload();
     setLinkPreviewEnabled(true);
     linkPreview.clearPreview();
+    setGifEmbed(null);
   }, [media, linkPreview, videoUploadManager, setText]);
 
   return {
@@ -578,6 +588,10 @@ export function useComposerState(): UseComposerStateReturn {
     setShowEmojiPicker,
     showThreadComposer,
     setShowThreadComposer,
+
+    // GIF embed
+    gifEmbed,
+    setGifEmbed,
 
     // Drag and drop state
     draggedMedia,

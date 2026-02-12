@@ -123,6 +123,16 @@ export interface UploadedMedia {
   order?: number; // Track order within a post
 }
 
+// GIF embed type
+export interface GifEmbed {
+  id: string;
+  url: string;
+  title: string;
+  width: number;
+  height: number;
+  tenorUrl: string; // Original Tenor page URL
+}
+
 // Post status types
 export interface PostStatus {
   type: "idle" | "posting" | "success" | "error" | "loading";
@@ -209,6 +219,9 @@ export interface ComposerState {
   showGiphySearch: boolean;
   showEmojiPicker: boolean;
   showThreadComposer: boolean;
+
+  // GIF embed
+  gifEmbed: GifEmbed | null;
 
   // Drag and drop state
   draggedMedia: UploadedMedia | null;
