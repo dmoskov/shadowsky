@@ -22,7 +22,6 @@ export function useProfile(actor: string) {
     queryKey: ['profile', actor],
     queryFn: () => getProfile(actor),
     enabled: !!actor,
-    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
@@ -34,7 +33,6 @@ export function useProfiles(actors: string[]) {
     queryKey: ['profiles', actors],
     queryFn: () => getProfiles(actors),
     enabled: actors.length > 0,
-    staleTime: 5 * 60 * 1000,
   });
 }
 
