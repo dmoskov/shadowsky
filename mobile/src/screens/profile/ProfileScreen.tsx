@@ -25,9 +25,11 @@ interface ProfileScreenProps {
   handle: string;
   onNavigateToPost?: (uri: string) => void;
   onNavigateToProfile?: (handle: string) => void;
+  onNavigateToFollowers?: (actor: string) => void;
+  onNavigateToFollowing?: (actor: string) => void;
 }
 
-export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }: ProfileScreenProps) {
+export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, onNavigateToFollowers, onNavigateToFollowing }: ProfileScreenProps) {
   const { data: profile, isLoading: isLoadingProfile, error: profileError, refetch: refetchProfile } = useProfile(handle);
   const {
     data: feedData,
@@ -204,14 +206,20 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile }:
             <Text style={styles.statValue}>{profile.postsCount ?? 0}</Text>
             <Text style={styles.statLabel}>Posts</Text>
           </View>
-          <View style={styles.stat}>
+          <TouchableOpacity
+            style={styles.stat}
+            onPress={() => onNavigateToFollowers?.(profile.handle)}
+            activeOpacity={0.7}>
             <Text style={styles.statValue}>{profile.followersCount ?? 0}</Text>
             <Text style={styles.statLabel}>Followers</Text>
-          </View>
-          <View style={styles.stat}>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.stat}
+            onPress={() => onNavigateToFollowing?.(profile.handle)}
+            activeOpacity={0.7}>
             <Text style={styles.statValue}>{profile.followsCount ?? 0}</Text>
             <Text style={styles.statLabel}>Following</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Follow/Unfollow Button and Actions */}
