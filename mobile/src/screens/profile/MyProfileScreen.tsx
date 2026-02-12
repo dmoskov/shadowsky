@@ -1,3 +1,4 @@
+import React, { useRef } from "react";
 import { AppBskyFeedDefs } from "@atproto/api";
 import {
   ActivityIndicator,
@@ -6,7 +7,9 @@ import {
   Text,
   TouchableOpacity,
   View,
+  RefreshControl,
 } from "react-native";
+import { useScrollToTop } from "@react-navigation/native";
 import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
 import { useAuth } from "../../contexts/AuthContext";
@@ -25,7 +28,7 @@ export function MyProfileScreen({
   onSignOut,
 }: MyProfileScreenProps) {
   const { account, signOut } = useAuth();
-  const { data: profile, isLoading: isLoadingProfile } = useProfile(
+  const { data: profile, isLoading: isLoadingProfile, refetch: refetchProfile } = useProfile(
     account?.handle || "",
   );
   const {
@@ -34,7 +37,14 @@ export function MyProfileScreen({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    refetch: refetchFeed,
+    isRefetching,
   } = useAuthorFeed(account?.handle || "");
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const scrollRef = useRef<FlatList>(null);
+
+  // Enable scroll-to-top on tab press
+  useScrollToTop(scrollRef);
 
   const handleSignOut = async () => {
     try {
@@ -54,6 +64,12 @@ export function MyProfileScreen({
   const handleHashtagPress = (tag: string) => {
     // TODO: Navigate to search with hashtag query
     console.log('Hashtag pressed:', tag);
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await Promise.all([refetchProfile(), refetchFeed()]);
+    setIsRefreshing(false);
   };
 
   const renderPost = ({ item }: { item: AppBskyFeedDefs.FeedViewPost }) => (
@@ -157,6 +173,7 @@ export function MyProfileScreen({
   return (
     <View style={styles.container}>
       <FlatList
+        ref={scrollRef}
         data={posts}
         renderItem={renderPost}
         keyExtractor={(item, index) => item.post.uri || `post-${index}`}
@@ -169,6 +186,14 @@ export function MyProfileScreen({
           }
         }}
         onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor="#3b82f6"
+            colors={['#3b82f6']}
+          />
+        }
         contentContainerStyle={
           posts.length === 0 ? styles.emptyList : undefined
         }

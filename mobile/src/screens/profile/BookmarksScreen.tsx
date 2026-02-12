@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 export function BookmarksScreen() {
   const router = useRouter();
   const { bookmarks, isLoading, error, refetch, isBookmarked, toggleBookmark } = useBookmarks();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   // Convert BookmarkPost[] to FeedViewPost[]
   const feedPosts: AppBskyFeedDefs.FeedViewPost[] = bookmarks
@@ -48,13 +49,20 @@ export function BookmarksScreen() {
     console.log('Hashtag pressed:', tag);
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
+  };
+
   return (
     <View style={styles.container}>
       <FeedList
         posts={feedPosts}
         isLoading={isLoading}
+        isRefreshing={isRefreshing}
         error={error}
-        onRefresh={refetch}
+        onRefresh={handleRefresh}
         onPostPress={handlePostPress}
         onProfilePress={handleProfilePress}
         onBookmark={handleBookmark}

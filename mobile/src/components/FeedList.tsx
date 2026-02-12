@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import {
   FlatList,
   ActivityIndicator,
@@ -34,7 +34,7 @@ interface FeedListProps {
   onHashtagPress?: (tag: string) => void;
 }
 
-export function FeedList({
+export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   posts,
   isLoading,
   isRefreshing = false,
@@ -52,7 +52,7 @@ export function FeedList({
   emptyMessage = 'No posts yet',
   onMentionPress,
   onHashtagPress,
-}: FeedListProps) {
+}: FeedListProps, ref) {
   const renderItem: ListRenderItem<AppBskyFeedDefs.FeedViewPost> = ({item}) => (
     <PostCard
       post={item}
@@ -94,6 +94,7 @@ export function FeedList({
 
   return (
     <FlatList
+      ref={ref}
       data={posts}
       renderItem={renderItem}
       keyExtractor={(item, index) => item.post.uri + index}
@@ -118,7 +119,7 @@ export function FeedList({
       style={styles.list}
     />
   );
-}
+});
 
 const styles = StyleSheet.create({
   list: {
