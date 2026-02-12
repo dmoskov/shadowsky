@@ -3,16 +3,18 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-nati
 import { useRouter, usePathname } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
 import { colors } from "../constants/theme";
-import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon } from "./icons";
+import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon, ChatBubbleIcon } from "./icons";
+import { useUnreadMessageCount } from "../hooks/api";
 
 interface DrawerItemProps {
   label: string;
   icon?: ReactNode;
   onPress: () => void;
   isActive?: boolean;
+  badge?: number;
 }
 
-function DrawerItem({ label, icon, onPress, isActive }: DrawerItemProps) {
+function DrawerItem({ label, icon, onPress, isActive, badge }: DrawerItemProps) {
   return (
     <TouchableOpacity
       style={[styles.drawerItem, isActive && styles.drawerItemActive]}
@@ -27,6 +29,11 @@ function DrawerItem({ label, icon, onPress, isActive }: DrawerItemProps) {
       >
         {label}
       </Text>
+      {badge !== undefined && badge > 0 && (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
@@ -35,6 +42,7 @@ export function CustomDrawerContent() {
   const router = useRouter();
   const pathname = usePathname();
   const { account } = useAuth();
+  const unreadCount = useUnreadMessageCount();
 
   return (
     <ScrollView style={styles.drawerContent}>
@@ -60,6 +68,13 @@ export function CustomDrawerContent() {
           icon={<HomeIcon size={20} color={pathname === "/" || pathname.startsWith("/(app)/(tabs)") ? colors.primary : colors.text} />}
           isActive={pathname === "/" || pathname.startsWith("/(app)/(tabs)")}
           onPress={() => router.push("/(app)/(tabs)/(home)")}
+        />
+        <DrawerItem
+          label="Messages"
+          icon={<ChatBubbleIcon size={20} color={pathname.includes("/messages") ? colors.primary : colors.text} />}
+          isActive={pathname.includes("/messages")}
+          onPress={() => router.push("/(app)/(tabs)/(profile)/messages")}
+          badge={unreadCount}
         />
         <DrawerItem
           label="Lists"
@@ -170,5 +185,20 @@ const styles = StyleSheet.create({
   version: {
     color: colors.textTertiary,
     fontSize: 12,
+  },
+  badge: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginLeft: 8,
+    minWidth: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
