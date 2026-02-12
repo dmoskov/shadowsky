@@ -186,6 +186,109 @@ export async function deleteRepost(repostUri: string) {
   );
 }
 
+export interface CreateThreadOptions {
+  posts: {
+    text: string;
+    images?: {
+      uri: string;
+      alt?: string;
+    }[];
+  }[];
+  reply?: {
+    root: {uri: string; cid: string};
+    parent: {uri: string; cid: string};
+  };
+  langs?: string[];
+}
+
+export interface ThreadPostResult {
+  uri: string;
+  cid: string;
+  success: boolean;
+  error?: string;
+}
+
+export interface CreateThreadResult {
+  posts: ThreadPostResult[];
+  successCount: number;
+  failureCount: number;
+}
+
+/**
+ * Create a thread of connected posts
+ * Each post replies to the previous one, creating a chain
+ */
+export async function createThread(
+  options: CreateThreadOptions
+): Promise<CreateThreadResult> {
+  const results: ThreadPostResult[] = [];
+  let root: {uri: string; cid: string} | null = null;
+  let parent: {uri: string; cid: string} | null = null;
+
+  // If this thread is a reply to another post, use that as the root
+  if (options.reply) {
+    root = options.reply.root;
+    parent = options.reply.parent;
+  }
+
+  for (let i = 0; i < options.posts.length; i++) {
+    const postData = options.posts[i];
+
+    try {
+      const postOptions: CreatePostOptions = {
+        text: postData.text,
+        images: postData.images,
+        langs: options.langs,
+      };
+
+      // Add reply reference if this is not the first post, or if replying to another post
+      if (parent && root) {
+        postOptions.reply = {
+          root: root,
+          parent: parent,
+        };
+      }
+
+      const response = await createPost(postOptions);
+
+      // Store the result
+      results.push({
+        uri: response.uri,
+        cid: response.cid,
+        success: true,
+      });
+
+      // Set up for next post in thread
+      if (i === 0 && !root) {
+        // First post becomes the root
+        root = {uri: response.uri, cid: response.cid};
+      }
+      // Each post becomes the parent for the next one
+      parent = {uri: response.uri, cid: response.cid};
+    } catch (error) {
+      // Record failure but continue trying to post remaining posts
+      results.push({
+        uri: '',
+        cid: '',
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      // Stop thread creation on failure to maintain chain integrity
+      break;
+    }
+  }
+
+  const successCount = results.filter(r => r.success).length;
+  const failureCount = results.filter(r => !r.success).length;
+
+  return {
+    posts: results,
+    successCount,
+    failureCount,
+  };
+}
+
 /**
  * Upload an image
  * Note: This is a helper function that needs platform-specific implementation

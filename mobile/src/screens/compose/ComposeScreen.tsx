@@ -9,6 +9,8 @@ import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
 import { colors } from "../../constants/theme";
 import { useSearchActors } from "../../hooks/api/useProfile";
 import { MentionSuggestions } from "../../components/MentionSuggestions";
+import { ThreadComposer } from "../../components/ThreadComposer";
+import { ThreadPost } from "../../components/ThreadPostItem";
 
 const MAX_POST_LENGTH = 300;
 
@@ -127,11 +129,22 @@ export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
     }
   }, [text, mentionQuery, mentionStartPos]);
 
+  // Thread mode state
+  const [isThreadMode, setIsThreadMode] = useState(false);
+  const [threadPosts, setThreadPosts] = useState<ThreadPost[]>([{ text: "", images: [] }]);
+  const [activeThreadPostIndex, setActiveThreadPostIndex] = useState<number | null>(null);
+
   const handleClose = () => {
-    if (imagePicker.selectedImages.length > 0 || text.trim()) {
+    const hasContent = isThreadMode
+      ? threadPosts.some(p => p.text.trim() || p.images.length > 0)
+      : (imagePicker.selectedImages.length > 0 || text.trim());
+
+    if (hasContent) {
       Alert.alert(
-        "Discard Post?",
-        "Are you sure you want to discard this post?",
+        isThreadMode ? "Discard Thread?" : "Discard Post?",
+        isThreadMode
+          ? "Are you sure you want to discard this thread?"
+          : "Are you sure you want to discard this post?",
         [
           { text: "Cancel", style: "cancel" },
           { text: "Discard", style: "destructive", onPress: () => router.back() },
@@ -180,7 +193,101 @@ export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
     setTempAltText("");
   };
 
+  // Thread mode handlers
+  const handleToggleThreadMode = () => {
+    if (isThreadMode) {
+      // Switching from thread to single post
+      if (threadPosts.some(p => p.text.trim() || p.images.length > 0)) {
+        Alert.alert(
+          "Exit Thread Mode?",
+          "Your thread will be converted to a single post. Only the first post will be kept.",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Continue",
+              style: "destructive",
+              onPress: () => {
+                setText(threadPosts[0].text);
+                imagePicker.clearImages();
+                threadPosts[0].images.forEach(img => {
+                  // Note: We can't easily restore images to the single post picker
+                  // This is a limitation we'll document
+                });
+                setIsThreadMode(false);
+                setThreadPosts([{ text: "", images: [] }]);
+              },
+            },
+          ]
+        );
+      } else {
+        setIsThreadMode(false);
+        setThreadPosts([{ text: "", images: [] }]);
+      }
+    } else {
+      // Switching from single post to thread
+      const firstPost: ThreadPost = {
+        text: text,
+        images: imagePicker.selectedImages,
+      };
+      setThreadPosts([firstPost]);
+      setText("");
+      imagePicker.clearImages();
+      setIsThreadMode(true);
+    }
+  };
+
+  const handleUpdateThreadPost = (index: number, post: ThreadPost) => {
+    const newPosts = [...threadPosts];
+    newPosts[index] = post;
+    setThreadPosts(newPosts);
+  };
+
+  const handleAddThreadPost = () => {
+    setThreadPosts([...threadPosts, { text: "", images: [] }]);
+  };
+
+  const handleRemoveThreadPost = (index: number) => {
+    if (threadPosts.length <= 1) return;
+    const newPosts = threadPosts.filter((_, i) => i !== index);
+    setThreadPosts(newPosts);
+  };
+
+  const handleThreadImagePicker = (postIndex: number) => {
+    setActiveThreadPostIndex(postIndex);
+    Alert.alert(
+      "Add Image",
+      "Choose an option",
+      [
+        { text: "Take Photo", onPress: () => handleThreadImageFromCamera(postIndex) },
+        { text: "Choose from Library", onPress: () => handleThreadImageFromLibrary(postIndex) },
+        { text: "Cancel", style: "cancel" },
+      ]
+    );
+  };
+
+  const handleThreadImageFromCamera = async (postIndex: number) => {
+    const image = await imagePicker.pickFromCamera();
+    if (image) {
+      const newPosts = [...threadPosts];
+      newPosts[postIndex].images.push(image);
+      setThreadPosts(newPosts);
+    }
+  };
+
+  const handleThreadImageFromLibrary = async (postIndex: number) => {
+    const image = await imagePicker.pickFromLibrary();
+    if (image) {
+      const newPosts = [...threadPosts];
+      newPosts[postIndex].images.push(image);
+      setThreadPosts(newPosts);
+    }
+  };
+
   const handlePost = async () => {
+    if (isThreadMode) {
+      return handlePostThread();
+    }
+
     if (!text.trim() && imagePicker.selectedImages.length === 0) {
       return;
     }
@@ -226,9 +333,74 @@ export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
     }
   };
 
-  const isPostDisabled = (!text.trim() && imagePicker.selectedImages.length === 0) ||
-                         text.length > MAX_POST_LENGTH ||
-                         imagePicker.isUploading;
+  const handlePostThread = async () => {
+    // Validate thread has content
+    const validPosts = threadPosts.filter(p => p.text.trim() || p.images.length > 0);
+    if (validPosts.length === 0) {
+      Alert.alert("Error", "Thread must have at least one post with content.");
+      return;
+    }
+
+    // Check for over-limit posts
+    const overLimitPosts = validPosts.filter(p => p.text.length > 300);
+    if (overLimitPosts.length > 0) {
+      Alert.alert("Error", "Some posts exceed the 300 character limit.");
+      return;
+    }
+
+    try {
+      imagePicker.setIsUploading(true);
+
+      // Import createThread dynamically to avoid circular dependencies
+      const { createThread } = await import("../../services/atproto/posts");
+
+      const threadOptions: any = {
+        posts: validPosts.map(p => ({
+          text: p.text.trim(),
+          images: p.images.map(img => ({
+            uri: img.uri,
+            alt: img.altText,
+          })),
+        })),
+      };
+
+      // Add reply reference if replying
+      if (replyTo) {
+        threadOptions.reply = {
+          root: { uri: replyTo.uri, cid: replyTo.cid },
+          parent: { uri: replyTo.uri, cid: replyTo.cid },
+        };
+      }
+
+      const result = await createThread(threadOptions);
+
+      if (result.failureCount > 0) {
+        Alert.alert(
+          "Partial Success",
+          `Posted ${result.successCount} of ${validPosts.length} posts. Some posts failed to publish.`
+        );
+      } else {
+        Alert.alert("Success", `Thread with ${result.successCount} posts published!`);
+      }
+
+      router.back();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to create thread. Please try again.";
+      Alert.alert("Error", errorMessage);
+    } finally {
+      imagePicker.setIsUploading(false);
+      imagePicker.setUploadProgress(0);
+    }
+  };
+
+  const isPostDisabled = isThreadMode
+    ? threadPosts.every(p => !p.text.trim() && p.images.length === 0) ||
+      threadPosts.some(p => p.text.length > MAX_POST_LENGTH) ||
+      imagePicker.isUploading
+    : (!text.trim() && imagePicker.selectedImages.length === 0) ||
+      text.length > MAX_POST_LENGTH ||
+      imagePicker.isUploading;
+
   const charCount = text.length;
   const isOverLimit = charCount > MAX_POST_LENGTH;
 
@@ -291,76 +463,89 @@ export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
         </View>
       )}
 
-      <TextInput
-        style={styles.input}
-        placeholder={placeholderText}
-        placeholderTextColor="#6b7280"
-        multiline
-        autoFocus
-        value={text}
-        onChangeText={handleTextChange}
-        editable={!createPost.isPending && !imagePicker.isUploading}
-      />
+      {isThreadMode ? (
+        <ThreadComposer
+          posts={threadPosts}
+          onUpdatePost={handleUpdateThreadPost}
+          onAddPost={handleAddThreadPost}
+          onRemovePost={handleRemoveThreadPost}
+          onImagePicker={handleThreadImagePicker}
+          isUploading={imagePicker.isUploading}
+        />
+      ) : (
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder={placeholderText}
+            placeholderTextColor="#6b7280"
+            multiline
+            autoFocus
+            value={text}
+            onChangeText={handleTextChange}
+            editable={!createPost.isPending && !imagePicker.isUploading}
+          />
 
-      {/* Image Previews */}
-      {imagePicker.selectedImages.length > 0 && (
-        <View style={styles.imagePreviewContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScrollView}>
-            {imagePicker.selectedImages.map((image, index) => (
-              <View key={index} style={styles.imagePreviewWrapper}>
-                <Image source={{ uri: image.uri }} style={styles.imagePreview} />
-                {imagePicker.isUploading && (
-                  <View style={styles.uploadingOverlay}>
-                    <ActivityIndicator color="#ffffff" size="small" />
+          {/* Image Previews */}
+          {imagePicker.selectedImages.length > 0 && (
+            <View style={styles.imagePreviewContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScrollView}>
+                {imagePicker.selectedImages.map((image, index) => (
+                  <View key={index} style={styles.imagePreviewWrapper}>
+                    <Image source={{ uri: image.uri }} style={styles.imagePreview} />
+                    {imagePicker.isUploading && (
+                      <View style={styles.uploadingOverlay}>
+                        <ActivityIndicator color="#ffffff" size="small" />
+                      </View>
+                    )}
+                    <TouchableOpacity
+                      style={styles.removeImageButton}
+                      onPress={() => handleRemoveImage(index)}
+                      disabled={imagePicker.isUploading}
+                    >
+                      <Text style={styles.removeImageText}>×</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.altTextButton}
+                      onPress={() => handleAddAltText(index)}
+                      disabled={imagePicker.isUploading}
+                    >
+                      <Text style={styles.altTextButtonText}>
+                        {image.altText ? "✓ ALT" : "ALT"}
+                      </Text>
+                    </TouchableOpacity>
                   </View>
-                )}
-                <TouchableOpacity
-                  style={styles.removeImageButton}
-                  onPress={() => handleRemoveImage(index)}
-                  disabled={imagePicker.isUploading}
-                >
-                  <Text style={styles.removeImageText}>×</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.altTextButton}
-                  onPress={() => handleAddAltText(index)}
-                  disabled={imagePicker.isUploading}
-                >
-                  <Text style={styles.altTextButtonText}>
-                    {image.altText ? "✓ ALT" : "ALT"}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
-          {imagePicker.isUploading && (
-            <Text style={styles.uploadingText}>
-              Uploading images...
-            </Text>
-          )}
-        </View>
-      )}
-
-      {/* Quote Preview */}
-      {quoteTo && (
-        <View style={styles.quotePreview}>
-          <View style={styles.quoteCard}>
-            <View style={styles.quoteHeader}>
-              <Avatar uri={quoteTo.author.avatar} size={32} />
-              <View style={styles.quoteAuthorInfo}>
-                <Text style={styles.quoteAuthorName} numberOfLines={1}>
-                  {quoteTo.author.displayName || quoteTo.author.handle}
+                ))}
+              </ScrollView>
+              {imagePicker.isUploading && (
+                <Text style={styles.uploadingText}>
+                  Uploading images...
                 </Text>
-                <Text style={styles.quoteAuthorHandle} numberOfLines={1}>
-                  @{quoteTo.author.handle}
+              )}
+            </View>
+          )}
+
+          {/* Quote Preview */}
+          {quoteTo && (
+            <View style={styles.quotePreview}>
+              <View style={styles.quoteCard}>
+                <View style={styles.quoteHeader}>
+                  <Avatar uri={quoteTo.author.avatar} size={32} />
+                  <View style={styles.quoteAuthorInfo}>
+                    <Text style={styles.quoteAuthorName} numberOfLines={1}>
+                      {quoteTo.author.displayName || quoteTo.author.handle}
+                    </Text>
+                    <Text style={styles.quoteAuthorHandle} numberOfLines={1}>
+                      @{quoteTo.author.handle}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.quoteText} numberOfLines={6}>
+                  {quoteTo.text}
                 </Text>
               </View>
             </View>
-            <Text style={styles.quoteText} numberOfLines={6}>
-              {quoteTo.text}
-            </Text>
-          </View>
-        </View>
+          )}
+        </>
       )}
 
       {/* Mention Suggestions */}
@@ -373,31 +558,49 @@ export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
       )}
 
       <View style={[styles.toolbar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-        <View style={styles.toolbarIcons}>
+        {isThreadMode ? (
           <TouchableOpacity
-            style={styles.toolbarButton}
+            style={styles.exitThreadButton}
             activeOpacity={0.7}
-            onPress={handleImagePicker}
-            disabled={imagePicker.isUploading || imagePicker.selectedImages.length >= 4}
+            onPress={handleToggleThreadMode}
           >
-            <ImageIcon size={22} color={imagePicker.selectedImages.length >= 4 ? "#4b5563" : "#6b7280"} />
+            <ThreadIcon size={18} color={colors.primary} />
+            <Text style={styles.exitThreadText}>Exit Thread Mode</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.toolbarButton} activeOpacity={0.7}>
-            <GifIcon size={22} color="#6b7280" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.toolbarButton} activeOpacity={0.7}>
-            <PollIcon size={22} color="#6b7280" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.toolbarButton} activeOpacity={0.7}>
-            <ThreadIcon size={22} color="#6b7280" />
-          </TouchableOpacity>
-        </View>
-        <Text style={[
-          styles.charCount,
-          isOverLimit && styles.charCountOver
-        ]}>
-          {charCount}/{MAX_POST_LENGTH}
-        </Text>
+        ) : (
+          <>
+            <View style={styles.toolbarIcons}>
+              <TouchableOpacity
+                style={styles.toolbarButton}
+                activeOpacity={0.7}
+                onPress={handleImagePicker}
+                disabled={imagePicker.isUploading || imagePicker.selectedImages.length >= 4}
+              >
+                <ImageIcon size={22} color={imagePicker.selectedImages.length >= 4 ? "#4b5563" : "#6b7280"} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toolbarButton} activeOpacity={0.7}>
+                <GifIcon size={22} color="#6b7280" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.toolbarButton} activeOpacity={0.7}>
+                <PollIcon size={22} color="#6b7280" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.toolbarButton}
+                activeOpacity={0.7}
+                onPress={handleToggleThreadMode}
+                disabled={replyTo !== undefined || quoteTo !== undefined}
+              >
+                <ThreadIcon size={22} color={isThreadMode ? colors.primary : "#6b7280"} />
+              </TouchableOpacity>
+            </View>
+            <Text style={[
+              styles.charCount,
+              isOverLimit && styles.charCountOver
+            ]}>
+              {charCount}/{MAX_POST_LENGTH}
+            </Text>
+          </>
+        )}
       </View>
 
       {/* Alt Text Modal */}
@@ -724,6 +927,17 @@ const styles = StyleSheet.create({
   saveAltTextButtonText: {
     color: "#ffffff",
     fontSize: 16,
+    fontWeight: "600",
+  },
+  exitThreadButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 8,
+  },
+  exitThreadText: {
+    color: colors.primary,
+    fontSize: 14,
     fontWeight: "600",
   },
 });
