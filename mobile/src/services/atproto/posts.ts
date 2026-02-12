@@ -46,7 +46,7 @@ export async function createPost(options: CreatePostOptions) {
     if (hasImages && hasQuote) {
       // Combined quote + images: use recordWithMedia
       const imageBlobs = await Promise.all(
-        options.images.map(async (img) => {
+        options.images!.map(async (img) => {
           const blob = await uploadImage(img.uri);
           return {
             alt: img.alt || '',
@@ -74,7 +74,7 @@ export async function createPost(options: CreatePostOptions) {
     } else if (hasImages) {
       // Images only
       const imageBlobs = await Promise.all(
-        options.images.map(async (img) => {
+        options.images!.map(async (img) => {
           const blob = await uploadImage(img.uri);
           return {
             alt: img.alt || '',
