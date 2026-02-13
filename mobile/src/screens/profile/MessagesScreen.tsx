@@ -592,7 +592,7 @@ export function MessagesScreen() {
         <View style={styles.inputRow}>
           <TouchableOpacity
             style={styles.attachButton}
-            onPress={pickFromLibrary}
+            onPress={() => pickFromLibrary(true)}
             disabled={isUploading || selectedImages.length >= 4}
           >
             <ImageIcon size={24} color={selectedImages.length >= 4 ? "#666" : colors.primary} />

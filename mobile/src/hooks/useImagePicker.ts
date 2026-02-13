@@ -20,7 +20,7 @@ export function useImagePicker() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const pickFromLibrary = async (): Promise<ImageAsset[]> => {
+  const pickFromLibrary = async (skipEditor = false): Promise<ImageAsset[]> => {
     try {
       // Request permission
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -94,9 +94,11 @@ export function useImagePicker() {
         });
       }
 
-      // Add new images to the list
-      const updatedImages = [...selectedImages, ...newImages].slice(0, MAX_IMAGES);
-      setSelectedImages(updatedImages);
+      // Only add to selected images if skipping editor
+      if (skipEditor) {
+        const updatedImages = [...selectedImages, ...newImages].slice(0, MAX_IMAGES);
+        setSelectedImages(updatedImages);
+      }
 
       return newImages;
     } catch (error) {
@@ -106,7 +108,7 @@ export function useImagePicker() {
     }
   };
 
-  const pickFromCamera = async (): Promise<ImageAsset | null> => {
+  const pickFromCamera = async (skipEditor = false): Promise<ImageAsset | null> => {
     try {
       // Request permission
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -166,8 +168,10 @@ export function useImagePicker() {
         altText: '',
       };
 
-      // Add to the list
-      setSelectedImages([...selectedImages, newImage]);
+      // Only add to selected images if skipping editor
+      if (skipEditor) {
+        setSelectedImages([...selectedImages, newImage]);
+      }
 
       return newImage;
     } catch (error) {
@@ -193,6 +197,11 @@ export function useImagePicker() {
     ));
   };
 
+  const addImages = (images: ImageAsset[]) => {
+    const updatedImages = [...selectedImages, ...images].slice(0, MAX_IMAGES);
+    setSelectedImages(updatedImages);
+  };
+
   return {
     pickFromLibrary,
     pickFromCamera,
@@ -200,6 +209,7 @@ export function useImagePicker() {
     removeImage,
     clearImages,
     updateAltText,
+    addImages,
     isUploading,
     uploadProgress,
     setIsUploading,

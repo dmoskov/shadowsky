@@ -25,6 +25,7 @@ import { useEmojiPicker } from "../../hooks/useEmojiPicker";
 import { EmojiPickerModal } from "../../components/EmojiPickerModal";
 import type { TenorGif } from "../../services/tenor";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
+import { ImageEditor } from "../../components/ImageEditor";
 
 const MAX_POST_LENGTH = 300;
 
@@ -81,6 +82,10 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
 
   // Emoji picker state
   const emojiPicker = useEmojiPicker();
+
+  // Image editor state
+  const [imageEditorVisible, setImageEditorVisible] = useState(false);
+  const [imagesToEdit, setImagesToEdit] = useState<ImageAsset[]>([]);
 
   // Mention autocomplete state
   const [mentionQuery, setMentionQuery] = useState("");
@@ -305,11 +310,40 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
       "Add Image",
       "Choose an option",
       [
-        { text: "Take Photo", onPress: () => imagePicker.pickFromCamera() },
-        { text: "Choose from Library", onPress: () => imagePicker.pickFromLibrary() },
+        { text: "Take Photo", onPress: handleTakePhoto },
+        { text: "Choose from Library", onPress: handleChooseFromLibrary },
         { text: "Cancel", style: "cancel" },
       ]
     );
+  };
+
+  const handleTakePhoto = async () => {
+    const image = await imagePicker.pickFromCamera(false);
+    if (image) {
+      setImagesToEdit([image]);
+      setImageEditorVisible(true);
+    }
+  };
+
+  const handleChooseFromLibrary = async () => {
+    const images = await imagePicker.pickFromLibrary(false);
+    if (images && images.length > 0) {
+      setImagesToEdit(images);
+      setImageEditorVisible(true);
+    }
+  };
+
+  const handleSaveEditedImages = (editedImages: Array<{ originalAsset: ImageAsset; editedAsset: ImageAsset }>) => {
+    // Add edited images to the picker
+    const assetsToAdd = editedImages.map(img => img.editedAsset);
+    imagePicker.addImages(assetsToAdd);
+    setImageEditorVisible(false);
+    setImagesToEdit([]);
+  };
+
+  const handleCancelImageEditor = () => {
+    setImageEditorVisible(false);
+    setImagesToEdit([]);
   };
 
   const handleVideoPicker = () => {
@@ -508,7 +542,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
   };
 
   const handleThreadImageFromCamera = async (postIndex: number) => {
-    const image = await imagePicker.pickFromCamera();
+    const image = await imagePicker.pickFromCamera(true);
     if (image) {
       const newPosts = [...threadPosts];
       newPosts[postIndex].images.push(image);
@@ -517,7 +551,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
   };
 
   const handleThreadImageFromLibrary = async (postIndex: number) => {
-    const images = await imagePicker.pickFromLibrary();
+    const images = await imagePicker.pickFromLibrary(true);
     if (images && images.length > 0) {
       const newPosts = [...threadPosts];
       images.forEach(image => {
@@ -1072,6 +1106,14 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
         visible={emojiPicker.isVisible}
         onSelectEmoji={handleSelectEmoji}
         onClose={emojiPicker.close}
+      />
+
+      {/* Image Editor Modal */}
+      <ImageEditor
+        visible={imageEditorVisible}
+        images={imagesToEdit}
+        onSave={handleSaveEditedImages}
+        onCancel={handleCancelImageEditor}
       />
     </View>
   );
