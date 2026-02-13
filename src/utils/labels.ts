@@ -171,15 +171,35 @@ export function getMostSevereLabel(
 }
 
 /**
+ * Labeler-specific label preference (for third-party labelers)
+ */
+export interface LabelerLabelPreference {
+  labelerDid: string;
+  label: string;
+  visibility: "show" | "warn" | "hide";
+}
+
+/**
  * Check if content should be hidden based on labels and preferences
+ * Now supports both native labels and third-party labeler labels
  */
 export function shouldHideContent(
   labels: ComAtprotoLabelDefs.Label[] | undefined,
   preferences: ContentFilterPreferences,
+  labelerPreferences?: LabelerLabelPreference[],
 ): boolean {
   if (!labels || labels.length === 0) return false;
 
   for (const label of labels) {
+    // Check for labeler-specific preference first
+    if (label.src && labelerPreferences) {
+      const labelerPref = labelerPreferences.find(
+        (p) => p.labelerDid === label.src && p.label === label.val,
+      );
+      if (labelerPref && labelerPref.visibility === "hide") return true;
+    }
+
+    // Fall back to native label preferences
     const labelType = parseLabelType(label.val);
     if (labelType !== "unknown") {
       const preference = preferences[labelType];
@@ -192,14 +212,25 @@ export function shouldHideContent(
 
 /**
  * Check if content should show a warning based on labels and preferences
+ * Now supports both native labels and third-party labeler labels
  */
 export function shouldWarnContent(
   labels: ComAtprotoLabelDefs.Label[] | undefined,
   preferences: ContentFilterPreferences,
+  labelerPreferences?: LabelerLabelPreference[],
 ): boolean {
   if (!labels || labels.length === 0) return false;
 
   for (const label of labels) {
+    // Check for labeler-specific preference first
+    if (label.src && labelerPreferences) {
+      const labelerPref = labelerPreferences.find(
+        (p) => p.labelerDid === label.src && p.label === label.val,
+      );
+      if (labelerPref && labelerPref.visibility === "warn") return true;
+    }
+
+    // Fall back to native label preferences
     const labelType = parseLabelType(label.val);
     if (labelType !== "unknown") {
       const preference = preferences[labelType];
@@ -212,15 +243,31 @@ export function shouldWarnContent(
 
 /**
  * Check if images should be blurred based on labels and preferences
+ * Now supports both native labels and third-party labeler labels
  */
 export function shouldBlurImages(
   labels: ComAtprotoLabelDefs.Label[] | undefined,
   preferences: ContentFilterPreferences,
+  labelerPreferences?: LabelerLabelPreference[],
 ): boolean {
   if (!labels || labels.length === 0) return false;
 
   // Blur images for warn or hide preferences
   for (const label of labels) {
+    // Check for labeler-specific preference first
+    if (label.src && labelerPreferences) {
+      const labelerPref = labelerPreferences.find(
+        (p) => p.labelerDid === label.src && p.label === label.val,
+      );
+      if (
+        labelerPref &&
+        (labelerPref.visibility === "warn" || labelerPref.visibility === "hide")
+      ) {
+        return true;
+      }
+    }
+
+    // Fall back to native label preferences
     const labelType = parseLabelType(label.val);
     if (labelType !== "unknown") {
       const preference = preferences[labelType];

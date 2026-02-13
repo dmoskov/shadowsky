@@ -153,6 +153,12 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
             path: "/settings/moderation",
           },
           {
+            id: "labelers",
+            label: "Labeler Subscriptions",
+            icon: Shield,
+            path: "/settings/labelers",
+          },
+          {
             id: "moderation-history",
             label: "Moderation History",
             icon: History,
