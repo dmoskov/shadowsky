@@ -57,6 +57,12 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   onHashtagPress,
 }: FeedListProps, ref) {
   const { isOnline } = useNetwork();
+
+  const handleRefresh = () => {
+    triggerHaptic('selection');
+    onRefresh?.();
+  };
+
   const renderItem: ListRenderItem<AppBskyFeedDefs.FeedViewPost> = ({item}) => (
     <PostCard
       post={item}

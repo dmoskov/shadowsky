@@ -10,6 +10,7 @@ import {sharePost} from '../utils/share';
 import {PostEmbed} from './PostEmbed';
 import {useBlockUser, useMuteUser} from '../hooks/api/useProfile';
 import {colors} from '../constants/theme';
+import {triggerHaptic} from '../utils/haptics';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -204,7 +205,10 @@ export function PostCard({
 
           <TouchableOpacity
             style={styles.engagementButton}
-            onPress={onRepost}
+            onPress={() => {
+              triggerHaptic('medium');
+              onRepost?.();
+            }}
             activeOpacity={0.7}
             disabled={!isOnline}>
             <RepostIcon size={18} color={isOnline ? "#9ca3af" : "#4b5563"} />
@@ -215,7 +219,10 @@ export function PostCard({
 
           <TouchableOpacity
             style={styles.engagementButton}
-            onPress={onLike}
+            onPress={() => {
+              triggerHaptic('light');
+              onLike?.();
+            }}
             activeOpacity={0.7}
             disabled={!isOnline}>
             <HeartIcon size={18} color={isOnline ? (isLiked ? '#ef4444' : '#9ca3af') : '#4b5563'} filled={isLiked} />
@@ -226,7 +233,10 @@ export function PostCard({
 
           <TouchableOpacity
             style={styles.engagementButton}
-            onPress={onBookmark}
+            onPress={() => {
+              triggerHaptic('light');
+              onBookmark?.();
+            }}
             activeOpacity={0.7}
             disabled={!isOnline}>
             <BookmarkIcon size={18} color={isOnline ? (isBookmarked ? colors.primary : '#9ca3af') : '#4b5563'} filled={isBookmarked} />

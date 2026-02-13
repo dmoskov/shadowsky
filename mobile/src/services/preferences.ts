@@ -17,6 +17,9 @@ export interface AppPreferences {
   notifyOnMentions: boolean;
   notifyOnQuotes: boolean;
 
+  // Interaction
+  hapticsEnabled: boolean;
+
   // Data
   autoPlayVideos: "always" | "wifi" | "never";
   imageQuality: "high" | "medium" | "low";
@@ -47,6 +50,9 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   notifyOnFollows: true,
   notifyOnMentions: true,
   notifyOnQuotes: true,
+
+  // Interaction
+  hapticsEnabled: true,
 
   // Data
   autoPlayVideos: "wifi",
