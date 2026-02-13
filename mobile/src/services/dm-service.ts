@@ -404,6 +404,81 @@ class DmService {
       // Don't throw - marking as read is not critical
     }
   }
+
+  /**
+   * Get or create a conversation with specified members
+   * This will find an existing conversation or create a new one
+   */
+  async getConvoForMembers(memberDids: string[]): Promise<DmConversation> {
+    if (!this.agent) {
+      throw new Error("Not authenticated");
+    }
+
+    return withRetry(async () => {
+      try {
+        const headers = await this.getAuthHeaders();
+        headers["Content-Type"] = "application/json";
+
+        const response = await fetch(
+          "https://api.bsky.chat/xrpc/chat.bsky.convo.getConvoForMembers",
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              members: memberDids,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const error: any = new Error(
+            `HTTP ${response.status}: ${response.statusText}`
+          );
+          error.status = response.status;
+          throw error;
+        }
+
+        const data = (await response.json()) as ApiGetConvoResponse;
+        const convo = data.convo;
+
+        return {
+          id: convo.id,
+          rev: convo.rev,
+          members: convo.members.map((member: ApiConvoMember) => ({
+            did: member.did,
+            handle: member.handle,
+            displayName: member.displayName,
+            avatar: member.avatar,
+          })),
+          muted: convo.muted || false,
+          unreadCount: convo.unreadCount || 0,
+          lastMessage: convo.lastMessage
+            ? {
+                id: convo.lastMessage.id,
+                rev: convo.lastMessage.rev,
+                text: convo.lastMessage.text,
+                sentAt: convo.lastMessage.sentAt,
+                sender: {
+                  did: convo.lastMessage.sender.did,
+                },
+              }
+            : undefined,
+        };
+      } catch (error: unknown) {
+        console.error("Failed to get conversation for members:", error);
+        const apiErr = error as ApiError;
+        if (apiErr.status === 401 || apiErr.statusCode === 401) {
+          throw new Error("Authentication required. Please sign in again.");
+        }
+        if (apiErr.status === 403 || apiErr.statusCode === 403) {
+          throw new Error(
+            "This app password doesn't have permission to access direct messages. Please create a new app password with Direct Messages enabled."
+          );
+        }
+        throw error;
+      }
+    });
+  }
 }
 
 export const dmService = new DmService();

@@ -19,11 +19,17 @@ export default function UserProfileRoute() {
     router.push(`/(app)/(tabs)/(profile)/following/${actor}`);
   };
 
+  const handleNavigateToMessages = (conversationId: string) => {
+    // Navigate to messages screen - the conversation will be available in the list
+    router.push('/(app)/(tabs)/(profile)/messages');
+  };
+
   return (
     <ProfileScreen
       handle={handle}
       onNavigateToFollowers={handleNavigateToFollowers}
       onNavigateToFollowing={handleNavigateToFollowing}
+      onNavigateToMessages={handleNavigateToMessages}
     />
   );
 }

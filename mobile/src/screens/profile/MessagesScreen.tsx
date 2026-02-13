@@ -24,7 +24,8 @@ import { getAtProtoClient } from "../../services/atproto/client";
 import { LoadingState } from "../../components/LoadingState";
 import { ErrorState } from "../../components/ErrorState";
 import { EmptyState } from "../../components/EmptyState";
-import { LockIcon, ChatBubbleIcon, ArrowLeftIcon, SearchIcon, CloseIcon } from "../../components/icons";
+import { NewConversationModal } from "../../components/NewConversationModal";
+import { LockIcon, ChatBubbleIcon, ArrowLeftIcon, SearchIcon, CloseIcon, PlusIcon } from "../../components/icons";
 import { useConversations, useConversation, useSendMessage, useMarkAsRead } from "../../hooks/api";
 import { colors } from "../../constants/theme";
 import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
@@ -39,6 +40,8 @@ export function MessagesScreen() {
   const [messageText, setMessageText] = useState("");
   const [searchText, setSearchText] = useState("");
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [showNewConversationModal, setShowNewConversationModal] = useState(false);
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   // Image picker for media attachments
@@ -137,6 +140,29 @@ export function MessagesScreen() {
       setMessageText(text); // Restore message on error
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleStartNewConversation = async (userDid: string) => {
+    setShowNewConversationModal(false);
+    setIsCreatingConversation(true);
+
+    try {
+      // Get or create conversation with this user
+      const conversation = await dmService.getConvoForMembers([userDid]);
+
+      // Refresh conversations list to include the new/found conversation
+      await refetchConversations();
+
+      // Select the conversation
+      setSelectedConversation(conversation.id);
+    } catch (error) {
+      console.error("Failed to create conversation:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to start conversation";
+      Alert.alert("Error", errorMessage);
+    } finally {
+      setIsCreatingConversation(false);
     }
   };
 
@@ -360,10 +386,32 @@ export function MessagesScreen() {
   // Show empty state if no conversations
   if (!conversations || conversations.length === 0) {
     return (
-      <EmptyState
-        icon={<ChatBubbleIcon size={64} color="#9ca3af" />}
-        message="No conversations yet. Start a conversation on Bluesky to see it here!"
-      />
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Messages</Text>
+          <TouchableOpacity
+            onPress={() => setShowNewConversationModal(true)}
+            style={styles.newMessageButton}
+          >
+            <PlusIcon size={24} color={colors.primary} />
+          </TouchableOpacity>
+        </View>
+        <EmptyState
+          icon={<ChatBubbleIcon size={64} color="#9ca3af" />}
+          message="No conversations yet. Tap + to start a new conversation!"
+        />
+        <NewConversationModal
+          visible={showNewConversationModal}
+          onClose={() => setShowNewConversationModal(false)}
+          onSelectUser={handleStartNewConversation}
+        />
+        {isCreatingConversation && (
+          <View style={styles.creatingOverlay}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.creatingText}>Starting conversation...</Text>
+          </View>
+        )}
+      </View>
     );
   }
 
@@ -374,19 +422,27 @@ export function MessagesScreen() {
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <Text style={styles.headerTitle}>Messages</Text>
-            <TouchableOpacity
-              onPress={() => {
-                setIsSearchVisible(!isSearchVisible);
-                if (isSearchVisible) setSearchText("");
-              }}
-              style={styles.searchToggle}
-            >
-              {isSearchVisible ? (
-                <CloseIcon size={24} color={colors.primary} />
-              ) : (
-                <SearchIcon size={24} color={colors.primary} />
-              )}
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                onPress={() => {
+                  setIsSearchVisible(!isSearchVisible);
+                  if (isSearchVisible) setSearchText("");
+                }}
+                style={styles.searchToggle}
+              >
+                {isSearchVisible ? (
+                  <CloseIcon size={24} color={colors.primary} />
+                ) : (
+                  <SearchIcon size={24} color={colors.primary} />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowNewConversationModal(true)}
+                style={styles.newMessageButton}
+              >
+                <PlusIcon size={24} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
           </View>
           {isSearchVisible && (
             <View style={styles.searchContainer}>
@@ -421,6 +477,17 @@ export function MessagesScreen() {
             ) : null
           }
         />
+        <NewConversationModal
+          visible={showNewConversationModal}
+          onClose={() => setShowNewConversationModal(false)}
+          onSelectUser={handleStartNewConversation}
+        />
+        {isCreatingConversation && (
+          <View style={styles.creatingOverlay}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.creatingText}>Starting conversation...</Text>
+          </View>
+        )}
       </View>
     );
   }
@@ -581,7 +648,15 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   searchToggle: {
+    padding: 4,
+  },
+  newMessageButton: {
     padding: 4,
   },
   searchContainer: {
@@ -878,5 +953,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "left",
     lineHeight: 22,
+  },
+  creatingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 16,
+  },
+  creatingText: {
+    color: "#ffffff",
+    fontSize: 16,
   },
 });
