@@ -32,6 +32,13 @@ import React, {
 } from "react";
 import { useSearchParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  useCreateDraft,
+  useDeleteDraft,
+  useDrafts,
+  useLoadDraft,
+  useUpdateDraft,
+} from "../hooks/useDrafts";
 import { useLinkPreview } from "../hooks/useLinkPreview";
 import { useVideoUploadManager } from "../hooks/useVideoUploadManager";
 import {
@@ -43,15 +50,8 @@ import {
 } from "../services/anthropic";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { ThreadgateService } from "../services/atproto/threadgate";
-import {
-  deleteDraft,
-  generateDraftId,
-  getComposerSettings,
-  getDrafts,
-  saveComposerSettings,
-  saveDraft,
-  type ThreadDraft,
-} from "../services/drafts";
+import { getComposerSettings, saveComposerSettings } from "../services/drafts";
+import type { EnrichedDraft } from "../services/drafts/official-draft-service";
 import {
   postToMultipleAccounts,
   retryPostToAccount,
@@ -268,9 +268,14 @@ export function Composer() {
 
   // Draft and scheduling state
   const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
-  const [draftTitle, setDraftTitle] = useState("");
-  const [drafts, setDrafts] = useState<ThreadDraft[]>([]);
   const [showDrafts, setShowDrafts] = useState(false);
+
+  // Draft hooks
+  const { data: drafts = [] } = useDrafts(agent, true);
+  const createDraftMutation = useCreateDraft(agent);
+  const updateDraftMutation = useUpdateDraft(agent);
+  const deleteDraftMutation = useDeleteDraft(agent);
+  const loadDraftMutation = useLoadDraft();
   const [delaySeconds, setDelaySeconds] = useState(3);
   const [numberingPosition, setNumberingPosition] = useState<
     "beginning" | "end"
@@ -435,10 +440,7 @@ export function Composer() {
     saveAiSettings();
   }, [autoGenerateAltText, enableHashtagSuggestions]);
 
-  // Load drafts
-  useEffect(() => {
-    setDrafts(getDrafts());
-  }, []);
+  // Drafts are loaded via useDrafts hook
 
   // Initialize selected accounts with current account if none selected
   useEffect(() => {
@@ -1266,152 +1268,150 @@ export function Composer() {
       return;
     }
 
-    // Convert media files to base64 for storage
-    const mediaData = await Promise.all(
-      media.map(async (m) => {
-        // If it's already a data URL, use it directly
-        if (m.preview.startsWith("data:")) {
-          return {
-            file: m.preview,
-            alt: m.alt,
-            type: m.type,
-            postIndex: m.postIndex,
-          };
-        }
+    try {
+      // Build composer state for draft API
+      const composerState = {
+        text,
+        images:
+          media
+            .filter((m) => m.type === "image")
+            .map((m) => ({
+              uri: m.preview,
+              altText: m.alt,
+              mimeType: m.file.type || "image/jpeg",
+            })) || undefined,
+        videos:
+          media
+            .filter((m) => m.type === "video")
+            .map((m) => ({
+              uri: m.preview,
+              mimeType: m.file.type || "video/mp4",
+            })) || undefined,
+      };
 
-        // Otherwise, convert file to base64
-        return new Promise<{
-          file: string;
-          alt: string;
-          type: "image" | "video";
-          postIndex?: number;
-        }>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            resolve({
-              file: reader.result as string,
-              alt: m.alt,
-              type: m.type,
-              postIndex: m.postIndex,
-            });
-          };
-          reader.readAsDataURL(m.file);
+      // Create or update draft
+      if (currentDraftId) {
+        await updateDraftMutation.mutateAsync({
+          draftId: currentDraftId,
+          state: composerState,
         });
-      }),
-    );
-
-    const draft: ThreadDraft = {
-      id: currentDraftId || generateDraftId(),
-      title: draftTitle || text.substring(0, 50) + "...",
-      content: text,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      // Save new structure
-      posts: posts,
-      postOrder: postOrder.length > 0 ? postOrder : undefined,
-      media: mediaData,
-      // Keep legacy field for first post's images only (backward compatibility)
-      images: mediaData
-        .filter(
-          (m) => m.type === "image" && (!m.postIndex || m.postIndex === 0),
-        )
-        .map((m) => ({ file: m.file, alt: m.alt })),
-    };
-
-    saveDraft(draft);
-    setCurrentDraftId(draft.id);
-    setDrafts(getDrafts());
-    setPostStatus({ type: "success", message: "Draft saved!" });
-
-    setTimeout(() => {
-      setPostStatus({ type: "idle" });
-    }, 2000);
-  }, [text, draftTitle, currentDraftId, media, posts, postOrder]);
-
-  const loadDraft = useCallback(
-    async (draft: ThreadDraft) => {
-      setText(draft.content);
-      setDraftTitle(draft.title);
-      setCurrentDraftId(draft.id);
-      setShowDrafts(false);
-
-      // Load posts and post order if available
-      if (draft.posts && draft.posts.length > 0) {
-        setPosts(draft.posts);
-        if (draft.postOrder) {
-          setPostOrder(draft.postOrder);
-        }
+      } else {
+        const newDraftId = await createDraftMutation.mutateAsync(composerState);
+        setCurrentDraftId(newDraftId);
       }
 
-      // Load media from new structure or legacy structure
-      const mediaToLoad =
-        draft.media ||
-        draft.images?.map((img) => ({
-          file: img.file,
-          alt: img.alt,
-          type: "image" as const,
-          postIndex: 0,
-        })) ||
-        [];
+      setPostStatus({ type: "success", message: "Draft saved!" });
 
-      // Convert stored base64 back to File objects and create preview URLs
-      const loadedMedia = await Promise.all(
-        mediaToLoad.map(async (m) => {
-          let file: File;
-          let preview: string;
-
-          if (m.file.startsWith("data:")) {
-            // Convert base64 to blob
-            const response = await fetch(m.file);
-            const blob = await response.blob();
-            const filename = `draft-media-${Date.now()}.${m.type === "video" ? "mp4" : "jpg"}`;
-            file = new File([blob], filename, { type: blob.type });
-            preview = m.file; // Use the data URL directly as preview
-          } else {
-            // If it's already a blob URL (shouldn't happen in saved drafts)
-            preview = m.file;
-            // Create a dummy file - this shouldn't happen in practice
-            file = new File([], "unknown", {
-              type: m.type === "video" ? "video/mp4" : "image/jpeg",
-            });
-          }
-
-          const newMedia: UploadedMedia = {
-            id: Math.random().toString(36).substr(2, 9),
-            file,
-            preview,
-            alt: m.alt,
-            type: m.type,
-            postIndex: m.postIndex,
-          };
-
-          return newMedia;
-        }),
-      );
-
-      // Clear existing media previews before setting new ones
-      media.forEach((m) => {
-        if (m.preview && !m.preview.startsWith("data:")) {
-          URL.revokeObjectURL(m.preview);
-          mediaUrlsRef.current.delete(m.preview);
-        }
+      setTimeout(() => {
+        setPostStatus({ type: "idle" });
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to save draft:", error);
+      setPostStatus({
+        type: "error",
+        message: "Failed to save draft. Please try again.",
       });
+    }
+  }, [text, media, currentDraftId, createDraftMutation, updateDraftMutation]);
 
-      setMedia(loadedMedia);
+  const loadDraft = useCallback(
+    async (draft: EnrichedDraft) => {
+      try {
+        setPostStatus({ type: "posting", message: "Loading draft..." });
+
+        // Convert draft to composer state
+        const composerState = await loadDraftMutation.mutateAsync(draft);
+
+        setText(composerState.text);
+        setCurrentDraftId(draft.id);
+        setShowDrafts(false);
+
+        // Clear existing media previews before setting new ones
+        media.forEach((m) => {
+          if (m.preview && !m.preview.startsWith("data:")) {
+            URL.revokeObjectURL(m.preview);
+            mediaUrlsRef.current.delete(m.preview);
+          }
+        });
+
+        // Load images
+        const loadedMedia: UploadedMedia[] = [];
+        if (composerState.images) {
+          for (const img of composerState.images) {
+            if (img.uri) {
+              const response = await fetch(img.uri);
+              const blob = await response.blob();
+              const filename = `draft-image-${Date.now()}.jpg`;
+              const file = new File([blob], filename, {
+                type: blob.type || "image/jpeg",
+              });
+
+              loadedMedia.push({
+                id: Math.random().toString(36).substr(2, 9),
+                file,
+                preview: img.uri,
+                alt: img.altText || "",
+                type: "image",
+              });
+            }
+          }
+        }
+
+        // Load videos
+        if (composerState.videos) {
+          for (const video of composerState.videos) {
+            if (video.uri) {
+              const response = await fetch(video.uri);
+              const blob = await response.blob();
+              const filename = `draft-video-${Date.now()}.mp4`;
+              const file = new File([blob], filename, {
+                type: blob.type || video.mimeType,
+              });
+
+              loadedMedia.push({
+                id: Math.random().toString(36).substr(2, 9),
+                file,
+                preview: video.uri,
+                alt: "",
+                type: "video",
+              });
+            }
+          }
+        }
+
+        setMedia(loadedMedia);
+        setPostStatus({ type: "success", message: "Draft loaded!" });
+
+        setTimeout(() => {
+          setPostStatus({ type: "idle" });
+        }, 1000);
+      } catch (error) {
+        console.error("Failed to load draft:", error);
+        setPostStatus({
+          type: "error",
+          message: "Failed to load draft. Please try again.",
+        });
+      }
     },
-    [media],
+    [media, loadDraftMutation],
   );
 
   const deleteDraftHandler = useCallback(
-    (id: string) => {
-      deleteDraft(id);
-      setDrafts(getDrafts());
-      if (currentDraftId === id) {
-        setCurrentDraftId(null);
-        setDraftTitle("");
+    async (id: string) => {
+      try {
+        await deleteDraftMutation.mutateAsync({ draftId: id });
+        if (currentDraftId === id) {
+          setCurrentDraftId(null);
+        }
+      } catch (error) {
+        console.error("Failed to delete draft:", error);
+        setPostStatus({
+          type: "error",
+          message: "Failed to delete draft. Please try again.",
+        });
       }
     },
-    [currentDraftId],
+    [currentDraftId, deleteDraftMutation],
   );
 
   const cancelDelayedSend = useCallback(() => {
@@ -1723,7 +1723,6 @@ export function Composer() {
       setPostOrder([]);
       setMedia([]);
       setCurrentDraftId(null);
-      setDraftTitle("");
       setPendingPost(null);
       setCountdown(null);
       setReplyPermission("everyone"); // Reset reply permission
@@ -1733,8 +1732,8 @@ export function Composer() {
 
       // Delete draft if it was loaded
       if (currentDraftId) {
-        deleteDraft(currentDraftId);
-        setDrafts(getDrafts());
+        await deleteDraftMutation.mutateAsync({ draftId: currentDraftId });
+        setCurrentDraftId(null);
       }
 
       // Reset status after 3 seconds
@@ -1988,7 +1987,6 @@ export function Composer() {
         setPostOrder([]);
         setMedia([]);
         setCurrentDraftId(null);
-        setDraftTitle("");
         setPendingPost(null);
         setCountdown(null);
         setReplyPermission("everyone");
@@ -2000,8 +1998,8 @@ export function Composer() {
 
         // Delete draft if it was loaded
         if (currentDraftId) {
-          deleteDraft(currentDraftId);
-          setDrafts(getDrafts());
+          await deleteDraftMutation.mutateAsync({ draftId: currentDraftId });
+          setCurrentDraftId(null);
         }
 
         // Reset status after 3 seconds
@@ -2088,7 +2086,6 @@ export function Composer() {
       setPostOrder([]);
       setMedia([]);
       setCurrentDraftId(null);
-      setDraftTitle("");
       setPendingPost(null);
       setAccountPostStatuses([]);
       setLastPostContent(null);
@@ -2698,26 +2695,6 @@ export function Composer() {
         </Suspense>
 
         <div className="mb-3 mt-3 flex items-center gap-2">
-          <input
-            type="text"
-            placeholder="Draft title (optional)"
-            value={draftTitle}
-            onChange={(e) => setDraftTitle(e.target.value)}
-            className="flex-1 rounded-lg p-2 text-sm"
-            style={{
-              background: "var(--asph-bg-secondary)",
-              border: "1px solid var(--asph-border-primary)",
-              color: "var(--asph-text-primary)",
-              outline: "none",
-            }}
-            onFocus={(e) =>
-              (e.target.style.borderColor = "var(--asph-primary)")
-            }
-            onBlur={(e) =>
-              (e.target.style.borderColor = "var(--asph-border-primary)")
-            }
-          />
-
           <button
             className="asph-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
             onClick={saveDraftHandler}
@@ -2752,7 +2729,6 @@ export function Composer() {
                 });
                 setMedia([]);
                 setCurrentDraftId(null);
-                setDraftTitle("");
                 videoUploadManager.resetUpload(); // Reset video upload state
                 setPostStatus({
                   type: "success",
@@ -3252,14 +3228,23 @@ export function Composer() {
                   No saved drafts
                 </p>
               ) : (
-                drafts.map((draft) => {
+                drafts.map((draftView) => {
+                  const draft = draftView.draft;
                   const postCount = draft.posts?.length || 1;
-                  const mediaCount =
-                    draft.media?.length || draft.images?.length || 0;
+                  const firstPost = draft.posts?.[0];
+                  const draftText = firstPost?.text || "";
+                  const draftTitle =
+                    draftText.substring(0, 50) +
+                    (draftText.length > 50 ? "..." : "");
+
+                  // Count media from the draft
+                  const imageCount = firstPost?.embedImages?.length || 0;
+                  const videoCount = firstPost?.embedVideos?.length || 0;
+                  const mediaCount = imageCount + videoCount;
 
                   return (
                     <div
-                      key={draft.id}
+                      key={draftView.id}
                       className="cursor-pointer rounded-lg border p-4 transition-all hover:shadow-sm"
                       style={{
                         borderColor: "var(--asph-border-primary)",
@@ -3271,13 +3256,13 @@ export function Composer() {
                           className="font-medium"
                           style={{ color: "var(--asph-text-primary)" }}
                         >
-                          {draft.title}
+                          {draftTitle}
                         </h4>
                         <button
                           className="rounded p-1 text-red-600 hover:bg-red-100"
                           onClick={(e) => {
                             e.stopPropagation();
-                            deleteDraftHandler(draft.id);
+                            deleteDraftHandler(draftView.id);
                           }}
                         >
                           <Trash2 size={16} />
@@ -3287,7 +3272,7 @@ export function Composer() {
                         className="mb-2 line-clamp-2 text-sm"
                         style={{ color: "var(--asph-text-secondary)" }}
                       >
-                        {draft.content}
+                        {draftText}
                       </p>
                       <div className="mb-2 flex items-center gap-3">
                         {postCount > 1 && (
@@ -3320,11 +3305,12 @@ export function Composer() {
                           className="text-xs"
                           style={{ color: "var(--asph-text-tertiary)" }}
                         >
-                          Updated {new Date(draft.updatedAt).toLocaleString()}
+                          Updated{" "}
+                          {new Date(draftView.updatedAt).toLocaleString()}
                         </span>
                         <button
                           className="asph-button-secondary px-3 py-1 text-sm"
-                          onClick={() => loadDraft(draft)}
+                          onClick={() => loadDraft(draftView)}
                         >
                           Load
                         </button>
