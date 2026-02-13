@@ -67,6 +67,10 @@ export function ThreadComposer({
         style={[styles.addPostButton, isUploading && styles.addPostButtonDisabled]}
         onPress={onAddPost}
         disabled={isUploading}
+        accessibilityRole="button"
+        accessibilityLabel="Add post to thread"
+        accessibilityHint={`Double tap to add another post to this ${posts.length} post thread`}
+        accessibilityState={{disabled: isUploading}}
       >
         <Text style={styles.addPostButtonText}>+ Add Post to Thread</Text>
       </TouchableOpacity>

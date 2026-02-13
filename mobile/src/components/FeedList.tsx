@@ -141,6 +141,9 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
       windowSize={10}
       initialNumToRender={10}
       style={styles.list}
+      accessible={false}
+      accessibilityLabel="Feed of posts"
+      accessibilityHint="Scroll to view more posts"
     />
   );
 });

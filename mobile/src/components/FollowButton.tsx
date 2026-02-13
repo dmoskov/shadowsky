@@ -69,7 +69,11 @@ export function FollowButton({
       ]}
       onPress={handlePress}
       disabled={isPending}
-      activeOpacity={0.7}>
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={isFollowing ? 'Unfollow user' : 'Follow user'}
+      accessibilityHint={isFollowing ? 'Double tap to unfollow this user' : 'Double tap to follow this user'}
+      accessibilityState={{disabled: isPending, busy: isPending}}>
       {isPending ? (
         <ActivityIndicator size="small" color={isFollowing ? colors.primary : '#ffffff'} />
       ) : (

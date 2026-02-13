@@ -10,7 +10,11 @@ interface ErrorStateProps {
 
 export function ErrorState({message, onRetry}: ErrorStateProps) {
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessible={true}
+      accessibilityRole="alert"
+      accessibilityLabel={`Error. ${message}`}>
       <AlertTriangleIcon size={48} color="#ef4444" />
       <Text style={styles.message}>{message}</Text>
       {onRetry && (
@@ -19,6 +23,7 @@ export function ErrorState({message, onRetry}: ErrorStateProps) {
           onPress={onRetry}
           variant="secondary"
           style={styles.button}
+          accessibilityHint="Double tap to retry loading"
         />
       )}
     </View>

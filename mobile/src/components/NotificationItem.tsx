@@ -89,13 +89,21 @@ export function NotificationItem({
   const postRecord = AppBskyFeedPost.isRecord(notification.record)
     ? notification.record
     : undefined;
-  const postText = postRecord?.text || '';
+  const postText = (postRecord && typeof postRecord.text === 'string') ? postRecord.text : '';
+  const postPreview = postText ? `Post: ${postText.substring(0, 100)}${postText.length > 100 ? '...' : ''}` : '';
+
+  const accessibilityLabel = `${author.displayName || author.handle} ${message}. ${postPreview} ${timestamp}. ${!notification.isRead ? 'Unread notification' : 'Read notification'}`;
 
   return (
     <TouchableOpacity
       style={[styles.container, !notification.isRead && styles.unread]}
       onPress={onPress}
-      activeOpacity={0.9}>
+      activeOpacity={0.9}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint="Double tap to view notification details"
+      accessibilityState={{selected: !notification.isRead}}>
       <View style={styles.content}>
         {/* Icon indicator */}
         <View style={[styles.iconContainer, {backgroundColor: color + '20'}]}>
@@ -108,8 +116,11 @@ export function NotificationItem({
             <TouchableOpacity
               onPress={handleProfilePress}
               activeOpacity={0.7}
-              style={styles.avatarContainer}>
-              <Avatar uri={author.avatar} size={36} />
+              style={styles.avatarContainer}
+              accessibilityRole="button"
+              accessibilityLabel={`View profile of ${author.displayName || author.handle}`}
+              accessibilityHint="Double tap to open profile">
+              <Avatar uri={author.avatar} size={36} accessibilityLabel={`${author.displayName || author.handle}'s avatar`} />
             </TouchableOpacity>
             <View style={styles.headerText}>
               <View style={styles.titleRow}>
@@ -126,11 +137,11 @@ export function NotificationItem({
           </View>
 
           {/* Post preview if available */}
-          {postText && (
+          {postText && postRecord && typeof postRecord.text === 'string' && (
             <View style={styles.postPreview}>
               <RichText
-                text={postText}
-                facets={postRecord?.facets}
+                text={postRecord.text}
+                facets={postRecord.facets}
                 onMentionPress={onMentionPress}
                 onHashtagPress={onHashtagPress}
                 style={styles.postText}
