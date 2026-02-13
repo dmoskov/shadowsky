@@ -32,6 +32,7 @@ export {GifIcon} from './GifIcon';
 export {PollIcon} from './PollIcon';
 export {ThreadIcon} from './ThreadIcon';
 export {SendIcon} from './SendIcon';
+export {GlobeIcon} from './GlobeIcon';
 
 // State/feedback
 export {AlertTriangleIcon} from './AlertTriangleIcon';
