@@ -1,6 +1,7 @@
 import { AppBskyFeedDefs } from "@atproto/api";
 import { formatDistanceToNow } from "date-fns";
 import {
+  BellOff,
   Bookmark,
   Heart,
   Loader,
@@ -13,6 +14,7 @@ import {
 import React, { memo } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
+import { useModeration } from "../contexts/ModerationContext";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { fetchLinkMetadata, type LinkMetadata } from "../services/anthropic";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
@@ -29,6 +31,18 @@ import { RichText } from "./ui/RichText";
 import { VideoPlayer } from "./VideoPlayer";
 
 const logger = createLogger("PostRenderer");
+
+/**
+ * Helper to get the root URI of a thread.
+ * For reply posts, returns the root URI from the reply record.
+ * For top-level posts, returns the post URI itself.
+ */
+function getThreadRootUri(post: AppBskyFeedDefs.PostView): string {
+  const record = post.record as
+    | { reply?: { root: { uri: string } } }
+    | undefined;
+  return record?.reply?.root?.uri || post.uri;
+}
 
 // Check if content has sensitive labels that should be blurred
 const hasSensitiveLabels = (labels?: Array<{ val: string }>): boolean => {
@@ -370,7 +384,10 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
   onQuoteClick,
 }) => {
   const navigate = useNavigate();
+  const { isThreadMuted } = useModeration();
   const record = post.record as any;
+  const rootUri = getThreadRootUri(post);
+  const isThreadMutedState = isThreadMuted(rootUri);
   const [galleryImages, setGalleryImages] = React.useState<Array<{
     thumb: string;
     fullsize: string;
@@ -928,6 +945,21 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                     addSuffix: true,
                   })}
                 </span>
+                {isThreadMutedState && (
+                  <>
+                    <span style={{ color: "var(--asph-text-secondary)" }}>
+                      ·
+                    </span>
+                    <span
+                      className="flex items-center gap-1 text-sm"
+                      style={{ color: "var(--asph-text-secondary)" }}
+                      title="Thread muted"
+                    >
+                      <BellOff size={14} aria-hidden="true" />
+                      <span className="text-xs">Muted</span>
+                    </span>
+                  </>
+                )}
               </div>
               {onMenuClick && (
                 <button

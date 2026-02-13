@@ -25,11 +25,6 @@ import { debug } from "@bsky/shared";
 import { WebSocketEventType, type WebSocketMessage } from "../types/websocket";
 
 /**
- * Jetstream event types
- */
-type JetstreamEventKind = "commit" | "identity" | "account";
-
-/**
  * Jetstream commit event
  */
 interface JetstreamCommit {

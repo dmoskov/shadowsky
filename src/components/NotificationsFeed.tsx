@@ -14,6 +14,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useLocation, useNavigate } from "react-router";
+import { useModeration } from "../contexts/ModerationContext";
 import { useFollowing } from "../hooks/useFollowing";
 import {
   useBatchedNotificationTransition,
@@ -68,6 +69,7 @@ const NotificationsFeedComponent: React.FC = () => {
   const searchParams = new URLSearchParams(location.search);
   const showTopAccounts = searchParams.get("top") === "1";
   const queryClient = useQueryClient();
+  const { isThreadMuted } = useModeration();
 
   const [filter, setFilter] = useState<NotificationFilter>("all");
   // Removed unread only filter
@@ -247,6 +249,43 @@ const NotificationsFeedComponent: React.FC = () => {
 
     let filtered = [...notifications];
 
+    // Filter out notifications from muted threads
+    // We check against the fetched posts to determine thread roots
+    if (posts && posts.length > 0) {
+      const postUriToRoot = new Map<string, string>();
+      posts.forEach((post) => {
+        const record = post.record as
+          | { reply?: { root: { uri: string } } }
+          | undefined;
+        const rootUri = record?.reply?.root?.uri || post.uri;
+        postUriToRoot.set(post.uri, rootUri);
+      });
+
+      filtered = filtered.filter((n: Notification) => {
+        // Get the post URI for this notification
+        let postUri: string | undefined;
+        if (n.reason === "repost" || n.reason === "like") {
+          postUri = n.reasonSubject;
+        } else if (
+          n.reason === "reply" ||
+          n.reason === "mention" ||
+          n.reason === "quote"
+        ) {
+          postUri = n.uri;
+        }
+
+        // If we have the post URI and can determine its root, check if muted
+        if (postUri && postUriToRoot.has(postUri)) {
+          const rootUri = postUriToRoot.get(postUri)!;
+          return !isThreadMuted(rootUri);
+        }
+
+        // If we don't have the post data yet, keep the notification
+        // (it will be filtered once posts are loaded)
+        return true;
+      });
+    }
+
     if (filter === "images") {
       // Filter notifications that have posts with images
       if (posts && posts.length > 0) {
@@ -309,7 +348,14 @@ const NotificationsFeedComponent: React.FC = () => {
     // }
 
     return filtered;
-  }, [notifications?.length, notifications, filter, posts, followingSet]);
+  }, [
+    notifications?.length,
+    notifications,
+    filter,
+    posts,
+    followingSet,
+    isThreadMuted,
+  ]);
 
   // Calculate counts for each filter type
   const filterCounts = React.useMemo(() => {

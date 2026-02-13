@@ -5,6 +5,7 @@
 This document describes the integration of Bluesky's Jetstream firehose for real-time updates in the application.
 
 Jetstream provides a WebSocket connection to Bluesky's AT Protocol firehose, delivering real-time events for:
+
 - New posts from followed accounts
 - Likes, reposts, and replies on user's posts
 - New followers
@@ -38,6 +39,7 @@ Jetstream provides a WebSocket connection to Bluesky's AT Protocol firehose, del
 ### Real-time Post Updates
 
 When a followed account creates a new post, the app:
+
 1. Receives the event via Jetstream
 2. Increments the "new posts" counter
 3. Shows the NewPostsIndicator component
@@ -46,6 +48,7 @@ When a followed account creates a new post, the app:
 ### Real-time Notifications
 
 When someone interacts with the user's content:
+
 1. Like/repost/follow events are filtered by the user's DID
 2. Notifications are added to React Query cache
 3. Notification badge updates in real-time
@@ -54,6 +57,7 @@ When someone interacts with the user's content:
 ### Background/Foreground Detection
 
 The Jetstream connection automatically:
+
 - **Disconnects** when the app goes to background (saves bandwidth/battery)
 - **Reconnects** when the app comes to foreground
 - **Handles** network online/offline events
@@ -62,6 +66,7 @@ The Jetstream connection automatically:
 ### Graceful Degradation
 
 If Jetstream connection fails:
+
 - App continues to work with polling-based updates
 - Auto-reconnect with exponential backoff (up to 10 attempts)
 - Error states are logged and can be monitored
@@ -104,11 +109,7 @@ function FeedComponent() {
 ### Manual Connection Control
 
 ```typescript
-const {
-  isConnected,
-  connect,
-  disconnect,
-} = useRealtimeUpdates({
+const { isConnected, connect, disconnect } = useRealtimeUpdates({
   userDid: userDid,
   autoConnect: false, // Don't connect automatically
 });
@@ -206,6 +207,7 @@ This reduces bandwidth by only receiving relevant events.
 ### Bandwidth
 
 Jetstream is efficient but still sends a continuous stream of events. The service:
+
 - Filters events client-side after receiving
 - Only subscribes to relevant collections
 - Disconnects when app is in background
@@ -215,6 +217,7 @@ Typical bandwidth: ~50-200 KB/minute depending on followed accounts and activity
 ### Battery Impact
 
 Background disconnection is critical for mobile devices:
+
 - Page Visibility API detects when app is hidden
 - Automatic disconnection stops network activity
 - Reconnection when app becomes visible again
@@ -222,6 +225,7 @@ Background disconnection is critical for mobile devices:
 ### Memory
 
 Event handlers and state:
+
 - Events are processed and discarded (not stored)
 - Only current "new posts count" is kept in state
 - React Query handles caching of actual data
@@ -239,6 +243,7 @@ useRealtimeUpdates({
 ```
 
 Debug logs include:
+
 - Connection/disconnection events
 - New posts received
 - Notifications received
@@ -285,11 +290,13 @@ console.log(stats);
 **Symptom**: Jetstream never connects, no error logs
 
 **Causes**:
+
 - Network firewall blocking WebSocket connections
 - CORS or security policy blocking wss:// connections
 - Browser extension interfering with WebSockets
 
 **Solutions**:
+
 - Check browser console for WebSocket errors
 - Disable browser extensions temporarily
 - Try different network (mobile hotspot vs WiFi)
@@ -299,11 +306,13 @@ console.log(stats);
 **Symptom**: Connected to Jetstream but new posts indicator never appears
 
 **Causes**:
+
 - `followedDids` array is empty or incorrect
 - Followed accounts aren't posting
 - Client-side filtering is too restrictive
 
 **Solutions**:
+
 - Enable debug logging and check console
 - Verify `followedDids` array contains correct DIDs
 - Test with a high-activity followed account
@@ -313,11 +322,13 @@ console.log(stats);
 **Symptom**: Mobile battery drains quickly when using app
 
 **Causes**:
+
 - Background disconnection not working
 - App stays in foreground (screen on)
 - Too many followed accounts generating high event volume
 
 **Solutions**:
+
 - Verify visibility change handlers are working
 - Check stats: `messagesReceived` should not increase when app is backgrounded
 - Consider reducing number of followed accounts (or implement sampling)

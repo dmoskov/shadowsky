@@ -48,17 +48,17 @@ export const NewPostsIndicator: React.FC<NewPostsIndicatorProps> = ({
 
   return (
     <div
-      className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-slide-down ${className}`}
+      className={`animate-slide-down fixed left-1/2 top-20 z-50 -translate-x-1/2 ${className}`}
     >
       <button
         onClick={handleClick}
         onKeyDown={handleKeyDown}
-        className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+        className="flex transform items-center gap-2 rounded-full bg-blue-500 px-6 py-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
         aria-live="polite"
         aria-label={`${count} new ${count === 1 ? "post" : "posts"} available. Click to refresh.`}
       >
         <svg
-          className="w-5 h-5"
+          className="h-5 w-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
