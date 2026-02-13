@@ -257,6 +257,86 @@ export const ModerationHistorySettings: React.FC = () => {
     </div>
   );
 
+  // Mute entry sub-components
+  const MuteEntryAvatar: React.FC<{ entry: MuteHistoryEntry }> = ({
+    entry,
+  }) => (
+    <div
+      className="flex h-10 w-10 items-center justify-center rounded-full"
+      style={{
+        backgroundColor: entry.isActive
+          ? "rgba(234, 179, 8, 0.1)"
+          : "var(--asph-bg-tertiary)",
+      }}
+    >
+      {entry.subjectAvatar ? (
+        <img
+          src={entry.subjectAvatar}
+          alt=""
+          className="h-10 w-10 rounded-full object-cover"
+        />
+      ) : (
+        <VolumeX
+          size={20}
+          style={{
+            color: entry.isActive
+              ? "var(--asph-yellow)"
+              : "var(--asph-text-tertiary)",
+          }}
+        />
+      )}
+    </div>
+  );
+
+  const MuteEntryStatus: React.FC<{ isActive: boolean }> = ({ isActive }) =>
+    isActive ? (
+      <span className="rounded-full bg-yellow-500 bg-opacity-20 px-2 py-0.5 text-xs text-yellow-500">
+        Active
+      </span>
+    ) : (
+      <span
+        className="rounded-full px-2 py-0.5 text-xs"
+        style={{
+          backgroundColor: "var(--asph-bg-tertiary)",
+          color: "var(--asph-text-tertiary)",
+        }}
+      >
+        Unmuted
+      </span>
+    );
+
+  const MuteEntryInfo: React.FC<{ entry: MuteHistoryEntry }> = ({ entry }) => (
+    <div>
+      <div className="flex items-center gap-2">
+        <span
+          className="font-medium"
+          style={{ color: "var(--asph-text-primary)" }}
+        >
+          {entry.subjectDisplayName || entry.subjectHandle || "Unknown"}
+        </span>
+        <MuteEntryStatus isActive={entry.isActive} />
+      </div>
+      {entry.subjectHandle && (
+        <div
+          className="text-sm"
+          style={{ color: "var(--asph-text-secondary)" }}
+        >
+          @{entry.subjectHandle}
+        </div>
+      )}
+      <div
+        className="flex items-center gap-1 text-xs"
+        style={{ color: "var(--asph-text-tertiary)" }}
+      >
+        <Clock size={12} />
+        {formatRelativeTime(entry.createdAt)}
+        {entry.unmutedAt && (
+          <span> · Unmuted {formatRelativeTime(entry.unmutedAt)}</span>
+        )}
+      </div>
+    </div>
+  );
+
   // Render mute entry
   const renderMuteEntry = (entry: MuteHistoryEntry) => (
     <div
@@ -268,74 +348,8 @@ export const ModerationHistorySettings: React.FC = () => {
       }}
     >
       <div className="flex items-center gap-3">
-        <div
-          className="flex h-10 w-10 items-center justify-center rounded-full"
-          style={{
-            backgroundColor: entry.isActive
-              ? "rgba(234, 179, 8, 0.1)"
-              : "var(--asph-bg-tertiary)",
-          }}
-        >
-          {entry.subjectAvatar ? (
-            <img
-              src={entry.subjectAvatar}
-              alt=""
-              className="h-10 w-10 rounded-full object-cover"
-            />
-          ) : (
-            <VolumeX
-              size={20}
-              style={{
-                color: entry.isActive
-                  ? "var(--asph-yellow)"
-                  : "var(--asph-text-tertiary)",
-              }}
-            />
-          )}
-        </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <span
-              className="font-medium"
-              style={{ color: "var(--asph-text-primary)" }}
-            >
-              {entry.subjectDisplayName || entry.subjectHandle || "Unknown"}
-            </span>
-            {entry.isActive ? (
-              <span className="rounded-full bg-yellow-500 bg-opacity-20 px-2 py-0.5 text-xs text-yellow-500">
-                Active
-              </span>
-            ) : (
-              <span
-                className="rounded-full px-2 py-0.5 text-xs"
-                style={{
-                  backgroundColor: "var(--asph-bg-tertiary)",
-                  color: "var(--asph-text-tertiary)",
-                }}
-              >
-                Unmuted
-              </span>
-            )}
-          </div>
-          {entry.subjectHandle && (
-            <div
-              className="text-sm"
-              style={{ color: "var(--asph-text-secondary)" }}
-            >
-              @{entry.subjectHandle}
-            </div>
-          )}
-          <div
-            className="flex items-center gap-1 text-xs"
-            style={{ color: "var(--asph-text-tertiary)" }}
-          >
-            <Clock size={12} />
-            {formatRelativeTime(entry.createdAt)}
-            {entry.unmutedAt && (
-              <span> · Unmuted {formatRelativeTime(entry.unmutedAt)}</span>
-            )}
-          </div>
-        </div>
+        <MuteEntryAvatar entry={entry} />
+        <MuteEntryInfo entry={entry} />
       </div>
     </div>
   );
