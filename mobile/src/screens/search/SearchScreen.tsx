@@ -19,14 +19,17 @@ import { useSearchActors } from "../../hooks/api/useProfile";
 import { useSearchPosts } from "../../hooks/api/useSearchPosts";
 import { Avatar } from "../../components/Avatar";
 import { FeedList } from "../../components/FeedList";
+import { TrendingTopics } from "../../components/TrendingTopics";
 import { AppBskyActorDefs, AppBskyFeedDefs } from "@atproto/api";
 import { useBookmarks } from "../../hooks/api/useBookmarks";
+import { useTrendingData } from "../../hooks/useTrending";
 import { colors } from "../../constants/theme";
 
 const SEARCH_HISTORY_KEY = "@search_history";
 const MAX_HISTORY_ITEMS = 20;
 
-type TabType = "people" | "posts";
+type TabType = "people" | "posts" | "hashtags";
+type MediaFilter = "all" | "images" | "videos" | "links";
 
 interface SearchScreenProps {
   query?: string;
@@ -37,6 +40,8 @@ interface SearchFilters {
   since?: string;
   until?: string;
   lang?: string;
+  author?: string;
+  mediaFilter?: MediaFilter;
 }
 
 export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
@@ -49,12 +54,14 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({
     sort: "top",
+    mediaFilter: "all",
   });
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const scrollRef = useRef<FlatList>(null);
 
   const { bookmarks, toggleBookmark, isBookmarked: checkIsBookmarked } = useBookmarks();
+  const { topics, trends, isLoading: isLoadingTrending } = useTrendingData();
 
   // Enable scroll-to-top on tab press
   useScrollToTop(scrollRef);
@@ -124,6 +131,14 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
     }
   };
 
+  // Build search query with hashtag prefix for hashtag tab
+  const effectiveQuery = useMemo(() => {
+    if (activeTab === "hashtags" && debouncedQuery && !debouncedQuery.startsWith("#")) {
+      return `#${debouncedQuery}`;
+    }
+    return debouncedQuery;
+  }, [activeTab, debouncedQuery]);
+
   // Fetch search results based on active tab
   const {
     data: actors,
@@ -140,11 +155,41 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
     hasNextPage,
     isFetchingNextPage,
     refetch: refetchPosts,
-  } = useSearchPosts(activeTab === "posts" ? debouncedQuery : "", filters);
+  } = useSearchPosts(
+    activeTab === "posts" || activeTab === "hashtags" ? effectiveQuery : "",
+    filters
+  );
 
   const posts = useMemo(() => {
-    return postsData?.pages.flatMap((page) => page.feed) || [];
-  }, [postsData]);
+    let allPosts = postsData?.pages.flatMap((page) => page.feed) || [];
+
+    // Apply media filter
+    if (filters.mediaFilter && filters.mediaFilter !== "all") {
+      allPosts = allPosts.filter((post) => {
+        const embed = post.post.embed;
+        if (!embed) return filters.mediaFilter === "links";
+
+        switch (filters.mediaFilter) {
+          case "images":
+            return embed.$type === "app.bsky.embed.images#view" ||
+                   (embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+                    embed.media.$type === "app.bsky.embed.images#view");
+          case "videos":
+            return embed.$type === "app.bsky.embed.video#view" ||
+                   (embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+                    embed.media.$type === "app.bsky.embed.video#view");
+          case "links":
+            return embed.$type === "app.bsky.embed.external#view" ||
+                   (embed.$type === "app.bsky.embed.recordWithMedia#view" &&
+                    embed.media.$type === "app.bsky.embed.external#view");
+          default:
+            return true;
+        }
+      });
+    }
+
+    return allPosts;
+  }, [postsData, filters.mediaFilter]);
 
   const isLoading =
     activeTab === "people" ? isLoadingActors : isLoadingPosts;
@@ -162,7 +207,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   };
 
   const handleLoadMore = () => {
-    if (activeTab === "posts" && hasNextPage && !isFetchingNextPage) {
+    if ((activeTab === "posts" || activeTab === "hashtags") && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   };
@@ -179,6 +224,14 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
 
   const handleHistoryItemPress = (query: string) => {
     setSearchQuery(query);
+    setShowHistory(false);
+  };
+
+  const handleTrendingTopicClick = (topic: string) => {
+    // Remove # prefix if present
+    const cleanTopic = topic.startsWith("#") ? topic.slice(1) : topic;
+    setSearchQuery(cleanTopic);
+    setActiveTab("hashtags");
     setShowHistory(false);
   };
 
@@ -233,6 +286,8 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
           <Text style={styles.emptyStateText}>
             {activeTab === "people"
               ? "Search for users by name or handle"
+              : activeTab === "hashtags"
+              ? "Search for posts by hashtag"
               : "Search for posts by keyword"}
           </Text>
         </View>
@@ -264,7 +319,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
       <View style={styles.searchBar}>
         <TextInput
           style={styles.input}
-          placeholder="Search posts, users, feeds..."
+          placeholder="Search posts, users, hashtags..."
           placeholderTextColor="#6b7280"
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -273,6 +328,16 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
           autoCorrect={false}
         />
       </View>
+
+      {/* Trending Topics */}
+      {!showHistory && !debouncedQuery && (
+        <TrendingTopics
+          topics={topics}
+          trends={trends}
+          onTopicClick={handleTrendingTopicClick}
+          isLoading={isLoadingTrending}
+        />
+      )}
 
       {/* Search History Suggestions */}
       {showHistory && searchHistory.length > 0 && (
@@ -324,10 +389,24 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
                 Posts
               </Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === "hashtags" && styles.activeTab]}
+              onPress={() => setActiveTab("hashtags")}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  activeTab === "hashtags" && styles.activeTabText,
+                ]}
+              >
+                Hashtags
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Filter button for Posts tab */}
-          {activeTab === "posts" && debouncedQuery && (
+          {/* Filter button for Posts/Hashtags tab */}
+          {(activeTab === "posts" || activeTab === "hashtags") && debouncedQuery && (
             <View style={styles.filterBar}>
               <TouchableOpacity
                 style={styles.filterButton}
@@ -335,7 +414,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
                 activeOpacity={0.7}
               >
                 <Text style={styles.filterButtonText}>
-                  Filters ({filters.sort})
+                  Filters ({filters.sort}, {filters.mediaFilter})
                 </Text>
               </TouchableOpacity>
             </View>
@@ -439,6 +518,30 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
                 </TouchableOpacity>
               </View>
 
+              <Text style={styles.filterLabel}>Media Type</Text>
+              <View style={styles.filterGroup}>
+                {(["all", "images", "videos", "links"] as MediaFilter[]).map((type) => (
+                  <TouchableOpacity
+                    key={type}
+                    style={[
+                      styles.filterOption,
+                      filters.mediaFilter === type && styles.filterOptionActive,
+                    ]}
+                    onPress={() => applyFilters({ mediaFilter: type })}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.filterOptionText,
+                        filters.mediaFilter === type && styles.filterOptionTextActive,
+                      ]}
+                    >
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
               <Text style={styles.filterLabel}>Date Range</Text>
               <View style={styles.filterGroup}>
                 <TouchableOpacity
@@ -502,6 +605,8 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
                     since: undefined,
                     until: undefined,
                     lang: undefined,
+                    author: undefined,
+                    mediaFilter: "all",
                   })
                 }
                 activeOpacity={0.7}
