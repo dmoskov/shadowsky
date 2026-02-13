@@ -13,6 +13,11 @@ export interface CreatePostOptions {
     uri: string;
     alt?: string;
   };
+  external?: {
+    uri: string;
+    title: string;
+    description: string;
+  };
   reply?: {
     root: {uri: string; cid: string};
     parent: {uri: string; cid: string};
@@ -46,9 +51,10 @@ export async function createPost(options: CreatePostOptions) {
       record.reply = options.reply;
     }
 
-    // Handle embeds (images, video, quote, or combinations)
+    // Handle embeds (images, video, external, quote, or combinations)
     const hasImages = options.images && options.images.length > 0;
     const hasVideo = !!options.video;
+    const hasExternal = !!options.external;
     const hasQuote = !!options.quote;
 
     if (hasVideo && hasQuote && options.video && options.quote) {
@@ -118,6 +124,16 @@ export async function createPost(options: CreatePostOptions) {
       record.embed = {
         $type: 'app.bsky.embed.images',
         images: imageBlobs,
+      };
+    } else if (hasExternal && options.external) {
+      // External embed only (e.g., GIFs from Tenor)
+      record.embed = {
+        $type: 'app.bsky.embed.external',
+        external: {
+          uri: options.external.uri,
+          title: options.external.title,
+          description: options.external.description,
+        },
       };
     }
 
