@@ -290,6 +290,81 @@ export async function createThread(
 }
 
 /**
+ * Get users who liked a post
+ */
+export async function getLikes(uri: string, cursor?: string) {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        const response = await agent.getLikes({
+          uri,
+          limit: 50,
+          cursor,
+        });
+
+        return {
+          likes: response.data.likes,
+          cursor: response.data.cursor,
+        };
+      }),
+    ATProtoEndpointType.READ
+  );
+}
+
+/**
+ * Get users who reposted a post
+ */
+export async function getRepostsByPost(uri: string, cursor?: string) {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        const response = await agent.getRepostedBy({
+          uri,
+          limit: 50,
+          cursor,
+        });
+
+        return {
+          repostedBy: response.data.repostedBy,
+          cursor: response.data.cursor,
+        };
+      }),
+    ATProtoEndpointType.READ
+  );
+}
+
+/**
+ * Get posts that quote a post
+ */
+export async function getQuotesByPost(uri: string, cursor?: string) {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        const response = await agent.app.bsky.feed.getQuotes({
+          uri,
+          limit: 50,
+          cursor,
+        });
+
+        return {
+          posts: response.data.posts,
+          cursor: response.data.cursor,
+        };
+      }),
+    ATProtoEndpointType.READ
+  );
+}
+
+/**
  * Upload an image
  * Note: This is a helper function that needs platform-specific implementation
  */
