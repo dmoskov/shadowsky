@@ -34,7 +34,7 @@
     "test:unit:watch": "vitest watch"
   },
   "dependencies": {
-    "@atproto/api": "^0.18.8",
+    "@atproto/api": "^0.18.21",
     "@atproto/oauth-client-browser": "^0.3.37",
     "@aws-sdk/client-cloudwatch-logs": "^3.978.0",
     "@ffmpeg/ffmpeg": "^0.12.15",
@@ -51,7 +51,9 @@
     "hls.js": "^1.6.7",
     "html2canvas": "^1.4.1",
     "idb": "^8.0.3",
+    "idb-keyval": "^6.2.2",
     "lucide-react": "^0.294.0",
+    "nanoid": "^5.1.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "^7.0.2",
