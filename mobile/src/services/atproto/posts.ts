@@ -9,6 +9,10 @@ export interface CreatePostOptions {
     uri: string;
     alt?: string;
   }[];
+  video?: {
+    uri: string;
+    alt?: string;
+  };
   reply?: {
     root: {uri: string; cid: string};
     parent: {uri: string; cid: string};
@@ -42,11 +46,27 @@ export async function createPost(options: CreatePostOptions) {
       record.reply = options.reply;
     }
 
-    // Handle embeds (images, quote, or both)
+    // Handle embeds (images, video, quote, or combinations)
     const hasImages = options.images && options.images.length > 0;
+    const hasVideo = !!options.video;
     const hasQuote = !!options.quote;
 
-    if (hasImages && hasQuote) {
+    if (hasVideo && hasQuote && options.video && options.quote) {
+      // Combined quote + video: use recordWithMedia
+      const videoBlob = await uploadVideo(options.video.uri);
+
+      record.embed = {
+        $type: 'app.bsky.embed.recordWithMedia',
+        record: {
+          record: options.quote,
+        },
+        media: {
+          $type: 'app.bsky.embed.video',
+          video: videoBlob,
+          alt: options.video.alt || '',
+        },
+      };
+    } else if (hasImages && hasQuote && options.quote) {
       // Combined quote + images: use recordWithMedia
       const imageBlobs = await Promise.all(
         options.images!.map(async (img) => {
@@ -73,6 +93,15 @@ export async function createPost(options: CreatePostOptions) {
       record.embed = {
         $type: 'app.bsky.embed.record',
         record: options.quote,
+      };
+    } else if (hasVideo && options.video) {
+      // Video only
+      const videoBlob = await uploadVideo(options.video.uri);
+
+      record.embed = {
+        $type: 'app.bsky.embed.video',
+        video: videoBlob,
+        alt: options.video.alt || '',
       };
     } else if (hasImages) {
       // Images only
@@ -193,6 +222,10 @@ export interface CreateThreadOptions {
       uri: string;
       alt?: string;
     }[];
+    video?: {
+      uri: string;
+      alt?: string;
+    };
   }[];
   reply?: {
     root: {uri: string; cid: string};
@@ -238,6 +271,7 @@ export async function createThread(
       const postOptions: CreatePostOptions = {
         text: postData.text,
         images: postData.images,
+        video: postData.video,
         langs: options.langs,
       };
 
@@ -385,6 +419,36 @@ async function uploadImage(uri: string) {
 
         const uploadResponse = await agent.uploadBlob(uint8Array, {
           encoding: blob.type,
+        });
+
+        return uploadResponse.data.blob;
+      }),
+    ATProtoEndpointType.UPLOAD
+  );
+}
+
+/**
+ * Upload a video
+ * Note: Video uploads use the same blob upload mechanism as images
+ */
+async function uploadVideo(uri: string) {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        // For React Native, we need to fetch the video as a blob
+        const response = await fetch(uri);
+        const blob = await response.blob();
+
+        // Convert blob to Uint8Array for upload
+        const arrayBuffer = await blob.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+
+        // Upload video blob with appropriate MIME type
+        const uploadResponse = await agent.uploadBlob(uint8Array, {
+          encoding: blob.type || 'video/mp4',
         });
 
         return uploadResponse.data.blob;
