@@ -27,6 +27,7 @@ export {SettingsIcon} from './SettingsIcon';
 
 // Compose toolbar
 export {ImageIcon} from './ImageIcon';
+export {VideoIcon} from './VideoIcon';
 export {GifIcon} from './GifIcon';
 export {PollIcon} from './PollIcon';
 export {ThreadIcon} from './ThreadIcon';

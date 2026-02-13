@@ -5,9 +5,10 @@ import { useRouter } from "expo-router";
 import { useCreatePost } from "../../hooks/api/usePosts";
 import { useSaveDraft, useDeleteDraft, useDrafts } from "../../hooks/api";
 import { draftToComposerState, ComposerState } from "../../services/drafts";
-import { ImageIcon, GifIcon, PollIcon, ThreadIcon, CloseIcon } from "../../components/icons";
+import { ImageIcon, VideoIcon, GifIcon, PollIcon, ThreadIcon, CloseIcon } from "../../components/icons";
 import { Avatar } from "../../components/Avatar";
 import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
+import { useVideoPicker, VideoAsset } from "../../hooks/useVideoPicker";
 import { colors } from "../../constants/theme";
 import { useSearchActors } from "../../hooks/api/useProfile";
 import { MentionSuggestions } from "../../components/MentionSuggestions";
@@ -51,6 +52,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
   const [text, setText] = useState("");
   const createPost = useCreatePost();
   const imagePicker = useImagePicker();
+  const videoPicker = useVideoPicker();
   const saveDraft = useSaveDraft();
   const deleteDraft = useDeleteDraft();
   const { data: draftsData } = useDrafts();
@@ -180,10 +182,10 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
 
   // Mark as dirty when content changes
   useEffect(() => {
-    if (loadedDraftId || text || imagePicker.selectedImages.length > 0) {
+    if (loadedDraftId || text || imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo) {
       setIsDirty(true);
     }
-  }, [text, imagePicker.selectedImages]);
+  }, [text, imagePicker.selectedImages, videoPicker.selectedVideo]);
 
   const handleSaveDraft = async () => {
     try {
@@ -219,7 +221,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
   const handleClose = () => {
     const hasContent = isThreadMode
       ? threadPosts.some(p => p.text.trim() || p.images.length > 0)
-      : (imagePicker.selectedImages.length > 0 || text.trim());
+      : (imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo || text.trim());
 
     if (hasContent && !isThreadMode) {
       // Offer to save as draft for single posts
@@ -248,6 +250,15 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
   };
 
   const handleImagePicker = () => {
+    // Check if video is already selected
+    if (videoPicker.selectedVideo) {
+      Alert.alert(
+        "Media Type Conflict",
+        "You can attach either images or a video, not both. Remove the video first to add images."
+      );
+      return;
+    }
+
     Alert.alert(
       "Add Image",
       "Choose an option",
@@ -255,6 +266,38 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
         { text: "Take Photo", onPress: () => imagePicker.pickFromCamera() },
         { text: "Choose from Library", onPress: () => imagePicker.pickFromLibrary() },
         { text: "Cancel", style: "cancel" },
+      ]
+    );
+  };
+
+  const handleVideoPicker = () => {
+    // Check if images are already selected
+    if (imagePicker.selectedImages.length > 0) {
+      Alert.alert(
+        "Media Type Conflict",
+        "You can attach either images or a video, not both. Remove the images first to add a video."
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Add Video",
+      "Choose an option",
+      [
+        { text: "Record Video", onPress: () => videoPicker.recordVideo() },
+        { text: "Choose from Library", onPress: () => videoPicker.pickFromLibrary() },
+        { text: "Cancel", style: "cancel" },
+      ]
+    );
+  };
+
+  const handleRemoveVideo = () => {
+    Alert.alert(
+      "Remove Video",
+      "Are you sure you want to remove this video?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Remove", style: "destructive", onPress: () => videoPicker.removeVideo() },
       ]
     );
   };
@@ -367,10 +410,12 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
   };
 
   const handleThreadImageFromLibrary = async (postIndex: number) => {
-    const image = await imagePicker.pickFromLibrary();
-    if (image) {
+    const images = await imagePicker.pickFromLibrary();
+    if (images && images.length > 0) {
       const newPosts = [...threadPosts];
-      newPosts[postIndex].images.push(image);
+      images.forEach(image => {
+        newPosts[postIndex].images.push(image);
+      });
       setThreadPosts(newPosts);
     }
   };
@@ -380,12 +425,15 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
       return handlePostThread();
     }
 
-    if (!text.trim() && imagePicker.selectedImages.length === 0) {
+    if (!text.trim() && imagePicker.selectedImages.length === 0 && !videoPicker.selectedVideo) {
       return;
     }
 
     try {
+      // Set uploading state on both pickers
       imagePicker.setIsUploading(true);
+      videoPicker.setIsUploading(true);
+
       const postOptions: any = { text: text.trim() };
 
       // Add reply reference if replying
@@ -401,8 +449,15 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
         postOptions.quote = { uri: quoteTo.uri, cid: quoteTo.cid };
       }
 
+      // Add video if selected
+      if (videoPicker.selectedVideo) {
+        postOptions.video = {
+          uri: videoPicker.selectedVideo.uri,
+          alt: '', // Could add alt text support for videos later
+        };
+      }
       // Add images if any are selected
-      if (imagePicker.selectedImages.length > 0) {
+      else if (imagePicker.selectedImages.length > 0) {
         postOptions.images = imagePicker.selectedImages.map((img) => ({
           uri: img.uri,
           alt: img.altText,
@@ -421,6 +476,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
       }
 
       imagePicker.clearImages();
+      videoPicker.clearVideo();
       router.back();
       // Show success feedback with haptic
       triggerHaptic("success");
@@ -434,6 +490,8 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
     } finally {
       imagePicker.setIsUploading(false);
       imagePicker.setUploadProgress(0);
+      videoPicker.setIsUploading(false);
+      videoPicker.setUploadProgress(0);
     }
   };
 
@@ -500,10 +558,10 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
   const isPostDisabled = isThreadMode
     ? threadPosts.every(p => !p.text.trim() && p.images.length === 0) ||
       threadPosts.some(p => p.text.length > MAX_POST_LENGTH) ||
-      imagePicker.isUploading
-    : (!text.trim() && imagePicker.selectedImages.length === 0) ||
+      imagePicker.isUploading || videoPicker.isUploading
+    : (!text.trim() && imagePicker.selectedImages.length === 0 && !videoPicker.selectedVideo) ||
       text.length > MAX_POST_LENGTH ||
-      imagePicker.isUploading;
+      imagePicker.isUploading || videoPicker.isUploading;
 
   const charCount = text.length;
   const isOverLimit = charCount > MAX_POST_LENGTH;
@@ -539,7 +597,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
           onPress={handlePost}
           disabled={isPostDisabled || createPost.isPending}
         >
-          {createPost.isPending || imagePicker.isUploading ? (
+          {createPost.isPending || imagePicker.isUploading || videoPicker.isUploading ? (
             <ActivityIndicator color="#ffffff" size="small" />
           ) : (
             <Text style={styles.postButtonText}>Post</Text>
@@ -635,6 +693,49 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
             </View>
           )}
 
+          {/* Video Preview */}
+          {videoPicker.selectedVideo && (
+            <View style={styles.videoPreviewContainer}>
+              <View style={styles.videoPreviewWrapper}>
+                {videoPicker.selectedVideo.thumbnail ? (
+                  <Image
+                    source={{ uri: videoPicker.selectedVideo.thumbnail }}
+                    style={styles.videoPreview}
+                  />
+                ) : (
+                  <View style={[styles.videoPreview, styles.videoPreviewPlaceholder]}>
+                    <VideoIcon size={48} color="#6b7280" />
+                  </View>
+                )}
+                {videoPicker.isUploading && (
+                  <View style={styles.uploadingOverlay}>
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  </View>
+                )}
+                <View style={styles.videoDurationBadge}>
+                  <Text style={styles.videoDurationText}>
+                    {videoPicker.formatDuration(videoPicker.selectedVideo.duration)}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.removeImageButton}
+                  onPress={handleRemoveVideo}
+                  disabled={videoPicker.isUploading}
+                >
+                  <Text style={styles.removeImageText}>×</Text>
+                </TouchableOpacity>
+                <View style={styles.videoPlayIcon}>
+                  <View style={styles.playIconTriangle} />
+                </View>
+              </View>
+              {videoPicker.isUploading && (
+                <Text style={styles.uploadingText}>
+                  Uploading video... This may take a while.
+                </Text>
+              )}
+            </View>
+          )}
+
           {/* Quote Preview */}
           {quoteTo && (
             <View style={styles.quotePreview}>
@@ -685,9 +786,17 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
                 style={styles.toolbarButton}
                 activeOpacity={0.7}
                 onPress={handleImagePicker}
-                disabled={imagePicker.isUploading || imagePicker.selectedImages.length >= 4}
+                disabled={imagePicker.isUploading || imagePicker.selectedImages.length >= 4 || videoPicker.selectedVideo !== null}
               >
-                <ImageIcon size={22} color={imagePicker.selectedImages.length >= 4 ? "#4b5563" : "#6b7280"} />
+                <ImageIcon size={22} color={(imagePicker.selectedImages.length >= 4 || videoPicker.selectedVideo) ? "#4b5563" : "#6b7280"} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.toolbarButton}
+                activeOpacity={0.7}
+                onPress={handleVideoPicker}
+                disabled={videoPicker.isUploading || imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo !== null}
+              >
+                <VideoIcon size={22} color={(imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo) ? "#4b5563" : "#6b7280"} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.toolbarButton} activeOpacity={0.7}>
                 <GifIcon size={22} color="#6b7280" />
@@ -1064,5 +1173,62 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 14,
     fontWeight: "600",
+  },
+  videoPreviewContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  videoPreviewWrapper: {
+    position: "relative",
+    width: 200,
+    height: 200,
+  },
+  videoPreview: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 12,
+    backgroundColor: "#1f2937",
+  },
+  videoPreviewPlaceholder: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  videoDurationBadge: {
+    position: "absolute",
+    bottom: 8,
+    right: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  videoDurationText: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  videoPlayIcon: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginTop: -20,
+    marginLeft: -20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  playIconTriangle: {
+    width: 0,
+    height: 0,
+    marginLeft: 3,
+    borderLeftWidth: 14,
+    borderLeftColor: "#ffffff",
+    borderTopWidth: 9,
+    borderTopColor: "transparent",
+    borderBottomWidth: 9,
+    borderBottomColor: "transparent",
   },
 });
