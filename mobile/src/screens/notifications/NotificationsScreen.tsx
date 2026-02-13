@@ -1,4 +1,4 @@
-import React, {useCallback, useRef, useMemo} from 'react';
+import React, {useCallback, useRef, useMemo, useState} from 'react';
 import {
   FlatList,
   ActivityIndicator,
@@ -10,12 +10,13 @@ import {
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect, useScrollToTop} from '@react-navigation/native';
 import {useRouter} from 'expo-router';
-import {AppBskyNotificationListNotifications} from '@atproto/api';
 import {
   useNotifications,
   useMarkNotificationsSeen,
 } from '../../hooks/api/useNotifications';
 import {NotificationItem} from '../../components/NotificationItem';
+import {AggregatedNotificationItem} from '../../components/AggregatedNotificationItem';
+import {NotificationTabBar, NotificationFilter} from '../../components/NotificationTabBar';
 import {LoadingState} from '../../components/LoadingState';
 import {ErrorState} from '../../components/ErrorState';
 import {EmptyState} from '../../components/EmptyState';
@@ -24,6 +25,12 @@ import {usePreferences} from '../../contexts/PreferencesContext';
 import {clearBadgeCount} from '../../services/notification-poller';
 import {colors} from '../../constants/theme';
 import {filterMutedNotifications} from '../../utils/content-filter';
+import {
+  aggregateNotifications,
+  filterNotificationsByType,
+  countNotificationsByType,
+  ProcessedNotification,
+} from '../../utils/notification-aggregator';
 
 export function NotificationsScreen() {
   const router = useRouter();
@@ -44,6 +51,9 @@ export function NotificationsScreen() {
   const markNotificationsSeen = useMarkNotificationsSeen();
   const {navigateToProfile} = useAppNavigation();
   const scrollRef = useRef<FlatList>(null);
+
+  // Filter state
+  const [activeFilter, setActiveFilter] = useState<NotificationFilter>('all');
 
   // Enable scroll-to-top on tab press
   useScrollToTop(scrollRef);
@@ -69,89 +79,20 @@ export function NotificationsScreen() {
     return filterMutedNotifications(allNotifications, preferences.mutedWords);
   }, [allNotifications, preferences?.mutedWords]);
 
-  // Group notifications by type for display
-  const groupedNotifications = React.useMemo(() => {
-    const groups: {
-      [key: string]: AppBskyNotificationListNotifications.Notification[];
-    } = {
-      follows: [],
-      likes: [],
-      reposts: [],
-      mentions: [],
-      replies: [],
-      quotes: [],
-      other: [],
-    };
-
-    notifications.forEach(notification => {
-      switch (notification.reason) {
-        case 'follow':
-          groups.follows.push(notification);
-          break;
-        case 'like':
-          groups.likes.push(notification);
-          break;
-        case 'repost':
-          groups.reposts.push(notification);
-          break;
-        case 'mention':
-          groups.mentions.push(notification);
-          break;
-        case 'reply':
-          groups.replies.push(notification);
-          break;
-        case 'quote':
-          groups.quotes.push(notification);
-          break;
-        default:
-          groups.other.push(notification);
-      }
-    });
-
-    return groups;
+  // Count notifications by type
+  const notificationCounts = useMemo(() => {
+    return countNotificationsByType(notifications);
   }, [notifications]);
 
-  // Create sections for rendering (ordered by priority)
-  const sections = React.useMemo(() => {
-    const result: Array<{
-      title: string;
-      data: AppBskyNotificationListNotifications.Notification[];
-    }> = [];
+  // Filter notifications based on active filter
+  const filteredNotifications = useMemo(() => {
+    return filterNotificationsByType(notifications, activeFilter);
+  }, [notifications, activeFilter]);
 
-    // Order by importance: replies, mentions, follows, likes, reposts, quotes, other
-    if (groupedNotifications.replies.length > 0) {
-      result.push({title: 'Replies', data: groupedNotifications.replies});
-    }
-    if (groupedNotifications.mentions.length > 0) {
-      result.push({title: 'Mentions', data: groupedNotifications.mentions});
-    }
-    if (groupedNotifications.follows.length > 0) {
-      result.push({title: 'New Followers', data: groupedNotifications.follows});
-    }
-    if (groupedNotifications.likes.length > 0) {
-      result.push({title: 'Likes', data: groupedNotifications.likes});
-    }
-    if (groupedNotifications.reposts.length > 0) {
-      result.push({title: 'Reposts', data: groupedNotifications.reposts});
-    }
-    if (groupedNotifications.quotes.length > 0) {
-      result.push({title: 'Quotes', data: groupedNotifications.quotes});
-    }
-    if (groupedNotifications.other.length > 0) {
-      result.push({title: 'Other', data: groupedNotifications.other});
-    }
-
-    return result;
-  }, [groupedNotifications]);
-
-  const renderSectionHeader = useCallback(
-    (title: string) => (
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-      </View>
-    ),
-    [],
-  );
+  // Aggregate notifications
+  const processedNotifications = useMemo(() => {
+    return aggregateNotifications(filteredNotifications);
+  }, [filteredNotifications]);
 
   const renderFooter = () => {
     if (!isFetchingNextPage) return null;
@@ -194,56 +135,61 @@ export function NotificationsScreen() {
     [navigateToProfile],
   );
 
-  const handleHashtagPress = useCallback((tag: string) => {
-    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
-  }, [router]);
+  const handleHashtagPress = useCallback(
+    (tag: string) => {
+      router.push({pathname: '/(tabs)/(search)', params: {q: '#' + tag}});
+    },
+    [router],
+  );
 
-  // Flatten sections into a single list with headers
-  const flattenedData = React.useMemo(() => {
-    const result: Array<{
-      type: 'header' | 'notification';
-      title?: string;
-      notification?: AppBskyNotificationListNotifications.Notification;
-    }> = [];
+  const handleFilterChange = useCallback((filter: NotificationFilter) => {
+    setActiveFilter(filter);
+    // Scroll to top when filter changes
+    scrollRef.current?.scrollToOffset({offset: 0, animated: true});
+  }, []);
 
-    sections.forEach(section => {
-      result.push({type: 'header', title: section.title});
-      section.data.forEach(notification => {
-        result.push({type: 'notification', notification});
-      });
-    });
-
-    return result;
-  }, [sections]);
-
-  const renderFlattenedItem = useCallback(
-    ({item}: {item: (typeof flattenedData)[0]}) => {
-      if (item.type === 'header') {
-        return renderSectionHeader(item.title!);
+  const renderItem = useCallback(
+    ({item}: {item: ProcessedNotification}) => {
+      if (item.type === 'aggregated') {
+        return (
+          <AggregatedNotificationItem
+            notifications={item.notifications}
+            reason={item.reason}
+            onMentionPress={handleMentionPress}
+            onHashtagPress={handleHashtagPress}
+          />
+        );
       }
       return (
         <NotificationItem
-          notification={item.notification!}
+          notification={item.notification}
           onMentionPress={handleMentionPress}
           onHashtagPress={handleHashtagPress}
         />
       );
     },
-    [renderSectionHeader, handleMentionPress, handleHashtagPress],
+    [handleMentionPress, handleHashtagPress],
   );
+
+  const getItemKey = useCallback((item: ProcessedNotification, index: number) => {
+    if (item.type === 'aggregated') {
+      return `aggregated-${item.reason}-${item.latestTimestamp}-${index}`;
+    }
+    return item.notification.uri + index;
+  }, []);
 
   return (
     <View style={[styles.container, {paddingTop: insets.top}]}>
+      <NotificationTabBar
+        activeFilter={activeFilter}
+        onFilterChange={handleFilterChange}
+        counts={notificationCounts as any}
+      />
       <FlatList
         ref={scrollRef}
-        data={flattenedData}
-        renderItem={renderFlattenedItem}
-        keyExtractor={(item, index) => {
-          if (item.type === 'header') {
-            return `header-${item.title}`;
-          }
-          return item.notification!.uri + index;
-        }}
+        data={processedNotifications}
+        renderItem={renderItem}
+        keyExtractor={getItemKey}
         ListEmptyComponent={renderEmpty}
         ListFooterComponent={renderFooter}
         onEndReached={handleLoadMore}
@@ -273,20 +219,6 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
-  },
-  sectionHeader: {
-    backgroundColor: '#1a1a24',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
-  },
-  sectionTitle: {
-    color: '#9ca3af',
-    fontSize: 13,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   footer: {
     padding: 20,
