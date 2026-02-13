@@ -7,6 +7,10 @@ export interface SearchFilters {
   until?: string;
   lang?: string;
   author?: string;
+  mentions?: string;
+  domain?: string;
+  url?: string;
+  tag?: string[];
 }
 
 /**
@@ -23,6 +27,10 @@ export function useSearchPosts(query: string, filters: SearchFilters = {}) {
         until: filters.until,
         lang: filters.lang,
         author: filters.author,
+        mentions: filters.mentions,
+        domain: filters.domain,
+        url: filters.url,
+        tag: filters.tag,
       }),
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
