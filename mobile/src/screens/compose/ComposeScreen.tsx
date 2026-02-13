@@ -2,10 +2,11 @@ import React, { useState, useCallback, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image, ScrollView, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import * as Localization from "expo-localization";
 import { useCreatePost } from "../../hooks/api/usePosts";
 import { useSaveDraft, useDeleteDraft, useDrafts } from "../../hooks/api";
 import { draftToComposerState, ComposerState } from "../../services/drafts";
-import { ImageIcon, VideoIcon, GifIcon, PollIcon, ThreadIcon, CloseIcon } from "../../components/icons";
+import { ImageIcon, VideoIcon, GifIcon, PollIcon, ThreadIcon, CloseIcon, GlobeIcon } from "../../components/icons";
 import { Avatar } from "../../components/Avatar";
 import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
 import { useVideoPicker, VideoAsset } from "../../hooks/useVideoPicker";
@@ -15,6 +16,9 @@ import { MentionSuggestions } from "../../components/MentionSuggestions";
 import { ThreadComposer } from "../../components/ThreadComposer";
 import { ThreadPost } from "../../components/ThreadPostItem";
 import { triggerHaptic } from "../../utils/haptics";
+import { LanguagePicker } from "../../components/LanguagePicker";
+import { getLanguageShortName } from "../../constants/languages";
+import { preferencesService } from "../../services/preferences";
 
 const MAX_POST_LENGTH = 300;
 
@@ -62,6 +66,10 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
   const [altTextModalVisible, setAltTextModalVisible] = useState(false);
   const [tempAltText, setTempAltText] = useState("");
 
+  // Language selection state
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [languagePickerVisible, setLanguagePickerVisible] = useState(false);
+
   // Mention autocomplete state
   const [mentionQuery, setMentionQuery] = useState("");
   const [mentionStartPos, setMentionStartPos] = useState<number | null>(null);
@@ -75,6 +83,28 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
 
     return () => clearTimeout(timer);
   }, [mentionQuery]);
+
+  // Initialize language from preferences or device locale
+  useEffect(() => {
+    const initLanguage = async () => {
+      try {
+        const prefs = await preferencesService.get();
+        if (prefs.postLanguages && prefs.postLanguages.length > 0) {
+          setSelectedLanguages(prefs.postLanguages);
+        } else {
+          // Default to device locale
+          const locales = Localization.getLocales();
+          const deviceLanguage = locales[0]?.languageCode || 'en';
+          setSelectedLanguages([deviceLanguage]);
+        }
+      } catch (error) {
+        // Fallback to English
+        setSelectedLanguages(['en']);
+      }
+    };
+
+    initLanguage();
+  }, []);
 
   // Search for actors with debounced query
   const { data: searchResults, isLoading: isSearching } = useSearchActors(debouncedMentionQuery);
@@ -328,6 +358,17 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
     setTempAltText("");
   };
 
+  // Handle language selection
+  const handleSelectLanguages = async (langs: string[]) => {
+    setSelectedLanguages(langs);
+    // Save to preferences
+    try {
+      await preferencesService.set('postLanguages', langs);
+    } catch (error) {
+      console.error('Failed to save language preference:', error);
+    }
+  };
+
   // Thread mode handlers
   const handleToggleThreadMode = () => {
     if (isThreadMode) {
@@ -436,6 +477,11 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
 
       const postOptions: any = { text: text.trim() };
 
+      // Add languages
+      if (selectedLanguages.length > 0) {
+        postOptions.langs = selectedLanguages;
+      }
+
       // Add reply reference if replying
       if (replyTo) {
         postOptions.reply = {
@@ -523,6 +569,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
             uri: img.uri,
             alt: img.altText,
           })),
+          langs: selectedLanguages.length > 0 ? selectedLanguages : undefined,
         })),
       };
 
@@ -812,6 +859,18 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
               >
                 <ThreadIcon size={22} color={isThreadMode ? colors.primary : "#6b7280"} />
               </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.languageButton}
+                activeOpacity={0.7}
+                onPress={() => setLanguagePickerVisible(true)}
+              >
+                <GlobeIcon size={18} color="#6b7280" />
+                <Text style={styles.languageButtonText}>
+                  {selectedLanguages.length > 0
+                    ? selectedLanguages.map(getLanguageShortName).join(', ')
+                    : 'EN'}
+                </Text>
+              </TouchableOpacity>
             </View>
             <Text style={[
               styles.charCount,
@@ -866,6 +925,15 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
           </View>
         </View>
       </Modal>
+
+      {/* Language Picker Modal */}
+      <LanguagePicker
+        visible={languagePickerVisible}
+        onClose={() => setLanguagePickerVisible(false)}
+        selectedLanguages={selectedLanguages}
+        onSelectLanguages={handleSelectLanguages}
+        multiSelect={true}
+      />
     </View>
   );
 }
@@ -946,6 +1014,22 @@ const styles = StyleSheet.create({
   },
   toolbarButton: {
     padding: 4,
+  },
+  languageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: '#111116',
+    borderWidth: 1,
+    borderColor: '#1f2937',
+  },
+  languageButtonText: {
+    color: '#9ca3af',
+    fontSize: 12,
+    fontWeight: '600',
   },
   charCount: {
     color: "#6b7280",

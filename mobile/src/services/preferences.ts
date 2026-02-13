@@ -40,6 +40,9 @@ export interface AppPreferences {
 
   // Moderation
   mutedWords: MutedWord[];
+
+  // Compose
+  postLanguages: string[];
 }
 
 const PREFERENCES_KEY = "@shadowsky_preferences";
@@ -77,6 +80,9 @@ const DEFAULT_PREFERENCES: AppPreferences = {
 
   // Moderation
   mutedWords: [],
+
+  // Compose
+  postLanguages: ["en"],
 };
 
 class PreferencesService {

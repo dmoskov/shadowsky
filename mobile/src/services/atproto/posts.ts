@@ -226,6 +226,7 @@ export interface CreateThreadOptions {
       uri: string;
       alt?: string;
     };
+    langs?: string[];
   }[];
   reply?: {
     root: {uri: string; cid: string};
@@ -272,7 +273,7 @@ export async function createThread(
         text: postData.text,
         images: postData.images,
         video: postData.video,
-        langs: options.langs,
+        langs: postData.langs || options.langs,
       };
 
       // Add reply reference if this is not the first post, or if replying to another post
