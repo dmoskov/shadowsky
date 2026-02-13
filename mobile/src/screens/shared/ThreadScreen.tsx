@@ -21,6 +21,8 @@ import { PostCard } from "../../components/PostCard";
 import { LoadingState } from "../../components/LoadingState";
 import { ErrorState } from "../../components/ErrorState";
 import { ThreadSummary } from "../../components/ThreadSummary";
+import { ThreadTreeView } from "../../components/ThreadTreeView";
+import { ThreadNavigator } from "../../components/ThreadNavigator";
 import { getAtProtoClient } from "../../services/atproto/client";
 import { colors } from "../../constants/theme";
 import { sharePost } from "../../utils/share";
@@ -93,6 +95,8 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   const [replyText, setReplyText] = useState("");
   const [isReplyVisible, setIsReplyVisible] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const scrollViewRef = React.useRef<ScrollView>(null);
+  const [scrollPositions, setScrollPositions] = React.useState<Map<number, number>>(new Map());
 
   const { navigateToProfile, navigateToThread, navigateToCompose } = useAppNavigation();
   const likePost = useLikePost();
@@ -367,9 +371,22 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   const replyCharCount = replyText.length;
   const isOverLimit = replyCharCount > MAX_REPLY_LENGTH;
 
+  const handleNavigateToPost = (index: number) => {
+    // Scroll to the post at the given index
+    // For simplicity, scroll by estimated post height
+    const estimatedPostHeight = 200; // Approximate height
+    const yOffset = index * estimatedPostHeight;
+
+    scrollViewRef.current?.scrollTo({
+      y: yOffset,
+      animated: true,
+    });
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         refreshControl={
           <RefreshControl
@@ -406,26 +423,23 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
         {/* Divider */}
         {replies.length > 0 && <View style={styles.divider} />}
 
-        {/* Replies */}
-        {replies.map((reply, index) => (
-          <View key={reply.post.uri} style={styles.replyContainer}>
-            <PostCard
-              post={reply}
-              onPressProfile={handleProfilePress}
-              onLike={() => handleLike(reply)}
-              onRepost={() => handleRepost(reply)}
-              onReply={() => handleReply(reply)}
-              onMentionPress={handleMentionPress}
-              onHashtagPress={handleHashtagPress}
-              onPressLikeCount={() => handlePressLikeCount(reply.post.uri)}
-              onPressRepostCount={() => handlePressRepostCount(reply.post.uri)}
-              onPressQuoteCount={() => handlePressQuoteCount(reply.post.uri)}
-            />
-          </View>
-        ))}
-
-        {/* No replies message */}
-        {replies.length === 0 && (
+        {/* Thread Tree View - Hierarchical with collapse/expand */}
+        {replies.length > 0 ? (
+          <ThreadTreeView
+            rootPost={rootPost}
+            replies={replies}
+            onPressProfile={handleProfilePress}
+            onLike={handleLike}
+            onRepost={handleRepost}
+            onReply={handleReply}
+            onMentionPress={handleMentionPress}
+            onHashtagPress={handleHashtagPress}
+            onPressLikeCount={handlePressLikeCount}
+            onPressRepostCount={handlePressRepostCount}
+            onPressQuoteCount={handlePressQuoteCount}
+          />
+        ) : (
+          /* No replies message */
           <View style={styles.noReplies}>
             <Text style={styles.noRepliesText}>No replies yet</Text>
           </View>
@@ -480,6 +494,14 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
         </View>
       )}
 
+      {/* Thread Navigator - Jump to reply navigation */}
+      {replies.length > 3 && (
+        <ThreadNavigator
+          posts={[rootPost, ...replies]}
+          onNavigate={handleNavigateToPost}
+        />
+      )}
+
       {/* Show reply button if composer is hidden */}
       {!isReplyVisible && (
         <TouchableOpacity
@@ -505,11 +527,6 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#1f2937",
     marginVertical: 8,
-  },
-  replyContainer: {
-    paddingLeft: 12,
-    borderLeftWidth: 2,
-    borderLeftColor: "#374151",
   },
   noReplies: {
     padding: 24,
