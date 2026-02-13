@@ -7,9 +7,10 @@ import {ImageCarousel, CarouselImage} from './ImageCarousel';
 interface ImageEmbedProps {
   images: AppBskyEmbedImages.ViewImage[];
   onImagePress?: (images: Array<{thumb: string; fullsize: string; alt?: string}>, index: number) => void;
+  blurImages?: boolean;
 }
 
-export function ImageEmbed({images, onImagePress}: ImageEmbedProps) {
+export function ImageEmbed({images, onImagePress, blurImages = false}: ImageEmbedProps) {
   const [carouselVisible, setCarouselVisible] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -72,10 +73,11 @@ export function ImageEmbed({images, onImagePress}: ImageEmbedProps) {
             activeOpacity={0.9}>
             <Image
               source={{uri: img.thumb}}
-              style={styles.image}
+              style={[styles.image, blurImages && styles.blurredImage]}
               contentFit="cover"
               placeholder={img.aspectRatio ? {blurhash: img.aspectRatio.toString()} : undefined}
               transition={200}
+              blurRadius={blurImages ? 20 : 0}
             />
             {img.alt && (
               <View style={styles.altBadge}>
@@ -152,6 +154,9 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
+  },
+  blurredImage: {
+    opacity: 0.8,
   },
   altBadge: {
     position: 'absolute',

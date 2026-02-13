@@ -11,6 +11,8 @@ import {PostEmbed} from './PostEmbed';
 import {useBlockUser, useMuteUser} from '../hooks/api/useProfile';
 import {colors} from '../constants/theme';
 import {triggerHaptic} from '../utils/haptics';
+import {useModeration} from '../contexts/ModerationContext';
+import {ContentLabelWarning} from './ContentLabelWarning';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -63,6 +65,12 @@ export function PostCard({
   const [showMenu, setShowMenu] = useState(false);
   const blockMutation = useBlockUser();
   const muteMutation = useMuteUser();
+  const {
+    shouldHideContent,
+    shouldWarnContent,
+    shouldBlurImages,
+    getContentWarningText,
+  } = useModeration();
 
   // Type guard for record
   const record = AppBskyFeedPost.isRecord(postView.record)
@@ -146,15 +154,19 @@ export function PostCard({
   const postPreview = postText ? `${postText.substring(0, 100)}${postText.length > 100 ? '...' : ''}` : 'No text content';
   const accessibilityLabel = `Post by ${author.displayName || author.handle}. ${postPreview}. ${postView.likeCount || 0} likes, ${postView.repostCount || 0} reposts, ${postView.replyCount || 0} replies. Posted ${timestamp}`;
 
-  return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={onPress}
-      activeOpacity={0.9}
-      accessible={true}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityHint="Double tap to view full post">
+  // Check for content labels
+  const labels = postView.labels || [];
+  const hideContent = shouldHideContent(labels);
+  const warnContent = shouldWarnContent(labels);
+  const blurImages = shouldBlurImages(labels);
+
+  // Don't render hidden content
+  if (hideContent) {
+    return null;
+  }
+
+  // Render post content
+  const postContent = (
       <View style={styles.content}>
         {/* Author Header */}
         <View style={styles.header}>
@@ -208,6 +220,7 @@ export function PostCard({
           onImagePress={onImagePress}
           onLinkPress={onLinkPress}
           onQuotePress={onQuotePress}
+          blurImages={blurImages}
         />
 
         {/* Engagement Bar */}
@@ -305,6 +318,27 @@ export function PostCard({
           </TouchableOpacity>
         </View>
       </View>
+  );
+
+  return (
+    <TouchableOpacity
+      style={styles.container}
+      onPress={onPress}
+      activeOpacity={0.9}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint="Double tap to view full post">
+      {warnContent ? (
+        <ContentLabelWarning
+          labels={labels}
+          warningText={getContentWarningText(labels)}
+          blurImages={blurImages}>
+          {postContent}
+        </ContentLabelWarning>
+      ) : (
+        postContent
+      )}
 
       {/* Menu Modal */}
       <Modal

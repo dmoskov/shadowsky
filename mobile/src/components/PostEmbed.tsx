@@ -10,6 +10,7 @@ interface PostEmbedProps {
   onImagePress?: (images: Array<{thumb: string; fullsize: string; alt?: string}>, index: number) => void;
   onLinkPress?: (url: string) => void;
   onQuotePress?: (uri: string, handle: string) => void;
+  blurImages?: boolean;
 }
 
 export function PostEmbed({
@@ -17,12 +18,13 @@ export function PostEmbed({
   onImagePress,
   onLinkPress,
   onQuotePress,
+  blurImages = false,
 }: PostEmbedProps) {
   if (!embed) return null;
 
   // Type guard checks
   if (AppBskyEmbedImages.isView(embed)) {
-    return <ImageEmbed images={embed.images} onImagePress={onImagePress} />;
+    return <ImageEmbed images={embed.images} onImagePress={onImagePress} blurImages={blurImages} />;
   }
 
   if (AppBskyEmbedExternal.isView(embed)) {
@@ -42,6 +44,7 @@ export function PostEmbed({
             onImagePress={onImagePress}
             onLinkPress={onLinkPress}
             onQuotePress={onQuotePress}
+            blurImages={blurImages}
           />
         )}
         {embed.record && (

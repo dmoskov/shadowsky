@@ -508,6 +508,13 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
         <Text style={styles.sectionTitle}>MODERATION</Text>
 
         <SettingRow
+          label="Content Moderation"
+          description="Control how labeled content is displayed"
+          onPress={() => router.push("/(app)/settings/content-moderation")}
+          showChevron
+        />
+
+        <SettingRow
           label="Blocked Accounts"
           description="Manage accounts you've blocked"
           onPress={() => router.push("/(app)/settings/blocked")}
