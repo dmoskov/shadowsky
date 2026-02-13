@@ -18,11 +18,12 @@ import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
 import { ProfileTabBar, ProfileTab } from "../../components/ProfileTabBar";
 import { AddToListModal } from "../../components/AddToListModal";
-import { MoreVerticalIcon } from "../../components/icons";
+import { MoreVerticalIcon, SendIcon } from "../../components/icons";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { colors } from "../../constants/theme";
 import { AuthorFeedFilter } from "../../services/atproto/feeds";
+import { dmService } from "../../services/dm-service";
 
 interface ProfileScreenProps {
   handle: string;
@@ -30,12 +31,14 @@ interface ProfileScreenProps {
   onNavigateToProfile?: (handle: string) => void;
   onNavigateToFollowers?: (actor: string) => void;
   onNavigateToFollowing?: (actor: string) => void;
+  onNavigateToMessages?: (conversationId: string) => void;
 }
 
-export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, onNavigateToFollowers, onNavigateToFollowing }: ProfileScreenProps) {
+export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, onNavigateToFollowers, onNavigateToFollowing, onNavigateToMessages }: ProfileScreenProps) {
   const router = useRouter();
   const { data: profile, isLoading: isLoadingProfile, error: profileError, refetch: refetchProfile } = useProfile(handle);
   const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
+  const [isStartingConversation, setIsStartingConversation] = useState(false);
 
   // Get the appropriate filter based on the active tab
   const getFilter = (): AuthorFeedFilter | undefined => {
@@ -225,6 +228,32 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
     );
   };
 
+  const handleStartConversation = async () => {
+    if (!profile) return;
+
+    setIsStartingConversation(true);
+
+    try {
+      // Get or create conversation with this user
+      const conversation = await dmService.getConvoForMembers([profile.did]);
+
+      // Navigate to messages with the conversation
+      if (onNavigateToMessages) {
+        onNavigateToMessages(conversation.id);
+      } else {
+        // Fallback to messages screen
+        router.push('/(app)/(tabs)/(profile)/messages');
+      }
+    } catch (error) {
+      console.error("Failed to start conversation:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to start conversation";
+      Alert.alert("Error", errorMessage);
+    } finally {
+      setIsStartingConversation(false);
+    }
+  };
+
   const renderPost = ({ item }: { item: AppBskyFeedDefs.FeedViewPost }) => (
     <PostCard
       post={item}
@@ -323,35 +352,48 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
 
         {/* Follow/Unfollow Button and Actions */}
         {!isOwnProfile && (
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity
-              style={[
-                styles.followButton,
-                profile.viewer?.following && styles.followingButton,
-              ]}
-              onPress={handleFollowToggle}
-              disabled={followMutation.isPending || unfollowMutation.isPending}
-            >
-              <Text
+          <>
+            <View style={styles.actionsContainer}>
+              <TouchableOpacity
                 style={[
-                  styles.followButtonText,
-                  profile.viewer?.following && styles.followingButtonText,
+                  styles.followButton,
+                  profile.viewer?.following && styles.followingButton,
                 ]}
+                onPress={handleFollowToggle}
+                disabled={followMutation.isPending || unfollowMutation.isPending}
               >
-                {followMutation.isPending || unfollowMutation.isPending
-                  ? "..."
-                  : profile.viewer?.following
-                  ? "Following"
-                  : "Follow"}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.addToListButton}
-              onPress={() => setShowAddToList(true)}
-            >
-              <Text style={styles.addToListButtonText}>Add to List</Text>
-            </TouchableOpacity>
-          </View>
+                <Text
+                  style={[
+                    styles.followButtonText,
+                    profile.viewer?.following && styles.followingButtonText,
+                  ]}
+                >
+                  {followMutation.isPending || unfollowMutation.isPending
+                    ? "..."
+                    : profile.viewer?.following
+                    ? "Following"
+                    : "Follow"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.messageButton}
+                onPress={handleStartConversation}
+                disabled={isStartingConversation}
+              >
+                {isStartingConversation ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <SendIcon size={20} color={colors.primary} />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.addToListButton}
+                onPress={() => setShowAddToList(true)}
+              >
+                <Text style={styles.addToListButtonText}>Add to List</Text>
+              </TouchableOpacity>
+            </View>
+          </>
         )}
 
       </View>
@@ -596,6 +638,17 @@ const styles = StyleSheet.create({
   },
   followingButtonText: {
     color: colors.primary,
+  },
+  messageButton: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 56,
   },
   addToListButton: {
     flex: 1,
