@@ -48,7 +48,6 @@
     "date-fns": "^3.0.0",
     "dexie": "^4.2.1",
     "dompurify": "3.3.0",
-    "expo-haptics": "^15.0.8",
     "hls.js": "^1.6.7",
     "html2canvas": "^1.4.1",
     "idb": "^8.0.3",
