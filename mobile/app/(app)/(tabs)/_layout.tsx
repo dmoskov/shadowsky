@@ -23,7 +23,10 @@ function NotificationsBadge() {
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 4,
-      }}>
+      }}
+      accessible={true}
+      accessibilityLabel={`${unreadCount} unread notifications`}
+      accessibilityRole="text">
       <Text
         style={{
           color: '#ffffff',
@@ -68,8 +71,9 @@ export default function TabsLayout() {
         name="(home)"
         options={{
           title: 'Home',
+          tabBarAccessibilityLabel: 'Home tab',
           tabBarIcon: ({color, focused}) => (
-            <HomeIcon size={24} color={color} filled={focused} />
+            <HomeIcon size={24} color={color} filled={focused} accessibilityLabel="Home" />
           ),
         }}
       />
@@ -77,8 +81,9 @@ export default function TabsLayout() {
         name="(search)"
         options={{
           title: 'Search',
+          tabBarAccessibilityLabel: 'Search tab',
           tabBarIcon: ({color}) => (
-            <SearchIcon size={24} color={color} />
+            <SearchIcon size={24} color={color} accessibilityLabel="Search" />
           ),
         }}
       />
@@ -86,6 +91,7 @@ export default function TabsLayout() {
         name="(notifications)"
         options={{
           title: 'Notifications',
+          tabBarAccessibilityLabel: 'Notifications tab',
           tabBarIcon: ({color, focused}) => (
             <NotificationsIcon color={color} focused={focused} />
           ),
@@ -95,8 +101,9 @@ export default function TabsLayout() {
         name="(profile)"
         options={{
           title: 'Profile',
+          tabBarAccessibilityLabel: 'Profile tab',
           tabBarIcon: ({color, focused}) => (
-            <PersonIcon size={24} color={color} filled={focused} />
+            <PersonIcon size={24} color={color} filled={focused} accessibilityLabel="Profile" />
           ),
         }}
       />

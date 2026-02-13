@@ -142,19 +142,30 @@ export function PostCard({
     sharePost(post);
   };
 
+  const postText = (record && typeof record.text === 'string') ? record.text : '';
+  const postPreview = postText ? `${postText.substring(0, 100)}${postText.length > 100 ? '...' : ''}` : 'No text content';
+  const accessibilityLabel = `Post by ${author.displayName || author.handle}. ${postPreview}. ${postView.likeCount || 0} likes, ${postView.repostCount || 0} reposts, ${postView.replyCount || 0} replies. Posted ${timestamp}`;
+
   return (
     <TouchableOpacity
       style={styles.container}
       onPress={onPress}
-      activeOpacity={0.9}>
+      activeOpacity={0.9}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint="Double tap to view full post">
       <View style={styles.content}>
         {/* Author Header */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.authorSection}
             onPress={handleProfilePress}
-            activeOpacity={0.7}>
-            <Avatar uri={author.avatar} size={44} />
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={`View profile of ${author.displayName || author.handle}`}
+            accessibilityHint="Double tap to open profile">
+            <Avatar uri={author.avatar} size={44} accessibilityLabel={`${author.displayName || author.handle}'s avatar`} />
             <View style={styles.authorInfo}>
               <Text style={styles.displayName} numberOfLines={1}>
                 {author.displayName || author.handle}
@@ -170,7 +181,10 @@ export function PostCard({
               <TouchableOpacity
                 style={styles.moreButton}
                 onPress={() => setShowMenu(true)}
-                activeOpacity={0.7}>
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="More options"
+                accessibilityHint="Double tap to open menu with mute, block, and report options">
                 <MoreIcon size={20} color="#9ca3af" />
               </TouchableOpacity>
             )}
@@ -178,7 +192,7 @@ export function PostCard({
         </View>
 
         {/* Post Text */}
-        {record && (
+        {record && typeof record.text === 'string' && (
           <RichText
             text={record.text}
             facets={record.facets}
@@ -203,7 +217,11 @@ export function PostCard({
               onPress={onReply}
               activeOpacity={0.7}
               disabled={!isOnline}
-              style={styles.iconButton}>
+              style={styles.iconButton}
+              accessibilityRole="button"
+              accessibilityLabel={`Reply. ${postView.replyCount || 0} replies`}
+              accessibilityHint="Double tap to reply to this post"
+              accessibilityState={{disabled: !isOnline}}>
               <ReplyIcon size={18} color={isOnline ? "#9ca3af" : "#4b5563"} />
             </TouchableOpacity>
             <Text style={[styles.engagementCount, !isOnline && styles.disabled]}>
@@ -219,7 +237,11 @@ export function PostCard({
               }}
               activeOpacity={0.7}
               disabled={!isOnline}
-              style={styles.iconButton}>
+              style={styles.iconButton}
+              accessibilityRole="button"
+              accessibilityLabel={`Repost. ${postView.repostCount || 0} reposts`}
+              accessibilityHint="Double tap to repost this post"
+              accessibilityState={{disabled: !isOnline}}>
               <RepostIcon size={18} color={isOnline ? "#9ca3af" : "#4b5563"} />
             </TouchableOpacity>
             <TouchableOpacity
@@ -240,7 +262,11 @@ export function PostCard({
               }}
               activeOpacity={0.7}
               disabled={!isOnline}
-              style={styles.iconButton}>
+              style={styles.iconButton}
+              accessibilityRole="button"
+              accessibilityLabel={`${isLiked ? 'Unlike' : 'Like'}. ${postView.likeCount || 0} likes`}
+              accessibilityHint={`Double tap to ${isLiked ? 'remove like from' : 'like'} this post`}
+              accessibilityState={{disabled: !isOnline, selected: isLiked}}>
               <HeartIcon size={18} color={isOnline ? (isLiked ? '#ef4444' : '#9ca3af') : '#4b5563'} filled={isLiked} />
             </TouchableOpacity>
             <TouchableOpacity
@@ -260,14 +286,21 @@ export function PostCard({
               onBookmark?.();
             }}
             activeOpacity={0.7}
-            disabled={!isOnline}>
+            disabled={!isOnline}
+            accessibilityRole="button"
+            accessibilityLabel={isBookmarked ? 'Remove bookmark' : 'Bookmark post'}
+            accessibilityHint={`Double tap to ${isBookmarked ? 'remove' : 'add'} bookmark`}
+            accessibilityState={{disabled: !isOnline, selected: isBookmarked}}>
             <BookmarkIcon size={18} color={isOnline ? (isBookmarked ? colors.primary : '#9ca3af') : '#4b5563'} filled={isBookmarked} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.engagementButton}
             onPress={handleShare}
-            activeOpacity={0.7}>
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Share post"
+            accessibilityHint="Double tap to share this post">
             <SendIcon size={18} color="#9ca3af" />
           </TouchableOpacity>
         </View>
@@ -284,22 +317,39 @@ export function PostCard({
           activeOpacity={1}
           onPress={() => setShowMenu(false)}>
           <View style={styles.menuContainer}>
-            <TouchableOpacity style={styles.menuItem} onPress={handleMuteUser}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={handleMuteUser}
+              accessibilityRole="button"
+              accessibilityLabel={`Mute @${author.handle}`}
+              accessibilityHint="Double tap to mute this user">
               <Text style={styles.menuItemText}>Mute @{author.handle}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={handleBlockUser}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={handleBlockUser}
+              accessibilityRole="button"
+              accessibilityLabel={`Block @${author.handle}`}
+              accessibilityHint="Double tap to block this user">
               <Text style={[styles.menuItemText, styles.menuItemDanger]}>
                 Block @{author.handle}
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={handleReport}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={handleReport}
+              accessibilityRole="button"
+              accessibilityLabel="Report post"
+              accessibilityHint="Double tap to report this post">
               <Text style={[styles.menuItemText, styles.menuItemDanger]}>
                 Report Post
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.menuItem, styles.menuItemLast]}
-              onPress={() => setShowMenu(false)}>
+              onPress={() => setShowMenu(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel">
               <Text style={styles.menuItemText}>Cancel</Text>
             </TouchableOpacity>
           </View>

@@ -9,7 +9,11 @@ interface EmptyStateProps {
 
 export function EmptyState({message, icon}: EmptyStateProps) {
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessible={true}
+      accessibilityRole="text"
+      accessibilityLabel={`Empty state. ${message}`}>
       <View style={styles.iconWrapper}>
         {icon || <MailboxIcon size={64} color="#9ca3af" />}
       </View>

@@ -117,6 +117,10 @@ export function ImageCarousel({
           removeClippedSubviews={true}
           maxToRenderPerBatch={2}
           initialNumToRender={1}
+          accessible={true}
+          accessibilityRole="imagebutton"
+          accessibilityLabel={`Image ${currentIndex + 1} of ${images.length}${currentImage?.alt ? `. ${currentImage.alt}` : ''}`}
+          accessibilityHint="Swipe left or right to navigate between images"
         />
 
         {/* Counter */}
@@ -136,7 +140,10 @@ export function ImageCarousel({
           style={styles.closeButton}>
           <TouchableOpacity
             onPress={onClose}
-            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+            accessibilityRole="button"
+            accessibilityLabel="Close image viewer"
+            accessibilityHint="Double tap to close the image carousel">
             <Text style={styles.closeButtonText}>✕</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -167,7 +174,10 @@ export function ImageCarousel({
             style={styles.altContainer}>
             <TouchableOpacity
               onPress={() => setShowAlt(!showAlt)}
-              activeOpacity={0.9}>
+              activeOpacity={0.9}
+              accessibilityRole="button"
+              accessibilityLabel={showAlt ? `Alt text: ${currentImage.alt}` : 'Show image description'}
+              accessibilityHint={showAlt ? 'Double tap to hide image description' : 'Double tap to show image description'}>
               {showAlt ? (
                 <View style={styles.altTextExpanded}>
                   <Text style={styles.altText}>{currentImage.alt}</Text>
