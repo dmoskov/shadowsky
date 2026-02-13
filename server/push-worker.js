@@ -4,13 +4,13 @@
  * Polls Bluesky notifications for users and sends push notifications via Expo Push Service
  */
 
-const { BskyAgent } = require('@atproto/api');
-const fetch = require('node-fetch');
-require('dotenv').config();
+const { BskyAgent } = require("@atproto/api");
+const fetch = require("node-fetch");
+require("dotenv").config();
 
 // Configuration
 const POLL_INTERVAL = 30000; // 30 seconds (much faster than 60s polling)
-const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
+const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 const MAX_BATCH_SIZE = 100; // Expo allows up to 100 notifications per request
 
 // In-memory cache of user notification states
@@ -38,7 +38,7 @@ async function getUnreadCount(agent) {
     const response = await agent.countUnreadNotifications();
     return response.data.count || 0;
   } catch (error) {
-    console.error('Error getting unread count:', error.message);
+    console.error("Error getting unread count:", error.message);
     return 0;
   }
 }
@@ -53,7 +53,7 @@ async function getRecentNotifications(agent, limit = 10) {
     });
     return response.data.notifications || [];
   } catch (error) {
-    console.error('Error getting notifications:', error.message);
+    console.error("Error getting notifications:", error.message);
     return [];
   }
 }
@@ -65,34 +65,34 @@ async function sendExpoPushNotification(pushToken, notification) {
   try {
     const message = {
       to: pushToken,
-      sound: 'default',
+      sound: "default",
       title: notification.title,
       body: notification.body,
       data: notification.data,
       badge: notification.badge,
-      priority: 'high',
-      channelId: 'default',
+      priority: "high",
+      channelId: "default",
     };
 
     const response = await fetch(EXPO_PUSH_URL, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify(message),
     });
 
     const result = await response.json();
 
-    if (result.data && result.data.status === 'error') {
-      console.error('Expo push error:', result.data.message);
+    if (result.data && result.data.status === "error") {
+      console.error("Expo push error:", result.data.message);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error sending push notification:', error.message);
+    console.error("Error sending push notification:", error.message);
     return false;
   }
 }
@@ -103,10 +103,10 @@ async function sendExpoPushNotification(pushToken, notification) {
 async function sendBatchExpoPushNotifications(messages) {
   try {
     const response = await fetch(EXPO_PUSH_URL, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify(messages),
     });
@@ -114,7 +114,7 @@ async function sendBatchExpoPushNotifications(messages) {
     const result = await response.json();
     return result.data || [];
   } catch (error) {
-    console.error('Error sending batch push notifications:', error.message);
+    console.error("Error sending batch push notifications:", error.message);
     return [];
   }
 }
@@ -128,7 +128,7 @@ async function processUserNotifications(userConfig) {
   try {
     // Create agent for this user
     const agent = new BskyAgent({
-      service: 'https://bsky.social',
+      service: "https://bsky.social",
     });
 
     // Resume session
@@ -155,40 +155,40 @@ async function processUserNotifications(userConfig) {
       // Get recent notifications to build a meaningful message
       const recentNotifications = await getRecentNotifications(agent, 5);
 
-      let title = 'New Notifications';
-      let body = `You have ${newCount} new ${newCount === 1 ? 'notification' : 'notifications'}`;
+      let title = "New Notifications";
+      let body = `You have ${newCount} new ${newCount === 1 ? "notification" : "notifications"}`;
 
       // If we have recent notifications, show the most recent one
       if (recentNotifications.length > 0) {
         const latest = recentNotifications[0];
-        const author = latest.author?.handle || 'Someone';
+        const author = latest.author?.handle || "Someone";
 
         switch (latest.reason) {
-          case 'like':
+          case "like":
             title = `${author} liked your post`;
             break;
-          case 'repost':
+          case "repost":
             title = `${author} reposted your post`;
             break;
-          case 'follow':
+          case "follow":
             title = `${author} followed you`;
             break;
-          case 'mention':
+          case "mention":
             title = `${author} mentioned you`;
             break;
-          case 'reply':
+          case "reply":
             title = `${author} replied to your post`;
             break;
-          case 'quote':
+          case "quote":
             title = `${author} quoted your post`;
             break;
           default:
-            title = 'New Notification';
+            title = "New Notification";
         }
 
         if (newCount > 1) {
           body = `${title} and ${newCount - 1} more`;
-          title = 'New Notifications';
+          title = "New Notifications";
         }
       }
 
@@ -197,7 +197,7 @@ async function processUserNotifications(userConfig) {
         title,
         body,
         data: {
-          type: 'notification',
+          type: "notification",
           count: currentCount,
         },
         badge: currentCount,
@@ -213,9 +213,11 @@ async function processUserNotifications(userConfig) {
       count: currentCount,
       lastCheck: new Date().toISOString(),
     });
-
   } catch (error) {
-    console.error(`Error processing notifications for ${handle}:`, error.message);
+    console.error(
+      `Error processing notifications for ${handle}:`,
+      error.message,
+    );
   }
 }
 
@@ -238,9 +240,8 @@ async function pollAllUsers() {
       const batch = users.slice(i, i + CONCURRENCY);
       await Promise.all(batch.map(processUserNotifications));
     }
-
   } catch (error) {
-    console.error('Error in poll cycle:', error.message);
+    console.error("Error in poll cycle:", error.message);
   }
 }
 
@@ -248,7 +249,7 @@ async function pollAllUsers() {
  * Start the push notification worker
  */
 function startWorker() {
-  console.log('Push Notification Worker starting...');
+  console.log("Push Notification Worker starting...");
   console.log(`Poll interval: ${POLL_INTERVAL}ms`);
 
   // Initial poll
@@ -257,19 +258,19 @@ function startWorker() {
   // Set up interval
   setInterval(pollAllUsers, POLL_INTERVAL);
 
-  console.log('Push Notification Worker started');
+  console.log("Push Notification Worker started");
 }
 
 /**
  * Graceful shutdown
  */
 function shutdown() {
-  console.log('Push Notification Worker shutting down...');
+  console.log("Push Notification Worker shutting down...");
   process.exit(0);
 }
 
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 // Start the worker if this is the main module
 if (require.main === module) {

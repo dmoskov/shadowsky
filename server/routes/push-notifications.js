@@ -145,7 +145,11 @@ router.post("/push-notification/send", async (req, res) => {
 
     // In a real implementation, you would send the push notification here
     // using the push-worker module
-    console.log(`Would send push to ${subscription.pushToken}:`, { title, body, data });
+    console.log(`Would send push to ${subscription.pushToken}:`, {
+      title,
+      body,
+      data,
+    });
 
     res.json({
       success: true,
