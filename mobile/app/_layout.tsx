@@ -1,4 +1,3 @@
-import { QueryClientProvider } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import { Slot, useRouter, useSegments } from "expo-router";
@@ -28,6 +27,8 @@ import {
   setupAppStateListener,
   cleanupAppStateListener,
   setupNetworkListener,
+  PersistQueryClientProvider,
+  asyncStoragePersister,
 } from "../src/shared/query-client";
 import { registerBackgroundFetch } from "../src/services/background-fetch";
 import {
@@ -36,6 +37,7 @@ import {
   Sentry,
 } from "../src/utils/error-reporting";
 import { appLockService } from "../src/services/app-lock";
+import { setupOfflineStorageCleanup } from "../src/hooks/useOfflineFeed";
 
 // Initialize Sentry as early as possible
 const sentryDsn = Constants.expoConfig?.extra?.sentryDsn;
@@ -136,6 +138,9 @@ function RootLayout() {
     // Register background fetch for fresh content
     registerBackgroundFetch();
 
+    // Setup offline storage cleanup (periodic eviction of old cached data)
+    setupOfflineStorageCleanup();
+
     return cleanup;
   }, []);
 
@@ -143,7 +148,10 @@ function RootLayout() {
     <ErrorBoundary>
       <SafeAreaProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <QueryClientProvider client={queryClient}>
+          <PersistQueryClientProvider
+            client={queryClient}
+            persistOptions={{ persister: asyncStoragePersister }}
+          >
             <NetworkProvider>
               <AuthProvider>
                 <PreferencesProvider>
@@ -156,7 +164,7 @@ function RootLayout() {
                 </PreferencesProvider>
               </AuthProvider>
             </NetworkProvider>
-          </QueryClientProvider>
+          </PersistQueryClientProvider>
         </GestureHandlerRootView>
       </SafeAreaProvider>
     </ErrorBoundary>

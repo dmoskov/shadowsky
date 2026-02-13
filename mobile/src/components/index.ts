@@ -13,3 +13,4 @@ export * from './ImageCarouselItem';
 export * from './AppLockScreen';
 export * from './icons';
 export {default as OfflineBanner} from './OfflineBanner';
+export {default as StaleContentIndicator} from './StaleContentIndicator';
