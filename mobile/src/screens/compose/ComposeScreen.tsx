@@ -19,6 +19,9 @@ import { triggerHaptic } from "../../utils/haptics";
 import { LanguagePicker } from "../../components/LanguagePicker";
 import { getLanguageShortName } from "../../constants/languages";
 import { preferencesService } from "../../services/preferences";
+import { useGifPicker } from "../../hooks/useGifPicker";
+import { GifPicker } from "../../components/GifPicker";
+import type { TenorGif } from "../../services/tenor";
 
 const MAX_POST_LENGTH = 300;
 
@@ -69,6 +72,9 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
   // Language selection state
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [languagePickerVisible, setLanguagePickerVisible] = useState(false);
+
+  // GIF picker state
+  const gifPicker = useGifPicker();
 
   // Mention autocomplete state
   const [mentionQuery, setMentionQuery] = useState("");
@@ -369,6 +375,48 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
     }
   };
 
+  // Handle GIF picker
+  const handleGifPicker = () => {
+    // Check if images or video are already selected
+    if (imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo) {
+      Alert.alert(
+        "Media Already Attached",
+        "Remove images or video first to add a GIF. GIFs are embedded as external links."
+      );
+      return;
+    }
+
+    // Check if GIF is already selected
+    if (gifPicker.selectedGif) {
+      Alert.alert(
+        "GIF Already Added",
+        "You already have a GIF attached. Remove it first to add a new one."
+      );
+      return;
+    }
+
+    gifPicker.open();
+  };
+
+  // Handle GIF selection
+  const handleSelectGif = useCallback((gif: TenorGif) => {
+    gifPicker.selectGif(gif);
+    gifPicker.close();
+    triggerHaptic('success');
+  }, [gifPicker]);
+
+  // Handle remove GIF
+  const handleRemoveGif = () => {
+    Alert.alert(
+      "Remove GIF",
+      "Are you sure you want to remove this GIF?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Remove", style: "destructive", onPress: () => gifPicker.clearSelection() },
+      ]
+    );
+  };
+
   // Thread mode handlers
   const handleToggleThreadMode = () => {
     if (isThreadMode) {
@@ -466,7 +514,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
       return handlePostThread();
     }
 
-    if (!text.trim() && imagePicker.selectedImages.length === 0 && !videoPicker.selectedVideo) {
+    if (!text.trim() && imagePicker.selectedImages.length === 0 && !videoPicker.selectedVideo && !gifPicker.selectedGif) {
       return;
     }
 
@@ -508,6 +556,14 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
           uri: img.uri,
           alt: img.altText,
         }));
+      }
+      // Add GIF as external embed if selected
+      else if (gifPicker.selectedGif) {
+        postOptions.external = {
+          uri: gifPicker.selectedGif.url,
+          title: gifPicker.selectedGif.title,
+          description: 'GIF from Tenor',
+        };
       }
 
       await createPost.mutateAsync(postOptions);
@@ -606,7 +662,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
     ? threadPosts.every(p => !p.text.trim() && p.images.length === 0) ||
       threadPosts.some(p => p.text.length > MAX_POST_LENGTH) ||
       imagePicker.isUploading || videoPicker.isUploading
-    : (!text.trim() && imagePicker.selectedImages.length === 0 && !videoPicker.selectedVideo) ||
+    : (!text.trim() && imagePicker.selectedImages.length === 0 && !videoPicker.selectedVideo && !gifPicker.selectedGif) ||
       text.length > MAX_POST_LENGTH ||
       imagePicker.isUploading || videoPicker.isUploading;
 
@@ -783,6 +839,31 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
             </View>
           )}
 
+          {/* GIF Preview */}
+          {gifPicker.selectedGif && (
+            <View style={styles.gifPreviewContainer}>
+              <View style={styles.gifPreviewWrapper}>
+                <Image
+                  source={{ uri: gifPicker.selectedGif.url }}
+                  style={styles.gifPreview}
+                  resizeMode="cover"
+                />
+                <TouchableOpacity
+                  style={styles.removeImageButton}
+                  onPress={handleRemoveGif}
+                >
+                  <Text style={styles.removeImageText}>×</Text>
+                </TouchableOpacity>
+                <View style={styles.gifBadge}>
+                  <Text style={styles.gifBadgeText}>GIF</Text>
+                </View>
+              </View>
+              <Text style={styles.gifHintText}>
+                GIFs are embedded as external links
+              </Text>
+            </View>
+          )}
+
           {/* Quote Preview */}
           {quoteTo && (
             <View style={styles.quotePreview}>
@@ -845,8 +926,13 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
               >
                 <VideoIcon size={22} color={(imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo) ? "#4b5563" : "#6b7280"} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.toolbarButton} activeOpacity={0.7}>
-                <GifIcon size={22} color="#6b7280" />
+              <TouchableOpacity
+                style={styles.toolbarButton}
+                activeOpacity={0.7}
+                onPress={handleGifPicker}
+                disabled={imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo !== null || gifPicker.selectedGif !== null}
+              >
+                <GifIcon size={22} color={(imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo || gifPicker.selectedGif) ? "#4b5563" : "#6b7280"} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.toolbarButton} activeOpacity={0.7}>
                 <PollIcon size={22} color="#6b7280" />
@@ -933,6 +1019,18 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
         selectedLanguages={selectedLanguages}
         onSelectLanguages={handleSelectLanguages}
         multiSelect={true}
+      />
+
+      {/* GIF Picker Modal */}
+      <GifPicker
+        visible={gifPicker.isVisible}
+        onSelectGif={handleSelectGif}
+        onClose={gifPicker.close}
+        gifs={gifPicker.gifs}
+        loading={gifPicker.loading}
+        error={gifPicker.error}
+        searchQuery={gifPicker.searchQuery}
+        onSearch={gifPicker.search}
       />
     </View>
   );
@@ -1314,5 +1412,39 @@ const styles = StyleSheet.create({
     borderTopColor: "transparent",
     borderBottomWidth: 9,
     borderBottomColor: "transparent",
+  },
+  gifPreviewContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  gifPreviewWrapper: {
+    position: "relative",
+    width: 200,
+    height: 200,
+  },
+  gifPreview: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 12,
+    backgroundColor: "#1f2937",
+  },
+  gifBadge: {
+    position: "absolute",
+    bottom: 8,
+    left: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  gifBadgeText: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  gifHintText: {
+    color: "#6b7280",
+    fontSize: 12,
+    marginTop: 8,
   },
 });
