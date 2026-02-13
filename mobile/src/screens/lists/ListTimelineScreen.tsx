@@ -78,9 +78,8 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
   );
 
   const handleHashtagPress = useCallback((tag: string) => {
-    // TODO: Navigate to search with hashtag query
-    console.log('Hashtag pressed:', tag);
-  }, []);
+    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
+  }, [router]);
 
   // Show loading state while fetching list details
   if (isLoadingList) {

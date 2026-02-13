@@ -47,8 +47,7 @@ export function BookmarksScreen() {
   };
 
   const handleHashtagPress = (tag: string) => {
-    // TODO: Navigate to search with hashtag query
-    console.log('Hashtag pressed:', tag);
+    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
   };
 
   const handleRefresh = async () => {

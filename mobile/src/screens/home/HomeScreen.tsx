@@ -194,7 +194,7 @@ export function HomeScreen() {
   };
 
   const handleHashtagPress = (tag: string) => {
-    // TODO: Navigate to search with hashtag query
+    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
   };
 
   const handleBookmark = (post: AppBskyFeedDefs.FeedViewPost) => {

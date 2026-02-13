@@ -13,6 +13,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { AppBskyFeedDefs } from "@atproto/api";
+import { useRouter } from "expo-router";
 import { usePostThread } from "../../hooks/api/useFeed";
 import { useLikePost, useUnlikePost, useRepost, useDeleteRepost, useCreatePost } from "../../hooks/api/usePosts";
 import { useAppNavigation } from "../../hooks/useNavigation";
@@ -85,6 +86,7 @@ function extractReplies(node: any): AppBskyFeedDefs.FeedViewPost[] {
 }
 
 export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
+  const router = useRouter();
   const [postUri, setPostUri] = useState<string | null>(null);
   const [isResolvingUri, setIsResolvingUri] = useState(false);
   const [resolveError, setResolveError] = useState<string | null>(null);
@@ -190,9 +192,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   };
 
   const handleHashtagPress = (tag: string) => {
-    // TODO: Navigate to search with hashtag query
-    // For now, just log it
-    console.log('Hashtag pressed:', tag);
+    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
   };
 
   const handleLike = (post: AppBskyFeedDefs.FeedViewPost) => {
