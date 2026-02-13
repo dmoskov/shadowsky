@@ -10,6 +10,8 @@ import {
   unpinFeed,
   getPinnedFeeds,
   reorderSavedFeeds,
+  createFeedGenerator,
+  CreateFeedGeneratorParams,
 } from '../../services/atproto/feeds';
 
 /**
@@ -142,6 +144,22 @@ export function useReorderSavedFeeds() {
     onSuccess: () => {
       // Invalidate saved feeds query to refetch
       queryClient.invalidateQueries({queryKey: ['savedFeeds']});
+    },
+  });
+}
+
+/**
+ * Hook to create a new feed generator
+ */
+export function useCreateFeedGenerator() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: CreateFeedGeneratorParams) => createFeedGenerator(params),
+    onSuccess: () => {
+      // Invalidate feed generator queries to refetch
+      queryClient.invalidateQueries({queryKey: ['popularFeedGenerators']});
+      queryClient.invalidateQueries({queryKey: ['suggestedFeeds']});
     },
   });
 }
