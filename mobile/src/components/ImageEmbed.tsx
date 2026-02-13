@@ -1,7 +1,8 @@
 import React, {useState} from 'react';
-import {View, StyleSheet, TouchableOpacity, Text, Modal, Dimensions} from 'react-native';
+import {View, StyleSheet, TouchableOpacity, Text} from 'react-native';
 import {Image} from 'expo-image';
 import {AppBskyEmbedImages} from '@atproto/api';
+import {ImageCarousel} from './ImageCarousel';
 
 interface ImageEmbedProps {
   images: AppBskyEmbedImages.ViewImage[];
@@ -79,32 +80,17 @@ export function ImageEmbed({images, onImagePress}: ImageEmbedProps) {
         ))}
       </View>
 
-      {/* Full-screen Image Viewer Modal */}
-      <Modal
+      {/* Full-screen Image Carousel */}
+      <ImageCarousel
         visible={viewerVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setViewerVisible(false)}>
-        <View style={styles.modalContainer}>
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setViewerVisible(false)}>
-            <Image
-              source={{uri: images[currentImageIndex].fullsize}}
-              style={styles.fullscreenImage}
-              contentFit="contain"
-            />
-            {images[currentImageIndex].alt && (
-              <View style={styles.fullscreenAltContainer}>
-                <Text style={styles.fullscreenAltText}>
-                  {images[currentImageIndex].alt}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-      </Modal>
+        images={images.map(img => ({
+          thumb: img.thumb,
+          fullsize: img.fullsize,
+          alt: img.alt,
+        }))}
+        initialIndex={currentImageIndex}
+        onClose={() => setViewerVisible(false)}
+      />
     </View>
   );
 }
@@ -178,32 +164,5 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 11,
     fontWeight: '600',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fullscreenImage: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
-  },
-  fullscreenAltContainer: {
-    position: 'absolute',
-    bottom: 40,
-    left: 16,
-    right: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    padding: 12,
-    borderRadius: 8,
-  },
-  fullscreenAltText: {
-    color: '#ffffff',
-    fontSize: 14,
-    lineHeight: 20,
   },
 });
