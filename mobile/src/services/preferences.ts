@@ -1,5 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+export interface MutedWord {
+  id: string;
+  value: string;
+  duration?: "forever" | "24h" | "7d" | "30d";
+  expiresAt?: number;
+  appliesTo?: "all" | "home";
+}
+
 export interface AppPreferences {
   // Appearance
   theme: "dark" | "light" | "system";
@@ -26,6 +34,9 @@ export interface AppPreferences {
 
   // Background fetch
   backgroundFetchEnabled: boolean;
+
+  // Moderation
+  mutedWords: MutedWord[];
 }
 
 const PREFERENCES_KEY = "@shadowsky_preferences";
@@ -57,6 +68,9 @@ const DEFAULT_PREFERENCES: AppPreferences = {
 
   // Background fetch
   backgroundFetchEnabled: true,
+
+  // Moderation
+  mutedWords: [],
 };
 
 class PreferencesService {

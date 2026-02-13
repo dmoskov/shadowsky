@@ -458,6 +458,13 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
           onPress={() => router.push("/(app)/settings/muted")}
           showChevron
         />
+
+        <SettingRow
+          label="Muted Words"
+          description="Hide posts with specific words or phrases"
+          onPress={() => router.push("/(app)/settings/muted-words")}
+          showChevron
+        />
       </View>
 
       {/* Data & Storage Section */}

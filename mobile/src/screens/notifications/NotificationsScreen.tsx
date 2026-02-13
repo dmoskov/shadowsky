@@ -1,4 +1,4 @@
-import React, {useCallback, useRef} from 'react';
+import React, {useCallback, useRef, useMemo} from 'react';
 import {
   FlatList,
   ActivityIndicator,
@@ -19,11 +19,14 @@ import {LoadingState} from '../../components/LoadingState';
 import {ErrorState} from '../../components/ErrorState';
 import {EmptyState} from '../../components/EmptyState';
 import {useAppNavigation} from '../../hooks/useNavigation';
+import {usePreferences} from '../../contexts/PreferencesContext';
 import {clearBadgeCount} from '../../services/notification-poller';
 import {colors} from '../../constants/theme';
+import {filterMutedNotifications} from '../../utils/content-filter';
 
 export function NotificationsScreen() {
   const insets = useSafeAreaInsets();
+  const {preferences} = usePreferences();
   const {
     data,
     isLoading,
@@ -55,8 +58,14 @@ export function NotificationsScreen() {
     }, [data?.pages, markNotificationsSeen]),
   );
 
-  // Flatten all pages of notifications
-  const notifications = data?.pages?.flatMap(page => page.notifications) || [];
+  // Flatten all pages of notifications and filter by muted words
+  const allNotifications = data?.pages?.flatMap(page => page.notifications) || [];
+  const notifications = useMemo(() => {
+    if (!preferences?.mutedWords || preferences.mutedWords.length === 0) {
+      return allNotifications;
+    }
+    return filterMutedNotifications(allNotifications, preferences.mutedWords);
+  }, [allNotifications, preferences?.mutedWords]);
 
   // Group notifications by type for display
   const groupedNotifications = React.useMemo(() => {
