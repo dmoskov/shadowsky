@@ -1,5 +1,6 @@
 import { AppBskyFeedDefs } from "@atproto/api";
 import {
+  Bell,
   BellOff,
   Code,
   ExternalLink,
@@ -18,6 +19,7 @@ interface PostMenuItemsProps {
   post: AppBskyFeedDefs.PostView;
   isOwnPost: boolean;
   isThread: boolean;
+  isThreadMuted: boolean;
   isWebShareSupported: boolean;
   onNativeShare: () => void;
   onCopyLink: () => void;
@@ -26,6 +28,7 @@ interface PostMenuItemsProps {
   onEmbed: () => void;
   onOpenInBluesky: () => void;
   onMuteThread: () => void;
+  onUnmuteThread: () => void;
   onHidePost: () => void;
   onOpenAddToListModal: () => void;
   onMute: () => void;
@@ -42,6 +45,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
   post,
   isOwnPost,
   isThread,
+  isThreadMuted,
   isWebShareSupported,
   onNativeShare,
   onCopyLink,
@@ -50,6 +54,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
   onEmbed,
   onOpenInBluesky,
   onMuteThread,
+  onUnmuteThread,
   onHidePost,
   onOpenAddToListModal,
   onMute,
@@ -126,14 +131,25 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
       {/* Thread-specific options */}
       {isThread && (
         <>
-          <button
-            role="menuitem"
-            onClick={onMuteThread}
-            className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
-          >
-            <BellOff className="h-4 w-4" aria-hidden="true" />
-            Mute thread
-          </button>
+          {isThreadMuted ? (
+            <button
+              role="menuitem"
+              onClick={onUnmuteThread}
+              className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+            >
+              <Bell className="h-4 w-4" aria-hidden="true" />
+              Unmute thread
+            </button>
+          ) : (
+            <button
+              role="menuitem"
+              onClick={onMuteThread}
+              className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+            >
+              <BellOff className="h-4 w-4" aria-hidden="true" />
+              Mute thread
+            </button>
+          )}
           <div
             className="my-1 border-t border-gray-200 dark:border-gray-700"
             role="separator"

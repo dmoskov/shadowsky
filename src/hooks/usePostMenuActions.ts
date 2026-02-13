@@ -8,6 +8,18 @@ import { generateShareablePostUrl } from "../hooks/usePostDeepLink";
 import { moderationHistoryDB } from "../services/moderation-history-db";
 import { isWebShareSupported, sharePost } from "../services/share-service";
 
+/**
+ * Helper to get the root URI of a thread.
+ * For reply posts, returns the root URI from the reply record.
+ * For top-level posts, returns the post URI itself.
+ */
+function getThreadRootUri(post: AppBskyFeedDefs.PostView): string {
+  const record = post.record as
+    | { reply?: { root: { uri: string } } }
+    | undefined;
+  return record?.reply?.root?.uri || post.uri;
+}
+
 interface PostMenuActionsProps {
   post: AppBskyFeedDefs.PostView;
   onMute?: () => void;
@@ -29,13 +41,16 @@ export function usePostMenuActions({
 }: PostMenuActionsProps) {
   const { session, agent } = useAuth();
   const { hidePost } = useHiddenPosts();
-  const { muteUser, muteThread, blockUser } = useModeration();
+  const { muteUser, muteThread, unmuteThread, blockUser, isThreadMuted } =
+    useModeration();
   const { showDestructiveConfirm } = useModal();
   const { showToast } = useToast();
 
   const isOwnPost = session?.did === post.author.did;
   const postRecord = post.record as { reply?: unknown } | undefined;
   const isThread = postRecord?.reply !== undefined;
+  const rootUri = getThreadRootUri(post);
+  const isThreadCurrentlyMuted = isThreadMuted(rootUri);
 
   const handleMute = async () => {
     onClose();
@@ -263,12 +278,12 @@ export function usePostMenuActions({
   const handleMuteThread = async () => {
     onClose();
     // Add to local muted threads immediately for instant UI update
-    muteThread(post.uri);
+    muteThread(rootUri);
 
     try {
       if (agent) {
         await agent.api.app.bsky.graph.muteThread({
-          root: post.uri,
+          root: rootUri,
         });
         showToast("Thread muted", {
           type: "success",
@@ -278,6 +293,31 @@ export function usePostMenuActions({
     } catch (error) {
       console.error("Failed to mute thread:", error);
       showToast("Failed to mute thread", { type: "error" });
+      // Revert local state on error
+      unmuteThread(rootUri);
+    }
+  };
+
+  const handleUnmuteThread = async () => {
+    onClose();
+    // Remove from local muted threads immediately for instant UI update
+    unmuteThread(rootUri);
+
+    try {
+      if (agent) {
+        await agent.api.app.bsky.graph.unmuteThread({
+          root: rootUri,
+        });
+        showToast("Thread unmuted", {
+          type: "success",
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to unmute thread:", error);
+      showToast("Failed to unmute thread", { type: "error" });
+      // Revert local state on error
+      muteThread(rootUri);
     }
   };
 
@@ -302,11 +342,13 @@ export function usePostMenuActions({
     handleEmbed,
     handleOpenInBluesky,
     handleMuteThread,
+    handleUnmuteThread,
     handleHidePost,
     // Helper functions
     isWebShareSupported,
     // Derived state
     isOwnPost,
     isThread,
+    isThreadCurrentlyMuted,
   };
 }
