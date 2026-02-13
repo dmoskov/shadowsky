@@ -18,6 +18,8 @@ export {ArrowLeftIcon} from './ArrowLeftIcon';
 export {CloseIcon} from './CloseIcon';
 export {CheckIcon} from './CheckIcon';
 export {PlusIcon} from './PlusIcon';
+export {ChevronDownIcon} from './ChevronDownIcon';
+export {ChevronUpIcon} from './ChevronUpIcon';
 
 // Drawer
 export {ListIcon} from './ListIcon';
