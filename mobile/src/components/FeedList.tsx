@@ -120,7 +120,7 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
       ref={ref}
       data={filteredPosts}
       renderItem={renderItem}
-      keyExtractor={(item, index) => item.post.uri + index}
+      keyExtractor={(item) => item.post.uri}
       ListEmptyComponent={renderEmpty}
       ListFooterComponent={renderFooter}
       onEndReached={onLoadMore}
@@ -138,8 +138,9 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
       }
       removeClippedSubviews={true}
       maxToRenderPerBatch={10}
-      windowSize={10}
+      windowSize={7}
       initialNumToRender={10}
+      updateCellsBatchingPeriod={50}
       style={styles.list}
       accessible={false}
       accessibilityLabel="Feed of posts"
