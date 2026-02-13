@@ -10,6 +10,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
@@ -145,7 +146,14 @@ export function LandingScreen() {
           </TouchableOpacity>
 
           <Text style={styles.disclaimer}>
-            By signing in, you agree to our Terms of Service and Privacy Policy
+            By signing in, you agree to our{" "}
+            <Text style={styles.link} onPress={() => Linking.openURL("https://shadowsky.io/terms")}>
+              Terms of Service
+            </Text>{" "}
+            and{" "}
+            <Text style={styles.link} onPress={() => Linking.openURL("https://shadowsky.io/privacy")}>
+              Privacy Policy
+            </Text>
           </Text>
         </View>
       </ScrollView>
@@ -277,5 +285,9 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     fontSize: 12,
     textAlign: "center",
+  },
+  link: {
+    color: "#60a5fa",
+    textDecorationLine: "underline",
   },
 });
