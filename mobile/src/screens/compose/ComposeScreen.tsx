@@ -6,7 +6,7 @@ import * as Localization from "expo-localization";
 import { useCreatePost } from "../../hooks/api/usePosts";
 import { useSaveDraft, useDeleteDraft, useDrafts } from "../../hooks/api";
 import { draftToComposerState, ComposerState } from "../../services/drafts";
-import { ImageIcon, VideoIcon, GifIcon, PollIcon, ThreadIcon, CloseIcon, GlobeIcon } from "../../components/icons";
+import { ImageIcon, VideoIcon, GifIcon, EmojiIcon, PollIcon, ThreadIcon, CloseIcon, GlobeIcon } from "../../components/icons";
 import { Avatar } from "../../components/Avatar";
 import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
 import { useVideoPicker, VideoAsset } from "../../hooks/useVideoPicker";
@@ -21,6 +21,8 @@ import { getLanguageShortName } from "../../constants/languages";
 import { preferencesService } from "../../services/preferences";
 import { useGifPicker } from "../../hooks/useGifPicker";
 import { GifPicker } from "../../components/GifPicker";
+import { useEmojiPicker } from "../../hooks/useEmojiPicker";
+import { EmojiPickerModal } from "../../components/EmojiPickerModal";
 import type { TenorGif } from "../../services/tenor";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 
@@ -76,6 +78,9 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
 
   // GIF picker state
   const gifPicker = useGifPicker();
+
+  // Emoji picker state
+  const emojiPicker = useEmojiPicker();
 
   // Mention autocomplete state
   const [mentionQuery, setMentionQuery] = useState("");
@@ -417,6 +422,18 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
       ]
     );
   };
+
+  // Handle emoji picker
+  const handleEmojiPicker = () => {
+    emojiPicker.open();
+  };
+
+  // Handle emoji selection
+  const handleSelectEmoji = useCallback((emoji: string) => {
+    // Insert emoji at the current cursor position
+    setText((prevText) => prevText + emoji);
+    triggerHaptic('selection');
+  }, []);
 
   // Thread mode handlers
   const handleToggleThreadMode = () => {
@@ -944,6 +961,13 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
               >
                 <GifIcon size={22} color={(imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo || gifPicker.selectedGif) ? "#4b5563" : "#6b7280"} />
               </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.toolbarButton}
+                activeOpacity={0.7}
+                onPress={handleEmojiPicker}
+              >
+                <EmojiIcon size={22} color="#6b7280" />
+              </TouchableOpacity>
               <TouchableOpacity style={styles.toolbarButton} activeOpacity={0.7}>
                 <PollIcon size={22} color="#6b7280" />
               </TouchableOpacity>
@@ -1041,6 +1065,13 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
         error={gifPicker.error}
         searchQuery={gifPicker.searchQuery}
         onSearch={gifPicker.search}
+      />
+
+      {/* Emoji Picker Modal */}
+      <EmojiPickerModal
+        visible={emojiPicker.isVisible}
+        onSelectEmoji={handleSelectEmoji}
+        onClose={emojiPicker.close}
       />
     </View>
   );
