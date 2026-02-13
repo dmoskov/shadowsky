@@ -22,6 +22,7 @@ import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { NetworkProvider } from "../src/contexts/NetworkContext";
 import { PreferencesProvider, usePreferences } from "../src/contexts/PreferencesContext";
 import { ToastProvider } from "../src/contexts/ToastContext";
+import { ModerationProvider } from "../src/contexts/ModerationContext";
 import {
   queryClient,
   setupAppStateListener,
@@ -155,12 +156,14 @@ function RootLayout() {
             <NetworkProvider>
               <AuthProvider>
                 <PreferencesProvider>
-                  <ToastProvider>
-                    <QueryErrorHandler>
-                      <StatusBar style="light" />
-                      <AuthGate />
-                    </QueryErrorHandler>
-                  </ToastProvider>
+                  <ModerationProvider>
+                    <ToastProvider>
+                      <QueryErrorHandler>
+                        <StatusBar style="light" />
+                        <AuthGate />
+                      </QueryErrorHandler>
+                    </ToastProvider>
+                  </ModerationProvider>
                 </PreferencesProvider>
               </AuthProvider>
             </NetworkProvider>
