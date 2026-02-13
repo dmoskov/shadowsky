@@ -3,6 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityInd
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useCreatePost } from "../../hooks/api/usePosts";
+import { useSaveDraft, useDeleteDraft, useDrafts } from "../../hooks/api";
+import { draftToComposerState, ComposerState } from "../../services/drafts";
 import { ImageIcon, GifIcon, PollIcon, ThreadIcon, CloseIcon } from "../../components/icons";
 import { Avatar } from "../../components/Avatar";
 import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
@@ -40,14 +42,20 @@ export interface QuoteToPost {
 export interface ComposeScreenProps {
   replyTo?: ReplyToPost;
   quoteTo?: QuoteToPost;
+  draftId?: string;
 }
 
-export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
+export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps = {}) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [text, setText] = useState("");
   const createPost = useCreatePost();
   const imagePicker = useImagePicker();
+  const saveDraft = useSaveDraft();
+  const deleteDraft = useDeleteDraft();
+  const { data: draftsData } = useDrafts();
+  const [loadedDraftId, setLoadedDraftId] = useState<string | undefined>(draftId);
+  const [isDirty, setIsDirty] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [altTextModalVisible, setAltTextModalVisible] = useState(false);
   const [tempAltText, setTempAltText] = useState("");
@@ -135,17 +143,100 @@ export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
   const [threadPosts, setThreadPosts] = useState<ThreadPost[]>([{ text: "", images: [] }]);
   const [activeThreadPostIndex, setActiveThreadPostIndex] = useState<number | null>(null);
 
+  // Load draft if draftId is provided
+  useEffect(() => {
+    if (draftId && draftsData) {
+      const allDrafts = draftsData.pages.flatMap((page) => page.drafts);
+      const draft = allDrafts.find((d) => d.id === draftId);
+
+      if (draft) {
+        draftToComposerState(draft).then((state) => {
+          setText(state.text);
+          // Load images one by one using the image picker API
+          if (state.images && state.images.length > 0) {
+            // Clear existing images first
+            imagePicker.clearImages();
+            // Add each image
+            for (const img of state.images) {
+              const imageAsset: ImageAsset = {
+                uri: img.uri,
+                width: 0,
+                height: 0,
+                mimeType: img.mimeType || 'image/jpeg',
+                altText: img.altText || '',
+              };
+              imagePicker.selectedImages.push(imageAsset);
+            }
+          }
+          setLoadedDraftId(draftId);
+          setIsDirty(false);
+        }).catch((error) => {
+          console.error('Failed to load draft:', error);
+          Alert.alert('Error', 'Failed to load draft');
+        });
+      }
+    }
+  }, [draftId, draftsData]);
+
+  // Mark as dirty when content changes
+  useEffect(() => {
+    if (loadedDraftId || text || imagePicker.selectedImages.length > 0) {
+      setIsDirty(true);
+    }
+  }, [text, imagePicker.selectedImages]);
+
+  const handleSaveDraft = async () => {
+    try {
+      const composerState: ComposerState = {
+        text: text.trim(),
+        images: imagePicker.selectedImages.length > 0
+          ? imagePicker.selectedImages.map((img) => ({
+              uri: img.uri,
+              altText: img.altText,
+              mimeType: img.mimeType,
+            }))
+          : undefined,
+        quoteUri: quoteTo?.uri,
+        quoteCid: quoteTo?.cid,
+        replyToUri: replyTo?.uri,
+        replyToCid: replyTo?.cid,
+      };
+
+      await saveDraft.mutateAsync({
+        draftId: loadedDraftId,
+        state: composerState,
+      });
+
+      triggerHaptic('success');
+      Alert.alert('Success', 'Draft saved!');
+      router.back();
+    } catch (error) {
+      triggerHaptic('error');
+      Alert.alert('Error', 'Failed to save draft');
+    }
+  };
+
   const handleClose = () => {
     const hasContent = isThreadMode
       ? threadPosts.some(p => p.text.trim() || p.images.length > 0)
       : (imagePicker.selectedImages.length > 0 || text.trim());
 
-    if (hasContent) {
+    if (hasContent && !isThreadMode) {
+      // Offer to save as draft for single posts
       Alert.alert(
-        isThreadMode ? "Discard Thread?" : "Discard Post?",
-        isThreadMode
-          ? "Are you sure you want to discard this thread?"
-          : "Are you sure you want to discard this post?",
+        "Save as draft?",
+        "Would you like to save your post as a draft?",
+        [
+          { text: "Discard", style: "destructive", onPress: () => router.back() },
+          { text: "Cancel", style: "cancel" },
+          { text: "Save Draft", onPress: handleSaveDraft },
+        ]
+      );
+    } else if (hasContent && isThreadMode) {
+      // Thread mode - just confirm discard (threads not supported in drafts yet)
+      Alert.alert(
+        "Discard Thread?",
+        "Are you sure you want to discard this thread?",
         [
           { text: "Cancel", style: "cancel" },
           { text: "Discard", style: "destructive", onPress: () => router.back() },
@@ -319,6 +410,16 @@ export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
       }
 
       await createPost.mutateAsync(postOptions);
+
+      // Delete draft if this was loaded from a draft
+      if (loadedDraftId) {
+        try {
+          await deleteDraft.mutateAsync(loadedDraftId);
+        } catch (error) {
+          console.error('Failed to delete draft after posting:', error);
+        }
+      }
+
       imagePicker.clearImages();
       router.back();
       // Show success feedback with haptic
@@ -423,6 +524,13 @@ export function ComposeScreen({ replyTo, quoteTo }: ComposeScreenProps = {}) {
         >
           <Text style={styles.cancelButton}>Cancel</Text>
         </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          {!isThreadMode && (
+            <TouchableOpacity onPress={() => router.push("/(app)/drafts")} style={styles.draftsButton}>
+              <Text style={styles.draftsButtonText}>Drafts</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         <TouchableOpacity
           style={[
             styles.postButton,
@@ -665,6 +773,20 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#1f2937",
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  draftsButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  draftsButtonText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: "500",
   },
   cancelTouchable: {
     minHeight: 44,
