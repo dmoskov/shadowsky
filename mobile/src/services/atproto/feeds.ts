@@ -580,3 +580,51 @@ export async function reorderSavedFeeds(feedUris: string[]): Promise<void> {
     ATProtoEndpointType.FEED
   );
 }
+
+export interface CreateFeedGeneratorParams {
+  displayName: string;
+  description?: string;
+  serviceEndpoint: string;
+  avatar?: string;
+}
+
+/**
+ * Create a new feed generator record
+ * Note: This only creates the record. You must have a feed generator service
+ * running at the serviceEndpoint that implements the AT Protocol feed generator API.
+ */
+export async function createFeedGenerator(params: CreateFeedGeneratorParams): Promise<{uri: string; cid: string}> {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+        const session = client.getSession();
+
+        if (!session?.did) {
+          throw new Error('No active session');
+        }
+
+        const record = {
+          $type: 'app.bsky.feed.generator',
+          did: session.did,
+          displayName: params.displayName,
+          description: params.description,
+          avatar: params.avatar,
+          createdAt: new Date().toISOString(),
+        };
+
+        const response = await agent.api.com.atproto.repo.createRecord({
+          repo: session.did,
+          collection: 'app.bsky.feed.generator',
+          record,
+        });
+
+        return {
+          uri: response.data.uri,
+          cid: response.data.cid,
+        };
+      }),
+    ATProtoEndpointType.RECORD
+  );
+}

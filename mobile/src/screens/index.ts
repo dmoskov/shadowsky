@@ -19,3 +19,4 @@ export { ListTimelineScreen } from "./lists/ListTimelineScreen";
 export { LikesScreen } from "./shared/LikesScreen";
 export { RepostsScreen } from "./shared/RepostsScreen";
 export { QuotesScreen } from "./shared/QuotesScreen";
+export { FeedCreationScreen } from "./feeds/FeedCreationScreen";
