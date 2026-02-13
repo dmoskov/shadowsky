@@ -1,8 +1,10 @@
 import { QueryClientProvider } from "@tanstack/react-query";
+import Constants from "expo-constants";
+import * as Device from "expo-device";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { LogBox } from "react-native";
+import { LogBox, Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // Suppress known harmless warnings from dependencies
@@ -27,6 +29,15 @@ import {
   setupNetworkListener,
 } from "../src/shared/query-client";
 import { registerBackgroundFetch } from "../src/services/background-fetch";
+import {
+  initializeSentry,
+  setTags,
+  Sentry,
+} from "../src/utils/error-reporting";
+
+// Initialize Sentry as early as possible
+const sentryDsn = Constants.expoConfig?.extra?.sentryDsn;
+initializeSentry(sentryDsn);
 
 function AuthGate() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -48,8 +59,17 @@ function AuthGate() {
   return <Slot />;
 }
 
-export default function RootLayout() {
+function RootLayout() {
   useEffect(() => {
+    // Set device and app tags for Sentry
+    setTags({
+      app_version: Constants.expoConfig?.version || "unknown",
+      platform: Platform.OS,
+      os_version: Platform.Version?.toString() || "unknown",
+      device_model: Device.modelName || "unknown",
+      device_brand: Device.brand || "unknown",
+    });
+
     // Setup AppState listener for query invalidation on foreground
     const cleanup = setupAppStateListener();
 
@@ -85,3 +105,6 @@ export default function RootLayout() {
     </ErrorBoundary>
   );
 }
+
+// Wrap the root component with Sentry for crash reporting
+export default Sentry.wrap(RootLayout);

@@ -22,6 +22,7 @@ import {
   getCurrentSession,
 } from "../services/auth/auth-service";
 import * as OAuthService from "../services/auth/oauth";
+import { addBreadcrumb, setUser, clearUser } from "../utils/error-reporting";
 
 const AUTH_STORAGE_KEY = "@shadowsky/auth_session";
 const SESSION_REFRESH_INTERVAL = 50 * 60 * 1000;
@@ -79,9 +80,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signOut = useCallback(async () => {
     try {
+      addBreadcrumb("auth", "User signed out");
       clearTimers();
       await authSignOut();
       setSession(null);
+      clearUser();
     } catch (error) {
       throw error;
     }
@@ -251,6 +254,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const restoredSession = await resumeSession();
       if (restoredSession) {
         setSession(restoredSession);
+        // Set user context for error tracking
+        await setUser(restoredSession.did);
+        addBreadcrumb("auth", "Session restored on app start");
       }
     } catch {
       // Session restore failed
@@ -274,6 +280,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const newSession = await signInWithPassword(identifier, password);
       setSession(newSession);
       await loadAccounts();
+
+      // Set user context for error tracking
+      await setUser(newSession.did);
+      addBreadcrumb("auth", "User signed in with password");
     } catch (error) {
       throw error;
     } finally {
@@ -285,6 +295,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true);
       await OAuthService.startOAuthFlow();
+      addBreadcrumb("auth", "User signed in with OAuth");
     } catch (error) {
       throw error;
     } finally {
@@ -302,6 +313,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const newSession = await switchToAccount(did);
       setSession(newSession);
+
+      // Update user context for error tracking
+      await setUser(newSession.did);
+      addBreadcrumb("auth", "User switched account");
     } catch (error) {
       throw error;
     } finally {
