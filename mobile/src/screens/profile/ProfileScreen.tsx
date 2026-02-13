@@ -12,14 +12,16 @@ import {
   Alert,
 } from "react-native";
 import { useProfile, useFollowUser, useUnfollowUser, useBlockUser, useUnblockUser, useMuteUser, useUnmuteUser } from "../../hooks/api/useProfile";
-import { useAuthorFeed } from "../../hooks/api/useFeed";
+import { useAuthorFeed, useActorLikes } from "../../hooks/api/useFeed";
 import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
+import { ProfileTabBar, ProfileTab } from "../../components/ProfileTabBar";
 import { AddToListModal } from "../../components/AddToListModal";
 import { MoreVerticalIcon } from "../../components/icons";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { colors } from "../../constants/theme";
+import { AuthorFeedFilter } from "../../services/atproto/feeds";
 
 interface ProfileScreenProps {
   handle: string;
@@ -31,15 +33,40 @@ interface ProfileScreenProps {
 
 export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, onNavigateToFollowers, onNavigateToFollowing }: ProfileScreenProps) {
   const { data: profile, isLoading: isLoadingProfile, error: profileError, refetch: refetchProfile } = useProfile(handle);
+  const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
+
+  // Get the appropriate filter based on the active tab
+  const getFilter = (): AuthorFeedFilter | undefined => {
+    switch (activeTab) {
+      case "posts":
+        return "posts_no_replies";
+      case "replies":
+        return "posts_with_replies";
+      case "media":
+        return "posts_with_media";
+      default:
+        return undefined;
+    }
+  };
+
   const {
     data: feedData,
     isLoading: isLoadingFeed,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
+    fetchNextPage: fetchNextFeedPage,
+    hasNextPage: hasNextFeedPage,
+    isFetchingNextPage: isFetchingNextFeedPage,
     refetch: refetchFeed,
-    isRefetching,
-  } = useAuthorFeed(handle);
+  } = useAuthorFeed(handle, getFilter());
+
+  const {
+    data: likesData,
+    isLoading: isLoadingLikes,
+    fetchNextPage: fetchNextLikesPage,
+    hasNextPage: hasNextLikesPage,
+    isFetchingNextPage: isFetchingNextLikesPage,
+    refetch: refetchLikes,
+  } = useActorLikes(handle);
+
   const { account } = useAuth();
   const followMutation = useFollowUser();
   const unfollowMutation = useUnfollowUser();
@@ -47,8 +74,8 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   const unblockMutation = useUnblockUser();
   const muteMutation = useMuteUser();
   const unmuteMutation = useUnmuteUser();
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
-  const [showAddToList, setShowAddToList] = React.useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showAddToList, setShowAddToList] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
   const isOwnProfile = account?.handle === handle;
@@ -63,7 +90,15 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
     }
   };
 
-  const posts = feedData?.pages.flatMap((page) => page.feed) ?? [];
+  // Get posts based on the active tab
+  const posts = activeTab === "likes"
+    ? likesData?.pages.flatMap((page) => page.feed) ?? []
+    : feedData?.pages.flatMap((page) => page.feed) ?? [];
+
+  const isLoading = activeTab === "likes" ? isLoadingLikes : isLoadingFeed;
+  const fetchNextPage = activeTab === "likes" ? fetchNextLikesPage : fetchNextFeedPage;
+  const hasNextPage = activeTab === "likes" ? hasNextLikesPage : hasNextFeedPage;
+  const isFetchingNextPage = activeTab === "likes" ? isFetchingNextLikesPage : isFetchingNextFeedPage;
 
   const handleMentionPress = (handle: string, did: string) => {
     onNavigateToProfile?.(handle);
@@ -168,8 +203,16 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await Promise.all([refetchProfile(), refetchFeed()]);
+    if (activeTab === "likes") {
+      await Promise.all([refetchProfile(), refetchLikes()]);
+    } else {
+      await Promise.all([refetchProfile(), refetchFeed()]);
+    }
     setIsRefreshing(false);
+  };
+
+  const handleTabChange = (tab: ProfileTab) => {
+    setActiveTab(tab);
   };
 
   const handleReport = () => {
@@ -310,10 +353,12 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           </View>
         )}
 
-        {/* Posts Header */}
-        <Text style={styles.postsHeader}>Posts</Text>
       </View>
     );
+  };
+
+  const renderTabBar = () => {
+    return <ProfileTabBar activeTab={activeTab} onTabChange={handleTabChange} />;
   };
 
   const renderFooter = () => {
@@ -327,7 +372,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   };
 
   const renderEmpty = () => {
-    if (isLoadingFeed) {
+    if (isLoading) {
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -335,9 +380,10 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
       );
     }
 
+    const emptyMessage = activeTab === "likes" ? "No likes yet" : "No posts yet";
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No posts yet</Text>
+        <Text style={styles.emptyText}>{emptyMessage}</Text>
       </View>
     );
   };
@@ -348,7 +394,12 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
         data={posts}
         renderItem={renderPost}
         keyExtractor={(item, index) => item.post.uri || `post-${index}`}
-        ListHeaderComponent={renderHeader}
+        ListHeaderComponent={
+          <>
+            {renderHeader()}
+            {renderTabBar()}
+          </>
+        }
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         onEndReached={() => {

@@ -8,6 +8,16 @@ export interface FeedOptions {
   cursor?: string;
 }
 
+export type AuthorFeedFilter =
+  | "posts_no_replies"
+  | "posts_with_replies"
+  | "posts_with_media"
+  | "posts_and_author_threads";
+
+export interface AuthorFeedOptions extends FeedOptions {
+  filter?: AuthorFeedFilter;
+}
+
 export interface FeedResponse {
   feed: AppBskyFeedDefs.FeedViewPost[];
   cursor?: string;
@@ -65,7 +75,7 @@ export async function getFeed(feedUri: string, options: FeedOptions = {}): Promi
 /**
  * Fetch author feed (posts from a specific user)
  */
-export async function getAuthorFeed(actor: string, options: FeedOptions = {}): Promise<FeedResponse> {
+export async function getAuthorFeed(actor: string, options: AuthorFeedOptions = {}): Promise<FeedResponse> {
   return rateLimited(
     async () =>
       withRetry(async () => {
@@ -76,6 +86,7 @@ export async function getAuthorFeed(actor: string, options: FeedOptions = {}): P
           actor,
           limit: options.limit || 50,
           cursor: options.cursor,
+          filter: options.filter,
         });
 
         return {
