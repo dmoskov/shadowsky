@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
+import { captureException } from "../utils/error-reporting";
 
 interface ErrorHandlerOptions {
   onRateLimit?: (resetAt: Date) => void;
@@ -152,6 +153,21 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
       }
 
       console.error(`[ErrorHandler] ${context || "Error"}:`, error);
+
+      // Extract API error details for Sentry reporting
+      const statusCode =
+        typeof error === "object" && error !== null && "status" in error
+          ? (error as ApiError).status
+          : undefined;
+
+      // Report all errors to Sentry (except rate limit queue timeouts)
+      captureException(error, {
+        statusCode,
+        extra: {
+          context: context || "Unknown context",
+          errorType: error instanceof Error ? error.name : typeof error,
+        },
+      });
 
       // Handle rate limit errors (429)
       if (isRateLimitError(error)) {

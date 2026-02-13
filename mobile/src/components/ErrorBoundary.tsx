@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import React, { Component, ReactNode } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { captureException } from "../utils/error-reporting";
 
 interface Props {
   children: ReactNode;
@@ -38,6 +39,14 @@ class ErrorBoundaryClass extends Component<Props, State> {
       error,
       errorInfo.componentStack,
     );
+
+    // Report to Sentry
+    captureException(error, {
+      extra: {
+        errorId: this.state.errorId,
+        componentStack: errorInfo.componentStack,
+      },
+    });
   }
 
   handleReset = (): void => {

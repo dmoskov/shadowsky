@@ -73,6 +73,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         sounds: [],
       },
     ],
+    [
+      "sentry-expo",
+      {
+        organization: process.env.SENTRY_ORG || "",
+        project: process.env.SENTRY_PROJECT || "",
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
@@ -81,5 +88,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     eas: {
       projectId: "bb805399-ea1d-4550-9fee-e7ecf9cc8b74",
     },
+    sentryDsn: process.env.SENTRY_DSN || "",
   },
 });

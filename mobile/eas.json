@@ -15,7 +15,10 @@
         "buildType": "apk",
         "gradleCommand": ":app:assembleDebug"
       },
-      "channel": "development"
+      "channel": "development",
+      "env": {
+        "SENTRY_UPLOAD_SOURCE_MAPS": "false"
+      }
     },
     "preview": {
       "distribution": "internal",
@@ -26,7 +29,10 @@
       "android": {
         "buildType": "apk"
       },
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "SENTRY_UPLOAD_SOURCE_MAPS": "true"
+      }
     },
     "production": {
       "ios": {
@@ -36,7 +42,10 @@
       "android": {
         "buildType": "app-bundle"
       },
-      "channel": "production"
+      "channel": "production",
+      "env": {
+        "SENTRY_UPLOAD_SOURCE_MAPS": "true"
+      }
     }
   },
   "submit": {
