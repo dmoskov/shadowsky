@@ -1,4 +1,4 @@
-import {useMutation, useQueryClient} from '@tanstack/react-query';
+import {useMutation, useQueryClient, useInfiniteQuery} from '@tanstack/react-query';
 import {AppBskyFeedDefs} from '@atproto/api';
 import {
   createPost,
@@ -8,6 +8,9 @@ import {
   repost,
   deleteRepost,
   CreatePostOptions,
+  getLikes,
+  getRepostsByPost,
+  getQuotesByPost,
 } from '../../services/atproto/posts';
 import {mutationQueue} from '../../services/mutation-queue';
 import {useToast} from '../../contexts/ToastContext';
@@ -414,5 +417,44 @@ export function useDeleteRepost() {
         maxRetries: 3,
       });
     },
+  });
+}
+
+/**
+ * Hook to get users who liked a post with infinite scroll
+ */
+export function usePostLikes(uri: string) {
+  return useInfiniteQuery({
+    queryKey: ['postLikes', uri],
+    queryFn: ({pageParam}) => getLikes(uri, pageParam),
+    getNextPageParam: (lastPage) => lastPage.cursor,
+    initialPageParam: undefined as string | undefined,
+    enabled: !!uri,
+  });
+}
+
+/**
+ * Hook to get users who reposted a post with infinite scroll
+ */
+export function usePostReposts(uri: string) {
+  return useInfiniteQuery({
+    queryKey: ['postReposts', uri],
+    queryFn: ({pageParam}) => getRepostsByPost(uri, pageParam),
+    getNextPageParam: (lastPage) => lastPage.cursor,
+    initialPageParam: undefined as string | undefined,
+    enabled: !!uri,
+  });
+}
+
+/**
+ * Hook to get posts that quote a post with infinite scroll
+ */
+export function usePostQuotes(uri: string) {
+  return useInfiniteQuery({
+    queryKey: ['postQuotes', uri],
+    queryFn: ({pageParam}) => getQuotesByPost(uri, pageParam),
+    getNextPageParam: (lastPage) => lastPage.cursor,
+    initialPageParam: undefined as string | undefined,
+    enabled: !!uri,
   });
 }

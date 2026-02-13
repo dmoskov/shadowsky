@@ -30,6 +30,9 @@ interface PostCardProps {
   onMute?: (did: string) => void;
   onReport?: (uri: string, cid: string) => void;
   currentUserDid?: string;
+  onPressLikeCount?: () => void;
+  onPressRepostCount?: () => void;
+  onPressQuoteCount?: () => void;
 }
 
 export function PostCard({
@@ -48,6 +51,9 @@ export function PostCard({
   onQuotePress,
   onBlock,
   onMute,
+  onPressLikeCount,
+  onPressRepostCount,
+  onPressQuoteCount,
   onReport,
   currentUserDid,
 }: PostCardProps) {
@@ -192,44 +198,60 @@ export function PostCard({
 
         {/* Engagement Bar */}
         <View style={styles.engagementBar}>
-          <TouchableOpacity
-            style={styles.engagementButton}
-            onPress={onReply}
-            activeOpacity={0.7}
-            disabled={!isOnline}>
-            <ReplyIcon size={18} color={isOnline ? "#9ca3af" : "#4b5563"} />
+          <View style={styles.engagementButton}>
+            <TouchableOpacity
+              onPress={onReply}
+              activeOpacity={0.7}
+              disabled={!isOnline}
+              style={styles.iconButton}>
+              <ReplyIcon size={18} color={isOnline ? "#9ca3af" : "#4b5563"} />
+            </TouchableOpacity>
             <Text style={[styles.engagementCount, !isOnline && styles.disabled]}>
               {postView.replyCount || 0}
             </Text>
-          </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity
-            style={styles.engagementButton}
-            onPress={() => {
-              triggerHaptic('medium');
-              onRepost?.();
-            }}
-            activeOpacity={0.7}
-            disabled={!isOnline}>
-            <RepostIcon size={18} color={isOnline ? "#9ca3af" : "#4b5563"} />
-            <Text style={[styles.engagementCount, !isOnline && styles.disabled]}>
-              {postView.repostCount || 0}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.engagementButton}>
+            <TouchableOpacity
+              onPress={() => {
+                triggerHaptic('medium');
+                onRepost?.();
+              }}
+              activeOpacity={0.7}
+              disabled={!isOnline}
+              style={styles.iconButton}>
+              <RepostIcon size={18} color={isOnline ? "#9ca3af" : "#4b5563"} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onPressRepostCount}
+              disabled={!onPressRepostCount || (postView.repostCount || 0) === 0}
+              activeOpacity={0.7}>
+              <Text style={[styles.engagementCount, !isOnline && styles.disabled]}>
+                {postView.repostCount || 0}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity
-            style={styles.engagementButton}
-            onPress={() => {
-              triggerHaptic('light');
-              onLike?.();
-            }}
-            activeOpacity={0.7}
-            disabled={!isOnline}>
-            <HeartIcon size={18} color={isOnline ? (isLiked ? '#ef4444' : '#9ca3af') : '#4b5563'} filled={isLiked} />
-            <Text style={[styles.engagementCount, !isOnline && styles.disabled]}>
-              {postView.likeCount || 0}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.engagementButton}>
+            <TouchableOpacity
+              onPress={() => {
+                triggerHaptic('light');
+                onLike?.();
+              }}
+              activeOpacity={0.7}
+              disabled={!isOnline}
+              style={styles.iconButton}>
+              <HeartIcon size={18} color={isOnline ? (isLiked ? '#ef4444' : '#9ca3af') : '#4b5563'} filled={isLiked} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onPressLikeCount}
+              disabled={!onPressLikeCount || (postView.likeCount || 0) === 0}
+              activeOpacity={0.7}>
+              <Text style={[styles.engagementCount, !isOnline && styles.disabled]}>
+                {postView.likeCount || 0}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={styles.engagementButton}
@@ -351,6 +373,9 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 4,
     paddingHorizontal: 12,
+  },
+  iconButton: {
+    padding: 0,
   },
   engagementCount: {
     color: '#9ca3af',

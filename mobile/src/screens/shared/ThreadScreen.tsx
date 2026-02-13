@@ -348,6 +348,21 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
     setIsRefreshing(false);
   };
 
+  const handlePressLikeCount = (postUri: string) => {
+    const encodedUri = encodeURIComponent(postUri);
+    router.push(`/(app)/post/${encodedUri}/likes` as any);
+  };
+
+  const handlePressRepostCount = (postUri: string) => {
+    const encodedUri = encodeURIComponent(postUri);
+    router.push(`/(app)/post/${encodedUri}/reposts` as any);
+  };
+
+  const handlePressQuoteCount = (postUri: string) => {
+    const encodedUri = encodeURIComponent(postUri);
+    router.push(`/(app)/post/${encodedUri}/quotes` as any);
+  };
+
   const isReplyDisabled = !replyText.trim() || replyText.length > MAX_REPLY_LENGTH;
   const replyCharCount = replyText.length;
   const isOverLimit = replyCharCount > MAX_REPLY_LENGTH;
@@ -374,6 +389,9 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
           onReply={() => handleReply(rootPost)}
           onMentionPress={handleMentionPress}
           onHashtagPress={handleHashtagPress}
+          onPressLikeCount={() => handlePressLikeCount(rootPost.post.uri)}
+          onPressRepostCount={() => handlePressRepostCount(rootPost.post.uri)}
+          onPressQuoteCount={() => handlePressQuoteCount(rootPost.post.uri)}
         />
 
         {/* AI Thread Summary */}
@@ -399,6 +417,9 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
               onReply={() => handleReply(reply)}
               onMentionPress={handleMentionPress}
               onHashtagPress={handleHashtagPress}
+              onPressLikeCount={() => handlePressLikeCount(reply.post.uri)}
+              onPressRepostCount={() => handlePressRepostCount(reply.post.uri)}
+              onPressQuoteCount={() => handlePressQuoteCount(reply.post.uri)}
             />
           </View>
         ))}

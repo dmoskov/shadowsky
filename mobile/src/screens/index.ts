@@ -16,3 +16,6 @@ export { AnalyticsScreen } from "./analytics/AnalyticsScreen";
 export { ScheduledPostsScreen } from "./scheduled/ScheduledPostsScreen";
 export { ListsScreen } from "./lists/ListsScreen";
 export { ListTimelineScreen } from "./lists/ListTimelineScreen";
+export { LikesScreen } from "./shared/LikesScreen";
+export { RepostsScreen } from "./shared/RepostsScreen";
+export { QuotesScreen } from "./shared/QuotesScreen";
