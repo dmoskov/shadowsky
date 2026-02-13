@@ -20,6 +20,9 @@ import {
   useSavedFeeds,
   useSaveFeed,
   useUnsaveFeed,
+  usePinFeed,
+  useUnpinFeed,
+  usePinnedFeeds,
 } from '../../hooks/api';
 import {AppBskyFeedDefs} from '@atproto/api';
 
@@ -42,8 +45,15 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
     return new Set(savedFeedsData?.map((feed) => feed.uri) || []);
   }, [savedFeedsData]);
 
+  const {data: pinnedFeedUris} = usePinnedFeeds();
+  const pinnedFeedUrisSet = useMemo(() => {
+    return new Set(pinnedFeedUris || []);
+  }, [pinnedFeedUris]);
+
   const {mutate: saveFeed} = useSaveFeed();
   const {mutate: unsaveFeed} = useUnsaveFeed();
+  const {mutate: pinFeed} = usePinFeed();
+  const {mutate: unpinFeed} = useUnpinFeed();
 
   // Debounce search query
   useEffect(() => {
@@ -160,8 +170,17 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
     }
   };
 
+  const handleTogglePin = (feedUri: string) => {
+    if (pinnedFeedUrisSet.has(feedUri)) {
+      unpinFeed(feedUri);
+    } else {
+      pinFeed(feedUri);
+    }
+  };
+
   const renderFeedCard = ({item}: {item: AppBskyFeedDefs.GeneratorView}) => {
     const isSaved = savedFeedUris.has(item.uri);
+    const isPinned = pinnedFeedUrisSet.has(item.uri);
     const likeCount = item.likeCount || 0;
 
     return (
@@ -185,14 +204,26 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
               by @{item.creator.handle}
             </Text>
           </View>
-          <TouchableOpacity
-            style={[styles.saveButton, isSaved && styles.saveButtonActive]}
-            onPress={() => handleToggleSave(item.uri)}
-            activeOpacity={0.7}>
-            <Text style={[styles.saveButtonText, isSaved && styles.saveButtonTextActive]}>
-              {isSaved ? '✓ Saved' : '+ Save'}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={[styles.saveButton, isSaved && styles.saveButtonActive]}
+              onPress={() => handleToggleSave(item.uri)}
+              activeOpacity={0.7}>
+              <Text style={[styles.saveButtonText, isSaved && styles.saveButtonTextActive]}>
+                {isSaved ? '✓' : '+'}
+              </Text>
+            </TouchableOpacity>
+            {isSaved && (
+              <TouchableOpacity
+                style={[styles.pinButton, isPinned && styles.pinButtonActive]}
+                onPress={() => handleTogglePin(item.uri)}
+                activeOpacity={0.7}>
+                <Text style={[styles.pinButtonText, isPinned && styles.pinButtonTextActive]}>
+                  📌
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
         {item.description && (
           <Text style={styles.feedDescription} numberOfLines={3}>
@@ -201,6 +232,7 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
         )}
         <View style={styles.feedFooter}>
           <Text style={styles.feedLikes}>❤️ {likeCount.toLocaleString()} likes</Text>
+          {isPinned && <Text style={styles.pinnedBadge}>📌 Pinned</Text>}
         </View>
       </TouchableOpacity>
     );
@@ -390,11 +422,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#8899A6',
   },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   saveButton: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: colors.primary,
+    minWidth: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   saveButtonActive: {
     backgroundColor: '#253341',
@@ -402,12 +441,33 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   saveButtonText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
   },
   saveButtonTextActive: {
     color: colors.primary,
+  },
+  pinButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#253341',
+    borderWidth: 1,
+    borderColor: '#38444D',
+    minWidth: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pinButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  pinButtonText: {
+    fontSize: 14,
+  },
+  pinButtonTextActive: {
+    fontSize: 14,
   },
   feedDescription: {
     fontSize: 14,
@@ -418,10 +478,16 @@ const styles = StyleSheet.create({
   feedFooter: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   feedLikes: {
     fontSize: 14,
     color: '#8899A6',
+  },
+  pinnedBadge: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '600',
   },
   loadingContainer: {
     flex: 1,
