@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useMemo } from 'react';
 import {
   FlatList,
   ActivityIndicator,
@@ -14,8 +14,10 @@ import {LoadingState} from './LoadingState';
 import {ErrorState} from './ErrorState';
 import {EmptyState} from './EmptyState';
 import {useNetwork} from '../contexts/NetworkContext';
+import {usePreferences} from '../contexts/PreferencesContext';
 import {colors} from '../constants/theme';
 import {triggerHaptic} from '../utils/haptics';
+import {filterMutedPosts} from '../utils/content-filter';
 
 interface FeedListProps {
   posts: AppBskyFeedDefs.FeedViewPost[];
@@ -35,6 +37,7 @@ interface FeedListProps {
   emptyMessage?: string;
   onMentionPress?: (handle: string, did: string) => void;
   onHashtagPress?: (tag: string) => void;
+  feedType?: "home" | "other";
 }
 
 export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
@@ -55,8 +58,18 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   emptyMessage = 'No posts yet',
   onMentionPress,
   onHashtagPress,
+  feedType = 'other',
 }: FeedListProps, ref) {
   const { isOnline } = useNetwork();
+  const { preferences } = usePreferences();
+
+  // Filter posts based on muted words
+  const filteredPosts = useMemo(() => {
+    if (!preferences?.mutedWords || preferences.mutedWords.length === 0) {
+      return posts;
+    }
+    return filterMutedPosts(posts, preferences.mutedWords, feedType);
+  }, [posts, preferences?.mutedWords, feedType]);
 
   const handleRefresh = () => {
     triggerHaptic('selection');
@@ -102,15 +115,10 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
     return <EmptyState message={emptyMessage} />;
   };
 
-  const handleRefresh = () => {
-    triggerHaptic("selection");
-    onRefresh?.();
-  };
-
   return (
     <FlatList
       ref={ref}
-      data={posts}
+      data={filteredPosts}
       renderItem={renderItem}
       keyExtractor={(item, index) => item.post.uri + index}
       ListEmptyComponent={renderEmpty}
