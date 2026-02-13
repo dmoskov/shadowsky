@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../contexts/AuthContext";
@@ -22,7 +23,7 @@ export function AnalyticsScreen() {
   const { navigateToProfile } = useAppNavigation();
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
 
-  const { data: analytics, isLoading, error } = useUserAnalytics(
+  const { data: analytics, isLoading, error, refetch, isRefetching } = useUserAnalytics(
     account?.handle || "",
     timeRange
   );
@@ -39,6 +40,7 @@ export function AnalyticsScreen() {
     { value: "today", label: "Today" },
     { value: "week", label: "This Week" },
     { value: "month", label: "This Month" },
+    { value: "quarter", label: "Last Quarter" },
   ];
 
   const renderMetricCard = (
@@ -125,7 +127,16 @@ export function AnalyticsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefetching}
+          onRefresh={() => refetch()}
+          tintColor={colors.primary}
+        />
+      }
+    >
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Analytics Dashboard</Text>

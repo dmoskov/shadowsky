@@ -7,7 +7,7 @@ import { withRetry } from "../../utils/with-retry";
 // Note: getProfile and getAuthorFeed are already rate-limited,
 // so analytics functions inherit rate limiting automatically
 
-export type TimeRange = "today" | "week" | "month";
+export type TimeRange = "today" | "week" | "month" | "quarter";
 
 export interface AnalyticsMetrics {
   likesReceived: number;
@@ -50,13 +50,17 @@ export async function getUserAnalytics(
     case "month":
       startDate.setMonth(now.getMonth() - 1);
       break;
+    case "quarter":
+      startDate.setDate(now.getDate() - 90);
+      break;
   }
 
   // Fetch author's posts to calculate engagement metrics
   let cursor: string | undefined;
   let allPosts: AppBskyFeedDefs.FeedViewPost[] = [];
   let hasMore = true;
-  const maxPages = 10; // Limit to prevent excessive API calls
+  // Adjust max pages based on time range (50 posts per page)
+  const maxPages = timeRange === "quarter" ? 6 : timeRange === "month" ? 2 : 1;
   let pageCount = 0;
 
   // Fetch posts until we reach the time range or max pages
