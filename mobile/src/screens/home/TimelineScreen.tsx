@@ -16,6 +16,9 @@ import { useAppNavigation } from "../../hooks/useNavigation";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorState } from "../../components/ErrorState";
 import { colors } from "../../constants/theme";
+import { useOfflineFeedEnhancer } from "../../hooks/useOfflineFeed";
+import StaleContentIndicator from "../../components/StaleContentIndicator";
+import { useOfflineFeedStatus } from "../../hooks/useOfflineFeed";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const GRID_COLUMNS = 3;
@@ -91,7 +94,11 @@ function MediaGridItem({ post, onPress }: MediaGridItemProps) {
 }
 
 export function TimelineScreen() {
-  const { data, isLoading, isRefetching, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useTimeline();
+  const timelineQuery = useTimeline();
+  const enhancedQuery = useOfflineFeedEnhancer(timelineQuery, 'timeline', ['timeline']);
+  const { data, isLoading, isRefetching, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = enhancedQuery;
+  const { isServingCached, isStale, isOnline } = enhancedQuery;
+  const offlineStatus = useOfflineFeedStatus();
   const { navigateToThread } = useAppNavigation();
 
   // Flatten paginated data and filter for posts with images
@@ -163,6 +170,12 @@ export function TimelineScreen() {
 
   return (
     <View style={styles.container}>
+      <StaleContentIndicator
+        isStale={isServingCached || isStale}
+        lastCachedAt={offlineStatus.lastCachedAt}
+        onRetry={isOnline ? refetch : undefined}
+        isOnline={isOnline}
+      />
       <FlatList
         data={postsWithMedia}
         renderItem={renderItem}

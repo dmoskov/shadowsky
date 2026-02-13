@@ -1,9 +1,13 @@
 /**
  * Centralized React Query client configuration
- * Provides unified query defaults, retry logic, and mobile-specific optimizations
+ * Provides unified query defaults, retry logic, mobile-specific optimizations,
+ * and persistent offline cache for viewing content without network connection
  */
 
 import { QueryClient, QueryCache, MutationCache, onlineManager } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState, AppStateStatus } from 'react-native';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { loadPrefetchData, isPrefetchDataStale } from '../services/background-fetch';
@@ -296,3 +300,19 @@ export function setupNetworkListener() {
     onlineManager.setOnline(isOnline);
   });
 }
+
+/**
+ * AsyncStorage-based persister for React Query cache
+ * Enables offline content viewing by persisting query results to device storage
+ */
+export const asyncStoragePersister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+  key: 'REACT_QUERY_OFFLINE_CACHE',
+  throttleTime: 1000, // Throttle writes to reduce storage pressure
+});
+
+/**
+ * Export PersistQueryClientProvider for app wrapper
+ * This should be used in App.tsx to enable persistence
+ */
+export { PersistQueryClientProvider };
