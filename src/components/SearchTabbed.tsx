@@ -1,27 +1,19 @@
-import {
-  AppBskyEmbedExternal,
-  AppBskyEmbedImages,
-  AppBskyEmbedRecordWithMedia,
-  AppBskyEmbedVideo,
-  type AppBskyFeedDefs,
-} from "@atproto/api";
+import { type AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useQuery } from "@tanstack/react-query";
-import { format, formatDistanceToNow, subDays, subMonths } from "date-fns";
+import { format, subDays, subMonths } from "date-fns";
 import {
   ArrowLeft,
   Bookmark,
   BookmarkPlus,
   Calendar,
   Clock,
-  ExternalLink,
   FileText,
   Filter,
   Flame,
   Globe,
   Hash,
   Image,
-  Link,
   List,
   Search as SearchIcon,
   TrendingUp,
@@ -45,329 +37,26 @@ import { useFollowing } from "../hooks/useFollowing";
 import {
   defaultFilters as defaultFacetedFilters,
   type SearchFilters as FacetedSearchFilters,
-  type MediaType,
 } from "../hooks/useSearch";
-import { useMinDuration } from "../hooks/useTiming";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
 import { getProfileCacheService } from "../services/profile-cache-service";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { constructAtUri, parseBskyUrl } from "../utils/url-helpers";
-import { ImageGrid } from "./ImageGrid";
 import { SearchFilterPanel } from "./SearchFilterPanel";
 import { ThreadViewer } from "./ThreadViewer";
-import { LoadingState } from "./ui/LoadingState";
+import { SearchTabFeeds } from "./search/SearchTabFeeds";
+import { SearchTabPosts } from "./search/SearchTabPosts";
+import { SearchTabUsers } from "./search/SearchTabUsers";
+import {
+  buildSearchQuery,
+  parseFacetedFiltersFromParams,
+  serializeFacetedFiltersToParams,
+  type SavedSearch,
+  type SearchFilters,
+  type SearchTab,
+  type UserSuggestion,
+} from "./search/search-utils";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
-
-type SearchTab = "posts" | "users" | "feeds";
-
-interface SearchFilters {
-  query: string;
-  phrases: string[];
-  hashtags: string[];
-  from: string[];
-  mentions: string[];
-  domains: string[];
-  language: string;
-  sinceDate: string;
-  untilDate: string;
-  hasMedia: boolean;
-}
-
-interface UserSuggestion {
-  did: string;
-  handle: string;
-  displayName?: string;
-  avatar?: string;
-  interactionScore?: number;
-}
-
-interface SavedSearch {
-  id: string;
-  query: string;
-  createdAt: number;
-}
-
-// Use AppBskyFeedDefs.GeneratorView for feeds
-
-// Check if a post has media attachments
-const postHasMedia = (post: AppBskyFeedDefs.PostView): boolean => {
-  if (!post.embed) return false;
-
-  const embed = post.embed;
-
-  // Direct image embed
-  if (AppBskyEmbedImages.isView(embed)) {
-    return true;
-  }
-
-  // Record with media (quote post with images)
-  if (
-    AppBskyEmbedRecordWithMedia.isView(embed) &&
-    AppBskyEmbedImages.isView(embed.media)
-  ) {
-    return true;
-  }
-
-  // Video embed
-  if (AppBskyEmbedVideo.isView(embed)) {
-    return true;
-  }
-
-  return false;
-};
-
-// Check if a post has images specifically
-const postHasImages = (post: AppBskyFeedDefs.PostView): boolean => {
-  if (!post.embed) return false;
-  const embed = post.embed;
-
-  if (AppBskyEmbedImages.isView(embed)) {
-    return true;
-  }
-
-  if (
-    AppBskyEmbedRecordWithMedia.isView(embed) &&
-    AppBskyEmbedImages.isView(embed.media)
-  ) {
-    return true;
-  }
-
-  return false;
-};
-
-// Check if a post has videos specifically
-const postHasVideo = (post: AppBskyFeedDefs.PostView): boolean => {
-  if (!post.embed) return false;
-  return AppBskyEmbedVideo.isView(post.embed);
-};
-
-// Check if a post has external links
-const postHasLinks = (post: AppBskyFeedDefs.PostView): boolean => {
-  if (!post.embed) return false;
-  const embed = post.embed;
-
-  if (AppBskyEmbedExternal.isView(embed)) {
-    return true;
-  }
-
-  if (
-    AppBskyEmbedRecordWithMedia.isView(embed) &&
-    AppBskyEmbedExternal.isView(embed.media)
-  ) {
-    return true;
-  }
-
-  return false;
-};
-
-// Check if a post is text-only (no embeds)
-const postIsTextOnly = (post: AppBskyFeedDefs.PostView): boolean => {
-  return !post.embed;
-};
-
-// Check if post meets engagement thresholds
-const postMeetsEngagement = (
-  post: AppBskyFeedDefs.PostView,
-  thresholds: { minLikes: number; minReposts: number; minReplies: number },
-): boolean => {
-  const likes = post.likeCount || 0;
-  const reposts = post.repostCount || 0;
-  const replies = post.replyCount || 0;
-
-  return (
-    likes >= thresholds.minLikes &&
-    reposts >= thresholds.minReposts &&
-    replies >= thresholds.minReplies
-  );
-};
-
-// Filter posts by media type
-const filterByMediaType = (
-  posts: AppBskyFeedDefs.PostView[],
-  mediaType: MediaType,
-): AppBskyFeedDefs.PostView[] => {
-  if (mediaType === "all") return posts;
-
-  switch (mediaType) {
-    case "images":
-      return posts.filter(postHasImages);
-    case "videos":
-      return posts.filter(postHasVideo);
-    case "links":
-      return posts.filter(postHasLinks);
-    case "text-only":
-      return posts.filter(postIsTextOnly);
-    default:
-      return posts;
-  }
-};
-
-// Parse faceted filters from URL search params
-const parseFacetedFiltersFromParams = (
-  searchParams: URLSearchParams,
-): Partial<FacetedSearchFilters> => {
-  const filters: Partial<FacetedSearchFilters> = {};
-
-  const mediaType = searchParams.get("mediaType");
-  if (
-    mediaType &&
-    ["all", "images", "videos", "links", "text-only"].includes(mediaType)
-  ) {
-    filters.mediaType = mediaType as MediaType;
-  }
-
-  const sinceDate = searchParams.get("since");
-  if (sinceDate) filters.sinceDate = sinceDate;
-
-  const untilDate = searchParams.get("until");
-  if (untilDate) filters.untilDate = untilDate;
-
-  const datePreset = searchParams.get("datePreset");
-  if (
-    datePreset &&
-    ["today", "week", "month", "year", "custom"].includes(datePreset)
-  ) {
-    filters.datePreset = datePreset as FacetedSearchFilters["datePreset"];
-  }
-
-  const minLikes = searchParams.get("minLikes");
-  const minReposts = searchParams.get("minReposts");
-  const minReplies = searchParams.get("minReplies");
-  if (minLikes || minReposts || minReplies) {
-    filters.engagement = {
-      minLikes: minLikes ? parseInt(minLikes, 10) : 0,
-      minReposts: minReposts ? parseInt(minReposts, 10) : 0,
-      minReplies: minReplies ? parseInt(minReplies, 10) : 0,
-    };
-  }
-
-  const language = searchParams.get("lang");
-  if (language) filters.language = language;
-
-  const fromUsers = searchParams.get("from");
-  if (fromUsers) filters.fromUsers = fromUsers.split(",");
-
-  return filters;
-};
-
-// Serialize faceted filters to URL search params
-const serializeFacetedFiltersToParams = (
-  filters: FacetedSearchFilters,
-): Record<string, string> => {
-  const params: Record<string, string> = {};
-
-  if (filters.mediaType !== "all") {
-    params.mediaType = filters.mediaType;
-  }
-
-  if (filters.sinceDate) params.since = filters.sinceDate;
-  if (filters.untilDate) params.until = filters.untilDate;
-  if (filters.datePreset) params.datePreset = filters.datePreset;
-
-  if (filters.engagement.minLikes > 0) {
-    params.minLikes = filters.engagement.minLikes.toString();
-  }
-  if (filters.engagement.minReposts > 0) {
-    params.minReposts = filters.engagement.minReposts.toString();
-  }
-  if (filters.engagement.minReplies > 0) {
-    params.minReplies = filters.engagement.minReplies.toString();
-  }
-
-  if (filters.language) params.lang = filters.language;
-  if (filters.fromUsers.length > 0) params.from = filters.fromUsers.join(",");
-
-  return params;
-};
-
-// Extract images from a post
-const getPostImages = (
-  post: AppBskyFeedDefs.PostView,
-): Array<{ thumb: string; fullsize: string; alt?: string }> => {
-  if (!post.embed) return [];
-
-  const embed = post.embed as any;
-  let images: Array<{ thumb: string; fullsize: string; alt?: string }> = [];
-
-  // Extract images from different embed types
-  if (embed.$type === "app.bsky.embed.images#view" && embed.images) {
-    images = embed.images;
-  } else if (
-    embed.$type === "app.bsky.embed.recordWithMedia#view" &&
-    embed.media?.$type === "app.bsky.embed.images#view" &&
-    embed.media.images
-  ) {
-    images = embed.media.images;
-  }
-
-  return images;
-};
-
-// Build search query from filters
-const buildSearchQuery = (searchFilters: SearchFilters) => {
-  const parts: string[] = [];
-
-  // Basic query
-  if (searchFilters.query) {
-    parts.push(searchFilters.query);
-  }
-
-  // Exact phrases
-  searchFilters.phrases.forEach((phrase) => {
-    if (phrase.trim()) {
-      parts.push(`"${phrase.trim()}"`);
-    }
-  });
-
-  // Hashtags
-  searchFilters.hashtags.forEach((tag) => {
-    if (tag.trim()) {
-      parts.push(`#${tag.trim().replace(/^#/, "")}`);
-    }
-  });
-
-  // From users
-  searchFilters.from.forEach((user) => {
-    if (user.trim()) {
-      parts.push(`from:${user.trim().replace(/^@/, "")}`);
-    }
-  });
-
-  // Mentions
-  searchFilters.mentions.forEach((user) => {
-    if (user.trim()) {
-      const cleanUser = user.trim().replace(/^@/, "");
-      if (cleanUser === "me") {
-        parts.push("mentions:me");
-      } else {
-        parts.push(`@${cleanUser}`);
-      }
-    }
-  });
-
-  // Domains
-  searchFilters.domains.forEach((domain) => {
-    if (domain.trim()) {
-      parts.push(`domain:${domain.trim()}`);
-    }
-  });
-
-  // Language
-  if (searchFilters.language) {
-    parts.push(`lang:${searchFilters.language}`);
-  }
-
-  // Date range
-  if (searchFilters.sinceDate) {
-    parts.push(`since:${searchFilters.sinceDate}`);
-  }
-
-  if (searchFilters.untilDate) {
-    parts.push(`until:${searchFilters.untilDate}`);
-  }
-
-  return parts.join(" ");
-};
 
 export const SearchTabbed: React.FC = React.memo(() => {
   const { agent } = useAuth();
@@ -536,7 +225,6 @@ export const SearchTabbed: React.FC = React.memo(() => {
 
   // Main search bar typeahead state
   const [showMainTypeahead, setShowMainTypeahead] = useState(false);
-  const [mainSearchInputFocused, setMainSearchInputFocused] = useState(false);
   const mainSearchInputRef = useRef<HTMLInputElement>(null);
   const mainTypeaheadRef = useRef<HTMLDivElement>(null);
   const debouncedMainSearch = useDebounce(filters.query, 300);
@@ -571,67 +259,33 @@ export const SearchTabbed: React.FC = React.memo(() => {
       const loadFollowersData = async () => {
         try {
           const db = await getFollowerCacheDB();
-          const profileService = getProfileCacheService(agent);
+          const profileCache = getProfileCacheService(agent);
 
-          // Get DIDs from following set
+          // Get all DIDs from following set
           const dids = Array.from(followingSet);
 
-          // Get cached profiles first
-          const cachedProfiles = await db.getProfiles(dids);
-          const interactionStats =
-            await db.getInteractionStatsForMultiple(dids);
+          // First try to get from cache (using getProfilesByDidsWithCache)
+          const cachedMap = await profileCache.getProfilesByDidsWithCache(dids);
 
-          // Build initial list from cache
-          const followers: UserSuggestion[] = [];
-          for (const [did, profile] of cachedProfiles) {
-            followers.push({
-              did: profile.did,
-              handle: profile.handle,
-              displayName: profile.displayName,
-              avatar: profile.avatar,
-              interactionScore:
-                interactionStats.get(did)?.totalInteractions || 0,
+          // Convert map to array and add interaction stats
+          const profiles: UserSuggestion[] = [];
+          for (const [did, cached] of cachedMap) {
+            const stats = await db.getInteractionStats(did);
+            profiles.push({
+              did,
+              handle: cached.handle,
+              displayName: cached.displayName,
+              avatar: cached.avatar,
+              interactionScore: stats?.totalInteractions || 0,
             });
           }
 
           // Sort by interaction score
-          followers.sort(
+          profiles.sort(
             (a, b) => (b.interactionScore || 0) - (a.interactionScore || 0),
           );
 
-          // Update state with cached data first
-          setFollowersWithData(followers);
-
-          // Then fetch any missing profiles in background
-          const missingDids = dids.filter((did) => !cachedProfiles.has(did));
-          if (missingDids.length > 0) {
-            debug.log(
-              `Fetching ${missingDids.length} missing follower profiles`,
-            );
-            const freshProfiles =
-              await profileService.getProfilesByDidsWithCache(missingDids);
-
-            // Update with fresh data
-            const updatedFollowers = [...followers];
-            for (const [did, profile] of freshProfiles) {
-              if (!cachedProfiles.has(did)) {
-                updatedFollowers.push({
-                  did: profile.did,
-                  handle: profile.handle,
-                  displayName: profile.displayName,
-                  avatar: profile.avatar,
-                  interactionScore:
-                    interactionStats.get(did)?.totalInteractions || 0,
-                });
-              }
-            }
-
-            // Re-sort with all data
-            updatedFollowers.sort(
-              (a, b) => (b.interactionScore || 0) - (a.interactionScore || 0),
-            );
-            setFollowersWithData(updatedFollowers);
-          }
+          setFollowersWithData(profiles);
         } catch (error) {
           debug.error("Error loading followers data:", error);
         }
@@ -639,117 +293,65 @@ export const SearchTabbed: React.FC = React.memo(() => {
 
       loadFollowersData();
     }
-  }, [followingSet]);
+  }, [agent, followingSet]);
 
-  // Typeahead query - now includes followers
-  const { data: searchSuggestions } = useQuery({
-    queryKey: ["userTypeahead", debouncedUserSearch],
+  // Typeahead suggestions query for user search
+  const { data: userSuggestions } = useQuery({
+    queryKey: ["userSuggestions", debouncedUserSearch, showingFollowers],
     queryFn: async () => {
-      if (!debouncedUserSearch || debouncedUserSearch.length < 2) return [];
+      if (showingFollowers) {
+        // Return top followers
+        return followersWithData.slice(0, 10);
+      }
 
-      try {
-        const response = await agent!.app.bsky.actor.searchActorsTypeahead({
-          q: debouncedUserSearch,
-          limit: 8,
-        });
-
-        return response.data.actors.map((actor) => ({
-          did: actor.did,
-          handle: actor.handle,
-          displayName: actor.displayName,
-          avatar: actor.avatar,
-        }));
-      } catch (error) {
-        console.error("Error searching users:", error);
+      if (!debouncedUserSearch || debouncedUserSearch.length < 2) {
         return [];
       }
+
+      const response = await agent!.app.bsky.actor.searchActorsTypeahead({
+        q: debouncedUserSearch,
+        limit: 10,
+      });
+
+      return response.data.actors.map((actor) => ({
+        did: actor.did,
+        handle: actor.handle,
+        displayName: actor.displayName,
+        avatar: actor.avatar,
+      }));
     },
     enabled:
-      !!agent && !!debouncedUserSearch && debouncedUserSearch.length >= 2,
+      !!agent &&
+      (showingFollowers ||
+        (!!debouncedUserSearch && debouncedUserSearch.length >= 2)),
   });
 
-  // Combine followers and search results
-  const userSuggestions = React.useMemo(() => {
-    if (showingFollowers && (!userSearchQuery || userSearchQuery.length < 2)) {
-      // Show all followers when arrow down pressed
-      return followersWithData.slice(0, 20); // Limit to top 20
-    }
-
-    if (!debouncedUserSearch || debouncedUserSearch.length < 2) {
-      return [];
-    }
-
-    // Filter followers that match the search
-    const searchLower = debouncedUserSearch.toLowerCase();
-    const matchingFollowers = followersWithData.filter(
-      (f) =>
-        f?.handle?.toLowerCase().includes(searchLower) ||
-        f?.displayName?.toLowerCase().includes(searchLower),
-    );
-
-    // Get search results that aren't followers
-    const followerDids = new Set(followersWithData.map((f) => f.did));
-    const nonFollowerResults = (searchSuggestions || []).filter(
-      (s) => !followerDids.has(s.did),
-    );
-
-    // Combine: followers first, then other results
-    return [...matchingFollowers, ...nonFollowerResults].slice(0, 10);
-  }, [
-    debouncedUserSearch,
-    searchSuggestions,
-    followersWithData,
-    showingFollowers,
-    userSearchQuery,
-  ]);
-
-  // Handle clicks outside suggestions
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node)
-      ) {
-        // Don't close if we're clicking on an input
-        const target = event.target as HTMLElement;
-        if (!target.closest("input")) {
-          setShowSuggestions(false);
-          setActiveUserInput(null);
-          setUserSearchQuery("");
-          setSelectedSuggestionIndex(-1);
-        }
+  // Typeahead for main search input
+  const { data: mainTypeaheadSuggestions } = useQuery({
+    queryKey: ["mainSearchTypeahead", debouncedMainSearch],
+    queryFn: async () => {
+      if (!debouncedMainSearch || debouncedMainSearch.length < 2) {
+        return [];
       }
-    };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+      const response = await agent!.app.bsky.actor.searchActorsTypeahead({
+        q: debouncedMainSearch,
+        limit: 5,
+      });
 
-  // Ensure selected item is visible when navigating with keyboard
-  useEffect(() => {
-    if (selectedSuggestionIndex >= 0 && suggestionsRef.current) {
-      const selectedButton =
-        suggestionsRef.current.querySelectorAll("button")[
-          selectedSuggestionIndex
-        ];
-      if (selectedButton) {
-        selectedButton.scrollIntoView({ block: "nearest" });
-      }
-    }
-  }, [selectedSuggestionIndex]);
+      return response.data.actors.map((actor) => ({
+        did: actor.did,
+        handle: actor.handle,
+        displayName: actor.displayName,
+        avatar: actor.avatar,
+      }));
+    },
+    enabled:
+      !!agent && !!debouncedMainSearch && debouncedMainSearch.length >= 2,
+  });
 
-  // No longer auto-trigger search - user must click search button or press Enter
-  useEffect(() => {
-    // Clear active search if the query is cleared
-    if (!searchQuery.trim()) {
-      setActiveSearchQuery("");
-    }
-  }, [searchQuery]);
-
-  // Trending topics query for empty state
-  const { data: trendingTopics, isLoading: isLoadingTrending } = useQuery({
+  // Fetch trending topics
+  const { data: trendingTopics } = useQuery({
     queryKey: ["trendingTopics"],
     queryFn: async () => {
       try {
@@ -759,233 +361,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
         return response.data;
       } catch (error) {
         debug.error("Error fetching trending topics:", error);
-        return null;
+        return { topics: [], suggested: [] };
       }
     },
     enabled: !!agent,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 5 * 60 * 1000,
-  });
-
-  // Main search typeahead query for user suggestions
-  const { data: mainTypeaheadUsers } = useQuery({
-    queryKey: ["mainSearchTypeahead", debouncedMainSearch],
-    queryFn: async () => {
-      if (!debouncedMainSearch || debouncedMainSearch.length < 2) return [];
-
-      try {
-        const response = await agent!.app.bsky.actor.searchActorsTypeahead({
-          q: debouncedMainSearch,
-          limit: 5,
-        });
-
-        return response.data.actors.map((actor) => ({
-          did: actor.did,
-          handle: actor.handle,
-          displayName: actor.displayName,
-          avatar: actor.avatar,
-        }));
-      } catch (error) {
-        debug.error("Error in main search typeahead:", error);
-        return [];
-      }
-    },
-    enabled:
-      !!agent &&
-      !!debouncedMainSearch &&
-      debouncedMainSearch.length >= 2 &&
-      mainSearchInputFocused,
-  });
-
-  // Handle click outside main typeahead
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        mainTypeaheadRef.current &&
-        !mainTypeaheadRef.current.contains(event.target as Node) &&
-        mainSearchInputRef.current &&
-        !mainSearchInputRef.current.contains(event.target as Node)
-      ) {
-        setShowMainTypeahead(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  // Show typeahead when input is focused and has content or history
-  useEffect(() => {
-    if (
-      mainSearchInputFocused &&
-      (searchHistory.length > 0 ||
-        savedSearches.length > 0 ||
-        (mainTypeaheadUsers && mainTypeaheadUsers.length > 0))
-    ) {
-      setShowMainTypeahead(true);
-    }
-  }, [
-    mainSearchInputFocused,
-    searchHistory,
-    savedSearches,
-    mainTypeaheadUsers,
-  ]);
-
-  // Search posts query
-  const {
-    data: postsSearchResults,
-    isLoading: isLoadingPosts,
-    error: postsError,
-  } = useQuery({
-    queryKey: ["searchPosts", activeSearchQuery, filters.hasMedia, sortOrder],
-    queryFn: async () => {
-      if (!activeSearchQuery.trim()) return null;
-
-      const response = await agent!.app.bsky.feed.searchPosts({
-        q: activeSearchQuery,
-        limit: 50,
-        sort: sortOrder,
-      });
-
-      // Filter by media if needed
-      if (filters.hasMedia) {
-        const filteredPosts = response.data.posts.filter((post) =>
-          postHasMedia(post),
-        );
-        return {
-          ...response.data,
-          posts: filteredPosts,
-        };
-      }
-
-      return response.data;
-    },
-    enabled: !!agent && !!activeSearchQuery.trim() && activeTab === "posts",
-  });
-
-  // Apply faceted filters to search results (client-side filtering)
-  const filteredPostsSearchResults = useMemo(() => {
-    if (!postsSearchResults?.posts) return postsSearchResults;
-
-    let posts = postsSearchResults.posts;
-
-    // Apply media type filter
-    posts = filterByMediaType(posts, facetedFilters.mediaType);
-
-    // Apply engagement thresholds
-    const hasEngagementFilters =
-      facetedFilters.engagement.minLikes > 0 ||
-      facetedFilters.engagement.minReposts > 0 ||
-      facetedFilters.engagement.minReplies > 0;
-
-    if (hasEngagementFilters) {
-      posts = posts.filter((post) =>
-        postMeetsEngagement(post, facetedFilters.engagement),
-      );
-    }
-
-    return { ...postsSearchResults, posts };
-  }, [postsSearchResults, facetedFilters.mediaType, facetedFilters.engagement]);
-
-  // Search users query
-  const {
-    data: usersSearchResults,
-    isLoading: isLoadingUsers,
-    error: usersError,
-  } = useQuery({
-    queryKey: ["searchUsers", activeSearchQuery],
-    queryFn: async () => {
-      if (!activeSearchQuery.trim()) return null;
-
-      const response = await agent!.app.bsky.actor.searchActors({
-        q: activeSearchQuery,
-        limit: 50,
-      });
-
-      return response.data;
-    },
-    enabled: !!agent && !!activeSearchQuery.trim() && activeTab === "users",
-  });
-
-  // Search feeds query
-  const {
-    data: feedsSearchResults,
-    isLoading: isLoadingFeeds,
-    error: feedsError,
-  } = useQuery({
-    queryKey: ["searchFeeds", activeSearchQuery],
-    queryFn: async () => {
-      if (!activeSearchQuery.trim()) return null;
-
-      try {
-        // Get popular feeds and user's feeds
-        const [popularResponse, suggestedResponse] = await Promise.all([
-          agent!.app.bsky.unspecced.getPopularFeedGenerators({
-            limit: 50,
-          }),
-          agent!.app.bsky.feed.getSuggestedFeeds({
-            limit: 50,
-          }),
-        ]);
-
-        // Combine and deduplicate feeds
-        const allFeeds = [
-          ...popularResponse.data.feeds,
-          ...suggestedResponse.data.feeds,
-        ];
-        const uniqueFeeds = Array.from(
-          new Map(allFeeds.map((feed) => [feed.uri, feed])).values(),
-        );
-
-        // Filter feeds based on search query
-        const searchLower = activeSearchQuery.toLowerCase();
-        const filteredFeeds = uniqueFeeds.filter((feed: any) => {
-          const displayName = feed.displayName?.toLowerCase() || "";
-          const description = feed.description?.toLowerCase() || "";
-          const creatorHandle = feed.creator?.handle?.toLowerCase() || "";
-          const creatorName = feed.creator?.displayName?.toLowerCase() || "";
-
-          return (
-            displayName.includes(searchLower) ||
-            description.includes(searchLower) ||
-            creatorHandle.includes(searchLower) ||
-            creatorName.includes(searchLower)
-          );
-        });
-
-        return {
-          feeds: filteredFeeds,
-        };
-      } catch (error) {
-        debug.error("Error searching feeds:", error);
-        // Fallback to just suggested feeds
-        const response = await agent!.app.bsky.feed.getSuggestedFeeds({
-          limit: 100,
-        });
-
-        const searchLower = activeSearchQuery.toLowerCase();
-        const filteredFeeds = response.data.feeds.filter((feed: any) => {
-          const displayName = feed.displayName?.toLowerCase() || "";
-          const description = feed.description?.toLowerCase() || "";
-          const creatorHandle = feed.creator?.handle?.toLowerCase() || "";
-          const creatorName = feed.creator?.displayName?.toLowerCase() || "";
-
-          return (
-            displayName.includes(searchLower) ||
-            description.includes(searchLower) ||
-            creatorHandle.includes(searchLower) ||
-            creatorName.includes(searchLower)
-          );
-        });
-
-        return {
-          feeds: filteredFeeds,
-        };
-      }
-    },
-    enabled: !!agent && !!activeSearchQuery.trim() && activeTab === "feeds",
   });
 
   // Fetch thread for a post
@@ -1066,70 +446,61 @@ export const SearchTabbed: React.FC = React.memo(() => {
       if (response.data.thread.$type === "app.bsky.feed.defs#threadViewPost") {
         const thread = response.data.thread as AppBskyFeedDefs.ThreadViewPost;
         if (thread.parent) {
-          const parentPosts = collectParents(thread.parent);
-          posts.push(...parentPosts);
-        }
-
-        // Add the current post
-        if (thread.post) {
-          posts.push(thread.post);
+          posts.push(...collectParents(thread.parent));
         }
       }
 
-      // Then collect all replies
-      const extractReplies = (thread: any) => {
-        if (thread.replies) {
-          thread.replies.forEach((reply: any) => {
-            if (reply.post) {
-              posts.push(reply.post);
-            }
-            extractReplies(reply);
-          });
-        }
-      };
+      // Add the main post
+      if (response.data.thread.$type === "app.bsky.feed.defs#threadViewPost") {
+        const thread = response.data.thread as AppBskyFeedDefs.ThreadViewPost;
+        posts.push(thread.post);
 
-      extractReplies(response.data.thread);
+        // Add replies
+        if (thread.replies) {
+          const extractReplies = (replies: any[]) => {
+            replies.forEach((reply) => {
+              if (reply.$type === "app.bsky.feed.defs#threadViewPost") {
+                posts.push(reply.post);
+                if (reply.replies) {
+                  extractReplies(reply.replies);
+                }
+              }
+            });
+          };
+          extractReplies(thread.replies);
+        }
+      }
 
       setThreadPosts(posts);
-      setSelectedPostUri(posts[0]?.uri || uri); // Set to root if available
-      setHighlightPostUri(null); // No highlight needed when showing from root
+      setSelectedPostUri(uri);
+      setHighlightPostUri(null);
       setShowThreadViewer(true);
     } catch (error) {
       debug.error("Error fetching thread:", error);
-      // Still show the single post if thread fetch fails
-      const singlePost = filteredPostsSearchResults?.posts.find(
-        (p) => p.uri === uri,
-      );
-      if (singlePost) {
-        setThreadPosts([singlePost]);
-        setSelectedPostUri(uri);
-        setHighlightPostUri(null);
-        setShowThreadViewer(true);
-      }
     } finally {
       setIsLoadingThread(false);
     }
   };
 
-  // Handle search result click
+  // Handle post click (open thread viewer)
   const handlePostClick = async (post: AppBskyFeedDefs.PostView) => {
-    await fetchThread(post.uri, false); // Don't find root for search results, just show the thread from that point
+    await fetchThread(post.uri);
   };
 
-  // Handle Bluesky URL input
+  // Handle Bluesky URL submission
   const handleBskyUrlSubmit = async (url: string) => {
-    if (!agent) return;
+    setIsLoadingThread(true);
     const parsed = parseBskyUrl(url);
     if (!parsed || !parsed.postId) {
+      setIsLoadingThread(false);
       return;
     }
 
-    setIsLoadingThread(true);
     try {
       // If we have a handle, we need to resolve it to a DID first
       let uri: string;
       if (parsed.handle) {
-        const profile = await agent.getProfile({
+        const profile = await agent!.getProfile({
           actor: parsed.handle,
         });
         uri = constructAtUri(profile.data.did, parsed.postId);
@@ -1275,39 +646,6 @@ export const SearchTabbed: React.FC = React.memo(() => {
     }
   };
 
-  // Get current search results and loading state based on active tab
-  const currentSearchResults = () => {
-    switch (activeTab) {
-      case "posts":
-        return {
-          data: filteredPostsSearchResults,
-          isLoading: isLoadingPosts,
-          error: postsError,
-        };
-      case "users":
-        return {
-          data: usersSearchResults,
-          isLoading: isLoadingUsers,
-          error: usersError,
-        };
-      case "feeds":
-        return {
-          data: feedsSearchResults,
-          isLoading: isLoadingFeeds,
-          error: feedsError,
-        };
-    }
-  };
-
-  const {
-    data: searchResults,
-    isLoading: isLoadingRaw,
-    error,
-  } = currentSearchResults();
-
-  // Apply minimum duration to prevent jarring flash of loading state
-  const isLoading = useMinDuration(isLoadingRaw);
-
   return (
     <div className="mx-auto min-h-screen max-w-4xl p-4">
       {/* Thread Viewer */}
@@ -1324,284 +662,184 @@ export const SearchTabbed: React.FC = React.memo(() => {
                 setSelectedPostUri(null);
                 setHighlightPostUri(null);
               }}
-              className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all hover:bg-white hover:bg-opacity-10"
-              style={{ color: "var(--asph-primary)" }}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-white hover:bg-opacity-10"
+              style={{ color: "var(--asph-text-primary)" }}
             >
               <ArrowLeft size={16} />
-              Back to search
+              Back to Search
             </button>
-            {selectedPostUri && (
-              <a
-                href={`https://bsky.app/profile/${threadPosts[0]?.author?.handle || "unknown"}/post/${selectedPostUri.split("/").pop()}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-all"
-                style={{
-                  backgroundColor: "var(--asph-primary)",
-                  color: "white",
-                }}
-              >
-                View on Bluesky
-                <ExternalLink size={14} />
-              </a>
-            )}
           </div>
+
           {isLoadingThread ? (
-            <div className="py-8 text-center">
+            <div className="flex items-center justify-center py-8">
               <div
-                className="mx-auto h-10 w-10 animate-spin rounded-full border-b-2"
+                className="h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"
                 style={{ borderColor: "var(--asph-primary)" }}
-              ></div>
-              <p
-                className="mt-3 text-sm"
-                style={{ color: "var(--asph-text-secondary)" }}
-              >
-                Loading thread...
-              </p>
+              />
             </div>
           ) : (
             <ThreadViewer
               posts={threadPosts}
               rootUri={selectedPostUri || undefined}
               highlightUri={highlightPostUri || undefined}
-              className="asph-scrollbar max-h-[70vh] overflow-y-auto"
+              onPostClick={handlePostClick}
             />
           )}
         </div>
       ) : (
         <>
-          {/* Search Input Box */}
+          {/* Main Search Box */}
           <div
-            className={`asph-glass relative mb-6 rounded-xl p-3 sm:p-4 ${showMainTypeahead ? "z-[100]" : ""}`}
+            className="asph-glass mb-4 rounded-xl p-4"
             style={{ border: "1px solid var(--asph-border-primary)" }}
           >
-            <div className="relative flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
-              <div className="flex flex-1 items-center gap-2">
-                <SearchIcon
-                  size={20}
-                  style={{ color: "var(--asph-text-secondary)" }}
-                  className="hidden sm:block"
-                />
-                <input
-                  ref={mainSearchInputRef}
-                  type="text"
-                  placeholder={
-                    activeTab === "posts"
-                      ? "Search posts or paste a Bluesky URL..."
-                      : activeTab === "users"
-                        ? "Search for users..."
-                        : "Search for feeds..."
-                  }
-                  value={filters.query}
-                  onChange={(e) =>
-                    setFilters((prev) => ({ ...prev, query: e.target.value }))
-                  }
-                  onFocus={() => {
-                    setMainSearchInputFocused(true);
-                    if (
-                      searchHistory.length > 0 ||
-                      savedSearches.length > 0 ||
-                      filters.query.length >= 2
-                    ) {
-                      setShowMainTypeahead(true);
-                    }
-                  }}
-                  onBlur={() => {
-                    setMainSearchInputFocused(false);
-                    // Delay hiding to allow clicks on typeahead
-                    setTimeout(() => {
-                      setShowMainTypeahead(false);
-                    }, 200);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      setShowMainTypeahead(false);
-                      handleSearch();
-                    } else if (e.key === "Escape") {
-                      setShowMainTypeahead(false);
-                    }
-                  }}
-                  className="flex-1 rounded-lg border px-3 py-2 text-sm transition-all focus-visible:outline-none focus-visible:ring-2"
-                  style={{
-                    backgroundColor: "var(--asph-bg-secondary)",
-                    borderColor: "var(--asph-border-primary)",
-                    color: "var(--asph-text-primary)",
-                    ["--tw-ring-color" as any]: "var(--asph-primary)",
-                  }}
-                  aria-label="Search"
-                  aria-autocomplete="list"
-                  aria-expanded={showMainTypeahead}
-                />
-
-                {/* Typeahead Dropdown */}
-                {showMainTypeahead &&
-                  (searchHistory.length > 0 ||
-                    savedSearches.length > 0 ||
-                    (mainTypeaheadUsers && mainTypeaheadUsers.length > 0)) && (
-                    <div
-                      ref={mainTypeaheadRef}
-                      className="asph-scrollbar absolute left-0 right-0 top-full z-50 mt-1 max-h-80 overflow-y-auto rounded-lg border shadow-lg sm:left-8"
-                      style={{
-                        backgroundColor: "var(--asph-bg-secondary)",
-                        borderColor: "var(--asph-border-primary)",
+            <div className="relative mb-3">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <SearchIcon
+                    className="absolute left-3 top-1/2 -translate-y-1/2"
+                    size={18}
+                    style={{ color: "var(--asph-text-secondary)" }}
+                  />
+                  <input
+                    ref={mainSearchInputRef}
+                    type="text"
+                    value={filters.query}
+                    onChange={(e) => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        query: e.target.value,
+                      }));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSearch();
+                        setShowMainTypeahead(false);
+                      } else if (e.key === "Escape") {
+                        setShowMainTypeahead(false);
+                      }
+                    }}
+                    onFocus={() => {
+                      if (
+                        filters.query.length >= 2 ||
+                        searchHistory.length > 0 ||
+                        savedSearches.length > 0
+                      ) {
+                        setShowMainTypeahead(true);
+                      }
+                    }}
+                    onBlur={() => {
+                      setTimeout(() => setShowMainTypeahead(false), 200);
+                    }}
+                    placeholder="Search posts, users, or paste a Bluesky post URL..."
+                    className="w-full rounded-xl border py-3 pl-10 pr-4 focus-visible:outline-none focus-visible:ring-2"
+                    style={{
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      borderColor: "var(--asph-border-primary)",
+                      color: "var(--asph-text-primary)",
+                      ["--tw-ring-color" as any]: "var(--asph-primary)",
+                    }}
+                  />
+                  {filters.query && (
+                    <button
+                      onClick={() => {
+                        setFilters((prev) => ({ ...prev, query: "" }));
+                        setActiveSearchQuery("");
+                        mainSearchInputRef.current?.focus();
                       }}
-                      role="listbox"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 transition-opacity hover:opacity-70"
+                      style={{ color: "var(--asph-text-secondary)" }}
                     >
-                      {/* Saved Searches Section */}
-                      {savedSearches.length > 0 && (
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleSearch}
+                  disabled={!filters.query.trim()}
+                  className="flex items-center gap-2 rounded-xl px-4 py-3 font-medium transition-all disabled:opacity-50"
+                  style={{
+                    backgroundColor: "var(--asph-primary)",
+                    color: "white",
+                  }}
+                >
+                  <SearchIcon size={16} />
+                  Search
+                </button>
+
+                {filters.query.trim() && (
+                  <button
+                    onClick={() => {
+                      if (isSearchSaved) {
+                        const search = savedSearches.find(
+                          (s) => s.query === filters.query.trim(),
+                        );
+                        if (search) removeSavedSearch(search.id);
+                      } else {
+                        saveSearch(filters.query.trim());
+                      }
+                    }}
+                    className="rounded-xl p-3 transition-all hover:bg-white hover:bg-opacity-10"
+                    style={{ color: "var(--asph-text-secondary)" }}
+                    title={isSearchSaved ? "Remove from saved" : "Save search"}
+                  >
+                    {isSearchSaved ? (
+                      <Bookmark size={18} fill="currentColor" />
+                    ) : (
+                      <BookmarkPlus size={18} />
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {/* Main search typeahead */}
+              {showMainTypeahead &&
+                ((mainTypeaheadSuggestions &&
+                  mainTypeaheadSuggestions.length > 0) ||
+                  searchHistory.length > 0 ||
+                  savedSearches.length > 0 ||
+                  (trendingTopics &&
+                    (trendingTopics.topics?.length > 0 ||
+                      trendingTopics.suggested?.length > 0))) && (
+                  <div
+                    ref={mainTypeaheadRef}
+                    className="absolute z-10 mt-2 w-full overflow-hidden rounded-xl border shadow-lg"
+                    style={{
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      borderColor: "var(--asph-border-primary)",
+                    }}
+                  >
+                    {/* User suggestions */}
+                    {mainTypeaheadSuggestions &&
+                      mainTypeaheadSuggestions.length > 0 && (
                         <div
                           className="border-b"
                           style={{ borderColor: "var(--asph-border-primary)" }}
                         >
-                          <div className="flex items-center justify-between px-3 py-2">
-                            <span
-                              className="flex items-center gap-1.5 text-xs font-medium"
-                              style={{ color: "var(--asph-text-secondary)" }}
-                            >
-                              <Bookmark size={12} />
-                              Saved Searches
-                            </span>
+                          <div
+                            className="px-3 py-2 text-xs font-medium"
+                            style={{ color: "var(--asph-text-secondary)" }}
+                          >
+                            Users
                           </div>
-                          {savedSearches.slice(0, 5).map((saved) => (
-                            <div
-                              key={saved.id}
-                              className="flex cursor-pointer items-center justify-between px-3 py-2 transition-colors hover:bg-white hover:bg-opacity-5"
-                              role="option"
-                            >
-                              <button
-                                className="flex flex-1 items-center gap-2 text-left"
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  setFilters((prev) => ({
-                                    ...prev,
-                                    query: saved.query,
-                                  }));
-                                  setActiveSearchQuery(saved.query);
-                                  setShowMainTypeahead(false);
-                                }}
-                              >
-                                <Bookmark
-                                  size={14}
-                                  style={{ color: "var(--asph-primary)" }}
-                                />
-                                <span
-                                  className="text-sm"
-                                  style={{ color: "var(--asph-text-primary)" }}
-                                >
-                                  {saved.query}
-                                </span>
-                              </button>
-                              <button
-                                onMouseDown={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  removeSavedSearch(saved.id);
-                                }}
-                                className="rounded p-1 transition-opacity hover:opacity-70"
-                                style={{ color: "var(--asph-text-secondary)" }}
-                              >
-                                <X size={14} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Recent Searches Section */}
-                      {searchHistory.length > 0 && (
-                        <div
-                          className="border-b"
-                          style={{ borderColor: "var(--asph-border-primary)" }}
-                        >
-                          <div className="flex items-center justify-between px-3 py-2">
-                            <span
-                              className="flex items-center gap-1.5 text-xs font-medium"
-                              style={{ color: "var(--asph-text-secondary)" }}
-                            >
-                              <Clock size={12} />
-                              Recent
-                            </span>
-                            <button
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                clearSearchHistory();
-                              }}
-                              className="text-xs transition-opacity hover:opacity-70"
-                              style={{ color: "var(--asph-text-secondary)" }}
-                            >
-                              Clear
-                            </button>
-                          </div>
-                          {searchHistory.slice(0, 5).map((query) => (
-                            <button
-                              key={`search-history-${query}`}
-                              className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-white hover:bg-opacity-5"
-                              onMouseDown={(e) => {
-                                e.preventDefault();
-                                setFilters((prev) => ({ ...prev, query }));
-                                setActiveSearchQuery(query);
-                                setShowMainTypeahead(false);
-                              }}
-                              role="option"
-                            >
-                              <Clock
-                                size={14}
-                                style={{ color: "var(--asph-text-tertiary)" }}
-                              />
-                              <span
-                                className="text-sm"
-                                style={{ color: "var(--asph-text-primary)" }}
-                              >
-                                {query}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* User Suggestions Section */}
-                      {mainTypeaheadUsers && mainTypeaheadUsers.length > 0 && (
-                        <div>
-                          <div className="px-3 py-2">
-                            <span
-                              className="flex items-center gap-1.5 text-xs font-medium"
-                              style={{ color: "var(--asph-text-secondary)" }}
-                            >
-                              <User size={12} />
-                              Users
-                            </span>
-                          </div>
-                          {mainTypeaheadUsers.map((user) => (
+                          {mainTypeaheadSuggestions.map((user) => (
                             <button
                               key={user.did}
-                              className="flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-white hover:bg-opacity-5"
                               onMouseDown={(e) => {
                                 e.preventDefault();
                                 navigate(`/profile/${user.handle}`);
-                                setShowMainTypeahead(false);
                               }}
-                              role="option"
+                              className="flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-white hover:bg-opacity-10"
                             >
-                              {user.avatar ? (
-                                <img
-                                  src={proxifyBskyImage(user.avatar)}
-                                  alt=""
-                                  className="h-8 w-8 rounded-full"
-                                />
-                              ) : (
-                                <div
-                                  className="flex h-8 w-8 items-center justify-center rounded-full"
-                                  style={{
-                                    backgroundColor: "var(--asph-bg-tertiary)",
-                                  }}
-                                >
-                                  <User
-                                    size={16}
-                                    style={{
-                                      color: "var(--asph-text-secondary)",
-                                    }}
+                              {user.avatar && (
+                                <ProfileHoverCard handle={user.handle}>
+                                  <img
+                                    src={proxifyBskyImage(user.avatar)}
+                                    alt=""
+                                    className="h-8 w-8 rounded-full"
                                   />
-                                </div>
+                                </ProfileHoverCard>
                               )}
                               <div className="min-w-0 flex-1">
                                 <div
@@ -1623,336 +861,220 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           ))}
                         </div>
                       )}
-                    </div>
-                  )}
-              </div>
-              <div className="flex gap-2">
-                {/* Save Search Button */}
-                {filters.query.trim() && (
-                  <button
-                    onClick={() => {
-                      if (isSearchSaved) {
-                        const saved = savedSearches.find(
-                          (s) => s.query === filters.query.trim(),
-                        );
-                        if (saved) removeSavedSearch(saved.id);
-                      } else {
-                        saveSearch(filters.query.trim());
-                      }
-                    }}
-                    className="flex items-center justify-center rounded-lg px-2 py-2 transition-all hover:opacity-80"
-                    style={{
-                      backgroundColor: isSearchSaved
-                        ? "var(--asph-primary)"
-                        : "var(--asph-bg-secondary)",
-                      color: isSearchSaved
-                        ? "white"
-                        : "var(--asph-text-secondary)",
-                      borderWidth: "1px",
-                      borderColor: isSearchSaved
-                        ? "var(--asph-primary)"
-                        : "var(--asph-border-primary)",
-                    }}
-                    title={isSearchSaved ? "Remove from saved" : "Save search"}
-                    aria-label={
-                      isSearchSaved
-                        ? "Remove from saved searches"
-                        : "Save this search"
-                    }
-                  >
-                    {isSearchSaved ? (
-                      <Bookmark size={16} />
-                    ) : (
-                      <BookmarkPlus size={16} />
+
+                    {/* Saved searches */}
+                    {savedSearches.length > 0 && (
+                      <div
+                        className="border-b"
+                        style={{ borderColor: "var(--asph-border-primary)" }}
+                      >
+                        <div className="flex items-center justify-between px-3 py-2">
+                          <span
+                            className="text-xs font-medium"
+                            style={{ color: "var(--asph-text-secondary)" }}
+                          >
+                            Saved Searches
+                          </span>
+                        </div>
+                        {savedSearches.map((search) => (
+                          <div
+                            key={search.id}
+                            className="group flex items-center gap-2 px-3 py-2 transition-colors hover:bg-white hover:bg-opacity-10"
+                          >
+                            <button
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setFilters((prev) => ({
+                                  ...prev,
+                                  query: search.query,
+                                }));
+                                setShowMainTypeahead(false);
+                                setTimeout(() => handleSearch(), 100);
+                              }}
+                              className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                            >
+                              <Bookmark
+                                size={14}
+                                style={{ color: "var(--asph-primary)" }}
+                              />
+                              <span
+                                className="truncate text-sm"
+                                style={{ color: "var(--asph-text-primary)" }}
+                              >
+                                {search.query}
+                              </span>
+                            </button>
+                            <button
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                removeSavedSearch(search.id);
+                              }}
+                              className="rounded p-1 opacity-0 transition-opacity hover:bg-white hover:bg-opacity-10 group-hover:opacity-100"
+                              style={{ color: "var(--asph-text-secondary)" }}
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     )}
-                  </button>
+
+                    {/* Recent searches */}
+                    {searchHistory.length > 0 && (
+                      <div
+                        className="border-b"
+                        style={{ borderColor: "var(--asph-border-primary)" }}
+                      >
+                        <div className="flex items-center justify-between px-3 py-2">
+                          <span
+                            className="text-xs font-medium"
+                            style={{ color: "var(--asph-text-secondary)" }}
+                          >
+                            Recent Searches
+                          </span>
+                          <button
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              clearSearchHistory();
+                            }}
+                            className="text-xs hover:underline"
+                            style={{ color: "var(--asph-primary)" }}
+                          >
+                            Clear
+                          </button>
+                        </div>
+                        {searchHistory.map((query, i) => (
+                          <button
+                            key={`${query}-${i}`}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              setFilters((prev) => ({ ...prev, query }));
+                              setShowMainTypeahead(false);
+                              setTimeout(() => handleSearch(), 100);
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-white hover:bg-opacity-10"
+                          >
+                            <Clock
+                              size={14}
+                              style={{ color: "var(--asph-text-secondary)" }}
+                            />
+                            <span
+                              className="truncate text-sm"
+                              style={{ color: "var(--asph-text-primary)" }}
+                            >
+                              {query}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Trending topics */}
+                    {trendingTopics &&
+                      (trendingTopics.topics?.length > 0 ||
+                        trendingTopics.suggested?.length > 0) && (
+                        <div>
+                          <div
+                            className="px-3 py-2 text-xs font-medium"
+                            style={{ color: "var(--asph-text-secondary)" }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Flame size={14} />
+                              Trending Topics
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2 px-3 pb-3">
+                            {[
+                              ...(trendingTopics.topics || []),
+                              ...(trendingTopics.suggested || []),
+                            ]
+                              .slice(0, 10)
+                              .map((topic: any) => (
+                                <button
+                                  key={topic.topic || topic}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    const topicText =
+                                      topic.displayName || topic.topic || topic;
+                                    setFilters((prev) => ({
+                                      ...prev,
+                                      query: `#${topicText}`,
+                                    }));
+                                    setShowMainTypeahead(false);
+                                    setTimeout(() => handleSearch(), 100);
+                                  }}
+                                  className="rounded-full px-3 py-1 text-xs transition-all hover:bg-white hover:bg-opacity-20"
+                                  style={{
+                                    backgroundColor: "var(--asph-bg-tertiary)",
+                                    color: "var(--asph-text-secondary)",
+                                  }}
+                                >
+                                  {topic.displayName || topic.topic || topic}
+                                </button>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                  </div>
                 )}
+            </div>
+
+            {/* Advanced Search & Faceted Filters Buttons */}
+            <div className="flex items-center gap-2">
+              {activeTab === "posts" && (
                 <button
-                  onClick={handleSearch}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all sm:flex-none sm:px-4"
+                  onClick={() => setShowFacetedFilters(!showFacetedFilters)}
+                  className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                    showFacetedFilters
+                      ? ""
+                      : "hover:bg-white hover:bg-opacity-10"
+                  }`}
                   style={{
-                    backgroundColor: "var(--asph-primary)",
-                    color: "white",
+                    backgroundColor: showFacetedFilters
+                      ? "var(--asph-primary)"
+                      : hasFacetedFiltersActive
+                        ? "rgba(201, 168, 76, 0.2)"
+                        : "transparent",
+                    color: showFacetedFilters
+                      ? "white"
+                      : "var(--asph-text-secondary)",
                   }}
                 >
-                  <SearchIcon size={16} />
-                  <span className="hidden sm:inline">Search</span>
+                  <Filter size={16} />
+                  Filters
+                  {hasFacetedFiltersActive && !showFacetedFilters && (
+                    <span
+                      className="flex h-2 w-2 rounded-full"
+                      style={{ backgroundColor: "var(--asph-primary)" }}
+                    />
+                  )}
                 </button>
-                {activeTab === "posts" && (
-                  <>
-                    <button
-                      onClick={() => setShowAdvanced(!showAdvanced)}
-                      className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-all ${
-                        showAdvanced ? "text-white" : ""
-                      }`}
-                      style={{
-                        backgroundColor: showAdvanced
-                          ? "var(--asph-primary)"
-                          : "var(--asph-bg-secondary)",
-                        color: showAdvanced
-                          ? "white"
-                          : "var(--asph-text-secondary)",
-                        borderWidth: "1px",
-                        borderColor: "var(--asph-border-primary)",
-                      }}
-                    >
-                      <Filter size={16} />
-                      <span className="hidden sm:inline">Query</span>
-                    </button>
-                    <button
-                      onClick={() => setShowFacetedFilters(!showFacetedFilters)}
-                      className={`relative flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-all ${
-                        showFacetedFilters || hasFacetedFiltersActive
-                          ? "text-white"
-                          : ""
-                      }`}
-                      style={{
-                        backgroundColor:
-                          showFacetedFilters || hasFacetedFiltersActive
-                            ? "var(--asph-primary)"
-                            : "var(--asph-bg-secondary)",
-                        color:
-                          showFacetedFilters || hasFacetedFiltersActive
-                            ? "white"
-                            : "var(--asph-text-secondary)",
-                        borderWidth: "1px",
-                        borderColor:
-                          showFacetedFilters || hasFacetedFiltersActive
-                            ? "var(--asph-primary)"
-                            : "var(--asph-border-primary)",
-                      }}
-                      title="Media, date, and engagement filters"
-                    >
-                      <Filter size={16} />
-                      <span className="hidden sm:inline">Filters</span>
-                      {hasFacetedFiltersActive && (
-                        <span
-                          className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold"
-                          style={{
-                            backgroundColor: "var(--asph-error)",
-                            color: "white",
-                          }}
-                        >
-                          !
-                        </span>
-                      )}
-                    </button>
-                  </>
-                )}
-              </div>
+              )}
+
+              {activeTab === "posts" && (
+                <button
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                    showAdvanced ? "" : "hover:bg-white hover:bg-opacity-10"
+                  }`}
+                  style={{
+                    backgroundColor: showAdvanced
+                      ? "var(--asph-primary)"
+                      : "transparent",
+                    color: showAdvanced
+                      ? "white"
+                      : "var(--asph-text-secondary)",
+                  }}
+                >
+                  <TrendingUp size={16} />
+                  Advanced
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Faceted Search Filter Panel */}
-          {activeTab === "posts" && showFacetedFilters && (
-            <div
-              className="asph-glass mb-4 rounded-xl"
-              style={{ border: "1px solid var(--asph-border-primary)" }}
-            >
-              <SearchFilterPanel
-                filters={facetedFilters}
-                setFilters={setFacetedFilters}
-                onClose={() => setShowFacetedFilters(false)}
-              />
-            </div>
-          )}
-
-          {/* Search History */}
-          {!activeSearchQuery && searchHistory.length > 0 && (
-            <div className="mb-4">
-              <div className="mb-2 flex items-center justify-between">
-                <span
-                  className="text-xs font-medium"
-                  style={{ color: "var(--asph-text-secondary)" }}
-                >
-                  Recent searches
-                </span>
-                <button
-                  onClick={clearSearchHistory}
-                  className="text-xs transition-opacity hover:opacity-70"
-                  style={{ color: "var(--asph-text-secondary)" }}
-                >
-                  Clear all
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {searchHistory.slice(0, 5).map((query) => (
-                  <button
-                    key={`search-pill-${query}`}
-                    onClick={() => {
-                      setFilters((prev) => ({ ...prev, query }));
-                      setActiveSearchQuery(query);
-                    }}
-                    className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs transition-all hover:opacity-80"
-                    style={{
-                      backgroundColor: "var(--asph-bg-secondary)",
-                      color: "var(--asph-text-secondary)",
-                      borderWidth: "1px",
-                      borderColor: "var(--asph-border-primary)",
-                    }}
-                  >
-                    <SearchIcon size={12} />
-                    {query}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Trending Topics Section - Show when no active search */}
-          {!activeSearchQuery && trendingTopics && (
-            <div
-              className="asph-glass mb-6 rounded-xl p-4"
-              style={{ border: "1px solid var(--asph-border-primary)" }}
-            >
-              <div className="mb-4 flex items-center gap-2">
-                <TrendingUp
-                  size={20}
-                  style={{ color: "var(--asph-primary)" }}
-                />
-                <h2
-                  className="text-base font-semibold"
-                  style={{ color: "var(--asph-text-primary)" }}
-                >
-                  Trending on Bluesky
-                </h2>
-              </div>
-
-              {isLoadingTrending ? (
-                <div className="flex items-center justify-center py-4">
-                  <div
-                    className="h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"
-                    style={{ borderColor: "var(--asph-primary)" }}
-                  />
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {/* Main trending topics */}
-                  {trendingTopics.topics &&
-                    trendingTopics.topics.length > 0 && (
-                      <div>
-                        <div className="mb-2 flex items-center gap-1.5">
-                          <Flame
-                            size={14}
-                            style={{ color: "var(--asph-error)" }}
-                          />
-                          <span
-                            className="text-xs font-medium"
-                            style={{ color: "var(--asph-text-secondary)" }}
-                          >
-                            Hot right now
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {trendingTopics.topics.slice(0, 8).map((topic) => (
-                            <button
-                              key={topic.topic}
-                              onClick={() => {
-                                const searchTerm =
-                                  topic.displayName || topic.topic;
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  query: searchTerm,
-                                }));
-                                setActiveSearchQuery(searchTerm);
-                                addToSearchHistory(searchTerm);
-                              }}
-                              className="group flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-all hover:shadow-md"
-                              style={{
-                                backgroundColor: "var(--asph-bg-secondary)",
-                                borderWidth: "1px",
-                                borderColor: "var(--asph-border-primary)",
-                              }}
-                            >
-                              <Hash
-                                size={14}
-                                className="transition-colors group-hover:text-[var(--asph-primary)]"
-                                style={{ color: "var(--asph-text-tertiary)" }}
-                              />
-                              <span
-                                className="font-medium transition-colors group-hover:text-[var(--asph-primary)]"
-                                style={{ color: "var(--asph-text-primary)" }}
-                              >
-                                {topic.displayName || topic.topic}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Suggested topics */}
-                  {trendingTopics.suggested &&
-                    trendingTopics.suggested.length > 0 && (
-                      <div className="mt-4">
-                        <div className="mb-2 flex items-center gap-1.5">
-                          <TrendingUp
-                            size={14}
-                            style={{ color: "var(--asph-text-secondary)" }}
-                          />
-                          <span
-                            className="text-xs font-medium"
-                            style={{ color: "var(--asph-text-secondary)" }}
-                          >
-                            Suggested for you
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {trendingTopics.suggested.slice(0, 6).map((topic) => (
-                            <button
-                              key={topic.topic}
-                              onClick={() => {
-                                const searchTerm =
-                                  topic.displayName || topic.topic;
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  query: searchTerm,
-                                }));
-                                setActiveSearchQuery(searchTerm);
-                                addToSearchHistory(searchTerm);
-                              }}
-                              className="group flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
-                              style={{
-                                backgroundColor: "transparent",
-                                borderWidth: "1px",
-                                borderColor: "var(--asph-border-primary)",
-                              }}
-                            >
-                              <Hash
-                                size={12}
-                                style={{ color: "var(--asph-text-tertiary)" }}
-                              />
-                              <span
-                                style={{
-                                  color: "var(--asph-text-secondary)",
-                                }}
-                              >
-                                {topic.displayName || topic.topic}
-                              </span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Empty state if no topics */}
-                  {(!trendingTopics.topics ||
-                    trendingTopics.topics.length === 0) &&
-                    (!trendingTopics.suggested ||
-                      trendingTopics.suggested.length === 0) && (
-                      <div
-                        className="py-4 text-center text-sm"
-                        style={{ color: "var(--asph-text-secondary)" }}
-                      >
-                        No trending topics available right now
-                      </div>
-                    )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Search Tabs - Separate Layer */}
+          {/* Search Tabs */}
           <div className="mb-2 flex gap-2">
             <button
               onClick={() => setActiveTab("posts")}
@@ -1972,28 +1094,6 @@ export const SearchTabbed: React.FC = React.memo(() => {
             >
               <FileText size={16} />
               Posts
-              {activeTab === "posts" &&
-                filteredPostsSearchResults?.posts &&
-                filteredPostsSearchResults.posts.length > 0 && (
-                  <span
-                    className="ml-1 rounded-full px-1.5 py-0.5 text-xs font-normal"
-                    style={{
-                      backgroundColor: "var(--asph-primary)",
-                      color: "white",
-                      opacity: 0.9,
-                    }}
-                  >
-                    {
-                      filteredPostsSearchResults.posts.filter(
-                        (post) =>
-                          !isPostHidden(post.uri) &&
-                          !isUserMuted(post.author.did) &&
-                          !isUserBlocked(post.author.did) &&
-                          !isThreadMuted(post.uri),
-                      ).length
-                    }
-                  </span>
-                )}
             </button>
             <button
               onClick={() => setActiveTab("users")}
@@ -2013,25 +1113,6 @@ export const SearchTabbed: React.FC = React.memo(() => {
             >
               <Users size={16} />
               Users
-              {activeTab === "users" &&
-                usersSearchResults?.actors &&
-                usersSearchResults.actors.length > 0 && (
-                  <span
-                    className="ml-1 rounded-full px-1.5 py-0.5 text-xs font-normal"
-                    style={{
-                      backgroundColor: "var(--asph-primary)",
-                      color: "white",
-                      opacity: 0.9,
-                    }}
-                  >
-                    {
-                      usersSearchResults.actors.filter(
-                        (user) =>
-                          !isUserMuted(user.did) && !isUserBlocked(user.did),
-                      ).length
-                    }
-                  </span>
-                )}
             </button>
             <button
               onClick={() => setActiveTab("feeds")}
@@ -2051,20 +1132,6 @@ export const SearchTabbed: React.FC = React.memo(() => {
             >
               <List size={16} />
               Feeds
-              {activeTab === "feeds" &&
-                feedsSearchResults?.feeds &&
-                feedsSearchResults.feeds.length > 0 && (
-                  <span
-                    className="ml-1 rounded-full px-1.5 py-0.5 text-xs font-normal"
-                    style={{
-                      backgroundColor: "var(--asph-primary)",
-                      color: "white",
-                      opacity: 0.9,
-                    }}
-                  >
-                    {feedsSearchResults.feeds.length}
-                  </span>
-                )}
             </button>
           </div>
 
@@ -2092,11 +1159,6 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       sortOrder === "latest"
                         ? "white"
                         : "var(--asph-text-secondary)",
-                    borderWidth: "1px",
-                    borderColor:
-                      sortOrder === "latest"
-                        ? "var(--asph-primary)"
-                        : "var(--asph-border-primary)",
                   }}
                 >
                   Latest
@@ -2115,11 +1177,6 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       sortOrder === "top"
                         ? "white"
                         : "var(--asph-text-secondary)",
-                    borderWidth: "1px",
-                    borderColor:
-                      sortOrder === "top"
-                        ? "var(--asph-primary)"
-                        : "var(--asph-border-primary)",
                   }}
                 >
                   Top
@@ -2128,1747 +1185,803 @@ export const SearchTabbed: React.FC = React.memo(() => {
             </div>
           )}
 
-          {/* Quick Filters (for posts tab) */}
-          {activeTab === "posts" &&
-            !showAdvanced &&
-            filters.from.length === 0 &&
-            !filters.sinceDate &&
-            !filters.untilDate &&
-            filters.phrases.length === 0 &&
-            filters.hashtags.length === 0 &&
-            filters.mentions.length === 0 &&
-            filters.domains.length === 0 &&
-            !filters.language && (
-              <div className="mb-4 flex flex-wrap gap-2">
-                <button
-                  onClick={() =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      hasMedia: !prev.hasMedia,
-                    }))
-                  }
-                  className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-sm transition-colors ${
-                    filters.hasMedia ? "" : "opacity-60"
-                  }`}
-                  style={{
-                    color: filters.hasMedia
-                      ? "white"
-                      : "var(--asph-text-secondary)",
-                    backgroundColor: filters.hasMedia
-                      ? "var(--asph-primary)"
-                      : "var(--asph-bg-secondary)",
-                    borderWidth: "1px",
-                    borderColor: filters.hasMedia
-                      ? "var(--asph-primary)"
-                      : "var(--asph-border-primary)",
-                  }}
-                >
-                  <Image size={14} />
-                  Media only
-                </button>
-                <button
-                  onClick={() => addToArrayFilter("from", "")}
-                  className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm opacity-60 transition-all hover:opacity-100"
-                  style={{
-                    color: "var(--asph-text-secondary)",
-                    backgroundColor: "var(--asph-bg-secondary)",
-                    borderWidth: "1px",
-                    borderColor: "var(--asph-border-primary)",
-                  }}
-                >
-                  <User size={14} />
-                  From user
-                </button>
-                <button
-                  onClick={() => {
-                    const today = new Date();
-                    const sevenDaysAgo = subDays(today, 7);
-                    setFilters((prev) => ({
-                      ...prev,
-                      sinceDate: format(sevenDaysAgo, "yyyy-MM-dd"),
-                      untilDate: format(today, "yyyy-MM-dd"),
-                    }));
-                  }}
-                  className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm opacity-60 transition-all hover:opacity-100"
-                  style={{
-                    color: "var(--asph-text-secondary)",
-                    backgroundColor: "var(--asph-bg-secondary)",
-                    borderWidth: "1px",
-                    borderColor: "var(--asph-border-primary)",
-                  }}
-                >
-                  <Calendar size={14} />
-                  Past week
-                </button>
-              </div>
-            )}
+          {/* Faceted Filters Panel (for posts tab) */}
+          {activeTab === "posts" && showFacetedFilters && (
+            <div className="mb-4">
+              <SearchFilterPanel
+                filters={facetedFilters}
+                setFilters={setFacetedFilters}
+              />
+            </div>
+          )}
 
-          {/* Advanced Filters Box (only show when there are filters or advanced mode) */}
-          {activeTab === "posts" &&
-            (filters.from.length > 0 ||
-              filters.sinceDate ||
-              filters.untilDate ||
-              filters.phrases.length > 0 ||
-              filters.hashtags.length > 0 ||
-              filters.mentions.length > 0 ||
-              filters.domains.length > 0 ||
-              filters.language ||
-              showAdvanced) && (
-              <div
-                className="asph-glass mb-4 rounded-xl p-3 sm:p-4"
-                style={{ border: "1px solid var(--asph-border-primary)" }}
+          {/* Advanced Search (for posts tab) */}
+          {showAdvanced && activeTab === "posts" && (
+            <div
+              className="asph-glass mb-4 rounded-xl p-4"
+              style={{ border: "1px solid var(--asph-border-primary)" }}
+            >
+              <h3
+                className="mb-4 text-lg font-semibold"
+                style={{ color: "var(--asph-text-primary)" }}
               >
-                {/* Filter Action Buttons - Compact when no filters (only for posts) */}
-                {activeTab === "posts" &&
-                filters.from.length === 0 &&
-                !filters.sinceDate &&
-                !filters.untilDate &&
-                filters.phrases.length === 0 &&
-                filters.hashtags.length === 0 &&
-                filters.mentions.length === 0 &&
-                filters.domains.length === 0 &&
-                !filters.language &&
-                !filters.hasMedia ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    <button
-                      onClick={() =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          hasMedia: !prev.hasMedia,
-                        }))
-                      }
-                      className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80 ${
-                        filters.hasMedia ? "ring-2" : ""
-                      }`}
-                      style={{
-                        color: filters.hasMedia
-                          ? "white"
-                          : "var(--asph-text-secondary)",
-                        backgroundColor: filters.hasMedia
-                          ? "var(--asph-primary)"
-                          : "var(--asph-bg-secondary)",
-                        borderWidth: "1px",
-                        borderColor: filters.hasMedia
-                          ? "var(--asph-primary)"
-                          : "var(--asph-border-primary)",
-                        ["--tw-ring-color" as any]: "var(--asph-primary)",
-                      }}
-                    >
-                      <Image size={12} />
-                      Media attached
-                    </button>
-                    <button
-                      onClick={() => addToArrayFilter("from", "")}
-                      className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
-                      style={{
-                        color: "var(--asph-text-secondary)",
-                        backgroundColor: "var(--asph-bg-secondary)",
-                        borderWidth: "1px",
-                        borderColor: "var(--asph-border-primary)",
-                      }}
-                    >
-                      <User size={12} />
-                      From user
-                    </button>
-                    <button
-                      onClick={() => {
-                        const today = new Date();
-                        const sevenDaysAgo = subDays(today, 7);
-                        setFilters((prev) => ({
-                          ...prev,
-                          sinceDate: format(sevenDaysAgo, "yyyy-MM-dd"),
-                          untilDate: format(today, "yyyy-MM-dd"),
-                        }));
-                      }}
-                      className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
-                      style={{
-                        color: "var(--asph-text-secondary)",
-                        backgroundColor: "var(--asph-bg-secondary)",
-                        borderWidth: "1px",
-                        borderColor: "var(--asph-border-primary)",
-                      }}
-                    >
-                      <Calendar size={12} />
-                      Date range
-                    </button>
-                    {showAdvanced && (
-                      <>
-                        <button
-                          key="phrases"
-                          onClick={() => addToArrayFilter("phrases", "")}
-                          className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
-                          style={{
-                            color: "var(--asph-text-secondary)",
-                            backgroundColor: "var(--asph-bg-secondary)",
-                            borderWidth: "1px",
-                            borderColor: "var(--asph-border-primary)",
-                          }}
-                        >
-                          <SearchIcon size={12} />
-                          Phrase
-                        </button>
-                        <button
-                          key="hashtags"
-                          onClick={() => addToArrayFilter("hashtags", "")}
-                          className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
-                          style={{
-                            color: "var(--asph-text-secondary)",
-                            backgroundColor: "var(--asph-bg-secondary)",
-                            borderWidth: "1px",
-                            borderColor: "var(--asph-border-primary)",
-                          }}
-                        >
-                          <Hash size={12} />
-                          Tag
-                        </button>
-                        <button
-                          key="mentions"
-                          onClick={() => addToArrayFilter("mentions", "")}
-                          className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
-                          style={{
-                            color: "var(--asph-text-secondary)",
-                            backgroundColor: "var(--asph-bg-secondary)",
-                            borderWidth: "1px",
-                            borderColor: "var(--asph-border-primary)",
-                          }}
-                        >
-                          <User size={12} />
-                          Mentions
-                        </button>
-                        <button
-                          key="domains"
-                          onClick={() => addToArrayFilter("domains", "")}
-                          className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
-                          style={{
-                            color: "var(--asph-text-secondary)",
-                            backgroundColor: "var(--asph-bg-secondary)",
-                            borderWidth: "1px",
-                            borderColor: "var(--asph-border-primary)",
-                          }}
-                        >
-                          <Link size={12} />
-                          Links
-                        </button>
-                        <button
-                          key="language"
-                          onClick={() =>
-                            setFilters((prev) => ({ ...prev, language: "en" }))
-                          }
-                          className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
-                          style={{
-                            color: "var(--asph-text-secondary)",
-                            backgroundColor: "var(--asph-bg-secondary)",
-                            borderWidth: "1px",
-                            borderColor: "var(--asph-border-primary)",
-                          }}
-                        >
-                          <Globe size={12} />
-                          Lang
-                        </button>
-                      </>
-                    )}
-                  </div>
-                ) : activeTab === "posts" ? (
-                  /* Expanded Filters for posts */
-                  <div className="mt-3 space-y-3">
-                    {/* Media Filter */}
-                    <div>
-                      <label
-                        className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--asph-text-secondary)" }}
+                Advanced Search
+              </h3>
+
+              <div className="space-y-4">
+                {/* Exact Phrases */}
+                <div>
+                  <label
+                    className="mb-2 flex items-center gap-2 text-sm font-medium"
+                    style={{ color: "var(--asph-text-secondary)" }}
+                  >
+                    <FileText size={16} />
+                    Exact Phrases
+                  </label>
+                  <div className="space-y-2">
+                    {filters.phrases.map((phrase, i) => (
+                      <div
+                        key={`phrase-${phrase}-${i}`}
+                        className="flex items-center gap-2"
                       >
-                        <Image size={16} />
-                        Media Filter
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() =>
+                        <input
+                          type="text"
+                          value={phrase}
+                          onChange={(e) => {
+                            const newPhrases = [...filters.phrases];
+                            newPhrases[i] = e.target.value;
                             setFilters((prev) => ({
                               ...prev,
-                              hasMedia: !prev.hasMedia,
-                            }))
-                          }
-                          className={`rounded-lg border px-3 py-2 text-sm transition-all ${
-                            filters.hasMedia ? "ring-2" : ""
-                          }`}
+                              phrases: newPhrases,
+                            }));
+                          }}
+                          placeholder="e.g., artificial intelligence"
+                          className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
                           style={{
-                            backgroundColor: filters.hasMedia
-                              ? "var(--asph-primary)"
-                              : "var(--asph-bg-secondary)",
-                            borderColor: filters.hasMedia
-                              ? "var(--asph-primary)"
-                              : "var(--asph-border-primary)",
-                            color: filters.hasMedia
-                              ? "white"
-                              : "var(--asph-text-primary)",
+                            backgroundColor: "var(--asph-bg-secondary)",
+                            borderColor: "var(--asph-border-primary)",
+                            color: "var(--asph-text-primary)",
                             ["--tw-ring-color" as any]: "var(--asph-primary)",
                           }}
-                        >
-                          {filters.hasMedia ? "✓ " : ""}Show only posts with
-                          media
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* From Users */}
-                    <div>
-                      <label
-                        className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--asph-text-secondary)" }}
-                      >
-                        <User size={16} />
-                        From Users
-                      </label>
-                      <div className="space-y-2">
-                        {filters.from.map((user, i) => (
-                          <div
-                            key={`from-user-${user}-${i}`}
-                            className="relative"
-                          >
-                            <div className="flex items-center gap-2">
-                              <input
-                                ref={(el) =>
-                                  (inputRefs.current[`from-${i}`] = el)
-                                }
-                                type="text"
-                                value={user}
-                                onChange={(e) =>
-                                  handleUserInputChange(
-                                    "from",
-                                    i,
-                                    e.target.value,
-                                  )
-                                }
-                                onKeyDown={(e) => handleKeyDown(e)}
-                                onFocus={() => {
-                                  setActiveUserInput({
-                                    field: "from",
-                                    index: i,
-                                  });
-                                  setUserSearchQuery(user);
-                                  setShowingFollowers(false);
-                                  if (user.length >= 2)
-                                    setShowSuggestions(true);
-                                }}
-                                onBlur={() => {
-                                  // Use setTimeout to allow click events on suggestions to fire first
-                                  setTimeout(() => {
-                                    if (
-                                      activeUserInput?.field === "from" &&
-                                      activeUserInput?.index === i
-                                    ) {
-                                      setShowSuggestions(false);
-                                      setShowingFollowers(false);
-                                      setSelectedSuggestionIndex(-1);
-                                    }
-                                  }, 200);
-                                }}
-                                placeholder="e.g., jay.bsky.team or me"
-                                className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
-                                style={{
-                                  backgroundColor: "var(--asph-bg-secondary)",
-                                  borderColor: "var(--asph-border-primary)",
-                                  color: "var(--asph-text-primary)",
-                                  ["--tw-ring-color" as any]:
-                                    "var(--asph-primary)",
-                                }}
-                              />
-                              <button
-                                onClick={() => removeFromArrayFilter("from", i)}
-                                className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                                style={{ color: "var(--asph-text-secondary)" }}
-                              >
-                                <X size={16} />
-                              </button>
-                            </div>
-
-                            {/* Typeahead suggestions */}
-                            {showSuggestions &&
-                              activeUserInput?.field === "from" &&
-                              activeUserInput?.index === i &&
-                              userSuggestions &&
-                              userSuggestions.length > 0 && (
-                                <div
-                                  ref={suggestionsRef}
-                                  className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border shadow-lg"
-                                  style={{
-                                    backgroundColor: "var(--asph-bg-secondary)",
-                                    borderColor: "var(--asph-border-primary)",
-                                  }}
-                                >
-                                  {userSuggestions.map((suggestion, idx) => {
-                                    const isFollower = followingSet?.has(
-                                      suggestion.did,
-                                    );
-                                    return (
-                                      <button
-                                        key={suggestion.did}
-                                        onMouseDown={(e) => {
-                                          e.preventDefault(); // Prevent focus loss
-                                          handleUserSelect(suggestion);
-                                        }}
-                                        onMouseEnter={() =>
-                                          setSelectedSuggestionIndex(idx)
-                                        }
-                                        className={`flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors ${
-                                          idx === selectedSuggestionIndex
-                                            ? "bg-opacity-20"
-                                            : "hover:bg-opacity-10"
-                                        } hover:bg-white`}
-                                        style={{
-                                          backgroundColor:
-                                            idx === selectedSuggestionIndex
-                                              ? "rgba(201, 168, 76, 0.1)"
-                                              : "transparent",
-                                        }}
-                                      >
-                                        {suggestion.avatar && (
-                                          <ProfileHoverCard
-                                            handle={suggestion.handle}
-                                          >
-                                            <img
-                                              src={proxifyBskyImage(
-                                                suggestion.avatar,
-                                              )}
-                                              alt=""
-                                              className="h-8 w-8 rounded-full"
-                                            />
-                                          </ProfileHoverCard>
-                                        )}
-                                        <div className="min-w-0 flex-1">
-                                          <div className="flex items-center gap-2">
-                                            <ProfileHoverCard
-                                              handle={suggestion.handle}
-                                            >
-                                              <span
-                                                className="truncate font-medium"
-                                                style={{
-                                                  color:
-                                                    "var(--asph-text-primary)",
-                                                }}
-                                              >
-                                                {suggestion.displayName ||
-                                                  suggestion.handle}
-                                              </span>
-                                            </ProfileHoverCard>
-                                            {isFollower && (
-                                              <span
-                                                className="rounded px-1.5 py-0.5 text-xs"
-                                                style={{
-                                                  backgroundColor:
-                                                    "var(--asph-primary)",
-                                                  color: "white",
-                                                  opacity: 0.8,
-                                                }}
-                                              >
-                                                Following
-                                              </span>
-                                            )}
-                                          </div>
-                                          <div
-                                            className="truncate text-sm"
-                                            style={{
-                                              color:
-                                                "var(--asph-text-secondary)",
-                                            }}
-                                          >
-                                            @{suggestion.handle}
-                                          </div>
-                                        </div>
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                          </div>
-                        ))}
+                        />
                         <button
-                          onClick={() => addToArrayFilter("from", "")}
-                          className="rounded-lg px-3 py-1.5 text-sm transition-colors"
-                          style={{
-                            color: "var(--asph-primary)",
-                            backgroundColor: "var(--asph-bg-secondary)",
-                            borderWidth: "1px",
-                            borderColor: "var(--asph-border-primary)",
-                          }}
-                        >
-                          + Add user
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Date Range */}
-                    <div>
-                      <label
-                        className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--asph-text-secondary)" }}
-                      >
-                        <Calendar size={16} />
-                        Date Range
-                      </label>
-
-                      {/* Date Presets */}
-                      <div className="mb-2 flex flex-wrap gap-1.5">
-                        <button
-                          onClick={() => {
-                            const today = new Date();
-                            const sevenDaysAgo = subDays(today, 7);
-                            setFilters((prev) => ({
-                              ...prev,
-                              sinceDate: format(sevenDaysAgo, "yyyy-MM-dd"),
-                              untilDate: format(today, "yyyy-MM-dd"),
-                            }));
-                          }}
-                          className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
-                          style={{
-                            backgroundColor: "var(--asph-bg-secondary)",
-                            color: "var(--asph-primary)",
-                            borderWidth: "1px",
-                            borderColor: "var(--asph-border-primary)",
-                          }}
-                        >
-                          7d
-                        </button>
-                        <button
-                          onClick={() => {
-                            const today = new Date();
-                            const thirtyDaysAgo = subDays(today, 30);
-                            setFilters((prev) => ({
-                              ...prev,
-                              sinceDate: format(thirtyDaysAgo, "yyyy-MM-dd"),
-                              untilDate: format(today, "yyyy-MM-dd"),
-                            }));
-                          }}
-                          className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
-                          style={{
-                            backgroundColor: "var(--asph-bg-secondary)",
-                            color: "var(--asph-primary)",
-                            borderWidth: "1px",
-                            borderColor: "var(--asph-border-primary)",
-                          }}
-                        >
-                          30d
-                        </button>
-                        <button
-                          onClick={() => {
-                            const today = new Date();
-                            const threeMonthsAgo = subMonths(today, 3);
-                            setFilters((prev) => ({
-                              ...prev,
-                              sinceDate: format(threeMonthsAgo, "yyyy-MM-dd"),
-                              untilDate: format(today, "yyyy-MM-dd"),
-                            }));
-                          }}
-                          className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
-                          style={{
-                            backgroundColor: "var(--asph-bg-secondary)",
-                            color: "var(--asph-primary)",
-                            borderWidth: "1px",
-                            borderColor: "var(--asph-border-primary)",
-                          }}
-                        >
-                          3m
-                        </button>
-                        <button
-                          onClick={() => {
-                            const today = new Date();
-                            const oneYearAgo = subMonths(today, 12);
-                            setFilters((prev) => ({
-                              ...prev,
-                              sinceDate: format(oneYearAgo, "yyyy-MM-dd"),
-                              untilDate: format(today, "yyyy-MM-dd"),
-                            }));
-                          }}
-                          className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
-                          style={{
-                            backgroundColor: "var(--asph-bg-secondary)",
-                            color: "var(--asph-primary)",
-                            borderWidth: "1px",
-                            borderColor: "var(--asph-border-primary)",
-                          }}
-                        >
-                          1y
-                        </button>
-                        {(filters.sinceDate || filters.untilDate) && (
-                          <button
-                            onClick={() =>
-                              setFilters((prev) => ({
-                                ...prev,
-                                sinceDate: "",
-                                untilDate: "",
-                              }))
-                            }
-                            className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
-                            style={{
-                              backgroundColor: "var(--asph-border-primary)",
-                              color: "var(--asph-text-secondary)",
-                            }}
-                          >
-                            Clear
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Date Inputs */}
-                      <div className="flex items-center gap-2 text-xs">
-                        <label
-                          htmlFor="search-date-from"
+                          onClick={() => removeFromArrayFilter("phrases", i)}
+                          className="rounded-lg p-2 transition-opacity hover:opacity-70"
                           style={{ color: "var(--asph-text-secondary)" }}
                         >
-                          from
-                        </label>
-                        <div className="relative">
-                          <input
-                            id="search-date-from"
-                            type="date"
-                            value={filters.sinceDate}
-                            max={filters.untilDate || undefined}
-                            onChange={(e) =>
-                              setFilters((prev) => ({
-                                ...prev,
-                                sinceDate: e.target.value,
-                              }))
-                            }
-                            className="cursor-pointer rounded-md border px-2 py-1 pr-7 text-xs focus-visible:outline-none focus-visible:ring-2"
-                            style={{
-                              backgroundColor: "var(--asph-bg-secondary)",
-                              borderColor: "var(--asph-border-primary)",
-                              color: "var(--asph-text-primary)",
-                              ["--tw-ring-color" as any]: "var(--asph-primary)",
-                              colorScheme: "dark",
-                              width: "140px",
-                            }}
-                            aria-describedby={
-                              filters.sinceDate &&
-                              filters.untilDate &&
-                              new Date(filters.sinceDate) >
-                                new Date(filters.untilDate)
-                                ? "date-error"
-                                : undefined
-                            }
-                          />
-                          {filters.sinceDate && (
-                            <button
-                              onClick={() =>
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  sinceDate: "",
-                                }))
-                              }
-                              className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 transition-opacity hover:opacity-70"
-                              style={{ color: "var(--asph-text-secondary)" }}
-                              aria-label="Clear from date"
-                            >
-                              <X size={12} aria-hidden="true" />
-                            </button>
-                          )}
-                        </div>
-                        <label
-                          htmlFor="search-date-to"
-                          style={{ color: "var(--asph-text-secondary)" }}
-                        >
-                          to
-                        </label>
-                        <div className="relative">
-                          <input
-                            id="search-date-to"
-                            type="date"
-                            value={filters.untilDate}
-                            min={filters.sinceDate || undefined}
-                            onChange={(e) =>
-                              setFilters((prev) => ({
-                                ...prev,
-                                untilDate: e.target.value,
-                              }))
-                            }
-                            className="cursor-pointer rounded-md border px-2 py-1 pr-7 text-xs focus-visible:outline-none focus-visible:ring-2"
-                            style={{
-                              backgroundColor: "var(--asph-bg-secondary)",
-                              borderColor: "var(--asph-border-primary)",
-                              color: "var(--asph-text-primary)",
-                              ["--tw-ring-color" as any]: "var(--asph-primary)",
-                              colorScheme: "dark",
-                              width: "140px",
-                            }}
-                            aria-describedby={
-                              filters.sinceDate &&
-                              filters.untilDate &&
-                              new Date(filters.sinceDate) >
-                                new Date(filters.untilDate)
-                                ? "date-error"
-                                : undefined
-                            }
-                          />
-                          {filters.untilDate && (
-                            <button
-                              onClick={() =>
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  untilDate: "",
-                                }))
-                              }
-                              className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 transition-opacity hover:opacity-70"
-                              style={{ color: "var(--asph-text-secondary)" }}
-                              aria-label="Clear to date"
-                            >
-                              <X size={12} aria-hidden="true" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Date validation message */}
-                      {filters.sinceDate &&
-                        filters.untilDate &&
-                        new Date(filters.sinceDate) >
-                          new Date(filters.untilDate) && (
-                          <p
-                            id="date-error"
-                            role="alert"
-                            className="mt-2 text-xs"
-                            style={{ color: "var(--asph-error)" }}
-                          >
-                            "From" date must be before "To" date
-                          </p>
-                        )}
-                    </div>
-                  </div>
-                ) : null}
-
-                {/* Advanced Search Filters (only for posts) */}
-                {showAdvanced && activeTab === "posts" && (
-                  <div
-                    className="mt-6 space-y-4 border-t pt-6"
-                    style={{ borderColor: "var(--asph-border-primary)" }}
-                  >
-                    {/* Exact Phrases */}
-                    <div>
-                      <label
-                        className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--asph-text-secondary)" }}
-                      >
-                        <SearchIcon size={16} />
-                        Exact Phrases
-                      </label>
-                      <div className="space-y-2">
-                        {filters.phrases.map((phrase, i) => (
-                          <div
-                            key={`phrase-${phrase}-${i}`}
-                            className="flex items-center gap-2"
-                          >
-                            <input
-                              type="text"
-                              value={phrase}
-                              onChange={(e) => {
-                                const newPhrases = [...filters.phrases];
-                                newPhrases[i] = e.target.value;
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  phrases: newPhrases,
-                                }));
-                              }}
-                              placeholder='e.g., "hello world"'
-                              className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
-                              style={{
-                                backgroundColor: "var(--asph-bg-secondary)",
-                                borderColor: "var(--asph-border-primary)",
-                                color: "var(--asph-text-primary)",
-                                ["--tw-ring-color" as any]:
-                                  "var(--asph-primary)",
-                              }}
-                            />
-                            <button
-                              onClick={() =>
-                                removeFromArrayFilter("phrases", i)
-                              }
-                              className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                              style={{ color: "var(--asph-text-secondary)" }}
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                        ))}
-                        <button
-                          onClick={() => addToArrayFilter("phrases", "")}
-                          className="rounded-lg px-3 py-1.5 text-sm transition-colors"
-                          style={{
-                            color: "var(--asph-primary)",
-                            backgroundColor: "var(--asph-bg-secondary)",
-                            borderWidth: "1px",
-                            borderColor: "var(--asph-border-primary)",
-                          }}
-                        >
-                          + Add phrase
+                          <X size={16} />
                         </button>
                       </div>
-                    </div>
-
-                    {/* Hashtags */}
-                    <div>
-                      <label
-                        className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--asph-text-secondary)" }}
-                      >
-                        <Hash size={16} />
-                        Hashtags
-                      </label>
-                      <div className="space-y-2">
-                        {filters.hashtags.map((tag, i) => (
-                          <div
-                            key={`hashtag-${tag}-${i}`}
-                            className="flex items-center gap-2"
-                          >
-                            <input
-                              type="text"
-                              value={tag}
-                              onChange={(e) => {
-                                const newTags = [...filters.hashtags];
-                                newTags[i] = e.target.value;
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  hashtags: newTags,
-                                }));
-                              }}
-                              placeholder="e.g., bluesky"
-                              className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
-                              style={{
-                                backgroundColor: "var(--asph-bg-secondary)",
-                                borderColor: "var(--asph-border-primary)",
-                                color: "var(--asph-text-primary)",
-                                ["--tw-ring-color" as any]:
-                                  "var(--asph-primary)",
-                              }}
-                            />
-                            <button
-                              onClick={() =>
-                                removeFromArrayFilter("hashtags", i)
-                              }
-                              className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                              style={{ color: "var(--asph-text-secondary)" }}
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                        ))}
-                        <button
-                          onClick={() => addToArrayFilter("hashtags", "")}
-                          className="rounded-lg px-3 py-1.5 text-sm transition-colors"
-                          style={{
-                            color: "var(--asph-primary)",
-                            backgroundColor: "var(--asph-bg-secondary)",
-                            borderWidth: "1px",
-                            borderColor: "var(--asph-border-primary)",
-                          }}
-                        >
-                          + Add hashtag
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Mentions */}
-                    <div>
-                      <label
-                        className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--asph-text-secondary)" }}
-                      >
-                        <User size={16} />
-                        Mentions
-                      </label>
-                      <div className="space-y-2">
-                        {filters.mentions.map((user, i) => (
-                          <div
-                            key={`mention-user-${user}-${i}`}
-                            className="relative"
-                          >
-                            <div className="flex items-center gap-2">
-                              <input
-                                ref={(el) =>
-                                  (inputRefs.current[`mentions-${i}`] = el)
-                                }
-                                type="text"
-                                value={user}
-                                onChange={(e) =>
-                                  handleUserInputChange(
-                                    "mentions",
-                                    i,
-                                    e.target.value,
-                                  )
-                                }
-                                onKeyDown={(e) => handleKeyDown(e)}
-                                onFocus={() => {
-                                  setActiveUserInput({
-                                    field: "mentions",
-                                    index: i,
-                                  });
-                                  setUserSearchQuery(user);
-                                  setShowingFollowers(false);
-                                  if (user.length >= 2)
-                                    setShowSuggestions(true);
-                                }}
-                                onBlur={() => {
-                                  // Use setTimeout to allow click events on suggestions to fire first
-                                  setTimeout(() => {
-                                    if (
-                                      activeUserInput?.field === "mentions" &&
-                                      activeUserInput?.index === i
-                                    ) {
-                                      setShowSuggestions(false);
-                                      setShowingFollowers(false);
-                                      setSelectedSuggestionIndex(-1);
-                                    }
-                                  }, 200);
-                                }}
-                                placeholder="e.g., alice.bsky.social or me"
-                                className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
-                                style={{
-                                  backgroundColor: "var(--asph-bg-secondary)",
-                                  borderColor: "var(--asph-border-primary)",
-                                  color: "var(--asph-text-primary)",
-                                  ["--tw-ring-color" as any]:
-                                    "var(--asph-primary)",
-                                }}
-                              />
-                              <button
-                                onClick={() =>
-                                  removeFromArrayFilter("mentions", i)
-                                }
-                                className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                                style={{ color: "var(--asph-text-secondary)" }}
-                              >
-                                <X size={16} />
-                              </button>
-                            </div>
-
-                            {/* Typeahead suggestions */}
-                            {showSuggestions &&
-                              activeUserInput?.field === "mentions" &&
-                              activeUserInput?.index === i &&
-                              userSuggestions &&
-                              userSuggestions.length > 0 && (
-                                <div
-                                  ref={suggestionsRef}
-                                  className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border shadow-lg"
-                                  style={{
-                                    backgroundColor: "var(--asph-bg-secondary)",
-                                    borderColor: "var(--asph-border-primary)",
-                                  }}
-                                >
-                                  {userSuggestions.map((suggestion, idx) => {
-                                    const isFollower = followingSet?.has(
-                                      suggestion.did,
-                                    );
-                                    return (
-                                      <button
-                                        key={suggestion.did}
-                                        onMouseDown={(e) => {
-                                          e.preventDefault(); // Prevent focus loss
-                                          handleUserSelect(suggestion);
-                                        }}
-                                        onMouseEnter={() =>
-                                          setSelectedSuggestionIndex(idx)
-                                        }
-                                        className={`flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors ${
-                                          idx === selectedSuggestionIndex
-                                            ? "bg-opacity-20"
-                                            : "hover:bg-opacity-10"
-                                        } hover:bg-white`}
-                                        style={{
-                                          backgroundColor:
-                                            idx === selectedSuggestionIndex
-                                              ? "rgba(201, 168, 76, 0.1)"
-                                              : "transparent",
-                                        }}
-                                      >
-                                        {suggestion.avatar && (
-                                          <ProfileHoverCard
-                                            handle={suggestion.handle}
-                                          >
-                                            <img
-                                              src={proxifyBskyImage(
-                                                suggestion.avatar,
-                                              )}
-                                              alt=""
-                                              className="h-8 w-8 rounded-full"
-                                            />
-                                          </ProfileHoverCard>
-                                        )}
-                                        <div className="min-w-0 flex-1">
-                                          <div className="flex items-center gap-2">
-                                            <ProfileHoverCard
-                                              handle={suggestion.handle}
-                                            >
-                                              <span
-                                                className="truncate font-medium"
-                                                style={{
-                                                  color:
-                                                    "var(--asph-text-primary)",
-                                                }}
-                                              >
-                                                {suggestion.displayName ||
-                                                  suggestion.handle}
-                                              </span>
-                                            </ProfileHoverCard>
-                                            {isFollower && (
-                                              <span
-                                                className="rounded px-1.5 py-0.5 text-xs"
-                                                style={{
-                                                  backgroundColor:
-                                                    "var(--asph-primary)",
-                                                  color: "white",
-                                                  opacity: 0.8,
-                                                }}
-                                              >
-                                                Following
-                                              </span>
-                                            )}
-                                          </div>
-                                          <div
-                                            className="truncate text-sm"
-                                            style={{
-                                              color:
-                                                "var(--asph-text-secondary)",
-                                            }}
-                                          >
-                                            @{suggestion.handle}
-                                          </div>
-                                        </div>
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                          </div>
-                        ))}
-                        <button
-                          onClick={() => addToArrayFilter("mentions", "")}
-                          className="rounded-lg px-3 py-1.5 text-sm transition-colors"
-                          style={{
-                            color: "var(--asph-primary)",
-                            backgroundColor: "var(--asph-bg-secondary)",
-                            borderWidth: "1px",
-                            borderColor: "var(--asph-border-primary)",
-                          }}
-                        >
-                          + Add mention
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Domain Filter */}
-                    <div>
-                      <label
-                        className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--asph-text-secondary)" }}
-                      >
-                        <Link size={16} />
-                        Domains
-                      </label>
-                      <div className="space-y-2">
-                        {filters.domains.map((domain, i) => (
-                          <div
-                            key={`domain-${domain}-${i}`}
-                            className="flex items-center gap-2"
-                          >
-                            <input
-                              type="text"
-                              value={domain}
-                              onChange={(e) => {
-                                const newDomains = [...filters.domains];
-                                newDomains[i] = e.target.value;
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  domains: newDomains,
-                                }));
-                              }}
-                              placeholder="e.g., npr.org"
-                              className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
-                              style={{
-                                backgroundColor: "var(--asph-bg-secondary)",
-                                borderColor: "var(--asph-border-primary)",
-                                color: "var(--asph-text-primary)",
-                                ["--tw-ring-color" as any]:
-                                  "var(--asph-primary)",
-                              }}
-                            />
-                            <button
-                              onClick={() =>
-                                removeFromArrayFilter("domains", i)
-                              }
-                              className="rounded-lg p-2 transition-opacity hover:opacity-70"
-                              style={{ color: "var(--asph-text-secondary)" }}
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                        ))}
-                        <button
-                          onClick={() => addToArrayFilter("domains", "")}
-                          className="rounded-lg px-3 py-1.5 text-sm transition-colors"
-                          style={{
-                            color: "var(--asph-primary)",
-                            backgroundColor: "var(--asph-bg-secondary)",
-                            borderWidth: "1px",
-                            borderColor: "var(--asph-border-primary)",
-                          }}
-                        >
-                          + Add domain
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Language */}
-                    <div>
-                      <label
-                        className="mb-2 flex items-center gap-2 text-sm font-medium"
-                        style={{ color: "var(--asph-text-secondary)" }}
-                      >
-                        <Globe size={16} />
-                        Language
-                      </label>
-                      <select
-                        value={filters.language}
-                        onChange={(e) =>
-                          setFilters((prev) => ({
-                            ...prev,
-                            language: e.target.value,
-                          }))
-                        }
-                        className="w-full rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
-                        style={{
-                          backgroundColor: "var(--asph-bg-secondary)",
-                          borderColor: "var(--asph-border-primary)",
-                          color: "var(--asph-text-primary)",
-                          ["--tw-ring-color" as any]: "var(--asph-primary)",
-                        }}
-                      >
-                        <option value="">Any language</option>
-                        <option value="en">English</option>
-                        <option value="ja">Japanese</option>
-                        <option value="es">Spanish</option>
-                        <option value="fr">French</option>
-                        <option value="de">German</option>
-                        <option value="pt">Portuguese</option>
-                        <option value="it">Italian</option>
-                        <option value="nl">Dutch</option>
-                        <option value="ko">Korean</option>
-                        <option value="zh">Chinese</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
-
-                {/* Search Query Display (only for posts with filters) */}
-                {activeTab === "posts" &&
-                  searchQuery &&
-                  searchQuery !== filters.query && (
-                    <div
-                      className="mt-3 rounded-md p-2 text-xs"
-                      style={{ backgroundColor: "var(--asph-bg-secondary)" }}
+                    ))}
+                    <button
+                      onClick={() => addToArrayFilter("phrases", "")}
+                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      style={{
+                        color: "var(--asph-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        borderWidth: "1px",
+                        borderColor: "var(--asph-border-primary)",
+                      }}
                     >
-                      <code
-                        className="break-all"
-                        style={{ color: "var(--asph-text-primary)" }}
+                      + Add phrase
+                    </button>
+                  </div>
+                </div>
+
+                {/* Hashtags */}
+                <div>
+                  <label
+                    className="mb-2 flex items-center gap-2 text-sm font-medium"
+                    style={{ color: "var(--asph-text-secondary)" }}
+                  >
+                    <Hash size={16} />
+                    Hashtags
+                  </label>
+                  <div className="space-y-2">
+                    {filters.hashtags.map((tag, i) => (
+                      <div
+                        key={`hashtag-${tag}-${i}`}
+                        className="flex items-center gap-2"
                       >
-                        {searchQuery}
-                      </code>
-                    </div>
-                  )}
-              </div>
-            )}
+                        <input
+                          type="text"
+                          value={tag}
+                          onChange={(e) => {
+                            const newTags = [...filters.hashtags];
+                            newTags[i] = e.target.value;
+                            setFilters((prev) => ({
+                              ...prev,
+                              hashtags: newTags,
+                            }));
+                          }}
+                          placeholder="e.g., bluesky"
+                          className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+                          style={{
+                            backgroundColor: "var(--asph-bg-secondary)",
+                            borderColor: "var(--asph-border-primary)",
+                            color: "var(--asph-text-primary)",
+                            ["--tw-ring-color" as any]: "var(--asph-primary)",
+                          }}
+                        />
+                        <button
+                          onClick={() => removeFromArrayFilter("hashtags", i)}
+                          className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                          style={{ color: "var(--asph-text-secondary)" }}
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => addToArrayFilter("hashtags", "")}
+                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      style={{
+                        color: "var(--asph-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        borderWidth: "1px",
+                        borderColor: "var(--asph-border-primary)",
+                      }}
+                    >
+                      + Add hashtag
+                    </button>
+                  </div>
+                </div>
 
-          {/* Search Results */}
-          <div className="space-y-3">
-            {!activeSearchQuery && !isLoading && (
-              <div
-                className="rounded-xl border bg-white bg-opacity-5 p-8 text-center"
-                style={{ borderColor: "var(--asph-border-primary)" }}
-              >
-                <SearchIcon
-                  size={48}
-                  className="mx-auto mb-4 opacity-10"
-                  style={{ color: "var(--asph-text-secondary)" }}
-                />
-                <p
-                  className="text-base font-medium"
-                  style={{ color: "var(--asph-text-primary)" }}
-                >
-                  Search for {activeTab}
-                </p>
-                <p
-                  className="mt-1 text-sm"
-                  style={{ color: "var(--asph-text-secondary)" }}
-                >
-                  Enter a search query above and press Enter
-                </p>
-              </div>
-            )}
+                {/* From Users */}
+                <div>
+                  <label
+                    className="mb-2 flex items-center gap-2 text-sm font-medium"
+                    style={{ color: "var(--asph-text-secondary)" }}
+                  >
+                    <User size={16} />
+                    From Users
+                  </label>
+                  <div className="space-y-2">
+                    {filters.from.map((user, i) => (
+                      <div key={`from-user-${user}-${i}`} className="relative">
+                        <div className="flex items-center gap-2">
+                          <input
+                            ref={(el) => (inputRefs.current[`from-${i}`] = el)}
+                            type="text"
+                            value={user}
+                            onChange={(e) =>
+                              handleUserInputChange("from", i, e.target.value)
+                            }
+                            onKeyDown={(e) => handleKeyDown(e)}
+                            onFocus={() => {
+                              setActiveUserInput({ field: "from", index: i });
+                              setUserSearchQuery(user);
+                              setShowingFollowers(false);
+                              if (user.length >= 2) setShowSuggestions(true);
+                            }}
+                            onBlur={() => {
+                              setTimeout(() => {
+                                if (
+                                  activeUserInput?.field === "from" &&
+                                  activeUserInput?.index === i
+                                ) {
+                                  setShowSuggestions(false);
+                                  setShowingFollowers(false);
+                                  setSelectedSuggestionIndex(-1);
+                                }
+                              }, 200);
+                            }}
+                            placeholder="e.g., alice.bsky.social"
+                            className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+                            style={{
+                              backgroundColor: "var(--asph-bg-secondary)",
+                              borderColor: "var(--asph-border-primary)",
+                              color: "var(--asph-text-primary)",
+                              ["--tw-ring-color" as any]: "var(--asph-primary)",
+                            }}
+                          />
+                          <button
+                            onClick={() => {
+                              setActiveUserInput({ field: "from", index: i });
+                              setShowingFollowers(true);
+                              setShowSuggestions(true);
+                              setUserSearchQuery("");
+                            }}
+                            className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                            style={{ color: "var(--asph-text-secondary)" }}
+                            title="Show following"
+                          >
+                            <Users size={16} />
+                          </button>
+                          <button
+                            onClick={() => removeFromArrayFilter("from", i)}
+                            className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                            style={{ color: "var(--asph-text-secondary)" }}
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
 
-            {isLoading && (
-              <LoadingState
-                variant="spinner"
-                size="lg"
-                message="Searching..."
-                centered
-                className="py-6"
+                        {/* Typeahead suggestions */}
+                        {showSuggestions &&
+                          activeUserInput?.field === "from" &&
+                          activeUserInput?.index === i &&
+                          userSuggestions &&
+                          userSuggestions.length > 0 && (
+                            <div
+                              ref={suggestionsRef}
+                              className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border shadow-lg"
+                              style={{
+                                backgroundColor: "var(--asph-bg-secondary)",
+                                borderColor: "var(--asph-border-primary)",
+                              }}
+                            >
+                              {userSuggestions.map((suggestion, idx) => {
+                                const isFollower = followingSet?.has(
+                                  suggestion.did,
+                                );
+                                return (
+                                  <button
+                                    key={suggestion.did}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      handleUserSelect(suggestion);
+                                    }}
+                                    onMouseEnter={() =>
+                                      setSelectedSuggestionIndex(idx)
+                                    }
+                                    className={`flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors ${
+                                      idx === selectedSuggestionIndex
+                                        ? "bg-opacity-20"
+                                        : "hover:bg-opacity-10"
+                                    } hover:bg-white`}
+                                    style={{
+                                      backgroundColor:
+                                        idx === selectedSuggestionIndex
+                                          ? "rgba(201, 168, 76, 0.1)"
+                                          : "transparent",
+                                    }}
+                                  >
+                                    {suggestion.avatar && (
+                                      <ProfileHoverCard
+                                        handle={suggestion.handle}
+                                      >
+                                        <img
+                                          src={proxifyBskyImage(
+                                            suggestion.avatar,
+                                          )}
+                                          alt=""
+                                          className="h-8 w-8 rounded-full"
+                                        />
+                                      </ProfileHoverCard>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                      <div
+                                        className="truncate text-sm font-medium"
+                                        style={{
+                                          color: "var(--asph-text-primary)",
+                                        }}
+                                      >
+                                        {suggestion.displayName ||
+                                          suggestion.handle}
+                                      </div>
+                                      <div
+                                        className="truncate text-xs"
+                                        style={{
+                                          color: "var(--asph-text-secondary)",
+                                        }}
+                                      >
+                                        @{suggestion.handle}
+                                        {isFollower && " · Following"}
+                                      </div>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => addToArrayFilter("from", "")}
+                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      style={{
+                        color: "var(--asph-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        borderWidth: "1px",
+                        borderColor: "var(--asph-border-primary)",
+                      }}
+                    >
+                      + Add user
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mentions */}
+                <div>
+                  <label
+                    className="mb-2 flex items-center gap-2 text-sm font-medium"
+                    style={{ color: "var(--asph-text-secondary)" }}
+                  >
+                    <User size={16} />
+                    Mentions
+                  </label>
+                  <div className="space-y-2">
+                    {filters.mentions.map((user, i) => (
+                      <div
+                        key={`mention-user-${user}-${i}`}
+                        className="relative"
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            ref={(el) =>
+                              (inputRefs.current[`mentions-${i}`] = el)
+                            }
+                            type="text"
+                            value={user}
+                            onChange={(e) =>
+                              handleUserInputChange(
+                                "mentions",
+                                i,
+                                e.target.value,
+                              )
+                            }
+                            onKeyDown={(e) => handleKeyDown(e)}
+                            onFocus={() => {
+                              setActiveUserInput({
+                                field: "mentions",
+                                index: i,
+                              });
+                              setUserSearchQuery(user);
+                              setShowingFollowers(false);
+                              if (user.length >= 2) setShowSuggestions(true);
+                            }}
+                            onBlur={() => {
+                              setTimeout(() => {
+                                if (
+                                  activeUserInput?.field === "mentions" &&
+                                  activeUserInput?.index === i
+                                ) {
+                                  setShowSuggestions(false);
+                                  setShowingFollowers(false);
+                                  setSelectedSuggestionIndex(-1);
+                                }
+                              }, 200);
+                            }}
+                            placeholder="e.g., alice.bsky.social or me"
+                            className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+                            style={{
+                              backgroundColor: "var(--asph-bg-secondary)",
+                              borderColor: "var(--asph-border-primary)",
+                              color: "var(--asph-text-primary)",
+                              ["--tw-ring-color" as any]: "var(--asph-primary)",
+                            }}
+                          />
+                          <button
+                            onClick={() => {
+                              setActiveUserInput({
+                                field: "mentions",
+                                index: i,
+                              });
+                              setShowingFollowers(true);
+                              setShowSuggestions(true);
+                              setUserSearchQuery("");
+                            }}
+                            className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                            style={{ color: "var(--asph-text-secondary)" }}
+                            title="Show following"
+                          >
+                            <Users size={16} />
+                          </button>
+                          <button
+                            onClick={() => removeFromArrayFilter("mentions", i)}
+                            className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                            style={{ color: "var(--asph-text-secondary)" }}
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+
+                        {/* Typeahead suggestions */}
+                        {showSuggestions &&
+                          activeUserInput?.field === "mentions" &&
+                          activeUserInput?.index === i &&
+                          userSuggestions &&
+                          userSuggestions.length > 0 && (
+                            <div
+                              ref={suggestionsRef}
+                              className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border shadow-lg"
+                              style={{
+                                backgroundColor: "var(--asph-bg-secondary)",
+                                borderColor: "var(--asph-border-primary)",
+                              }}
+                            >
+                              {userSuggestions.map((suggestion, idx) => {
+                                const isFollower = followingSet?.has(
+                                  suggestion.did,
+                                );
+                                return (
+                                  <button
+                                    key={suggestion.did}
+                                    onMouseDown={(e) => {
+                                      e.preventDefault();
+                                      handleUserSelect(suggestion);
+                                    }}
+                                    onMouseEnter={() =>
+                                      setSelectedSuggestionIndex(idx)
+                                    }
+                                    className={`flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors ${
+                                      idx === selectedSuggestionIndex
+                                        ? "bg-opacity-20"
+                                        : "hover:bg-opacity-10"
+                                    } hover:bg-white`}
+                                    style={{
+                                      backgroundColor:
+                                        idx === selectedSuggestionIndex
+                                          ? "rgba(201, 168, 76, 0.1)"
+                                          : "transparent",
+                                    }}
+                                  >
+                                    {suggestion.avatar && (
+                                      <ProfileHoverCard
+                                        handle={suggestion.handle}
+                                      >
+                                        <img
+                                          src={proxifyBskyImage(
+                                            suggestion.avatar,
+                                          )}
+                                          alt=""
+                                          className="h-8 w-8 rounded-full"
+                                        />
+                                      </ProfileHoverCard>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                      <div
+                                        className="truncate text-sm font-medium"
+                                        style={{
+                                          color: "var(--asph-text-primary)",
+                                        }}
+                                      >
+                                        {suggestion.displayName ||
+                                          suggestion.handle}
+                                      </div>
+                                      <div
+                                        className="truncate text-xs"
+                                        style={{
+                                          color: "var(--asph-text-secondary)",
+                                        }}
+                                      >
+                                        @{suggestion.handle}
+                                        {isFollower && " · Following"}
+                                      </div>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => addToArrayFilter("mentions", "")}
+                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      style={{
+                        color: "var(--asph-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        borderWidth: "1px",
+                        borderColor: "var(--asph-border-primary)",
+                      }}
+                    >
+                      + Add mention
+                    </button>
+                  </div>
+                </div>
+
+                {/* Domains */}
+                <div>
+                  <label
+                    className="mb-2 flex items-center gap-2 text-sm font-medium"
+                    style={{ color: "var(--asph-text-secondary)" }}
+                  >
+                    <Globe size={16} />
+                    Domains (links)
+                  </label>
+                  <div className="space-y-2">
+                    {filters.domains.map((domain, i) => (
+                      <div
+                        key={`domain-${domain}-${i}`}
+                        className="flex items-center gap-2"
+                      >
+                        <input
+                          type="text"
+                          value={domain}
+                          onChange={(e) => {
+                            const newDomains = [...filters.domains];
+                            newDomains[i] = e.target.value;
+                            setFilters((prev) => ({
+                              ...prev,
+                              domains: newDomains,
+                            }));
+                          }}
+                          placeholder="e.g., github.com"
+                          className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+                          style={{
+                            backgroundColor: "var(--asph-bg-secondary)",
+                            borderColor: "var(--asph-border-primary)",
+                            color: "var(--asph-text-primary)",
+                            ["--tw-ring-color" as any]: "var(--asph-primary)",
+                          }}
+                        />
+                        <button
+                          onClick={() => removeFromArrayFilter("domains", i)}
+                          className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                          style={{ color: "var(--asph-text-secondary)" }}
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => addToArrayFilter("domains", "")}
+                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      style={{
+                        color: "var(--asph-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        borderWidth: "1px",
+                        borderColor: "var(--asph-border-primary)",
+                      }}
+                    >
+                      + Add domain
+                    </button>
+                  </div>
+                </div>
+
+                {/* Language Filter */}
+                <div>
+                  <label
+                    className="mb-2 flex items-center gap-2 text-sm font-medium"
+                    style={{ color: "var(--asph-text-secondary)" }}
+                  >
+                    <Globe size={16} />
+                    Language
+                  </label>
+                  <select
+                    value={filters.language}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        language: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+                    style={{
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      borderColor: "var(--asph-border-primary)",
+                      color: "var(--asph-text-primary)",
+                      ["--tw-ring-color" as any]: "var(--asph-primary)",
+                    }}
+                  >
+                    <option value="">Any language</option>
+                    <option value="en">English</option>
+                    <option value="ja">Japanese</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="it">Italian</option>
+                    <option value="ko">Korean</option>
+                    <option value="zh">Chinese</option>
+                  </select>
+                </div>
+
+                {/* Date Range */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      className="mb-2 flex items-center gap-2 text-sm font-medium"
+                      style={{ color: "var(--asph-text-secondary)" }}
+                    >
+                      <Calendar size={16} />
+                      Since
+                    </label>
+                    <input
+                      type="date"
+                      value={filters.sinceDate}
+                      onChange={(e) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          sinceDate: e.target.value,
+                        }))
+                      }
+                      max={
+                        filters.untilDate || format(new Date(), "yyyy-MM-dd")
+                      }
+                      className="w-full rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+                      style={{
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        borderColor: "var(--asph-border-primary)",
+                        color: "var(--asph-text-primary)",
+                        ["--tw-ring-color" as any]: "var(--asph-primary)",
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="mb-2 flex items-center gap-2 text-sm font-medium"
+                      style={{ color: "var(--asph-text-secondary)" }}
+                    >
+                      <Calendar size={16} />
+                      Until
+                    </label>
+                    <input
+                      type="date"
+                      value={filters.untilDate}
+                      onChange={(e) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          untilDate: e.target.value,
+                        }))
+                      }
+                      min={filters.sinceDate}
+                      max={format(new Date(), "yyyy-MM-dd")}
+                      className="w-full rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
+                      style={{
+                        backgroundColor: "var(--asph-bg-secondary)",
+                        borderColor: "var(--asph-border-primary)",
+                        color: "var(--asph-text-primary)",
+                        ["--tw-ring-color" as any]: "var(--asph-primary)",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Quick date filters */}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        sinceDate: format(subDays(new Date(), 1), "yyyy-MM-dd"),
+                        untilDate: format(new Date(), "yyyy-MM-dd"),
+                      }))
+                    }
+                    className="rounded-lg px-3 py-1.5 text-xs transition-colors"
+                    style={{
+                      color: "var(--asph-primary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      borderWidth: "1px",
+                      borderColor: "var(--asph-border-primary)",
+                    }}
+                  >
+                    Last 24h
+                  </button>
+                  <button
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        sinceDate: format(subDays(new Date(), 7), "yyyy-MM-dd"),
+                        untilDate: format(new Date(), "yyyy-MM-dd"),
+                      }))
+                    }
+                    className="rounded-lg px-3 py-1.5 text-xs transition-colors"
+                    style={{
+                      color: "var(--asph-primary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      borderWidth: "1px",
+                      borderColor: "var(--asph-border-primary)",
+                    }}
+                  >
+                    Last 7 days
+                  </button>
+                  <button
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        sinceDate: format(
+                          subMonths(new Date(), 1),
+                          "yyyy-MM-dd",
+                        ),
+                        untilDate: format(new Date(), "yyyy-MM-dd"),
+                      }))
+                    }
+                    className="rounded-lg px-3 py-1.5 text-xs transition-colors"
+                    style={{
+                      color: "var(--asph-primary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      borderWidth: "1px",
+                      borderColor: "var(--asph-border-primary)",
+                    }}
+                  >
+                    Last 30 days
+                  </button>
+                  <button
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        sinceDate: "",
+                        untilDate: "",
+                      }))
+                    }
+                    className="rounded-lg px-3 py-1.5 text-xs transition-colors"
+                    style={{
+                      color: "var(--asph-text-secondary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                      borderWidth: "1px",
+                      borderColor: "var(--asph-border-primary)",
+                    }}
+                  >
+                    Clear dates
+                  </button>
+                </div>
+
+                {/* Media Filter */}
+                <div>
+                  <label
+                    className="mb-2 flex items-center gap-2 text-sm font-medium"
+                    style={{ color: "var(--asph-text-secondary)" }}
+                  >
+                    <Image size={16} />
+                    Has Media
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={filters.hasMedia}
+                      onChange={(e) =>
+                        setFilters((prev) => ({
+                          ...prev,
+                          hasMedia: e.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 rounded"
+                      style={{
+                        accentColor: "var(--asph-primary)",
+                      }}
+                    />
+                    <span
+                      className="text-sm"
+                      style={{ color: "var(--asph-text-primary)" }}
+                    >
+                      Only show posts with media attachments
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab Content */}
+          <div className="space-y-4">
+            {activeTab === "posts" && (
+              <SearchTabPosts
+                activeSearchQuery={activeSearchQuery}
+                agent={agent}
+                sortOrder={sortOrder}
+                facetedFilters={facetedFilters}
+                hasMediaFilter={filters.hasMedia}
+                isPostHidden={isPostHidden}
+                isUserMuted={isUserMuted}
+                isUserBlocked={isUserBlocked}
+                isThreadMuted={isThreadMuted}
+                handlePostClick={handlePostClick}
               />
             )}
 
-            {error && (
-              <div
-                className="rounded-xl border bg-red-500 bg-opacity-5 p-6 text-center"
-                style={{ borderColor: "var(--asph-error)" }}
-              >
-                <p className="text-sm" style={{ color: "var(--asph-error)" }}>
-                  Error searching. Please try again.
-                </p>
-              </div>
+            {activeTab === "users" && (
+              <SearchTabUsers
+                activeSearchQuery={activeSearchQuery}
+                agent={agent}
+                isUserMuted={isUserMuted}
+                isUserBlocked={isUserBlocked}
+                navigate={navigate}
+              />
             )}
 
-            {/* Posts Results */}
-            {activeTab === "posts" &&
-              searchResults &&
-              filteredPostsSearchResults?.posts.length === 0 && (
-                <div
-                  className="rounded-xl border bg-white bg-opacity-5 p-6 text-center"
-                  style={{ borderColor: "var(--asph-border-primary)" }}
-                >
-                  <FileText
-                    size={32}
-                    className="mx-auto mb-3 opacity-10"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  />
-                  <p
-                    className="mb-3 text-sm font-medium"
-                    style={{ color: "var(--asph-text-primary)" }}
-                  >
-                    No posts found matching your search
-                  </p>
-                  <p
-                    className="mb-4 text-xs"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  >
-                    Try these suggestions:
-                  </p>
-                  <ul
-                    className="space-y-2 text-left text-xs"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  >
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>Check your spelling or try different keywords</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>
-                        Try removing some filters or date restrictions
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>Search for broader terms or hashtags</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>Try switching to "Users" or "Feeds" tabs</span>
-                    </li>
-                  </ul>
-                </div>
-              )}
-
-            {activeTab === "posts" &&
-              searchResults &&
-              filteredPostsSearchResults?.posts &&
-              filteredPostsSearchResults.posts.length > 0 && (
-                <>
-                  <div className="mb-2 flex items-center justify-between">
-                    <p
-                      className="text-sm"
-                      style={{ color: "var(--asph-text-secondary)" }}
-                    >
-                      {
-                        filteredPostsSearchResults.posts.filter(
-                          (post) =>
-                            !isPostHidden(post.uri) &&
-                            !isUserMuted(post.author.did) &&
-                            !isUserBlocked(post.author.did) &&
-                            !isThreadMuted(post.uri),
-                        ).length
-                      }{" "}
-                      results
-                    </p>
-                  </div>
-
-                  {filteredPostsSearchResults.posts
-                    .filter(
-                      (post) =>
-                        !isPostHidden(post.uri) &&
-                        !isUserMuted(post.author.did) &&
-                        !isUserBlocked(post.author.did) &&
-                        !isThreadMuted(post.uri),
-                    )
-                    .map((post) => (
-                      <div
-                        key={post.uri}
-                        className="asph-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
-                        style={{
-                          border: "1px solid var(--asph-border-primary)",
-                        }}
-                        onClick={() => handlePostClick(post)}
-                      >
-                        <div className="flex items-start gap-2.5">
-                          <ProfileHoverCard handle={post.author.handle}>
-                            <img
-                              src={proxifyBskyImage(post.author.avatar)}
-                              alt={post.author.displayName}
-                              className="h-9 w-9 flex-shrink-0 cursor-pointer rounded-full transition-opacity hover:opacity-80"
-                            />
-                          </ProfileHoverCard>
-                          <div className="min-w-0 flex-1">
-                            <div className="mb-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                              <ProfileHoverCard handle={post.author.handle}>
-                                <span
-                                  className="cursor-pointer truncate text-sm font-medium hover:underline"
-                                  style={{ color: "var(--asph-text-primary)" }}
-                                >
-                                  {post.author.displayName}
-                                </span>
-                              </ProfileHoverCard>
-                              <span
-                                className="truncate text-xs"
-                                style={{
-                                  color: "var(--asph-text-secondary)",
-                                }}
-                              >
-                                @{post.author?.handle || "unknown"}
-                              </span>
-                              <span
-                                className="whitespace-nowrap text-xs"
-                                style={{ color: "var(--asph-text-tertiary)" }}
-                              >
-                                ·{" "}
-                                {formatDistanceToNow(new Date(post.indexedAt))}{" "}
-                                ago
-                              </span>
-                            </div>
-                            <div
-                              className="break-words text-sm"
-                              style={{ color: "var(--asph-text-primary)" }}
-                            >
-                              {(post.record as any).text}
-                            </div>
-
-                            {/* Display quoted post if present */}
-                            {(() => {
-                              const embed = post.embed as any;
-
-                              // Check for quoted post (record embed or recordWithMedia)
-                              const quotedPost =
-                                embed?.$type === "app.bsky.embed.record#view"
-                                  ? embed.record
-                                  : embed?.$type ===
-                                      "app.bsky.embed.recordWithMedia#view"
-                                    ? embed.record?.record
-                                    : null;
-
-                              if (
-                                quotedPost &&
-                                quotedPost.$type ===
-                                  "app.bsky.embed.record#viewRecord"
-                              ) {
-                                return (
-                                  <div className="mt-2 rounded-lg border border-asph-border-primary bg-asph-bg-secondary p-2.5">
-                                    <div className="mb-1 flex items-center gap-1.5">
-                                      {quotedPost.author?.avatar &&
-                                        quotedPost.author?.handle && (
-                                          <ProfileHoverCard
-                                            handle={quotedPost.author.handle}
-                                          >
-                                            <img
-                                              src={proxifyBskyImage(
-                                                quotedPost.author.avatar,
-                                              )}
-                                              alt={quotedPost.author.handle}
-                                              className="h-4 w-4 cursor-pointer rounded-full transition-opacity hover:opacity-80"
-                                            />
-                                          </ProfileHoverCard>
-                                        )}
-                                      {quotedPost.author?.handle ? (
-                                        <ProfileHoverCard
-                                          handle={quotedPost.author.handle}
-                                        >
-                                          <span className="cursor-pointer text-xs font-medium text-asph-text-secondary hover:underline">
-                                            {quotedPost.author?.displayName ||
-                                              quotedPost.author?.handle}
-                                          </span>
-                                        </ProfileHoverCard>
-                                      ) : (
-                                        <span className="text-xs font-medium text-asph-text-secondary">
-                                          Unknown
-                                        </span>
-                                      )}
-                                      <span className="text-xs text-asph-text-tertiary">
-                                        @
-                                        {quotedPost.author?.handle || "unknown"}
-                                      </span>
-                                    </div>
-                                    <p className="text-xs leading-relaxed text-asph-text-primary">
-                                      {quotedPost.value?.text || "[No text]"}
-                                    </p>
-
-                                    {/* Show images from quoted post if it has them */}
-                                    {quotedPost.embeds &&
-                                      quotedPost.embeds[0] &&
-                                      quotedPost.embeds[0].$type ===
-                                        "app.bsky.embed.images#view" &&
-                                      quotedPost.embeds[0].images && (
-                                        <ImageGrid
-                                          images={quotedPost.embeds[0].images}
-                                          className="mt-2"
-                                        />
-                                      )}
-                                  </div>
-                                );
-                              }
-                              return null;
-                            })()}
-
-                            {/* Display images using ImageGrid component */}
-                            {(() => {
-                              const images = getPostImages(post);
-                              if (images.length === 0) return null;
-                              return (
-                                <ImageGrid images={images} className="mt-3" />
-                              );
-                            })()}
-
-                            <div className="mt-2 flex items-center gap-3">
-                              <span
-                                className="text-xs"
-                                style={{ color: "var(--asph-text-tertiary)" }}
-                              >
-                                Click to view thread
-                              </span>
-                              <a
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.open(
-                                    `https://bsky.app/profile/${post.author?.handle || "unknown"}/post/${post.uri.split("/").pop()}`,
-                                    "_blank",
-                                    "noopener,noreferrer",
-                                  );
-                                }}
-                                className="inline-flex cursor-pointer items-center gap-1 text-xs hover:underline"
-                                style={{ color: "var(--asph-primary)" }}
-                              >
-                                <ExternalLink size={12} />
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </>
-              )}
-
-            {/* Users Results */}
-            {activeTab === "users" &&
-              searchResults &&
-              usersSearchResults?.actors.length === 0 && (
-                <div
-                  className="rounded-xl border bg-white bg-opacity-5 p-6 text-center"
-                  style={{ borderColor: "var(--asph-border-primary)" }}
-                >
-                  <Users
-                    size={32}
-                    className="mx-auto mb-3 opacity-10"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  />
-                  <p
-                    className="mb-3 text-sm font-medium"
-                    style={{ color: "var(--asph-text-primary)" }}
-                  >
-                    No users found matching your search
-                  </p>
-                  <p
-                    className="mb-4 text-xs"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  >
-                    Try these suggestions:
-                  </p>
-                  <ul
-                    className="space-y-2 text-left text-xs"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  >
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>Check the username spelling</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>Try searching by display name instead</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>Search for related terms or interests</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>
-                        Try the "Posts" tab to find content from users
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-              )}
-
-            {activeTab === "users" &&
-              searchResults &&
-              usersSearchResults?.actors &&
-              usersSearchResults.actors.length > 0 && (
-                <>
-                  <div className="mb-2 flex items-center justify-between">
-                    <p
-                      className="text-sm"
-                      style={{ color: "var(--asph-text-secondary)" }}
-                    >
-                      {
-                        usersSearchResults.actors.filter(
-                          (user) =>
-                            !isUserMuted(user.did) && !isUserBlocked(user.did),
-                        ).length
-                      }{" "}
-                      results
-                    </p>
-                  </div>
-
-                  {usersSearchResults.actors
-                    .filter(
-                      (user) =>
-                        !isUserMuted(user.did) && !isUserBlocked(user.did),
-                    )
-                    .map((user) => (
-                      <div
-                        key={user.did}
-                        className="asph-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
-                        style={{
-                          border: "1px solid var(--asph-border-primary)",
-                        }}
-                        onClick={() => navigate(`/profile/${user.handle}`)}
-                      >
-                        <div className="flex items-start gap-3">
-                          {user.avatar && (
-                            <img
-                              src={proxifyBskyImage(user.avatar)}
-                              alt={user.displayName}
-                              className="h-12 w-12 flex-shrink-0 rounded-full"
-                            />
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <div className="mb-1 flex items-baseline gap-2">
-                              <span
-                                className="truncate font-medium"
-                                style={{ color: "var(--asph-text-primary)" }}
-                              >
-                                {user.displayName || user.handle}
-                              </span>
-                              <span
-                                className="truncate text-sm"
-                                style={{
-                                  color: "var(--asph-text-secondary)",
-                                }}
-                              >
-                                @{user.handle}
-                              </span>
-                            </div>
-                            {user.description && (
-                              <p
-                                className="mb-2 line-clamp-2 text-sm"
-                                style={{ color: "var(--asph-text-primary)" }}
-                              >
-                                {user.description}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-4 text-xs">
-                              {/* Profile counts not available in basic ProfileView */}
-                            </div>
-                            <div className="mt-2 flex items-center gap-3">
-                              <span
-                                className="text-xs"
-                                style={{ color: "var(--asph-text-tertiary)" }}
-                              >
-                                Click to view profile
-                              </span>
-                              <a
-                                href={`https://bsky.app/profile/${user.handle}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-1 text-xs hover:underline"
-                                style={{ color: "var(--asph-primary)" }}
-                              >
-                                <ExternalLink size={12} />
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                </>
-              )}
-
-            {/* Feeds Results */}
-            {activeTab === "feeds" &&
-              searchResults &&
-              feedsSearchResults?.feeds.length === 0 && (
-                <div
-                  className="rounded-xl border bg-white bg-opacity-5 p-6 text-center"
-                  style={{ borderColor: "var(--asph-border-primary)" }}
-                >
-                  <List
-                    size={32}
-                    className="mx-auto mb-3 opacity-10"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  />
-                  <p
-                    className="mb-3 text-sm font-medium"
-                    style={{ color: "var(--asph-text-primary)" }}
-                  >
-                    No feeds found matching your search
-                  </p>
-                  <p
-                    className="mb-4 text-xs"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  >
-                    Try these suggestions:
-                  </p>
-                  <ul
-                    className="space-y-2 text-left text-xs"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  >
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>Check the feed name spelling</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>Try searching for feed topics or categories</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>Browse popular feeds to discover new ones</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>Try the "Posts" tab to search for content</span>
-                    </li>
-                  </ul>
-                </div>
-              )}
-
-            {activeTab === "feeds" &&
-              searchResults &&
-              feedsSearchResults?.feeds &&
-              feedsSearchResults.feeds.length > 0 && (
-                <>
-                  <div className="mb-2 flex items-center justify-between">
-                    <p
-                      className="text-sm"
-                      style={{ color: "var(--asph-text-secondary)" }}
-                    >
-                      {feedsSearchResults.feeds.length} results
-                    </p>
-                  </div>
-
-                  {feedsSearchResults.feeds.map((feed) => (
-                    <div
-                      key={feed.uri}
-                      className="asph-glass cursor-pointer rounded-xl p-3 transition-all hover:shadow-lg sm:p-4"
-                      style={{
-                        border: "1px solid var(--asph-border-primary)",
-                      }}
-                      onClick={() => {
-                        // Navigate to home and set the selected feed
-                        // For now, just open the feed URL externally until we have proper feed navigation
-                        window.open(
-                          `https://bsky.app/profile/${feed.creator.handle}/feed/${feed.uri.split("/").pop()}`,
-                          "_blank",
-                          "noopener,noreferrer",
-                        );
-                      }}
-                    >
-                      <div className="flex items-start gap-3">
-                        {feed.avatar && (
-                          <img
-                            src={proxifyBskyImage(feed.avatar)}
-                            alt={feed.displayName}
-                            className="h-12 w-12 flex-shrink-0 rounded-lg"
-                          />
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-1">
-                            <h3
-                              className="font-medium"
-                              style={{ color: "var(--asph-text-primary)" }}
-                            >
-                              {feed.displayName}
-                            </h3>
-                          </div>
-                          {feed.description && (
-                            <p
-                              className="mb-2 line-clamp-2 text-sm"
-                              style={{ color: "var(--asph-text-primary)" }}
-                            >
-                              {feed.description}
-                            </p>
-                          )}
-                          <div className="mb-2 flex items-center gap-4 text-xs">
-                            <span
-                              style={{ color: "var(--asph-text-secondary)" }}
-                            >
-                              by @{feed.creator.handle}
-                            </span>
-                            {feed.likeCount !== undefined && (
-                              <span
-                                style={{
-                                  color: "var(--asph-text-secondary)",
-                                }}
-                              >
-                                <strong>
-                                  {feed.likeCount.toLocaleString()}
-                                </strong>{" "}
-                                likes
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span
-                              className="text-xs"
-                              style={{ color: "var(--asph-text-tertiary)" }}
-                            >
-                              Click to view feed
-                            </span>
-                            <a
-                              href={`https://bsky.app/profile/${feed.creator.handle}/feed/${feed.uri.split("/").pop()}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1 text-xs hover:underline"
-                              style={{ color: "var(--asph-primary)" }}
-                            >
-                              <ExternalLink size={12} />
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
+            {activeTab === "feeds" && (
+              <SearchTabFeeds
+                activeSearchQuery={activeSearchQuery}
+                agent={agent}
+                navigate={navigate}
+              />
+            )}
           </div>
         </>
       )}
     </div>
   );
 });
-
-SearchTabbed.displayName = "SearchTabbed";
