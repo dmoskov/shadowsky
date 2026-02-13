@@ -174,6 +174,86 @@ export const ModerationHistorySettings: React.FC = () => {
     );
   };
 
+  // Block entry sub-components
+  const BlockEntryAvatar: React.FC<{
+    entry: BlockHistoryEntry;
+  }> = ({ entry }) => (
+    <div
+      className="flex h-10 w-10 items-center justify-center rounded-full"
+      style={{
+        backgroundColor: entry.isActive
+          ? "rgba(239, 68, 68, 0.1)"
+          : "var(--asph-bg-tertiary)",
+      }}
+    >
+      {entry.subjectAvatar ? (
+        <img
+          src={entry.subjectAvatar}
+          alt=""
+          className="h-10 w-10 rounded-full object-cover"
+        />
+      ) : (
+        <Ban
+          size={20}
+          style={{
+            color: entry.isActive
+              ? "var(--asph-error)"
+              : "var(--asph-text-tertiary)",
+          }}
+        />
+      )}
+    </div>
+  );
+
+  const BlockEntryDetails: React.FC<{
+    entry: BlockHistoryEntry;
+    formatRelativeTime: (timestamp: number) => string;
+  }> = ({ entry, formatRelativeTime }) => (
+    <div>
+      <div className="flex items-center gap-2">
+        <span
+          className="font-medium"
+          style={{ color: "var(--asph-text-primary)" }}
+        >
+          {entry.subjectDisplayName || entry.subjectHandle || "Unknown"}
+        </span>
+        {entry.isActive ? (
+          <span className="rounded-full bg-red-500 bg-opacity-20 px-2 py-0.5 text-xs text-red-500">
+            Active
+          </span>
+        ) : (
+          <span
+            className="rounded-full px-2 py-0.5 text-xs"
+            style={{
+              backgroundColor: "var(--asph-bg-tertiary)",
+              color: "var(--asph-text-tertiary)",
+            }}
+          >
+            Unblocked
+          </span>
+        )}
+      </div>
+      {entry.subjectHandle && (
+        <div
+          className="text-sm"
+          style={{ color: "var(--asph-text-secondary)" }}
+        >
+          @{entry.subjectHandle}
+        </div>
+      )}
+      <div
+        className="flex items-center gap-1 text-xs"
+        style={{ color: "var(--asph-text-tertiary)" }}
+      >
+        <Clock size={12} />
+        {formatRelativeTime(entry.createdAt)}
+        {entry.unblockedAt && (
+          <span> · Unblocked {formatRelativeTime(entry.unblockedAt)}</span>
+        )}
+      </div>
+    </div>
+  );
+
   // Render block entry
   const renderBlockEntry = (entry: BlockHistoryEntry) => (
     <div
@@ -185,74 +265,11 @@ export const ModerationHistorySettings: React.FC = () => {
       }}
     >
       <div className="flex items-center gap-3">
-        <div
-          className="flex h-10 w-10 items-center justify-center rounded-full"
-          style={{
-            backgroundColor: entry.isActive
-              ? "rgba(239, 68, 68, 0.1)"
-              : "var(--asph-bg-tertiary)",
-          }}
-        >
-          {entry.subjectAvatar ? (
-            <img
-              src={entry.subjectAvatar}
-              alt=""
-              className="h-10 w-10 rounded-full object-cover"
-            />
-          ) : (
-            <Ban
-              size={20}
-              style={{
-                color: entry.isActive
-                  ? "var(--asph-error)"
-                  : "var(--asph-text-tertiary)",
-              }}
-            />
-          )}
-        </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <span
-              className="font-medium"
-              style={{ color: "var(--asph-text-primary)" }}
-            >
-              {entry.subjectDisplayName || entry.subjectHandle || "Unknown"}
-            </span>
-            {entry.isActive ? (
-              <span className="rounded-full bg-red-500 bg-opacity-20 px-2 py-0.5 text-xs text-red-500">
-                Active
-              </span>
-            ) : (
-              <span
-                className="rounded-full px-2 py-0.5 text-xs"
-                style={{
-                  backgroundColor: "var(--asph-bg-tertiary)",
-                  color: "var(--asph-text-tertiary)",
-                }}
-              >
-                Unblocked
-              </span>
-            )}
-          </div>
-          {entry.subjectHandle && (
-            <div
-              className="text-sm"
-              style={{ color: "var(--asph-text-secondary)" }}
-            >
-              @{entry.subjectHandle}
-            </div>
-          )}
-          <div
-            className="flex items-center gap-1 text-xs"
-            style={{ color: "var(--asph-text-tertiary)" }}
-          >
-            <Clock size={12} />
-            {formatRelativeTime(entry.createdAt)}
-            {entry.unblockedAt && (
-              <span> · Unblocked {formatRelativeTime(entry.unblockedAt)}</span>
-            )}
-          </div>
-        </div>
+        <BlockEntryAvatar entry={entry} />
+        <BlockEntryDetails
+          entry={entry}
+          formatRelativeTime={formatRelativeTime}
+        />
       </div>
     </div>
   );
