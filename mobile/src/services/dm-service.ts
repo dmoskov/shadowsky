@@ -19,6 +19,7 @@ interface ApiMessage {
   sender: {
     did: string;
   };
+  embed?: DmMessageEmbed;
 }
 
 interface ApiConvo {
@@ -71,6 +72,18 @@ export interface DmConversation {
   };
 }
 
+export interface DmMessageEmbed {
+  $type: string;
+  images?: {
+    image: {
+      ref: { $link: string };
+      mimeType: string;
+      size: number;
+    };
+    alt: string;
+  }[];
+}
+
 export interface DmMessage {
   id: string;
   rev: string;
@@ -79,6 +92,7 @@ export interface DmMessage {
   sender: {
     did: string;
   };
+  embed?: DmMessageEmbed;
 }
 
 class DmService {
@@ -223,6 +237,7 @@ class DmService {
             sender: {
               did: msg.sender.did,
             },
+            embed: msg.embed,
           }))
           .reverse(); // Reverse to show oldest first
 
@@ -263,7 +278,33 @@ class DmService {
     });
   }
 
-  async sendMessage(conversationId: string, text: string): Promise<void> {
+  async uploadBlob(uri: string): Promise<{ ref: { $link: string }; mimeType: string; size: number }> {
+    if (!this.agent) {
+      throw new Error("Not authenticated");
+    }
+
+    return withRetry(async () => {
+      // Fetch the media file
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      // Convert blob to Uint8Array for upload
+      const arrayBuffer = await blob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+
+      const uploadResponse = await this.agent!.uploadBlob(uint8Array, {
+        encoding: blob.type,
+      });
+
+      return uploadResponse.data.blob;
+    });
+  }
+
+  async sendMessage(
+    conversationId: string,
+    text: string,
+    images?: { uri: string; alt: string }[]
+  ): Promise<void> {
     if (!this.agent) {
       throw new Error("Not authenticated");
     }
@@ -273,6 +314,28 @@ class DmService {
         const headers = await this.getAuthHeaders();
         headers["Content-Type"] = "application/json";
 
+        const message: any = {
+          text,
+        };
+
+        // Upload images if provided
+        if (images && images.length > 0) {
+          const imageBlobs = await Promise.all(
+            images.map(async (img) => {
+              const blob = await this.uploadBlob(img.uri);
+              return {
+                image: blob,
+                alt: img.alt || "",
+              };
+            })
+          );
+
+          message.embed = {
+            $type: "chat.bsky.convo.defs#messageEmbed",
+            images: imageBlobs,
+          };
+        }
+
         const response = await fetch(
           "https://api.bsky.chat/xrpc/chat.bsky.convo.sendMessage",
           {
@@ -280,9 +343,7 @@ class DmService {
             headers,
             body: JSON.stringify({
               convoId: conversationId,
-              message: {
-                text,
-              },
+              message,
             }),
           }
         );

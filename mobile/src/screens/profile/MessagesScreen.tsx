@@ -27,6 +27,8 @@ import { EmptyState } from "../../components/EmptyState";
 import { LockIcon, ChatBubbleIcon, ArrowLeftIcon, SearchIcon, CloseIcon } from "../../components/icons";
 import { useConversations, useConversation, useSendMessage, useMarkAsRead } from "../../hooks/api";
 import { colors } from "../../constants/theme";
+import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
+import { ImageIcon } from "../../components/icons/ImageIcon";
 
 export function MessagesScreen() {
   const { session } = useAuth();
@@ -38,6 +40,17 @@ export function MessagesScreen() {
   const [searchText, setSearchText] = useState("");
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+
+  // Image picker for media attachments
+  const {
+    pickFromLibrary,
+    pickFromCamera,
+    selectedImages,
+    removeImage,
+    clearImages,
+    isUploading,
+    setIsUploading,
+  } = useImagePicker();
 
   // Set up DM service with agent
   useEffect(() => {
@@ -96,16 +109,24 @@ export function MessagesScreen() {
   }, [conversationData?.messages.length]);
 
   const handleSendMessage = async () => {
-    if (!selectedConversation || !messageText.trim() || sendMessageMutation.isPending) return;
+    if (!selectedConversation || (!messageText.trim() && selectedImages.length === 0) || sendMessageMutation.isPending || isUploading) return;
 
     const text = messageText.trim();
+    const images = selectedImages.map(img => ({ uri: img.uri, alt: img.altText }));
+
     setMessageText("");
+    setIsUploading(true);
 
     try {
       await sendMessageMutation.mutateAsync({
         conversationId: selectedConversation,
         text,
+        images: images.length > 0 ? images : undefined,
       });
+
+      // Clear images after successful send
+      clearImages();
+
       // Refresh messages after sending
       setTimeout(() => {
         refetchMessages();
@@ -114,6 +135,8 @@ export function MessagesScreen() {
       console.error("Failed to send message:", error);
       Alert.alert("Error", "Failed to send message. Please try again.");
       setMessageText(text); // Restore message on error
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -219,6 +242,9 @@ export function MessagesScreen() {
     // If message exists on server, it's delivered
     const deliveryStatus = isOwnMessage ? (item.id ? "delivered" : "sent") : null;
 
+    // Check if message has media attachments
+    const hasImages = item.embed?.$type === "chat.bsky.convo.defs#messageEmbed" && item.embed.images && item.embed.images.length > 0;
+
     return (
       <View
         style={[
@@ -232,14 +258,35 @@ export function MessagesScreen() {
             isOwnMessage ? styles.ownMessageBubble : styles.otherMessageBubble,
           ]}
         >
-          <Text
-            style={[
-              styles.messageText,
-              isOwnMessage ? styles.ownMessageText : styles.otherMessageText,
-            ]}
-          >
-            {item.text}
-          </Text>
+          {/* Display images if present */}
+          {hasImages && item.embed?.images && (
+            <View style={styles.messageImagesContainer}>
+              {item.embed.images.map((img, imgIndex) => {
+                const imageUrl = `https://cdn.bsky.app/img/feed_thumbnail/plain/${session?.did}/${img.image.ref.$link}@jpeg`;
+                return (
+                  <Image
+                    key={imgIndex}
+                    source={{ uri: imageUrl }}
+                    style={styles.messageImage}
+                    resizeMode="cover"
+                  />
+                );
+              })}
+            </View>
+          )}
+
+          {/* Display text if present */}
+          {item.text && (
+            <Text
+              style={[
+                styles.messageText,
+                isOwnMessage ? styles.ownMessageText : styles.otherMessageText,
+              ]}
+            >
+              {item.text}
+            </Text>
+          )}
+
           <View style={styles.messageFooter}>
             <Text
               style={[
@@ -451,29 +498,64 @@ export function MessagesScreen() {
 
       {/* Input */}
       <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          value={messageText}
-          onChangeText={setMessageText}
-          placeholder="Type a message..."
-          placeholderTextColor="#666"
-          multiline
-          maxLength={1000}
-        />
-        <TouchableOpacity
-          style={[
-            styles.sendButton,
-            (!messageText.trim() || sendMessageMutation.isPending) && styles.sendButtonDisabled,
-          ]}
-          onPress={handleSendMessage}
-          disabled={!messageText.trim() || sendMessageMutation.isPending}
-        >
-          {sendMessageMutation.isPending ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <Text style={styles.sendButtonText}>Send</Text>
-          )}
-        </TouchableOpacity>
+        {/* Image preview */}
+        {selectedImages.length > 0 && (
+          <View style={styles.imagePreviewContainer}>
+            <FlatList
+              horizontal
+              data={selectedImages}
+              keyExtractor={(_, index) => index.toString()}
+              renderItem={({ item, index }) => (
+                <View style={styles.imagePreviewItem}>
+                  <Image source={{ uri: item.uri }} style={styles.imagePreview} />
+                  <TouchableOpacity
+                    style={styles.removeImageButton}
+                    onPress={() => removeImage(index)}
+                  >
+                    <CloseIcon size={16} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              )}
+              style={styles.imagePreviewList}
+              showsHorizontalScrollIndicator={false}
+            />
+          </View>
+        )}
+
+        <View style={styles.inputRow}>
+          <TouchableOpacity
+            style={styles.attachButton}
+            onPress={pickFromLibrary}
+            disabled={isUploading || selectedImages.length >= 4}
+          >
+            <ImageIcon size={24} color={selectedImages.length >= 4 ? "#666" : colors.primary} />
+          </TouchableOpacity>
+
+          <TextInput
+            style={styles.input}
+            value={messageText}
+            onChangeText={setMessageText}
+            placeholder="Type a message..."
+            placeholderTextColor="#666"
+            multiline
+            maxLength={1000}
+          />
+
+          <TouchableOpacity
+            style={[
+              styles.sendButton,
+              ((!messageText.trim() && selectedImages.length === 0) || sendMessageMutation.isPending || isUploading) && styles.sendButtonDisabled,
+            ]}
+            onPress={handleSendMessage}
+            disabled={(!messageText.trim() && selectedImages.length === 0) || sendMessageMutation.isPending || isUploading}
+          >
+            {sendMessageMutation.isPending || isUploading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Text style={styles.sendButtonText}>Send</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -693,12 +775,55 @@ const styles = StyleSheet.create({
   ownDeliveryStatus: {
     color: "rgba(255, 255, 255, 0.7)",
   },
-  inputContainer: {
+  messageImagesContainer: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 4,
+    marginBottom: 8,
+  },
+  messageImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 8,
+  },
+  inputContainer: {
     padding: 12,
     borderTopWidth: 1,
     borderTopColor: "#1f1f23",
+  },
+  imagePreviewContainer: {
+    marginBottom: 8,
+  },
+  imagePreviewList: {
+    maxHeight: 100,
+  },
+  imagePreviewItem: {
+    position: "relative",
+    marginRight: 8,
+  },
+  imagePreview: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+  },
+  removeImageButton: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  inputRow: {
+    flexDirection: "row",
     alignItems: "flex-end",
+  },
+  attachButton: {
+    padding: 8,
+    marginRight: 8,
   },
   input: {
     flex: 1,

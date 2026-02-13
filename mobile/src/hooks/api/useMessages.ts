@@ -59,10 +59,12 @@ export function useSendMessage() {
     mutationFn: ({
       conversationId,
       text,
+      images,
     }: {
       conversationId: string;
       text: string;
-    }) => dmService.sendMessage(conversationId, text),
+      images?: { uri: string; alt: string }[];
+    }) => dmService.sendMessage(conversationId, text, images),
     onSuccess: (_, variables) => {
       // Invalidate conversation messages and conversations list
       queryClient.invalidateQueries({
