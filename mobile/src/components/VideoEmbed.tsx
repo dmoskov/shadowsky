@@ -1,53 +1,103 @@
-import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import React, {useState, useRef} from 'react';
+import {View, Text, StyleSheet, TouchableOpacity, ActivityIndicator} from 'react-native';
+import {Video, ResizeMode, AVPlaybackStatus} from 'expo-av';
 import {Image} from 'react-native';
 import {AppBskyEmbedVideo} from '@atproto/api';
-import {openLink} from '../utils/browser';
 
 interface VideoEmbedProps {
   video: AppBskyEmbedVideo.View;
   onPress?: (url: string) => void;
 }
 
-export function VideoEmbed({video, onPress}: VideoEmbedProps) {
-  const handlePress = async () => {
-    // Get the video URL from the playlist
-    const videoUrl = video.playlist;
+export function VideoEmbed({video}: VideoEmbedProps) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showThumbnail, setShowThumbnail] = useState(true);
+  const videoRef = useRef<Video>(null);
 
-    if (onPress) {
-      onPress(videoUrl);
-    } else if (videoUrl) {
+  const handlePlayPress = async () => {
+    if (!isPlaying) {
+      setIsLoading(true);
+      setShowThumbnail(false);
       try {
-        await openLink(videoUrl);
+        if (videoRef.current) {
+          await videoRef.current.playAsync();
+          setIsPlaying(true);
+        }
       } catch (error) {
-        console.error('Failed to open video URL:', error);
+        console.error('Failed to play video:', error);
+        setShowThumbnail(true);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      try {
+        if (videoRef.current) {
+          await videoRef.current.pauseAsync();
+          setIsPlaying(false);
+        }
+      } catch (error) {
+        console.error('Failed to pause video:', error);
+      }
+    }
+  };
+
+  const handlePlaybackStatusUpdate = (status: AVPlaybackStatus) => {
+    if (status.isLoaded) {
+      setIsPlaying(status.isPlaying);
+      if (status.didJustFinish) {
+        setShowThumbnail(true);
+        setIsPlaying(false);
       }
     }
   };
 
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={handlePress}
-      activeOpacity={0.8}>
-      {video.thumbnail && (
-        <Image
-          source={{uri: video.thumbnail}}
-          style={styles.thumbnail}
-          resizeMode="cover"
-        />
+    <View style={styles.container}>
+      {showThumbnail ? (
+        <TouchableOpacity
+          style={styles.thumbnailContainer}
+          onPress={handlePlayPress}
+          activeOpacity={0.8}>
+          {video.thumbnail && (
+            <Image
+              source={{uri: video.thumbnail}}
+              style={styles.thumbnail}
+              resizeMode="cover"
+            />
+          )}
+          <View style={styles.playButtonContainer}>
+            {isLoading ? (
+              <ActivityIndicator size="large" color="#ffffff" />
+            ) : (
+              <View style={styles.playButton}>
+                <View style={styles.playIcon} />
+              </View>
+            )}
+          </View>
+          {video.alt && (
+            <View style={styles.altContainer}>
+              <Text style={styles.altText}>{video.alt}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={styles.videoContainer}
+          onPress={handlePlayPress}
+          activeOpacity={1}>
+          <Video
+            ref={videoRef}
+            source={{uri: video.playlist}}
+            style={styles.video}
+            resizeMode={ResizeMode.CONTAIN}
+            useNativeControls={true}
+            shouldPlay={false}
+            onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
+          />
+        </TouchableOpacity>
       )}
-      <View style={styles.playButtonContainer}>
-        <View style={styles.playButton}>
-          <View style={styles.playIcon} />
-        </View>
-      </View>
-      {video.alt && (
-        <View style={styles.altContainer}>
-          <Text style={styles.altText}>{video.alt}</Text>
-        </View>
-      )}
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -60,9 +110,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#1f2937',
     position: 'relative',
   },
+  thumbnailContainer: {
+    position: 'relative',
+  },
   thumbnail: {
     width: '100%',
     height: 240,
+  },
+  videoContainer: {
+    position: 'relative',
+    width: '100%',
+    height: 240,
+    backgroundColor: '#000000',
+  },
+  video: {
+    width: '100%',
+    height: '100%',
   },
   playButtonContainer: {
     position: 'absolute',
