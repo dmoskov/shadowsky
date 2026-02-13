@@ -22,6 +22,7 @@ import { preferencesService } from "../../services/preferences";
 import { useGifPicker } from "../../hooks/useGifPicker";
 import { GifPicker } from "../../components/GifPicker";
 import type { TenorGif } from "../../services/tenor";
+import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 
 const MAX_POST_LENGTH = 300;
 
@@ -665,6 +666,15 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
     : (!text.trim() && imagePicker.selectedImages.length === 0 && !videoPicker.selectedVideo && !gifPicker.selectedGif) ||
       text.length > MAX_POST_LENGTH ||
       imagePicker.isUploading || videoPicker.isUploading;
+
+  // Enable cmd+Enter keyboard shortcut to submit post
+  useKeyboardShortcuts({
+    onCmdEnter: () => {
+      if (!isPostDisabled && !createPost.isPending) {
+        handlePost();
+      }
+    },
+  });
 
   const charCount = text.length;
   const isOverLimit = charCount > MAX_POST_LENGTH;

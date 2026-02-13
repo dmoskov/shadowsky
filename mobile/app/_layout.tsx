@@ -39,6 +39,7 @@ import {
 } from "../src/utils/error-reporting";
 import { appLockService } from "../src/services/app-lock";
 import { setupOfflineStorageCleanup } from "../src/hooks/useOfflineFeed";
+import { useGlobalKeyboardShortcuts } from "../src/hooks/useKeyboardShortcuts";
 
 // Initialize Sentry as early as possible
 const sentryDsn = Constants.expoConfig?.extra?.sentryDsn;
@@ -120,6 +121,9 @@ function AuthGate() {
 }
 
 function RootLayout() {
+  // Enable global keyboard shortcuts (cmd+N, cmd+K, cmd+1-4)
+  useGlobalKeyboardShortcuts();
+
   useEffect(() => {
     // Set device and app tags for Sentry
     setTags({
