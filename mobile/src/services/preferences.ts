@@ -35,6 +35,9 @@ export interface AppPreferences {
   // Background fetch
   backgroundFetchEnabled: boolean;
 
+  // Security
+  appLockEnabled: boolean;
+
   // Moderation
   mutedWords: MutedWord[];
 }
@@ -68,6 +71,9 @@ const DEFAULT_PREFERENCES: AppPreferences = {
 
   // Background fetch
   backgroundFetchEnabled: true,
+
+  // Security
+  appLockEnabled: false,
 
   // Moderation
   mutedWords: [],

@@ -3,8 +3,8 @@ import Constants from "expo-constants";
 import * as Device from "expo-device";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
-import { LogBox, Platform } from "react-native";
+import { useEffect, useState, useRef } from "react";
+import { LogBox, Platform, AppState, AppStateStatus } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // Suppress known harmless warnings from dependencies
@@ -18,9 +18,10 @@ LogBox.ignoreLogs([
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ErrorBoundary from "../src/components/ErrorBoundary";
 import { QueryErrorHandler } from "../src/components/QueryErrorHandler";
+import { AppLockScreen } from "../src/components/AppLockScreen";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { NetworkProvider } from "../src/contexts/NetworkContext";
-import { PreferencesProvider } from "../src/contexts/PreferencesContext";
+import { PreferencesProvider, usePreferences } from "../src/contexts/PreferencesContext";
 import { ToastProvider } from "../src/contexts/ToastContext";
 import {
   queryClient,
@@ -34,10 +35,62 @@ import {
   setTags,
   Sentry,
 } from "../src/utils/error-reporting";
+import { appLockService } from "../src/services/app-lock";
 
 // Initialize Sentry as early as possible
 const sentryDsn = Constants.expoConfig?.extra?.sentryDsn;
 initializeSentry(sentryDsn);
+
+function AppLockGate({ children }: { children: React.ReactNode }) {
+  const { preferences } = usePreferences();
+  const { isAuthenticated } = useAuth();
+  const [isLocked, setIsLocked] = useState(false);
+  const appState = useRef(AppState.currentState);
+
+  useEffect(() => {
+    // Only enable app lock if user is authenticated and preference is enabled
+    if (!isAuthenticated || !preferences?.appLockEnabled) {
+      setIsLocked(false);
+      return;
+    }
+
+    // Handle app state changes (foreground/background)
+    const subscription = AppState.addEventListener(
+      "change",
+      async (nextAppState: AppStateStatus) => {
+        if (
+          appState.current.match(/inactive|background/) &&
+          nextAppState === "active"
+        ) {
+          // App has come to foreground
+          const shouldLock = await appLockService.shouldRequireAuthentication();
+          if (shouldLock && preferences.appLockEnabled) {
+            setIsLocked(true);
+          }
+        } else if (nextAppState.match(/inactive|background/)) {
+          // App is going to background
+          await appLockService.recordBackgroundTime();
+        }
+
+        appState.current = nextAppState;
+      },
+    );
+
+    return () => {
+      subscription.remove();
+    };
+  }, [isAuthenticated, preferences?.appLockEnabled]);
+
+  const handleUnlock = () => {
+    setIsLocked(false);
+  };
+
+  if (isLocked) {
+    return <AppLockScreen onUnlock={handleUnlock} />;
+  }
+
+  return <>{children}</>;
+}
 
 function AuthGate() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -56,7 +109,11 @@ function AuthGate() {
     }
   }, [isAuthenticated, isLoading, segments, router]);
 
-  return <Slot />;
+  return (
+    <AppLockGate>
+      <Slot />
+    </AppLockGate>
+  );
 }
 
 function RootLayout() {
