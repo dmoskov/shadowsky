@@ -11,6 +11,7 @@ import {
   Modal,
   Alert,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { useProfile, useFollowUser, useUnfollowUser, useBlockUser, useUnblockUser, useMuteUser, useUnmuteUser } from "../../hooks/api/useProfile";
 import { useAuthorFeed } from "../../hooks/api/useFeed";
 import { Avatar } from "../../components/Avatar";
@@ -30,6 +31,7 @@ interface ProfileScreenProps {
 }
 
 export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, onNavigateToFollowers, onNavigateToFollowing }: ProfileScreenProps) {
+  const router = useRouter();
   const { data: profile, isLoading: isLoadingProfile, error: profileError, refetch: refetchProfile } = useProfile(handle);
   const {
     data: feedData,
@@ -70,8 +72,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   };
 
   const handleHashtagPress = (tag: string) => {
-    // TODO: Navigate to search with hashtag query
-    console.log('Hashtag pressed:', tag);
+    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
   };
 
   const handleBlock = () => {

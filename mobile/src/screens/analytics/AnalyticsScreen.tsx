@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAppNavigation } from "../../hooks/useNavigation";
 import { useUserAnalytics } from "../../hooks/api/useAnalytics";
 import { TimeRange } from "../../services/atproto/analytics";
 import { PostCard } from "../../components/PostCard";
@@ -15,7 +17,9 @@ import { AppBskyFeedDefs } from "@atproto/api";
 import { colors } from "../../constants/theme";
 
 export function AnalyticsScreen() {
+  const router = useRouter();
   const { account } = useAuth();
+  const { navigateToProfile } = useAppNavigation();
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
 
   const { data: analytics, isLoading, error } = useUserAnalytics(
@@ -24,13 +28,11 @@ export function AnalyticsScreen() {
   );
 
   const handleMentionPress = (handle: string, did: string) => {
-    // TODO: Navigate to profile
-    console.log('Navigate to profile:', handle);
+    navigateToProfile(handle);
   };
 
   const handleHashtagPress = (tag: string) => {
-    // TODO: Navigate to search with hashtag query
-    console.log('Hashtag pressed:', tag);
+    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
   };
 
   const timeRanges: { value: TimeRange; label: string }[] = [

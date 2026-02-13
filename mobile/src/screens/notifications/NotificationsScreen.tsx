@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect, useScrollToTop} from '@react-navigation/native';
+import {useRouter} from 'expo-router';
 import {AppBskyNotificationListNotifications} from '@atproto/api';
 import {
   useNotifications,
@@ -23,6 +24,7 @@ import {clearBadgeCount} from '../../services/notification-poller';
 import {colors} from '../../constants/theme';
 
 export function NotificationsScreen() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const {
     data,
@@ -184,8 +186,8 @@ export function NotificationsScreen() {
   );
 
   const handleHashtagPress = useCallback((tag: string) => {
-    // TODO: Navigate to search with hashtag query
-  }, []);
+    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
+  }, [router]);
 
   // Flatten sections into a single list with headers
   const flattenedData = React.useMemo(() => {

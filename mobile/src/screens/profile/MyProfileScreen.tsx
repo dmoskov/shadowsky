@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScrollToTop } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
 import { useAuth } from "../../contexts/AuthContext";
@@ -35,6 +36,7 @@ export function MyProfileScreen({
   onNavigateToFollowing,
   onSignOut,
 }: MyProfileScreenProps) {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { account, signOut } = useAuth();
   const { data: profile, isLoading: isLoadingProfile, refetch: refetchProfile } = useProfile(
@@ -71,7 +73,7 @@ export function MyProfileScreen({
   };
 
   const handleHashtagPress = (tag: string) => {
-    // TODO: Navigate to search with hashtag query
+    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
   };
 
   const handleRefresh = async () => {
