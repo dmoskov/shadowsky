@@ -7,6 +7,7 @@ import { ComposerSettings } from "../components/settings/ComposerSettings";
 import { ContentModerationSettings } from "../components/settings/ContentModerationSettings";
 import { DataSettings } from "../components/settings/DataSettings";
 import { HelpSettings } from "../components/settings/HelpSettings";
+import { LabelersSettings } from "../components/settings/LabelersSettings";
 import { MediaCacheSettings } from "../components/settings/MediaCacheSettings";
 import { ModerationHistorySettings } from "../components/settings/ModerationHistorySettings";
 import { NotificationSettings } from "../components/settings/NotificationSettings";
@@ -36,6 +37,8 @@ export const Settings = () => {
         return <PrivacySettings />;
       case "moderation":
         return <ContentModerationSettings />;
+      case "labelers":
+        return <LabelersSettings />;
       case "data":
         return <DataSettings />;
       case "storage":
