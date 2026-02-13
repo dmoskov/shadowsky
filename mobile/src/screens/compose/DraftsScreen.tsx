@@ -176,6 +176,11 @@ export function DraftsScreen() {
           ListFooterComponent={renderFooter}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          initialNumToRender={10}
+          updateCellsBatchingPeriod={50}
         />
       )}
     </View>

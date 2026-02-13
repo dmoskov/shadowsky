@@ -298,6 +298,16 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
           refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={8}
+          windowSize={5}
+          initialNumToRender={8}
+          updateCellsBatchingPeriod={50}
+          getItemLayout={(data, index) => ({
+            length: 160,
+            offset: 172 * index,
+            index,
+          })}
         />
       )}
     </View>
