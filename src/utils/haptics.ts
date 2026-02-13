@@ -50,7 +50,7 @@ export async function triggerHaptic(type: HapticType): Promise<void> {
         await Haptics.selectionAsync();
         break;
     }
-  } catch (error) {
+  } catch (_error) {
     // Silently fail if haptics are not supported or error occurs
     // Don't log to avoid noise in development
   }
