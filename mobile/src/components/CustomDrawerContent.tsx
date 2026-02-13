@@ -4,8 +4,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, usePathname } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
 import { colors } from "../constants/theme";
-import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon, ChatBubbleIcon, SearchIcon } from "./icons";
-import { useUnreadMessageCount } from "../hooks/api";
+import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon, ChatBubbleIcon, SearchIcon, ImageIcon } from "./icons";
+import { useUnreadMessageCount, useDraftCount } from "../hooks/api";
 
 interface DrawerItemProps {
   label: string;
@@ -45,6 +45,7 @@ export function CustomDrawerContent() {
   const pathname = usePathname();
   const { account } = useAuth();
   const unreadCount = useUnreadMessageCount();
+  const draftCount = useDraftCount();
 
   return (
     <ScrollView style={[styles.drawerContent, { paddingTop: insets.top }]}>
@@ -89,6 +90,13 @@ export function CustomDrawerContent() {
           icon={<ListIcon size={20} color={pathname.includes("/lists") ? colors.primary : colors.text} />}
           isActive={pathname.includes("/lists")}
           onPress={() => router.push("/(app)/lists")}
+        />
+        <DrawerItem
+          label="Drafts"
+          icon={<ImageIcon size={20} color={pathname.includes("/drafts") ? colors.primary : colors.text} />}
+          isActive={pathname.includes("/drafts")}
+          onPress={() => router.push("/(app)/drafts")}
+          badge={draftCount}
         />
         <DrawerItem
           label="Scheduled Posts"

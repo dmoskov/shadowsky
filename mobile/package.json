@@ -21,7 +21,7 @@
     "update:production": "eas update --branch production --message"
   },
   "dependencies": {
-    "@atproto/api": "^0.13.21",
+    "@atproto/api": "^0.18.21",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "11.4.1",
     "@react-navigation/drawer": "^7.3.5",
@@ -34,6 +34,7 @@
     "expo-crypto": "~15.0.8",
     "expo-dev-client": "~6.0.20",
     "expo-device": "~8.0.10",
+    "expo-file-system": "^19.0.21",
     "expo-haptics": "~15.0.8",
     "expo-image": "~3.0.11",
     "expo-image-picker": "~17.0.10",
@@ -45,6 +46,7 @@
     "expo-task-manager": "^14.0.9",
     "expo-updates": "~29.0.16",
     "expo-web-browser": "^15.0.10",
+    "nanoid": "^5.1.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
