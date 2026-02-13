@@ -80,6 +80,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         project: process.env.SENTRY_PROJECT || "",
       },
     ],
+    "./plugins/withKeyEvent",
   ],
   experiments: {
     typedRoutes: true,

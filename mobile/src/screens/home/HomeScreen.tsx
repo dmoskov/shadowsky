@@ -11,6 +11,7 @@ import { useAppNavigation } from "../../hooks/useNavigation";
 import { FeedList } from "../../components/FeedList";
 import { useRouter } from "expo-router";
 import { triggerHaptic } from "../../utils/haptics";
+import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 
 /**
  * Extract post ID (rkey) from AT Protocol URI
@@ -25,6 +26,7 @@ export function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [selectedFeedUri, setSelectedFeedUri] = useState<string | null>(null);
+  const [selectedPostIndex, setSelectedPostIndex] = useState<number>(0);
   const { navigateToThread, navigateToProfile, navigateToCompose } = useAppNavigation();
   const likePost = useLikePost();
   const unlikePost = useUnlikePost();
@@ -201,6 +203,24 @@ export function HomeScreen() {
     triggerHaptic("light");
     toggleBookmark(post.post);
   };
+
+  // Arrow key navigation for feed
+  useKeyboardShortcuts({
+    onArrowUp: () => {
+      if (posts.length > 0) {
+        const newIndex = Math.max(0, selectedPostIndex - 1);
+        setSelectedPostIndex(newIndex);
+        scrollRef.current?.scrollToIndex({ index: newIndex, animated: true });
+      }
+    },
+    onArrowDown: () => {
+      if (posts.length > 0) {
+        const newIndex = Math.min(posts.length - 1, selectedPostIndex + 1);
+        setSelectedPostIndex(newIndex);
+        scrollRef.current?.scrollToIndex({ index: newIndex, animated: true });
+      }
+    },
+  });
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
