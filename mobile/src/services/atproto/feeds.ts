@@ -419,3 +419,164 @@ export async function unsaveFeed(feedUri: string): Promise<void> {
     ATProtoEndpointType.FEED
   );
 }
+
+/**
+ * Pin a feed to the home screen
+ */
+export async function pinFeed(feedUri: string): Promise<void> {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        // Get current preferences
+        const response = await agent.app.bsky.actor.getPreferences();
+        const preferences = response.data.preferences;
+
+        // Find saved feeds preference
+        const savedFeedsIndex = preferences.findIndex(
+          (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
+        );
+
+        let savedFeeds: string[] = [];
+        let pinnedFeeds: string[] = [];
+
+        if (savedFeedsIndex >= 0) {
+          const savedFeedsPref = preferences[savedFeedsIndex] as {saved?: string[]; pinned?: string[]};
+          savedFeeds = savedFeedsPref.saved || [];
+          pinnedFeeds = savedFeedsPref.pinned || [];
+        }
+
+        // Add feed to pinned if not already pinned
+        if (!pinnedFeeds.includes(feedUri)) {
+          pinnedFeeds.push(feedUri);
+
+          // Also ensure it's saved
+          if (!savedFeeds.includes(feedUri)) {
+            savedFeeds.push(feedUri);
+          }
+
+          // Update preferences
+          const updatedPreferences = [...preferences];
+          if (savedFeedsIndex >= 0) {
+            updatedPreferences[savedFeedsIndex] = {
+              $type: 'app.bsky.actor.defs#savedFeedsPref',
+              saved: savedFeeds,
+              pinned: pinnedFeeds,
+            };
+          } else {
+            updatedPreferences.push({
+              $type: 'app.bsky.actor.defs#savedFeedsPref',
+              saved: savedFeeds,
+              pinned: pinnedFeeds,
+            });
+          }
+
+          await agent.app.bsky.actor.putPreferences({preferences: updatedPreferences});
+        }
+      }),
+    ATProtoEndpointType.FEED
+  );
+}
+
+/**
+ * Unpin a feed from the home screen
+ */
+export async function unpinFeed(feedUri: string): Promise<void> {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        // Get current preferences
+        const response = await agent.app.bsky.actor.getPreferences();
+        const preferences = response.data.preferences;
+
+        // Find saved feeds preference
+        const savedFeedsIndex = preferences.findIndex(
+          (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
+        );
+
+        if (savedFeedsIndex >= 0) {
+          const savedFeedsPref = preferences[savedFeedsIndex] as {saved?: string[]; pinned?: string[]};
+          const savedFeeds = savedFeedsPref.saved || [];
+          const pinnedFeeds = savedFeedsPref.pinned || [];
+
+          // Remove feed from pinned
+          const updatedPinnedFeeds = pinnedFeeds.filter((uri) => uri !== feedUri);
+
+          // Update preferences
+          const updatedPreferences = [...preferences];
+          updatedPreferences[savedFeedsIndex] = {
+            $type: 'app.bsky.actor.defs#savedFeedsPref',
+            saved: savedFeeds,
+            pinned: updatedPinnedFeeds,
+          };
+
+          await agent.app.bsky.actor.putPreferences({preferences: updatedPreferences});
+        }
+      }),
+    ATProtoEndpointType.FEED
+  );
+}
+
+/**
+ * Get the pinned feeds for the current user
+ */
+export async function getPinnedFeeds(): Promise<string[]> {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        const response = await agent.app.bsky.actor.getPreferences();
+        const savedFeedsPreference = response.data.preferences.find(
+          (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
+        ) as {saved?: string[]; pinned?: string[]} | undefined;
+
+        return savedFeedsPreference?.pinned || [];
+      }),
+    ATProtoEndpointType.FEED
+  );
+}
+
+/**
+ * Reorder saved feeds
+ */
+export async function reorderSavedFeeds(feedUris: string[]): Promise<void> {
+  return rateLimited(
+    async () =>
+      withRetry(async () => {
+        const client = getAtProtoClient();
+        const agent = client.getAgent();
+
+        // Get current preferences
+        const response = await agent.app.bsky.actor.getPreferences();
+        const preferences = response.data.preferences;
+
+        // Find saved feeds preference
+        const savedFeedsIndex = preferences.findIndex(
+          (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
+        );
+
+        if (savedFeedsIndex >= 0) {
+          const savedFeedsPref = preferences[savedFeedsIndex] as {saved?: string[]; pinned?: string[]};
+          const pinnedFeeds = savedFeedsPref.pinned || [];
+
+          // Update preferences with new order
+          const updatedPreferences = [...preferences];
+          updatedPreferences[savedFeedsIndex] = {
+            $type: 'app.bsky.actor.defs#savedFeedsPref',
+            saved: feedUris,
+            pinned: pinnedFeeds,
+          };
+
+          await agent.app.bsky.actor.putPreferences({preferences: updatedPreferences});
+        }
+      }),
+    ATProtoEndpointType.FEED
+  );
+}

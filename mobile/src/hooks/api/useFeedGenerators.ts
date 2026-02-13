@@ -6,6 +6,10 @@ import {
   getSavedFeeds,
   saveFeed,
   unsaveFeed,
+  pinFeed,
+  unpinFeed,
+  getPinnedFeeds,
+  reorderSavedFeeds,
 } from '../../services/atproto/feeds';
 
 /**
@@ -78,6 +82,63 @@ export function useUnsaveFeed() {
 
   return useMutation({
     mutationFn: (feedUri: string) => unsaveFeed(feedUri),
+    onSuccess: () => {
+      // Invalidate saved feeds query to refetch
+      queryClient.invalidateQueries({queryKey: ['savedFeeds']});
+      queryClient.invalidateQueries({queryKey: ['pinnedFeeds']});
+    },
+  });
+}
+
+/**
+ * Hook to pin a feed to the home screen
+ */
+export function usePinFeed() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (feedUri: string) => pinFeed(feedUri),
+    onSuccess: () => {
+      // Invalidate queries to refetch
+      queryClient.invalidateQueries({queryKey: ['savedFeeds']});
+      queryClient.invalidateQueries({queryKey: ['pinnedFeeds']});
+    },
+  });
+}
+
+/**
+ * Hook to unpin a feed from the home screen
+ */
+export function useUnpinFeed() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (feedUri: string) => unpinFeed(feedUri),
+    onSuccess: () => {
+      // Invalidate pinned feeds query to refetch
+      queryClient.invalidateQueries({queryKey: ['pinnedFeeds']});
+    },
+  });
+}
+
+/**
+ * Hook to fetch the user's pinned feeds
+ */
+export function usePinnedFeeds() {
+  return useQuery({
+    queryKey: ['pinnedFeeds'],
+    queryFn: () => getPinnedFeeds(),
+  });
+}
+
+/**
+ * Hook to reorder saved feeds
+ */
+export function useReorderSavedFeeds() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (feedUris: string[]) => reorderSavedFeeds(feedUris),
     onSuccess: () => {
       // Invalidate saved feeds query to refetch
       queryClient.invalidateQueries({queryKey: ['savedFeeds']});

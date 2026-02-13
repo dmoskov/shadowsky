@@ -80,6 +80,12 @@ export function CustomDrawerContent() {
           badge={unreadCount}
         />
         <DrawerItem
+          label="My Feeds"
+          icon={<SearchIcon size={20} color={pathname.includes("/feeds/saved") ? colors.primary : colors.text} />}
+          isActive={pathname.includes("/feeds/saved")}
+          onPress={() => router.push("/(app)/feeds/saved")}
+        />
+        <DrawerItem
           label="Discover Feeds"
           icon={<SearchIcon size={20} color={pathname.includes("/feeds/discover") ? colors.primary : colors.text} />}
           isActive={pathname.includes("/feeds/discover")}
