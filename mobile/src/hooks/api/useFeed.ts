@@ -1,5 +1,5 @@
 import {useInfiniteQuery, useQuery} from '@tanstack/react-query';
-import {getTimeline, getFeed, getAuthorFeed, getActorLikes, getPostThread} from '../../services/atproto/feeds';
+import {getTimeline, getFeed, getAuthorFeed, getActorLikes, getPostThread, AuthorFeedFilter} from '../../services/atproto/feeds';
 
 /**
  * Hook to fetch the user's timeline with infinite scroll
@@ -29,10 +29,10 @@ export function useCustomFeed(feedUri: string) {
 /**
  * Hook to fetch an author's feed with infinite scroll
  */
-export function useAuthorFeed(actor: string) {
+export function useAuthorFeed(actor: string, filter?: AuthorFeedFilter) {
   return useInfiniteQuery({
-    queryKey: ['authorFeed', actor],
-    queryFn: ({pageParam}) => getAuthorFeed(actor, {cursor: pageParam}),
+    queryKey: ['authorFeed', actor, filter],
+    queryFn: ({pageParam}) => getAuthorFeed(actor, {cursor: pageParam, filter}),
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     enabled: !!actor,

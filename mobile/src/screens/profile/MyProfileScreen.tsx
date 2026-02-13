@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { AppBskyFeedDefs } from "@atproto/api";
 import {
   ActivityIndicator,
@@ -13,10 +13,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScrollToTop } from "@react-navigation/native";
 import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
+import { ProfileTabBar, ProfileTab } from "../../components/ProfileTabBar";
 import { useAuth } from "../../contexts/AuthContext";
-import { useAuthorFeed } from "../../hooks/api/useFeed";
+import { useAuthorFeed, useActorLikes } from "../../hooks/api/useFeed";
 import { useProfile } from "../../hooks/api/useProfile";
 import { colors } from "../../constants/theme";
+import { AuthorFeedFilter } from "../../services/atproto/feeds";
 
 interface MyProfileScreenProps {
   onNavigateToPost?: (uri: string) => void;
@@ -37,19 +39,45 @@ export function MyProfileScreen({
 }: MyProfileScreenProps) {
   const insets = useSafeAreaInsets();
   const { account, signOut } = useAuth();
+  const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
   const { data: profile, isLoading: isLoadingProfile, refetch: refetchProfile } = useProfile(
     account?.handle || "",
   );
+
+  // Get the appropriate filter based on the active tab
+  const getFilter = (): AuthorFeedFilter | undefined => {
+    switch (activeTab) {
+      case "posts":
+        return "posts_no_replies";
+      case "replies":
+        return "posts_with_replies";
+      case "media":
+        return "posts_with_media";
+      default:
+        return undefined;
+    }
+  };
+
+  // Use different hooks based on the active tab
   const {
     data: feedData,
     isLoading: isLoadingFeed,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
+    fetchNextPage: fetchNextFeedPage,
+    hasNextPage: hasNextFeedPage,
+    isFetchingNextPage: isFetchingNextFeedPage,
     refetch: refetchFeed,
-    isRefetching,
-  } = useAuthorFeed(account?.handle || "");
-  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  } = useAuthorFeed(account?.handle || "", getFilter());
+
+  const {
+    data: likesData,
+    isLoading: isLoadingLikes,
+    fetchNextPage: fetchNextLikesPage,
+    hasNextPage: hasNextLikesPage,
+    isFetchingNextPage: isFetchingNextLikesPage,
+    refetch: refetchLikes,
+  } = useActorLikes(account?.handle || "");
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const scrollRef = useRef<FlatList>(null);
 
   // Enable scroll-to-top on tab press
@@ -64,7 +92,15 @@ export function MyProfileScreen({
     }
   };
 
-  const posts = feedData?.pages.flatMap((page) => page.feed) ?? [];
+  // Get posts based on the active tab
+  const posts = activeTab === "likes"
+    ? likesData?.pages.flatMap((page) => page.feed) ?? []
+    : feedData?.pages.flatMap((page) => page.feed) ?? [];
+
+  const isLoading = activeTab === "likes" ? isLoadingLikes : isLoadingFeed;
+  const fetchNextPage = activeTab === "likes" ? fetchNextLikesPage : fetchNextFeedPage;
+  const hasNextPage = activeTab === "likes" ? hasNextLikesPage : hasNextFeedPage;
+  const isFetchingNextPage = activeTab === "likes" ? isFetchingNextLikesPage : isFetchingNextFeedPage;
 
   const handleMentionPress = (handle: string, did: string) => {
     onNavigateToProfile?.(handle);
@@ -76,8 +112,18 @@ export function MyProfileScreen({
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await Promise.all([refetchProfile(), refetchFeed()]);
+    if (activeTab === "likes") {
+      await Promise.all([refetchProfile(), refetchLikes()]);
+    } else {
+      await Promise.all([refetchProfile(), refetchFeed()]);
+    }
     setIsRefreshing(false);
+  };
+
+  const handleTabChange = (tab: ProfileTab) => {
+    setActiveTab(tab);
+    // Scroll to top when changing tabs
+    scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
   const renderPost = ({ item }: { item: AppBskyFeedDefs.FeedViewPost }) => (
@@ -146,11 +192,12 @@ export function MyProfileScreen({
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
           <Text style={styles.signOutButtonText}>Sign Out</Text>
         </TouchableOpacity>
-
-        {/* Posts Header */}
-        <Text style={styles.postsHeader}>My Posts</Text>
       </View>
     );
+  };
+
+  const renderTabBar = () => {
+    return <ProfileTabBar activeTab={activeTab} onTabChange={handleTabChange} />;
   };
 
   const renderFooter = () => {
@@ -164,7 +211,7 @@ export function MyProfileScreen({
   };
 
   const renderEmpty = () => {
-    if (isLoadingFeed) {
+    if (isLoading) {
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -172,9 +219,10 @@ export function MyProfileScreen({
       );
     }
 
+    const emptyMessage = activeTab === "likes" ? "No likes yet" : "No posts yet";
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No posts yet</Text>
+        <Text style={styles.emptyText}>{emptyMessage}</Text>
       </View>
     );
   };
@@ -196,7 +244,12 @@ export function MyProfileScreen({
         data={posts}
         renderItem={renderPost}
         keyExtractor={(item, index) => item.post.uri || `post-${index}`}
-        ListHeaderComponent={renderHeader}
+        ListHeaderComponent={
+          <>
+            {renderHeader()}
+            {renderTabBar()}
+          </>
+        }
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
         onEndReached={() => {
