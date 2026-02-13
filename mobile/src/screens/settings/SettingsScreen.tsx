@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   Switch,
+  Platform,
 } from "react-native";
 import { AccountSwitcher } from "../../components";
 import { useAuth } from "../../contexts/AuthContext";
@@ -21,6 +22,7 @@ import {
 } from "../../services/background-fetch";
 import { openLink } from "../../utils/browser";
 import { useRouter } from "expo-router";
+import { appLockService } from "../../services/app-lock";
 
 interface SettingsScreenProps {
   section?: string;
@@ -37,11 +39,24 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
   const router = useRouter();
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
   const [cacheSize, setCacheSize] = useState<string>("calculating...");
+  const [biometricsSupported, setBiometricsSupported] = useState(false);
+  const [biometricType, setBiometricType] = useState<string>("Biometric");
 
-  // Calculate cache size on mount
+  // Calculate cache size and check biometric support on mount
   useEffect(() => {
     calculateCacheSize();
+    checkBiometricSupport();
   }, []);
+
+  const checkBiometricSupport = async () => {
+    const capability = await appLockService.isSupported();
+    setBiometricsSupported(capability.isSupported);
+    if (capability.biometricType) {
+      setBiometricType(
+        appLockService.getBiometricTypeName(capability.biometricType),
+      );
+    }
+  };
 
   const calculateCacheSize = async () => {
     try {
@@ -440,6 +455,53 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
           />
         </SettingRow>
       </View>
+
+      {/* Security Section */}
+      {biometricsSupported && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>SECURITY</Text>
+
+          <SettingRow
+            label="App Lock"
+            description={`Require ${biometricType} to open the app`}
+          >
+            <Switch
+              value={preferences.appLockEnabled}
+              onValueChange={async (value) => {
+                try {
+                  if (value) {
+                    // Test authentication before enabling
+                    const result = await appLockService.authenticate();
+                    if (result.success) {
+                      await appLockService.setEnabled(true);
+                      await updatePreference("appLockEnabled", true);
+                      Alert.alert(
+                        "App Lock Enabled",
+                        `${biometricType} will be required to unlock the app after 30 seconds of inactivity.`,
+                      );
+                    } else {
+                      Alert.alert(
+                        "Authentication Failed",
+                        result.error || "Could not verify your identity",
+                      );
+                    }
+                  } else {
+                    await appLockService.setEnabled(false);
+                    await updatePreference("appLockEnabled", false);
+                  }
+                } catch (error) {
+                  Alert.alert(
+                    "Error",
+                    "Failed to update app lock setting. Please try again.",
+                  );
+                }
+              }}
+              trackColor={{ false: "#374151", true: colors.primary }}
+              thumbColor="#ffffff"
+            />
+          </SettingRow>
+        </View>
+      )}
 
       {/* Moderation Section */}
       <View style={styles.section}>

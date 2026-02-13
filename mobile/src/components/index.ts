@@ -10,5 +10,6 @@ export * from './CustomDrawerContent';
 export * from './NotificationSetup';
 export * from './ImageCarousel';
 export * from './ImageCarouselItem';
+export * from './AppLockScreen';
 export * from './icons';
 export {default as OfflineBanner} from './OfflineBanner';
