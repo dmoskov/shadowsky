@@ -184,67 +184,19 @@ export function useBatchKeyboardShortcuts({
 }
 
 /**
- * Keyboard shortcuts reference for help modal
+ * Keyboard Shortcuts Reference (for future help modal)
+ *
+ * Available shortcuts:
+ * - Ctrl/Cmd + Shift + S: Enter selection mode
+ * - Escape: Exit selection mode
+ * - Ctrl/Cmd + A: Select all
+ * - Ctrl/Cmd + D: Deselect all
+ * - Space: Toggle selection on focused item
+ * - Shift + Click: Range select
+ * - M: Mute selected users
+ * - Shift + B: Block selected users
+ * - U: Unfollow selected users
+ * - L: Add selected to list
+ * - Shift + R: Remove selected followers
+ * - Ctrl/Cmd + Z: Undo last batch action
  */
-export const BATCH_KEYBOARD_SHORTCUTS = [
-  {
-    key: "Ctrl/Cmd + Shift + S",
-    description: "Enter selection mode",
-    context: "always",
-  },
-  {
-    key: "Escape",
-    description: "Exit selection mode",
-    context: "selection",
-  },
-  {
-    key: "Ctrl/Cmd + A",
-    description: "Select all",
-    context: "selection",
-  },
-  {
-    key: "Ctrl/Cmd + D",
-    description: "Deselect all",
-    context: "selection",
-  },
-  {
-    key: "Space",
-    description: "Toggle selection on focused item",
-    context: "selection",
-  },
-  {
-    key: "Shift + Click",
-    description: "Range select",
-    context: "selection",
-  },
-  {
-    key: "M",
-    description: "Mute selected users",
-    context: "selection",
-  },
-  {
-    key: "Shift + B",
-    description: "Block selected users",
-    context: "selection",
-  },
-  {
-    key: "U",
-    description: "Unfollow selected users",
-    context: "selection",
-  },
-  {
-    key: "L",
-    description: "Add selected to list",
-    context: "selection",
-  },
-  {
-    key: "Shift + R",
-    description: "Remove selected followers",
-    context: "selection",
-  },
-  {
-    key: "Ctrl/Cmd + Z",
-    description: "Undo last batch action",
-    context: "selection",
-  },
-];

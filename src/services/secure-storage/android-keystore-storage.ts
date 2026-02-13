@@ -76,33 +76,24 @@ export class AndroidKeystoreStorage implements ISecureStorage {
 }
 
 /**
- * Android Keystore key purposes (for future implementation reference)
- */
-export const AndroidKeyPurpose = {
-  /** Key can be used for encryption */
-  ENCRYPT: 1,
-  /** Key can be used for decryption */
-  DECRYPT: 2,
-  /** Key can be used for signing */
-  SIGN: 4,
-  /** Key can be used for signature verification */
-  VERIFY: 8,
-} as const;
-
-/**
- * Android biometric authentication types (for future implementation reference)
- */
-export const AndroidBiometricType = {
-  /** Strong biometric (fingerprint, face on supported devices) */
-  BIOMETRIC_STRONG: 0x000f,
-  /** Weak biometric (may include less secure methods) */
-  BIOMETRIC_WEAK: 0x00ff,
-  /** Device credential (PIN, pattern, password) */
-  DEVICE_CREDENTIAL: 0x8000,
-} as const;
-
-/**
- * EncryptedSharedPreferences configuration (for future implementation reference)
+ * Future Android Implementation Reference
+ *
+ * When implementing native Android support, refer to:
+ *
+ * Key Purposes:
+ * - ENCRYPT (1): Key can be used for encryption
+ * - DECRYPT (2): Key can be used for decryption
+ * - SIGN (4): Key can be used for signing
+ * - VERIFY (8): Key can be used for signature verification
+ *
+ * Biometric Types:
+ * - BIOMETRIC_STRONG (0x000f): Strong biometric (fingerprint, face)
+ * - BIOMETRIC_WEAK (0x00ff): Weak biometric methods
+ * - DEVICE_CREDENTIAL (0x8000): PIN, pattern, password
+ *
+ * Encryption Schemes:
+ * - KEY_SCHEME: AES256_SIV for key encryption
+ * - VALUE_SCHEME: AES256_GCM for value encryption
  *
  * Example Kotlin implementation:
  * ```kotlin
@@ -124,9 +115,3 @@ export const AndroidBiometricType = {
  * )
  * ```
  */
-export const AndroidEncryptionScheme = {
-  /** AES-256-SIV for key encryption */
-  KEY_SCHEME: "AES256_SIV",
-  /** AES-256-GCM for value encryption */
-  VALUE_SCHEME: "AES256_GCM",
-} as const;

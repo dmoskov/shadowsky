@@ -75,34 +75,20 @@ export class IOSKeychainStorage implements ISecureStorage {
 }
 
 /**
- * iOS Keychain access levels (for future implementation reference)
+ * Future iOS Implementation Reference
+ *
+ * When implementing native iOS support, refer to:
+ *
+ * Keychain Accessibility Levels:
+ * - WHEN_UNLOCKED: kSecAttrAccessibleWhenUnlocked
+ * - AFTER_FIRST_UNLOCK: kSecAttrAccessibleAfterFirstUnlock
+ * - WHEN_UNLOCKED_THIS_DEVICE_ONLY: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+ * - AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+ * - WHEN_PASSCODE_SET_THIS_DEVICE_ONLY: kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly
+ *
+ * Biometric Protection Options:
+ * - BIOMETRY_ANY: kSecAccessControlBiometryAny
+ * - BIOMETRY_CURRENT_SET: kSecAccessControlBiometryCurrentSet
+ * - DEVICE_PASSCODE: kSecAccessControlDevicePasscode
+ * - USER_PRESENCE: kSecAccessControlUserPresence
  */
-export const IOSKeychainAccessibility = {
-  /** Item data can only be accessed while device is unlocked */
-  WHEN_UNLOCKED: "kSecAttrAccessibleWhenUnlocked",
-  /** Item data can only be accessed after first unlock */
-  AFTER_FIRST_UNLOCK: "kSecAttrAccessibleAfterFirstUnlock",
-  /** Item data can be accessed when device is unlocked (non-migratable) */
-  WHEN_UNLOCKED_THIS_DEVICE_ONLY:
-    "kSecAttrAccessibleWhenUnlockedThisDeviceOnly",
-  /** Item data can be accessed after first unlock (non-migratable) */
-  AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY:
-    "kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly",
-  /** Item data can only be accessed when passcode is set on device */
-  WHEN_PASSCODE_SET_THIS_DEVICE_ONLY:
-    "kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly",
-} as const;
-
-/**
- * iOS Keychain biometric protection options (for future implementation reference)
- */
-export const IOSBiometricProtection = {
-  /** Require any biometric authentication */
-  BIOMETRY_ANY: "kSecAccessControlBiometryAny",
-  /** Require biometric authentication enrolled at time of creation */
-  BIOMETRY_CURRENT_SET: "kSecAccessControlBiometryCurrentSet",
-  /** Require device passcode */
-  DEVICE_PASSCODE: "kSecAccessControlDevicePasscode",
-  /** Require user presence (any authentication method) */
-  USER_PRESENCE: "kSecAccessControlUserPresence",
-} as const;
