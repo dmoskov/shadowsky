@@ -40,11 +40,13 @@ import { BackgroundNotificationLoader } from "./components/BackgroundNotificatio
 import { ColumnMigrationNotice } from "./components/ColumnMigrationNotice";
 import { CommandPalette } from "./components/CommandPalette";
 import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
+import { OnboardingFlow } from "./components/onboarding";
 import { StatusBar } from "./components/StatusBar";
 import { SwipeIndicator } from "./components/SwipeIndicator";
 import { FloatingActionButton } from "./components/ui/FloatingActionButton";
 import { getKeyboardShortcuts } from "./config/keyboardShortcuts";
 import { AppRoutes } from "./config/routes";
+import { onboardingService } from "./services/onboarding-service";
 
 // Keep lazy loading only for rarely-used dev/debug tools
 const DebugConsole = lazy(() =>
@@ -112,19 +114,30 @@ function createAppQueryClient(): QueryClient {
 const queryClient = createAppQueryClient();
 
 function AppContent() {
-  const { isAuthenticated, isLoading, session } = useAuth();
+  const { isAuthenticated, isLoading, session, agent } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const { isShortcutsHelpOpen, setIsShortcutsHelpOpen } =
     useKeyboardShortcutsContext();
 
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   // Use extracted hooks for cleaner code
   const { isSidebarOpen, setIsSidebarOpen, isSidebarCollapsed } =
     useSidebarManagement(isAuthenticated);
 
   useStorageInitialization();
+
+  // Check if user needs onboarding
+  useEffect(() => {
+    if (isAuthenticated && agent) {
+      const isComplete = onboardingService.isCompleted();
+      setNeedsOnboarding(!isComplete);
+      // Initialize onboarding service with agent
+      onboardingService.setAgent(agent);
+    }
+  }, [isAuthenticated, agent]);
 
   // Check if we're on the home route
   const isHomeRoute =
@@ -195,6 +208,18 @@ function AppContent() {
 
   if (!isAuthenticated) {
     return <LandingPage />;
+  }
+
+  // Show onboarding flow for new users
+  if (needsOnboarding) {
+    return (
+      <OnboardingFlow
+        onComplete={() => {
+          setNeedsOnboarding(false);
+          navigate("/home");
+        }}
+      />
+    );
   }
 
   return (
