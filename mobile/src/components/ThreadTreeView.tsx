@@ -82,15 +82,15 @@ function buildThreadTree(
 
 // Get color based on depth for visual hierarchy
 function getDepthColor(depth: number): string {
-  const colors = [
+  const depthColors = [
     colors.info, // blue
     colors.mention, // purple
-    "colors.accent", // pink
+    colors.accent, // pink
     colors.warning, // amber
     colors.success, // emerald
     colors.quote, // cyan
   ];
-  return colors[depth % colors.length];
+  return depthColors[depth % depthColors.length];
 }
 
 // Count descendants in a branch

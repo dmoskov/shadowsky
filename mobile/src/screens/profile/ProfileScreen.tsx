@@ -121,7 +121,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   };
 
   const handleHashtagPress = (tag: string) => {
-    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
+    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } } as any);
   };
 
   const handleBlock = () => {
@@ -159,7 +159,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           text: 'Unblock',
           style: 'default',
           onPress: () => {
-            unblockMutation.mutate(profile.viewer.blocking!, {
+            unblockMutation.mutate(profile.viewer!.blocking!, {
               onSuccess: () => {
                 refetchProfile();
               },

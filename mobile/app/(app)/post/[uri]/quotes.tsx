@@ -12,7 +12,7 @@ export default function PostQuotesRoute() {
   const {uri} = useLocalSearchParams<{uri: string}>();
   const router = useRouter();
   const {account} = useAuth();
-  const {isBookmarked, addBookmark, removeBookmark} = useBookmarks();
+  const {isBookmarked, toggleBookmark} = useBookmarks();
 
   const likePostMutation = useLikePost();
   const unlikePostMutation = useUnlikePost();
@@ -71,7 +71,7 @@ export default function PostQuotesRoute() {
             repostMutation.mutate({uri: postUri, cid});
           } else if (buttonIndex === 2) {
             router.push({
-              pathname: '/(app)/(tabs)/(home)/compose',
+              pathname: '/(app)/compose' as any,
               params: {quoteUri: postUri, quoteCid: cid},
             });
           }
@@ -91,7 +91,7 @@ export default function PostQuotesRoute() {
           text: 'Quote',
           onPress: () => {
             router.push({
-              pathname: '/(app)/(tabs)/(home)/compose',
+              pathname: '/(app)/compose' as any,
               params: {quoteUri: postUri, quoteCid: cid},
             });
           },
@@ -102,7 +102,7 @@ export default function PostQuotesRoute() {
 
   const handleReply = (post: AppBskyFeedDefs.PostView) => {
     router.push({
-      pathname: '/(app)/(tabs)/(home)/compose',
+      pathname: '/(app)/compose' as any,
       params: {
         replyToUri: post.uri,
         replyToCid: post.cid,
@@ -112,11 +112,8 @@ export default function PostQuotesRoute() {
   };
 
   const handleBookmark = (postUri: string, cid: string) => {
-    if (isBookmarked(postUri)) {
-      removeBookmark(postUri);
-    } else {
-      addBookmark(postUri, cid);
-    }
+    // toggleBookmark expects a PostView-like object
+    toggleBookmark({ uri: postUri, cid } as AppBskyFeedDefs.PostView);
   };
 
   const handleMentionPress = (handle: string, did: string) => {

@@ -1,6 +1,6 @@
 import React, {useState, useCallback, useMemo} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Modal, Alert} from 'react-native';
-import {AppBskyFeedDefs, AppBskyFeedPost} from '@atproto/api';
+import {AppBskyFeedDefs, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
 import {ReplyIcon, RepostIcon, HeartIcon, BookmarkIcon, MoreIcon, SendIcon} from './icons';
@@ -261,7 +261,7 @@ function PostCardComponent({
         {record && typeof record.text === 'string' && (
           <RichText
             text={record.text}
-            facets={record.facets}
+            facets={record.facets as AppBskyRichtextFacet.Main[] | undefined}
             onMentionPress={onMentionPress}
             onHashtagPress={onHashtagPress}
             style={styles.text}

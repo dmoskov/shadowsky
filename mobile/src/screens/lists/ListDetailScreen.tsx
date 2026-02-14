@@ -22,7 +22,6 @@ import {useAuth} from '../../contexts/AuthContext';
 import {AppBskyGraphDefs} from '@atproto/api';
 import {colors} from '../../constants/theme';
 import {EditListModal} from '../../components/EditListModal';
-import {useAuth} from '../../contexts/AuthContext';
 
 interface ListDetailScreenProps {
   listUri: string;
@@ -112,14 +111,7 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
     return data.pages.flatMap((page) => page.items);
   }, [data]);
 
-  // Check if current user is the list owner
-  const isOwner = useMemo(() => {
-    if (!listData || !session?.did) return false;
-    // Extract DID from list URI (format: at://did:plc:xxx/app.bsky.graph.list/rkey)
-    const uriParts = listData.uri.split('/');
-    const listCreatorDid = uriParts[2]; // The DID is the third part after at://
-    return listCreatorDid === session.did;
-  }, [listData, session]);
+
 
   const handleRemoveMember = useCallback(
     async (memberUri: string) => {

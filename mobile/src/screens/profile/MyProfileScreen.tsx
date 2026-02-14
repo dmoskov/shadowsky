@@ -113,7 +113,7 @@ export function MyProfileScreen({
   };
 
   const handleHashtagPress = (tag: string) => {
-    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
+    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } } as any);
   };
 
   const handleRefresh = async () => {

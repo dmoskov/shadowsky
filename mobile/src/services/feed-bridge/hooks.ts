@@ -6,7 +6,7 @@
  */
 
 import {useCallback, useEffect, useMemo, useRef} from 'react';
-import {UseInfiniteQueryResult} from '@tanstack/react-query';
+import {UseInfiniteQueryResult, InfiniteData} from '@tanstack/react-query';
 import {AppBskyFeedDefs} from '@atproto/api';
 import {
   extractPostsFromPages,
@@ -47,10 +47,10 @@ export interface UseFeedSerializerResult {
  * optimized for Swift Codable decoding.
  */
 export function useFeedSerializer(
-  query: UseInfiniteQueryResult<{
+  query: UseInfiniteQueryResult<InfiniteData<{
     feed: AppBskyFeedDefs.FeedViewPost[];
     cursor?: string;
-  }>,
+  }>>,
   options: UseFeedSerializerOptions = {}
 ): UseFeedSerializerResult {
   const {isOnline = true, isFromCache = false, bookmarkedPostUris} = options;
@@ -122,10 +122,10 @@ export function useFeedSerializer(
  * and generates efficient incremental updates.
  */
 export function useFeedIncrementalUpdates(
-  query: UseInfiniteQueryResult<{
+  query: UseInfiniteQueryResult<InfiniteData<{
     feed: AppBskyFeedDefs.FeedViewPost[];
     cursor?: string;
-  }>,
+  }>>,
   onUpdate?: (update: FeedBatchUpdate) => void
 ) {
   const prevPostsRef = useRef<Map<string, AppBskyFeedDefs.PostView>>(new Map());
@@ -234,10 +234,10 @@ export function useBookmarkUpdates(
  * Combines full serialization with incremental updates and bookmark tracking.
  */
 export function useCompleteFeedSerializer(
-  query: UseInfiniteQueryResult<{
+  query: UseInfiniteQueryResult<InfiniteData<{
     feed: AppBskyFeedDefs.FeedViewPost[];
     cursor?: string;
-  }>,
+  }>>,
   options: UseFeedSerializerOptions & {
     onIncrementalUpdate?: (update: FeedBatchUpdate) => void;
   } = {}

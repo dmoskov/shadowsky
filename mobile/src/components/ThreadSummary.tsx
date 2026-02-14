@@ -14,9 +14,12 @@ import {
   type ThreadSummaryFormat,
   type ThreadSummaryResult,
 } from "../services/ai-service";
-import {colors} from "../constants/theme";
+import { getCachedSummary, cacheSummary } from "../services/thread-summary-cache";
+import { colors } from "../constants/theme";
 
 type Post = AppBskyFeedDefs.PostView;
+
+type SummaryMode = "quick" | "full";
 
 interface ThreadSummaryProps {
   posts: Post[];
@@ -28,7 +31,7 @@ const STALE_TIME_MS = 10 * 60 * 1000; // 10 minutes
 
 /**
  * Mobile ThreadSummary - AI-generated summary for threads with 5+ posts
- * Adapts complexity based on thread size and engagement
+ * Supports quick (TLDR) and full (adaptive) summary modes
  */
 export function ThreadSummary({
   posts,
@@ -36,6 +39,7 @@ export function ThreadSummary({
   parentUris,
 }: ThreadSummaryProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [summaryMode, setSummaryMode] = useState<SummaryMode>("quick");
 
   // Only show summary for threads with 5+ posts
   const shouldFetchSummary = posts.length >= 5;
@@ -47,8 +51,8 @@ export function ThreadSummary({
     0,
   );
 
-  // Choose format based on thread size and engagement
-  const getSummaryFormat = (): ThreadSummaryFormat => {
+  // Choose format based on thread size and engagement (full mode only)
+  const getFullFormat = (): ThreadSummaryFormat => {
     if (posts.length >= 75) return "comprehensive";
     if (posts.length >= 30) return "detailed";
     if (posts.length >= 10) return "moderate";
@@ -56,7 +60,7 @@ export function ThreadSummary({
     return "brief";
   };
 
-  const summaryFormat = getSummaryFormat();
+  const activeFormat: ThreadSummaryFormat = summaryMode === "quick" ? "tldr" : getFullFormat();
 
   // Calculate depth based on parent chain
   const getDepth = (postUri: string): number => {
@@ -89,9 +93,15 @@ export function ThreadSummary({
     isLoading,
     error,
   } = useQuery<ThreadSummaryResult>({
-    queryKey: ["thread-summary-mobile", threadUri, summaryFormat],
+    queryKey: ["thread-summary-mobile", threadUri, activeFormat, summaryMode],
     queryFn: async () => {
-      return await generateThreadSummary(summaryPosts, summaryFormat);
+      const cacheKeyUri = `${threadUri}:${activeFormat}`;
+      const cached = await getCachedSummary(cacheKeyUri);
+      if (cached) return cached;
+
+      const result = await generateThreadSummary(summaryPosts, activeFormat);
+      await cacheSummary(cacheKeyUri, result);
+      return result;
     },
     enabled: shouldFetchSummary,
     staleTime: STALE_TIME_MS,
@@ -120,8 +130,9 @@ export function ThreadSummary({
     return null; // Fail silently
   }
 
-  const isComprehensive = summaryFormat === "comprehensive";
+  const isComprehensive = activeFormat === "comprehensive";
   const highlights = summary.metadata?.highlightedSubThreads;
+  const isCached = summary.metadata?.cached;
 
   return (
     <View style={styles.container}>
@@ -133,6 +144,7 @@ export function ThreadSummary({
         <Text style={styles.sparkle}>✨</Text>
         <View style={styles.headerTextContainer}>
           <Text style={styles.headerLabel}>AI Summary</Text>
+          {isCached && <Text style={styles.cachedBadge}> cached</Text>}
           {summary.metadata?.postCount && (
             <Text style={styles.headerMeta}>
               {" "}
@@ -141,6 +153,19 @@ export function ThreadSummary({
                 `, ${summary.metadata.authors.length} participants`}
             </Text>
           )}
+        </View>
+        {/* Quick / Full toggle */}
+        <View style={styles.modeToggle}>
+          <TouchableOpacity onPress={() => setSummaryMode("quick")}>
+            <Text style={[styles.modeButton, summaryMode === "quick" && styles.modeButtonActive]}>
+              Quick
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setSummaryMode("full")}>
+            <Text style={[styles.modeButton, summaryMode === "full" && styles.modeButtonActive]}>
+              Full
+            </Text>
+          </TouchableOpacity>
         </View>
         {isComprehensive && (
           <Text style={styles.chevron}>{isExpanded ? "▼" : "▶"}</Text>
@@ -173,8 +198,8 @@ export function ThreadSummary({
           )}
 
           {/* Total engagement for detailed+ summaries */}
-          {(summaryFormat === "detailed" ||
-            summaryFormat === "comprehensive") &&
+          {(activeFormat === "detailed" ||
+            activeFormat === "comprehensive") &&
             summary.metadata?.totalEngagement && (
               <Text style={styles.engagementText}>
                 {summary.metadata.totalEngagement.toLocaleString()} total
@@ -189,7 +214,7 @@ export function ThreadSummary({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "colors.surface",
+    backgroundColor: colors.surface,
     borderRadius: 8,
     marginHorizontal: 12,
     marginVertical: 8,
@@ -226,9 +251,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
+  cachedBadge: {
+    color: colors.textTertiary,
+    fontSize: 10,
+    fontStyle: "italic",
+  },
   headerMeta: {
     color: colors.textTertiary,
     fontSize: 11,
+  },
+  modeToggle: {
+    flexDirection: "row",
+    gap: 4,
+  },
+  modeButton: {
+    color: colors.textTertiary,
+    fontSize: 12,
+    fontWeight: "500",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  modeButtonActive: {
+    color: colors.primary,
   },
   chevron: {
     color: colors.textSecondary,
@@ -239,7 +283,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   summaryText: {
-    color: colors.borderLight,
+    color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },

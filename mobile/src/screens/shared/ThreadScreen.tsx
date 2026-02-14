@@ -201,7 +201,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   };
 
   const handleHashtagPress = (tag: string) => {
-    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
+    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } } as any);
   };
 
   const handleLike = (post: AppBskyFeedDefs.FeedViewPost) => {

@@ -1,6 +1,6 @@
 import React, {ReactNode} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import {AppBskyNotificationListNotifications, AppBskyFeedPost} from '@atproto/api';
+import {AppBskyNotificationListNotifications, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
 import {HeartIcon, RepostIcon, FollowIcon, AtSignIcon, ReplyIcon, QuoteIcon, BellIcon} from './icons';
@@ -141,7 +141,7 @@ export function NotificationItem({
             <View style={styles.postPreview}>
               <RichText
                 text={postRecord.text}
-                facets={postRecord.facets}
+                facets={postRecord.facets as AppBskyRichtextFacet.Main[] | undefined}
                 onMentionPress={onMentionPress}
                 onHashtagPress={onHashtagPress}
                 style={styles.postText}

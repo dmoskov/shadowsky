@@ -78,7 +78,7 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
   );
 
   const handleHashtagPress = useCallback((tag: string) => {
-    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
+    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } } as any);
   }, [router]);
 
   // Show loading state while fetching list details

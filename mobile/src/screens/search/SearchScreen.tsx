@@ -173,19 +173,20 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
         const embed = post.post.embed;
         if (!embed) return filters.mediaFilter === "links";
 
+        const media = (embed as any).media;
         switch (filters.mediaFilter) {
           case "images":
             return embed.$type === "app.bsky.embed.images#view" ||
                    (embed.$type === "app.bsky.embed.recordWithMedia#view" &&
-                    embed.media.$type === "app.bsky.embed.images#view");
+                    media?.$type === "app.bsky.embed.images#view");
           case "videos":
             return embed.$type === "app.bsky.embed.video#view" ||
                    (embed.$type === "app.bsky.embed.recordWithMedia#view" &&
-                    embed.media.$type === "app.bsky.embed.video#view");
+                    media?.$type === "app.bsky.embed.video#view");
           case "links":
             return embed.$type === "app.bsky.embed.external#view" ||
                    (embed.$type === "app.bsky.embed.recordWithMedia#view" &&
-                    embed.media.$type === "app.bsky.embed.external#view");
+                    media?.$type === "app.bsky.embed.external#view");
           default:
             return true;
         }

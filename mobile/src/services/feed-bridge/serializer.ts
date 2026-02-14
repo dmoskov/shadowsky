@@ -5,7 +5,7 @@
  * optimized for Swift consumption via JSON serialization.
  */
 
-import {AppBskyFeedDefs} from '@atproto/api';
+import {AppBskyFeedDefs, AppBskyActorDefs} from '@atproto/api';
 import {
   SerializedFeedViewPost,
   SerializedPost,
@@ -26,7 +26,7 @@ import {
 /**
  * Serialize author profile
  */
-function serializeAuthor(author: AppBskyFeedDefs.ProfileViewBasic): SerializedAuthor {
+function serializeAuthor(author: AppBskyActorDefs.ProfileViewBasic): SerializedAuthor {
   return {
     did: author.did,
     handle: author.handle,

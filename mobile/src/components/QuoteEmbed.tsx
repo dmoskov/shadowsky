@@ -1,6 +1,6 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import {AppBskyEmbedRecord, AppBskyFeedPost} from '@atproto/api';
+import {AppBskyEmbedRecord, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {RichText} from '../utils/rich-text';
 import {colors} from '../constants/theme';
@@ -52,8 +52,8 @@ export function QuoteEmbed({record, onPress}: QuoteEmbedProps) {
       </View>
       {postRecord && (
         <RichText
-          text={postRecord.text}
-          facets={postRecord.facets}
+          text={postRecord.text as string}
+          facets={postRecord.facets as AppBskyRichtextFacet.Main[] | undefined}
           style={styles.text}
           numberOfLines={3}
         />
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.surfaceElevated,
-    backgroundColor: 'colors.background',
+    backgroundColor: colors.background,
   },
   notFoundContainer: {
     alignItems: 'center',

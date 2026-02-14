@@ -8,10 +8,14 @@ import { triggerHaptic } from '../../../src/utils/haptics';
 import { useCollectionBookmarks } from '../../hooks/useBookmarkCollections';
 import { CollectionManager } from '../../components/CollectionManager';
 import { colors } from '../../constants/theme';
+import { useThreadSummaryPreGeneration } from '../../hooks/useThreadSummaryPreGeneration';
+import { usePreferences } from '../../contexts/PreferencesContext';
 
 export function BookmarksScreen() {
   const router = useRouter();
   const { isBookmarked, toggleBookmark } = useBookmarks();
+  const { preferences } = usePreferences();
+  useThreadSummaryPreGeneration({ enabled: preferences?.enableThreadSummaryPreGen });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
   const [showCollectionManager, setShowCollectionManager] = useState(false);
@@ -77,7 +81,7 @@ export function BookmarksScreen() {
   };
 
   const handleHashtagPress = (tag: string) => {
-    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
+    router.push({ pathname: '/(app)/(tabs)/(search)' as any, params: { q: '#' + tag } });
   };
 
   const handleRefresh = async () => {

@@ -148,7 +148,7 @@ export function NotificationsAnalyticsScreen() {
 
       if (!postEngagement[uri]) {
         const postText = AppBskyFeedPost.isRecord(notification.record)
-          ? notification.record.text || 'Post content unavailable'
+          ? (notification.record.text as string) || 'Post content unavailable'
           : 'Post content unavailable';
 
         postEngagement[uri] = {

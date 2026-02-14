@@ -147,7 +147,7 @@ export function NotificationsScreen() {
 
   const handleHashtagPress = useCallback(
     (tag: string) => {
-      router.push({pathname: '/(tabs)/(search)', params: {q: '#' + tag}});
+      router.push({pathname: '/(tabs)/(search)', params: {q: '#' + tag}} as any);
     },
     [router],
   );

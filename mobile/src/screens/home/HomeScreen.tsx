@@ -202,7 +202,7 @@ export function HomeScreen() {
 
   const handleHashtagPress = (event: { nativeEvent: { tag: string } }) => {
     const { tag } = event.nativeEvent;
-    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
+    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } } as any);
   };
 
   const handleBookmark = (event: { nativeEvent: { uri: string } }) => {

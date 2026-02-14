@@ -50,6 +50,7 @@ export interface AppPreferences {
 
   // AI Features
   autoGenerateAltText: boolean;
+  enableThreadSummaryPreGen: boolean;
 }
 
 const PREFERENCES_KEY = "@shadowsky_preferences";
@@ -93,6 +94,7 @@ const DEFAULT_PREFERENCES: AppPreferences = {
 
   // AI Features
   autoGenerateAltText: false,
+  enableThreadSummaryPreGen: true,
 };
 
 class PreferencesService {

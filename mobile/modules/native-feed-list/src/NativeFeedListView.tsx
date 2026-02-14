@@ -9,7 +9,7 @@ import { requireNativeViewManager, NativeModulesProxy } from 'expo-modules-core'
 import { ViewProps, Platform } from 'react-native';
 import FeedBridge from '../../feed-bridge';
 import { useCompleteFeedSerializer } from '../../../src/services/feed-bridge';
-import { UseInfiniteQueryResult } from '@tanstack/react-query';
+import { UseInfiniteQueryResult, InfiniteData } from '@tanstack/react-query';
 import { AppBskyFeedDefs } from '@atproto/api';
 
 // Native view manager
@@ -40,10 +40,8 @@ export interface NativeFeedListProps extends ViewProps, FeedListEvents {
 }
 
 // Feed query type (matching useTimeline/useCustomFeed)
-export interface FeedQuery extends UseInfiniteQueryResult<
-  { feed: AppBskyFeedDefs.FeedViewPost[]; cursor?: string },
-  Error
-> {}
+type FeedPage = { feed: AppBskyFeedDefs.FeedViewPost[]; cursor?: string };
+export type FeedQuery = UseInfiniteQueryResult<InfiniteData<FeedPage>, Error>;
 
 // Full props including the query
 export interface NativeFeedListWithDataProps extends Omit<NativeFeedListProps, 'isLoading' | 'isRefreshing' | 'isLoadingMore' | 'error'> {
@@ -128,7 +126,7 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
   const { serializedJSON } = useCompleteFeedSerializer(query, {
     isOnline,
     bookmarkedPostUris,
-    onIncrementalUpdate: useCallback((update) => {
+    onIncrementalUpdate: useCallback((update: unknown) => {
       if (isOnline) {
         const json = JSON.stringify(update);
         FeedBridge.updateFeedIncremental(json);

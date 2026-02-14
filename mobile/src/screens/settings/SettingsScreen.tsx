@@ -675,7 +675,19 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
             value={preferences.autoGenerateAltText}
             onValueChange={(value) => updatePreference("autoGenerateAltText", value)}
             trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor=colors.text
+            thumbColor={colors.text}
+          />
+        </SettingRow>
+
+        <SettingRow
+          label="Pre-Generate Thread Summaries"
+          description="Cache summaries for bookmarked threads for faster loading"
+        >
+          <Switch
+            value={preferences.enableThreadSummaryPreGen}
+            onValueChange={(value) => updatePreference("enableThreadSummaryPreGen", value)}
+            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
+            thumbColor={colors.text}
           />
         </SettingRow>
       </View>
@@ -730,18 +742,20 @@ function SettingRow({
   labelStyle,
   showChevron,
 }: SettingRowProps) {
+  const { colors: themeColors } = useTheme();
+  const rowStyles = createSettingRowStyles(themeColors);
   const content = (
-    <View style={styles.settingRow}>
-      <View style={styles.settingLeft}>
-        <Text style={[styles.settingLabel, labelStyle]}>{label}</Text>
+    <View style={rowStyles.settingRow}>
+      <View style={rowStyles.settingLeft}>
+        <Text style={[rowStyles.settingLabel, labelStyle]}>{label}</Text>
         {description && (
-          <Text style={styles.settingDescription}>{description}</Text>
+          <Text style={rowStyles.settingDescription}>{description}</Text>
         )}
       </View>
-      <View style={styles.settingRight}>
-        {value && <Text style={styles.settingValue}>{value}</Text>}
+      <View style={rowStyles.settingRight}>
+        {value && <Text style={rowStyles.settingValue}>{value}</Text>}
         {children}
-        {showChevron && <Text style={styles.chevron}>›</Text>}
+        {showChevron && <Text style={rowStyles.chevron}>›</Text>}
       </View>
     </View>
   );
@@ -757,7 +771,7 @@ function SettingRow({
   return content;
 }
 
-const createStyles = (themeColors: typeof colors) => StyleSheet.create({
+const createStyles = (themeColors: Record<string, string>) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: themeColors.background,
@@ -925,5 +939,46 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   backButtonText: {
     color: colors.info,
     fontSize: 16,
+  },
+});
+
+const createSettingRowStyles = (themeColors: Record<string, string>) => StyleSheet.create({
+  settingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: themeColors.border,
+    minHeight: 48,
+  },
+  settingLeft: {
+    flex: 1,
+    marginRight: 12,
+  },
+  settingLabel: {
+    color: themeColors.text,
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  settingDescription: {
+    color: themeColors.textTertiary,
+    fontSize: 13,
+    marginTop: 2,
+  },
+  settingRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  settingValue: {
+    color: themeColors.textSecondary,
+    fontSize: 14,
+  },
+  chevron: {
+    color: themeColors.textTertiary,
+    fontSize: 24,
+    fontWeight: "300",
   },
 });

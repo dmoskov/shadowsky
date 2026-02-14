@@ -5,7 +5,7 @@ import { colors } from "../../../constants/theme";
 import { getLanguageShortName } from "../../../constants/languages";
 import type { ImageAsset } from "../../../hooks/useImagePicker";
 import type { VideoAsset } from "../../../hooks/useVideoPicker";
-import type { TenorGif } from "../../../services/tenor";
+import type { SelectedGif } from "../../../hooks/useGifPicker";
 
 const MAX_POST_LENGTH = 300;
 
@@ -21,7 +21,7 @@ export interface ComposeToolbarProps {
   // State for toolbar buttons
   selectedImages: ImageAsset[];
   selectedVideo: VideoAsset | null;
-  selectedGif: TenorGif | null;
+  selectedGif: SelectedGif | null;
   isImageUploading: boolean;
   isVideoUploading: boolean;
   isThreadMode: boolean;

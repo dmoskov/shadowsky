@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     bottom: 60,
     width: width * 0.6,
     maxHeight: 300,
-    backgroundColor: "colors.surface",
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.borderLight,
@@ -221,10 +221,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "colors.border",
+    borderBottomColor: colors.border,
   },
   postItemCurrent: {
-    backgroundColor: colors.info,
     backgroundColor: "rgba(59, 130, 246, 0.2)",
   },
   postItemContent: {

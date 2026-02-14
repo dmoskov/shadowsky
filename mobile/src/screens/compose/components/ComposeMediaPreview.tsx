@@ -4,7 +4,7 @@ import { colors } from "../../../constants/theme";
 import { VideoIcon } from "../../../components/icons";
 import type { ImageAsset } from "../../../hooks/useImagePicker";
 import type { VideoAsset } from "../../../hooks/useVideoPicker";
-import type { TenorGif } from "../../../services/tenor";
+import type { SelectedGif } from "../../../hooks/useGifPicker";
 
 export interface ComposeMediaPreviewProps {
   // Image preview
@@ -20,7 +20,7 @@ export interface ComposeMediaPreviewProps {
   isVideoUploading: boolean;
 
   // GIF preview
-  selectedGif: TenorGif | null;
+  selectedGif: SelectedGif | null;
   onRemoveGif: () => void;
 }
 

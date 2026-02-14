@@ -5,6 +5,8 @@
  * Collections are stored locally (AsyncStorage) with the bookmark-to-collection mappings.
  */
 
+import { colors } from "../../constants/theme";
+
 export interface BookmarkCollection {
   id: string;
   name: string;
@@ -29,9 +31,9 @@ export const UNCATEGORIZED_COLLECTION_ID = "__uncategorized__";
 // Collection color options
 export const COLLECTION_COLORS = [
   { id: "blue", name: "Blue", value: colors.info },
-  { id: "green", name: "Green", value: "colors.success" },
+  { id: "green", name: "Green", value: colors.success },
   { id: "purple", name: "Purple", value: "#a855f7" },
-  { id: "pink", name: "Pink", value: "colors.accent" },
+  { id: "pink", name: "Pink", value: colors.accent },
   { id: "orange", name: "Orange", value: "#f97316" },
   { id: "yellow", name: "Yellow", value: "#eab308" },
   { id: "red", name: "Red", value: colors.danger },

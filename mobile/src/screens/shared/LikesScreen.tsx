@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
-import {AppBskyFeedDefs} from '@atproto/api';
+import {AppBskyFeedDefs, AppBskyFeedGetLikes} from '@atproto/api';
 import {usePostLikes} from '../../hooks/api/usePosts';
 import {Avatar} from '../../components/Avatar';
 import {FollowButton} from '../../components/FollowButton';
@@ -35,7 +35,7 @@ export function LikesScreen({postUri, onNavigateToProfile}: LikesScreenProps) {
 
   const likes = data?.pages.flatMap((page) => page.likes) ?? [];
 
-  const renderLike = ({item}: {item: AppBskyFeedDefs.Like}) => {
+  const renderLike = ({item}: {item: AppBskyFeedGetLikes.Like}) => {
     const isOwnProfile = account?.did === item.actor.did;
 
     return (

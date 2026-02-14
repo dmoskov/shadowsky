@@ -361,7 +361,7 @@ export async function getLikes(uri: string, cursor?: string) {
           cursor: response.data.cursor,
         };
       }),
-    ATProtoEndpointType.READ
+    ATProtoEndpointType.FEED
   );
 }
 
@@ -386,7 +386,7 @@ export async function getRepostsByPost(uri: string, cursor?: string) {
           cursor: response.data.cursor,
         };
       }),
-    ATProtoEndpointType.READ
+    ATProtoEndpointType.FEED
   );
 }
 
@@ -411,7 +411,7 @@ export async function getQuotesByPost(uri: string, cursor?: string) {
           cursor: response.data.cursor,
         };
       }),
-    ATProtoEndpointType.READ
+    ATProtoEndpointType.FEED
   );
 }
 

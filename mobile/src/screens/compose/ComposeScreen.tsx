@@ -28,6 +28,8 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { ComposeToolbar, ComposeMediaPreview, ComposeQuotePreview } from "./components";
 import { generateAltText } from "../../services/ai-service";
 import { usePreferences } from "../../contexts/PreferencesContext";
+import { useLinkPreview } from "../../hooks/useLinkPreview";
+import { LinkPreviewCard } from "../../components/LinkPreviewCard";
 
 import { createLogger } from '../../utils/logger';
 
@@ -93,6 +95,9 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
 
   // Emoji picker state
   const emojiPicker = useEmojiPicker();
+
+  // Link preview
+  const linkPreview = useLinkPreview(text);
 
   // Image editor state
   const [imageEditorVisible, setImageEditorVisible] = useState(false);
@@ -723,6 +728,15 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
           description: 'GIF from Tenor',
         };
       }
+      // Add link preview as external embed if detected
+      else if (linkPreview.metadata) {
+        postOptions.external = {
+          uri: linkPreview.metadata.url,
+          title: linkPreview.metadata.title,
+          description: linkPreview.metadata.description,
+          thumb: linkPreview.metadata.imageUrl,
+        };
+      }
 
       await createPost.mutateAsync(postOptions);
 
@@ -923,6 +937,14 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
             onChangeText={handleTextChange}
             editable={!createPost.isPending && !imagePicker.isUploading}
           />
+
+          {/* Link Preview */}
+          {linkPreview.metadata && !gifPicker.selectedGif && (
+            <LinkPreviewCard
+              metadata={linkPreview.metadata}
+              onDismiss={linkPreview.clearPreview}
+            />
+          )}
 
           {/* Media Previews */}
           <ComposeMediaPreview

@@ -121,7 +121,7 @@ export async function savePushTokenToATProto(
       repo: agent.session?.did || '',
       collection: PUSH_TOKEN_COLLECTION,
       rkey: PUSH_TOKEN_RECORD_KEY,
-      record,
+      record: record as unknown as { [key: string]: unknown },
     });
 
     logger.log('Push token saved to AT Protocol');
@@ -145,7 +145,7 @@ export async function getPushTokenFromATProto(
       rkey: PUSH_TOKEN_RECORD_KEY,
     });
 
-    return response.data.value as PushTokenRecord;
+    return response.data.value as unknown as PushTokenRecord;
   } catch (error) {
     // 400 error means record doesn't exist yet, which is normal
     if ((error as any)?.status === 400) {
