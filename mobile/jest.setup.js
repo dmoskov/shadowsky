@@ -1,12 +1,14 @@
 // Setup file for Jest
-// Note: @testing-library/react-native v12.4+ has built-in matchers
+// Only mock native modules that can't be loaded in the test environment.
+// Individual tests should set up their own mocks for app-level modules
+// (expo-router, react-query, atproto client, etc.)
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
 
-// Mock Expo modules
+// Mock Expo native modules
 jest.mock('expo-constants', () => ({
   ...jest.requireActual('expo-constants'),
   expoConfig: {
@@ -28,14 +30,15 @@ jest.mock('expo-notifications', () => ({
 }));
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({
+  useRouter: jest.fn(() => ({
     push: jest.fn(),
     replace: jest.fn(),
     back: jest.fn(),
     canGoBack: jest.fn(() => true),
-  }),
-  usePathname: () => '/',
-  useSegments: () => [],
+  })),
+  usePathname: jest.fn(() => '/'),
+  useSegments: jest.fn(() => []),
+  useLocalSearchParams: jest.fn(() => ({})),
   Link: 'Link',
   Stack: {
     Screen: 'Screen',
@@ -58,32 +61,17 @@ jest.mock('@sentry/react-native', () => ({
   setContext: jest.fn(),
 }));
 
-// Mock AT Protocol client
-jest.mock('./src/services/atproto/client', () => ({
-  getAtProtoClient: jest.fn(() => ({
-    getAgent: jest.fn(() => ({
-      session: null,
-      login: jest.fn(),
-      resumeSession: jest.fn(),
-      getProfile: jest.fn(),
-    })),
-  })),
-}));
-
-// Mock React Query
-jest.mock('@tanstack/react-query', () => ({
-  ...jest.requireActual('@tanstack/react-query'),
-  useQuery: jest.fn(),
-  useMutation: jest.fn(),
-  useInfiniteQuery: jest.fn(),
-  QueryClient: jest.fn(() => ({
-    clear: jest.fn(),
-    invalidateQueries: jest.fn(),
-    setQueryData: jest.fn(),
-    getQueryData: jest.fn(),
-  })),
-  QueryClientProvider: ({ children }) => children,
-}));
+// Patch AppState for react-native (needed by AuthContext)
+const { AppState } = require('react-native');
+if (AppState) {
+  AppState.currentState = AppState.currentState || 'active';
+  AppState.addEventListener = AppState.addEventListener || jest.fn(() => ({ remove: jest.fn() }));
+} else {
+  jest.mock('react-native/Libraries/AppState/AppState', () => ({
+    addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+    currentState: 'active',
+  }));
+}
 
 // Suppress console warnings/errors in tests
 global.console = {
@@ -91,9 +79,3 @@ global.console = {
   warn: jest.fn(),
   error: jest.fn(),
 };
-
-// Mock AppState
-jest.mock('react-native/Libraries/AppState/AppState', () => ({
-  addEventListener: jest.fn(() => ({ remove: jest.fn() })),
-  currentState: 'active',
-}));

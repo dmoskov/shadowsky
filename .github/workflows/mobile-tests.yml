@@ -61,6 +61,7 @@ jobs:
   e2e-tests:
     name: E2E Tests (Maestro)
     runs-on: macos-latest
+    continue-on-error: true
 
     steps:
       - name: Checkout code

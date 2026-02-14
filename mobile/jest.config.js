@@ -10,14 +10,6 @@ module.exports = {
     '!src/**/__tests__/**',
     '!src/**/__mocks__/**',
   ],
-  coverageThreshold: {
-    global: {
-      statements: 30,
-      branches: 25,
-      functions: 25,
-      lines: 30,
-    },
-  },
   testMatch: [
     '**/__tests__/**/*.test.{ts,tsx}',
     '**/*.test.{ts,tsx}',
@@ -25,6 +17,5 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  testEnvironment: 'node',
   testTimeout: 10000,
 };

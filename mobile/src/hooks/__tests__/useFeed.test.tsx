@@ -1,6 +1,6 @@
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { renderHook } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider, useInfiniteQuery } from '@tanstack/react-query';
-import { useFeed } from '../api/useFeed';
+import { useTimeline, useCustomFeed } from '../api/useFeed';
 import React from 'react';
 
 // Mock React Query
@@ -11,7 +11,10 @@ jest.mock('@tanstack/react-query', () => ({
   useInfiniteQuery: jest.fn(),
 }));
 
-describe('useFeed', () => {
+// Mock the feeds service
+jest.mock('../../services/atproto/feeds');
+
+describe('Feed hooks', () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
@@ -29,8 +32,8 @@ describe('useFeed', () => {
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
-  describe('Initial load', () => {
-    it('fetches feed data on mount', async () => {
+  describe('useTimeline', () => {
+    it('fetches timeline data on mount', () => {
       const mockFeedData = {
         pages: [
           {
@@ -40,15 +43,8 @@ describe('useFeed', () => {
                 post: {
                   uri: 'at://did:plc:test/app.bsky.feed.post/1',
                   cid: 'cid-1',
-                  author: {
-                    did: 'did:plc:test',
-                    handle: 'test.bsky.social',
-                    displayName: 'Test User',
-                  },
-                  record: {
-                    text: 'Test post',
-                    createdAt: new Date().toISOString(),
-                  },
+                  author: { did: 'did:plc:test', handle: 'test.bsky.social' },
+                  record: { text: 'Test post', createdAt: new Date().toISOString() },
                 },
               },
             ],
@@ -69,7 +65,7 @@ describe('useFeed', () => {
         status: 'success',
       } as any);
 
-      const { result } = renderHook(() => useFeed('following'), { wrapper });
+      const { result } = renderHook(() => useTimeline(), { wrapper });
 
       expect(mockUseInfiniteQuery).toHaveBeenCalled();
       expect(result.current.data).toEqual(mockFeedData);
@@ -88,7 +84,7 @@ describe('useFeed', () => {
         status: 'loading',
       } as any);
 
-      const { result } = renderHook(() => useFeed('following'), { wrapper });
+      const { result } = renderHook(() => useTimeline(), { wrapper });
 
       expect(result.current.isLoading).toBe(true);
     });
@@ -108,39 +104,17 @@ describe('useFeed', () => {
         status: 'error',
       } as any);
 
-      const { result } = renderHook(() => useFeed('following'), { wrapper });
+      const { result } = renderHook(() => useTimeline(), { wrapper });
 
       expect(result.current.isError).toBe(true);
       expect(result.current.error).toEqual(mockError);
     });
-  });
 
-  describe('Pagination', () => {
-    it('fetches next page when requested', async () => {
+    it('supports pagination', () => {
       const mockFetchNextPage = jest.fn();
 
       mockUseInfiniteQuery.mockReturnValue({
-        data: {
-          pages: [
-            {
-              cursor: 'cursor-1',
-              feed: [
-                {
-                  post: {
-                    uri: 'at://did:plc:test/app.bsky.feed.post/1',
-                    cid: 'cid-1',
-                    author: {
-                      did: 'did:plc:test',
-                      handle: 'test.bsky.social',
-                    },
-                    record: { text: 'Test post 1', createdAt: new Date().toISOString() },
-                  },
-                },
-              ],
-            },
-          ],
-          pageParams: [undefined],
-        },
+        data: { pages: [{ cursor: 'cursor-1', feed: [] }], pageParams: [undefined] },
         isLoading: false,
         isError: false,
         error: null,
@@ -151,104 +125,18 @@ describe('useFeed', () => {
         status: 'success',
       } as any);
 
-      const { result } = renderHook(() => useFeed('following'), { wrapper });
+      const { result } = renderHook(() => useTimeline(), { wrapper });
 
       expect(result.current.hasNextPage).toBe(true);
       result.current.fetchNextPage();
       expect(mockFetchNextPage).toHaveBeenCalled();
     });
 
-    it('indicates when fetching next page', () => {
-      mockUseInfiniteQuery.mockReturnValue({
-        data: {
-          pages: [
-            {
-              cursor: 'cursor-1',
-              feed: [
-                {
-                  post: {
-                    uri: 'at://did:plc:test/app.bsky.feed.post/1',
-                    cid: 'cid-1',
-                    author: {
-                      did: 'did:plc:test',
-                      handle: 'test.bsky.social',
-                    },
-                    record: { text: 'Test post 1', createdAt: new Date().toISOString() },
-                  },
-                },
-              ],
-            },
-          ],
-          pageParams: [undefined],
-        },
-        isLoading: false,
-        isError: false,
-        error: null,
-        fetchNextPage: jest.fn(),
-        hasNextPage: true,
-        isFetchingNextPage: true,
-        refetch: jest.fn(),
-        status: 'success',
-      } as any);
-
-      const { result } = renderHook(() => useFeed('following'), { wrapper });
-
-      expect(result.current.isFetchingNextPage).toBe(true);
-    });
-
-    it('indicates when there are no more pages', () => {
-      mockUseInfiniteQuery.mockReturnValue({
-        data: {
-          pages: [
-            {
-              cursor: undefined,
-              feed: [
-                {
-                  post: {
-                    uri: 'at://did:plc:test/app.bsky.feed.post/1',
-                    cid: 'cid-1',
-                    author: {
-                      did: 'did:plc:test',
-                      handle: 'test.bsky.social',
-                    },
-                    record: { text: 'Test post 1', createdAt: new Date().toISOString() },
-                  },
-                },
-              ],
-            },
-          ],
-          pageParams: [undefined],
-        },
-        isLoading: false,
-        isError: false,
-        error: null,
-        fetchNextPage: jest.fn(),
-        hasNextPage: false,
-        isFetchingNextPage: false,
-        refetch: jest.fn(),
-        status: 'success',
-      } as any);
-
-      const { result } = renderHook(() => useFeed('following'), { wrapper });
-
-      expect(result.current.hasNextPage).toBe(false);
-    });
-  });
-
-  describe('Pull to refresh', () => {
-    it('refetches feed data', () => {
+    it('supports pull to refresh', () => {
       const mockRefetch = jest.fn();
 
       mockUseInfiniteQuery.mockReturnValue({
-        data: {
-          pages: [
-            {
-              cursor: 'cursor-1',
-              feed: [],
-            },
-          ],
-          pageParams: [undefined],
-        },
+        data: { pages: [{ cursor: 'cursor-1', feed: [] }], pageParams: [undefined] },
         isLoading: false,
         isError: false,
         error: null,
@@ -259,39 +147,17 @@ describe('useFeed', () => {
         status: 'success',
       } as any);
 
-      const { result } = renderHook(() => useFeed('following'), { wrapper });
+      const { result } = renderHook(() => useTimeline(), { wrapper });
 
       result.current.refetch();
       expect(mockRefetch).toHaveBeenCalled();
     });
   });
 
-  describe('Cache behavior', () => {
-    it('returns cached data when available', () => {
-      const cachedData = {
-        pages: [
-          {
-            cursor: 'cursor-1',
-            feed: [
-              {
-                post: {
-                  uri: 'at://did:plc:test/app.bsky.feed.post/1',
-                  cid: 'cid-1',
-                  author: {
-                    did: 'did:plc:test',
-                    handle: 'test.bsky.social',
-                  },
-                  record: { text: 'Cached post', createdAt: new Date().toISOString() },
-                },
-              },
-            ],
-          },
-        ],
-        pageParams: [undefined],
-      };
-
+  describe('useCustomFeed', () => {
+    it('fetches custom feed with a feed URI', () => {
       mockUseInfiniteQuery.mockReturnValue({
-        data: cachedData,
+        data: { pages: [{ cursor: 'cursor-1', feed: [] }], pageParams: [undefined] },
         isLoading: false,
         isError: false,
         error: null,
@@ -302,9 +168,13 @@ describe('useFeed', () => {
         status: 'success',
       } as any);
 
-      const { result } = renderHook(() => useFeed('following'), { wrapper });
+      const { result } = renderHook(
+        () => useCustomFeed('at://did:plc:test/app.bsky.feed.generator/whats-hot'),
+        { wrapper }
+      );
 
-      expect(result.current.data).toEqual(cachedData);
+      expect(mockUseInfiniteQuery).toHaveBeenCalled();
+      expect(result.current.data).toBeDefined();
     });
   });
 });
