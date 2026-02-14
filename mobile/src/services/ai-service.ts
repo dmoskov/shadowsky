@@ -4,7 +4,7 @@
  */
 
 import { Platform } from "react-native";
-
+import * as FileSystem from 'expo-file-system';
 
 import { createLogger } from '../utils/logger';
 
@@ -195,5 +195,122 @@ export async function generateThreadSummary(
     }
     logger.error('Error generating thread summary:', error);
     throw error;
+  }
+}
+
+/**
+ * Convert local file URI to base64 data URL
+ */
+async function fileUriToDataUrl(uri: string): Promise<string> {
+  try {
+    // Read the file as base64
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    // Detect MIME type from file extension
+    let mimeType = 'image/jpeg'; // Default to JPEG
+    const extension = uri.toLowerCase().split('.').pop();
+
+    if (extension === 'png') {
+      mimeType = 'image/png';
+    } else if (extension === 'gif') {
+      mimeType = 'image/gif';
+    } else if (extension === 'webp') {
+      mimeType = 'image/webp';
+    } else if (extension === 'heic' || extension === 'heif') {
+      mimeType = 'image/heic';
+    }
+
+    return `data:${mimeType};base64,${base64}`;
+  } catch (error) {
+    logger.error('Error converting file URI to data URL:', error);
+    throw new Error('Failed to read image file');
+  }
+}
+
+/**
+ * Generate alt text for an image using AI
+ * @param imageUri - Local file URI (e.g., from expo-image-picker)
+ * @returns Generated alt text description
+ */
+export async function generateAltText(imageUri: string): Promise<string> {
+  try {
+    // Convert local file URI to base64 data URL
+    logger.log('Converting image URI to data URL:', imageUri);
+    const dataUrl = await fileUriToDataUrl(imageUri);
+
+    const apiBaseUrl = getApiBaseUrl();
+    const endpoint = `${apiBaseUrl}/api/generate-alt-text`;
+
+    logger.log('Generating alt text via backend:', { endpoint });
+
+    // Create abort controller for 8s timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getApiAuthHeaders(),
+        },
+        body: JSON.stringify({ imageUrl: dataUrl }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const status = response.status;
+        if (status === 401) {
+          throw new Error("Alt text generation failed: Invalid API key");
+        } else if (status === 429) {
+          throw new Error("Alt text generation failed: Rate limit exceeded");
+        } else if (status === 503) {
+          throw new Error("Alt text generation service is temporarily unavailable");
+        } else {
+          throw new Error(
+            `Alt text generation failed: ${response.statusText || "Unknown error"}`,
+          );
+        }
+      }
+
+      const data = await response.json();
+      const altText = data.altText?.trim() || "";
+
+      logger.log('Alt text generated successfully');
+      return altText;
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+
+      // Handle timeout
+      if (fetchError.name === 'AbortError') {
+        throw new Error(
+          "Alt text generation timed out. The service took too long to respond. Please try again with a smaller image.",
+        );
+      }
+
+      throw fetchError;
+    }
+  } catch (error) {
+    // Network errors in dev are expected when the local API server isn't running
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      throw new Error("Alt text generation unavailable: API server not reachable");
+    }
+
+    // Re-throw if it's already a formatted error message
+    if (error instanceof Error && error.message.includes("Alt text generation")) {
+      throw error;
+    }
+
+    logger.error('Error generating alt text:', error);
+    throw new Error(
+      `Alt text generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
