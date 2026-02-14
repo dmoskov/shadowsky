@@ -32,7 +32,6 @@ export {ImageIcon} from './ImageIcon';
 export {VideoIcon} from './VideoIcon';
 export {GifIcon} from './GifIcon';
 export {EmojiIcon} from './EmojiIcon';
-export {PollIcon} from './PollIcon';
 export {ThreadIcon} from './ThreadIcon';
 export {SendIcon} from './SendIcon';
 export {GlobeIcon} from './GlobeIcon';
