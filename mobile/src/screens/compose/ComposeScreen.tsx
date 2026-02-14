@@ -6,7 +6,7 @@ import * as Localization from "expo-localization";
 import { useCreatePost } from "../../hooks/api/usePosts";
 import { useSaveDraft, useDeleteDraft, useDrafts } from "../../hooks/api";
 import { draftToComposerState, ComposerState } from "../../services/drafts";
-import { ImageIcon, VideoIcon, GifIcon, EmojiIcon, PollIcon, ThreadIcon, CloseIcon, GlobeIcon } from "../../components/icons";
+import { ImageIcon, VideoIcon, GifIcon, EmojiIcon, ThreadIcon, CloseIcon, GlobeIcon } from "../../components/icons";
 import { Avatar } from "../../components/Avatar";
 import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
 import { useVideoPicker, VideoAsset } from "../../hooks/useVideoPicker";
@@ -1003,9 +1003,6 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
                 onPress={handleEmojiPicker}
               >
                 <EmojiIcon size={22} color="#6b7280" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.toolbarButton} activeOpacity={0.7}>
-                <PollIcon size={22} color="#6b7280" />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.toolbarButton}
