@@ -58,6 +58,17 @@ export function LandingScreen() {
     }
   };
 
+  const handleSignUp = async () => {
+    try {
+      await Linking.openURL("https://bsky.app/signup");
+    } catch (error) {
+      Alert.alert(
+        t("auth.error_title"),
+        "Failed to open sign-up page. Please visit bsky.app/signup in your browser.",
+      );
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
@@ -139,11 +150,11 @@ export function LandingScreen() {
           </View>
 
           <TouchableOpacity
-            style={[styles.oauthButton, styles.oauthButtonDisabled]}
-            disabled={true}
+            style={styles.signUpButton}
+            onPress={handleSignUp}
           >
-            <Text style={styles.oauthButtonText}>
-              {t("auth.sign_in_oauth_button")}
+            <Text style={styles.signUpButtonText}>
+              {t("auth.sign_up_button")}
             </Text>
           </TouchableOpacity>
 
@@ -210,6 +221,22 @@ const styles = StyleSheet.create({
   },
   oauthButtonText: {
     color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  signUpButton: {
+    backgroundColor: "#1a1a24",
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "#c9a84c",
+  },
+  signUpButtonText: {
+    color: "#c9a84c",
     fontSize: 18,
     fontWeight: "600",
   },
