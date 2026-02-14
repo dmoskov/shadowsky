@@ -1,17 +1,15 @@
 import React, { useState, useRef, useMemo } from "react";
-import { View, StyleSheet, Alert, ActionSheetIOS, Platform, FlatList, ScrollView, TouchableOpacity, Text } from "react-native";
+import { View, StyleSheet, Alert, ActionSheetIOS, Platform, ScrollView, TouchableOpacity, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../constants/theme";
-import { AppBskyFeedDefs } from "@atproto/api";
 import { useScrollToTop } from "@react-navigation/native";
 import { useTimeline, useCustomFeed, useSavedFeeds } from "../../hooks/api";
 import { useLikePost, useUnlikePost, useRepost, useDeleteRepost } from "../../hooks/api/usePosts";
 import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useAppNavigation } from "../../hooks/useNavigation";
-import { FeedList } from "../../components/FeedList";
+import { NativeFeedList } from "../../../modules/native-feed-list";
 import { useRouter } from "expo-router";
 import { triggerHaptic } from "../../utils/haptics";
-import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 
 /**
  * Extract post ID (rkey) from AT Protocol URI
@@ -26,14 +24,18 @@ export function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [selectedFeedUri, setSelectedFeedUri] = useState<string | null>(null);
-  const [selectedPostIndex, setSelectedPostIndex] = useState<number>(0);
   const { navigateToThread, navigateToProfile, navigateToCompose } = useAppNavigation();
   const likePost = useLikePost();
   const unlikePost = useUnlikePost();
   const repost = useRepost();
   const deleteRepost = useDeleteRepost();
-  const { toggleBookmark, isBookmarked } = useBookmarks();
-  const scrollRef = useRef<FlatList>(null);
+  const { toggleBookmark, isBookmarked, bookmarks } = useBookmarks();
+  const scrollRef = useRef<any>(null);
+
+  // Compute bookmarked post URIs for the native feed list
+  const bookmarkedPostUris = useMemo(() => {
+    return new Set(bookmarks.map(b => b.postUri));
+  }, [bookmarks]);
 
   // Fetch saved feeds
   const { data: savedFeeds } = useSavedFeeds();
@@ -49,9 +51,6 @@ export function HomeScreen() {
   // Enable scroll-to-top on tab press
   useScrollToTop(scrollRef);
 
-  // Flatten paginated data
-  const posts = data?.pages.flatMap((page) => page.feed) ?? [];
-
   // Handle feed selection
   const handleFeedSelect = (feedUri: string | null) => {
     setSelectedFeedUri(feedUri);
@@ -61,23 +60,24 @@ export function HomeScreen() {
     router.push('/(app)/feeds/discover');
   };
 
-  const handlePostPress = (post: AppBskyFeedDefs.FeedViewPost) => {
-    const postId = getPostIdFromUri(post.post.uri);
-    const handle = post.post.author.handle;
+  const handlePostPress = (event: { nativeEvent: { uri: string; handle: string } }) => {
+    const { uri, handle } = event.nativeEvent;
+    const postId = getPostIdFromUri(uri);
     navigateToThread(handle, postId);
   };
 
-  const handleProfilePress = (handle: string) => {
+  const handleProfilePress = (event: { nativeEvent: { handle: string } }) => {
+    const { handle } = event.nativeEvent;
     navigateToProfile(handle);
   };
 
-  const handleLike = (post: AppBskyFeedDefs.FeedViewPost) => {
-    const { uri, cid, viewer } = post.post;
+  const handleLike = (event: { nativeEvent: { uri: string; cid: string; likeUri?: string } }) => {
+    const { uri, cid, likeUri } = event.nativeEvent;
 
-    if (viewer?.like) {
+    if (likeUri) {
       // Unlike if already liked
       triggerHaptic("light");
-      unlikePost.mutate({ likeUri: viewer.like, postUri: uri });
+      unlikePost.mutate({ likeUri, postUri: uri });
     } else {
       // Like the post
       triggerHaptic("light");
@@ -85,17 +85,19 @@ export function HomeScreen() {
     }
   };
 
-  const handleRepost = (post: AppBskyFeedDefs.FeedViewPost) => {
-    const postView = post.post;
-    const { uri, cid, viewer } = postView;
-    const record = postView.record as any;
+  const handleRepost = (event: { nativeEvent: { uri: string; cid: string; repostUri?: string } }) => {
+    const { uri, cid, repostUri } = event.nativeEvent;
 
     // If already reposted, just unrepost
-    if (viewer?.repost) {
+    if (repostUri) {
       triggerHaptic("medium");
-      deleteRepost.mutate({ repostUri: viewer.repost, postUri: uri });
+      deleteRepost.mutate({ repostUri, postUri: uri });
       return;
     }
+
+    // Get post data for quote option
+    const posts = data?.pages.flatMap((page) => page.feed) ?? [];
+    const postData = posts.find(p => p.post.uri === uri);
 
     // Show menu: Repost or Quote
     if (Platform.OS === 'ios') {
@@ -109,16 +111,17 @@ export function HomeScreen() {
             // Repost
             triggerHaptic("medium");
             repost.mutate({ uri, cid });
-          } else if (buttonIndex === 2) {
+          } else if (buttonIndex === 2 && postData) {
             // Quote
+            const record = postData.post.record as any;
             navigateToCompose({
               quoteTo: {
-                uri: postView.uri,
-                cid: postView.cid,
+                uri: postData.post.uri,
+                cid: postData.post.cid,
                 author: {
-                  handle: postView.author.handle,
-                  displayName: postView.author.displayName,
-                  avatar: postView.author.avatar,
+                  handle: postData.post.author.handle,
+                  displayName: postData.post.author.displayName,
+                  avatar: postData.post.author.avatar,
                 },
                 text: record?.text?.substring(0, 150) || '',
               },
@@ -143,18 +146,21 @@ export function HomeScreen() {
           {
             text: 'Quote',
             onPress: () => {
-              navigateToCompose({
-                quoteTo: {
-                  uri: postView.uri,
-                  cid: postView.cid,
-                  author: {
-                    handle: postView.author.handle,
-                    displayName: postView.author.displayName,
-                    avatar: postView.author.avatar,
+              if (postData) {
+                const record = postData.post.record as any;
+                navigateToCompose({
+                  quoteTo: {
+                    uri: postData.post.uri,
+                    cid: postData.post.cid,
+                    author: {
+                      handle: postData.post.author.handle,
+                      displayName: postData.post.author.displayName,
+                      avatar: postData.post.author.avatar,
+                    },
+                    text: record?.text?.substring(0, 150) || '',
                   },
-                  text: record?.text?.substring(0, 150) || '',
-                },
-              });
+                });
+              }
             },
           },
         ],
@@ -163,64 +169,62 @@ export function HomeScreen() {
     }
   };
 
-  const handleReply = (post: AppBskyFeedDefs.FeedViewPost) => {
-    const postView = post.post;
-    const record = postView.record as any;
+  const handleReply = (event: { nativeEvent: { uri: string; cid: string; handle: string } }) => {
+    const { uri, cid, handle } = event.nativeEvent;
 
-    navigateToCompose({
-      replyTo: {
-        uri: postView.uri,
-        cid: postView.cid,
-        author: {
-          handle: postView.author.handle,
-          displayName: postView.author.displayName,
-          avatar: postView.author.avatar,
+    // Get post data for reply
+    const posts = data?.pages.flatMap((page) => page.feed) ?? [];
+    const postData = posts.find(p => p.post.uri === uri);
+
+    if (postData) {
+      const record = postData.post.record as any;
+      navigateToCompose({
+        replyTo: {
+          uri: postData.post.uri,
+          cid: postData.post.cid,
+          author: {
+            handle: postData.post.author.handle,
+            displayName: postData.post.author.displayName,
+            avatar: postData.post.author.avatar,
+          },
+          text: record?.text?.substring(0, 100) || '',
         },
-        text: record?.text?.substring(0, 100) || '',
-      },
-    });
-  };
-
-  const handleRefresh = () => {
-    refetch();
-  };
-
-  const handleLoadMore = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
+      });
     }
   };
 
-  const handleMentionPress = (handle: string, did: string) => {
+  // Note: Refresh and load more are handled by NativeFeedList component
+
+  const handleMentionPress = (event: { nativeEvent: { handle: string; did: string } }) => {
+    const { handle } = event.nativeEvent;
     navigateToProfile(handle);
   };
 
-  const handleHashtagPress = (tag: string) => {
+  const handleHashtagPress = (event: { nativeEvent: { tag: string } }) => {
+    const { tag } = event.nativeEvent;
     router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } });
   };
 
-  const handleBookmark = (post: AppBskyFeedDefs.FeedViewPost) => {
-    triggerHaptic("light");
-    toggleBookmark(post.post);
+  const handleBookmark = (event: { nativeEvent: { uri: string } }) => {
+    const { uri } = event.nativeEvent;
+
+    // Get post data
+    const posts = data?.pages.flatMap((page) => page.feed) ?? [];
+    const postData = posts.find(p => p.post.uri === uri);
+
+    if (postData) {
+      triggerHaptic("light");
+      toggleBookmark(postData.post);
+    }
   };
 
-  // Arrow key navigation for feed
-  useKeyboardShortcuts({
-    onArrowUp: () => {
-      if (posts.length > 0) {
-        const newIndex = Math.max(0, selectedPostIndex - 1);
-        setSelectedPostIndex(newIndex);
-        scrollRef.current?.scrollToIndex({ index: newIndex, animated: true });
-      }
-    },
-    onArrowDown: () => {
-      if (posts.length > 0) {
-        const newIndex = Math.min(posts.length - 1, selectedPostIndex + 1);
-        setSelectedPostIndex(newIndex);
-        scrollRef.current?.scrollToIndex({ index: newIndex, animated: true });
-      }
-    },
-  });
+  const handleShare = (event: { nativeEvent: { uri: string } }) => {
+    // Share functionality can be implemented later
+    // TODO: Implement share functionality
+  };
+
+  // Note: Arrow key navigation disabled for native SwiftUI view
+  // Can be re-implemented if needed with native bridge
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -259,24 +263,20 @@ export function HomeScreen() {
         </ScrollView>
       )}
 
-      <FeedList
+      <NativeFeedList
         ref={scrollRef}
-        posts={posts}
-        isLoading={isLoading}
-        isRefreshing={isRefetching}
-        isLoadingMore={isFetchingNextPage}
-        error={error}
-        onRefresh={handleRefresh}
-        onLoadMore={handleLoadMore}
+        query={selectedFeedUri ? customFeedQuery : timelineQuery}
+        bookmarkedPostUris={bookmarkedPostUris}
+        isOnline={true}
         onPostPress={handlePostPress}
         onProfilePress={handleProfilePress}
         onLike={handleLike}
         onRepost={handleRepost}
         onReply={handleReply}
         onBookmark={handleBookmark}
-        isBookmarked={isBookmarked}
         onMentionPress={handleMentionPress}
         onHashtagPress={handleHashtagPress}
+        onShare={handleShare}
         emptyMessage="No posts in your timeline yet"
       />
     </View>
