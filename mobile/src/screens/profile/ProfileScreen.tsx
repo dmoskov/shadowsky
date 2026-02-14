@@ -18,6 +18,7 @@ import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
 import { ProfileTabBar, ProfileTab } from "../../components/ProfileTabBar";
 import { AddToListModal } from "../../components/AddToListModal";
+import { ProfileSkeleton } from "../../components/ProfileSkeleton";
 import { MoreVerticalIcon, SendIcon } from "../../components/icons";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useAuth } from "../../contexts/AuthContext";
@@ -430,6 +431,11 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
       </View>
     );
   };
+
+  // Show skeleton when initially loading profile
+  if (isLoadingProfile) {
+    return <ProfileSkeleton />;
+  }
 
   return (
     <View style={styles.container}>

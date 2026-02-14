@@ -20,6 +20,7 @@ import { useAppNavigation } from "../../hooks/useNavigation";
 import { PostCard } from "../../components/PostCard";
 import { LoadingState } from "../../components/LoadingState";
 import { ErrorState } from "../../components/ErrorState";
+import { ThreadSkeleton } from "../../components/ThreadSkeleton";
 import { ThreadSummary } from "../../components/ThreadSummary";
 import { ThreadTreeView } from "../../components/ThreadTreeView";
 import { ThreadNavigator } from "../../components/ThreadNavigator";
@@ -130,7 +131,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   const { data: thread, isLoading, error, refetch } = usePostThread(postUri || "");
 
   if (isResolvingUri || !postUri) {
-    return <LoadingState message="Loading thread..." />;
+    return <ThreadSkeleton />;
   }
 
   if (resolveError) {
@@ -138,7 +139,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   }
 
   if (isLoading) {
-    return <LoadingState message="Loading thread..." />;
+    return <ThreadSkeleton />;
   }
 
   if (error) {
