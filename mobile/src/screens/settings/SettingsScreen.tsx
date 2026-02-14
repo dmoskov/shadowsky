@@ -12,6 +12,7 @@ import {
 import { AccountSwitcher } from "../../components";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePreferences } from "../../contexts/PreferencesContext";
+import { useTheme } from "../../contexts/ThemeContext";
 import { ArrowLeftIcon } from "../../components/icons";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -36,6 +37,7 @@ const APP_VERSION = "0.7.0";
 export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigateToMutedAccounts }: SettingsScreenProps) {
   const { signOut, accounts, account } = useAuth();
   const { preferences, updatePreference } = usePreferences();
+  const { colors: themeColors } = useTheme();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -217,6 +219,8 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
     }
   };
 
+  const styles = createStyles(themeColors);
+
   if (showAccountSwitcher) {
     return (
       <View style={styles.container}>
@@ -355,7 +359,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
           <Switch
             value={preferences.showNSFW}
             onValueChange={(value) => updatePreference("showNSFW", value)}
-            trackColor={{ false: "#374151", true: colors.primary }}
+            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
             thumbColor="#ffffff"
           />
         </SettingRow>
@@ -374,7 +378,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
             onValueChange={(value) =>
               updatePreference("notificationsEnabled", value)
             }
-            trackColor={{ false: "#374151", true: colors.primary }}
+            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
             thumbColor="#ffffff"
           />
         </SettingRow>
@@ -387,7 +391,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                 onValueChange={(value) =>
                   updatePreference("notifyOnLikes", value)
                 }
-                trackColor={{ false: "#374151", true: colors.primary }}
+                trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
                 thumbColor="#ffffff"
               />
             </SettingRow>
@@ -398,7 +402,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                 onValueChange={(value) =>
                   updatePreference("notifyOnReplies", value)
                 }
-                trackColor={{ false: "#374151", true: colors.primary }}
+                trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
                 thumbColor="#ffffff"
               />
             </SettingRow>
@@ -409,7 +413,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                 onValueChange={(value) =>
                   updatePreference("notifyOnFollows", value)
                 }
-                trackColor={{ false: "#374151", true: colors.primary }}
+                trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
                 thumbColor="#ffffff"
               />
             </SettingRow>
@@ -420,7 +424,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                 onValueChange={(value) =>
                   updatePreference("notifyOnMentions", value)
                 }
-                trackColor={{ false: "#374151", true: colors.primary }}
+                trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
                 thumbColor="#ffffff"
               />
             </SettingRow>
@@ -431,7 +435,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                 onValueChange={(value) =>
                   updatePreference("notifyOnQuotes", value)
                 }
-                trackColor={{ false: "#374151", true: colors.primary }}
+                trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
                 thumbColor="#ffffff"
               />
             </SettingRow>
@@ -452,7 +456,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
             onValueChange={(value) =>
               updatePreference("hapticsEnabled", value)
             }
-            trackColor={{ false: "#374151", true: colors.primary }}
+            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
             thumbColor="#ffffff"
           />
         </SettingRow>
@@ -498,7 +502,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                   );
                 }
               }}
-              trackColor={{ false: "#374151", true: colors.primary }}
+              trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
               thumbColor="#ffffff"
             />
           </SettingRow>
@@ -556,7 +560,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                 await unregisterBackgroundFetch();
               }
             }}
-            trackColor={{ false: "#374151", true: colors.primary }}
+            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
             thumbColor="#ffffff"
           />
         </SettingRow>
@@ -649,7 +653,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
           <Switch
             value={preferences.hapticsEnabled}
             onValueChange={(value) => updatePreference("hapticsEnabled", value)}
-            trackColor={{ false: "#374151", true: "#3b82f6" }}
+            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
             thumbColor="#ffffff"
           />
         </SettingRow>
@@ -732,19 +736,19 @@ function SettingRow({
   return content;
 }
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: typeof colors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: themeColors.background,
   },
   loadingText: {
-    color: "#9ca3af",
+    color: themeColors.textSecondary,
     fontSize: 16,
     textAlign: "center",
     marginTop: 24,
   },
   header: {
-    color: "#ffffff",
+    color: themeColors.text,
     fontSize: 32,
     fontWeight: "bold",
     padding: 16,
@@ -754,7 +758,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   sectionTitle: {
-    color: "#6b7280",
+    color: themeColors.textTertiary,
     fontSize: 12,
     fontWeight: "600",
     textTransform: "uppercase",
@@ -768,13 +772,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: themeColors.border,
   },
   accountAvatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.primary,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
@@ -788,13 +792,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   accountName: {
-    color: "#ffffff",
+    color: themeColors.text,
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 2,
   },
   accountHandle: {
-    color: "#9ca3af",
+    color: themeColors.textSecondary,
     fontSize: 14,
   },
   settingRow: {
@@ -804,7 +808,7 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: themeColors.border,
     minHeight: 48,
   },
   settingLeft: {
@@ -812,12 +816,12 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   settingLabel: {
-    color: "#ffffff",
+    color: themeColors.text,
     fontSize: 16,
     fontWeight: "500",
   },
   settingDescription: {
-    color: "#6b7280",
+    color: themeColors.textTertiary,
     fontSize: 13,
     marginTop: 2,
   },
@@ -827,16 +831,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   settingValue: {
-    color: "#9ca3af",
+    color: themeColors.textSecondary,
     fontSize: 14,
   },
   chevron: {
-    color: "#6b7280",
+    color: themeColors.textTertiary,
     fontSize: 24,
     fontWeight: "300",
   },
   dangerText: {
-    color: "#ef4444",
+    color: themeColors.danger,
   },
   themeSelector: {
     flexDirection: "row",
@@ -846,16 +850,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: "#1f2937",
+    backgroundColor: themeColors.surface,
     borderWidth: 1,
-    borderColor: "#374151",
+    borderColor: themeColors.borderLight,
   },
   themeButtonActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: themeColors.primary,
+    borderColor: themeColors.primary,
   },
   themeButtonText: {
-    color: "#9ca3af",
+    color: themeColors.textSecondary,
     fontSize: 14,
     fontWeight: "500",
   },
@@ -874,20 +878,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   footerText: {
-    color: "#6b7280",
+    color: themeColors.textTertiary,
     fontSize: 14,
     fontWeight: "600",
   },
   footerSubtext: {
-    color: "#4b5563",
+    color: themeColors.textTertiary,
     fontSize: 12,
     marginTop: 4,
   },
   accountSwitcherHeader: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#333",
-    backgroundColor: "#000",
+    borderBottomColor: themeColors.border,
+    backgroundColor: themeColors.background,
   },
   backButton: {
     padding: 8,

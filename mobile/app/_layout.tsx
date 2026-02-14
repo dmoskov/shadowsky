@@ -21,6 +21,7 @@ import { AppLockScreen } from "../src/components/AppLockScreen";
 import { AuthProvider, useAuth } from "../src/contexts/AuthContext";
 import { NetworkProvider } from "../src/contexts/NetworkContext";
 import { PreferencesProvider, usePreferences } from "../src/contexts/PreferencesContext";
+import { ThemeProvider, useTheme } from "../src/contexts/ThemeContext";
 import { ToastProvider } from "../src/contexts/ToastContext";
 import { ModerationProvider } from "../src/contexts/ModerationContext";
 import {
@@ -97,6 +98,11 @@ function AppLockGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function DynamicStatusBar() {
+  const { isDark } = useTheme();
+  return <StatusBar style={isDark ? "light" : "dark"} />;
+}
+
 function AuthGate() {
   const { isAuthenticated, isLoading } = useAuth();
   const segments = useSegments();
@@ -161,14 +167,16 @@ function RootLayout() {
             <NetworkProvider>
               <AuthProvider>
                 <PreferencesProvider>
-                  <ModerationProvider>
-                    <ToastProvider>
-                      <QueryErrorHandler>
-                        <StatusBar style="light" />
-                        <AuthGate />
-                      </QueryErrorHandler>
-                    </ToastProvider>
-                  </ModerationProvider>
+                  <ThemeProvider>
+                    <ModerationProvider>
+                      <ToastProvider>
+                        <QueryErrorHandler>
+                          <DynamicStatusBar />
+                          <AuthGate />
+                        </QueryErrorHandler>
+                      </ToastProvider>
+                    </ModerationProvider>
+                  </ThemeProvider>
                 </PreferencesProvider>
               </AuthProvider>
             </NetworkProvider>
