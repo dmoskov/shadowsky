@@ -14,6 +14,7 @@ import {
 import { useRouter } from "expo-router";
 import { useProfile, useFollowUser, useUnfollowUser, useBlockUser, useUnblockUser, useMuteUser, useUnmuteUser } from "../../hooks/api/useProfile";
 import { useAuthorFeed, useActorLikes } from "../../hooks/api/useFeed";
+import { useActorStarterPacks } from "../../hooks/api/useStarterPacks";
 import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
 import { ProfileTabBar, ProfileTab } from "../../components/ProfileTabBar";
@@ -83,6 +84,9 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAddToList, setShowAddToList] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+
+  // Fetch starter packs for this actor
+  const { data: starterPacksData } = useActorStarterPacks(handle);
 
   const isOwnProfile = account?.handle === handle;
 
@@ -350,6 +354,42 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
             <Text style={styles.statLabel}>Following</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Starter Packs */}
+        {starterPacksData?.starterPacks && starterPacksData.starterPacks.length > 0 && (
+          <View style={styles.starterPacksContainer}>
+            <Text style={styles.starterPacksTitle}>Starter Packs</Text>
+            {starterPacksData.starterPacks.map((pack) => {
+              const record = pack.record as any;
+              const name = record?.name || 'Starter Pack';
+              return (
+                <TouchableOpacity
+                  key={pack.uri}
+                  style={styles.starterPackItem}
+                  onPress={() => {
+                    const encodedUri = encodeURIComponent(pack.uri);
+                    router.push(`/(app)/(tabs)/(home)/starter-pack/${encodedUri}`);
+                  }}
+                  activeOpacity={0.7}>
+                  <View style={styles.starterPackInfo}>
+                    <Text style={styles.starterPackName}>{name}</Text>
+                    {pack.listItemCount !== undefined && (
+                      <Text style={styles.starterPackMeta}>
+                        {pack.listItemCount} members
+                      </Text>
+                    )}
+                    {pack.joinedAllTimeCount !== undefined && (
+                      <Text style={styles.starterPackMeta}>
+                        {pack.joinedAllTimeCount} joined
+                      </Text>
+                    )}
+                  </View>
+                  <Text style={styles.starterPackArrow}>›</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
 
         {/* Follow/Unfollow Button and Actions */}
         {!isOwnProfile && (
@@ -723,5 +763,43 @@ const styles = StyleSheet.create({
   },
   menuItemDanger: {
     color: "#ef4444",
+  },
+  starterPacksContainer: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  starterPacksTitle: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 12,
+  },
+  starterPackItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#1f2937",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  starterPackInfo: {
+    flex: 1,
+  },
+  starterPackName: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  starterPackMeta: {
+    color: "#9ca3af",
+    fontSize: 14,
+  },
+  starterPackArrow: {
+    color: colors.primary,
+    fontSize: 24,
+    fontWeight: "300",
+    marginLeft: 8,
   },
 });
