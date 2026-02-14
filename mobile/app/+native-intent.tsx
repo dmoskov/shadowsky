@@ -12,6 +12,7 @@ import * as Linking from "expo-linking";
  * - bsky.app/search?q={query} -> /search?q={query}
  * - bsky.app/feeds/{feedUri} -> /feeds/[uri]
  * - shadowsky://oauth/callback -> OAuth handler
+ * - shadowsky://compose?url={url}&text={text} -> Compose screen with shared content
  */
 
 export default function NativeIntent() {
@@ -33,6 +34,15 @@ export default function NativeIntent() {
         if (queryParams?.error) params.append("error", queryParams.error as string);
         if (queryParams?.iss) params.append("iss", queryParams.iss as string);
         setRedirect(`/(auth)/oauth-callback?${params.toString()}`);
+        return;
+      }
+
+      // Handle compose deep link from Share Extension (shadowsky://compose)
+      if (hostname === "compose") {
+        const params = new URLSearchParams();
+        if (queryParams?.url) params.append("url", queryParams.url as string);
+        if (queryParams?.text) params.append("text", queryParams.text as string);
+        setRedirect(`/(app)/compose?${params.toString()}`);
         return;
       }
 
