@@ -3,7 +3,7 @@ import {QuotesScreen} from '../../../../src/screens/shared/QuotesScreen';
 import {ErrorState} from '../../../../src/components/ErrorState';
 import {useLikePost, useUnlikePost, useRepost, useDeleteRepost} from '../../../../src/hooks/api/usePosts';
 import {useAuth} from '../../../../src/contexts/AuthContext';
-import {useBookmarks} from '../../../../src/contexts/BookmarksContext';
+import {useBookmarks} from '../../../../src/hooks/api/useBookmarks';
 import {AppBskyFeedDefs} from '@atproto/api';
 import {triggerHaptic} from '../../../../src/utils/haptics';
 import {Platform, ActionSheetIOS, Alert} from 'react-native';
