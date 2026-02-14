@@ -54,7 +54,7 @@ export function Button({
       accessibilityState={{disabled: isDisabled, busy: loading}}>
       {loading ? (
         <ActivityIndicator
-          color={variant === 'primary' ? '#fff' : colors.primary}
+          color={variant === 'primary' ? colors.text : colors.primary}
           size="small"
         />
       ) : (
@@ -84,12 +84,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   secondary: {
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: colors.borderLight,
   },
   danger: {
-    backgroundColor: '#ef4444',
+    backgroundColor: colors.danger,
   },
   ghost: {
     backgroundColor: 'transparent',
@@ -115,13 +115,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   primaryText: {
-    color: '#ffffff',
+    color: colors.text,
   },
   secondaryText: {
-    color: '#ffffff',
+    color: colors.text,
   },
   dangerText: {
-    color: '#ffffff',
+    color: colors.text,
   },
   ghostText: {
     color: colors.primary,

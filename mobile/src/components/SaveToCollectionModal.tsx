@@ -69,7 +69,7 @@ export function SaveToCollectionModal({
 
   const getCollectionColor = (colorId: string) => {
     const colorOption = COLLECTION_COLORS.find((c) => c.id === colorId);
-    return colorOption?.value || '#3b82f6';
+    return colorOption?.value || colors.info;
   };
 
   return (
@@ -149,7 +149,7 @@ export function SaveToCollectionModal({
                     disabled={!newCollectionName.trim() || isCreating}
                   >
                     {isCreating ? (
-                      <ActivityIndicator color="#fff" size="small" />
+                      <ActivityIndicator color=colors.text size="small" />
                     ) : (
                       <Text style={styles.createButtonText}>Create</Text>
                     )}
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   },
   checkMark: {
     fontSize: 18,
-    color: '#22c55e',
+    color: 'colors.success',
   },
   formContainer: {
     marginTop: 16,
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.info,
     alignItems: 'center',
   },
   disabledButton: {
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   createButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.text,
   },
   newCollectionButton: {
     marginTop: 16,

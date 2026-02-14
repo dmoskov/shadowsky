@@ -122,7 +122,7 @@ export function AppLockScreen({ onUnlock }: AppLockScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -141,18 +141,18 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   iconText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 40,
     fontWeight: "bold",
   },
   title: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 8,
   },
   subtitle: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
     marginBottom: 48,
   },
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   authenticatingText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
   },
   unlockButton: {
@@ -174,12 +174,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   unlockButtonText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
   helpText: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 14,
     textAlign: "center",
     lineHeight: 20,

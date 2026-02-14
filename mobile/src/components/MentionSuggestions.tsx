@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     maxHeight: 250,
-    shadowColor: "#000",
+    shadowColor: colors.borderDark,
     shadowOffset: {
       width: 0,
       height: -2,

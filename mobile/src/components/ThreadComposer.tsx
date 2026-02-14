@@ -89,10 +89,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   headerText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   threadBadgeText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 12,
     fontWeight: "600",
   },
@@ -112,14 +112,14 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   addPostButton: {
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     marginHorizontal: 16,
     marginBottom: 16,
     padding: 16,
     borderRadius: 8,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#374151",
+    borderColor: colors.borderLight,
     borderStyle: "dashed",
   },
   addPostButtonDisabled: {

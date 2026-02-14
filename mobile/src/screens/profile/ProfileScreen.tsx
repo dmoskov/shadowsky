@@ -320,7 +320,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
             style={styles.headerMenuButton}
             onPress={() => setShowMenu(true)}
             activeOpacity={0.7}>
-            <MoreVerticalIcon size={24} color="#9ca3af" />
+            <MoreVerticalIcon size={24} color=colors.textSecondary />
           </TouchableOpacity>
         )}
 
@@ -604,7 +604,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -619,14 +619,14 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   errorText: {
-    color: "#ef4444",
+    color: colors.danger,
     fontSize: 16,
   },
   header: {
     paddingHorizontal: 16,
     paddingVertical: 24,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
     position: "relative",
   },
   headerMenuButton: {
@@ -647,32 +647,32 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   blockedBadge: {
-    backgroundColor: "#ef4444",
+    backgroundColor: colors.danger,
   },
   mutedBadge: {
-    backgroundColor: "#f59e0b",
+    backgroundColor: colors.warning,
   },
   blockedByBadge: {
-    backgroundColor: "#6b7280",
+    backgroundColor: colors.textTertiary,
   },
   statusBadgeText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 12,
     fontWeight: "600",
   },
   displayName: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 24,
     fontWeight: "bold",
     marginTop: 12,
   },
   handle: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
     marginTop: 4,
   },
   bio: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 15,
     lineHeight: 20,
     marginBottom: 16,
@@ -687,12 +687,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   statValue: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 20,
     fontWeight: "bold",
   },
   statLabel: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -715,7 +715,7 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   followButtonText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   postsHeader: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "bold",
     marginTop: 8,
@@ -763,7 +763,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   emptyText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
   },
   emptyList: {
@@ -777,7 +777,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   menuContainer: {
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 12,
     width: "100%",
     maxWidth: 320,
@@ -787,26 +787,26 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#374151",
+    borderBottomColor: colors.borderLight,
   },
   menuItemLast: {
     borderBottomWidth: 0,
   },
   menuItemText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "500",
     textAlign: "center",
   },
   menuItemDanger: {
-    color: "#ef4444",
+    color: colors.danger,
   },
   starterPacksContainer: {
     marginTop: 16,
     marginBottom: 8,
   },
   starterPacksTitle: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 12,
@@ -815,7 +815,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
@@ -824,13 +824,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   starterPackName: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 4,
   },
   starterPackMeta: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
   },
   starterPackArrow: {

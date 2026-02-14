@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   headerText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -144,12 +144,12 @@ const styles = StyleSheet.create({
   topicChip: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: "#374151",
+    borderColor: colors.borderLight,
     gap: 6,
   },
   topicChipHot: {
@@ -160,13 +160,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   topicText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 14,
     fontWeight: "500",
     maxWidth: 120,
   },
   postCount: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 12,
     marginLeft: 4,
   },

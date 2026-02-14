@@ -101,7 +101,7 @@ export function EditScheduledPostModal({
             <TextInput
               style={styles.input}
               placeholder="What's happening?"
-              placeholderTextColor="#6b7280"
+              placeholderTextColor=colors.textTertiary
               multiline
               autoFocus
               value={text}
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: '#1a1a24',
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -158,15 +158,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#2a2a38',
+    borderBottomColor: colors.surface,
   },
   title: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 18,
     fontWeight: '600',
   },
   closeButton: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 24,
     fontWeight: '300',
   },
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   input: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     padding: 16,
     minHeight: 150,
@@ -188,20 +188,20 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   charCount: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 12,
     fontWeight: '500',
     textAlign: 'right',
   },
   charCountOver: {
-    color: '#ef4444',
+    color: colors.danger,
   },
   actions: {
     flexDirection: 'row',
     gap: 12,
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#2a2a38',
+    borderTopColor: colors.surface,
   },
   button: {
     flex: 1,
@@ -212,10 +212,10 @@ const styles = StyleSheet.create({
     minHeight: 48,
   },
   cancelButton: {
-    backgroundColor: '#2a2a38',
+    backgroundColor: colors.surface,
   },
   cancelButtonText: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -223,11 +223,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   saveButtonDisabled: {
-    backgroundColor: '#1e3a5f',
+    backgroundColor: 'colors.surface',
     opacity: 0.5,
   },
   saveButtonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },

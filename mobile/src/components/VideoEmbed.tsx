@@ -3,6 +3,7 @@ import {View, Text, StyleSheet, TouchableOpacity, ActivityIndicator} from 'react
 import {Video, ResizeMode, AVPlaybackStatus} from 'expo-av';
 import {Image} from 'expo-image';
 import {AppBskyEmbedVideo} from '@atproto/api';
+import {colors} from '../constants/theme';
 
 
 import { createLogger } from '../utils/logger';
@@ -73,7 +74,7 @@ export function VideoEmbed({video}: VideoEmbedProps) {
           )}
           <View style={styles.playButtonContainer}>
             {isLoading ? (
-              <ActivityIndicator size="large" color="#ffffff" />
+              <ActivityIndicator size="large" color=colors.text />
             ) : (
               <View style={styles.playButton}>
                 <View style={styles.playIcon} />
@@ -112,7 +113,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
     position: 'relative',
   },
   thumbnailContainer: {
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     width: '100%',
     height: 240,
-    backgroundColor: '#000000',
+    backgroundColor: colors.borderDark,
   },
   video: {
     width: '100%',
@@ -154,7 +155,7 @@ const styles = StyleSheet.create({
     height: 0,
     marginLeft: 4,
     borderLeftWidth: 20,
-    borderLeftColor: '#ffffff',
+    borderLeftColor: colors.text,
     borderTopWidth: 12,
     borderTopColor: 'transparent',
     borderBottomWidth: 12,
@@ -170,7 +171,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   altText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 12,
   },
 });

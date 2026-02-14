@@ -16,6 +16,7 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { AuthAccount } from "../services/auth/auth-service";
 import { CheckIcon, CloseIcon, PlusIcon } from "./icons";
+import {colors} from '../constants/theme';
 
 interface AccountSwitcherProps {
   onAccountSwitch?: () => void;
@@ -116,11 +117,11 @@ export function AccountSwitcher({
           </View>
 
           {isSwitching && (
-            <ActivityIndicator color="#1DA1F2" style={styles.spinner} />
+            <ActivityIndicator color=colors.info style={styles.spinner} />
           )}
           {isActive && !isSwitching && (
             <View style={styles.activeIndicator}>
-              <CheckIcon size={16} color="#fff" />
+              <CheckIcon size={16} color=colors.text />
             </View>
           )}
         </TouchableOpacity>
@@ -132,9 +133,9 @@ export function AccountSwitcher({
             disabled={isRemoving}
           >
             {isRemoving ? (
-              <ActivityIndicator size="small" color="#F91880" />
+              <ActivityIndicator size="small" color="colors.accent" />
             ) : (
-              <CloseIcon size={20} color="#F91880" />
+              <CloseIcon size={20} color="colors.accent" />
             )}
           </TouchableOpacity>
         )}
@@ -158,7 +159,7 @@ export function AccountSwitcher({
 
       <TouchableOpacity style={styles.addAccountButton} onPress={onAddAccount}>
         <View style={styles.addAccountContent}>
-          <PlusIcon size={18} color="#fff" />
+          <PlusIcon size={18} color=colors.text />
           <Text style={styles.addAccountButtonText}>Add Account</Text>
         </View>
       </TouchableOpacity>
@@ -168,17 +169,17 @@ export function AccountSwitcher({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#000",
+    backgroundColor: colors.borderDark,
   },
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#333",
+    borderBottomColor: colors.border,
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#fff",
+    color: colors.text,
   },
   accountsList: {
     paddingVertical: 8,
@@ -195,12 +196,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 12,
     borderRadius: 8,
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "colors.editorBackground",
   },
   activeAccount: {
-    backgroundColor: "#1e3a4f",
+    backgroundColor: "colors.surface",
     borderWidth: 1,
-    borderColor: "#1DA1F2",
+    borderColor: colors.info,
   },
   avatar: {
     width: 40,
@@ -209,12 +210,12 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   avatarPlaceholder: {
-    backgroundColor: "#333",
+    backgroundColor: colors.border,
     justifyContent: "center",
     alignItems: "center",
   },
   avatarText: {
-    color: "#fff",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "bold",
   },
@@ -222,13 +223,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   displayName: {
-    color: "#fff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 2,
   },
   handle: {
-    color: "#8899a6",
+    color: colors.textSecondary,
     fontSize: 14,
   },
   spinner: {
@@ -238,7 +239,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#1DA1F2",
+    backgroundColor: colors.info,
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 8,
@@ -251,7 +252,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   emptyText: {
-    color: "#8899a6",
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: "center",
     padding: 24,
@@ -260,7 +261,7 @@ const styles = StyleSheet.create({
     margin: 16,
     padding: 16,
     borderRadius: 8,
-    backgroundColor: "#1DA1F2",
+    backgroundColor: colors.info,
     alignItems: "center",
   },
   addAccountContent: {
@@ -269,7 +270,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   addAccountButtonText: {
-    color: "#fff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },

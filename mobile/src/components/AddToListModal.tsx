@@ -118,7 +118,7 @@ export function AddToListModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -126,10 +126,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f1f2e',
+    borderBottomColor: colors.surfaceAlt,
   },
   title: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 20,
     fontWeight: '700',
   },
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   closeButtonText: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 24,
     fontWeight: '300',
   },
@@ -146,28 +146,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f1f2e',
+    borderBottomColor: colors.surfaceAlt,
   },
   listContent: {
     flex: 1,
   },
   listName: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
   },
   listDescription: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
     marginBottom: 4,
   },
   listMemberCount: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 13,
   },
   chevron: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 24,
     fontWeight: '300',
     marginLeft: 8,
@@ -183,23 +183,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 12,
   },
   emptyText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 8,
   },
   emptySubtext: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: 'center',
   },
   errorText: {
-    color: '#ef4444',
+    color: colors.danger,
     fontSize: 16,
     fontWeight: '600',
   },

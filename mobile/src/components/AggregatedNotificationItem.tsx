@@ -53,13 +53,13 @@ export function AggregatedNotificationItem({
     switch (reason) {
       case 'like':
         return {
-          icon: <HeartIcon size={18} color="#ef4444" filled />,
-          color: '#ef4444',
+          icon: <HeartIcon size={18} color=colors.danger filled />,
+          color: colors.danger,
         };
       case 'repost':
         return {
-          icon: <RepostIcon size={18} color="#10b981" />,
-          color: '#10b981',
+          icon: <RepostIcon size={18} color=colors.success />,
+          color: colors.success,
         };
       case 'follow':
         return {
@@ -68,13 +68,13 @@ export function AggregatedNotificationItem({
         };
       case 'quote':
         return {
-          icon: <QuoteIcon size={18} color="#06b6d4" />,
-          color: '#06b6d4',
+          icon: <QuoteIcon size={18} color=colors.quote />,
+          color: colors.quote,
         };
       default:
         return {
-          icon: <HeartIcon size={18} color="#9ca3af" />,
-          color: '#9ca3af',
+          icon: <HeartIcon size={18} color=colors.textSecondary />,
+          color: colors.textSecondary,
         };
     }
   };
@@ -172,9 +172,9 @@ export function AggregatedNotificationItem({
             {isExpanded ? 'Collapse' : `Show all ${count} notifications`}
           </Text>
           {isExpanded ? (
-            <ChevronUpIcon size={16} color="#6b7280" />
+            <ChevronUpIcon size={16} color=colors.textTertiary />
           ) : (
-            <ChevronDownIcon size={16} color="#6b7280" />
+            <ChevronDownIcon size={16} color=colors.textTertiary />
           )}
         </TouchableOpacity>
       )}
@@ -198,15 +198,15 @@ export function AggregatedNotificationItem({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: colors.surfaceElevated,
   },
   mainContent: {
     position: 'relative',
   },
   unread: {
-    backgroundColor: '#0f172a',
+    backgroundColor: colors.unreadBackground,
   },
   content: {
     padding: 16,
@@ -232,21 +232,21 @@ const styles = StyleSheet.create({
   },
   avatarWrapper: {
     borderWidth: 2,
-    borderColor: '#0a0a0f',
+    borderColor: colors.background,
     borderRadius: 16,
   },
   moreCount: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
     borderWidth: 2,
-    borderColor: '#0a0a0f',
+    borderColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
   },
   moreCountText: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -259,14 +259,14 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   userName: {
-    color: '#ffffff',
+    color: colors.text,
     fontWeight: '600',
   },
   actionText: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
   },
   timestamp: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 12,
   },
   unreadIndicator: {
@@ -287,15 +287,15 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderTopWidth: 1,
-    borderTopColor: '#1f2937',
+    borderTopColor: colors.surfaceElevated,
   },
   expandText: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 13,
     fontWeight: '600',
   },
   expandedList: {
     borderTopWidth: 1,
-    borderTopColor: '#1f2937',
+    borderTopColor: colors.surfaceElevated,
   },
 });

@@ -34,15 +34,15 @@ export function NotificationItem({
     switch (notification.reason) {
       case 'like':
         return {
-          icon: <HeartIcon size={16} color="#ef4444" filled />,
+          icon: <HeartIcon size={16} color={colors.like} filled />,
           message: 'liked your post',
-          color: '#ef4444',
+          color: colors.like,
         };
       case 'repost':
         return {
-          icon: <RepostIcon size={16} color="#10b981" />,
+          icon: <RepostIcon size={16} color={colors.repost} />,
           message: 'reposted your post',
-          color: '#10b981',
+          color: colors.repost,
         };
       case 'follow':
         return {
@@ -52,27 +52,27 @@ export function NotificationItem({
         };
       case 'mention':
         return {
-          icon: <AtSignIcon size={16} color="#8b5cf6" />,
+          icon: <AtSignIcon size={16} color={colors.mention} />,
           message: 'mentioned you',
-          color: '#8b5cf6',
+          color: colors.mention,
         };
       case 'reply':
         return {
-          icon: <ReplyIcon size={16} color="#6366f1" />,
+          icon: <ReplyIcon size={16} color={colors.reply} />,
           message: 'replied to your post',
-          color: '#6366f1',
+          color: colors.reply,
         };
       case 'quote':
         return {
-          icon: <QuoteIcon size={16} color="#06b6d4" />,
+          icon: <QuoteIcon size={16} color={colors.quote} />,
           message: 'quoted your post',
-          color: '#06b6d4',
+          color: colors.quote,
         };
       default:
         return {
-          icon: <BellIcon size={16} color="#9ca3af" />,
+          icon: <BellIcon size={16} color={colors.textSecondary} />,
           message: 'sent a notification',
-          color: '#9ca3af',
+          color: colors.textSecondary,
         };
     }
   };
@@ -159,13 +159,13 @@ export function NotificationItem({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: colors.border,
     position: 'relative',
   },
   unread: {
-    backgroundColor: '#0f172a',
+    backgroundColor: colors.unreadBackground,
   },
   content: {
     padding: 16,
@@ -200,31 +200,31 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   displayName: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
   },
   message: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 15,
   },
   handle: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 13,
   },
   timestamp: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 12,
     marginLeft: 8,
   },
   postPreview: {
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 8,
     padding: 12,
     marginTop: 8,
   },
   postText: {
-    color: '#d1d5db',
+    color: colors.borderLight,
     fontSize: 14,
     lineHeight: 18,
   },

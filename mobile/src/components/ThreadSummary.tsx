@@ -109,7 +109,7 @@ export function ThreadSummary({
     return (
       <View style={styles.container}>
         <View style={styles.loadingContent}>
-          <ActivityIndicator size="small" color="#9ca3af" />
+          <ActivityIndicator size="small" color=colors.textSecondary />
           <Text style={styles.loadingText}>Generating summary...</Text>
         </View>
       </View>
@@ -189,12 +189,12 @@ export function ThreadSummary({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#1a1a1f",
+    backgroundColor: "colors.surface",
     borderRadius: 8,
     marginHorizontal: 12,
     marginVertical: 8,
     borderWidth: 1,
-    borderColor: "#374151",
+    borderColor: colors.borderLight,
   },
   loadingContent: {
     flexDirection: "row",
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   loadingText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 13,
   },
   header: {
@@ -222,16 +222,16 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   headerLabel: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 12,
     fontWeight: "600",
   },
   headerMeta: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 11,
   },
   chevron: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 12,
   },
   content: {
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   summaryText: {
-    color: "#d1d5db",
+    color: colors.borderLight,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -248,11 +248,11 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: "#374151",
+    backgroundColor: colors.borderLight,
     marginBottom: 8,
   },
   highlightsLabel: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 11,
     fontWeight: "600",
     marginBottom: 6,
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 4,
     paddingHorizontal: 8,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
     borderRadius: 4,
     flexWrap: "wrap",
   },
@@ -275,11 +275,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   highlightEngagement: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 11,
   },
   engagementText: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 11,
     marginTop: 8,
   },

@@ -111,7 +111,7 @@ export function CollectionManager({
 
   const getCollectionColor = (collection: BookmarkCollection) => {
     const colorOption = COLLECTION_COLORS.find((c) => c.id === collection.color);
-    return colorOption?.value || '#3b82f6';
+    return colorOption?.value || colors.info;
   };
 
   return (
@@ -289,7 +289,7 @@ export function CollectionManager({
               disabled={!collectionName.trim() || isCreating || isUpdating}
             >
               {isCreating || isUpdating ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color=colors.text />
               ) : (
                 <Text style={styles.submitButtonText}>
                   {editingCollection ? 'Save' : 'Create'}
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   selectedText: {
-    color: '#3b82f6',
+    color: colors.info,
     fontWeight: '600',
   },
   collectionDescription: {
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: '#3b82f6',
+    backgroundColor: colors.info,
     alignItems: 'center',
   },
   disabledButton: {
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#fff',
+    color: colors.text,
   },
   deleteButton: {
     marginTop: 12,
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
   },
   deleteButtonText: {
     fontSize: 14,
-    color: '#ef4444',
+    color: colors.danger,
   },
   createButtonContainer: {
     padding: 16,

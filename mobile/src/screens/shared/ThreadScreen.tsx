@@ -469,7 +469,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
           <TextInput
             style={styles.replyInput}
             placeholder="Write your reply..."
-            placeholderTextColor="#6b7280"
+            placeholderTextColor=colors.textTertiary
             multiline
             value={replyText}
             onChangeText={setReplyText}
@@ -490,7 +490,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
               disabled={isReplyDisabled || createPost.isPending}
             >
               {createPost.isPending ? (
-                <ActivityIndicator color="#ffffff" size="small" />
+                <ActivityIndicator color=colors.text size="small" />
               ) : (
                 <Text style={styles.replyButtonText}>Reply</Text>
               )}
@@ -523,14 +523,14 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
   },
   divider: {
     height: 1,
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     marginVertical: 8,
   },
   noReplies: {
@@ -538,13 +538,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   noRepliesText: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 14,
   },
   replyComposer: {
-    backgroundColor: "#1a1a1f",
+    backgroundColor: "colors.surface",
     borderTopWidth: 1,
-    borderTopColor: "#1f2937",
+    borderTopColor: colors.surfaceElevated,
     padding: 16,
   },
   replyHeader: {
@@ -554,7 +554,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   replyLabel: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
   },
   cancelButton: {
@@ -563,15 +563,15 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   replyInput: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     minHeight: 80,
     maxHeight: 160,
     padding: 12,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#374151",
+    borderColor: colors.borderLight,
     textAlignVertical: "top",
   },
   replyFooter: {
@@ -581,11 +581,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   charCount: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 13,
   },
   charCountOver: {
-    color: "#ef4444",
+    color: colors.danger,
   },
   replyButton: {
     backgroundColor: colors.primary,
@@ -596,11 +596,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   replyButtonDisabled: {
-    backgroundColor: "#1e3a5f",
+    backgroundColor: "colors.surface",
     opacity: 0.5,
   },
   replyButtonText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -615,13 +615,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     elevation: 4,
-    shadowColor: "#000",
+    shadowColor: colors.borderDark,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
   floatingReplyButtonText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },

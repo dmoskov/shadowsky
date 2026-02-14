@@ -12,6 +12,7 @@ import {
 import { useMutedAccounts, useUnmuteUser } from '../../hooks/api/useProfile';
 import { Avatar } from '../../components/Avatar';
 import { AppBskyActorDefs } from '@atproto/api';
+import {colors} from '../../constants/theme';
 
 interface MutedAccountsScreenProps {
   onNavigateToProfile?: (handle: string) => void;
@@ -92,7 +93,7 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
 
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#3b82f6" />
+        <ActivityIndicator size="small" color=colors.info />
       </View>
     );
   };
@@ -101,7 +102,7 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
     if (isLoading) {
       return (
         <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color="#3b82f6" />
+          <ActivityIndicator size="large" color=colors.info />
         </View>
       );
     }
@@ -148,8 +149,8 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor="#3b82f6"
-            colors={['#3b82f6']}
+            tintColor=colors.info
+            colors={[colors.info]}
           />
         }
         contentContainerStyle={accounts.length === 0 ? styles.emptyList : undefined}
@@ -161,21 +162,21 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: colors.surfaceElevated,
   },
   headerTitle: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   headerDescription: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
   },
   accountItem: {
@@ -184,7 +185,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: colors.surfaceElevated,
   },
   accountInfo: {
     flex: 1,
@@ -197,25 +198,25 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   displayName: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 2,
   },
   handle: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
   },
   unmuteButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#3b82f6',
+    borderColor: colors.info,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
   },
   unmuteButtonText: {
-    color: '#3b82f6',
+    color: colors.info,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -231,20 +232,20 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   emptyText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 8,
     textAlign: 'center',
   },
   emptySubtext: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
   },
   errorText: {
-    color: '#ef4444',
+    color: colors.danger,
     fontSize: 16,
     textAlign: 'center',
   },

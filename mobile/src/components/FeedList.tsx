@@ -139,8 +139,8 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor={isOnline ? colors.primary : "#6b7280"}
-            colors={[isOnline ? colors.primary : "#6b7280"]}
+            tintColor={isOnline ? colors.primary : colors.textTertiary}
+            colors={[isOnline ? colors.primary : colors.textTertiary]}
             enabled={isOnline}
           />
         ) : undefined
@@ -161,7 +161,7 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
 const styles = StyleSheet.create({
   list: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   footer: {
     padding: 20,

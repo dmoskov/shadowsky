@@ -21,11 +21,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   message: {
     marginTop: 12,
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
   },
 });

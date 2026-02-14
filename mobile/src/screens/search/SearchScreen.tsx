@@ -324,7 +324,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
         <TextInput
           style={styles.input}
           placeholder="Search posts, users, hashtags..."
-          placeholderTextColor="#6b7280"
+          placeholderTextColor=colors.textTertiary
           value={searchQuery}
           onChangeText={setSearchQuery}
           onFocus={() => setShowHistory(searchHistory.length > 0 && !searchQuery)}
@@ -628,25 +628,25 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   searchBar: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   input: {
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
   },
   tabContainer: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   tab: {
     flex: 1,
@@ -661,7 +661,7 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#6b7280",
+    color: colors.textTertiary,
   },
   activeTabText: {
     color: colors.primary,
@@ -669,17 +669,17 @@ const styles = StyleSheet.create({
   filterBar: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   filterButton: {
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     alignSelf: "flex-start",
   },
   filterButtonText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: "500",
   },
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
     alignItems: "flex-start",
   },
   resultInfo: {
@@ -698,18 +698,18 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   displayName: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 2,
   },
   handle: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     marginBottom: 4,
   },
   description: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -719,7 +719,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
     marginTop: 12,
   },
@@ -730,19 +730,19 @@ const styles = StyleSheet.create({
     padding: 32,
   },
   emptyStateText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 18,
     textAlign: "center",
     marginBottom: 8,
   },
   emptyStateSubtext: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 14,
     textAlign: "center",
   },
   historyContainer: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   historyHeader: {
     flexDirection: "row",
@@ -751,10 +751,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   historyTitle: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -769,10 +769,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   historyText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
   },
   modalOverlay: {
@@ -781,7 +781,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: "80%",
@@ -792,10 +792,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   modalTitle: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "600",
   },
@@ -808,7 +808,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   filterLabel: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: "600",
     marginTop: 16,
@@ -818,7 +818,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   filterOption: {
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -827,10 +827,10 @@ const styles = StyleSheet.create({
   },
   filterOptionActive: {
     borderColor: colors.primary,
-    backgroundColor: "#1d4e6f",
+    backgroundColor: "colors.surface",
   },
   filterOptionText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
   },
   filterOptionTextActive: {
@@ -838,7 +838,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   resetButton: {
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -846,7 +846,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   resetButtonText: {
-    color: "#ef4444",
+    color: colors.danger,
     fontSize: 16,
     fontWeight: "600",
   },

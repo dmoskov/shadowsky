@@ -28,13 +28,13 @@ export const UNCATEGORIZED_COLLECTION_ID = "__uncategorized__";
 
 // Collection color options
 export const COLLECTION_COLORS = [
-  { id: "blue", name: "Blue", value: "#3b82f6" },
-  { id: "green", name: "Green", value: "#22c55e" },
+  { id: "blue", name: "Blue", value: colors.info },
+  { id: "green", name: "Green", value: "colors.success" },
   { id: "purple", name: "Purple", value: "#a855f7" },
-  { id: "pink", name: "Pink", value: "#ec4899" },
+  { id: "pink", name: "Pink", value: "colors.accent" },
   { id: "orange", name: "Orange", value: "#f97316" },
   { id: "yellow", name: "Yellow", value: "#eab308" },
-  { id: "red", name: "Red", value: "#ef4444" },
+  { id: "red", name: "Red", value: colors.danger },
   { id: "teal", name: "Teal", value: "#14b8a6" },
 ] as const;
 

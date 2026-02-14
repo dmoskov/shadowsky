@@ -152,7 +152,7 @@ export function ContentModerationSettingsScreen({
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <ChevronLeft size={24} color="#fff" />
+          <ChevronLeft size={24} color=colors.text />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Content Moderation</Text>
         <TouchableOpacity
@@ -240,7 +240,7 @@ export function ContentModerationSettingsScreen({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: "row",
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   backButton: {
     padding: 4,
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#fff",
+    color: colors.text,
     flex: 1,
     textAlign: "center",
   },
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 14,
-    color: "#9ca3af",
+    color: colors.textSecondary,
     marginBottom: 24,
     lineHeight: 20,
   },
@@ -290,16 +290,16 @@ const styles = StyleSheet.create({
   categoryTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#fff",
+    color: colors.text,
     marginBottom: 12,
   },
   labelCard: {
-    backgroundColor: "#1a1a24",
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#2a2a3a",
+    borderColor: "colors.surface",
   },
   labelInfo: {
     marginBottom: 12,
@@ -307,12 +307,12 @@ const styles = StyleSheet.create({
   labelName: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#fff",
+    color: colors.text,
     marginBottom: 4,
   },
   labelDescription: {
     fontSize: 13,
-    color: "#9ca3af",
+    color: colors.textSecondary,
     lineHeight: 18,
   },
   preferenceButtons: {
@@ -324,9 +324,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: "#2a2a3a",
+    backgroundColor: "colors.surface",
     borderWidth: 1,
-    borderColor: "#3a3a4a",
+    borderColor: "colors.surface",
     alignItems: "center",
   },
   preferenceButtonSelected: {
@@ -336,34 +336,34 @@ const styles = StyleSheet.create({
   preferenceButtonText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#9ca3af",
+    color: colors.textSecondary,
   },
   preferenceButtonTextSelected: {
-    color: "#fff",
+    color: colors.text,
   },
   infoBox: {
-    backgroundColor: "#1a1a24",
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: "#2a2a3a",
+    borderColor: "colors.surface",
   },
   infoTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#fff",
+    color: colors.text,
     marginBottom: 12,
   },
   infoText: {
     fontSize: 13,
-    color: "#9ca3af",
+    color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: 6,
   },
   infoBold: {
     fontWeight: "600",
-    color: "#fff",
+    color: colors.text,
   },
 });

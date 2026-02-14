@@ -21,6 +21,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {colors} from '../constants/theme';
 
 interface OfflineBannerProps {
   isOnline: boolean;
@@ -69,7 +70,7 @@ export default function OfflineBanner({ isOnline }: OfflineBannerProps) {
   const animatedBackgroundStyle = useAnimatedStyle(() => {
     // Interpolate between offline (orange) and online (green) colors
     const bgColor =
-      backgroundColor.value === 0 ? "#F59E0B" : "#10B981";
+      backgroundColor.value === 0 ? colors.warning : colors.success;
     return {
       backgroundColor: bgColor,
     };
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 12,
     zIndex: 9999,
-    shadowColor: "#000",
+    shadowColor: colors.borderDark,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -109,7 +110,7 @@ const styles = StyleSheet.create({
   bannerText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: colors.text,
     textAlign: "center",
   },
 });

@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import {Image} from 'expo-image';
+import {colors} from '../constants/theme';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -331,7 +332,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: colors.borderDark,
   },
   gallery: {
     flexDirection: 'row',
@@ -372,7 +373,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   counterText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -386,7 +387,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   altText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 15,
     lineHeight: 22,
   },

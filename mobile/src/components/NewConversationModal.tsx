@@ -129,7 +129,7 @@ export function NewConversationModal({
 
     return (
       <View style={styles.emptyContainer}>
-        <SearchIcon size={48} color="#9ca3af" />
+        <SearchIcon size={48} color=colors.textSecondary />
         <Text style={styles.emptyText}>
           Search for a user to start a conversation
         </Text>
@@ -155,20 +155,20 @@ export function NewConversationModal({
 
         {/* Search Input */}
         <View style={styles.searchContainer}>
-          <SearchIcon size={20} color="#9ca3af" />
+          <SearchIcon size={20} color=colors.textSecondary />
           <TextInput
             style={styles.searchInput}
             value={searchQuery}
             onChangeText={handleSearch}
             placeholder="Search users..."
-            placeholderTextColor="#666"
+            placeholderTextColor="colors.textTertiary"
             autoFocus
             autoCapitalize="none"
             autoCorrect={false}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => handleSearch("")}>
-              <CloseIcon size={20} color="#9ca3af" />
+              <CloseIcon size={20} color=colors.textSecondary />
             </TouchableOpacity>
           )}
         </View>
@@ -196,7 +196,7 @@ export function NewConversationModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: "row",
@@ -204,10 +204,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f1f23",
+    borderBottomColor: colors.surfaceAlt,
   },
   headerTitle: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 20,
     fontWeight: "bold",
   },
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1f1f23",
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
   },
   loadingContainer: {
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f1f23",
+    borderBottomColor: colors.surfaceAlt,
   },
   avatar: {
     width: 48,
@@ -252,12 +252,12 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#3a3a3f",
+    backgroundColor: "colors.surface",
     justifyContent: "center",
     alignItems: "center",
   },
   avatarText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 20,
     fontWeight: "600",
   },
@@ -266,17 +266,17 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   displayName: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
   handle: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 2,
   },
   description: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -287,13 +287,13 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   emptyText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
     textAlign: "center",
     marginTop: 12,
   },
   errorText: {
-    color: "#ef4444",
+    color: colors.danger,
     fontSize: 16,
     textAlign: "center",
   },

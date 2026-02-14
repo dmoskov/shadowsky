@@ -319,7 +319,7 @@ export function MyProfileScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -333,32 +333,32 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   errorText: {
-    color: "#ef4444",
+    color: colors.danger,
     fontSize: 16,
   },
   header: {
     paddingHorizontal: 16,
     paddingVertical: 24,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   profileInfo: {
     alignItems: "center",
     marginBottom: 16,
   },
   displayName: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 24,
     fontWeight: "bold",
     marginTop: 12,
   },
   handle: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
     marginTop: 4,
   },
   bio: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 15,
     lineHeight: 20,
     marginBottom: 16,
@@ -373,12 +373,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   statValue: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 20,
     fontWeight: "bold",
   },
   statLabel: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -391,12 +391,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   editProfileButtonText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
   signOutButton: {
-    backgroundColor: "#ef4444",
+    backgroundColor: colors.danger,
     paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 24,
@@ -404,12 +404,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   signOutButtonText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
   postsHeader: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "bold",
     marginTop: 8,
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   emptyText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
   },
   emptyList: {
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   starterPacksTitle: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 12,
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
@@ -451,13 +451,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   starterPackName: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 4,
   },
   starterPackMeta: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
   },
   starterPackArrow: {

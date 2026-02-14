@@ -1,6 +1,7 @@
 import React from 'react';
 import {View, StyleSheet, ViewStyle} from 'react-native';
 import {Image} from 'expo-image';
+import {colors} from '../constants/theme';
 
 interface AvatarProps {
   uri?: string;
@@ -36,9 +37,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   image: {
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
   },
   placeholder: {
-    backgroundColor: '#374151',
+    backgroundColor: colors.borderLight,
   },
 });

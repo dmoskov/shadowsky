@@ -152,13 +152,13 @@ export function AnalyticsScreen() {
           "Likes Received",
           analytics.likesReceived,
           "❤️",
-          "#ef4444"
+          colors.danger
         )}
         {renderMetricCard(
           "Reposts",
           analytics.repostsReceived,
           "🔄",
-          "#10b981"
+          colors.success
         )}
         {renderMetricCard(
           "Replies",
@@ -170,19 +170,19 @@ export function AnalyticsScreen() {
           "Total Followers",
           analytics.followersCount,
           "👥",
-          "#8b5cf6"
+          colors.mention
         )}
         {renderMetricCard(
           "Posts Published",
           analytics.postsCount,
           "📝",
-          "#f59e0b"
+          colors.warning
         )}
         {renderMetricCard(
           "Total Engagement",
           analytics.impressions,
           "📊",
-          "#ec4899"
+          "colors.accent"
         )}
       </View>
 
@@ -250,7 +250,7 @@ export function AnalyticsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   loadingText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
     marginTop: 16,
   },
@@ -270,13 +270,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   errorText: {
-    color: "#ef4444",
+    color: colors.danger,
     fontSize: 18,
     fontWeight: "600",
     textAlign: "center",
   },
   errorSubtext: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 8,
     textAlign: "center",
@@ -287,12 +287,12 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   title: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 28,
     fontWeight: "bold",
   },
   subtitle: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
     marginTop: 4,
   },
@@ -307,19 +307,19 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     alignItems: "center",
   },
   timeRangeButtonActive: {
     backgroundColor: colors.primary,
   },
   timeRangeText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: "600",
   },
   timeRangeTextActive: {
-    color: "#ffffff",
+    color: colors.text,
   },
   metricsGrid: {
     paddingHorizontal: 16,
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
   metricCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 12,
     padding: 16,
     borderLeftWidth: 4,
@@ -342,12 +342,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   metricValue: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 24,
     fontWeight: "bold",
   },
   metricTitle: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 2,
   },
@@ -356,26 +356,26 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   sectionTitle: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 4,
   },
   sectionSubtitle: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     marginBottom: 16,
   },
   topPostCard: {
     flexDirection: "row",
     marginBottom: 16,
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 12,
     overflow: "hidden",
   },
   topPostRank: {
     width: 48,
-    backgroundColor: "#374151",
+    backgroundColor: colors.borderLight,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -393,18 +393,18 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderTopWidth: 1,
-    borderTopColor: "#374151",
+    borderTopColor: colors.borderLight,
   },
   topPostStat: {
     alignItems: "center",
   },
   topPostStatLabel: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 12,
     marginBottom: 4,
   },
   topPostStatValue: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -414,13 +414,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   emptyText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 18,
     fontWeight: "600",
     textAlign: "center",
   },
   emptySubtext: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 14,
     marginTop: 8,
     textAlign: "center",

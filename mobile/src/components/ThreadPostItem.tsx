@@ -72,7 +72,7 @@ export function ThreadPostItem({
             style={styles.removeButton}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <CloseIcon size={18} color="#ef4444" />
+            <CloseIcon size={18} color=colors.danger />
           </TouchableOpacity>
         )}
       </View>
@@ -80,7 +80,7 @@ export function ThreadPostItem({
       <TextInput
         style={styles.input}
         placeholder={`Post ${index + 1}`}
-        placeholderTextColor="#6b7280"
+        placeholderTextColor=colors.textTertiary
         multiline
         value={post.text}
         onChangeText={onTextChange}
@@ -122,7 +122,7 @@ export function ThreadPostItem({
           onPress={onImagePicker}
           disabled={!canAddImages || isUploading}
         >
-          <ImageIcon size={18} color={canAddImages ? "#6b7280" : "#4b5563"} />
+          <ImageIcon size={18} color={canAddImages ? colors.textTertiary : colors.borderLight} />
         </TouchableOpacity>
         <Text style={[styles.charCount, isOverLimit && styles.charCountOver]}>
           {charCount}/{MAX_POST_LENGTH}
@@ -134,10 +134,10 @@ export function ThreadPostItem({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#111116",
+    backgroundColor: colors.background,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#1f2937",
+    borderColor: colors.surfaceElevated,
     padding: 12,
     marginBottom: 12,
   },
@@ -148,13 +148,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   postNumber: {
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
   postNumberText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 12,
     fontWeight: "600",
   },
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   input: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     minHeight: 80,
     textAlignVertical: "top",
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 6,
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
   },
   removeImageButton: {
     position: "absolute",
@@ -188,12 +188,12 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#374151",
+    backgroundColor: colors.borderLight,
     justifyContent: "center",
     alignItems: "center",
   },
   removeImageText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 14,
     fontWeight: "600",
     lineHeight: 16,
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   altTextButtonText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 9,
     fontWeight: "600",
   },
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: "#1f2937",
+    borderTopColor: colors.surfaceElevated,
   },
   imageButton: {
     padding: 4,
@@ -227,11 +227,11 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   charCount: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 12,
     fontWeight: "500",
   },
   charCountOver: {
-    color: "#ef4444",
+    color: colors.danger,
   },
 });

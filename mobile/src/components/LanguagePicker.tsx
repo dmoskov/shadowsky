@@ -134,7 +134,7 @@ export function LanguagePicker({
             style={styles.closeButton}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <CloseIcon size={24} color="#9ca3af" />
+            <CloseIcon size={24} color=colors.textSecondary />
           </TouchableOpacity>
         </View>
 
@@ -143,7 +143,7 @@ export function LanguagePicker({
           <TextInput
             style={styles.searchInput}
             placeholder="Search languages..."
-            placeholderTextColor="#6b7280"
+            placeholderTextColor=colors.textTertiary
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCapitalize="none"
@@ -222,7 +222,7 @@ export function LanguagePicker({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -230,12 +230,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: colors.surfaceElevated,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#ffffff',
+    color: colors.text,
   },
   closeButton: {
     padding: 4,
@@ -243,15 +243,15 @@ const styles = StyleSheet.create({
   searchContainer: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: colors.surfaceElevated,
   },
   searchInput: {
-    backgroundColor: '#111116',
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: '#1f2937',
+    borderColor: colors.surfaceElevated,
     borderRadius: 8,
     padding: 12,
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
   },
   listContent: {
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6b7280',
+    color: colors.textTertiary,
     marginTop: 16,
     marginBottom: 8,
     textTransform: 'uppercase',
@@ -284,17 +284,17 @@ const styles = StyleSheet.create({
   languageName: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#ffffff',
+    color: colors.text,
     marginBottom: 2,
   },
   languageNative: {
     fontSize: 14,
-    color: '#9ca3af',
+    color: colors.textSecondary,
     marginBottom: 2,
   },
   languageCode: {
     fontSize: 12,
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontWeight: '600',
   },
   checkIcon: {
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 14,
-    color: '#6b7280',
+    color: colors.textTertiary,
     textAlign: 'center',
   },
   footer: {
@@ -316,8 +316,8 @@ const styles = StyleSheet.create({
     right: 0,
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#1f2937',
-    backgroundColor: '#0a0a0f',
+    borderTopColor: colors.surfaceElevated,
+    backgroundColor: colors.background,
   },
   doneButton: {
     backgroundColor: colors.primary,
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   doneButtonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },

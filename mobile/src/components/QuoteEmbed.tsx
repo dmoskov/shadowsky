@@ -3,6 +3,7 @@ import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {AppBskyEmbedRecord, AppBskyFeedPost} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {RichText} from '../utils/rich-text';
+import {colors} from '../constants/theme';
 
 interface QuoteEmbedProps {
   record: any;
@@ -68,8 +69,8 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#1f2937',
-    backgroundColor: '#0f1419',
+    borderColor: colors.surfaceElevated,
+    backgroundColor: 'colors.background',
   },
   notFoundContainer: {
     alignItems: 'center',
@@ -77,7 +78,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   notFoundText: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 14,
     fontStyle: 'italic',
   },
@@ -94,16 +95,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   displayName: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
   handle: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 13,
   },
   text: {
-    color: '#e5e7eb',
+    color: colors.textMuted,
     fontSize: 14,
     lineHeight: 18,
   },

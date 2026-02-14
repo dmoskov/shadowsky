@@ -3,6 +3,7 @@ import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {Image} from 'expo-image';
 import {AppBskyEmbedExternal} from '@atproto/api';
 import {openLink} from '../utils/browser';
+import {colors} from '../constants/theme';
 
 
 import { createLogger } from '../utils/logger';
@@ -73,31 +74,31 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#1f2937',
-    backgroundColor: '#0f1419',
+    borderColor: colors.surfaceElevated,
+    backgroundColor: 'colors.background',
     overflow: 'hidden',
   },
   thumbnail: {
     width: '100%',
     height: 180,
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
   },
   textContainer: {
     padding: 12,
   },
   domain: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 12,
     marginBottom: 4,
   },
   title: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
     marginBottom: 4,
   },
   description: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },

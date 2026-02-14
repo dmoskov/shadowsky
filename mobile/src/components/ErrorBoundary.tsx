@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import React, { Component, ReactNode } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { captureException } from "../utils/error-reporting";
+import { colors } from "../constants/theme";
 
 
 import { createLogger } from '../utils/logger';
@@ -141,7 +142,7 @@ function ErrorFallback({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000000",
+    backgroundColor: colors.borderDark,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
@@ -153,47 +154,47 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#FFFFFF",
+    color: colors.text,
     marginBottom: 12,
     textAlign: "center",
   },
   message: {
     fontSize: 16,
-    color: "#AAAAAA",
+    color: colors.textSecondary,
     marginBottom: 12,
     textAlign: "center",
     lineHeight: 22,
   },
   errorId: {
     fontSize: 12,
-    color: "#666666",
+    color: colors.textTertiary,
     marginBottom: 24,
     textAlign: "center",
     fontFamily: "monospace",
   },
   errorDetails: {
-    backgroundColor: "#1A1A1A",
+    backgroundColor: colors.errorBackground,
     borderRadius: 8,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: "#FF4444",
+    borderColor: colors.errorBorder,
   },
   errorTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#FF4444",
+    color: colors.errorBorder,
     marginBottom: 8,
   },
   errorMessage: {
     fontSize: 13,
-    color: "#FFFFFF",
+    color: colors.text,
     marginBottom: 8,
     fontFamily: "monospace",
   },
   errorStack: {
     fontSize: 11,
-    color: "#AAAAAA",
+    color: colors.textSecondary,
     fontFamily: "monospace",
     lineHeight: 16,
   },
@@ -207,22 +208,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   primaryButton: {
-    backgroundColor: "#1DA1F2",
+    backgroundColor: colors.info,
   },
   primaryButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: colors.text,
   },
   secondaryButton: {
     backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: "#333333",
+    borderColor: colors.border,
   },
   secondaryButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#AAAAAA",
+    color: colors.textSecondary,
   },
 });
 

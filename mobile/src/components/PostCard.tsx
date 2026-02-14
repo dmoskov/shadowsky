@@ -251,7 +251,7 @@ function PostCardComponent({
                 accessibilityRole="button"
                 accessibilityLabel="More options"
                 accessibilityHint="Double tap to open menu with mute, block, and report options">
-                <MoreIcon size={20} color="#9ca3af" />
+                <MoreIcon size={20} color=colors.textSecondary />
               </TouchableOpacity>
             )}
           </View>
@@ -289,7 +289,7 @@ function PostCardComponent({
               accessibilityLabel={`Reply. ${postView.replyCount || 0} replies`}
               accessibilityHint="Double tap to reply to this post"
               accessibilityState={{disabled: !isOnline}}>
-              <ReplyIcon size={18} color={isOnline ? "#9ca3af" : "#4b5563"} />
+              <ReplyIcon size={18} color={isOnline ? colors.textSecondary : colors.borderLight} />
             </TouchableOpacity>
             <Text style={[styles.engagementCount, !isOnline && styles.disabled]}>
               {postView.replyCount || 0}
@@ -306,7 +306,7 @@ function PostCardComponent({
               accessibilityLabel={`Repost. ${postView.repostCount || 0} reposts`}
               accessibilityHint="Double tap to repost this post"
               accessibilityState={{disabled: !isOnline}}>
-              <RepostIcon size={18} color={isOnline ? "#9ca3af" : "#4b5563"} />
+              <RepostIcon size={18} color={isOnline ? colors.textSecondary : colors.borderLight} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={onPressRepostCount}
@@ -328,7 +328,7 @@ function PostCardComponent({
               accessibilityLabel={`${isLiked ? 'Unlike' : 'Like'}. ${postView.likeCount || 0} likes`}
               accessibilityHint={`Double tap to ${isLiked ? 'remove like from' : 'like'} this post`}
               accessibilityState={{disabled: !isOnline, selected: isLiked}}>
-              <HeartIcon size={18} color={isOnline ? (isLiked ? '#ef4444' : '#9ca3af') : '#4b5563'} filled={isLiked} />
+              <HeartIcon size={18} color={isOnline ? (isLiked ? colors.danger : colors.textSecondary) : colors.borderLight} filled={isLiked} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={onPressLikeCount}
@@ -349,7 +349,7 @@ function PostCardComponent({
             accessibilityLabel={isBookmarked ? 'Remove bookmark' : 'Bookmark post'}
             accessibilityHint={`Double tap to ${isBookmarked ? 'remove' : 'add'} bookmark`}
             accessibilityState={{disabled: !isOnline, selected: isBookmarked}}>
-            <BookmarkIcon size={18} color={isOnline ? (isBookmarked ? colors.primary : '#9ca3af') : '#4b5563'} filled={isBookmarked} />
+            <BookmarkIcon size={18} color={isOnline ? (isBookmarked ? colors.primary : colors.textSecondary) : colors.borderLight} filled={isBookmarked} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -359,7 +359,7 @@ function PostCardComponent({
             accessibilityRole="button"
             accessibilityLabel="Share post"
             accessibilityHint="Double tap to share this post">
-            <SendIcon size={18} color="#9ca3af" />
+            <SendIcon size={18} color=colors.textSecondary />
           </TouchableOpacity>
         </View>
       </View>
@@ -525,9 +525,9 @@ export const PostCard = React.memo(PostCardComponent, arePropsEqual);
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: colors.surfaceElevated,
   },
   content: {
     padding: 16,
@@ -556,22 +556,22 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   displayName: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 2,
   },
   handle: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
   },
   timestamp: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 13,
     marginRight: 4,
   },
   text: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 15,
     lineHeight: 20,
     marginBottom: 12,
@@ -592,11 +592,11 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   engagementCount: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 13,
   },
   disabled: {
-    color: '#4b5563',
+    color: colors.borderLight,
     opacity: 0.5,
   },
   menuOverlay: {
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   menuContainer: {
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 12,
     width: '100%',
     maxWidth: 320,
@@ -617,18 +617,18 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#374151',
+    borderBottomColor: colors.borderLight,
   },
   menuItemLast: {
     borderBottomWidth: 0,
   },
   menuItemText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '500',
     textAlign: 'center',
   },
   menuItemDanger: {
-    color: '#ef4444',
+    color: colors.danger,
   },
 });

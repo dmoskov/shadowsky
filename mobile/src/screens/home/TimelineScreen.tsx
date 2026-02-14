@@ -211,11 +211,11 @@ export function TimelineScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   centerContainer: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   gridImage: {
     width: "100%",
     height: "100%",
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
   },
   overlay: {
     position: "absolute",
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   statText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 11,
     fontWeight: "600",
   },

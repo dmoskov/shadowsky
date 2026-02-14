@@ -3,6 +3,7 @@ import {View, StyleSheet, TouchableOpacity, Text} from 'react-native';
 import {Image} from 'expo-image';
 import {AppBskyEmbedImages} from '@atproto/api';
 import {ImageCarousel, CarouselImage} from './ImageCarousel';
+import {colors} from '../constants/theme';
 
 interface ImageEmbedProps {
   images: AppBskyEmbedImages.ViewImage[];
@@ -168,7 +169,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   altText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 11,
     fontWeight: '600',
   },

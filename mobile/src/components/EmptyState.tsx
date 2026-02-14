@@ -1,6 +1,7 @@
 import React, {ReactNode} from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {MailboxIcon} from './icons';
+import {colors} from '../constants/theme';
 
 interface EmptyStateProps {
   message: string;
@@ -15,7 +16,7 @@ export function EmptyState({message, icon}: EmptyStateProps) {
       accessibilityRole="text"
       accessibilityLabel={`Empty state. ${message}`}>
       <View style={styles.iconWrapper}>
-        {icon || <MailboxIcon size={64} color="#9ca3af" />}
+        {icon || <MailboxIcon size={64} color={colors.textSecondary} />}
       </View>
       <Text style={styles.message}>{message}</Text>
     </View>
@@ -28,13 +29,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   iconWrapper: {
     marginBottom: 16,
   },
   message: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 16,
     textAlign: 'center',
   },

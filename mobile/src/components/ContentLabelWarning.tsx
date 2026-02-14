@@ -40,7 +40,7 @@ export function ContentLabelWarning({
       labelValues.includes("sexual") ||
       labelValues.includes("nudity")
     ) {
-      return <EyeOff size={24} color="#fff" />;
+      return <EyeOff size={24} color=colors.text />;
     }
 
     if (
@@ -48,10 +48,10 @@ export function ContentLabelWarning({
       labelValues.includes("gore") ||
       labelValues.includes("nsfl")
     ) {
-      return <AlertTriangle size={24} color="#fff" />;
+      return <AlertTriangle size={24} color=colors.text />;
     }
 
-    return <Eye size={24} color="#fff" />;
+    return <Eye size={24} color=colors.text />;
   };
 
   // Get background color based on severity
@@ -64,10 +64,10 @@ export function ContentLabelWarning({
       labelValues.includes("graphic-media") ||
       labelValues.includes("gore")
     ) {
-      return "#dc2626"; // Red for severe content
+      return colors.danger; // Red for severe content
     }
 
-    return "#f59e0b"; // Orange for warnings
+    return colors.warning; // Orange for warnings
   };
 
   if (revealed) {
@@ -104,7 +104,7 @@ export function ContentLabelWarning({
             accessibilityLabel={`Show ${warningText}`}
             accessibilityHint="Tap to reveal sensitive content"
           >
-            <Eye size={16} color="#fff" />
+            <Eye size={16} color=colors.text />
             <Text style={styles.buttonText}>Show Content</Text>
           </TouchableOpacity>
 
@@ -148,12 +148,12 @@ const styles = StyleSheet.create({
   warningText: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#fff",
+    color: colors.text,
     textAlign: "center",
   },
   description: {
     fontSize: 14,
-    color: "#fff",
+    color: colors.text,
     opacity: 0.9,
     textAlign: "center",
   },
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#fff",
+    color: colors.text,
   },
   labelContainer: {
     flexDirection: "row",
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   },
   labelText: {
     fontSize: 11,
-    color: "#fff",
+    color: colors.text,
     fontWeight: "500",
     textTransform: "uppercase",
   },

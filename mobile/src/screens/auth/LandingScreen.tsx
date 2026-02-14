@@ -91,7 +91,7 @@ export function LandingScreen() {
             <TextInput
               style={styles.input}
               placeholder={t("auth.handle_placeholder")}
-              placeholderTextColor="#6b7280"
+              placeholderTextColor={colors.textTertiary}
               value={identifier}
               onChangeText={setIdentifier}
               autoCapitalize="none"
@@ -106,7 +106,7 @@ export function LandingScreen() {
             <TextInput
               style={styles.input}
               placeholder={t("auth.app_password_placeholder")}
-              placeholderTextColor="#6b7280"
+              placeholderTextColor={colors.textTertiary}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -128,7 +128,7 @@ export function LandingScreen() {
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator color="#ffffff" />
+              <ActivityIndicator color={colors.text} />
             ) : (
               <Text style={styles.loginButtonText}>{t("auth.sign_in_button")}</Text>
             )}
@@ -177,7 +177,7 @@ export function LandingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -192,12 +192,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 48,
     fontWeight: "bold",
-    color: "#ffffff",
+    color: colors.text,
     marginBottom: 16,
   },
   subtitle: {
     fontSize: 16,
-    color: "#9ca3af",
+    color: colors.textSecondary,
     textAlign: "center",
     paddingHorizontal: 20,
   },
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   oauthButton: {
-    backgroundColor: "#c9a84c",
+    backgroundColor: colors.primary,
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
@@ -214,18 +214,18 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   oauthButtonDisabled: {
-    backgroundColor: "#1a1a24",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#374151",
+    borderColor: colors.borderLight,
     opacity: 0.6,
   },
   oauthButtonText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "600",
   },
   signUpButton: {
-    backgroundColor: "#1a1a24",
+    backgroundColor: colors.surface,
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
@@ -233,10 +233,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: "#c9a84c",
+    borderColor: colors.primary,
   },
   signUpButtonText: {
-    color: "#c9a84c",
+    color: colors.primary,
     fontSize: 18,
     fontWeight: "600",
   },
@@ -248,10 +248,10 @@ const styles = StyleSheet.create({
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: "#374151",
+    backgroundColor: colors.borderLight,
   },
   dividerText: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 14,
     marginHorizontal: 16,
   },
@@ -259,28 +259,28 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    color: "#e5e7eb",
+    color: colors.textMuted,
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 8,
   },
   input: {
-    backgroundColor: "#1a1a24",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#374151",
+    borderColor: colors.borderLight,
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: "#ffffff",
+    color: colors.text,
   },
   helpText: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 12,
     marginTop: 6,
   },
   loginButton: {
-    backgroundColor: "#c9a84c",
+    backgroundColor: colors.primary,
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryDark,
   },
   loginButtonText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "600",
   },
@@ -301,22 +301,22 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   infoText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: "center",
     lineHeight: 20,
   },
   linkText: {
-    color: "#c9a84c",
+    color: colors.primary,
     fontWeight: "600",
   },
   disclaimer: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 12,
     textAlign: "center",
   },
   link: {
-    color: "#60a5fa",
+    color: colors.info,
     textDecorationLine: "underline",
   },
 });

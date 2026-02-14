@@ -107,7 +107,7 @@ export function EmojiPickerModal({
             style={styles.closeButton}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <CloseIcon size={24} color="#9ca3af" />
+            <CloseIcon size={24} color=colors.textSecondary />
           </TouchableOpacity>
         </View>
 
@@ -140,7 +140,7 @@ export function EmojiPickerModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: "row",
@@ -149,10 +149,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   headerTitle: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "600",
   },
@@ -161,17 +161,17 @@ const styles = StyleSheet.create({
   },
   pickerContainer: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   footer: {
     borderTopWidth: 1,
-    borderTopColor: "#1f2937",
+    borderTopColor: colors.surfaceElevated,
     paddingHorizontal: 16,
     paddingTop: 12,
     alignItems: "center",
   },
   footerText: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 12,
     textAlign: "center",
   },

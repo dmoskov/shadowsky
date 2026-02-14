@@ -136,7 +136,7 @@ export function FollowingScreen({actor, onNavigateToProfile}: FollowingScreenPro
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   followingItem: {
     flexDirection: 'row',
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: colors.surfaceElevated,
   },
   followingInfo: {
     flex: 1,
@@ -152,18 +152,18 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   displayName: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 2,
   },
   handle: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
     marginBottom: 4,
   },
   description: {
-    color: '#d1d5db',
+    color: colors.borderLight,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -181,11 +181,11 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   errorText: {
-    color: '#ef4444',
+    color: colors.danger,
     fontSize: 16,
   },
   emptyText: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 16,
   },
   emptyList: {

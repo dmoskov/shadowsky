@@ -220,7 +220,7 @@ export function StarterPackDetailScreen({
             onPress={handleFollowAll}
             disabled={followAllMutation.isPending}>
             {followAllMutation.isPending ? (
-              <ActivityIndicator size="small" color="#ffffff" />
+              <ActivityIndicator size="small" color=colors.text />
             ) : (
               <Text style={styles.followAllButtonText}>
                 Follow All ({starterPack.listItemsSample.length})
@@ -269,23 +269,23 @@ export function StarterPackDetailScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
     padding: 20,
   },
   errorText: {
-    color: '#ef4444',
+    color: colors.danger,
     fontSize: 16,
     marginBottom: 16,
     textAlign: 'center',
@@ -297,19 +297,19 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   retryButtonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: colors.surfaceElevated,
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: colors.text,
     marginBottom: 16,
   },
   creatorContainer: {
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
     padding: 12,
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 12,
   },
   creatorInfo: {
@@ -326,21 +326,21 @@ const styles = StyleSheet.create({
   },
   creatorLabel: {
     fontSize: 12,
-    color: '#9ca3af',
+    color: colors.textSecondary,
     marginBottom: 2,
   },
   creatorName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: colors.text,
   },
   creatorHandle: {
     fontSize: 14,
-    color: '#9ca3af',
+    color: colors.textSecondary,
   },
   description: {
     fontSize: 16,
-    color: '#e5e7eb',
+    color: colors.textMuted,
     lineHeight: 24,
     marginBottom: 16,
   },
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     marginBottom: 16,
     padding: 12,
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 12,
   },
   stat: {
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: '#9ca3af',
+    color: colors.textSecondary,
     marginTop: 4,
   },
   followAllButton: {
@@ -374,19 +374,19 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   followAllButtonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 18,
     fontWeight: '600',
   },
   section: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: colors.surfaceElevated,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: colors.text,
     marginBottom: 16,
   },
   memberItem: {
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: colors.surfaceElevated,
   },
   memberInfo: {
     marginLeft: 12,
@@ -403,16 +403,16 @@ const styles = StyleSheet.create({
   displayName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: colors.text,
   },
   handle: {
     fontSize: 14,
-    color: '#9ca3af',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   memberDescription: {
     fontSize: 14,
-    color: '#9ca3af',
+    color: colors.textSecondary,
     marginTop: 4,
   },
   feedItem: {
@@ -420,13 +420,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: colors.surfaceElevated,
   },
   feedAvatar: {
     width: 48,
     height: 48,
     borderRadius: 8,
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
   },
   feedInfo: {
     marginLeft: 12,
@@ -435,11 +435,11 @@ const styles = StyleSheet.create({
   feedName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: colors.text,
   },
   feedDescription: {
     fontSize: 14,
-    color: '#9ca3af',
+    color: colors.textSecondary,
     marginTop: 4,
   },
 });

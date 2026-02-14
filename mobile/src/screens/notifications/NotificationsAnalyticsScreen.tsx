@@ -109,19 +109,19 @@ export function NotificationsAnalyticsScreen() {
       string,
       {icon: string; color: string; label: string}
     > = {
-      like: {icon: '❤️', color: '#ef4444', label: 'Likes'},
-      repost: {icon: '🔄', color: '#10b981', label: 'Reposts'},
+      like: {icon: '❤️', color: colors.danger, label: 'Likes'},
+      repost: {icon: '🔄', color: colors.success, label: 'Reposts'},
       follow: {icon: '👤', color: colors.primary, label: 'Follows'},
-      mention: {icon: '@', color: '#8b5cf6', label: 'Mentions'},
-      reply: {icon: '💬', color: '#6366f1', label: 'Replies'},
-      quote: {icon: '💭', color: '#06b6d4', label: 'Quotes'},
+      mention: {icon: '@', color: colors.mention, label: 'Mentions'},
+      reply: {icon: '💬', color: colors.reply, label: 'Replies'},
+      quote: {icon: '💭', color: colors.quote, label: 'Quotes'},
     };
 
     return Object.entries(typeCounts)
       .map(([type, count]) => {
         const config = typeConfig[type] || {
           icon: '🔔',
-          color: '#9ca3af',
+          color: colors.textSecondary,
           label: type,
         };
         return {
@@ -392,15 +392,15 @@ export function NotificationsAnalyticsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   section: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
+    borderBottomColor: colors.surfaceElevated,
   },
   sectionTitle: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 16,
@@ -414,19 +414,19 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
     alignItems: 'center',
   },
   timeRangeButtonActive: {
     backgroundColor: colors.primary,
   },
   timeRangeButtonText: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: '600',
   },
   timeRangeButtonTextActive: {
-    color: '#ffffff',
+    color: colors.text,
   },
   metricsGrid: {
     flexDirection: 'row',
@@ -436,19 +436,19 @@ const styles = StyleSheet.create({
   metricCard: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
   },
   metricValue: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   metricLabel: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 12,
     textAlign: 'center',
   },
@@ -478,15 +478,15 @@ const styles = StyleSheet.create({
     minHeight: 2,
   },
   barEmpty: {
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
   },
   barLabel: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 11,
     marginTop: 4,
   },
   barCount: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 10,
     marginTop: 2,
   },
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   typeLabel: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 15,
     fontWeight: '500',
   },
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
   progressBarContainer: {
     flex: 1,
     height: 8,
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -528,20 +528,20 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   typeCount: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
     minWidth: 30,
     textAlign: 'right',
   },
   typePercentage: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 13,
     minWidth: 40,
     textAlign: 'right',
   },
   postCard: {
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -561,16 +561,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   postEngagementCount: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 24,
     fontWeight: 'bold',
   },
   postEngagementLabel: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 12,
   },
   postText: {
-    color: '#d1d5db',
+    color: colors.borderLight,
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 12,
