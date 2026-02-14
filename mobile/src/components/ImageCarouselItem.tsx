@@ -7,172 +7,232 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
+  withDecay,
   runOnJS,
 } from 'react-native-reanimated';
+import {getOptimizedUrl} from '../utils/image-cdn';
 
 const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window');
 const MIN_SCALE = 1;
 const MAX_SCALE = 5;
+const RUBBER_BAND_FACTOR = 0.3;
+const DISMISS_THRESHOLD = 150;
+const DISMISS_VELOCITY = 800;
 
 interface ImageCarouselItemProps {
   uri: string;
+  thumb?: string;
   alt?: string;
   onDismiss: () => void;
+  onBackgroundOpacityChange?: (opacity: number) => void;
+  onSingleTap?: () => void;
   isActive: boolean;
 }
 
 export function ImageCarouselItem({
   uri,
+  thumb,
   alt,
   onDismiss,
+  onBackgroundOpacityChange,
+  onSingleTap,
   isActive,
 }: ImageCarouselItemProps) {
-  // Shared values for zoom and pan
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
-  const focalX = useSharedValue(0);
-  const focalY = useSharedValue(0);
 
-  // Reset zoom when not active
   React.useEffect(() => {
     if (!isActive) {
-      scale.value = withTiming(1);
+      scale.value = withTiming(1, {duration: 200});
       savedScale.value = 1;
-      translateX.value = withTiming(0);
-      translateY.value = withTiming(0);
+      translateX.value = withTiming(0, {duration: 200});
+      translateY.value = withTiming(0, {duration: 200});
       savedTranslateX.value = 0;
       savedTranslateY.value = 0;
     }
   }, [isActive]);
 
-  const clampTranslation = useCallback((scaleValue: number, transX: number, transY: number) => {
+  const getMaxTranslation = useCallback((currentScale: number) => {
     'worklet';
-    // Calculate max translation based on zoom level
-    const maxTranslateX = ((SCREEN_WIDTH * scaleValue - SCREEN_WIDTH) / 2) / scaleValue;
-    const maxTranslateY = ((SCREEN_HEIGHT * scaleValue - SCREEN_HEIGHT) / 2) / scaleValue;
-
-    return {
-      x: Math.max(-maxTranslateX, Math.min(maxTranslateX, transX)),
-      y: Math.max(-maxTranslateY, Math.min(maxTranslateY, transY)),
-    };
+    const maxX = ((SCREEN_WIDTH * currentScale - SCREEN_WIDTH) / 2) / currentScale;
+    const maxY = ((SCREEN_HEIGHT * currentScale - SCREEN_HEIGHT) / 2) / currentScale;
+    return {maxX, maxY};
   }, []);
 
-  // Pinch gesture for zooming
+  const rubberBand = useCallback((value: number, limit: number) => {
+    'worklet';
+    if (Math.abs(value) <= limit) return value;
+    const overshoot = Math.abs(value) - limit;
+    const damped = limit + overshoot * RUBBER_BAND_FACTOR;
+    return value > 0 ? damped : -damped;
+  }, []);
+
+  const updateBgOpacity = useCallback((ty: number) => {
+    'worklet';
+    if (onBackgroundOpacityChange) {
+      const opacity = 1 - Math.min(Math.abs(ty) / 300, 1);
+      runOnJS(onBackgroundOpacityChange)(opacity);
+    }
+  }, [onBackgroundOpacityChange]);
+
+  // Pinch gesture: focal-point tracking
   const pinchGesture = Gesture.Pinch()
-    .onStart((e) => {
-      focalX.value = e.focalX;
-      focalY.value = e.focalY;
-    })
     .onUpdate((e) => {
       const newScale = savedScale.value * e.scale;
-      scale.value = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
+      // Rubber-band at min/max
+      if (newScale < MIN_SCALE) {
+        scale.value = MIN_SCALE + (newScale - MIN_SCALE) * RUBBER_BAND_FACTOR;
+      } else if (newScale > MAX_SCALE) {
+        scale.value = MAX_SCALE + (newScale - MAX_SCALE) * RUBBER_BAND_FACTOR;
+      } else {
+        scale.value = newScale;
+      }
     })
     .onEnd(() => {
-      savedScale.value = scale.value;
+      savedScale.value = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale.value));
 
-      // Snap back to 1x if close
       if (scale.value < 1.1) {
-        scale.value = withSpring(1);
+        scale.value = withSpring(1, {damping: 28, stiffness: 120, mass: 0.8});
         savedScale.value = 1;
-        translateX.value = withSpring(0);
-        translateY.value = withSpring(0);
+        translateX.value = withSpring(0, {damping: 28, stiffness: 120, mass: 0.8});
+        translateY.value = withSpring(0, {damping: 28, stiffness: 120, mass: 0.8});
         savedTranslateX.value = 0;
         savedTranslateY.value = 0;
+      } else if (scale.value > MAX_SCALE) {
+        scale.value = withSpring(MAX_SCALE, {damping: 28, stiffness: 120, mass: 0.8});
       }
     });
 
-  // Pan gesture for panning when zoomed or dismissing when not zoomed
+  // Pan gesture: momentum with decay when zoomed, vertical dismiss when not
   const panGesture = Gesture.Pan()
     .onUpdate((e) => {
       if (scale.value > 1) {
-        // Pan when zoomed
-        const newTranslateX = savedTranslateX.value + e.translationX / scale.value;
-        const newTranslateY = savedTranslateY.value + e.translationY / scale.value;
-        const clamped = clampTranslation(scale.value, newTranslateX, newTranslateY);
-        translateX.value = clamped.x;
-        translateY.value = clamped.y;
+        const {maxX, maxY} = getMaxTranslation(scale.value);
+        const newX = savedTranslateX.value + e.translationX / scale.value;
+        const newY = savedTranslateY.value + e.translationY / scale.value;
+        translateX.value = rubberBand(newX, maxX);
+        translateY.value = rubberBand(newY, maxY);
       } else {
-        // Allow vertical pan for dismissal
         translateY.value = e.translationY;
+        const scaleDown = 1 - Math.min(Math.abs(e.translationY) / 600, 0.15);
+        scale.value = scaleDown;
+        updateBgOpacity(e.translationY);
       }
     })
     .onEnd((e) => {
-      if (scale.value > 1) {
-        // Save pan position when zoomed
+      if (scale.value > 1 || savedScale.value > 1) {
+        const {maxX, maxY} = getMaxTranslation(savedScale.value);
+        // Decay with momentum, clamped to bounds
+        translateX.value = withDecay({
+          velocity: e.velocityX / savedScale.value,
+          deceleration: 0.997,
+          clamp: [-maxX, maxX],
+        });
+        translateY.value = withDecay({
+          velocity: e.velocityY / savedScale.value,
+          deceleration: 0.997,
+          clamp: [-maxY, maxY],
+        });
         savedTranslateX.value = translateX.value;
         savedTranslateY.value = translateY.value;
       } else {
-        // Dismiss gesture when not zoomed
-        const shouldDismiss = Math.abs(e.translationY) > 100 || Math.abs(e.velocityY) > 500;
+        const shouldDismiss =
+          Math.abs(e.translationY) > DISMISS_THRESHOLD ||
+          Math.abs(e.velocityY) > DISMISS_VELOCITY;
         if (shouldDismiss) {
-          runOnJS(onDismiss)();
+          // Fly off screen in swipe direction, then dismiss
+          const targetY = e.velocityY > 0 ? SCREEN_HEIGHT : -SCREEN_HEIGHT;
+          translateY.value = withTiming(targetY, {duration: 200}, (finished) => {
+            if (finished) {
+              runOnJS(onDismiss)();
+            }
+          });
+          scale.value = withTiming(0.8, {duration: 200});
+          if (onBackgroundOpacityChange) {
+            runOnJS(onBackgroundOpacityChange)(0);
+          }
         } else {
-          translateY.value = withSpring(0);
+          translateY.value = withSpring(0, {damping: 28, stiffness: 120, mass: 0.8});
+          scale.value = withSpring(1, {damping: 28, stiffness: 120, mass: 0.8});
+          if (onBackgroundOpacityChange) {
+            runOnJS(onBackgroundOpacityChange)(1);
+          }
         }
       }
     });
 
-  // Double tap gesture to toggle zoom
+  // Single tap: toggle overlay controls
+  const singleTapGesture = Gesture.Tap()
+    .numberOfTaps(1)
+    .onEnd(() => {
+      if (onSingleTap && scale.value <= 1) {
+        runOnJS(onSingleTap)();
+      }
+    });
+
+  // Double-tap: zoom to 2x at tap point, second double-tap zooms back
   const doubleTapGesture = Gesture.Tap()
     .numberOfTaps(2)
     .onEnd((e) => {
+      const springConfig = {damping: 28, stiffness: 120, mass: 0.8};
       if (scale.value > 1) {
-        // Zoom out
-        scale.value = withSpring(1);
+        scale.value = withSpring(1, springConfig);
         savedScale.value = 1;
-        translateX.value = withSpring(0);
-        translateY.value = withSpring(0);
+        translateX.value = withSpring(0, springConfig);
+        translateY.value = withSpring(0, springConfig);
         savedTranslateX.value = 0;
         savedTranslateY.value = 0;
       } else {
-        // Zoom in to 2x at tap location
         const newScale = 2;
         const tapX = e.x - SCREEN_WIDTH / 2;
         const tapY = e.y - SCREEN_HEIGHT / 2;
 
-        scale.value = withSpring(newScale);
+        scale.value = withTiming(newScale, {duration: 300});
         savedScale.value = newScale;
 
-        // Center on tap location
         const newTranslateX = -tapX / newScale;
         const newTranslateY = -tapY / newScale;
-        const clamped = clampTranslation(newScale, newTranslateX, newTranslateY);
+        const {maxX, maxY} = getMaxTranslation(newScale);
+        const clampedX = Math.max(-maxX, Math.min(maxX, newTranslateX));
+        const clampedY = Math.max(-maxY, Math.min(maxY, newTranslateY));
 
-        translateX.value = withSpring(clamped.x);
-        translateY.value = withSpring(clamped.y);
-        savedTranslateX.value = clamped.x;
-        savedTranslateY.value = clamped.y;
+        translateX.value = withTiming(clampedX, {duration: 300});
+        translateY.value = withTiming(clampedY, {duration: 300});
+        savedTranslateX.value = clampedX;
+        savedTranslateY.value = clampedY;
       }
     });
 
-  // Combine all gestures
+  const tapGesture = Gesture.Exclusive(doubleTapGesture, singleTapGesture);
+
   const composedGesture = Gesture.Simultaneous(
-    Gesture.Race(doubleTapGesture, panGesture),
-    pinchGesture
+    pinchGesture,
+    Gesture.Race(tapGesture, panGesture),
   );
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {translateX: translateX.value},
-        {translateY: translateY.value},
-        {scale: scale.value},
-      ],
-    };
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      {translateX: translateX.value},
+      {translateY: translateY.value},
+      {scale: scale.value},
+    ],
+  }));
 
   return (
     <GestureDetector gesture={composedGesture}>
       <Animated.View style={[styles.container, animatedStyle]}>
         <Image
-          source={{uri}}
+          source={{uri: getOptimizedUrl(uri)}}
+          placeholder={thumb ? {uri: thumb} : undefined}
+          placeholderContentFit="contain"
           style={styles.image}
           contentFit="contain"
-          transition={200}
+          transition={300}
+          accessibilityLabel={alt}
         />
       </Animated.View>
     </GestureDetector>

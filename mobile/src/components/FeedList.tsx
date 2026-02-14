@@ -1,4 +1,4 @@
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useMemo, useRef, useCallback } from 'react';
 import {
   FlatList,
   ActivityIndicator,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   RefreshControl,
   ListRenderItem,
+  ViewToken,
 } from 'react-native';
 import {AppBskyFeedDefs} from '@atproto/api';
 import {PostCard} from './PostCard';
@@ -19,6 +20,7 @@ import {usePreferences} from '../contexts/PreferencesContext';
 import {colors} from '../constants/theme';
 import {triggerHaptic} from '../utils/haptics';
 import {filterMutedPosts} from '../utils/content-filter';
+import {useImagePrefetch} from '../hooks/useImagePrefetch';
 
 interface FeedListProps {
   posts: AppBskyFeedDefs.FeedViewPost[];
@@ -71,6 +73,24 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
     }
     return filterMutedPosts(posts, preferences.mutedWords, feedType);
   }, [posts, preferences?.mutedWords, feedType]);
+
+  const {prefetchVisibleWindow} = useImagePrefetch(filteredPosts);
+  const prefetchRef = useRef(prefetchVisibleWindow);
+  prefetchRef.current = prefetchVisibleWindow;
+
+  const onViewableItemsChangedRef = useRef(
+    ({viewableItems}: {viewableItems: ViewToken[]}) => {
+      if (viewableItems.length > 0) {
+        const firstIndex = viewableItems[0].index ?? 0;
+        prefetchRef.current(firstIndex);
+      }
+    },
+  );
+
+  const viewabilityConfigRef = useRef({
+    itemVisiblePercentThreshold: 30,
+    minimumViewTime: 100,
+  });
 
   const handleRefresh = () => {
     triggerHaptic('selection');
@@ -145,6 +165,8 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
           />
         ) : undefined
       }
+      onViewableItemsChanged={onViewableItemsChangedRef.current}
+      viewabilityConfig={viewabilityConfigRef.current}
       removeClippedSubviews={true}
       maxToRenderPerBatch={10}
       windowSize={7}

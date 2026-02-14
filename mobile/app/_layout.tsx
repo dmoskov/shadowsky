@@ -24,6 +24,8 @@ import { PreferencesProvider, usePreferences } from "../src/contexts/Preferences
 import { ThemeProvider, useTheme } from "../src/contexts/ThemeContext";
 import { ToastProvider } from "../src/contexts/ToastContext";
 import { ModerationProvider } from "../src/contexts/ModerationContext";
+import { LightboxProvider } from "../src/contexts/LightboxContext";
+import { LightboxOverlay } from "../src/components/LightboxOverlay";
 import {
   queryClient,
   setupAppStateListener,
@@ -170,10 +172,13 @@ function RootLayout() {
                   <ThemeProvider>
                     <ModerationProvider>
                       <ToastProvider>
-                        <QueryErrorHandler>
-                          <DynamicStatusBar />
-                          <AuthGate />
-                        </QueryErrorHandler>
+                        <LightboxProvider>
+                          <QueryErrorHandler>
+                            <DynamicStatusBar />
+                            <AuthGate />
+                          </QueryErrorHandler>
+                          <LightboxOverlay />
+                        </LightboxProvider>
                       </ToastProvider>
                     </ModerationProvider>
                   </ThemeProvider>

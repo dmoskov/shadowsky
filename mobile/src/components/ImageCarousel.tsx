@@ -9,10 +9,17 @@ import {
   FlatList,
   Dimensions,
   Platform,
+  Alert,
+  Share,
 } from 'react-native';
+import {Image} from 'expo-image';
+import {Download} from 'lucide-react-native';
 import {ImageCarouselItem} from './ImageCarouselItem';
 import Animated, {FadeIn, FadeOut} from 'react-native-reanimated';
 import {colors} from '../constants/theme';
+import {getOptimizedUrl} from '../utils/image-cdn';
+import {saveImageToGallery} from '../utils/save-image';
+import {triggerHaptic} from '../utils/haptics';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
@@ -37,19 +44,32 @@ export function ImageCarousel({
 }: ImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [showAlt, setShowAlt] = useState(false);
+  const [bgOpacity, setBgOpacity] = useState(1);
+  const [controlsVisible, setControlsVisible] = useState(true);
   const flatListRef = useRef<FlatList>(null);
 
-  // Reset to initial index when modal opens
   React.useEffect(() => {
     if (visible) {
       setCurrentIndex(initialIndex);
       setShowAlt(false);
-    }
-  }, [visible, initialIndex]);
+      setBgOpacity(1);
+      setControlsVisible(true);
 
+      // Prefetch all fullsize images when lightbox opens
+      const urls = images.map(i => getOptimizedUrl(i.fullsize));
+      Image.prefetch(urls);
+    }
+  }, [visible, initialIndex, images]);
+
+  const prevIndexRef = useRef(initialIndex);
   const onViewableItemsChanged = useRef(({viewableItems}: any) => {
     if (viewableItems.length > 0) {
-      setCurrentIndex(viewableItems[0].index ?? 0);
+      const newIndex = viewableItems[0].index ?? 0;
+      if (newIndex !== prevIndexRef.current) {
+        prevIndexRef.current = newIndex;
+        triggerHaptic('selection');
+      }
+      setCurrentIndex(newIndex);
     }
   }).current;
 
@@ -66,16 +86,57 @@ export function ImageCarousel({
     []
   );
 
+  const handleBgOpacityChange = useCallback((opacity: number) => {
+    setBgOpacity(opacity);
+  }, []);
+
+  const handleToggleControls = useCallback(() => {
+    setControlsVisible(prev => !prev);
+  }, []);
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = useCallback(async () => {
+    if (isSaving) return;
+    const image = images[currentIndex];
+    if (!image) return;
+
+    setIsSaving(true);
+    try {
+      await saveImageToGallery(image.fullsize);
+    } catch (err: any) {
+      Alert.alert('Save Failed', err.message || 'Could not save image');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [currentIndex, images, isSaving]);
+
+  const handleShare = useCallback(async () => {
+    const image = images[currentIndex];
+    if (!image) return;
+    try {
+      await Share.share({
+        url: image.fullsize,
+        message: Platform.OS === 'android' ? image.fullsize : undefined,
+      });
+    } catch {
+      // User cancelled
+    }
+  }, [currentIndex, images]);
+
   const renderItem = useCallback(
     ({item, index}: {item: CarouselImage; index: number}) => (
       <ImageCarouselItem
         uri={item.fullsize}
+        thumb={item.thumb}
         alt={item.alt}
         onDismiss={onClose}
+        onBackgroundOpacityChange={handleBgOpacityChange}
+        onSingleTap={handleToggleControls}
         isActive={index === currentIndex}
       />
     ),
-    [currentIndex, onClose]
+    [currentIndex, onClose, handleBgOpacityChange, handleToggleControls]
   );
 
   const keyExtractor = useCallback(
@@ -97,11 +158,9 @@ export function ImageCarousel({
       animationType="fade"
       onRequestClose={onClose}
       statusBarTranslucent={true}>
-      {/* Hide status bar on Android */}
       {Platform.OS === 'android' && <StatusBar hidden />}
 
-      <View style={styles.container}>
-        {/* FlatList for horizontal scrolling */}
+      <View style={[styles.container, {backgroundColor: `rgba(0, 0, 0, ${bgOpacity})`}]}>
         <FlatList
           ref={flatListRef}
           data={images}
@@ -124,72 +183,106 @@ export function ImageCarousel({
           accessibilityHint="Swipe left or right to navigate between images"
         />
 
-        {/* Counter */}
-        <Animated.View
-          entering={FadeIn}
-          exiting={FadeOut}
-          style={styles.counterContainer}>
-          <Text style={styles.counterText}>
-            {currentIndex + 1} / {images.length}
-          </Text>
-        </Animated.View>
+        {/* Overlay controls - tap to toggle */}
+        {controlsVisible && (
+          <>
+            {/* Counter */}
+            {images.length > 1 && (
+              <Animated.View
+                entering={FadeIn.duration(150)}
+                exiting={FadeOut.duration(150)}
+                style={styles.counterContainer}>
+                <Text style={styles.counterText}>
+                  {currentIndex + 1} / {images.length}
+                </Text>
+              </Animated.View>
+            )}
 
-        {/* Close button */}
-        <Animated.View
-          entering={FadeIn}
-          exiting={FadeOut}
-          style={styles.closeButton}>
-          <TouchableOpacity
-            onPress={onClose}
-            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
-            accessibilityRole="button"
-            accessibilityLabel="Close image viewer"
-            accessibilityHint="Double tap to close the image carousel">
-            <Text style={styles.closeButtonText}>✕</Text>
-          </TouchableOpacity>
-        </Animated.View>
+            {/* Close button */}
+            <Animated.View
+              entering={FadeIn.duration(150)}
+              exiting={FadeOut.duration(150)}
+              style={styles.closeButton}>
+              <TouchableOpacity
+                onPress={onClose}
+                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                accessibilityRole="button"
+                accessibilityLabel="Close image viewer"
+                accessibilityHint="Double tap to close the image carousel">
+                <Text style={styles.closeButtonText}>{'\u2715'}</Text>
+              </TouchableOpacity>
+            </Animated.View>
 
-        {/* Page indicator dots */}
-        {images.length > 1 && (
-          <Animated.View
-            entering={FadeIn}
-            exiting={FadeOut}
-            style={styles.dotsContainer}>
-            {images.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.dot,
-                  index === currentIndex && styles.dotActive,
-                ]}
-              />
-            ))}
-          </Animated.View>
-        )}
+            {/* Bottom controls row */}
+            <Animated.View
+              entering={FadeIn.duration(150)}
+              exiting={FadeOut.duration(150)}
+              style={styles.bottomControls}>
+              {/* Save button */}
+              <TouchableOpacity
+                onPress={handleSave}
+                disabled={isSaving}
+                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                accessibilityRole="button"
+                accessibilityLabel="Save image to gallery"
+                style={[styles.bottomButton, {opacity: isSaving ? 0.5 : 1}]}>
+                <Download size={20} color={colors.text} />
+              </TouchableOpacity>
 
-        {/* Alt text overlay */}
-        {hasAlt && (
-          <Animated.View
-            entering={FadeIn}
-            exiting={FadeOut}
-            style={styles.altContainer}>
-            <TouchableOpacity
-              onPress={() => setShowAlt(!showAlt)}
-              activeOpacity={0.9}
-              accessibilityRole="button"
-              accessibilityLabel={showAlt ? `Alt text: ${currentImage.alt}` : 'Show image description'}
-              accessibilityHint={showAlt ? 'Double tap to hide image description' : 'Double tap to show image description'}>
-              {showAlt ? (
-                <View style={styles.altTextExpanded}>
-                  <Text style={styles.altText}>{currentImage.alt}</Text>
-                </View>
-              ) : (
-                <View style={styles.altBadge}>
-                  <Text style={styles.altBadgeText}>ALT</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-          </Animated.View>
+              {/* Share button */}
+              <TouchableOpacity
+                onPress={handleShare}
+                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                accessibilityRole="button"
+                accessibilityLabel="Share image"
+                style={styles.bottomButton}>
+                <Text style={styles.shareIcon}>{'\u{2B06}\u{FE0E}'}</Text>
+              </TouchableOpacity>
+            </Animated.View>
+
+            {/* Page indicator dots */}
+            {images.length > 1 && (
+              <Animated.View
+                entering={FadeIn.duration(150)}
+                exiting={FadeOut.duration(150)}
+                style={styles.dotsContainer}>
+                {images.map((_, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.dot,
+                      index === currentIndex && styles.dotActive,
+                    ]}
+                  />
+                ))}
+              </Animated.View>
+            )}
+
+            {/* Alt text overlay */}
+            {hasAlt && (
+              <Animated.View
+                entering={FadeIn.duration(150)}
+                exiting={FadeOut.duration(150)}
+                style={styles.altContainer}>
+                <TouchableOpacity
+                  onPress={() => setShowAlt(!showAlt)}
+                  activeOpacity={0.9}
+                  accessibilityRole="button"
+                  accessibilityLabel={showAlt ? `Alt text: ${currentImage.alt}` : 'Show image description'}
+                  accessibilityHint={showAlt ? 'Double tap to hide image description' : 'Double tap to show image description'}>
+                  {showAlt ? (
+                    <View style={styles.altTextExpanded}>
+                      <Text style={styles.altText}>{currentImage.alt}</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.altBadge}>
+                      <Text style={styles.altBadgeText}>ALT</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </Animated.View>
+            )}
+          </>
         )}
       </View>
     </Modal>
@@ -199,7 +292,6 @@ export function ImageCarousel({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.borderDark,
   },
   counterContainer: {
     position: 'absolute',
@@ -230,6 +322,25 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 20,
     fontWeight: '400',
+  },
+  bottomControls: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 50 : 20,
+    right: 16,
+    flexDirection: 'row',
+    gap: 12,
+  },
+  bottomButton: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shareIcon: {
+    color: colors.text,
+    fontSize: 16,
   },
   dotsContainer: {
     position: 'absolute',

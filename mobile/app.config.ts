@@ -84,6 +84,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         project: process.env.SENTRY_PROJECT || "",
       },
     ],
+    [
+      "expo-media-library",
+      {
+        photosPermission: "Allow $(PRODUCT_NAME) to save images to your photo library",
+        savePhotosPermission: "Allow $(PRODUCT_NAME) to save images to your photo library",
+        isAccessMediaLocationEnabled: true,
+      },
+    ],
     "./plugins/withKeyEvent",
     "./plugins/withPrivacyManifest",
     "./plugins/withShareExtension",
