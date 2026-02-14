@@ -12,7 +12,8 @@ import {
 import { Avatar } from '../../components/Avatar';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile, useUpdateProfile } from '../../hooks/api/useProfile';
-import { useImagePicker } from '../../hooks/useImagePicker';
+import { useImagePicker, ImageAsset } from '../../hooks/useImagePicker';
+import { ImageEditor } from '../../components/ImageEditor';
 import { colors } from '../../constants/theme';
 
 interface EditProfileScreenProps {
@@ -27,11 +28,15 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
   const { account } = useAuth();
   const { data: profile, isLoading } = useProfile(account?.handle || '');
   const updateProfile = useUpdateProfile();
-  const { pickFromLibrary, selectedImages, clearImages } = useImagePicker();
+  const { pickFromLibrary, selectedImages, clearImages, addImages } = useImagePicker();
 
   const [displayName, setDisplayName] = useState('');
   const [description, setDescription] = useState('');
   const [avatarUri, setAvatarUri] = useState<string | undefined>();
+
+  // Image editor state
+  const [imageEditorVisible, setImageEditorVisible] = useState(false);
+  const [imagesToEdit, setImagesToEdit] = useState<ImageAsset[]>([]);
 
   // Initialize form with current profile data
   useEffect(() => {
@@ -51,7 +56,29 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
 
   const handlePickAvatar = async () => {
     clearImages();
-    await pickFromLibrary();
+    const images = await pickFromLibrary(false); // Don't skip editor
+    if (images && images.length > 0) {
+      setImagesToEdit(images);
+      setImageEditorVisible(true);
+    }
+  };
+
+  const handleSaveEditedImages = (editedImages: Array<{ originalAsset: ImageAsset; editedAsset: ImageAsset }>) => {
+    // Use the first edited image as the avatar
+    if (editedImages.length > 0) {
+      const editedAsset = editedImages[0].editedAsset;
+      setAvatarUri(editedAsset.uri);
+      // Update the selected images in the picker for upload
+      clearImages();
+      addImages([editedAsset]);
+    }
+    setImageEditorVisible(false);
+    setImagesToEdit([]);
+  };
+
+  const handleCancelImageEditor = () => {
+    setImageEditorVisible(false);
+    setImagesToEdit([]);
   };
 
   const handleSave = async () => {
@@ -210,6 +237,14 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Image Editor Modal */}
+      <ImageEditor
+        visible={imageEditorVisible}
+        images={imagesToEdit}
+        onSave={handleSaveEditedImages}
+        onCancel={handleCancelImageEditor}
+      />
     </View>
   );
 }
