@@ -141,3 +141,60 @@ export async function generateThreadSummary(
     throw error;
   }
 }
+
+export interface GenerateAltTextResult {
+  altText: string;
+  cached?: boolean;
+}
+
+/**
+ * Generate alt text for an image using AI
+ * @param imageUri - URI of the image (can be file:// or data: URL)
+ * @returns Promise with the generated alt text
+ */
+export async function generateAltText(imageUri: string): Promise<string> {
+  try {
+    const apiBaseUrl = getApiBaseUrl();
+    const endpoint = `${apiBaseUrl}/api/generate-alt-text`;
+
+    logger.log('Generating alt text for image:', imageUri.substring(0, 50));
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getApiAuthHeaders(),
+      },
+      body: JSON.stringify({ imageUrl: imageUri }),
+    });
+
+    if (!response.ok) {
+      const status = response.status;
+      if (status === 401) {
+        throw new Error("Alt text generation failed: Invalid API key");
+      } else if (status === 429) {
+        throw new Error("Alt text generation failed: Rate limit exceeded");
+      } else if (status === 400) {
+        throw new Error("Alt text generation failed: Invalid image format");
+      } else {
+        throw new Error(
+          `Alt text generation failed: ${response.statusText || "Unknown error"}`,
+        );
+      }
+    }
+
+    const data: GenerateAltTextResult = await response.json();
+    logger.log('Alt text generated successfully:', data.altText.substring(0, 50));
+    return data.altText;
+  } catch (error) {
+    // Network errors in dev are expected when the local API server isn't running
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      throw new Error("Alt text generation unavailable: API server not reachable");
+    }
+    logger.error('Error generating alt text:', error);
+    throw error;
+  }
+}

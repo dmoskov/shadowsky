@@ -26,6 +26,7 @@ import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { ImageEditor } from "../../components/ImageEditor";
 import { useTranslation } from "../../hooks/useTranslation";
 import { ComposeToolbar, ComposeMediaPreview, ComposeQuotePreview } from "./components";
+import { generateAltText } from "../../services/ai-service";
 
 import { createLogger } from '../../utils/logger';
 
@@ -79,6 +80,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [altTextModalVisible, setAltTextModalVisible] = useState(false);
   const [tempAltText, setTempAltText] = useState("");
+  const [isGeneratingAltText, setIsGeneratingAltText] = useState(false);
 
   // Language selection state
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
@@ -429,6 +431,30 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
     setAltTextModalVisible(false);
     setSelectedImageIndex(null);
     setTempAltText("");
+  };
+
+  const handleGenerateAltText = async () => {
+    if (selectedImageIndex === null) return;
+
+    const imageUri = imagePicker.selectedImages[selectedImageIndex].uri;
+    setIsGeneratingAltText(true);
+
+    try {
+      const altText = await generateAltText(imageUri);
+      setTempAltText(altText);
+      triggerHaptic('success');
+    } catch (error) {
+      logger.error('Failed to generate alt text:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate alt text';
+      Alert.alert(
+        'Alt Text Generation Failed',
+        errorMessage,
+        [{ text: 'OK' }]
+      );
+      triggerHaptic('error');
+    } finally {
+      setIsGeneratingAltText(false);
+    }
   };
 
   // Handle language selection
@@ -918,6 +944,17 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
                 style={styles.modalImage}
               />
             )}
+            <TouchableOpacity
+              style={styles.generateAltTextButton}
+              onPress={handleGenerateAltText}
+              disabled={isGeneratingAltText}
+            >
+              {isGeneratingAltText ? (
+                <ActivityIndicator size="small" color={colors.white} />
+              ) : (
+                <Text style={styles.generateAltTextButtonText}>Generate with AI</Text>
+              )}
+            </TouchableOpacity>
             <TextInput
               style={styles.altTextInput}
               placeholder="Describe this image..."
@@ -1123,6 +1160,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceElevated,
     marginBottom: 12,
     resizeMode: "contain",
+  },
+  generateAltTextButton: {
+    backgroundColor: colors.primary,
+    padding: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 12,
+    minHeight: 48,
+    justifyContent: "center",
+  },
+  generateAltTextButtonText: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "600",
   },
   altTextInput: {
     backgroundColor: colors.background,
