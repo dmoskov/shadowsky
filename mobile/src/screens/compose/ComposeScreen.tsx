@@ -56,9 +56,12 @@ export interface ComposeScreenProps {
   replyTo?: ReplyToPost;
   quoteTo?: QuoteToPost;
   draftId?: string;
+  sharedUrl?: string;
+  sharedText?: string;
+  initialText?: string;
 }
 
-export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps = {}) {
+export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText, initialText }: ComposeScreenProps = {}) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation();
@@ -228,6 +231,26 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
       }
     }
   }, [draftId, draftsData]);
+
+  // Initialize with shared content from Share Extension
+  useEffect(() => {
+    if (initialText) {
+      setText(initialText);
+    } else if (sharedUrl || sharedText) {
+      let composedText = '';
+
+      if (sharedText) {
+        composedText = sharedText;
+      }
+
+      if (sharedUrl) {
+        // Add URL on a new line if there's text, otherwise just add the URL
+        composedText = composedText ? `${composedText}\n\n${sharedUrl}` : sharedUrl;
+      }
+
+      setText(composedText);
+    }
+  }, [sharedUrl, sharedText, initialText]);
 
   // Mark as dirty when content changes
   useEffect(() => {

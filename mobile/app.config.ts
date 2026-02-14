@@ -86,6 +86,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     "./plugins/withKeyEvent",
     "./plugins/withPrivacyManifest",
+    "./plugins/withShareExtension",
   ],
   experiments: {
     typedRoutes: true,
