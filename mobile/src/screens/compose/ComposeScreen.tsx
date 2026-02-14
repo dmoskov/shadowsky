@@ -82,6 +82,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [altTextModalVisible, setAltTextModalVisible] = useState(false);
   const [tempAltText, setTempAltText] = useState("");
+  const [isGeneratingAltText, setIsGeneratingAltText] = useState(false);
 
   // Language selection state
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
@@ -455,6 +456,28 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
     setAltTextModalVisible(false);
     setSelectedImageIndex(null);
     setTempAltText("");
+  };
+
+  const handleGenerateAltText = async () => {
+    if (selectedImageIndex === null) return;
+
+    setIsGeneratingAltText(true);
+    try {
+      const imageUri = imagePicker.selectedImages[selectedImageIndex].uri;
+      const generatedText = await generateAltText(imageUri);
+      setTempAltText(generatedText);
+      triggerHaptic('success');
+    } catch (error) {
+      logger.error('Failed to generate alt text:', error);
+      Alert.alert(
+        'Generation Failed',
+        error instanceof Error ? error.message : 'Failed to generate alt text. Please try again.',
+        [{ text: 'OK' }]
+      );
+      triggerHaptic('error');
+    } finally {
+      setIsGeneratingAltText(false);
+    }
   };
 
   // Handle language selection
@@ -974,6 +997,20 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
                 style={styles.modalImage}
               />
             )}
+            <TouchableOpacity
+              style={[styles.generateAltTextButton, isGeneratingAltText && styles.generateAltTextButtonDisabled]}
+              onPress={handleGenerateAltText}
+              disabled={isGeneratingAltText}
+            >
+              {isGeneratingAltText ? (
+                <>
+                  <ActivityIndicator size="small" color={colors.primary} style={styles.generateButtonSpinner} />
+                  <Text style={styles.generateAltTextButtonText}>Generating...</Text>
+                </>
+              ) : (
+                <Text style={styles.generateAltTextButtonText}>✨ Generate with AI</Text>
+              )}
+            </TouchableOpacity>
             <TextInput
               style={styles.altTextInput}
               placeholder="Describe this image..."
@@ -1179,6 +1216,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceElevated,
     marginBottom: 12,
     resizeMode: "contain",
+  },
+  generateAltTextButton: {
+    backgroundColor: colors.surfaceElevated,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+    flexDirection: "row",
+  },
+  generateAltTextButtonDisabled: {
+    opacity: 0.6,
+  },
+  generateAltTextButtonText: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  generateButtonSpinner: {
+    marginRight: 8,
   },
   altTextInput: {
     backgroundColor: colors.background,
