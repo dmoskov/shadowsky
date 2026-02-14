@@ -1,0 +1,10 @@
+{
+  "name": "expo-swiftui-feed",
+  "version": "1.0.0",
+  "description": "SwiftUI feed embed components for BSKY mobile app",
+  "main": "index.ts",
+  "scripts": {},
+  "keywords": ["expo", "swiftui", "feed", "embeds"],
+  "author": "BSKY Team",
+  "license": "MIT"
+}
