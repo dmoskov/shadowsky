@@ -9,6 +9,7 @@
     "app_password_help": "Use an app password, not your account password",
     "sign_in_button": "Sign In",
     "sign_in_oauth_button": "Sign in with Bluesky (Coming Soon)",
+    "sign_up_button": "Create New Account",
     "no_app_password_info": "Don't have an app password?",
     "create_app_password_link": "Create one in your Bluesky account settings",
     "divider_or": "OR",
