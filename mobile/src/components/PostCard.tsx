@@ -13,6 +13,7 @@ import {colors} from '../constants/theme';
 import {triggerHaptic} from '../utils/haptics';
 import {useModeration} from '../contexts/ModerationContext';
 import {ContentLabelWarning} from './ContentLabelWarning';
+import {ReportModal} from './ReportModal';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -63,6 +64,7 @@ function PostCardComponent({
   const postView = post.post;
   const author = postView.author;
   const [showMenu, setShowMenu] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const blockMutation = useBlockUser();
   const muteMutation = useMuteUser();
   const {
@@ -133,12 +135,26 @@ function PostCardComponent({
 
   const handleReport = useCallback(() => {
     setShowMenu(false);
-    Alert.alert(
-      'Report',
-      'Reporting functionality will be available soon.',
-      [{ text: 'OK' }]
-    );
+    setShowReportModal(true);
   }, []);
+
+  const handleBlockAfterReport = useCallback(async (did: string) => {
+    try {
+      await blockMutation.mutateAsync(did);
+      Alert.alert('Success', `@${author.handle} has been blocked.`);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to block user. Please try again.');
+    }
+  }, [blockMutation, author.handle]);
+
+  const handleMuteAfterReport = useCallback(async (did: string) => {
+    try {
+      await muteMutation.mutateAsync(did);
+      Alert.alert('Success', `@${author.handle} has been muted.`);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to mute user. Please try again.');
+    }
+  }, [muteMutation, author.handle]);
 
   const handleShare = useCallback(() => {
     sharePost(post);
@@ -445,6 +461,21 @@ function PostCardComponent({
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Report Modal */}
+      <ReportModal
+        visible={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        reportType="post"
+        subjectUri={postView.uri}
+        subjectCid={postView.cid}
+        subjectDid={author.did}
+        subjectHandle={author.handle}
+        subjectDisplayName={author.displayName}
+        subjectText={postText}
+        onBlock={handleBlockAfterReport}
+        onMute={handleMuteAfterReport}
+      />
     </TouchableOpacity>
   );
 }
