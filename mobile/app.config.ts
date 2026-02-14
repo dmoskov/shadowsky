@@ -28,6 +28,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     infoPlist: {
       UIBackgroundModes: ["remote-notification"],
+      NSCameraUsageDescription: "Take photos for posts and profile",
+      NSPhotoLibraryUsageDescription: "Select photos and videos to share",
+      NSMicrophoneUsageDescription: "Record video with audio",
+      NSFaceIDUsageDescription: "Unlock app with Face ID",
     },
   },
   notification: {
