@@ -168,11 +168,16 @@ export const UserAnalytics: React.FC = () => {
         0,
       );
 
+      // Aggregate by hour for 24h view, by day for others
       const dailyEngagement = allPosts.reduce(
         (acc, item) => {
-          const date = format(new Date(item.post.indexedAt), "yyyy-MM-dd");
-          if (!acc[date]) {
-            acc[date] = {
+          const postDate = new Date(item.post.indexedAt);
+          const key =
+            dateRange === "24h"
+              ? format(postDate, "yyyy-MM-dd-HH") // Hour-level for 24h
+              : format(postDate, "yyyy-MM-dd"); // Day-level for others
+          if (!acc[key]) {
+            acc[key] = {
               likes: 0,
               reposts: 0,
               replies: 0,
@@ -181,16 +186,16 @@ export const UserAnalytics: React.FC = () => {
               replyPosts: 0,
             };
           }
-          acc[date].likes += item.post.likeCount || 0;
-          acc[date].reposts += item.post.repostCount || 0;
-          acc[date].replies += item.post.replyCount || 0;
-          acc[date].posts += 1;
+          acc[key].likes += item.post.likeCount || 0;
+          acc[key].reposts += item.post.repostCount || 0;
+          acc[key].replies += item.post.replyCount || 0;
+          acc[key].posts += 1;
           // Check if post is a reply (has reply field in record)
           const isReply = !!(item.post.record as { reply?: unknown })?.reply;
           if (isReply) {
-            acc[date].replyPosts += 1;
+            acc[key].replyPosts += 1;
           } else {
-            acc[date].originalPosts += 1;
+            acc[key].originalPosts += 1;
           }
           return acc;
         },
@@ -249,32 +254,49 @@ export const UserAnalytics: React.FC = () => {
   const engagementChartData = useMemo(() => {
     if (!postsData?.dailyEngagement) return [];
 
-    const days =
-      dateRange === "24h"
-        ? 1
-        : dateRange === "7d"
-          ? 7
-          : dateRange === "30d"
-            ? 30
-            : 90;
     const data = [];
 
-    for (let i = days - 1; i >= 0; i--) {
-      const date = subDays(new Date(), i);
-      const dateKey = format(date, "yyyy-MM-dd");
-      const dayData = postsData.dailyEngagement[dateKey] || {
-        likes: 0,
-        reposts: 0,
-        replies: 0,
-        posts: 0,
-      };
-      data.push({
-        date: format(date, dateRange === "7d" ? "EEE" : "M/d"),
-        total: dayData.likes + dayData.reposts + dayData.replies,
-        likes: dayData.likes,
-        reposts: dayData.reposts,
-        replies: dayData.replies,
-      });
+    if (dateRange === "24h") {
+      // Show hourly data for 24-hour view
+      for (let i = 23; i >= 0; i--) {
+        const date = new Date();
+        date.setHours(date.getHours() - i);
+        const dateKey = format(date, "yyyy-MM-dd-HH");
+        const hourData = postsData.dailyEngagement[dateKey] || {
+          likes: 0,
+          reposts: 0,
+          replies: 0,
+          posts: 0,
+        };
+        data.push({
+          date: format(date, "ha"), // e.g., "2pm"
+          total: hourData.likes + hourData.reposts + hourData.replies,
+          likes: hourData.likes,
+          reposts: hourData.reposts,
+          replies: hourData.replies,
+        });
+      }
+    } else {
+      // Show daily data for other views
+      const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : 90;
+
+      for (let i = days - 1; i >= 0; i--) {
+        const date = subDays(new Date(), i);
+        const dateKey = format(date, "yyyy-MM-dd");
+        const dayData = postsData.dailyEngagement[dateKey] || {
+          likes: 0,
+          reposts: 0,
+          replies: 0,
+          posts: 0,
+        };
+        data.push({
+          date: format(date, dateRange === "7d" ? "EEE" : "M/d"),
+          total: dayData.likes + dayData.reposts + dayData.replies,
+          likes: dayData.likes,
+          reposts: dayData.reposts,
+          replies: dayData.replies,
+        });
+      }
     }
 
     return data;
@@ -323,30 +345,45 @@ export const UserAnalytics: React.FC = () => {
   const postFrequencyData = useMemo(() => {
     if (!postsData?.dailyEngagement) return [];
 
-    const days =
-      dateRange === "24h"
-        ? 1
-        : dateRange === "7d"
-          ? 7
-          : dateRange === "30d"
-            ? 30
-            : 90;
     const data = [];
 
-    for (let i = days - 1; i >= 0; i--) {
-      const date = subDays(new Date(), i);
-      const dateKey = format(date, "yyyy-MM-dd");
-      const dayData = postsData.dailyEngagement[dateKey] || {
-        posts: 0,
-        originalPosts: 0,
-        replyPosts: 0,
-      };
-      data.push({
-        date: format(date, dateRange === "7d" ? "EEE" : "M/d"),
-        posts: dayData.posts,
-        originalPosts: dayData.originalPosts,
-        replyPosts: dayData.replyPosts,
-      });
+    if (dateRange === "24h") {
+      // Show hourly data for 24-hour view
+      for (let i = 23; i >= 0; i--) {
+        const date = new Date();
+        date.setHours(date.getHours() - i);
+        const dateKey = format(date, "yyyy-MM-dd-HH");
+        const hourData = postsData.dailyEngagement[dateKey] || {
+          posts: 0,
+          originalPosts: 0,
+          replyPosts: 0,
+        };
+        data.push({
+          date: format(date, "ha"), // e.g., "2pm"
+          posts: hourData.posts,
+          originalPosts: hourData.originalPosts,
+          replyPosts: hourData.replyPosts,
+        });
+      }
+    } else {
+      // Show daily data for other views
+      const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : 90;
+
+      for (let i = days - 1; i >= 0; i--) {
+        const date = subDays(new Date(), i);
+        const dateKey = format(date, "yyyy-MM-dd");
+        const dayData = postsData.dailyEngagement[dateKey] || {
+          posts: 0,
+          originalPosts: 0,
+          replyPosts: 0,
+        };
+        data.push({
+          date: format(date, dateRange === "7d" ? "EEE" : "M/d"),
+          posts: dayData.posts,
+          originalPosts: dayData.originalPosts,
+          replyPosts: dayData.replyPosts,
+        });
+      }
     }
 
     return data;
