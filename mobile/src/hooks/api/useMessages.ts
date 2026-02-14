@@ -90,3 +90,57 @@ export function useMarkAsRead() {
     },
   });
 }
+
+/**
+ * Hook to mute a conversation
+ */
+export function useMuteConversation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (conversationId: string) =>
+      dmService.muteConversation(conversationId),
+    onSuccess: (_, conversationId) => {
+      // Invalidate conversations list and the specific conversation
+      queryClient.invalidateQueries({ queryKey: ["dm-conversations"] });
+      queryClient.invalidateQueries({
+        queryKey: ["dm-conversation", conversationId],
+      });
+    },
+  });
+}
+
+/**
+ * Hook to unmute a conversation
+ */
+export function useUnmuteConversation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (conversationId: string) =>
+      dmService.unmuteConversation(conversationId),
+    onSuccess: (_, conversationId) => {
+      // Invalidate conversations list and the specific conversation
+      queryClient.invalidateQueries({ queryKey: ["dm-conversations"] });
+      queryClient.invalidateQueries({
+        queryKey: ["dm-conversation", conversationId],
+      });
+    },
+  });
+}
+
+/**
+ * Hook to leave (delete) a conversation
+ */
+export function useLeaveConversation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (conversationId: string) =>
+      dmService.leaveConversation(conversationId),
+    onSuccess: () => {
+      // Invalidate conversations list to refresh after deletion
+      queryClient.invalidateQueries({ queryKey: ["dm-conversations"] });
+    },
+  });
+}
