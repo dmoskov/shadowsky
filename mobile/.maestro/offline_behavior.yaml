@@ -1,0 +1,64 @@
+appId: com.shadowsky.mobile
+---
+# E2E Test: Offline Behavior
+# Tests app behavior when going offline and coming back online
+
+- launchApp
+
+# Sign in
+- tapOn: "Sign In"
+- inputText: "test.bsky.social"
+- tapOn: "Password"
+- inputText: "password123"
+- tapOn: "Sign In"
+- assertVisible: "Home"
+
+# Load some content while online
+- scroll:
+    direction: DOWN
+- scroll:
+    direction: DOWN
+
+# Go offline
+- setAirplaneMode: true
+- wait: 2000
+
+# Test that cached content is still visible
+- assertVisible: "Timeline"
+- scroll:
+    direction: DOWN
+- assertVisible:
+    id: "cached-post"
+
+# Try to create a post while offline
+- tapOn:
+    id: "compose-button"
+- inputText: "Offline post attempt"
+- tapOn: "Post"
+- assertVisible: "No internet connection"
+- assertVisible: "Your post will be sent when you're back online"
+- tapOn: "Save as Draft"
+
+# Try to refresh while offline
+- swipe:
+    direction: DOWN
+    duration: 1000
+- assertVisible: "Unable to refresh"
+- assertVisible: "Check your internet connection"
+
+# Come back online
+- setAirplaneMode: false
+- wait: 2000
+
+# Test that app syncs
+- swipe:
+    direction: DOWN
+    duration: 1000
+- assertVisible:
+    id: "loading-indicator"
+
+# Check if drafts can be sent
+- tapOn: "Drafts"
+- assertVisible: "Offline post attempt"
+- tapOn: "Send Draft"
+- assertVisible: "Posted successfully"
