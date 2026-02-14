@@ -663,6 +663,23 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
         </SettingRow>
       </View>
 
+      {/* AI Features Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>AI FEATURES</Text>
+
+        <SettingRow
+          label="Auto-Generate Alt Text"
+          description="Automatically generate descriptive alt text when you attach images"
+        >
+          <Switch
+            value={preferences.autoGenerateAltText}
+            onValueChange={(value) => updatePreference("autoGenerateAltText", value)}
+            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
+            thumbColor=colors.text
+          />
+        </SettingRow>
+      </View>
+
       {/* About Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>ABOUT</Text>

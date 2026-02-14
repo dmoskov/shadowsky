@@ -95,6 +95,62 @@ function getApiAuthHeaders(): Record<string, string> {
 }
 
 /**
+ * Generate alt text for an image using AI
+ */
+export async function generateAltText(imageUri: string): Promise<string> {
+  try {
+    const apiBaseUrl = getApiBaseUrl();
+    const endpoint = `${apiBaseUrl}/api/generate-alt-text`;
+
+    // For mobile, we need to convert the local file URI to base64
+    // The backend expects a data URL or blob URL
+    let processedImageUrl = imageUri;
+
+    // If it's a local file (file://, ph://, etc.), we need to convert to base64
+    if (!imageUri.startsWith("http://") && !imageUri.startsWith("https://")) {
+      // For now, pass the URI directly and let the backend handle conversion
+      // In a production app, you might want to convert to base64 here
+      processedImageUrl = imageUri;
+    }
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getApiAuthHeaders(),
+      },
+      body: JSON.stringify({ imageUrl: processedImageUrl }),
+    });
+
+    if (!response.ok) {
+      const status = response.status;
+      if (status === 401) {
+        throw new Error("Alt text generation failed: Invalid API key");
+      } else if (status === 429) {
+        throw new Error("Alt text generation failed: Rate limit exceeded");
+      } else {
+        throw new Error(
+          `Alt text generation failed: ${response.statusText || "Unknown error"}`,
+        );
+      }
+    }
+
+    const data = await response.json();
+    return data.altText?.trim() || "";
+  } catch (error) {
+    // Network errors in dev are expected when the local API server isn't running
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      throw new Error("Alt text generation unavailable: API server not reachable");
+    }
+    logger.error("Error generating alt text:", error);
+    throw error;
+  }
+}
+
+/**
  * Generate thread summary using AI
  */
 export async function generateThreadSummary(

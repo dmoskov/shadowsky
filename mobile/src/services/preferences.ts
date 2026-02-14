@@ -47,6 +47,9 @@ export interface AppPreferences {
 
   // Compose
   postLanguages: string[];
+
+  // AI Features
+  autoGenerateAltText: boolean;
 }
 
 const PREFERENCES_KEY = "@shadowsky_preferences";
@@ -87,6 +90,9 @@ const DEFAULT_PREFERENCES: AppPreferences = {
 
   // Compose
   postLanguages: ["en"],
+
+  // AI Features
+  autoGenerateAltText: false,
 };
 
 class PreferencesService {
