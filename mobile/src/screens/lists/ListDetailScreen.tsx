@@ -21,6 +21,8 @@ import {useAppNavigation} from '../../hooks/useNavigation';
 import {useAuth} from '../../contexts/AuthContext';
 import {AppBskyGraphDefs} from '@atproto/api';
 import {colors} from '../../constants/theme';
+import {EditListModal} from '../../components/EditListModal';
+import {useAuth} from '../../contexts/AuthContext';
 
 interface ListDetailScreenProps {
   listUri: string;
@@ -87,6 +89,7 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
   const {session} = useAuth();
 
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
   // Extract creator DID from list URI (format: at://did:plc:xxx/app.bsky.graph.list/rkey)
   const listCreatorDid = useMemo(() => {
@@ -108,6 +111,15 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
     if (!data?.pages) return [];
     return data.pages.flatMap((page) => page.items);
   }, [data]);
+
+  // Check if current user is the list owner
+  const isOwner = useMemo(() => {
+    if (!listData || !session?.did) return false;
+    // Extract DID from list URI (format: at://did:plc:xxx/app.bsky.graph.list/rkey)
+    const uriParts = listData.uri.split('/');
+    const listCreatorDid = uriParts[2]; // The DID is the third part after at://
+    return listCreatorDid === session.did;
+  }, [listData, session]);
 
   const handleRemoveMember = useCallback(
     async (memberUri: string) => {
@@ -169,9 +181,22 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
   }, [deleteList, listUri, goBack]);
 
   const handleEditList = useCallback(() => {
-    // Navigate to edit screen (we'll need to create this or use a modal)
-    Alert.alert('Edit List', 'Edit functionality coming soon');
+    setIsEditModalVisible(true);
   }, []);
+
+  const handleSaveList = useCallback(
+    async (updates: {name: string; description: string}) => {
+      try {
+        await updateList({listUri, updates});
+        Alert.alert('Success', 'List updated successfully');
+        // Refetch the list data to show updated info
+        refetch();
+      } catch (error) {
+        throw error; // Let the modal handle the error display
+      }
+    },
+    [updateList, listUri, refetch]
+  );
 
   const handleProfilePress = useCallback(
     (handle: string) => {
@@ -239,23 +264,25 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
               : 'Mod List'}
           </Text>
         </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleEditList}>
-            <Text style={styles.actionButtonText}>Edit</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.deleteButton]}
-            onPress={handleDeleteList}
-            disabled={isDeleting}>
-            {isDeleting ? (
-              <ActivityIndicator color="#ffffff" size="small" />
-            ) : (
-              <Text style={styles.deleteButtonText}>Delete</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+        {isOwner && (
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleEditList}>
+              <Text style={styles.actionButtonText}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.deleteButton]}
+              onPress={handleDeleteList}
+              disabled={isDeleting}>
+              {isDeleting ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <Text style={styles.deleteButtonText}>Delete</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Members</Text>
         </View>
@@ -296,6 +323,12 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
             </View>
           ) : null
         }
+      />
+      <EditListModal
+        visible={isEditModalVisible}
+        list={listData || null}
+        onClose={() => setIsEditModalVisible(false)}
+        onSave={handleSaveList}
       />
     </View>
   );
