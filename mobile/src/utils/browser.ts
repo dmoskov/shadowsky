@@ -4,6 +4,7 @@
  */
 
 import * as WebBrowser from 'expo-web-browser';
+import {router} from 'expo-router';
 import {colors} from '../constants/theme';
 
 /**
@@ -21,6 +22,60 @@ function isBskyDeepLink(url: string): boolean {
 }
 
 /**
+ * Navigate to a Bluesky deep link within the app
+ * Parses bsky.app URLs and navigates to the appropriate screen
+ * @param url - The bsky.app URL to navigate to
+ * @returns true if navigation was handled, false otherwise
+ */
+function handleBskyDeepLink(url: string): boolean {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+
+    // Profile links: /profile/[handle]
+    const profileMatch = pathname.match(/^\/profile\/([^/]+)$/);
+    if (profileMatch) {
+      const handle = profileMatch[1];
+      router.push(`/(app)/(tabs)/(home)/profile/${handle}`);
+      return true;
+    }
+
+    // Post/thread links: /profile/[handle]/post/[postId]
+    const postMatch = pathname.match(/^\/profile\/([^/]+)\/post\/([^/]+)$/);
+    if (postMatch) {
+      const [, handle, postId] = postMatch;
+      router.push(`/(app)/(tabs)/(home)/thread/${postId}?handle=${handle}`);
+      return true;
+    }
+
+    // Search: /search?q=query
+    if (pathname === '/search') {
+      const query = urlObj.searchParams.get('q');
+      if (query) {
+        router.push(`/(app)/(tabs)/(search)?query=${encodeURIComponent(query)}`);
+      } else {
+        router.push('/(app)/(tabs)/(search)');
+      }
+      return true;
+    }
+
+    // List: /lists/[listUri]
+    const listMatch = pathname.match(/^\/lists\/(.+)$/);
+    if (listMatch) {
+      const listUri = decodeURIComponent(listMatch[1]);
+      router.push(`/(app)/(tabs)/(home)/list/${encodeURIComponent(listUri)}`);
+      return true;
+    }
+
+    // If we can't parse the URL, return false to open in browser
+    return false;
+  } catch (error) {
+    console.error('Failed to parse bsky.app deep link:', error);
+    return false;
+  }
+}
+
+/**
  * Open a URL in the in-app browser
  * Uses SFSafariViewController on iOS and Chrome Custom Tabs on Android
  *
@@ -29,12 +84,14 @@ function isBskyDeepLink(url: string): boolean {
  */
 export async function openLink(url: string): Promise<void> {
   try {
-    // For bsky.app URLs, we should handle them as deep links
-    // For now, we'll open them in the browser, but this can be enhanced
-    // to navigate within the app if the deep link handling is implemented
+    // For bsky.app URLs, try to handle them as deep links within the app
     if (isBskyDeepLink(url)) {
-      // TODO: Implement deep link navigation within app
-      // For now, still open in browser
+      const handled = handleBskyDeepLink(url);
+      if (handled) {
+        // Successfully navigated within app, no need to open browser
+        return;
+      }
+      // If we couldn't parse the URL, fall through to open in browser
     }
 
     // Open the URL in an in-app browser
