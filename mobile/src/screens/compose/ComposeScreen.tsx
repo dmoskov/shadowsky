@@ -26,6 +26,8 @@ import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { ImageEditor } from "../../components/ImageEditor";
 import { useTranslation } from "../../hooks/useTranslation";
 import { ComposeToolbar, ComposeMediaPreview, ComposeQuotePreview } from "./components";
+import { generateAltText } from "../../services/ai-service";
+import { usePreferences } from "../../contexts/PreferencesContext";
 
 import { createLogger } from '../../utils/logger';
 
@@ -67,6 +69,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation();
+  const { preferences } = usePreferences();
   const [text, setText] = useState("");
   const createPost = useCreatePost();
   const imagePicker = useImagePicker();
@@ -360,12 +363,35 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
     }
   };
 
-  const handleSaveEditedImages = (editedImages: Array<{ originalAsset: ImageAsset; editedAsset: ImageAsset }>) => {
+  const handleSaveEditedImages = async (editedImages: Array<{ originalAsset: ImageAsset; editedAsset: ImageAsset }>) => {
     // Add edited images to the picker
     const assetsToAdd = editedImages.map(img => img.editedAsset);
     imagePicker.addImages(assetsToAdd);
     setImageEditorVisible(false);
     setImagesToEdit([]);
+
+    // Auto-generate alt text if enabled and images don't have alt text
+    if (preferences?.autoGenerateAltText) {
+      for (let i = 0; i < assetsToAdd.length; i++) {
+        const asset = assetsToAdd[i];
+        // Only generate if alt text is empty
+        if (!asset.altText || asset.altText.trim() === "") {
+          try {
+            const altText = await generateAltText(asset.uri);
+            // Find the index in selectedImages array
+            const imageIndex = imagePicker.selectedImages.findIndex(
+              img => img.uri === asset.uri
+            );
+            if (imageIndex !== -1) {
+              imagePicker.updateAltText(imageIndex, altText);
+            }
+          } catch (error) {
+            // Silently handle errors - log but don't block compose flow
+            logger.error("Failed to auto-generate alt text:", error);
+          }
+        }
+      }
+    }
   };
 
   const handleCancelImageEditor = () => {
@@ -574,6 +600,19 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
       const newPosts = [...threadPosts];
       newPosts[postIndex].images.push(image);
       setThreadPosts(newPosts);
+
+      // Auto-generate alt text if enabled
+      if (preferences?.autoGenerateAltText && (!image.altText || image.altText.trim() === "")) {
+        try {
+          const altText = await generateAltText(image.uri);
+          image.altText = altText;
+          // Update the post with the new alt text
+          const updatedPosts = [...newPosts];
+          setThreadPosts(updatedPosts);
+        } catch (error) {
+          logger.error("Failed to auto-generate alt text for thread image:", error);
+        }
+      }
     }
   };
 
@@ -585,6 +624,23 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
         newPosts[postIndex].images.push(image);
       });
       setThreadPosts(newPosts);
+
+      // Auto-generate alt text if enabled for each image
+      if (preferences?.autoGenerateAltText) {
+        for (const image of images) {
+          if (!image.altText || image.altText.trim() === "") {
+            try {
+              const altText = await generateAltText(image.uri);
+              image.altText = altText;
+            } catch (error) {
+              logger.error("Failed to auto-generate alt text for thread image:", error);
+            }
+          }
+        }
+        // Update the posts with the new alt text
+        const updatedPosts = [...newPosts];
+        setThreadPosts(updatedPosts);
+      }
     }
   };
 
