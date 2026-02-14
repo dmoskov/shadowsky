@@ -15,17 +15,19 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
 import { colors } from "../../constants/theme";
+import { useTranslation } from "../../hooks/useTranslation";
 
 export function LandingScreen() {
   const insets = useSafeAreaInsets();
   const { signIn, signInWithOAuth } = useAuth();
+  const { t } = useTranslation();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!identifier.trim() || !password.trim()) {
-      Alert.alert("Error", "Please enter both handle and app password");
+      Alert.alert(t("auth.error_title"), t("auth.error_missing_credentials"));
       return;
     }
 
@@ -34,8 +36,8 @@ export function LandingScreen() {
       await signIn(identifier.trim(), password);
     } catch {
       Alert.alert(
-        "Sign In Failed",
-        "Invalid credentials. Please check your handle and app password.",
+        t("auth.sign_in_failed_title"),
+        t("auth.sign_in_failed_invalid_credentials"),
       );
     } finally {
       setIsLoading(false);
@@ -48,8 +50,8 @@ export function LandingScreen() {
       await signInWithOAuth();
     } catch {
       Alert.alert(
-        "Sign In Failed",
-        "Failed to start OAuth flow. Please try again.",
+        t("auth.sign_in_failed_title"),
+        t("auth.sign_in_failed_oauth"),
       );
     } finally {
       setIsLoading(false);
@@ -66,18 +68,18 @@ export function LandingScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
-          <Text style={styles.title}>Asphodel</Text>
+          <Text style={styles.title}>{t("auth.app_title")}</Text>
           <Text style={styles.subtitle}>
-            A powerful Bluesky client with advanced features
+            {t("auth.app_subtitle")}
           </Text>
         </View>
 
         <View style={styles.formContainer}>
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Handle or Email</Text>
+            <Text style={styles.label}>{t("auth.handle_or_email_label")}</Text>
             <TextInput
               style={styles.input}
-              placeholder="yourhandle.bsky.social"
+              placeholder={t("auth.handle_placeholder")}
               placeholderTextColor="#6b7280"
               value={identifier}
               onChangeText={setIdentifier}
@@ -89,10 +91,10 @@ export function LandingScreen() {
           </View>
 
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>App Password</Text>
+            <Text style={styles.label}>{t("auth.app_password_label")}</Text>
             <TextInput
               style={styles.input}
-              placeholder="xxxx-xxxx-xxxx-xxxx"
+              placeholder={t("auth.app_password_placeholder")}
               placeholderTextColor="#6b7280"
               value={password}
               onChangeText={setPassword}
@@ -102,7 +104,7 @@ export function LandingScreen() {
               editable={!isLoading}
             />
             <Text style={styles.helpText}>
-              Use an app password, not your account password
+              {t("auth.app_password_help")}
             </Text>
           </View>
 
@@ -117,22 +119,22 @@ export function LandingScreen() {
             {isLoading ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text style={styles.loginButtonText}>Sign In</Text>
+              <Text style={styles.loginButtonText}>{t("auth.sign_in_button")}</Text>
             )}
           </TouchableOpacity>
 
           <View style={styles.infoContainer}>
             <Text style={styles.infoText}>
-              Don't have an app password?{" "}
+              {t("auth.no_app_password_info")}{" "}
               <Text style={styles.linkText}>
-                Create one in your Bluesky account settings
+                {t("auth.create_app_password_link")}
               </Text>
             </Text>
           </View>
 
           <View style={styles.dividerContainer}>
             <View style={styles.divider} />
-            <Text style={styles.dividerText}>OR</Text>
+            <Text style={styles.dividerText}>{t("auth.divider_or")}</Text>
             <View style={styles.divider} />
           </View>
 
@@ -141,18 +143,18 @@ export function LandingScreen() {
             disabled={true}
           >
             <Text style={styles.oauthButtonText}>
-              Sign in with Bluesky (Coming Soon)
+              {t("auth.sign_in_oauth_button")}
             </Text>
           </TouchableOpacity>
 
           <Text style={styles.disclaimer}>
-            By signing in, you agree to our{" "}
+            {t("auth.disclaimer")}{" "}
             <Text style={styles.link} onPress={() => Linking.openURL("https://shadowsky.io/terms")}>
-              Terms of Service
+              {t("auth.terms_of_service")}
             </Text>{" "}
-            and{" "}
+            {t("auth.and")}{" "}
             <Text style={styles.link} onPress={() => Linking.openURL("https://shadowsky.io/privacy")}>
-              Privacy Policy
+              {t("auth.privacy_policy")}
             </Text>
           </Text>
         </View>

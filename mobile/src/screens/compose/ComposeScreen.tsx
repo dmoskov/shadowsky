@@ -26,6 +26,7 @@ import { EmojiPickerModal } from "../../components/EmojiPickerModal";
 import type { TenorGif } from "../../services/tenor";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { ImageEditor } from "../../components/ImageEditor";
+import { useTranslation } from "../../hooks/useTranslation";
 
 const MAX_POST_LENGTH = 300;
 
@@ -60,6 +61,7 @@ export interface ComposeScreenProps {
 export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps = {}) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { t } = useTranslation();
   const [text, setText] = useState("");
   const createPost = useCreatePost();
   const imagePicker = useImagePicker();
@@ -273,22 +275,22 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
     if (hasContent && !isThreadMode) {
       // Offer to save as draft for single posts
       Alert.alert(
-        "Save as draft?",
-        "Would you like to save your post as a draft?",
+        t("compose.save_draft_title"),
+        t("compose.save_draft_message"),
         [
-          { text: "Discard", style: "destructive", onPress: () => router.back() },
-          { text: "Cancel", style: "cancel" },
-          { text: "Save Draft", onPress: handleSaveDraft },
+          { text: t("compose.discard_button"), style: "destructive", onPress: () => router.back() },
+          { text: t("compose.cancel_button"), style: "cancel" },
+          { text: t("compose.save_draft_button"), onPress: handleSaveDraft },
         ]
       );
     } else if (hasContent && isThreadMode) {
       // Thread mode - just confirm discard (threads not supported in drafts yet)
       Alert.alert(
-        "Discard Thread?",
-        "Are you sure you want to discard this thread?",
+        t("compose.discard_thread_title"),
+        t("compose.discard_thread_message"),
         [
-          { text: "Cancel", style: "cancel" },
-          { text: "Discard", style: "destructive", onPress: () => router.back() },
+          { text: t("compose.cancel_button"), style: "cancel" },
+          { text: t("compose.discard_button"), style: "destructive", onPress: () => router.back() },
         ]
       );
     } else {
