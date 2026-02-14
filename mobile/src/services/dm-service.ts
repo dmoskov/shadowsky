@@ -479,6 +479,132 @@ class DmService {
       }
     });
   }
+
+  /**
+   * Mute a conversation
+   */
+  async muteConversation(conversationId: string): Promise<void> {
+    if (!this.agent) {
+      throw new Error("Not authenticated");
+    }
+
+    return withRetry(async () => {
+      try {
+        const headers = await this.getAuthHeaders();
+        headers["Content-Type"] = "application/json";
+
+        const response = await fetch(
+          "https://api.bsky.chat/xrpc/chat.bsky.convo.muteConvo",
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              convoId: conversationId,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const error: any = new Error(
+            `HTTP ${response.status}: ${response.statusText}`
+          );
+          error.status = response.status;
+          throw error;
+        }
+      } catch (error: unknown) {
+        console.error("Failed to mute conversation:", error);
+        const apiErr = error as ApiError;
+        if (apiErr.status === 401 || apiErr.statusCode === 401) {
+          throw new Error("Authentication required. Please sign in again.");
+        }
+        throw error;
+      }
+    });
+  }
+
+  /**
+   * Unmute a conversation
+   */
+  async unmuteConversation(conversationId: string): Promise<void> {
+    if (!this.agent) {
+      throw new Error("Not authenticated");
+    }
+
+    return withRetry(async () => {
+      try {
+        const headers = await this.getAuthHeaders();
+        headers["Content-Type"] = "application/json";
+
+        const response = await fetch(
+          "https://api.bsky.chat/xrpc/chat.bsky.convo.unmuteConvo",
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              convoId: conversationId,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const error: any = new Error(
+            `HTTP ${response.status}: ${response.statusText}`
+          );
+          error.status = response.status;
+          throw error;
+        }
+      } catch (error: unknown) {
+        console.error("Failed to unmute conversation:", error);
+        const apiErr = error as ApiError;
+        if (apiErr.status === 401 || apiErr.statusCode === 401) {
+          throw new Error("Authentication required. Please sign in again.");
+        }
+        throw error;
+      }
+    });
+  }
+
+  /**
+   * Leave (delete) a conversation
+   */
+  async leaveConversation(conversationId: string): Promise<void> {
+    if (!this.agent) {
+      throw new Error("Not authenticated");
+    }
+
+    return withRetry(async () => {
+      try {
+        const headers = await this.getAuthHeaders();
+        headers["Content-Type"] = "application/json";
+
+        const response = await fetch(
+          "https://api.bsky.chat/xrpc/chat.bsky.convo.leaveConvo",
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              convoId: conversationId,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const error: any = new Error(
+            `HTTP ${response.status}: ${response.statusText}`
+          );
+          error.status = response.status;
+          throw error;
+        }
+      } catch (error: unknown) {
+        console.error("Failed to leave conversation:", error);
+        const apiErr = error as ApiError;
+        if (apiErr.status === 401 || apiErr.statusCode === 401) {
+          throw new Error("Authentication required. Please sign in again.");
+        }
+        throw error;
+      }
+    });
+  }
 }
 
 export const dmService = new DmService();

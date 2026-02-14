@@ -11,9 +11,11 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Animated,
 } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
+import Swipeable from "react-native-gesture-handler/Swipeable";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   dmService,
@@ -25,8 +27,8 @@ import { LoadingState } from "../../components/LoadingState";
 import { ErrorState } from "../../components/ErrorState";
 import { EmptyState } from "../../components/EmptyState";
 import { NewConversationModal } from "../../components/NewConversationModal";
-import { LockIcon, ChatBubbleIcon, ArrowLeftIcon, SearchIcon, CloseIcon, PlusIcon } from "../../components/icons";
-import { useConversations, useConversation, useSendMessage, useMarkAsRead } from "../../hooks/api";
+import { LockIcon, ChatBubbleIcon, ArrowLeftIcon, SearchIcon, CloseIcon, PlusIcon, TrashIcon, BellIcon, BellSlashIcon } from "../../components/icons";
+import { useConversations, useConversation, useSendMessage, useMarkAsRead, useMuteConversation, useUnmuteConversation, useLeaveConversation } from "../../hooks/api";
 import { colors } from "../../constants/theme";
 import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
 import { ImageIcon } from "../../components/icons/ImageIcon";
@@ -86,6 +88,9 @@ export function MessagesScreen() {
   // Mutations
   const sendMessageMutation = useSendMessage();
   const markAsReadMutation = useMarkAsRead();
+  const muteConversationMutation = useMuteConversation();
+  const unmuteConversationMutation = useUnmuteConversation();
+  const leaveConversationMutation = useLeaveConversation();
 
   // Mark conversation as read when opened
   useEffect(() => {
@@ -166,6 +171,51 @@ export function MessagesScreen() {
     }
   };
 
+  const handleDeleteConversation = (conversationId: string) => {
+    const conversation = conversations?.find((c) => c.id === conversationId);
+    const otherMember = conversation ? getOtherMember(conversation) : null;
+    const displayName = otherMember?.displayName || otherMember?.handle || "this user";
+
+    Alert.alert(
+      "Delete Conversation",
+      `Are you sure you want to delete your conversation with ${displayName}? This cannot be undone.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await leaveConversationMutation.mutateAsync(conversationId);
+              if (selectedConversation === conversationId) {
+                setSelectedConversation(null);
+              }
+            } catch (error) {
+              console.error("Failed to delete conversation:", error);
+              Alert.alert("Error", "Failed to delete conversation. Please try again.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleToggleMute = async (conversationId: string, isMuted: boolean) => {
+    try {
+      if (isMuted) {
+        await unmuteConversationMutation.mutateAsync(conversationId);
+      } else {
+        await muteConversationMutation.mutateAsync(conversationId);
+      }
+    } catch (error) {
+      console.error("Failed to toggle mute:", error);
+      Alert.alert("Error", "Failed to update conversation. Please try again.");
+    }
+  };
+
   // Filter conversations based on search text
   const filteredConversations = useMemo(() => {
     if (!conversations || !searchText.trim()) return conversations;
@@ -200,6 +250,37 @@ export function MessagesScreen() {
     }
   };
 
+  const renderRightActions = (
+    progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>,
+    conversationId: string
+  ) => {
+    const trans = dragX.interpolate({
+      inputRange: [-80, 0],
+      outputRange: [0, 80],
+      extrapolate: "clamp",
+    });
+
+    return (
+      <Animated.View
+        style={[
+          styles.swipeActions,
+          {
+            transform: [{ translateX: trans }],
+          },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.deleteAction}
+          onPress={() => handleDeleteConversation(conversationId)}
+        >
+          <TrashIcon size={24} color="#ffffff" />
+          <Text style={styles.actionText}>Delete</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
+
   const renderConversationItem = ({
     item,
   }: {
@@ -209,53 +290,65 @@ export function MessagesScreen() {
     const isSelected = selectedConversation === item.id;
 
     return (
-      <TouchableOpacity
-        style={[styles.conversationItem, isSelected && styles.selectedConversation]}
-        onPress={() => setSelectedConversation(item.id)}
+      <Swipeable
+        renderRightActions={(progress, dragX) =>
+          renderRightActions(progress, dragX, item.id)
+        }
+        overshootRight={false}
       >
-        <View style={styles.conversationContent}>
-          {otherMember.avatar ? (
-            <Image
-              source={{ uri: otherMember.avatar }}
-              style={styles.avatar}
-            />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarText}>
-                {(
-                  otherMember.displayName ||
-                  otherMember.handle ||
-                  "U"
-                )[0].toUpperCase()}
-              </Text>
-            </View>
-          )}
-          <View style={styles.conversationDetails}>
-            <View style={styles.conversationHeader}>
-              <Text style={styles.displayName} numberOfLines={1}>
-                {otherMember.displayName ||
-                  otherMember.handle ||
-                  "Unknown User"}
-              </Text>
-              {item.unreadCount > 0 && (
-                <View style={styles.unreadBadge}>
-                  <Text style={styles.unreadCount}>{item.unreadCount}</Text>
+        <TouchableOpacity
+          style={[styles.conversationItem, isSelected && styles.selectedConversation]}
+          onPress={() => setSelectedConversation(item.id)}
+        >
+          <View style={styles.conversationContent}>
+            {otherMember.avatar ? (
+              <Image
+                source={{ uri: otherMember.avatar }}
+                style={styles.avatar}
+              />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarText}>
+                  {(
+                    otherMember.displayName ||
+                    otherMember.handle ||
+                    "U"
+                  )[0].toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <View style={styles.conversationDetails}>
+              <View style={styles.conversationHeader}>
+                <View style={styles.conversationNameRow}>
+                  <Text style={styles.displayName} numberOfLines={1}>
+                    {otherMember.displayName ||
+                      otherMember.handle ||
+                      "Unknown User"}
+                  </Text>
+                  {item.muted && (
+                    <BellSlashIcon size={16} color="#9ca3af" />
+                  )}
                 </View>
+                {item.unreadCount > 0 && (
+                  <View style={styles.unreadBadge}>
+                    <Text style={styles.unreadCount}>{item.unreadCount}</Text>
+                  </View>
+                )}
+              </View>
+              {otherMember.handle && (
+                <Text style={styles.handle} numberOfLines={1}>
+                  @{otherMember.handle}
+                </Text>
+              )}
+              {item.lastMessage && (
+                <Text style={styles.lastMessage} numberOfLines={1}>
+                  {item.lastMessage.text}
+                </Text>
               )}
             </View>
-            {otherMember.handle && (
-              <Text style={styles.handle} numberOfLines={1}>
-                @{otherMember.handle}
-              </Text>
-            )}
-            {item.lastMessage && (
-              <Text style={styles.lastMessage} numberOfLines={1}>
-                {item.lastMessage.text}
-              </Text>
-            )}
           </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </Swipeable>
     );
   };
 
@@ -507,15 +600,27 @@ export function MessagesScreen() {
     >
       {/* Header */}
       <View style={styles.chatHeader}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => setSelectedConversation(null)}
-        >
-          <View style={styles.backButtonContent}>
-            <ArrowLeftIcon size={20} color={colors.primary} />
-            <Text style={styles.backButtonText}>Back</Text>
-          </View>
-        </TouchableOpacity>
+        <View style={styles.chatHeaderTop}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => setSelectedConversation(null)}
+          >
+            <View style={styles.backButtonContent}>
+              <ArrowLeftIcon size={20} color={colors.primary} />
+              <Text style={styles.backButtonText}>Back</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.muteButton}
+            onPress={() => handleToggleMute(selectedConversation, conversationData.conversation.muted)}
+          >
+            {conversationData.conversation.muted ? (
+              <BellSlashIcon size={24} color={colors.primary} />
+            ) : (
+              <BellIcon size={24} color={colors.primary} />
+            )}
+          </TouchableOpacity>
+        </View>
         <View style={styles.chatHeaderContent}>
           {otherMember.avatar ? (
             <Image
@@ -717,11 +822,17 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  conversationNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flex: 1,
+  },
   displayName: {
     color: "#ffffff",
     fontSize: 16,
     fontWeight: "600",
-    flex: 1,
+    flexShrink: 1,
   },
   handle: {
     color: "#9ca3af",
@@ -750,8 +861,17 @@ const styles = StyleSheet.create({
     borderBottomColor: "#1f1f23",
     padding: 12,
   },
+  chatHeaderTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
   backButton: {
     paddingVertical: 4,
+  },
+  muteButton: {
+    padding: 4,
   },
   backButtonContent: {
     flexDirection: "row",
@@ -968,5 +1088,22 @@ const styles = StyleSheet.create({
   creatingText: {
     color: "#ffffff",
     fontSize: 16,
+  },
+  swipeActions: {
+    flexDirection: "row",
+    width: 80,
+  },
+  deleteAction: {
+    backgroundColor: "#ef4444",
+    justifyContent: "center",
+    alignItems: "center",
+    width: 80,
+    height: "100%",
+  },
+  actionText: {
+    color: "#ffffff",
+    fontSize: 12,
+    fontWeight: "600",
+    marginTop: 4,
   },
 });
