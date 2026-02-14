@@ -19,6 +19,7 @@ export default defineConfig({
       "**/*.spec.ts",
       "**/*.spec.js",
       "**/amplify/**",
+      "**/mobile/**",
     ],
     coverage: {
       provider: "v8",
