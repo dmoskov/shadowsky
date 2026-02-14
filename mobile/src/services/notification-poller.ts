@@ -5,6 +5,10 @@ import {AppState, AppStateStatus} from 'react-native';
 import {getUnreadCount} from './atproto/notifications';
 import {preferencesService} from './preferences';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('NotificationPoller');
 const STORAGE_KEY = '@shadowsky/last_unread_count';
 const POLL_INTERVAL = 60000; // 60 seconds
 
@@ -16,7 +20,7 @@ async function getLastUnreadCount(): Promise<number> {
     const count = await AsyncStorage.getItem(STORAGE_KEY);
     return count ? parseInt(count, 10) : 0;
   } catch (error) {
-    console.error('Error loading last unread count:', error);
+    logger.error('Error loading last unread count:', error);
     return 0;
   }
 }
@@ -28,7 +32,7 @@ async function saveUnreadCount(count: number): Promise<void> {
   try {
     await AsyncStorage.setItem(STORAGE_KEY, count.toString());
   } catch (error) {
-    console.error('Error saving unread count:', error);
+    logger.error('Error saving unread count:', error);
   }
 }
 
@@ -47,7 +51,7 @@ async function scheduleNotification(count: number): Promise<void> {
       trigger: null, // Show immediately
     });
   } catch (error) {
-    console.error('Error scheduling notification:', error);
+    logger.error('Error scheduling notification:', error);
   }
 }
 
@@ -60,7 +64,7 @@ async function updateBadgeCount(count: number): Promise<void> {
       await Notifications.setBadgeCountAsync(count);
     }
   } catch (error) {
-    console.error('Error updating badge count:', error);
+    logger.error('Error updating badge count:', error);
   }
 }
 
@@ -97,7 +101,7 @@ async function pollNotifications(): Promise<void> {
     // Save current count
     await saveUnreadCount(currentCount);
   } catch (error) {
-    console.error('Error polling notifications:', error);
+    logger.error('Error polling notifications:', error);
   }
 }
 

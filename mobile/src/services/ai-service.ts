@@ -5,6 +5,10 @@
 
 import { Platform } from "react-native";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('AiService');
 export interface ThreadSummaryPost {
   text: string;
   author: string;
@@ -133,7 +137,7 @@ export async function generateThreadSummary(
     ) {
       throw new Error("Thread summary unavailable: API server not reachable");
     }
-    console.error("Error generating thread summary:", error);
+    logger.error('Error generating thread summary:', error);
     throw error;
   }
 }

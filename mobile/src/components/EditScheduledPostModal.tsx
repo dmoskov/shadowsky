@@ -18,6 +18,10 @@ import {
 import { ScheduledPost } from '../services/scheduled-posts';
 import { colors } from '../constants/theme';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Editscheduledpostmodalx');
 const MAX_POST_LENGTH = 300;
 
 interface EditScheduledPostModalProps {
@@ -53,7 +57,7 @@ export function EditScheduledPostModal({
       onClose();
     } catch (error) {
       // Error handling could be improved with a toast or alert
-      console.error('Failed to save:', error);
+      logger.error('Failed to save:', error);
     } finally {
       setIsSaving(false);
     }

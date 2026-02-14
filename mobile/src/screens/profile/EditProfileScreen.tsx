@@ -16,6 +16,10 @@ import { useImagePicker, ImageAsset } from '../../hooks/useImagePicker';
 import { ImageEditor } from '../../components/ImageEditor';
 import { colors } from '../../constants/theme';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Editprofilescreenx');
 interface EditProfileScreenProps {
   onSave?: () => void;
   onCancel?: () => void;
@@ -105,7 +109,7 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
       clearImages();
       onSave?.();
     } catch (error) {
-      console.error('Error updating profile:', error);
+      logger.error('Error updating profile:', error);
       Alert.alert('Error', 'Failed to update profile. Please try again.');
     }
   };

@@ -6,6 +6,10 @@ import {
 import {followUser} from '../../services/atproto/profiles';
 import {mutationQueue} from '../../services/mutation-queue';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Usestarterpacks');
 /**
  * Hook to fetch a starter pack by URI
  */
@@ -59,7 +63,7 @@ export function useFollowAllFromStarterPack() {
 
       // Queue failed follows for retry
       if (data.failedDids.length > 0) {
-        console.log(`[useFollowAllFromStarterPack] ${data.failedDids.length} follows failed, queueing for retry`);
+        logger.log(`${data.failedDids.length} follows failed, queueing for retry`);
         data.failedDids.forEach(async (did) => {
           await mutationQueue.enqueue({
             type: 'follow',

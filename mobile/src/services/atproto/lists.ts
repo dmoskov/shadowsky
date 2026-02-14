@@ -3,6 +3,10 @@ import {AppBskyGraphDefs} from '@atproto/api';
 import {withRetry} from '../../utils/with-retry';
 import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Lists');
 export interface ListsResponse {
   lists: AppBskyGraphDefs.ListView[];
   cursor?: string;
@@ -68,7 +72,7 @@ export async function getList(listUri: string): Promise<AppBskyGraphDefs.ListVie
       ATProtoEndpointType.FEED
     );
   } catch (error) {
-    console.error(`Failed to fetch list ${listUri}:`, error);
+    logger.error(`Failed to fetch list ${listUri}:`, error);
     return null;
   }
 }

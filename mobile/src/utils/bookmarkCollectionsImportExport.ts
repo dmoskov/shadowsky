@@ -3,6 +3,9 @@ import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { Alert } from 'react-native';
 import { exportCollections, importCollections } from '../services/atproto/bookmarks';
+import { createLogger } from './logger';
+
+const logger = createLogger('BookmarkCollectionsImportExport');
 
 /**
  * Export bookmark collections to a JSON file
@@ -30,7 +33,7 @@ export async function exportBookmarkCollections() {
 
     return true;
   } catch (error) {
-    console.error('Failed to export collections:', error);
+    logger.error('Failed to export collections:', error);
     Alert.alert('Error', 'Failed to export bookmark collections');
     return false;
   }
@@ -81,7 +84,7 @@ export async function importBookmarkCollections() {
               await importCollections(data);
               Alert.alert('Success', 'Collections imported successfully');
             } catch (error) {
-              console.error('Failed to import collections:', error);
+              logger.error('Failed to import collections:', error);
               Alert.alert('Error', 'Failed to import collections');
             }
           },
@@ -91,7 +94,7 @@ export async function importBookmarkCollections() {
 
     return true;
   } catch (error) {
-    console.error('Failed to import collections:', error);
+    logger.error('Failed to import collections:', error);
     Alert.alert('Error', 'Failed to import bookmark collections');
     return false;
   }

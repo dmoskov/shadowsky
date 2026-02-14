@@ -24,6 +24,10 @@ import {
 import * as OAuthService from "../services/auth/oauth";
 import { addBreadcrumb, setUser, clearUser } from "../utils/error-reporting";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Authcontextx');
 const AUTH_STORAGE_KEY = "@shadowsky/auth_session";
 const SESSION_REFRESH_INTERVAL = 50 * 60 * 1000;
 const SESSION_CHECK_INTERVAL = 5 * 60 * 1000;
@@ -151,20 +155,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
         })
         .catch((error) => {
           consecutiveRefreshFailures.current += 1;
-          console.error(
-            `Session refresh failed (${consecutiveRefreshFailures.current}/${MAX_CONSECUTIVE_FAILURES}):`,
+          logger.error(`Session refresh failed (${consecutiveRefreshFailures.current}/${MAX_CONSECUTIVE_FAILURES}):`,
             error,
           );
 
           if (
             consecutiveRefreshFailures.current >= MAX_CONSECUTIVE_FAILURES
           ) {
-            console.error(
-              "Max consecutive session refresh failures reached, forcing sign out",
+            logger.error('Max consecutive session refresh failures reached, forcing sign out',
             );
             clearTimers();
             signOut().catch((signOutError) =>
-              console.error("Error during forced sign out:", signOutError),
+              logger.error('Error during forced sign out:', signOutError),
             );
           }
         });
@@ -179,20 +181,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
         })
         .catch((error) => {
           consecutiveValidityFailures.current += 1;
-          console.error(
-            `Session validity check failed (${consecutiveValidityFailures.current}/${MAX_CONSECUTIVE_FAILURES}):`,
+          logger.error(`Session validity check failed (${consecutiveValidityFailures.current}/${MAX_CONSECUTIVE_FAILURES}):`,
             error,
           );
 
           if (
             consecutiveValidityFailures.current >= MAX_CONSECUTIVE_FAILURES
           ) {
-            console.error(
-              "Max consecutive session validity failures reached, forcing sign out",
+            logger.error('Max consecutive session validity failures reached, forcing sign out',
             );
             clearTimers();
             signOut().catch((signOutError) =>
-              console.error("Error during forced sign out:", signOutError),
+              logger.error('Error during forced sign out:', signOutError),
             );
           }
         });

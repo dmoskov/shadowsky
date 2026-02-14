@@ -1,6 +1,10 @@
 import { BskyAgent } from "@atproto/api";
 import { withRetry } from "../utils/with-retry";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('DmService');
 /**
  * Raw API response types for DM service
  */
@@ -268,7 +272,7 @@ class DmService {
           messages,
         };
       } catch (error: unknown) {
-        console.error("Failed to get conversation:", error);
+        logger.error('Failed to get conversation:', error);
         const apiErr = error as ApiError;
         if (apiErr.status === 401 || apiErr.statusCode === 401) {
           throw new Error("Authentication required. Please sign in again.");
@@ -354,7 +358,7 @@ class DmService {
           throw error;
         }
       } catch (error: unknown) {
-        console.error("Failed to send message:", error);
+        logger.error('Failed to send message:', error);
         const apiErr = error as ApiError;
         if (apiErr.status === 401 || apiErr.statusCode === 401) {
           throw new Error("Authentication required. Please sign in again.");
@@ -400,7 +404,7 @@ class DmService {
         }),
       });
     } catch (error: unknown) {
-      console.error("Failed to update read status:", error);
+      logger.error('Failed to update read status:', error);
       // Don't throw - marking as read is not critical
     }
   }
@@ -465,7 +469,7 @@ class DmService {
             : undefined,
         };
       } catch (error: unknown) {
-        console.error("Failed to get conversation for members:", error);
+        logger.error('Failed to get conversation for members:', error);
         const apiErr = error as ApiError;
         if (apiErr.status === 401 || apiErr.statusCode === 401) {
           throw new Error("Authentication required. Please sign in again.");
@@ -512,7 +516,7 @@ class DmService {
           throw error;
         }
       } catch (error: unknown) {
-        console.error("Failed to mute conversation:", error);
+        logger.error('Failed to mute conversation:', error);
         const apiErr = error as ApiError;
         if (apiErr.status === 401 || apiErr.statusCode === 401) {
           throw new Error("Authentication required. Please sign in again.");
@@ -554,7 +558,7 @@ class DmService {
           throw error;
         }
       } catch (error: unknown) {
-        console.error("Failed to unmute conversation:", error);
+        logger.error('Failed to unmute conversation:', error);
         const apiErr = error as ApiError;
         if (apiErr.status === 401 || apiErr.statusCode === 401) {
           throw new Error("Authentication required. Please sign in again.");
@@ -596,7 +600,7 @@ class DmService {
           throw error;
         }
       } catch (error: unknown) {
-        console.error("Failed to leave conversation:", error);
+        logger.error('Failed to leave conversation:', error);
         const apiErr = error as ApiError;
         if (apiErr.status === 401 || apiErr.statusCode === 401) {
           throw new Error("Authentication required. Please sign in again.");

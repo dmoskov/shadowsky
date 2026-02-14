@@ -23,6 +23,10 @@ import OfflineBanner from "../components/OfflineBanner";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
 import type { NetworkStatus } from "../hooks/useNetworkStatus";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Networkcontextx');
 interface NetworkContextType extends NetworkStatus {
   isOnline: boolean;
   waitForConnection: () => Promise<void>;
@@ -51,7 +55,7 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
         try {
           callback();
         } catch (error) {
-          console.error("[NetworkContext] Error in reconnect callback:", error);
+          logger.error('Error in reconnect callback:', error);
         }
       });
 
@@ -92,7 +96,7 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
    * @example
    * ```tsx
    * const unsubscribe = onReconnect(() => {
-   *   console.log('Back online!');
+   *   logger.log('Back online!');
    *   refetch();
    * });
    *

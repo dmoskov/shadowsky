@@ -1,6 +1,10 @@
 import * as LocalAuthentication from "expo-local-authentication";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('AppLock');
 const APP_LOCK_ENABLED_KEY = "@shadowsky_app_lock_enabled";
 const LAST_BACKGROUND_TIME_KEY = "@shadowsky_last_background_time";
 
@@ -57,7 +61,7 @@ class AppLockService {
         biometricType,
       };
     } catch (error) {
-      console.error("Error checking biometric support:", error);
+      logger.error('Error checking biometric support:', error);
       return {
         isSupported: false,
         hasHardware: false,
@@ -117,7 +121,7 @@ class AppLockService {
         };
       }
     } catch (error) {
-      console.error("Biometric authentication error:", error);
+      logger.error('Biometric authentication error:', error);
       return {
         success: false,
         error: "An error occurred during authentication",
@@ -133,7 +137,7 @@ class AppLockService {
       const enabled = await AsyncStorage.getItem(APP_LOCK_ENABLED_KEY);
       return enabled === "true";
     } catch (error) {
-      console.error("Error checking app lock status:", error);
+      logger.error('Error checking app lock status:', error);
       return false;
     }
   }
@@ -155,7 +159,7 @@ class AppLockService {
 
       await AsyncStorage.setItem(APP_LOCK_ENABLED_KEY, enabled ? "true" : "false");
     } catch (error) {
-      console.error("Error setting app lock status:", error);
+      logger.error('Error setting app lock status:', error);
       throw error;
     }
   }
@@ -168,7 +172,7 @@ class AppLockService {
       const now = Date.now().toString();
       await AsyncStorage.setItem(LAST_BACKGROUND_TIME_KEY, now);
     } catch (error) {
-      console.error("Error recording background time:", error);
+      logger.error('Error recording background time:', error);
     }
   }
 
@@ -190,7 +194,7 @@ class AppLockService {
       const elapsed = Date.now() - parseInt(lastBackgroundTime, 10);
       return elapsed > GRACE_PERIOD;
     } catch (error) {
-      console.error("Error checking authentication requirement:", error);
+      logger.error('Error checking authentication requirement:', error);
       // Err on the side of security
       return true;
     }
@@ -203,7 +207,7 @@ class AppLockService {
     try {
       await AsyncStorage.removeItem(LAST_BACKGROUND_TIME_KEY);
     } catch (error) {
-      console.error("Error clearing background time:", error);
+      logger.error('Error clearing background time:', error);
     }
   }
 }

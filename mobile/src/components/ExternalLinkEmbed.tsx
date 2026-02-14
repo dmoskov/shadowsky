@@ -4,6 +4,10 @@ import {Image} from 'expo-image';
 import {AppBskyEmbedExternal} from '@atproto/api';
 import {openLink} from '../utils/browser';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Externallinkembedx');
 interface ExternalLinkEmbedProps {
   external: AppBskyEmbedExternal.ViewExternal;
   onPress?: (url: string) => void;
@@ -17,7 +21,7 @@ export function ExternalLinkEmbed({external, onPress}: ExternalLinkEmbedProps) {
       try {
         await openLink(external.uri);
       } catch (error) {
-        console.error('Failed to open URL:', error);
+        logger.error('Failed to open URL:', error);
       }
     }
   };

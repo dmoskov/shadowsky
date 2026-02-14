@@ -28,6 +28,10 @@ import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { ImageEditor } from "../../components/ImageEditor";
 import { useTranslation } from "../../hooks/useTranslation";
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Composescreenx');
 const MAX_POST_LENGTH = 300;
 
 export interface ReplyToPost {
@@ -222,7 +226,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
           setLoadedDraftId(draftId);
           setIsDirty(false);
         }).catch((error) => {
-          console.error('Failed to load draft:', error);
+          logger.error('Failed to load draft:', error);
           Alert.alert('Error', 'Failed to load draft');
         });
       }
@@ -413,7 +417,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
     try {
       await preferencesService.set('postLanguages', langs);
     } catch (error) {
-      console.error('Failed to save language preference:', error);
+      logger.error('Failed to save language preference:', error);
     }
   };
 
@@ -627,7 +631,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
         try {
           await deleteDraft.mutateAsync(loadedDraftId);
         } catch (error) {
-          console.error('Failed to delete draft after posting:', error);
+          logger.error('Failed to delete draft after posting:', error);
         }
       }
 

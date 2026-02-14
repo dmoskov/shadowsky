@@ -6,6 +6,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { TenorGif } from "../services/tenor";
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Usegifpicker');
 import {
   getBestGifUrl,
   getGifDimensions,
@@ -45,7 +49,7 @@ export function useGifPicker() {
       const results = await getTrending(20);
       setTrending(results);
     } catch (err) {
-      console.error("Error loading trending GIFs:", err);
+      logger.error('Error loading trending GIFs:', err);
       setError(
         err instanceof Error ? err.message : "Failed to load trending GIFs",
       );
@@ -66,7 +70,7 @@ export function useGifPicker() {
       const results = await searchGifs(query, 20);
       setGifs(results);
     } catch (err) {
-      console.error("Error searching GIFs:", err);
+      logger.error('Error searching GIFs:', err);
       setError(err instanceof Error ? err.message : "Failed to search GIFs");
     } finally {
       setLoading(false);

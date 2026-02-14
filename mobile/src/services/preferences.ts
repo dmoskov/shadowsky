@@ -1,5 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Preferences');
 export interface MutedWord {
   id: string;
   value: string;
@@ -105,7 +109,7 @@ class PreferencesService {
         return this.cache;
       }
     } catch (error) {
-      console.error("Failed to load preferences:", error);
+      logger.error('Failed to load preferences:', error);
     }
 
     // Return default preferences
@@ -123,7 +127,7 @@ class PreferencesService {
       await AsyncStorage.setItem(PREFERENCES_KEY, JSON.stringify(updated));
       this.cache = updated;
     } catch (error) {
-      console.error("Failed to save preference:", error);
+      logger.error('Failed to save preference:', error);
       throw error;
     }
   }
@@ -138,7 +142,7 @@ class PreferencesService {
       await AsyncStorage.setItem(PREFERENCES_KEY, JSON.stringify(updated));
       this.cache = updated;
     } catch (error) {
-      console.error("Failed to save preferences:", error);
+      logger.error('Failed to save preferences:', error);
       throw error;
     }
   }
@@ -151,7 +155,7 @@ class PreferencesService {
       await AsyncStorage.removeItem(PREFERENCES_KEY);
       this.cache = DEFAULT_PREFERENCES;
     } catch (error) {
-      console.error("Failed to reset preferences:", error);
+      logger.error('Failed to reset preferences:', error);
       throw error;
     }
   }

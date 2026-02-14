@@ -27,6 +27,10 @@ import { colors } from "../../constants/theme";
 import { AuthorFeedFilter } from "../../services/atproto/feeds";
 import { dmService } from "../../services/dm-service";
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Profilescreenx');
 interface ProfileScreenProps {
   handle: string;
   onNavigateToPost?: (uri: string) => void;
@@ -250,7 +254,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
         router.push('/(app)/(tabs)/(profile)/messages');
       }
     } catch (error) {
-      console.error("Failed to start conversation:", error);
+      logger.error('Failed to start conversation:', error);
       const errorMessage =
         error instanceof Error ? error.message : "Failed to start conversation";
       Alert.alert("Error", errorMessage);

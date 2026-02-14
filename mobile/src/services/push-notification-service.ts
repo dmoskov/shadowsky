@@ -5,6 +5,10 @@ import {Platform} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {BskyAgent} from '@atproto/api';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('PushNotificationService');
 const PUSH_TOKEN_STORAGE_KEY = '@shadowsky/push_token';
 const PUSH_TOKEN_RECORD_KEY = 'self'; // Singleton record
 const PUSH_TOKEN_COLLECTION = 'com.shadowsky.pushToken';
@@ -23,7 +27,7 @@ async function getStoredPushToken(): Promise<string | null> {
   try {
     return await AsyncStorage.getItem(PUSH_TOKEN_STORAGE_KEY);
   } catch (error) {
-    console.error('Error getting stored push token:', error);
+    logger.error('Error getting stored push token:', error);
     return null;
   }
 }
@@ -35,7 +39,7 @@ async function savePushToken(token: string): Promise<void> {
   try {
     await AsyncStorage.setItem(PUSH_TOKEN_STORAGE_KEY, token);
   } catch (error) {
-    console.error('Error saving push token:', error);
+    logger.error('Error saving push token:', error);
   }
 }
 
@@ -46,7 +50,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
   try {
     // Only register on physical devices
     if (!Device.isDevice) {
-      console.log('Push notifications only work on physical devices');
+      logger.log('Push notifications only work on physical devices');
       return null;
     }
 
@@ -66,14 +70,14 @@ export async function registerForPushNotifications(): Promise<string | null> {
     }
 
     if (finalStatus !== 'granted') {
-      console.log('Push notification permission not granted');
+      logger.log('Push notification permission not granted');
       return null;
     }
 
     // Get Expo Push Token
     const projectId = Constants.expoConfig?.extra?.eas?.projectId;
     if (!projectId) {
-      console.error('Expo project ID not configured');
+      logger.error('Expo project ID not configured');
       return null;
     }
 
@@ -82,14 +86,14 @@ export async function registerForPushNotifications(): Promise<string | null> {
     });
 
     const token = tokenData.data;
-    console.log('Got Expo Push Token:', token);
+    logger.log('Got Expo Push Token:', token);
 
     // Save token locally
     await savePushToken(token);
 
     return token;
   } catch (error) {
-    console.error('Error registering for push notifications:', error);
+    logger.error('Error registering for push notifications:', error);
     return null;
   }
 }
@@ -120,10 +124,10 @@ export async function savePushTokenToATProto(
       record,
     });
 
-    console.log('Push token saved to AT Protocol');
+    logger.log('Push token saved to AT Protocol');
     return true;
   } catch (error) {
-    console.error('Error saving push token to AT Protocol:', error);
+    logger.error('Error saving push token to AT Protocol:', error);
     return false;
   }
 }
@@ -147,7 +151,7 @@ export async function getPushTokenFromATProto(
     if ((error as any)?.status === 400) {
       return null;
     }
-    console.error('Error getting push token from AT Protocol:', error);
+    logger.error('Error getting push token from AT Protocol:', error);
     return null;
   }
 }
@@ -191,7 +195,7 @@ export async function initializePushNotifications(
     const token = await registerForPushNotifications();
 
     if (!token) {
-      console.log('Could not get push token');
+      logger.log('Could not get push token');
       return false;
     }
 
@@ -201,15 +205,15 @@ export async function initializePushNotifications(
     if (needsUpdate) {
       const saved = await savePushTokenToATProto(agent, token);
       if (!saved) {
-        console.error('Failed to save push token to AT Protocol');
+        logger.error('Failed to save push token to AT Protocol');
         return false;
       }
     }
 
-    console.log('Push notifications initialized successfully');
+    logger.log('Push notifications initialized successfully');
     return true;
   } catch (error) {
-    console.error('Error initializing push notifications:', error);
+    logger.error('Error initializing push notifications:', error);
     return false;
   }
 }
@@ -232,8 +236,8 @@ export async function unregisterPushNotifications(
     // Clear local storage
     await AsyncStorage.removeItem(PUSH_TOKEN_STORAGE_KEY);
 
-    console.log('Push notifications unregistered');
+    logger.log('Push notifications unregistered');
   } catch (error) {
-    console.error('Error unregistering push notifications:', error);
+    logger.error('Error unregistering push notifications:', error);
   }
 }

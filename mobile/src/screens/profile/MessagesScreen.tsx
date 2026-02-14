@@ -33,6 +33,10 @@ import { colors } from "../../constants/theme";
 import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
 import { ImageIcon } from "../../components/icons/ImageIcon";
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Messagesscreenx');
 export function MessagesScreen() {
   const { session } = useAuth();
   const queryClient = useQueryClient();
@@ -65,7 +69,7 @@ export function MessagesScreen() {
         const agent = client.getAgent();
         dmService.setAgent(agent);
       } catch (error) {
-        console.error("Failed to get agent:", error);
+        logger.error('Failed to get agent:', error);
       }
     }
   }, [session]);
@@ -140,7 +144,7 @@ export function MessagesScreen() {
         refetchMessages();
       }, 500);
     } catch (error) {
-      console.error("Failed to send message:", error);
+      logger.error('Failed to send message:', error);
       Alert.alert("Error", "Failed to send message. Please try again.");
       setMessageText(text); // Restore message on error
     } finally {
@@ -162,7 +166,7 @@ export function MessagesScreen() {
       // Select the conversation
       setSelectedConversation(conversation.id);
     } catch (error) {
-      console.error("Failed to create conversation:", error);
+      logger.error('Failed to create conversation:', error);
       const errorMessage =
         error instanceof Error ? error.message : "Failed to start conversation";
       Alert.alert("Error", errorMessage);
@@ -194,7 +198,7 @@ export function MessagesScreen() {
                 setSelectedConversation(null);
               }
             } catch (error) {
-              console.error("Failed to delete conversation:", error);
+              logger.error('Failed to delete conversation:', error);
               Alert.alert("Error", "Failed to delete conversation. Please try again.");
             }
           },
@@ -211,7 +215,7 @@ export function MessagesScreen() {
         await muteConversationMutation.mutateAsync(conversationId);
       }
     } catch (error) {
-      console.error("Failed to toggle mute:", error);
+      logger.error('Failed to toggle mute:', error);
       Alert.alert("Error", "Failed to update conversation. Please try again.");
     }
   };

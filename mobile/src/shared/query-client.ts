@@ -12,6 +12,10 @@ import { AppState, AppStateStatus } from 'react-native';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { loadPrefetchData, isPrefetchDataStale } from '../services/background-fetch';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('QueryClient');
 // Type for error responses from AT Protocol
 interface AtProtoError {
   status?: number;
@@ -88,7 +92,7 @@ function extractRetryAfter(headers?: Record<string, string> | Headers): number {
       }
     }
   } catch (error) {
-    console.warn('Failed to parse Retry-After header:', error);
+    logger.warn('Failed to parse Retry-After header:', error);
   }
 
   return defaultRetryAfter;
@@ -107,7 +111,7 @@ const queryCache = new QueryCache({
       const retryAfter = extractRetryAfter(atProtoError.headers);
       setRateLimited(retryAfter);
 
-      console.warn(`Rate limited, pausing queries for ${retryAfter} seconds`);
+      logger.warn(`Rate limited, pausing queries for ${retryAfter} seconds`);
 
       // Pause all queries
       queryClient.getQueryCache().getAll().forEach(query => {
@@ -129,7 +133,7 @@ const mutationCache = new MutationCache({
       // Extract Retry-After header value from response headers
       const retryAfter = extractRetryAfter(atProtoError.headers);
       setRateLimited(retryAfter);
-      console.warn(`Rate limited on mutation, pausing for ${retryAfter} seconds`);
+      logger.warn(`Rate limited on mutation, pausing for ${retryAfter} seconds`);
     }
   },
 });
@@ -229,7 +233,7 @@ export function setupAppStateListener() {
         const isStale = await isPrefetchDataStale();
 
         if (prefetchData && !isStale) {
-          console.log('[QueryClient] Hydrating timeline from prefetched data');
+          logger.log('Hydrating timeline from prefetched data');
 
           // Hydrate timeline query cache
           if (prefetchData.timeline) {
@@ -247,15 +251,15 @@ export function setupAppStateListener() {
             queryClient.setQueryData(['unreadCount'], prefetchData.unreadCount);
           }
 
-          console.log('[QueryClient] Prefetched data hydrated successfully');
+          logger.log('Prefetched data hydrated successfully');
         }
       } catch (error) {
-        console.error('[QueryClient] Error hydrating prefetched data:', error);
+        logger.error('Error hydrating prefetched data:', error);
       }
 
       // If app was in background for more than 5 minutes, invalidate stale queries
       if (backgroundDuration > fiveMinutes) {
-        console.log(`App foregrounded after ${Math.round(backgroundDuration / 1000)}s, invalidating stale queries`);
+        logger.log(`App foregrounded after ${Math.round(backgroundDuration / 1000)}s, invalidating stale queries`);
         queryClient.invalidateQueries({ stale: true });
       }
 
@@ -316,13 +320,13 @@ export function setupNetworkListener() {
           clearTimeout(networkInvalidationTimer);
         }
         networkInvalidationTimer = setTimeout(() => {
-          console.log('[NetworkListener] Back online, invalidating stale queries');
+          logger.log('Back online, invalidating stale queries');
           queryClient.invalidateQueries({ stale: true });
           networkInvalidationTimer = null;
         }, 2000);
       } else if (!isOnline) {
         wasOnline = false;
-        console.log('[NetworkListener] Offline detected, pausing queries');
+        logger.log('Offline detected, pausing queries');
       }
 
       if (isOnline) {

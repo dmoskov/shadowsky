@@ -25,6 +25,10 @@ import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useTrendingData } from "../../hooks/useTrending";
 import { colors } from "../../constants/theme";
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Searchscreenx');
 const SEARCH_HISTORY_KEY = "@search_history";
 const MAX_HISTORY_ITEMS = 20;
 
@@ -91,7 +95,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
         setSearchHistory(JSON.parse(history));
       }
     } catch (error) {
-      console.error("Failed to load search history:", error);
+      logger.error('Failed to load search history:', error);
     }
   };
 
@@ -118,7 +122,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
       );
       setSearchHistory(historyArray);
     } catch (error) {
-      console.error("Failed to save search history:", error);
+      logger.error('Failed to save search history:', error);
     }
   };
 
@@ -127,7 +131,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
       await AsyncStorage.removeItem(SEARCH_HISTORY_KEY);
       setSearchHistory([]);
     } catch (error) {
-      console.error("Failed to clear search history:", error);
+      logger.error('Failed to clear search history:', error);
     }
   };
 

@@ -9,6 +9,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BookmarkCollection, BookmarkCollectionMapping } from './types';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('CollectionStorage');
 const COLLECTIONS_KEY = '@shadowsky/bookmark_collections';
 const MAPPINGS_KEY = '@shadowsky/bookmark_collection_mappings';
 
@@ -45,7 +49,7 @@ export class BookmarkCollectionStorage {
     collections.push(newCollection);
     await AsyncStorage.setItem(COLLECTIONS_KEY, JSON.stringify(collections));
 
-    console.log(`Created collection: ${newCollection.name}`);
+    logger.log(`Created collection: ${newCollection.name}`);
     return newCollection;
   }
 
@@ -62,7 +66,7 @@ export class BookmarkCollectionStorage {
       }
       return JSON.parse(stored);
     } catch (error) {
-      console.error('Failed to get collections:', error);
+      logger.error('Failed to get collections:', error);
       return [];
     }
   }
@@ -87,7 +91,7 @@ export class BookmarkCollectionStorage {
     collections[index] = updated;
     await AsyncStorage.setItem(COLLECTIONS_KEY, JSON.stringify(collections));
 
-    console.log(`Updated collection: ${updated.name}`);
+    logger.log(`Updated collection: ${updated.name}`);
     return updated;
   }
 
@@ -101,7 +105,7 @@ export class BookmarkCollectionStorage {
     const filteredMappings = mappings.filter((m) => m.collectionId !== id);
     await AsyncStorage.setItem(MAPPINGS_KEY, JSON.stringify(filteredMappings));
 
-    console.log(`Deleted collection: ${id}`);
+    logger.log(`Deleted collection: ${id}`);
   }
 
   // ==================== Bookmark-Collection Mappings ====================
@@ -114,7 +118,7 @@ export class BookmarkCollectionStorage {
       }
       return JSON.parse(stored);
     } catch (error) {
-      console.error('Failed to get mappings:', error);
+      logger.error('Failed to get mappings:', error);
       return [];
     }
   }
@@ -143,7 +147,7 @@ export class BookmarkCollectionStorage {
     // Update collection bookmark count
     await this.updateCollectionCounts();
 
-    console.log(`Added bookmark to collection: ${collectionId}`);
+    logger.log(`Added bookmark to collection: ${collectionId}`);
   }
 
   async removeBookmarkFromCollection(
@@ -159,7 +163,7 @@ export class BookmarkCollectionStorage {
     // Update collection bookmark count
     await this.updateCollectionCounts();
 
-    console.log(`Removed bookmark from collection: ${collectionId}`);
+    logger.log(`Removed bookmark from collection: ${collectionId}`);
   }
 
   async removeBookmarkFromAllCollections(bookmarkUri: string): Promise<void> {
@@ -170,7 +174,7 @@ export class BookmarkCollectionStorage {
     // Update collection bookmark counts
     await this.updateCollectionCounts();
 
-    console.log(`Removed bookmark from all collections: ${bookmarkUri}`);
+    logger.log(`Removed bookmark from all collections: ${bookmarkUri}`);
   }
 
   async getBookmarkCollections(bookmarkUri: string): Promise<string[]> {
@@ -223,7 +227,7 @@ export class BookmarkCollectionStorage {
   async clearAll(): Promise<void> {
     await AsyncStorage.removeItem(COLLECTIONS_KEY);
     await AsyncStorage.removeItem(MAPPINGS_KEY);
-    console.log('Cleared all collection storage');
+    logger.log('Cleared all collection storage');
   }
 
   async exportData(): Promise<{
@@ -244,7 +248,7 @@ export class BookmarkCollectionStorage {
       JSON.stringify(data.collections)
     );
     await AsyncStorage.setItem(MAPPINGS_KEY, JSON.stringify(data.mappings));
-    console.log('Imported collection data');
+    logger.log('Imported collection data');
   }
 }
 

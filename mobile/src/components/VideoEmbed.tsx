@@ -4,6 +4,10 @@ import {Video, ResizeMode, AVPlaybackStatus} from 'expo-av';
 import {Image} from 'react-native';
 import {AppBskyEmbedVideo} from '@atproto/api';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Videoembedx');
 interface VideoEmbedProps {
   video: AppBskyEmbedVideo.View;
   onPress?: (url: string) => void;
@@ -25,7 +29,7 @@ export function VideoEmbed({video}: VideoEmbedProps) {
           setIsPlaying(true);
         }
       } catch (error) {
-        console.error('Failed to play video:', error);
+        logger.error('Failed to play video:', error);
         setShowThumbnail(true);
       } finally {
         setIsLoading(false);
@@ -37,7 +41,7 @@ export function VideoEmbed({video}: VideoEmbedProps) {
           setIsPlaying(false);
         }
       } catch (error) {
-        console.error('Failed to pause video:', error);
+        logger.error('Failed to pause video:', error);
       }
     }
   };

@@ -16,6 +16,10 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import { colors } from '../constants/theme';
 import { ImageAsset } from '../hooks/useImagePicker';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Imageeditorx');
 // Aspect ratio presets
 const ASPECT_RATIOS = {
   free: { name: 'Free', ratio: null },
@@ -226,7 +230,7 @@ export function ImageEditor({ images, onSave, onCancel, visible }: ImageEditorPr
         altText: asset.altText,
       };
     } catch (error) {
-      console.error('Error applying edits:', error);
+      logger.error('Error applying edits:', error);
       throw error;
     }
   };
@@ -257,7 +261,7 @@ export function ImageEditor({ images, onSave, onCancel, visible }: ImageEditorPr
 
       return edited;
     } catch (error) {
-      console.error('Error saving image edits:', error);
+      logger.error('Error saving image edits:', error);
       Alert.alert('Error', 'Failed to apply image edits. Please try again.');
       throw error;
     }
@@ -274,7 +278,7 @@ export function ImageEditor({ images, onSave, onCancel, visible }: ImageEditorPr
       const editedAsset = await applyEdits(currentImage, edits);
       setPreviewUri(editedAsset.uri);
     } catch (error) {
-      console.error('Error applying crop:', error);
+      logger.error('Error applying crop:', error);
       Alert.alert('Error', 'Failed to apply crop. Please try again.');
     }
   };
@@ -317,7 +321,7 @@ export function ImageEditor({ images, onSave, onCancel, visible }: ImageEditorPr
 
       onSave(result);
     } catch (error) {
-      console.error('Error saving edits:', error);
+      logger.error('Error saving edits:', error);
     } finally {
       setIsSaving(false);
     }

@@ -4,6 +4,10 @@ import * as VideoThumbnails from 'expo-video-thumbnails';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Alert } from 'react-native';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Usevideopicker');
 export interface VideoAsset {
   uri: string;
   duration: number;
@@ -31,7 +35,7 @@ export function useVideoPicker() {
       });
       return uri;
     } catch (error) {
-      console.error('Error generating video thumbnail:', error);
+      logger.error('Error generating video thumbnail:', error);
       return undefined;
     }
   };
@@ -114,7 +118,7 @@ export function useVideoPicker() {
       setSelectedVideo(newVideo);
       return newVideo;
     } catch (error) {
-      console.error('Error picking video from library:', error);
+      logger.error('Error picking video from library:', error);
       Alert.alert('Error', 'Failed to select video. Please try again.');
       return null;
     }
@@ -175,7 +179,7 @@ export function useVideoPicker() {
       setSelectedVideo(newVideo);
       return newVideo;
     } catch (error) {
-      console.error('Error recording video:', error);
+      logger.error('Error recording video:', error);
       Alert.alert('Error', 'Failed to record video. Please try again.');
       return null;
     }

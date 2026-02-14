@@ -10,6 +10,9 @@ import {
   AppPreferences,
   preferencesService,
 } from "../services/preferences";
+import { createLogger } from "../utils/logger";
+
+const logger = createLogger('PreferencesContext');
 
 interface PreferencesContextType {
   preferences: AppPreferences | null;
@@ -46,7 +49,7 @@ export function PreferencesProvider({
       const prefs = await preferencesService.get();
       setPreferences(prefs);
     } catch (error) {
-      console.error("Failed to load preferences:", error);
+      logger.error('Failed to load preferences:', error);
     } finally {
       setLoading(false);
     }
@@ -60,7 +63,7 @@ export function PreferencesProvider({
         const updated = await preferencesService.get();
         setPreferences(updated);
       } catch (error) {
-        console.error("Failed to update preference:", error);
+        logger.error('Failed to update preference:', error);
         throw error;
       }
     },
@@ -75,7 +78,7 @@ export function PreferencesProvider({
         const updated = await preferencesService.get();
         setPreferences(updated);
       } catch (error) {
-        console.error("Failed to update preferences:", error);
+        logger.error('Failed to update preferences:', error);
         throw error;
       }
     },
@@ -88,7 +91,7 @@ export function PreferencesProvider({
       const prefs = await preferencesService.get();
       setPreferences(prefs);
     } catch (error) {
-      console.error("Failed to reset preferences:", error);
+      logger.error('Failed to reset preferences:', error);
       throw error;
     }
   }, []);

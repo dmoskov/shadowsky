@@ -12,6 +12,10 @@
  * - Comprehensive metrics tracking
  */
 
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('RateLimiter');
+
 /**
  * Rate limiter configuration for a specific endpoint type
  */
@@ -304,8 +308,7 @@ export class ATProtoRateLimiter {
       return;
     }
 
-    console.log(
-      '[RateLimiter] Enabling adaptive mode: reducing all limits by 50% for 5 minutes'
+    logger.log('Enabling adaptive mode: reducing all limits by 50% for 5 minutes'
     );
 
     // Save original configs
@@ -332,7 +335,7 @@ export class ATProtoRateLimiter {
   private disableAdaptiveMode(): void {
     if (!this.isInAdaptiveMode()) return;
 
-    console.log('[RateLimiter] Disabling adaptive mode: restoring original limits');
+    logger.log('Disabling adaptive mode: restoring original limits');
 
     // Restore original capacities
     Array.from(this.adaptiveState.originalConfigs.entries()).forEach(([type, originalConfig]) => {
@@ -360,8 +363,7 @@ export class ATProtoRateLimiter {
     this.adaptiveState.recent429Count++;
     this.adaptiveState.last429Timestamp = now;
 
-    console.log(
-      `[RateLimiter] 429 error for ${endpointType}. Recent count: ${this.adaptiveState.recent429Count}`
+    logger.log(`429 error for ${endpointType}. Recent count: ${this.adaptiveState.recent429Count}`
     );
 
     // Enable adaptive mode if 3+ 429s in 60 seconds
@@ -387,7 +389,7 @@ export class ATProtoRateLimiter {
 
     const bucket = this.buckets.get(endpointType);
     if (!bucket) {
-      console.warn(`[RateLimiter] Unknown endpoint type: ${endpointType}`);
+      logger.warn(`Unknown endpoint type: ${endpointType}`);
       return;
     }
 
@@ -407,8 +409,7 @@ export class ATProtoRateLimiter {
 
     // If remaining is very low, log a warning
     if (headers.remaining !== undefined && headers.remaining < 5) {
-      console.warn(
-        `[RateLimiter] Low rate limit remaining for ${endpointType}: ${headers.remaining}`
+      logger.warn(`Low rate limit remaining for ${endpointType}: ${headers.remaining}`
       );
     }
   }
@@ -513,7 +514,7 @@ export class ATProtoRateLimiter {
     if (bucket) {
       bucket.reset();
       this.headerMetrics.delete(endpointType);
-      console.log(`[RateLimiter] Reset rate limiter for ${endpointType}`);
+      logger.log(`Reset rate limiter for ${endpointType}`);
     }
   }
 
@@ -534,7 +535,7 @@ export class ATProtoRateLimiter {
       originalConfigs: new Map(),
     };
 
-    console.log('[RateLimiter] Reset all rate limiters');
+    logger.log('Reset all rate limiters');
   }
 }
 

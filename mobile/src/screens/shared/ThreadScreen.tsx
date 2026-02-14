@@ -29,6 +29,10 @@ import { colors } from "../../constants/theme";
 import { sharePost } from "../../utils/share";
 import { triggerHaptic } from "../../utils/haptics";
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Threadscreenx');
 interface ThreadScreenProps {
   handle: string;
   postId: string;
@@ -115,7 +119,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
         const uri = await buildPostUri(handle, postId);
         setPostUri(uri);
       } catch (error) {
-        console.error("Failed to resolve post URI:", error);
+        logger.error('Failed to resolve post URI:', error);
         setResolveError(error instanceof Error ? error.message : "Failed to load post");
       } finally {
         setIsResolvingUri(false);

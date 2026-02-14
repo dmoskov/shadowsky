@@ -18,6 +18,10 @@ import {
 } from '../../services/atproto/profiles';
 import {mutationQueue} from '../../services/mutation-queue';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Useprofile');
 /**
  * Hook to fetch a user profile
  */
@@ -65,7 +69,7 @@ export function useFollowUser() {
     },
     onError: async (error, did: string) => {
       // Queue the mutation for retry
-      console.log('[useFollowUser] Failed to follow user, queueing for retry');
+      logger.log('Failed to follow user, queueing for retry');
       await mutationQueue.enqueue({
         type: 'follow',
         targetUri: did,
@@ -88,7 +92,7 @@ export function useUnfollowUser() {
     },
     onError: async (error, followUri: string) => {
       // Queue the mutation for retry
-      console.log('[useUnfollowUser] Failed to unfollow user, queueing for retry');
+      logger.log('Failed to unfollow user, queueing for retry');
       await mutationQueue.enqueue({
         type: 'unfollow',
         targetUri: followUri,

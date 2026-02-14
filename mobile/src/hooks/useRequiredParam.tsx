@@ -1,6 +1,10 @@
 import { useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Userequiredparamx');
 /**
  * Hook to safely extract and validate a required route parameter.
  * If the parameter is missing, it shows an error state instead of crashing.
@@ -28,8 +32,7 @@ export function useRequiredParam(paramName: string): {
   // Log error for debugging when param is missing
   useEffect(() => {
     if (!isValid) {
-      console.error(
-        `[useRequiredParam] Missing required route parameter: ${paramName}`,
+      logger.error(`Missing required route parameter: ${paramName}`,
       );
     }
   }, [isValid, paramName]);
@@ -64,8 +67,7 @@ export function useRequiredParams(paramNames: string[]): {
     values[paramName] = value;
     if (!value) {
       allValid = false;
-      console.error(
-        `[useRequiredParams] Missing required route parameter: ${paramName}`,
+      logger.error(`Missing required route parameter: ${paramName}`,
       );
     }
   }

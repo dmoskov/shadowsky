@@ -3,6 +3,10 @@ import React, { Component, ReactNode } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { captureException } from "../utils/error-reporting";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Errorboundaryx');
 interface Props {
   children: ReactNode;
 }
@@ -34,8 +38,7 @@ class ErrorBoundaryClass extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     // Log the error for debugging with error ID
-    console.error(
-      `[ErrorBoundary] Error ID: ${this.state.errorId}`,
+    logger.error(`Error ID: ${this.state.errorId}`,
       error,
       errorInfo.componentStack,
     );

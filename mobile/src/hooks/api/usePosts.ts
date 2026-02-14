@@ -15,6 +15,10 @@ import {
 import {mutationQueue} from '../../services/mutation-queue';
 import {useToast} from '../../contexts/ToastContext';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Useposts');
 /**
  * Type definitions for infinite query data structures
  */
@@ -198,7 +202,7 @@ export function useLikePost() {
       showToast('Failed to like post', {type: 'error'});
 
       // Queue the mutation for retry
-      console.log('[useLikePost] Failed to like post, queueing for retry');
+      logger.log('Failed to like post, queueing for retry');
       await mutationQueue.enqueue({
         type: 'like',
         targetUri: uri,
@@ -278,7 +282,7 @@ export function useUnlikePost() {
       showToast('Failed to unlike post', {type: 'error'});
 
       // Queue the mutation for retry
-      console.log('[useUnlikePost] Failed to unlike post, queueing for retry');
+      logger.log('Failed to unlike post, queueing for retry');
       await mutationQueue.enqueue({
         type: 'unlike',
         targetUri: likeUri,
@@ -343,7 +347,7 @@ export function useRepost() {
       showToast('Failed to repost', {type: 'error'});
 
       // Queue the mutation for retry
-      console.log('[useRepost] Failed to repost, queueing for retry');
+      logger.log('Failed to repost, queueing for retry');
       await mutationQueue.enqueue({
         type: 'repost',
         targetUri: uri,
@@ -410,7 +414,7 @@ export function useDeleteRepost() {
       showToast('Failed to delete repost', {type: 'error'});
 
       // Queue the mutation for retry
-      console.log('[useDeleteRepost] Failed to delete repost, queueing for retry');
+      logger.log('Failed to delete repost, queueing for retry');
       await mutationQueue.enqueue({
         type: 'deleteRepost',
         targetUri: repostUri,

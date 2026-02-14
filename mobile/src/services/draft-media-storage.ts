@@ -1,6 +1,10 @@
 import { File, Directory, Paths } from 'expo-file-system';
 import { nanoid } from 'nanoid';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('DraftMediaStorage');
 /**
  * Media storage for drafts using expo-file-system
  * Media is stored locally on-device and referenced by abstract localRefPath identifiers
@@ -140,7 +144,7 @@ export async function ensureMediaCachePopulated(): Promise<void> {
       mediaExistenceCache.set(localRefPath, true);
     }
   } catch (error) {
-    console.error('Failed to populate media cache:', error);
+    logger.error('Failed to populate media cache:', error);
   }
 }
 
@@ -163,7 +167,7 @@ export async function getAllStoredMedia(): Promise<string[]> {
     const files = await DRAFT_MEDIA_DIR.list();
     return files.map((file) => file.name.replace(/_/g, ':'));
   } catch (error) {
-    console.error('Failed to get stored media:', error);
+    logger.error('Failed to get stored media:', error);
     return [];
   }
 }
@@ -178,6 +182,6 @@ export async function clearAllDraftMedia(): Promise<void> {
       mediaExistenceCache.clear();
     }
   } catch (error) {
-    console.error('Failed to clear draft media:', error);
+    logger.error('Failed to clear draft media:', error);
   }
 }

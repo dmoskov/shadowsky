@@ -1,6 +1,10 @@
 import { Share, Alert } from 'react-native';
 import { AppBskyFeedDefs, AppBskyFeedPost } from '@atproto/api';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Share');
 /**
  * Extract rkey from AT Protocol post URI
  * Post URI format: at://did:plc:xxx/app.bsky.feed.post/rkey123
@@ -60,7 +64,7 @@ export async function sharePost(post: AppBskyFeedDefs.FeedViewPost): Promise<voi
   } catch (error) {
     // User cancelled share or an error occurred
     if (error instanceof Error && error.message !== 'User did not share') {
-      console.error('Error sharing post:', error);
+      logger.error('Error sharing post:', error);
       Alert.alert('Error', 'Failed to share post');
     }
   }

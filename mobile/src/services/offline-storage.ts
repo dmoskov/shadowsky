@@ -14,6 +14,10 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('OfflineStorage');
 // Storage keys
 const STORAGE_KEYS = {
   FEED_ITEMS: '@offline/feed_items',
@@ -113,9 +117,9 @@ class OfflineStorageService {
       }
 
       this.initialized = true;
-      console.log('[OfflineStorage] Initialized');
+      logger.log('Initialized');
     } catch (error) {
-      console.error('[OfflineStorage] Initialization failed:', error);
+      logger.error('Initialization failed:', error);
       throw error;
     }
   }
@@ -172,9 +176,9 @@ class OfflineStorageService {
         oldestItemAt: limitedItems[limitedItems.length - 1]?.indexedAt,
       });
 
-      console.log(`[OfflineStorage] Saved ${newItems.length} feed items (${feedType}), total: ${limitedItems.length}`);
+      logger.log(`Saved ${newItems.length} feed items (${feedType}), total: ${limitedItems.length}`);
     } catch (error) {
-      console.error('[OfflineStorage] Failed to save feed items:', error);
+      logger.error('Failed to save feed items:', error);
       throw error;
     }
   }
@@ -197,7 +201,7 @@ class OfflineStorageService {
       // Return limited items
       return filteredItems.slice(0, limit);
     } catch (error) {
-      console.error('[OfflineStorage] Failed to get feed items:', error);
+      logger.error('Failed to get feed items:', error);
       return [];
     }
   }
@@ -253,9 +257,9 @@ class OfflineStorageService {
         itemCount: limitedThreads.length,
       });
 
-      console.log(`[OfflineStorage] Saved thread ${threadUri}, total: ${limitedThreads.length}`);
+      logger.log(`Saved thread ${threadUri}, total: ${limitedThreads.length}`);
     } catch (error) {
-      console.error('[OfflineStorage] Failed to save thread:', error);
+      logger.error('Failed to save thread:', error);
       throw error;
     }
   }
@@ -277,7 +281,7 @@ class OfflineStorageService {
 
       return null;
     } catch (error) {
-      console.error('[OfflineStorage] Failed to get thread:', error);
+      logger.error('Failed to get thread:', error);
       return null;
     }
   }
@@ -304,7 +308,7 @@ class OfflineStorageService {
 
       await AsyncStorage.setItem(STORAGE_KEYS.FEED_METADATA, JSON.stringify(allMetadata));
     } catch (error) {
-      console.error('[OfflineStorage] Failed to save metadata:', error);
+      logger.error('Failed to save metadata:', error);
     }
   }
 
@@ -316,7 +320,7 @@ class OfflineStorageService {
       const allMetadata: Record<string, OfflineMetadata> = JSON.parse(data);
       return allMetadata[key] || null;
     } catch (error) {
-      console.error('[OfflineStorage] Failed to get metadata:', error);
+      logger.error('Failed to get metadata:', error);
       return null;
     }
   }
@@ -344,7 +348,7 @@ class OfflineStorageService {
         estimatedSize,
       };
     } catch (error) {
-      console.error('[OfflineStorage] Failed to get stats:', error);
+      logger.error('Failed to get stats:', error);
       return {
         feedItemCount: 0,
         threadItemCount: 0,
@@ -370,12 +374,12 @@ class OfflineStorageService {
 
       if (deletedCount > 0) {
         await AsyncStorage.setItem(STORAGE_KEYS.FEED_ITEMS, JSON.stringify(filteredItems));
-        console.log(`[OfflineStorage] Evicted ${deletedCount} old feed items`);
+        logger.log(`Evicted ${deletedCount} old feed items`);
       }
 
       return deletedCount;
     } catch (error) {
-      console.error('[OfflineStorage] Failed to evict old feed items:', error);
+      logger.error('Failed to evict old feed items:', error);
       return 0;
     }
   }
@@ -393,12 +397,12 @@ class OfflineStorageService {
 
       if (deletedCount > 0) {
         await AsyncStorage.setItem(STORAGE_KEYS.THREAD_ITEMS, JSON.stringify(filteredThreads));
-        console.log(`[OfflineStorage] Evicted ${deletedCount} old threads`);
+        logger.log(`Evicted ${deletedCount} old threads`);
       }
 
       return deletedCount;
     } catch (error) {
-      console.error('[OfflineStorage] Failed to evict old threads:', error);
+      logger.error('Failed to evict old threads:', error);
       return 0;
     }
   }
@@ -419,9 +423,9 @@ class OfflineStorageService {
         AsyncStorage.removeItem(STORAGE_KEYS.THREAD_METADATA),
       ]);
       this.initialized = false;
-      console.log('[OfflineStorage] Cleared all offline storage');
+      logger.log('Cleared all offline storage');
     } catch (error) {
-      console.error('[OfflineStorage] Failed to clear storage:', error);
+      logger.error('Failed to clear storage:', error);
       throw error;
     }
   }
