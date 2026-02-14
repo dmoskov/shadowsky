@@ -15,6 +15,7 @@ import {
   useMarkNotificationsSeen,
 } from '../../hooks/api/useNotifications';
 import {NotificationItem} from '../../components/NotificationItem';
+import {NotificationItemSkeleton} from '../../components/NotificationItemSkeleton';
 import {AggregatedNotificationItem} from '../../components/AggregatedNotificationItem';
 import {NotificationTabBar, NotificationFilter} from '../../components/NotificationTabBar';
 import {LoadingState} from '../../components/LoadingState';
@@ -105,7 +106,16 @@ export function NotificationsScreen() {
 
   const renderEmpty = () => {
     if (isLoading) {
-      return <LoadingState />;
+      return (
+        <View>
+          <NotificationItemSkeleton />
+          <NotificationItemSkeleton />
+          <NotificationItemSkeleton />
+          <NotificationItemSkeleton />
+          <NotificationItemSkeleton />
+          <NotificationItemSkeleton />
+        </View>
+      );
     }
     if (isError) {
       return (

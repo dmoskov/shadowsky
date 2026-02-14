@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import {AppBskyFeedDefs} from '@atproto/api';
 import {PostCard} from './PostCard';
+import {PostCardSkeleton} from './PostCardSkeleton';
 import {LoadingState} from './LoadingState';
 import {ErrorState} from './ErrorState';
 import {EmptyState} from './EmptyState';
@@ -102,7 +103,15 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
 
   const renderEmpty = () => {
     if (isLoading) {
-      return <LoadingState />;
+      return (
+        <View>
+          <PostCardSkeleton />
+          <PostCardSkeleton />
+          <PostCardSkeleton />
+          <PostCardSkeleton />
+          <PostCardSkeleton />
+        </View>
+      );
     }
     if (error) {
       return (
