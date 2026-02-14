@@ -3,13 +3,13 @@ name: Mobile Tests
 on:
   pull_request:
     paths:
-      - 'mobile/**'
-      - '.github/workflows/mobile-tests.yml'
+      - "mobile/**"
+      - ".github/workflows/mobile-tests.yml"
   push:
     branches:
       - main
     paths:
-      - 'mobile/**'
+      - "mobile/**"
 
 jobs:
   unit-tests:
@@ -23,8 +23,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
           cache-dependency-path: mobile/package-lock.json
 
       - name: Install dependencies
@@ -69,8 +69,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
           cache-dependency-path: mobile/package-lock.json
 
       - name: Install dependencies
@@ -131,8 +131,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
           cache-dependency-path: mobile/package-lock.json
 
       - name: Install dependencies
