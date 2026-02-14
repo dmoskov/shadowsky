@@ -1,0 +1,3 @@
+[submodule "ai-dev-tools"]
+	path = ai-dev-tools
+	url = https://github.com/dmoskov/sharedskills.git
