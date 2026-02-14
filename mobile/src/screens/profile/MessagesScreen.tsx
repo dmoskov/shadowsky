@@ -278,7 +278,7 @@ export function MessagesScreen() {
           style={styles.deleteAction}
           onPress={() => handleDeleteConversation(conversationId)}
         >
-          <TrashIcon size={24} color=colors.text />
+          <TrashIcon size={24} color={colors.text} />
           <Text style={styles.actionText}>Delete</Text>
         </TouchableOpacity>
       </Animated.View>
@@ -330,7 +330,7 @@ export function MessagesScreen() {
                       "Unknown User"}
                   </Text>
                   {item.muted && (
-                    <BellSlashIcon size={16} color=colors.textSecondary />
+                    <BellSlashIcon size={16} color={colors.textSecondary} />
                   )}
                 </View>
                 {item.unreadCount > 0 && (
@@ -448,7 +448,7 @@ export function MessagesScreen() {
         <View style={styles.container}>
           <View style={styles.permissionErrorContainer}>
             <View style={{marginBottom: 16}}>
-              <LockIcon size={64} color=colors.textSecondary />
+              <LockIcon size={64} color={colors.textSecondary} />
             </View>
             <Text style={styles.permissionErrorTitle}>
               App Password Required
@@ -494,7 +494,7 @@ export function MessagesScreen() {
           </TouchableOpacity>
         </View>
         <EmptyState
-          icon={<ChatBubbleIcon size={64} color=colors.textSecondary />}
+          icon={<ChatBubbleIcon size={64} color={colors.textSecondary} />}
           message="No conversations yet. Tap + to start a new conversation!"
         />
         <NewConversationModal
@@ -543,18 +543,18 @@ export function MessagesScreen() {
           </View>
           {isSearchVisible && (
             <View style={styles.searchContainer}>
-              <SearchIcon size={20} color=colors.textSecondary />
+              <SearchIcon size={20} color={colors.textSecondary} />
               <TextInput
                 style={styles.searchInput}
                 value={searchText}
                 onChangeText={setSearchText}
                 placeholder="Search conversations..."
-                placeholderTextColor=colors.textTertiary
+                placeholderTextColor={colors.textTertiary}
                 autoFocus
               />
               {searchText.length > 0 && (
                 <TouchableOpacity onPress={() => setSearchText("")}>
-                  <CloseIcon size={20} color=colors.textSecondary />
+                  <CloseIcon size={20} color={colors.textSecondary} />
                 </TouchableOpacity>
               )}
             </View>
@@ -568,7 +568,7 @@ export function MessagesScreen() {
           ListEmptyComponent={
             searchText.length > 0 ? (
               <EmptyState
-                icon={<SearchIcon size={64} color=colors.textSecondary />}
+                icon={<SearchIcon size={64} color={colors.textSecondary} />}
                 message="No conversations found"
               />
             ) : null
@@ -688,7 +688,7 @@ export function MessagesScreen() {
                     style={styles.removeImageButton}
                     onPress={() => removeImage(index)}
                   >
-                    <CloseIcon size={16} color=colors.text />
+                    <CloseIcon size={16} color={colors.text} />
                   </TouchableOpacity>
                 </View>
               )}
@@ -712,7 +712,7 @@ export function MessagesScreen() {
             value={messageText}
             onChangeText={setMessageText}
             placeholder="Type a message..."
-            placeholderTextColor=colors.textTertiary
+            placeholderTextColor={colors.textTertiary}
             multiline
             maxLength={1000}
           />
@@ -726,7 +726,7 @@ export function MessagesScreen() {
             disabled={(!messageText.trim() && selectedImages.length === 0) || sendMessageMutation.isPending || isUploading}
           >
             {sendMessageMutation.isPending || isUploading ? (
-              <ActivityIndicator color=colors.text size="small" />
+              <ActivityIndicator color={colors.text} size="small" />
             ) : (
               <Text style={styles.sendButtonText}>Send</Text>
             )}

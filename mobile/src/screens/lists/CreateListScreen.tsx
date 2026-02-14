@@ -68,7 +68,7 @@ export function CreateListScreen({onSuccess}: CreateListScreenProps) {
             value={name}
             onChangeText={setName}
             placeholder="Enter list name"
-            placeholderTextColor=colors.textTertiary
+            placeholderTextColor={colors.textTertiary}
             maxLength={64}
             editable={!isPending}
           />
@@ -81,7 +81,7 @@ export function CreateListScreen({onSuccess}: CreateListScreenProps) {
             value={description}
             onChangeText={setDescription}
             placeholder="Enter list description (optional)"
-            placeholderTextColor=colors.textTertiary
+            placeholderTextColor={colors.textTertiary}
             multiline
             numberOfLines={4}
             maxLength={300}
@@ -138,7 +138,7 @@ export function CreateListScreen({onSuccess}: CreateListScreenProps) {
           onPress={handleCreate}
           disabled={isPending}>
           {isPending ? (
-            <ActivityIndicator color=colors.text />
+            <ActivityIndicator color={colors.text} />
           ) : (
             <Text style={styles.createButtonText}>Create List</Text>
           )}

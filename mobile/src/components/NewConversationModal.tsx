@@ -129,7 +129,7 @@ export function NewConversationModal({
 
     return (
       <View style={styles.emptyContainer}>
-        <SearchIcon size={48} color=colors.textSecondary />
+        <SearchIcon size={48} color={colors.textSecondary} />
         <Text style={styles.emptyText}>
           Search for a user to start a conversation
         </Text>
@@ -155,7 +155,7 @@ export function NewConversationModal({
 
         {/* Search Input */}
         <View style={styles.searchContainer}>
-          <SearchIcon size={20} color=colors.textSecondary />
+          <SearchIcon size={20} color={colors.textSecondary} />
           <TextInput
             style={styles.searchInput}
             value={searchQuery}
@@ -168,7 +168,7 @@ export function NewConversationModal({
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => handleSearch("")}>
-              <CloseIcon size={20} color=colors.textSecondary />
+              <CloseIcon size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           )}
         </View>

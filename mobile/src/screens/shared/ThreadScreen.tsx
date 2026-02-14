@@ -469,7 +469,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
           <TextInput
             style={styles.replyInput}
             placeholder="Write your reply..."
-            placeholderTextColor=colors.textTertiary
+            placeholderTextColor={colors.textTertiary}
             multiline
             value={replyText}
             onChangeText={setReplyText}
@@ -490,7 +490,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
               disabled={isReplyDisabled || createPost.isPending}
             >
               {createPost.isPending ? (
-                <ActivityIndicator color=colors.text size="small" />
+                <ActivityIndicator color={colors.text} size="small" />
               ) : (
                 <Text style={styles.replyButtonText}>Reply</Text>
               )}

@@ -289,7 +289,7 @@ export function CollectionManager({
               disabled={!collectionName.trim() || isCreating || isUpdating}
             >
               {isCreating || isUpdating ? (
-                <ActivityIndicator color=colors.text />
+                <ActivityIndicator color={colors.text} />
               ) : (
                 <Text style={styles.submitButtonText}>
                   {editingCollection ? 'Save' : 'Create'}

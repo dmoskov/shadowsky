@@ -149,7 +149,7 @@ export function SaveToCollectionModal({
                     disabled={!newCollectionName.trim() || isCreating}
                   >
                     {isCreating ? (
-                      <ActivityIndicator color=colors.text size="small" />
+                      <ActivityIndicator color={colors.text} size="small" />
                     ) : (
                       <Text style={styles.createButtonText}>Create</Text>
                     )}

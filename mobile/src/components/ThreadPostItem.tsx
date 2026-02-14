@@ -72,7 +72,7 @@ export function ThreadPostItem({
             style={styles.removeButton}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <CloseIcon size={18} color=colors.danger />
+            <CloseIcon size={18} color={colors.danger} />
           </TouchableOpacity>
         )}
       </View>
@@ -80,7 +80,7 @@ export function ThreadPostItem({
       <TextInput
         style={styles.input}
         placeholder={`Post ${index + 1}`}
-        placeholderTextColor=colors.textTertiary
+        placeholderTextColor={colors.textTertiary}
         multiline
         value={post.text}
         onChangeText={onTextChange}

@@ -74,7 +74,7 @@ export function VideoEmbed({video}: VideoEmbedProps) {
           )}
           <View style={styles.playButtonContainer}>
             {isLoading ? (
-              <ActivityIndicator size="large" color=colors.text />
+              <ActivityIndicator size="large" color={colors.text} />
             ) : (
               <View style={styles.playButton}>
                 <View style={styles.playIcon} />

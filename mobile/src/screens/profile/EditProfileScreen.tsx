@@ -174,7 +174,7 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
             value={displayName}
             onChangeText={setDisplayName}
             placeholder="Enter display name"
-            placeholderTextColor=colors.textTertiary
+            placeholderTextColor={colors.textTertiary}
             maxLength={MAX_DISPLAY_NAME_LENGTH + 10} // Allow typing slightly over to show error
           />
         </View>
@@ -197,7 +197,7 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
             value={description}
             onChangeText={setDescription}
             placeholder="Tell us about yourself"
-            placeholderTextColor=colors.textTertiary
+            placeholderTextColor={colors.textTertiary}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -235,7 +235,7 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
           }
         >
           {updateProfile.isPending ? (
-            <ActivityIndicator size="small" color=colors.text />
+            <ActivityIndicator size="small" color={colors.text} />
           ) : (
             <Text style={styles.saveButtonText}>Save</Text>
           )}

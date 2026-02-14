@@ -324,7 +324,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
         <TextInput
           style={styles.input}
           placeholder="Search posts, users, hashtags..."
-          placeholderTextColor=colors.textTertiary
+          placeholderTextColor={colors.textTertiary}
           value={searchQuery}
           onChangeText={setSearchQuery}
           onFocus={() => setShowHistory(searchHistory.length > 0 && !searchQuery)}

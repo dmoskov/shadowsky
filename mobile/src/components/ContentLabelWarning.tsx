@@ -40,7 +40,7 @@ export function ContentLabelWarning({
       labelValues.includes("sexual") ||
       labelValues.includes("nudity")
     ) {
-      return <EyeOff size={24} color=colors.text />;
+      return <EyeOff size={24} color={colors.text} />;
     }
 
     if (
@@ -48,10 +48,10 @@ export function ContentLabelWarning({
       labelValues.includes("gore") ||
       labelValues.includes("nsfl")
     ) {
-      return <AlertTriangle size={24} color=colors.text />;
+      return <AlertTriangle size={24} color={colors.text} />;
     }
 
-    return <Eye size={24} color=colors.text />;
+    return <Eye size={24} color={colors.text} />;
   };
 
   // Get background color based on severity
@@ -104,7 +104,7 @@ export function ContentLabelWarning({
             accessibilityLabel={`Show ${warningText}`}
             accessibilityHint="Tap to reveal sensitive content"
           >
-            <Eye size={16} color=colors.text />
+            <Eye size={16} color={colors.text} />
             <Text style={styles.buttonText}>Show Content</Text>
           </TouchableOpacity>
 

@@ -131,7 +131,7 @@ export function EditListModal({
               <TextInput
                 style={[styles.input, isNameOverLimit && styles.inputError]}
                 placeholder="Enter list name"
-                placeholderTextColor=colors.textTertiary
+                placeholderTextColor={colors.textTertiary}
                 value={name}
                 onChangeText={setName}
                 maxLength={MAX_NAME_LENGTH + 10}
@@ -159,7 +159,7 @@ export function EditListModal({
                   isDescOverLimit && styles.inputError,
                 ]}
                 placeholder="Enter list description"
-                placeholderTextColor=colors.textTertiary
+                placeholderTextColor={colors.textTertiary}
                 value={description}
                 onChangeText={setDescription}
                 maxLength={MAX_DESCRIPTION_LENGTH + 10}
@@ -204,7 +204,7 @@ export function EditListModal({
               onPress={handleSave}
               disabled={isSaveDisabled}>
               {isSaving ? (
-                <ActivityIndicator color=colors.text size="small" />
+                <ActivityIndicator color={colors.text} size="small" />
               ) : (
                 <Text style={styles.saveButtonText}>Save</Text>
               )}

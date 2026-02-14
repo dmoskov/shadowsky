@@ -117,11 +117,11 @@ export function AccountSwitcher({
           </View>
 
           {isSwitching && (
-            <ActivityIndicator color=colors.info style={styles.spinner} />
+            <ActivityIndicator color={colors.info} style={styles.spinner} />
           )}
           {isActive && !isSwitching && (
             <View style={styles.activeIndicator}>
-              <CheckIcon size={16} color=colors.text />
+              <CheckIcon size={16} color={colors.text} />
             </View>
           )}
         </TouchableOpacity>
@@ -159,7 +159,7 @@ export function AccountSwitcher({
 
       <TouchableOpacity style={styles.addAccountButton} onPress={onAddAccount}>
         <View style={styles.addAccountContent}>
-          <PlusIcon size={18} color=colors.text />
+          <PlusIcon size={18} color={colors.text} />
           <Text style={styles.addAccountButtonText}>Add Account</Text>
         </View>
       </TouchableOpacity>

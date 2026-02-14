@@ -124,7 +124,7 @@ export function GifPicker({
         />
         {isSelected && (
           <View style={styles.selectedOverlay}>
-            <ActivityIndicator color=colors.text size="large" />
+            <ActivityIndicator color={colors.text} size="large" />
           </View>
         )}
       </TouchableOpacity>
@@ -135,12 +135,12 @@ export function GifPicker({
     <View>
       {/* Search bar */}
       <View style={styles.searchContainer}>
-        <SearchIcon size={20} color=colors.textTertiary />
+        <SearchIcon size={20} color={colors.textTertiary} />
         <TextInput
           ref={searchInputRef}
           style={styles.searchInput}
           placeholder="Search GIFs..."
-          placeholderTextColor=colors.textTertiary
+          placeholderTextColor={colors.textTertiary}
           value={localSearchQuery}
           onChangeText={handleSearchChange}
           autoCapitalize="none"
@@ -211,7 +211,7 @@ export function GifPicker({
             style={styles.closeButton}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <CloseIcon size={24} color=colors.textSecondary />
+            <CloseIcon size={24} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 

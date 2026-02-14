@@ -368,7 +368,7 @@ export function ImageEditor({ images, onSave, onCancel, visible }: ImageEditorPr
               style={[styles.headerButton, styles.doneButton]}
             >
               {isSaving ? (
-                <ActivityIndicator size="small" color=colors.text />
+                <ActivityIndicator size="small" color={colors.text} />
               ) : (
                 <Text style={styles.doneButtonText}>Done</Text>
               )}

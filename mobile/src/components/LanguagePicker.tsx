@@ -134,7 +134,7 @@ export function LanguagePicker({
             style={styles.closeButton}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <CloseIcon size={24} color=colors.textSecondary />
+            <CloseIcon size={24} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
@@ -143,7 +143,7 @@ export function LanguagePicker({
           <TextInput
             style={styles.searchInput}
             placeholder="Search languages..."
-            placeholderTextColor=colors.textTertiary
+            placeholderTextColor={colors.textTertiary}
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCapitalize="none"

@@ -251,7 +251,7 @@ function PostCardComponent({
                 accessibilityRole="button"
                 accessibilityLabel="More options"
                 accessibilityHint="Double tap to open menu with mute, block, and report options">
-                <MoreIcon size={20} color=colors.textSecondary />
+                <MoreIcon size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             )}
           </View>
@@ -359,7 +359,7 @@ function PostCardComponent({
             accessibilityRole="button"
             accessibilityLabel="Share post"
             accessibilityHint="Double tap to share this post">
-            <SendIcon size={18} color=colors.textSecondary />
+            <SendIcon size={18} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </View>

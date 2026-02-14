@@ -96,7 +96,7 @@ export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsSc
 
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color=colors.info />
+        <ActivityIndicator size="small" color={colors.info} />
       </View>
     );
   };
@@ -105,7 +105,7 @@ export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsSc
     if (isLoading) {
       return (
         <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color=colors.info />
+          <ActivityIndicator size="large" color={colors.info} />
         </View>
       );
     }
@@ -152,7 +152,7 @@ export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsSc
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor=colors.info
+            tintColor={colors.info}
             colors={[colors.info]}
           />
         }

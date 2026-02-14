@@ -109,7 +109,7 @@ export function ThreadSummary({
     return (
       <View style={styles.container}>
         <View style={styles.loadingContent}>
-          <ActivityIndicator size="small" color=colors.textSecondary />
+          <ActivityIndicator size="small" color={colors.textSecondary} />
           <Text style={styles.loadingText}>Generating summary...</Text>
         </View>
       </View>

@@ -220,7 +220,7 @@ export function StarterPackDetailScreen({
             onPress={handleFollowAll}
             disabled={followAllMutation.isPending}>
             {followAllMutation.isPending ? (
-              <ActivityIndicator size="small" color=colors.text />
+              <ActivityIndicator size="small" color={colors.text} />
             ) : (
               <Text style={styles.followAllButtonText}>
                 Follow All ({starterPack.listItemsSample.length})

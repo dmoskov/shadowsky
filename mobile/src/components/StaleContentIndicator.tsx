@@ -51,7 +51,7 @@ export default function StaleContentIndicator({
   const content = (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        <AlertTriangleIcon size={16} color=colors.textTertiary />
+        <AlertTriangleIcon size={16} color={colors.textTertiary} />
       </View>
       <Text style={styles.text}>
         {isOnline

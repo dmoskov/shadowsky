@@ -53,12 +53,12 @@ export function AggregatedNotificationItem({
     switch (reason) {
       case 'like':
         return {
-          icon: <HeartIcon size={18} color=colors.danger filled />,
+          icon: <HeartIcon size={18} color={colors.danger} filled />,
           color: colors.danger,
         };
       case 'repost':
         return {
-          icon: <RepostIcon size={18} color=colors.success />,
+          icon: <RepostIcon size={18} color={colors.success} />,
           color: colors.success,
         };
       case 'follow':
@@ -68,12 +68,12 @@ export function AggregatedNotificationItem({
         };
       case 'quote':
         return {
-          icon: <QuoteIcon size={18} color=colors.quote />,
+          icon: <QuoteIcon size={18} color={colors.quote} />,
           color: colors.quote,
         };
       default:
         return {
-          icon: <HeartIcon size={18} color=colors.textSecondary />,
+          icon: <HeartIcon size={18} color={colors.textSecondary} />,
           color: colors.textSecondary,
         };
     }
@@ -172,9 +172,9 @@ export function AggregatedNotificationItem({
             {isExpanded ? 'Collapse' : `Show all ${count} notifications`}
           </Text>
           {isExpanded ? (
-            <ChevronUpIcon size={16} color=colors.textTertiary />
+            <ChevronUpIcon size={16} color={colors.textTertiary} />
           ) : (
-            <ChevronDownIcon size={16} color=colors.textTertiary />
+            <ChevronDownIcon size={16} color={colors.textTertiary} />
           )}
         </TouchableOpacity>
       )}

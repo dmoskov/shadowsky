@@ -205,7 +205,7 @@ export function MutedWordsScreen() {
               value={newWord}
               onChangeText={setNewWord}
               placeholder="Enter word, phrase, or #hashtag"
-              placeholderTextColor=colors.textTertiary
+              placeholderTextColor={colors.textTertiary}
               autoCapitalize="none"
               autoCorrect={false}
             />

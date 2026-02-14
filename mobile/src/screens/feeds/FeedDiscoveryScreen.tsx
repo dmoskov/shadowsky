@@ -305,7 +305,7 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
           <TextInput
             style={styles.searchInput}
             placeholder="Search for feeds..."
-            placeholderTextColor=colors.textSecondary
+            placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCapitalize="none"

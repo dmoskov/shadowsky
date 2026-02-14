@@ -276,7 +276,7 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
               onPress={handleDeleteList}
               disabled={isDeleting}>
               {isDeleting ? (
-                <ActivityIndicator color=colors.text size="small" />
+                <ActivityIndicator color={colors.text} size="small" />
               ) : (
                 <Text style={styles.deleteButtonText}>Delete</Text>
               )}

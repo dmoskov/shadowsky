@@ -845,7 +845,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
           disabled={isPostDisabled || createPost.isPending}
         >
           {createPost.isPending || imagePicker.isUploading || videoPicker.isUploading ? (
-            <ActivityIndicator color=colors.text size="small" />
+            <ActivityIndicator color={colors.text} size="small" />
           ) : (
             <Text style={styles.postButtonText}>Post</Text>
           )}
@@ -893,7 +893,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
           <TextInput
             style={styles.input}
             placeholder={placeholderText}
-            placeholderTextColor=colors.textTertiary
+            placeholderTextColor={colors.textTertiary}
             multiline
             autoFocus
             value={text}
@@ -977,7 +977,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
             <TextInput
               style={styles.altTextInput}
               placeholder="Describe this image..."
-              placeholderTextColor=colors.textTertiary
+              placeholderTextColor={colors.textTertiary}
               multiline
               value={tempAltText}
               onChangeText={setTempAltText}

@@ -320,7 +320,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
             style={styles.headerMenuButton}
             onPress={() => setShowMenu(true)}
             activeOpacity={0.7}>
-            <MoreVerticalIcon size={24} color=colors.textSecondary />
+            <MoreVerticalIcon size={24} color={colors.textSecondary} />
           </TouchableOpacity>
         )}
 

@@ -101,7 +101,7 @@ export function EditScheduledPostModal({
             <TextInput
               style={styles.input}
               placeholder="What's happening?"
-              placeholderTextColor=colors.textTertiary
+              placeholderTextColor={colors.textTertiary}
               multiline
               autoFocus
               value={text}

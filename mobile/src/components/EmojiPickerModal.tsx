@@ -107,7 +107,7 @@ export function EmojiPickerModal({
             style={styles.closeButton}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <CloseIcon size={24} color=colors.textSecondary />
+            <CloseIcon size={24} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 

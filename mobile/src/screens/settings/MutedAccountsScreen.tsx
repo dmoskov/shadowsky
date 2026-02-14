@@ -93,7 +93,7 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
 
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color=colors.info />
+        <ActivityIndicator size="small" color={colors.info} />
       </View>
     );
   };
@@ -102,7 +102,7 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
     if (isLoading) {
       return (
         <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color=colors.info />
+          <ActivityIndicator size="large" color={colors.info} />
         </View>
       );
     }
@@ -149,7 +149,7 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            tintColor=colors.info
+            tintColor={colors.info}
             colors={[colors.info]}
           />
         }

@@ -115,7 +115,7 @@ export function FeedCreationScreen() {
             <TextInput
               style={styles.input}
               placeholder="e.g., Tech News Feed"
-              placeholderTextColor=colors.textSecondary
+              placeholderTextColor={colors.textSecondary}
               value={displayName}
               onChangeText={setDisplayName}
               maxLength={100}
@@ -129,7 +129,7 @@ export function FeedCreationScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               placeholder="Describe what content your feed will show..."
-              placeholderTextColor=colors.textSecondary
+              placeholderTextColor={colors.textSecondary}
               value={description}
               onChangeText={setDescription}
               multiline
@@ -149,7 +149,7 @@ export function FeedCreationScreen() {
             <TextInput
               style={styles.input}
               placeholder="https://your-feed-service.com"
-              placeholderTextColor=colors.textSecondary
+              placeholderTextColor={colors.textSecondary}
               value={serviceEndpoint}
               onChangeText={setServiceEndpoint}
               autoCapitalize="none"
@@ -186,7 +186,7 @@ export function FeedCreationScreen() {
           disabled={createFeedMutation.isPending || !displayName.trim() || !serviceEndpoint.trim()}
           activeOpacity={0.7}>
           {createFeedMutation.isPending ? (
-            <ActivityIndicator color=colors.text size="small" />
+            <ActivityIndicator color={colors.text} size="small" />
           ) : (
             <Text style={styles.buttonText}>Create Feed</Text>
           )}

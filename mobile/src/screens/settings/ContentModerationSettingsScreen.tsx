@@ -152,7 +152,7 @@ export function ContentModerationSettingsScreen({
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <ChevronLeft size={24} color=colors.text />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Content Moderation</Text>
         <TouchableOpacity
