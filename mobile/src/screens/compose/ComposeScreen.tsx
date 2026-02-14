@@ -1,15 +1,14 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image, ScrollView, Modal } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as Localization from "expo-localization";
 import { useCreatePost } from "../../hooks/api/usePosts";
 import { useSaveDraft, useDeleteDraft, useDrafts } from "../../hooks/api";
 import { draftToComposerState, ComposerState } from "../../services/drafts";
-import { ImageIcon, VideoIcon, GifIcon, EmojiIcon, ThreadIcon, CloseIcon, GlobeIcon } from "../../components/icons";
 import { Avatar } from "../../components/Avatar";
 import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
-import { useVideoPicker, VideoAsset } from "../../hooks/useVideoPicker";
+import { useVideoPicker } from "../../hooks/useVideoPicker";
 import { colors } from "../../constants/theme";
 import { useSearchActors } from "../../hooks/api/useProfile";
 import { MentionSuggestions } from "../../components/MentionSuggestions";
@@ -17,7 +16,6 @@ import { ThreadComposer } from "../../components/ThreadComposer";
 import { ThreadPost } from "../../components/ThreadPostItem";
 import { triggerHaptic } from "../../utils/haptics";
 import { LanguagePicker } from "../../components/LanguagePicker";
-import { getLanguageShortName } from "../../constants/languages";
 import { preferencesService } from "../../services/preferences";
 import { useGifPicker } from "../../hooks/useGifPicker";
 import { GifPicker } from "../../components/GifPicker";
@@ -27,7 +25,7 @@ import type { TenorGif } from "../../services/tenor";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { ImageEditor } from "../../components/ImageEditor";
 import { useTranslation } from "../../hooks/useTranslation";
-
+import { ComposeToolbar, ComposeMediaPreview, ComposeQuotePreview } from "./components";
 
 import { createLogger } from '../../utils/logger';
 
@@ -847,134 +845,22 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
             editable={!createPost.isPending && !imagePicker.isUploading}
           />
 
-          {/* Image Previews */}
-          {imagePicker.selectedImages.length > 0 && (
-            <View style={styles.imagePreviewContainer}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScrollView}>
-                {imagePicker.selectedImages.map((image, index) => (
-                  <View key={index} style={styles.imagePreviewWrapper}>
-                    <Image source={{ uri: image.uri }} style={styles.imagePreview} />
-                    {imagePicker.isUploading && (
-                      <View style={styles.uploadingOverlay}>
-                        <ActivityIndicator color=colors.text size="small" />
-                      </View>
-                    )}
-                    <TouchableOpacity
-                      style={styles.removeImageButton}
-                      onPress={() => handleRemoveImage(index)}
-                      disabled={imagePicker.isUploading}
-                    >
-                      <Text style={styles.removeImageText}>×</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.altTextButton}
-                      onPress={() => handleAddAltText(index)}
-                      disabled={imagePicker.isUploading}
-                    >
-                      <Text style={styles.altTextButtonText}>
-                        {image.altText ? "✓ ALT" : "ALT"}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </ScrollView>
-              {imagePicker.isUploading && (
-                <Text style={styles.uploadingText}>
-                  Uploading images...
-                </Text>
-              )}
-            </View>
-          )}
-
-          {/* Video Preview */}
-          {videoPicker.selectedVideo && (
-            <View style={styles.videoPreviewContainer}>
-              <View style={styles.videoPreviewWrapper}>
-                {videoPicker.selectedVideo.thumbnail ? (
-                  <Image
-                    source={{ uri: videoPicker.selectedVideo.thumbnail }}
-                    style={styles.videoPreview}
-                  />
-                ) : (
-                  <View style={[styles.videoPreview, styles.videoPreviewPlaceholder]}>
-                    <VideoIcon size={48} color=colors.textTertiary />
-                  </View>
-                )}
-                {videoPicker.isUploading && (
-                  <View style={styles.uploadingOverlay}>
-                    <ActivityIndicator color=colors.text size="small" />
-                  </View>
-                )}
-                <View style={styles.videoDurationBadge}>
-                  <Text style={styles.videoDurationText}>
-                    {videoPicker.formatDuration(videoPicker.selectedVideo.duration)}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.removeImageButton}
-                  onPress={handleRemoveVideo}
-                  disabled={videoPicker.isUploading}
-                >
-                  <Text style={styles.removeImageText}>×</Text>
-                </TouchableOpacity>
-                <View style={styles.videoPlayIcon}>
-                  <View style={styles.playIconTriangle} />
-                </View>
-              </View>
-              {videoPicker.isUploading && (
-                <Text style={styles.uploadingText}>
-                  Uploading video... This may take a while.
-                </Text>
-              )}
-            </View>
-          )}
-
-          {/* GIF Preview */}
-          {gifPicker.selectedGif && (
-            <View style={styles.gifPreviewContainer}>
-              <View style={styles.gifPreviewWrapper}>
-                <Image
-                  source={{ uri: gifPicker.selectedGif.url }}
-                  style={styles.gifPreview}
-                  resizeMode="cover"
-                />
-                <TouchableOpacity
-                  style={styles.removeImageButton}
-                  onPress={handleRemoveGif}
-                >
-                  <Text style={styles.removeImageText}>×</Text>
-                </TouchableOpacity>
-                <View style={styles.gifBadge}>
-                  <Text style={styles.gifBadgeText}>GIF</Text>
-                </View>
-              </View>
-              <Text style={styles.gifHintText}>
-                GIFs are embedded as external links
-              </Text>
-            </View>
-          )}
+          {/* Media Previews */}
+          <ComposeMediaPreview
+            selectedImages={imagePicker.selectedImages}
+            onRemoveImage={handleRemoveImage}
+            onAddAltText={handleAddAltText}
+            isImageUploading={imagePicker.isUploading}
+            selectedVideo={videoPicker.selectedVideo}
+            onRemoveVideo={handleRemoveVideo}
+            formatVideoDuration={videoPicker.formatDuration}
+            isVideoUploading={videoPicker.isUploading}
+            selectedGif={gifPicker.selectedGif}
+            onRemoveGif={handleRemoveGif}
+          />
 
           {/* Quote Preview */}
-          {quoteTo && (
-            <View style={styles.quotePreview}>
-              <View style={styles.quoteCard}>
-                <View style={styles.quoteHeader}>
-                  <Avatar uri={quoteTo.author.avatar} size={32} />
-                  <View style={styles.quoteAuthorInfo}>
-                    <Text style={styles.quoteAuthorName} numberOfLines={1}>
-                      {quoteTo.author.displayName || quoteTo.author.handle}
-                    </Text>
-                    <Text style={styles.quoteAuthorHandle} numberOfLines={1}>
-                      @{quoteTo.author.handle}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={styles.quoteText} numberOfLines={6}>
-                  {quoteTo.text}
-                </Text>
-              </View>
-            </View>
-          )}
+          {quoteTo && <ComposeQuotePreview quoteTo={quoteTo} />}
         </>
       )}
 
@@ -987,80 +873,26 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
         />
       )}
 
-      <View style={[styles.toolbar, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-        {isThreadMode ? (
-          <TouchableOpacity
-            style={styles.exitThreadButton}
-            activeOpacity={0.7}
-            onPress={handleToggleThreadMode}
-          >
-            <ThreadIcon size={18} color={colors.primary} />
-            <Text style={styles.exitThreadText}>Exit Thread Mode</Text>
-          </TouchableOpacity>
-        ) : (
-          <>
-            <View style={styles.toolbarIcons}>
-              <TouchableOpacity
-                style={styles.toolbarButton}
-                activeOpacity={0.7}
-                onPress={handleImagePicker}
-                disabled={imagePicker.isUploading || imagePicker.selectedImages.length >= 4 || videoPicker.selectedVideo !== null}
-              >
-                <ImageIcon size={22} color={(imagePicker.selectedImages.length >= 4 || videoPicker.selectedVideo) ? colors.borderLight : colors.textTertiary} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.toolbarButton}
-                activeOpacity={0.7}
-                onPress={handleVideoPicker}
-                disabled={videoPicker.isUploading || imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo !== null}
-              >
-                <VideoIcon size={22} color={(imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo) ? colors.borderLight : colors.textTertiary} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.toolbarButton}
-                activeOpacity={0.7}
-                onPress={handleGifPicker}
-                disabled={imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo !== null || gifPicker.selectedGif !== null}
-              >
-                <GifIcon size={22} color={(imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo || gifPicker.selectedGif) ? colors.borderLight : colors.textTertiary} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.toolbarButton}
-                activeOpacity={0.7}
-                onPress={handleEmojiPicker}
-              >
-                <EmojiIcon size={22} color=colors.textTertiary />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.toolbarButton}
-                activeOpacity={0.7}
-                onPress={handleToggleThreadMode}
-                disabled={replyTo !== undefined || quoteTo !== undefined}
-              >
-                <ThreadIcon size={22} color={isThreadMode ? colors.primary : colors.textTertiary} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.languageButton}
-                activeOpacity={0.7}
-                onPress={() => setLanguagePickerVisible(true)}
-              >
-                <GlobeIcon size={18} color=colors.textTertiary />
-                <Text style={styles.languageButtonText}>
-                  {selectedLanguages.length > 0
-                    ? selectedLanguages.map(getLanguageShortName).join(', ')
-                    : 'EN'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={[
-              styles.charCount,
-              isOverLimit && styles.charCountOver
-            ]}>
-              {charCount}/{MAX_POST_LENGTH}
-            </Text>
-          </>
-        )}
-      </View>
+      <ComposeToolbar
+        onImagePicker={handleImagePicker}
+        onVideoPicker={handleVideoPicker}
+        onGifPicker={handleGifPicker}
+        onEmojiPicker={handleEmojiPicker}
+        onToggleThreadMode={handleToggleThreadMode}
+        onLanguagePickerOpen={() => setLanguagePickerVisible(true)}
+        selectedImages={imagePicker.selectedImages}
+        selectedVideo={videoPicker.selectedVideo}
+        selectedGif={gifPicker.selectedGif}
+        isImageUploading={imagePicker.isUploading}
+        isVideoUploading={videoPicker.isUploading}
+        isThreadMode={isThreadMode}
+        replyTo={replyTo}
+        quoteTo={quoteTo}
+        charCount={charCount}
+        maxLength={MAX_POST_LENGTH}
+        selectedLanguages={selectedLanguages}
+        bottomInset={insets.bottom}
+      />
 
       {/* Alt Text Modal */}
       <Modal
@@ -1207,45 +1039,6 @@ const styles = StyleSheet.create({
     padding: 16,
     textAlignVertical: "top",
   },
-  toolbar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: colors.surfaceElevated,
-  },
-  toolbarIcons: {
-    flexDirection: "row",
-    gap: 16,
-  },
-  toolbarButton: {
-    padding: 4,
-  },
-  languageButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.surfaceElevated,
-  },
-  languageButtonText: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  charCount: {
-    color: colors.textTertiary,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  charCountOver: {
-    color: colors.danger,
-  },
   replyContext: {
     backgroundColor: colors.background,
     borderBottomWidth: 1,
@@ -1289,106 +1082,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 18,
-  },
-  quotePreview: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  quoteCard: {
-    borderWidth: 1,
-    borderColor: colors.surfaceElevated,
-    borderRadius: 12,
-    padding: 12,
-    backgroundColor: colors.background,
-  },
-  quoteHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 8,
-  },
-  quoteAuthorInfo: {
-    flex: 1,
-  },
-  quoteAuthorName: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  quoteAuthorHandle: {
-    color: colors.textTertiary,
-    fontSize: 13,
-  },
-  quoteText: {
-    color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 18,
-  },
-  imagePreviewContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  imageScrollView: {
-    flexDirection: "row",
-  },
-  imagePreviewWrapper: {
-    position: "relative",
-    marginRight: 12,
-  },
-  imagePreview: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    backgroundColor: colors.surfaceElevated,
-  },
-  uploadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 8,
-  },
-  removeImageButton: {
-    position: "absolute",
-    top: -8,
-    right: -8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.borderLight,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  removeImageText: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: "600",
-    lineHeight: 20,
-  },
-  altTextButton: {
-    position: "absolute",
-    bottom: 4,
-    left: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-  },
-  altTextButtonText: {
-    color: colors.text,
-    fontSize: 10,
-    fontWeight: "600",
-  },
-  uploadingText: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    marginTop: 8,
-    textAlign: "center",
   },
   modalOverlay: {
     flex: 1,
@@ -1453,107 +1146,5 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 16,
     fontWeight: "600",
-  },
-  exitThreadButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    padding: 8,
-  },
-  exitThreadText: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  videoPreviewContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  videoPreviewWrapper: {
-    position: "relative",
-    width: 200,
-    height: 200,
-  },
-  videoPreview: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 12,
-    backgroundColor: colors.surfaceElevated,
-  },
-  videoPreviewPlaceholder: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  videoDurationBadge: {
-    position: "absolute",
-    bottom: 8,
-    right: 8,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  videoDurationText: {
-    color: colors.text,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  videoPlayIcon: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    marginTop: -20,
-    marginLeft: -20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  playIconTriangle: {
-    width: 0,
-    height: 0,
-    marginLeft: 3,
-    borderLeftWidth: 14,
-    borderLeftColor: colors.text,
-    borderTopWidth: 9,
-    borderTopColor: "transparent",
-    borderBottomWidth: 9,
-    borderBottomColor: "transparent",
-  },
-  gifPreviewContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  gifPreviewWrapper: {
-    position: "relative",
-    width: 200,
-    height: 200,
-  },
-  gifPreview: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 12,
-    backgroundColor: colors.surfaceElevated,
-  },
-  gifBadge: {
-    position: "absolute",
-    bottom: 8,
-    left: 8,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  gifBadgeText: {
-    color: colors.text,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  gifHintText: {
-    color: colors.textTertiary,
-    fontSize: 12,
-    marginTop: 8,
   },
 });
