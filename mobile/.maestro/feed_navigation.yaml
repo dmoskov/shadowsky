@@ -1,0 +1,78 @@
+appId: com.shadowsky.mobile
+---
+# E2E Test: Feed Navigation and Interaction
+# Tests scrolling, refreshing, and interacting with posts
+
+- launchApp
+
+# Sign in
+- tapOn: "Sign In"
+- inputText: "test.bsky.social"
+- tapOn: "Password"
+- inputText: "password123"
+- tapOn: "Sign In"
+- assertVisible: "Home"
+
+# Test Pull to Refresh
+- swipe:
+    direction: DOWN
+    duration: 1000
+- assertVisible:
+    id: "loading-indicator"
+- assertVisible: "Timeline"
+
+# Test Scrolling Feed
+- scroll:
+    direction: DOWN
+- scroll:
+    direction: DOWN
+- scroll:
+    direction: DOWN
+
+# Test Interacting with Post
+- tapOn:
+    id: "post-0"
+- assertVisible: "Post Details"
+- assertVisible: "Reply"
+- assertVisible: "Like"
+- assertVisible: "Repost"
+
+# Test Like Post
+- tapOn:
+    id: "like-button"
+- assertVisible:
+    id: "like-button-filled"
+
+# Test Reply to Post
+- tapOn:
+    id: "reply-button"
+- assertVisible: "Reply to"
+- inputText: "This is a test reply"
+- tapOn: "Post Reply"
+- assertVisible: "This is a test reply"
+
+# Test Repost
+- tapOn:
+    id: "repost-button"
+- tapOn: "Repost"
+- assertVisible: "Reposted"
+
+# Test Quote Post
+- tapOn:
+    id: "repost-button"
+- tapOn: "Quote Post"
+- inputText: "This is a quote of the original post"
+- tapOn: "Post"
+- assertVisible: "This is a quote of the original post"
+
+# Navigate Back to Home
+- tapOn: "Back"
+- assertVisible: "Home"
+- assertVisible: "Timeline"
+
+# Test Feed Switching
+- tapOn: "Following"
+- assertVisible: "Following Feed"
+- tapOn: "Discover"
+- assertVisible: "Discover Feed"
+- tapOn: "Following"

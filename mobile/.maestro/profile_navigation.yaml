@@ -1,0 +1,73 @@
+appId: com.shadowsky.mobile
+---
+# E2E Test: Profile Navigation
+# Tests viewing profile, editing profile, and following/unfollowing users
+
+- launchApp
+
+# Sign in
+- tapOn: "Sign In"
+- inputText: "test.bsky.social"
+- tapOn: "Password"
+- inputText: "password123"
+- tapOn: "Sign In"
+- assertVisible: "Home"
+
+# Navigate to own profile
+- tapOn: "Profile"
+- assertVisible: "@test.bsky.social"
+- assertVisible: "Edit Profile"
+
+# Test Edit Profile
+- tapOn: "Edit Profile"
+- assertVisible: "Display Name"
+- tapOn: "Display Name"
+- inputText: "Test User Updated"
+- tapOn: "Bio"
+- inputText: "This is my updated bio"
+- tapOn: "Save"
+- assertVisible: "Test User Updated"
+- assertVisible: "This is my updated bio"
+
+# Test Profile Tabs
+- tapOn: "Posts"
+- assertVisible:
+    id: "posts-tab-content"
+- tapOn: "Replies"
+- assertVisible:
+    id: "replies-tab-content"
+- tapOn: "Media"
+- assertVisible:
+    id: "media-tab-content"
+- tapOn: "Likes"
+- assertVisible:
+    id: "likes-tab-content"
+
+# Navigate to another user's profile
+- tapOn: "Search"
+- inputText: "bsky.app"
+- tapOn:
+    text: "@bsky.app"
+- assertVisible: "@bsky.app"
+- assertVisible: "Follow"
+
+# Test Follow User
+- tapOn: "Follow"
+- assertVisible: "Following"
+
+# Test Unfollow User
+- tapOn: "Following"
+- tapOn: "Unfollow"
+- assertVisible: "Follow"
+
+# Test viewing followers/following lists
+- tapOn: "Followers"
+- assertVisible: "Followers List"
+- tapOn: "Back"
+- tapOn: "Following"
+- assertVisible: "Following List"
+- tapOn: "Back"
+
+# Navigate back to home
+- tapOn: "Home"
+- assertVisible: "Timeline"

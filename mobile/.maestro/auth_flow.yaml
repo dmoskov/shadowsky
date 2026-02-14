@@ -1,0 +1,31 @@
+appId: com.shadowsky.mobile
+---
+# E2E Test: Authentication Flow
+# Tests user sign in, sign out, and account switching
+
+- launchApp
+- assertVisible: "Welcome to Shadowsky"
+
+# Test Sign In
+- tapOn: "Sign In"
+- assertVisible: "Sign in to your account"
+- inputText: "test.bsky.social"
+- tapOn: "Password"
+- inputText: "password123"
+- tapOn: "Sign In"
+- assertVisible: "Home"
+- assertVisible: "Timeline"
+
+# Test Navigation After Sign In
+- tapOn: "Profile"
+- assertVisible: "@test.bsky.social"
+- tapOn: "Back"
+- assertVisible: "Home"
+
+# Test Sign Out
+- tapOn: "Settings"
+- scrollUntilVisible: "Sign Out"
+- tapOn: "Sign Out"
+- assertVisible: "Are you sure you want to sign out?"
+- tapOn: "Yes"
+- assertVisible: "Welcome to Shadowsky"

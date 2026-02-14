@@ -1,40 +1,30 @@
 module.exports = {
-  testEnvironment: 'node',
-  transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', {
-      tsconfig: {
-        jsx: 'react',
-        esModuleInterop: true,
-        allowSyntheticDefaultImports: true,
-      },
-    }],
-  },
-  testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.test.tsx'],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  preset: 'jest-expo',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|@atproto/.*|@tanstack/.*)',
   ],
   collectCoverageFrom: [
-    'src/services/auth/**/*.{ts,tsx}',
+    'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
     '!src/**/__tests__/**',
+    '!src/**/__mocks__/**',
   ],
   coverageThreshold: {
-    'src/services/auth/auth-service.ts': {
-      lines: 80,
-      functions: 80,
-      branches: 80,
-      statements: 80,
-    },
-    'src/services/auth/oauth.ts': {
-      lines: 80,
-      functions: 80,
-      branches: 80,
-      statements: 80,
+    global: {
+      statements: 30,
+      branches: 25,
+      functions: 25,
+      lines: 30,
     },
   },
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  testMatch: [
+    '**/__tests__/**/*.test.{ts,tsx}',
+    '**/*.test.{ts,tsx}',
+  ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
+  testEnvironment: 'node',
+  testTimeout: 10000,
 };

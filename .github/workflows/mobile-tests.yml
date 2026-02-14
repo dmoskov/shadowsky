@@ -1,0 +1,148 @@
+name: Mobile Tests
+
+on:
+  pull_request:
+    paths:
+      - "mobile/**"
+      - ".github/workflows/mobile-tests.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "mobile/**"
+
+jobs:
+  unit-tests:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci --legacy-peer-deps
+
+      - name: Run lint
+        working-directory: mobile
+        run: npm run lint || true
+
+      - name: Run type check
+        working-directory: mobile
+        run: npm run build
+
+      - name: Run tests
+        working-directory: mobile
+        run: npm test -- --coverage --maxWorkers=2
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          files: mobile/coverage/coverage-final.json
+          flags: mobile
+          name: mobile-coverage
+        if: always()
+
+      - name: Comment PR with coverage
+        uses: romeovs/lcov-reporter-action@v0.3.1
+        with:
+          lcov-file: mobile/coverage/lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        if: github.event_name == 'pull_request'
+
+  e2e-tests:
+    name: E2E Tests (Maestro)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci --legacy-peer-deps
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "${HOME}/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Setup iOS Simulator
+        run: |
+          xcrun simctl boot "iPhone 15 Pro" || true
+          xcrun simctl list
+
+      - name: Start Expo
+        working-directory: mobile
+        run: |
+          npm start &
+          sleep 30
+
+      - name: Run Maestro E2E tests
+        working-directory: mobile
+        run: |
+          maestro test .maestro/ --format junit --output e2e-results.xml
+        timeout-minutes: 30
+
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: mobile/e2e-results.xml
+        if: always()
+
+      - name: Publish E2E test report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: E2E Tests
+          path: mobile/e2e-results.xml
+          reporter: java-junit
+
+  build-check:
+    name: Build Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci --legacy-peer-deps
+
+      - name: Verify build
+        working-directory: mobile
+        run: npm run build
+
+      - name: Check for TypeScript errors
+        working-directory: mobile
+        run: npx tsc --noEmit

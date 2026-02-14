@@ -1,0 +1,52 @@
+appId: com.shadowsky.mobile
+---
+# E2E Test: Post Creation
+# Tests creating a text post, post with image, and thread
+
+- launchApp
+
+# Sign in first
+- tapOn: "Sign In"
+- inputText: "test.bsky.social"
+- tapOn: "Password"
+- inputText: "password123"
+- tapOn: "Sign In"
+- assertVisible: "Home"
+
+# Test Creating Text Post
+- tapOn:
+    id: "compose-button"
+- assertVisible: "What's on your mind?"
+- inputText: "This is a test post from Maestro E2E tests"
+- tapOn: "Post"
+- assertVisible: "This is a test post from Maestro E2E tests"
+
+# Test Creating Post with Image
+- tapOn:
+    id: "compose-button"
+- inputText: "Test post with image"
+- tapOn:
+    id: "add-image-button"
+- tapOn: "Choose from Library"
+- tapOn:
+    index: 0
+- assertVisible:
+    id: "image-preview"
+- tapOn: "Add Alt Text"
+- inputText: "Test image description"
+- tapOn: "Save"
+- tapOn: "Post"
+- assertVisible: "Test post with image"
+
+# Test Creating Thread
+- tapOn:
+    id: "compose-button"
+- inputText: "First post in thread"
+- tapOn: "Add to Thread"
+- inputText: "Second post in thread"
+- tapOn: "Add to Thread"
+- inputText: "Third post in thread"
+- tapOn: "Post Thread"
+- assertVisible: "First post in thread"
+- assertVisible: "Second post in thread"
+- assertVisible: "Third post in thread"
