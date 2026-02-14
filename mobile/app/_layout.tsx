@@ -40,6 +40,7 @@ import {
 import { appLockService } from "../src/services/app-lock";
 import { setupOfflineStorageCleanup } from "../src/hooks/useOfflineFeed";
 import { useGlobalKeyboardShortcuts } from "../src/hooks/useKeyboardShortcuts";
+import "../src/i18n";
 
 // Initialize Sentry as early as possible
 const sentryDsn = Constants.expoConfig?.extra?.sentryDsn;

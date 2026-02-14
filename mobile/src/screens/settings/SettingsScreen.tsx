@@ -23,6 +23,7 @@ import {
 import { openLink } from "../../utils/browser";
 import { useRouter } from "expo-router";
 import { appLockService } from "../../services/app-lock";
+import { useTranslation } from "../../hooks/useTranslation";
 
 interface SettingsScreenProps {
   section?: string;
@@ -35,6 +36,7 @@ const APP_VERSION = "0.7.0";
 export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigateToMutedAccounts }: SettingsScreenProps) {
   const { signOut, accounts, account } = useAuth();
   const { preferences, updatePreference } = usePreferences();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const router = useRouter();
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
@@ -250,11 +252,11 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.header}>Settings</Text>
+      <Text style={styles.header}>{t("settings.header")}</Text>
 
       {/* Account Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>ACCOUNT</Text>
+        <Text style={styles.sectionTitle}>{t("settings.section_account")}</Text>
 
         {account && (
           <View style={styles.accountInfo}>
