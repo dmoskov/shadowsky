@@ -5,12 +5,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
-  Image,
   ScrollView,
   Dimensions,
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import {Image} from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { colors } from '../constants/theme';
@@ -378,7 +378,8 @@ export function ImageEditor({ images, onSave, onCancel, visible }: ImageEditorPr
             <Image
               source={{ uri: previewUri }}
               style={styles.previewImage}
-              resizeMode="contain"
+              contentFit="contain"
+              transition={200}
             />
           ) : (
             <ActivityIndicator size="large" color={colors.primary} />
@@ -489,7 +490,12 @@ export function ImageEditor({ images, onSave, onCancel, visible }: ImageEditorPr
                         currentIndex === index && styles.thumbnailActive,
                       ]}
                     >
-                      <Image source={{ uri: displayUri }} style={styles.thumbnailImage} />
+                      <Image
+                        source={{ uri: displayUri }}
+                        style={styles.thumbnailImage}
+                        contentFit="cover"
+                        transition={200}
+                      />
                       {isEdited && (
                         <View style={styles.editedBadge}>
                           <Text style={styles.editedBadgeText}>✓</Text>
