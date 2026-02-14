@@ -1,5 +1,6 @@
 import React from 'react';
-import {View, Image, StyleSheet, ViewStyle} from 'react-native';
+import {View, StyleSheet, ViewStyle} from 'react-native';
+import {Image} from 'expo-image';
 
 interface AvatarProps {
   uri?: string;
@@ -19,6 +20,8 @@ export function Avatar({uri, size = 40, style, accessibilityLabel}: AvatarProps)
         <Image
           source={{uri}}
           style={[styles.image, {width: size, height: size, borderRadius: size / 2}]}
+          contentFit="cover"
+          transition={200}
           accessibilityIgnoresInvertColors={true}
         />
       ) : (
