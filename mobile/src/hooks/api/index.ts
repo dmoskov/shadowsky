@@ -10,3 +10,4 @@ export * from './useAnalytics';
 export * from './useMessages';
 export * from './useFeedGenerators';
 export * from './useSearchPosts';
+export * from './useStarterPacks';
