@@ -2,6 +2,10 @@ import { AppBskyFeedDefs } from '@atproto/api';
 import { getAtProtoClient } from './client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Bookmarks');
 import {
   BookmarkCollection,
   bookmarkCollectionStorage
@@ -53,7 +57,7 @@ export async function getBookmarks(): Promise<BookmarkPost[]> {
           bookmarkPosts.push(bookmark);
         }
       } catch (error) {
-        console.error('Failed to fetch bookmarked post:', error);
+        logger.error('Failed to fetch bookmarked post:', error);
         // Include bookmark even if post fetch failed
         bookmarkPosts.push(bookmark);
       }
@@ -61,7 +65,7 @@ export async function getBookmarks(): Promise<BookmarkPost[]> {
 
     return bookmarkPosts;
   } catch (error) {
-    console.error('Failed to get bookmarks:', error);
+    logger.error('Failed to get bookmarks:', error);
     return [];
   }
 }
@@ -79,7 +83,7 @@ export async function isBookmarked(postUri: string): Promise<boolean> {
     const bookmarks: Bookmark[] = JSON.parse(stored);
     return bookmarks.some((b) => b.postUri === postUri);
   } catch (error) {
-    console.error('Failed to check bookmark:', error);
+    logger.error('Failed to check bookmark:', error);
     return false;
   }
 }
@@ -105,7 +109,7 @@ export async function addBookmark(post: AppBskyFeedDefs.PostView): Promise<void>
 
     await AsyncStorage.setItem(BOOKMARKS_STORAGE_KEY, JSON.stringify(bookmarks));
   } catch (error) {
-    console.error('Failed to add bookmark:', error);
+    logger.error('Failed to add bookmark:', error);
     throw error;
   }
 }
@@ -128,7 +132,7 @@ export async function removeBookmark(postUri: string): Promise<void> {
     // Also remove from all collections
     await bookmarkCollectionStorage.removeBookmarkFromAllCollections(postUri);
   } catch (error) {
-    console.error('Failed to remove bookmark:', error);
+    logger.error('Failed to remove bookmark:', error);
     throw error;
   }
 }
@@ -155,7 +159,7 @@ export async function clearAllBookmarks(): Promise<void> {
   try {
     await AsyncStorage.removeItem(BOOKMARKS_STORAGE_KEY);
   } catch (error) {
-    console.error('Failed to clear bookmarks:', error);
+    logger.error('Failed to clear bookmarks:', error);
     throw error;
   }
 }
@@ -256,7 +260,7 @@ export async function getBookmarksInCollection(collectionId: string): Promise<Bo
         });
       }
     } catch (error) {
-      console.error('Failed to fetch bookmarked post:', error);
+      logger.error('Failed to fetch bookmarked post:', error);
     }
   }
 

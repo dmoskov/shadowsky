@@ -10,6 +10,10 @@ import {
 import { appLockService } from "../services/app-lock";
 import { colors } from "../constants/theme";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Applockscreenx');
 interface AppLockScreenProps {
   onUnlock: () => void;
 }
@@ -63,7 +67,7 @@ export function AppLockScreen({ onUnlock }: AppLockScreenProps) {
         }
       }
     } catch (error) {
-      console.error("Authentication error:", error);
+      logger.error('Authentication error:', error);
       Alert.alert(
         "Error",
         "An error occurred during authentication. Please try again.",

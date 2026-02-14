@@ -9,6 +9,10 @@ import {initializePushNotifications} from '../services/push-notification-service
 import {useAuth} from '../contexts/AuthContext';
 import {getAgent} from '../services/atproto/client';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Notificationsetupx');
 /**
  * Component to initialize and manage push notifications
  * This should be mounted when the user is authenticated
@@ -60,7 +64,7 @@ export function NotificationSetup() {
             }
           }
         } catch (error) {
-          console.error('Error setting up push notifications:', error);
+          logger.error('Error setting up push notifications:', error);
           if (mounted) {
             setUseFallback(true);
           }
@@ -78,7 +82,7 @@ export function NotificationSetup() {
   // Start/stop poller as fallback if push initialization fails
   useEffect(() => {
     if (isAuthenticated && hasPermission && useFallback) {
-      console.log('Using polling fallback for notifications');
+      logger.log('Using polling fallback for notifications');
       startNotificationPoller();
       return () => {
         stopNotificationPoller();

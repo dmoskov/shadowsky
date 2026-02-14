@@ -1,4 +1,8 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Usedrafts');
 import {
   getDrafts,
   createDraft,
@@ -54,7 +58,7 @@ export function useSaveDraft() {
       queryClient.invalidateQueries({ queryKey: ['drafts'] });
     },
     onError: (error) => {
-      console.error('Failed to save draft:', error);
+      logger.error('Failed to save draft:', error);
     },
   });
 }

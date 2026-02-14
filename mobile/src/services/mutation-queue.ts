@@ -11,6 +11,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {AppState, AppStateStatus} from 'react-native';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('MutationQueue');
 const QUEUE_KEY = '@BskyMutationQueue';
 const MAX_RETRIES = 3;
 
@@ -68,7 +72,7 @@ class MutationQueue {
       const stored = await AsyncStorage.getItem(QUEUE_KEY);
       if (stored) {
         this.queue = JSON.parse(stored);
-        console.log(`[MutationQueue] Loaded ${this.queue.length} mutations from storage`);
+        logger.log(`Loaded ${this.queue.length} mutations from storage`);
       }
 
       // Set up AppState listener
@@ -82,7 +86,7 @@ class MutationQueue {
 
       this.isInitialized = true;
     } catch (error) {
-      console.error('[MutationQueue] Failed to initialize:', error);
+      logger.error('Failed to initialize:', error);
       throw error;
     }
   }
@@ -94,7 +98,7 @@ class MutationQueue {
       'change',
       (nextAppState: AppStateStatus) => {
         if (nextAppState === 'active') {
-          console.log('[MutationQueue] App became active, processing queue...');
+          logger.log('App became active, processing queue...');
           this.processQueue();
         }
       }
@@ -106,7 +110,7 @@ class MutationQueue {
 
     this.netInfoUnsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
       if (state.isConnected && state.isInternetReachable !== false) {
-        console.log('[MutationQueue] Network restored, processing queue...');
+        logger.log('Network restored, processing queue...');
         this.processQueue();
       }
     });
@@ -136,7 +140,7 @@ class MutationQueue {
     try {
       await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(this.queue));
     } catch (error) {
-      console.error('[MutationQueue] Failed to persist queue:', error);
+      logger.error('Failed to persist queue:', error);
     }
   }
 
@@ -159,7 +163,7 @@ class MutationQueue {
     await this.persistQueue();
     this.notifyListeners();
 
-    console.log(`[MutationQueue] Enqueued mutation: ${mutation.type}`, {
+    logger.log(`Enqueued mutation: ${mutation.type}`, {
       targetUri: mutation.targetUri,
       targetCid: mutation.targetCid,
     });
@@ -192,7 +196,7 @@ class MutationQueue {
   // Process queue
   async processQueue(): Promise<void> {
     if (this.isProcessing) {
-      console.log('[MutationQueue] Already processing, skipping');
+      logger.log('Already processing, skipping');
       return;
     }
 
@@ -204,7 +208,7 @@ class MutationQueue {
     this.isProcessing = true;
     this.notifyListeners();
 
-    console.log(`[MutationQueue] Processing ${pendingMutations.length} mutations...`);
+    logger.log(`Processing ${pendingMutations.length} mutations...`);
 
     try {
       // Sort by timestamp (FIFO)
@@ -234,7 +238,7 @@ class MutationQueue {
       await this.persistQueue();
       this.notifyListeners();
 
-      console.log(`[MutationQueue] Successfully processed mutation: ${mutation.type}`);
+      logger.log(`Successfully processed mutation: ${mutation.type}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
@@ -249,8 +253,7 @@ class MutationQueue {
         await this.persistQueue();
         this.notifyListeners();
 
-        console.log(
-          `[MutationQueue] Transient error processing ${mutation.type}, will retry (${mutation.retryCount}/${mutation.maxRetries}):`,
+        logger.log(`Transient error processing ${mutation.type}, will retry (${mutation.retryCount}/${mutation.maxRetries}):`,
           errorMessage
         );
       } else {
@@ -260,8 +263,7 @@ class MutationQueue {
         await this.persistQueue();
         this.notifyListeners();
 
-        console.error(
-          `[MutationQueue] Failed to process mutation ${mutation.type}:`,
+        logger.error(`Failed to process mutation ${mutation.type}:`,
           errorMessage
         );
       }
@@ -314,7 +316,7 @@ class MutationQueue {
     if (failedMutations.length > 0) {
       await this.persistQueue();
       this.notifyListeners();
-      console.log(`[MutationQueue] Retrying ${failedMutations.length} failed mutations`);
+      logger.log(`Retrying ${failedMutations.length} failed mutations`);
       await this.processQueue();
     }
   }
@@ -330,7 +332,7 @@ class MutationQueue {
     this.queue = [];
     await this.persistQueue();
     this.notifyListeners();
-    console.log('[MutationQueue] Cleared all mutations');
+    logger.log('Cleared all mutations');
   }
 
   // Clear only failed mutations
@@ -338,7 +340,7 @@ class MutationQueue {
     this.queue = this.queue.filter(m => m.status !== 'failed');
     await this.persistQueue();
     this.notifyListeners();
-    console.log('[MutationQueue] Cleared failed mutations');
+    logger.log('Cleared failed mutations');
   }
 
   // Check if queue is currently processing

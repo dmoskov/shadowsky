@@ -8,6 +8,10 @@ import React, {
 } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Moderationcontextx');
 /**
  * Content label types from AT Protocol
  */
@@ -103,7 +107,7 @@ export function ModerationProvider({
         });
       }
     } catch (error) {
-      console.error("Failed to load content filter preferences:", error);
+      logger.error('Failed to load content filter preferences:', error);
     }
   };
 
@@ -117,7 +121,7 @@ export function ModerationProvider({
         await AsyncStorage.setItem(CONTENT_FILTER_KEY, JSON.stringify(updated));
         setContentFilterPreferences(updated);
       } catch (error) {
-        console.error("Failed to save content filter preference:", error);
+        logger.error('Failed to save content filter preference:', error);
         throw error;
       }
     },
@@ -129,7 +133,7 @@ export function ModerationProvider({
       await AsyncStorage.removeItem(CONTENT_FILTER_KEY);
       setContentFilterPreferences(DEFAULT_CONTENT_FILTER_PREFERENCES);
     } catch (error) {
-      console.error("Failed to reset content filter preferences:", error);
+      logger.error('Failed to reset content filter preferences:', error);
       throw error;
     }
   }, []);

@@ -11,6 +11,10 @@ import { useModeration, LabelType, LabelPreference } from "../../contexts/Modera
 import { colors } from "../../constants/theme";
 import { ChevronLeft } from "lucide-react-native";
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Contentmoderationsettingsscreenx');
 interface ContentModerationSettingsScreenProps {
   navigation: {
     goBack: () => void;
@@ -111,7 +115,7 @@ export function ContentModerationSettingsScreen({
     try {
       await setContentFilterPreference(labelType, preference);
     } catch (error) {
-      console.error("Failed to update preference:", error);
+      logger.error('Failed to update preference:', error);
     }
   };
 
@@ -119,7 +123,7 @@ export function ContentModerationSettingsScreen({
     try {
       await resetContentFilterPreferences();
     } catch (error) {
-      console.error("Failed to reset preferences:", error);
+      logger.error('Failed to reset preferences:', error);
     }
   };
 

@@ -15,6 +15,10 @@ import {
 } from '../services/mutation-queue';
 import {getAtProtoClient} from '../services/atproto/client';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Usemutationqueue');
 export interface UseMutationQueueReturn {
   // Queue statistics
   pendingCount: number;
@@ -106,7 +110,7 @@ export function useMutationQueue(): UseMutationQueueReturn {
           }
         }
       } catch (error) {
-        console.error('[useMutationQueue] Failed to initialize:', error);
+        logger.error('Failed to initialize:', error);
       }
     };
 
@@ -128,7 +132,7 @@ export function useMutationQueue(): UseMutationQueueReturn {
         setStats(newStats);
         setIsProcessing(processing);
       } catch (error) {
-        console.error('[useMutationQueue] Failed to update stats:', error);
+        logger.error('Failed to update stats:', error);
       }
     };
 

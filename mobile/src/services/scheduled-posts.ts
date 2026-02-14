@@ -5,6 +5,10 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('ScheduledPosts');
 const SCHEDULED_POSTS_KEY = '@shadowsky/scheduled_posts';
 
 export interface ScheduledPost {
@@ -40,7 +44,7 @@ export async function getScheduledPosts(): Promise<ScheduledPost[]> {
       updatedAt: new Date(post.updatedAt),
     }));
   } catch (error) {
-    console.error('Failed to load scheduled posts:', error);
+    logger.error('Failed to load scheduled posts:', error);
     return [];
   }
 }

@@ -7,6 +7,10 @@ import * as WebBrowser from 'expo-web-browser';
 import {router} from 'expo-router';
 import {colors} from '../constants/theme';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Browser');
 /**
  * Check if a URL is a Bluesky deep link that should be handled in-app
  * rather than opening in the in-app browser
@@ -70,7 +74,7 @@ function handleBskyDeepLink(url: string): boolean {
     // If we can't parse the URL, return false to open in browser
     return false;
   } catch (error) {
-    console.error('Failed to parse bsky.app deep link:', error);
+    logger.error('Failed to parse bsky.app deep link:', error);
     return false;
   }
 }
@@ -110,7 +114,7 @@ export async function openLink(url: string): Promise<void> {
       presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
     });
   } catch (error) {
-    console.error('Failed to open URL in browser:', error);
+    logger.error('Failed to open URL in browser:', error);
     throw error;
   }
 }

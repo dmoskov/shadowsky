@@ -2,6 +2,10 @@ import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { Alert } from 'react-native';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Useimagepicker');
 export interface ImageAsset {
   uri: string;
   width: number;
@@ -102,7 +106,7 @@ export function useImagePicker() {
 
       return newImages;
     } catch (error) {
-      console.error('Error picking images from library:', error);
+      logger.error('Error picking images from library:', error);
       Alert.alert('Error', 'Failed to select images. Please try again.');
       return [];
     }
@@ -175,7 +179,7 @@ export function useImagePicker() {
 
       return newImage;
     } catch (error) {
-      console.error('Error taking photo:', error);
+      logger.error('Error taking photo:', error);
       Alert.alert('Error', 'Failed to take photo. Please try again.');
       return null;
     }

@@ -26,6 +26,10 @@ import { useRouter } from "expo-router";
 import { appLockService } from "../../services/app-lock";
 import { useTranslation } from "../../hooks/useTranslation";
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Settingsscreenx');
 interface SettingsScreenProps {
   section?: string;
   onNavigateToBlockedAccounts?: () => void;
@@ -85,7 +89,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
         setCacheSize(`${(totalSize / (1024 * 1024)).toFixed(2)} MB`);
       }
     } catch (error) {
-      console.error("Failed to calculate cache size:", error);
+      logger.error('Failed to calculate cache size:', error);
       setCacheSize("unknown");
     }
   };

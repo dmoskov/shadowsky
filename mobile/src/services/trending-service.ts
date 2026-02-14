@@ -6,6 +6,10 @@ import { getAtProtoClient } from "./atproto/client";
 import { withRetry } from "../utils/with-retry";
 import { rateLimited, ATProtoEndpointType } from "./rate-limiter";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('TrendingService');
 export interface TrendingTopic {
   topic: string;
   link?: string;
@@ -55,7 +59,7 @@ export async function getTrendingTopics(
           };
         } catch (error) {
           // If trending topics API is not available, return empty arrays
-          console.warn("Failed to fetch trending topics:", error);
+          logger.warn('Failed to fetch trending topics:', error);
           return { topics: [], suggested: [] };
         }
       }),

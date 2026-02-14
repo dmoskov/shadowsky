@@ -5,6 +5,10 @@ import {Platform} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {colors} from '../constants/theme';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Usenotificationpermissions');
 const PERMISSION_STORAGE_KEY = '@shadowsky/notification_permission_asked';
 
 export type PermissionStatus = 'granted' | 'denied' | 'undetermined';
@@ -47,7 +51,7 @@ export function useNotificationPermissions(): NotificationPermissions {
       const {status} = await Notifications.getPermissionsAsync();
       updatePermissionState(status);
     } catch (error) {
-      console.error('Error checking notification permissions:', error);
+      logger.error('Error checking notification permissions:', error);
       setPermissionStatus('undetermined');
       setHasPermission(false);
     }
@@ -59,7 +63,7 @@ export function useNotificationPermissions(): NotificationPermissions {
   async function requestPermission(): Promise<boolean> {
     try {
       if (!Device.isDevice) {
-        console.log('Cannot request permissions on simulator/emulator');
+        logger.log('Cannot request permissions on simulator/emulator');
         return false;
       }
 
@@ -78,7 +82,7 @@ export function useNotificationPermissions(): NotificationPermissions {
       updatePermissionState(status);
       return status === 'granted';
     } catch (error) {
-      console.error('Error requesting notification permissions:', error);
+      logger.error('Error requesting notification permissions:', error);
       return false;
     }
   }

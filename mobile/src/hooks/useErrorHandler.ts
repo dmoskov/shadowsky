@@ -14,6 +14,10 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { captureException } from "../utils/error-reporting";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Useerrorhandler');
 interface ErrorHandlerOptions {
   onRateLimit?: (resetAt: Date) => void;
   onAuthError?: () => void;
@@ -152,7 +156,7 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
         return;
       }
 
-      console.error(`[ErrorHandler] ${context || "Error"}:`, error);
+      logger.error(`${context || "Error"}:`, error);
 
       // Extract API error details for Sentry reporting
       const statusCode =

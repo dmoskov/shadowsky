@@ -14,6 +14,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getTimeline } from './atproto/feeds';
 import { getUnreadCount } from './atproto/notifications';
 import { preferencesService } from './preferences';
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('BackgroundFetch');
 
 const BACKGROUND_FETCH_TASK = 'background-fetch-task';
 const PREFETCH_STORAGE_KEY = '@shadowsky/prefetch_data';
@@ -36,7 +39,7 @@ async function savePrefetchData(data: PrefetchData): Promise<void> {
     await AsyncStorage.setItem(PREFETCH_STORAGE_KEY, JSON.stringify(data));
     await AsyncStorage.setItem(PREFETCH_TIMESTAMP_KEY, data.timestamp.toString());
   } catch (error) {
-    console.error('[BackgroundFetch] Error saving prefetch data:', error);
+    logger.error('Error saving prefetch data:', error);
   }
 }
 
@@ -51,7 +54,7 @@ export async function loadPrefetchData(): Promise<PrefetchData | null> {
     }
     return JSON.parse(data) as PrefetchData;
   } catch (error) {
-    console.error('[BackgroundFetch] Error loading prefetch data:', error);
+    logger.error('Error loading prefetch data:', error);
     return null;
   }
 }
@@ -69,7 +72,7 @@ export async function isPrefetchDataStale(): Promise<boolean> {
     const fifteenMinutes = 15 * 60 * 1000;
     return age > fifteenMinutes;
   } catch (error) {
-    console.error('[BackgroundFetch] Error checking prefetch staleness:', error);
+    logger.error('Error checking prefetch staleness:', error);
     return true;
   }
 }
@@ -83,7 +86,7 @@ async function updateBadgeCount(count: number): Promise<void> {
       await Notifications.setBadgeCountAsync(count);
     }
   } catch (error) {
-    console.error('[BackgroundFetch] Error updating badge count:', error);
+    logger.error('Error updating badge count:', error);
   }
 }
 
@@ -93,12 +96,12 @@ async function updateBadgeCount(count: number): Promise<void> {
  */
 TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
   try {
-    console.log('[BackgroundFetch] Starting background fetch task');
+    logger.log('Starting background fetch task');
 
     // Check if user has enabled background fetch
     const prefs = await preferencesService.get();
     if (!prefs.backgroundFetchEnabled) {
-      console.log('[BackgroundFetch] Background fetch disabled in preferences');
+      logger.log('Background fetch disabled in preferences');
       return BackgroundFetch.BackgroundFetchResult.NoData;
     }
 
@@ -113,9 +116,9 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
         feed: timelineResult.feed,
         cursor: timelineResult.cursor,
       };
-      console.log(`[BackgroundFetch] Fetched ${timelineResult.feed.length} timeline posts`);
+      logger.log(`Fetched ${timelineResult.feed.length} timeline posts`);
     } catch (error) {
-      console.error('[BackgroundFetch] Error fetching timeline:', error);
+      logger.error('Error fetching timeline:', error);
     }
 
     // Fetch unread notification count
@@ -125,18 +128,18 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
 
       // Update badge count
       await updateBadgeCount(unreadCount);
-      console.log(`[BackgroundFetch] Unread count: ${unreadCount}`);
+      logger.log(`Unread count: ${unreadCount}`);
     } catch (error) {
-      console.error('[BackgroundFetch] Error fetching unread count:', error);
+      logger.error('Error fetching unread count:', error);
     }
 
     // Save prefetched data to AsyncStorage
     await savePrefetchData(prefetchData);
 
-    console.log('[BackgroundFetch] Background fetch completed successfully');
+    logger.log('Background fetch completed successfully');
     return BackgroundFetch.BackgroundFetchResult.NewData;
   } catch (error) {
-    console.error('[BackgroundFetch] Background fetch failed:', error);
+    logger.error('Background fetch failed:', error);
     return BackgroundFetch.BackgroundFetchResult.Failed;
   }
 });
@@ -150,7 +153,7 @@ export async function registerBackgroundFetch(): Promise<void> {
     // Check if user has enabled background fetch
     const prefs = await preferencesService.get();
     if (!prefs.backgroundFetchEnabled) {
-      console.log('[BackgroundFetch] Background fetch disabled, skipping registration');
+      logger.log('Background fetch disabled, skipping registration');
       return;
     }
 
@@ -158,7 +161,7 @@ export async function registerBackgroundFetch(): Promise<void> {
     const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_FETCH_TASK);
 
     if (isRegistered) {
-      console.log('[BackgroundFetch] Task already registered');
+      logger.log('Task already registered');
       return;
     }
 
@@ -169,9 +172,9 @@ export async function registerBackgroundFetch(): Promise<void> {
       startOnBoot: true, // Start on device boot
     });
 
-    console.log('[BackgroundFetch] Background fetch registered successfully');
+    logger.log('Background fetch registered successfully');
   } catch (error) {
-    console.error('[BackgroundFetch] Failed to register background fetch:', error);
+    logger.error('Failed to register background fetch:', error);
   }
 }
 
@@ -184,10 +187,10 @@ export async function unregisterBackgroundFetch(): Promise<void> {
 
     if (isRegistered) {
       await BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
-      console.log('[BackgroundFetch] Background fetch unregistered successfully');
+      logger.log('Background fetch unregistered successfully');
     }
   } catch (error) {
-    console.error('[BackgroundFetch] Failed to unregister background fetch:', error);
+    logger.error('Failed to unregister background fetch:', error);
   }
 }
 
@@ -198,7 +201,7 @@ export async function getBackgroundFetchStatus(): Promise<BackgroundFetch.Backgr
   try {
     return await BackgroundFetch.getStatusAsync();
   } catch (error) {
-    console.error('[BackgroundFetch] Failed to get status:', error);
+    logger.error('Failed to get status:', error);
     return null;
   }
 }

@@ -36,6 +36,10 @@ export interface TenorSearchResponse {
 // For React Native, we'll use expo-constants to access environment variables
 import Constants from 'expo-constants';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Tenor');
 const TENOR_API_KEY = Constants.expoConfig?.extra?.tenorApiKey || "";
 const TENOR_API_BASE = "https://tenor.googleapis.com/v2";
 const CLIENT_KEY = "shadowsky"; // Client key for tracking
@@ -73,7 +77,7 @@ export async function searchGifs(
     const data: TenorSearchResponse = await response.json();
     return data.results;
   } catch (error) {
-    console.error("Error searching Tenor GIFs:", error);
+    logger.error('Error searching Tenor GIFs:', error);
     throw error;
   }
 }
@@ -103,7 +107,7 @@ export async function getTrending(limit = 20): Promise<TenorGif[]> {
     const data: TenorSearchResponse = await response.json();
     return data.results;
   } catch (error) {
-    console.error("Error loading trending GIFs:", error);
+    logger.error('Error loading trending GIFs:', error);
     throw error;
   }
 }
@@ -132,7 +136,7 @@ export async function getGifById(id: string): Promise<TenorGif | null> {
     const data: TenorSearchResponse = await response.json();
     return data.results[0] || null;
   } catch (error) {
-    console.error("Error fetching GIF by ID:", error);
+    logger.error('Error fetching GIF by ID:', error);
     throw error;
   }
 }

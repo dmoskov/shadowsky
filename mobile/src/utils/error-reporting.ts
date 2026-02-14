@@ -16,6 +16,10 @@ import * as Sentry from "@sentry/react-native";
 import Constants from "expo-constants";
 import * as Crypto from "expo-crypto";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('ErrorReporting');
 export interface ErrorContext {
   endpoint?: string;
   statusCode?: number;
@@ -42,7 +46,7 @@ async function hashDid(did: string): Promise<string> {
     // Return first 16 chars for brevity
     return digest.substring(0, 16);
   } catch (error) {
-    console.error("[ErrorReporting] Failed to hash DID:", error);
+    logger.error('Failed to hash DID:', error);
     return "unknown";
   }
 }
@@ -54,7 +58,7 @@ async function hashDid(did: string): Promise<string> {
 export function initializeSentry(dsn?: string): void {
   // Skip initialization if no DSN provided or in development
   if (!dsn) {
-    console.log("[ErrorReporting] No DSN provided, Sentry disabled");
+    logger.log('No DSN provided, Sentry disabled');
     return;
   }
 
@@ -96,7 +100,7 @@ export function initializeSentry(dsn?: string): void {
       beforeSend(event) {
         // Don't send events in development
         if (__DEV__) {
-          console.log("[ErrorReporting] Would send event:", event);
+          logger.log('Would send event:', event);
           return null;
         }
 
@@ -113,9 +117,9 @@ export function initializeSentry(dsn?: string): void {
       },
     });
 
-    console.log("[ErrorReporting] Sentry initialized successfully");
+    logger.log('Sentry initialized successfully');
   } catch (error) {
-    console.error("[ErrorReporting] Failed to initialize Sentry:", error);
+    logger.error('Failed to initialize Sentry:', error);
   }
 }
 
@@ -139,7 +143,7 @@ export async function setUser(did: string | null): Promise<void> {
     // Add DID as tag for filtering
     Sentry.setTag("user_did_hash", hashedDid);
   } catch (error) {
-    console.error("[ErrorReporting] Failed to set user:", error);
+    logger.error('Failed to set user:', error);
   }
 }
 
@@ -178,13 +182,12 @@ export function captureException(
         : undefined,
     });
 
-    console.log(
-      `[ErrorReporting] Exception captured: ${eventId}`,
+    logger.log(`Exception captured: ${eventId}`,
       error,
       context
     );
   } catch (err) {
-    console.error("[ErrorReporting] Failed to capture exception:", err);
+    logger.error('Failed to capture exception:', err);
   }
 }
 
@@ -200,7 +203,7 @@ export function captureMessage(
   try {
     Sentry.captureMessage(message, level);
   } catch (error) {
-    console.error("[ErrorReporting] Failed to capture message:", error);
+    logger.error('Failed to capture message:', error);
   }
 }
 
@@ -225,7 +228,7 @@ export function addBreadcrumb(
       timestamp: Date.now() / 1000,
     });
   } catch (error) {
-    console.error("[ErrorReporting] Failed to add breadcrumb:", error);
+    logger.error('Failed to add breadcrumb:', error);
   }
 }
 
@@ -242,7 +245,7 @@ export function startTransaction(
   try {
     return Sentry.startSpan({ name, op }, (span) => span);
   } catch (error) {
-    console.error("[ErrorReporting] Failed to start transaction:", error);
+    logger.error('Failed to start transaction:', error);
     return null;
   }
 }
@@ -260,7 +263,7 @@ export function startSpan(
   try {
     return Sentry.startSpan({ op, name: description }, (span) => span);
   } catch (error) {
-    console.error("[ErrorReporting] Failed to start span:", error);
+    logger.error('Failed to start span:', error);
     return null;
   }
 }
@@ -274,7 +277,7 @@ export function setTag(key: string, value: string): void {
   try {
     Sentry.setTag(key, value);
   } catch (error) {
-    console.error("[ErrorReporting] Failed to set tag:", error);
+    logger.error('Failed to set tag:', error);
   }
 }
 
@@ -286,7 +289,7 @@ export function setTags(tags: Record<string, string>): void {
   try {
     Sentry.setTags(tags);
   } catch (error) {
-    console.error("[ErrorReporting] Failed to set tags:", error);
+    logger.error('Failed to set tags:', error);
   }
 }
 
@@ -299,7 +302,7 @@ export function setContext(name: string, context: Record<string, unknown>): void
   try {
     Sentry.setContext(name, context);
   } catch (error) {
-    console.error("[ErrorReporting] Failed to set context:", error);
+    logger.error('Failed to set context:', error);
   }
 }
 

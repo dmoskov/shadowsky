@@ -17,6 +17,10 @@ import {useCallback, useEffect, useState} from 'react';
 import {offlineStorage, OfflineFeedItem} from '../services/offline-storage';
 import {useNetworkStatus} from './useNetworkStatus';
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Useofflinefeed');
 /**
  * Feed item type for transformations
  */
@@ -146,7 +150,7 @@ export function useOfflineFeedStatus(): OfflineFeedStatus {
           isStale,
         }));
       } catch (error) {
-        console.error('[useOfflineFeedStatus] Failed to initialize:', error);
+        logger.error('Failed to initialize:', error);
         setStatus(prev => ({...prev, isInitialized: true}));
       }
     };
@@ -181,9 +185,9 @@ export function useFeedCaching(feedType: 'timeline' | 'author' | 'list' = 'timel
         );
 
         await offlineStorage.saveFeedItems(offlineItems, feedType);
-        console.log(`[useFeedCaching] Cached ${offlineItems.length} ${feedType} items`);
+        logger.log(`Cached ${offlineItems.length} ${feedType} items`);
       } catch (error) {
-        console.error('[useFeedCaching] Failed to cache feed items:', error);
+        logger.error('Failed to cache feed items:', error);
       }
     },
     [feedType]
@@ -253,7 +257,7 @@ export function useOfflineFeedEnhancer<T extends {pages: Array<{feed: unknown[]}
           const cachedItems = await offlineStorage.getFeedItems(100, feedType);
 
           if (cachedItems.length > 0) {
-            console.log(`[useOfflineFeedEnhancer] Loading ${cachedItems.length} cached items`);
+            logger.log(`Loading ${cachedItems.length} cached items`);
 
             // Check if data is stale (older than 5 minutes)
             const metadata = await offlineStorage.getMetadata(`feed_${feedType}`);
@@ -280,7 +284,7 @@ export function useOfflineFeedEnhancer<T extends {pages: Array<{feed: unknown[]}
             });
           }
         } catch (error) {
-          console.error('[useOfflineFeedEnhancer] Failed to load cached data:', error);
+          logger.error('Failed to load cached data:', error);
         }
       } else if (isConnected && offlineStatus.isServingCached) {
         // Back online - clear offline status
@@ -312,9 +316,9 @@ export function useThreadCaching() {
     try {
       await offlineStorage.init();
       await offlineStorage.saveThread(threadUri, posts);
-      console.log(`[useThreadCaching] Cached thread ${threadUri} with ${posts.length} posts`);
+      logger.log(`Cached thread ${threadUri} with ${posts.length} posts`);
     } catch (error) {
-      console.error('[useThreadCaching] Failed to cache thread:', error);
+      logger.error('Failed to cache thread:', error);
     }
   }, []);
 
@@ -367,7 +371,7 @@ export function useOfflineThreadEnhancer<T extends {thread?: {posts?: unknown[]}
           const cachedThread = await offlineStorage.getThread(threadUri);
 
           if (cachedThread) {
-            console.log(`[useOfflineThreadEnhancer] Loading cached thread ${threadUri}`);
+            logger.log(`Loading cached thread ${threadUri}`);
             setIsServingCached(true);
 
             // Inject cached data into query cache
@@ -379,7 +383,7 @@ export function useOfflineThreadEnhancer<T extends {thread?: {posts?: unknown[]}
             });
           }
         } catch (error) {
-          console.error('[useOfflineThreadEnhancer] Failed to load cached thread:', error);
+          logger.error('Failed to load cached thread:', error);
         }
       } else if (isConnected && isServingCached) {
         setIsServingCached(false);
@@ -404,18 +408,18 @@ export async function setupOfflineStorageCleanup() {
   try {
     await offlineStorage.init();
     await offlineStorage.enforceStorageLimits();
-    console.log('[setupOfflineStorageCleanup] Initial cleanup complete');
+    logger.log('Initial cleanup complete');
 
     // Schedule periodic cleanup (every 24 hours)
     setInterval(async () => {
       try {
         await offlineStorage.enforceStorageLimits();
-        console.log('[setupOfflineStorageCleanup] Periodic cleanup complete');
+        logger.log('Periodic cleanup complete');
       } catch (error) {
-        console.error('[setupOfflineStorageCleanup] Periodic cleanup failed:', error);
+        logger.error('Periodic cleanup failed:', error);
       }
     }, 24 * 60 * 60 * 1000);
   } catch (error) {
-    console.error('[setupOfflineStorageCleanup] Setup failed:', error);
+    logger.error('Setup failed:', error);
   }
 }

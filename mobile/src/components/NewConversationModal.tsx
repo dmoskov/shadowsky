@@ -16,6 +16,10 @@ import { searchActors } from "../services/atproto/profiles";
 import { CloseIcon, SearchIcon } from "./icons";
 import { colors } from "../constants/theme";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Newconversationmodalx');
 interface NewConversationModalProps {
   visible: boolean;
   onClose: () => void;
@@ -48,7 +52,7 @@ export function NewConversationModal({
       const results = await searchActors(query.trim(), 20);
       setSearchResults(results);
     } catch (error) {
-      console.error("Failed to search users:", error);
+      logger.error('Failed to search users:', error);
       setSearchError("Failed to search users. Please try again.");
       setSearchResults([]);
     } finally {

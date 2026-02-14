@@ -17,6 +17,10 @@ import {AppBskyGraphDefs, AppBskyActorDefs} from '@atproto/api';
 import {colors} from '../../constants/theme';
 import {Avatar} from '../../components/Avatar';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Starterpackdetailscreenx');
 interface StarterPackDetailScreenProps {
   starterPackUri: string;
   onNavigateToProfile?: (handle: string) => void;
@@ -236,7 +240,7 @@ export function StarterPackDetailScreen({
               feed={feed}
               onPress={() => {
                 // Navigate to feed detail if implemented
-                console.log('Navigate to feed:', feed.uri);
+                logger.log('Navigate to feed:', feed.uri);
               }}
             />
           ))}

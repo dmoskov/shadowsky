@@ -22,6 +22,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CloseIcon } from "./icons";
 import { colors } from "../constants/theme";
 
+
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('Emojipickermodalx');
 interface EmojiPickerModalProps {
   visible: boolean;
   onSelectEmoji: (emoji: string) => void;
@@ -57,7 +61,7 @@ export function EmojiPickerModal({
         setRecentEmojis(JSON.parse(stored));
       }
     } catch (error) {
-      console.error("Failed to load recent emojis:", error);
+      logger.error('Failed to load recent emojis:', error);
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +71,7 @@ export function EmojiPickerModal({
     try {
       await AsyncStorage.setItem(RECENT_EMOJIS_KEY, JSON.stringify(newRecent));
     } catch (error) {
-      console.error("Failed to save recent emojis:", error);
+      logger.error('Failed to save recent emojis:', error);
     }
   };
 

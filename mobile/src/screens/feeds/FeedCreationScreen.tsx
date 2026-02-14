@@ -16,6 +16,10 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {colors} from '../../constants/theme';
 import {useCreateFeedGenerator} from '../../hooks/api';
 
+
+import { createLogger } from '../../utils/logger';
+
+const logger = createLogger('Feedcreationscreenx');
 export function FeedCreationScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -56,7 +60,7 @@ export function FeedCreationScreen() {
         ]
       );
     } catch (error) {
-      console.error('Failed to create feed generator:', error);
+      logger.error('Failed to create feed generator:', error);
       Alert.alert(
         'Error',
         error instanceof Error ? error.message : 'Failed to create feed generator. Please try again.'
