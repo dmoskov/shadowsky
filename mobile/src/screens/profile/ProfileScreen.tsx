@@ -19,6 +19,7 @@ import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
 import { ProfileTabBar, ProfileTab } from "../../components/ProfileTabBar";
 import { AddToListModal } from "../../components/AddToListModal";
+import { ReportModal } from "../../components/ReportModal";
 import { ProfileSkeleton } from "../../components/ProfileSkeleton";
 import { MoreVerticalIcon, SendIcon } from "../../components/icons";
 import { AppBskyFeedDefs } from "@atproto/api";
@@ -84,6 +85,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAddToList, setShowAddToList] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   // Fetch starter packs for this actor
   const { data: starterPacksData } = useActorStarterPacks(handle);
@@ -226,11 +228,27 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
 
   const handleReport = () => {
     setShowMenu(false);
-    Alert.alert(
-      'Report',
-      'Reporting functionality will be available soon.',
-      [{ text: 'OK' }]
-    );
+    setShowReportModal(true);
+  };
+
+  const handleBlockAfterReport = async (did: string) => {
+    if (!profile) return;
+    try {
+      await blockMutation.mutateAsync(did);
+      Alert.alert('Success', `@${profile.handle} has been blocked.`);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to block user. Please try again.');
+    }
+  };
+
+  const handleMuteAfterReport = async (did: string) => {
+    if (!profile) return;
+    try {
+      await muteMutation.mutateAsync(did);
+      Alert.alert('Success', `@${profile.handle} has been muted.`);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to mute user. Please try again.');
+    }
   };
 
   const handleStartConversation = async () => {
@@ -559,6 +577,21 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
             </View>
           </TouchableOpacity>
         </Modal>
+      )}
+
+      {/* Report Modal */}
+      {profile && (
+        <ReportModal
+          visible={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          reportType="account"
+          subjectUri={`at://${profile.did}/app.bsky.actor.profile/self`}
+          subjectDid={profile.did}
+          subjectHandle={profile.handle}
+          subjectDisplayName={profile.displayName}
+          onBlock={handleBlockAfterReport}
+          onMute={handleMuteAfterReport}
+        />
       )}
     </View>
   );
