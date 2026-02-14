@@ -1,4 +1,4 @@
-import { File, Directory, Paths } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system';
 import { nanoid } from 'nanoid';
 
 
@@ -10,8 +10,7 @@ const logger = createLogger('DraftMediaStorage');
  * Media is stored locally on-device and referenced by abstract localRefPath identifiers
  */
 
-// Use new expo-file-system API
-const DRAFT_MEDIA_DIR = new Directory(Paths.document, 'bsky-draft-media');
+const DRAFT_MEDIA_DIR = FileSystem.documentDirectory + 'bsky-draft-media/';
 
 // Cache to avoid repeated filesystem checks
 const mediaExistenceCache = new Map<string, boolean>();
@@ -35,18 +34,19 @@ export function generateVideoRefPath(mimeType: string): string {
  * Initialize the draft media directory
  */
 async function ensureMediaDirectory(): Promise<void> {
-  if (!(await DRAFT_MEDIA_DIR.exists)) {
-    await DRAFT_MEDIA_DIR.create();
+  const info = await FileSystem.getInfoAsync(DRAFT_MEDIA_DIR);
+  if (!info.exists) {
+    await FileSystem.makeDirectoryAsync(DRAFT_MEDIA_DIR, { intermediates: true });
   }
 }
 
 /**
  * Convert localRefPath to filesystem path
  */
-function getFile(localRefPath: string): File {
+function getFilePath(localRefPath: string): string {
   // Sanitize the localRefPath to create a valid filename
   const sanitized = localRefPath.replace(/[:/\\]/g, '_');
-  return new File(DRAFT_MEDIA_DIR, sanitized);
+  return DRAFT_MEDIA_DIR + sanitized;
 }
 
 /**
@@ -61,16 +61,17 @@ export async function saveMediaToLocal(
 ): Promise<string> {
   await ensureMediaDirectory();
 
-  const destFile = getFile(localRefPath);
+  const destPath = getFilePath(localRefPath);
 
-  // Copy the file to our draft media directory
-  const sourceFile = new File(sourceUri);
-  await sourceFile.copy(destFile);
+  await FileSystem.copyAsync({
+    from: sourceUri,
+    to: destPath,
+  });
 
   // Update cache
   mediaExistenceCache.set(localRefPath, true);
 
-  return destFile.uri;
+  return destPath;
 }
 
 /**
@@ -81,11 +82,12 @@ export async function saveMediaToLocal(
 export async function loadMediaFromLocal(
   localRefPath: string
 ): Promise<string | null> {
-  const file = getFile(localRefPath);
+  const filePath = getFilePath(localRefPath);
+  const info = await FileSystem.getInfoAsync(filePath);
 
-  if (await file.exists) {
+  if (info.exists) {
     mediaExistenceCache.set(localRefPath, true);
-    return file.uri;
+    return filePath;
   }
 
   mediaExistenceCache.set(localRefPath, false);
@@ -97,10 +99,11 @@ export async function loadMediaFromLocal(
  * @param localRefPath - The unique identifier for this media file
  */
 export async function deleteMediaFromLocal(localRefPath: string): Promise<void> {
-  const file = getFile(localRefPath);
+  const filePath = getFilePath(localRefPath);
+  const info = await FileSystem.getInfoAsync(filePath);
 
-  if (await file.exists) {
-    await file.delete();
+  if (info.exists) {
+    await FileSystem.deleteAsync(filePath, { idempotent: true });
   }
 
   // Remove from cache
@@ -119,13 +122,13 @@ export async function mediaExists(localRefPath: string): Promise<boolean> {
   }
 
   // Check filesystem
-  const file = getFile(localRefPath);
-  const exists = await file.exists;
+  const filePath = getFilePath(localRefPath);
+  const info = await FileSystem.getInfoAsync(filePath);
 
   // Update cache
-  mediaExistenceCache.set(localRefPath, exists);
+  mediaExistenceCache.set(localRefPath, info.exists);
 
-  return exists;
+  return info.exists;
 }
 
 /**
@@ -135,12 +138,12 @@ export async function mediaExists(localRefPath: string): Promise<boolean> {
 export async function ensureMediaCachePopulated(): Promise<void> {
   try {
     await ensureMediaDirectory();
-    const files = await DRAFT_MEDIA_DIR.list();
+    const files = await FileSystem.readDirectoryAsync(DRAFT_MEDIA_DIR);
 
     // Pre-populate cache with all existing files
-    for (const file of files) {
+    for (const fileName of files) {
       // Reverse sanitization to get original localRefPath
-      const localRefPath = file.name.replace(/_/g, ':');
+      const localRefPath = fileName.replace(/_/g, ':');
       mediaExistenceCache.set(localRefPath, true);
     }
   } catch (error) {
@@ -164,8 +167,8 @@ export async function deleteMultipleMedia(localRefPaths: string[]): Promise<void
 export async function getAllStoredMedia(): Promise<string[]> {
   try {
     await ensureMediaDirectory();
-    const files = await DRAFT_MEDIA_DIR.list();
-    return files.map((file) => file.name.replace(/_/g, ':'));
+    const files = await FileSystem.readDirectoryAsync(DRAFT_MEDIA_DIR);
+    return files.map((fileName) => fileName.replace(/_/g, ':'));
   } catch (error) {
     logger.error('Failed to get stored media:', error);
     return [];
@@ -177,8 +180,9 @@ export async function getAllStoredMedia(): Promise<string[]> {
  */
 export async function clearAllDraftMedia(): Promise<void> {
   try {
-    if (await DRAFT_MEDIA_DIR.exists) {
-      await DRAFT_MEDIA_DIR.delete();
+    const info = await FileSystem.getInfoAsync(DRAFT_MEDIA_DIR);
+    if (info.exists) {
+      await FileSystem.deleteAsync(DRAFT_MEDIA_DIR, { idempotent: true });
       mediaExistenceCache.clear();
     }
   } catch (error) {
