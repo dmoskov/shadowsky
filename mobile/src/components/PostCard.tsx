@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useCallback, useMemo} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Modal, Alert} from 'react-native';
 import {AppBskyFeedDefs, AppBskyFeedPost} from '@atproto/api';
 import {Avatar} from './Avatar';
@@ -37,7 +37,7 @@ interface PostCardProps {
   onPressQuoteCount?: () => void;
 }
 
-export function PostCard({
+function PostCardComponent({
   post,
   onPress,
   onPressProfile,
@@ -72,18 +72,20 @@ export function PostCard({
     getContentWarningText,
   } = useModeration();
 
-  // Type guard for record
-  const record = AppBskyFeedPost.isRecord(postView.record)
-    ? postView.record
-    : undefined;
+  // Memoized type guard for record
+  const record = useMemo(
+    () => (AppBskyFeedPost.isRecord(postView.record) ? postView.record : undefined),
+    [postView.record]
+  );
 
-  const handleProfilePress = () => {
+  // Memoized event handlers
+  const handleProfilePress = useCallback(() => {
     if (onPressProfile) {
       onPressProfile(author.handle);
     }
-  };
+  }, [onPressProfile, author.handle]);
 
-  const handleMuteUser = () => {
+  const handleMuteUser = useCallback(() => {
     setShowMenu(false);
     Alert.alert(
       'Mute User',
@@ -104,9 +106,9 @@ export function PostCard({
         },
       ]
     );
-  };
+  }, [author.handle, author.did, muteMutation]);
 
-  const handleBlockUser = () => {
+  const handleBlockUser = useCallback(() => {
     setShowMenu(false);
     Alert.alert(
       'Block User',
@@ -127,46 +129,82 @@ export function PostCard({
         },
       ]
     );
-  };
+  }, [author.handle, author.did, blockMutation]);
 
-  const handleReport = () => {
+  const handleReport = useCallback(() => {
     setShowMenu(false);
     Alert.alert(
       'Report',
       'Reporting functionality will be available soon.',
       [{ text: 'OK' }]
     );
-  };
+  }, []);
 
-  // Format timestamp
-  const timestamp = formatDistanceToNow(new Date(postView.indexedAt), {
-    addSuffix: true,
-  });
-
-  const isLiked = !!postView.viewer?.like;
-  const isOwnPost = currentUserDid === author.did;
-
-  const handleShare = () => {
+  const handleShare = useCallback(() => {
     sharePost(post);
-  };
+  }, [post]);
 
-  const postText = (record && typeof record.text === 'string') ? record.text : '';
-  const postPreview = postText ? `${postText.substring(0, 100)}${postText.length > 100 ? '...' : ''}` : 'No text content';
-  const accessibilityLabel = `Post by ${author.displayName || author.handle}. ${postPreview}. ${postView.likeCount || 0} likes, ${postView.repostCount || 0} reposts, ${postView.replyCount || 0} replies. Posted ${timestamp}`;
+  const handleMenuOpen = useCallback(() => {
+    setShowMenu(true);
+  }, []);
 
-  // Check for content labels
-  const labels = postView.labels || [];
-  const hideContent = shouldHideContent(labels);
-  const warnContent = shouldWarnContent(labels);
-  const blurImages = shouldBlurImages(labels);
+  const handleMenuClose = useCallback(() => {
+    setShowMenu(false);
+  }, []);
+
+  const handleLikePress = useCallback(() => {
+    triggerHaptic('light');
+    onLike?.();
+  }, [onLike]);
+
+  const handleRepostPress = useCallback(() => {
+    triggerHaptic('medium');
+    onRepost?.();
+  }, [onRepost]);
+
+  const handleBookmarkPress = useCallback(() => {
+    triggerHaptic('light');
+    onBookmark?.();
+  }, [onBookmark]);
+
+  // Memoized computed values
+  const timestamp = useMemo(
+    () => formatDistanceToNow(new Date(postView.indexedAt), { addSuffix: true }),
+    [postView.indexedAt]
+  );
+
+  const isLiked = useMemo(() => !!postView.viewer?.like, [postView.viewer?.like]);
+
+  const isOwnPost = useMemo(() => currentUserDid === author.did, [currentUserDid, author.did]);
+
+  const postText = useMemo(
+    () => (record && typeof record.text === 'string' ? record.text : ''),
+    [record]
+  );
+
+  const postPreview = useMemo(
+    () => (postText ? `${postText.substring(0, 100)}${postText.length > 100 ? '...' : ''}` : 'No text content'),
+    [postText]
+  );
+
+  const accessibilityLabel = useMemo(
+    () => `Post by ${author.displayName || author.handle}. ${postPreview}. ${postView.likeCount || 0} likes, ${postView.repostCount || 0} reposts, ${postView.replyCount || 0} replies. Posted ${timestamp}`,
+    [author.displayName, author.handle, postPreview, postView.likeCount, postView.repostCount, postView.replyCount, timestamp]
+  );
+
+  // Memoized content label checks
+  const labels = useMemo(() => postView.labels || [], [postView.labels]);
+  const hideContent = useMemo(() => shouldHideContent(labels), [shouldHideContent, labels]);
+  const warnContent = useMemo(() => shouldWarnContent(labels), [shouldWarnContent, labels]);
+  const blurImages = useMemo(() => shouldBlurImages(labels), [shouldBlurImages, labels]);
 
   // Don't render hidden content
   if (hideContent) {
     return null;
   }
 
-  // Render post content
-  const postContent = (
+  // Memoized post content JSX
+  const postContent = useMemo(() => (
       <View style={styles.content}>
         {/* Author Header */}
         <View style={styles.header}>
@@ -192,7 +230,7 @@ export function PostCard({
             {!isOwnPost && isOnline && (
               <TouchableOpacity
                 style={styles.moreButton}
-                onPress={() => setShowMenu(true)}
+                onPress={handleMenuOpen}
                 activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel="More options"
@@ -244,10 +282,7 @@ export function PostCard({
 
           <View style={styles.engagementButton}>
             <TouchableOpacity
-              onPress={() => {
-                triggerHaptic('medium');
-                onRepost?.();
-              }}
+              onPress={handleRepostPress}
               activeOpacity={0.7}
               disabled={!isOnline}
               style={styles.iconButton}
@@ -269,10 +304,7 @@ export function PostCard({
 
           <View style={styles.engagementButton}>
             <TouchableOpacity
-              onPress={() => {
-                triggerHaptic('light');
-                onLike?.();
-              }}
+              onPress={handleLikePress}
               activeOpacity={0.7}
               disabled={!isOnline}
               style={styles.iconButton}
@@ -294,10 +326,7 @@ export function PostCard({
 
           <TouchableOpacity
             style={styles.engagementButton}
-            onPress={() => {
-              triggerHaptic('light');
-              onBookmark?.();
-            }}
+            onPress={handleBookmarkPress}
             activeOpacity={0.7}
             disabled={!isOnline}
             accessibilityRole="button"
@@ -318,7 +347,34 @@ export function PostCard({
           </TouchableOpacity>
         </View>
       </View>
-  );
+  ), [
+    author,
+    timestamp,
+    isOwnPost,
+    isOnline,
+    handleProfilePress,
+    handleMenuOpen,
+    record,
+    onMentionPress,
+    onHashtagPress,
+    postView.embed,
+    onImagePress,
+    onLinkPress,
+    onQuotePress,
+    blurImages,
+    postView.replyCount,
+    onReply,
+    handleRepostPress,
+    postView.repostCount,
+    onPressRepostCount,
+    handleLikePress,
+    isLiked,
+    postView.likeCount,
+    onPressLikeCount,
+    handleBookmarkPress,
+    isBookmarked,
+    handleShare,
+  ]);
 
   return (
     <TouchableOpacity
@@ -345,11 +401,11 @@ export function PostCard({
         visible={showMenu}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setShowMenu(false)}>
+        onRequestClose={handleMenuClose}>
         <TouchableOpacity
           style={styles.menuOverlay}
           activeOpacity={1}
-          onPress={() => setShowMenu(false)}>
+          onPress={handleMenuClose}>
           <View style={styles.menuContainer}>
             <TouchableOpacity
               style={styles.menuItem}
@@ -381,7 +437,7 @@ export function PostCard({
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.menuItem, styles.menuItemLast]}
-              onPress={() => setShowMenu(false)}
+              onPress={handleMenuClose}
               accessibilityRole="button"
               accessibilityLabel="Cancel">
               <Text style={styles.menuItemText}>Cancel</Text>
@@ -392,6 +448,49 @@ export function PostCard({
     </TouchableOpacity>
   );
 }
+
+// Custom comparison function for React.memo
+function arePropsEqual(prevProps: PostCardProps, nextProps: PostCardProps): boolean {
+  // Compare post URI (unique identifier)
+  if (prevProps.post.post.uri !== nextProps.post.post.uri) {
+    return false;
+  }
+
+  // Compare post content changes (likes, reposts, etc.)
+  if (
+    prevProps.post.post.likeCount !== nextProps.post.post.likeCount ||
+    prevProps.post.post.repostCount !== nextProps.post.post.repostCount ||
+    prevProps.post.post.replyCount !== nextProps.post.post.replyCount ||
+    prevProps.post.post.viewer?.like !== nextProps.post.post.viewer?.like ||
+    prevProps.post.post.viewer?.repost !== nextProps.post.post.viewer?.repost
+  ) {
+    return false;
+  }
+
+  // Compare bookmark state
+  if (prevProps.isBookmarked !== nextProps.isBookmarked) {
+    return false;
+  }
+
+  // Compare current user DID
+  if (prevProps.currentUserDid !== nextProps.currentUserDid) {
+    return false;
+  }
+
+  // Compare labels (content moderation)
+  const prevLabels = prevProps.post.post.labels || [];
+  const nextLabels = nextProps.post.post.labels || [];
+  if (prevLabels.length !== nextLabels.length) {
+    return false;
+  }
+
+  // All other props are assumed stable (handlers, callbacks)
+  // We don't need to compare function references as they should be memoized by parent
+  return true;
+}
+
+// Export memoized component
+export const PostCard = React.memo(PostCardComponent, arePropsEqual);
 
 const styles = StyleSheet.create({
   container: {
