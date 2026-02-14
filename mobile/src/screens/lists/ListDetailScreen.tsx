@@ -18,6 +18,7 @@ import {
   useUpdateList,
 } from '../../hooks/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
+import {useAuth} from '../../contexts/AuthContext';
 import {AppBskyGraphDefs} from '@atproto/api';
 import {colors} from '../../constants/theme';
 
@@ -83,8 +84,24 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
   const {mutateAsync: deleteList} = useDeleteList();
   const {mutateAsync: updateList} = useUpdateList();
   const {goBack, router} = useAppNavigation();
+  const {session} = useAuth();
 
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Extract creator DID from list URI (format: at://did:plc:xxx/app.bsky.graph.list/rkey)
+  const listCreatorDid = useMemo(() => {
+    try {
+      const match = listUri.match(/^at:\/\/(did:[^/]+)\//);
+      return match ? match[1] : null;
+    } catch {
+      return null;
+    }
+  }, [listUri]);
+
+  // Check if current user is the list owner
+  const isOwner = useMemo(() => {
+    return session?.did === listCreatorDid;
+  }, [session?.did, listCreatorDid]);
 
   // Flatten paginated members data
   const members = useMemo(() => {
@@ -255,7 +272,7 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
             member={item}
             onRemove={handleRemoveMember}
             onProfilePress={handleProfilePress}
-            isOwner={true} // TODO: Check if current user is the list owner
+            isOwner={isOwner}
           />
         )}
         keyExtractor={(item) => item.uri}

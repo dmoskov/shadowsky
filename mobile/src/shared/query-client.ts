@@ -17,6 +17,7 @@ interface AtProtoError {
   status?: number;
   message?: string;
   error?: string;
+  headers?: Record<string, string> | Headers;
 }
 
 /**
@@ -58,6 +59,42 @@ export function getSecondsUntilRateLimitExpires(): number {
 }
 
 /**
+ * Extract Retry-After value from headers
+ * @param headers - Response headers from the error
+ * @returns Number of seconds to wait, or default of 60 seconds
+ */
+function extractRetryAfter(headers?: Record<string, string> | Headers): number {
+  const defaultRetryAfter = 60;
+
+  if (!headers) {
+    return defaultRetryAfter;
+  }
+
+  try {
+    // Handle both Headers object and plain object
+    let retryAfterValue: string | null = null;
+
+    if (headers instanceof Headers) {
+      retryAfterValue = headers.get('retry-after') || headers.get('Retry-After');
+    } else {
+      // Plain object - check both lowercase and capitalized keys
+      retryAfterValue = headers['retry-after'] || headers['Retry-After'] || null;
+    }
+
+    if (retryAfterValue) {
+      const parsed = parseInt(retryAfterValue, 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        return parsed;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to parse Retry-After header:', error);
+  }
+
+  return defaultRetryAfter;
+}
+
+/**
  * Query cache with global error handler for rate limiting
  */
 const queryCache = new QueryCache({
@@ -66,8 +103,8 @@ const queryCache = new QueryCache({
 
     // Handle 429 rate limiting
     if (atProtoError?.status === 429) {
-      // Extract Retry-After header value (defaults to 60 seconds)
-      const retryAfter = 60; // TODO: Extract from response headers when available
+      // Extract Retry-After header value from response headers
+      const retryAfter = extractRetryAfter(atProtoError.headers);
       setRateLimited(retryAfter);
 
       console.warn(`Rate limited, pausing queries for ${retryAfter} seconds`);
@@ -89,7 +126,8 @@ const mutationCache = new MutationCache({
 
     // Handle 429 rate limiting for mutations
     if (atProtoError?.status === 429) {
-      const retryAfter = 60;
+      // Extract Retry-After header value from response headers
+      const retryAfter = extractRetryAfter(atProtoError.headers);
       setRateLimited(retryAfter);
       console.warn(`Rate limited on mutation, pausing for ${retryAfter} seconds`);
     }
