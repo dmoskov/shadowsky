@@ -131,7 +131,7 @@ export function EditListModal({
               <TextInput
                 style={[styles.input, isNameOverLimit && styles.inputError]}
                 placeholder="Enter list name"
-                placeholderTextColor="#6b7280"
+                placeholderTextColor=colors.textTertiary
                 value={name}
                 onChangeText={setName}
                 maxLength={MAX_NAME_LENGTH + 10}
@@ -159,7 +159,7 @@ export function EditListModal({
                   isDescOverLimit && styles.inputError,
                 ]}
                 placeholder="Enter list description"
-                placeholderTextColor="#6b7280"
+                placeholderTextColor=colors.textTertiary
                 value={description}
                 onChangeText={setDescription}
                 maxLength={MAX_DESCRIPTION_LENGTH + 10}
@@ -204,7 +204,7 @@ export function EditListModal({
               onPress={handleSave}
               disabled={isSaveDisabled}>
               {isSaving ? (
-                <ActivityIndicator color="#ffffff" size="small" />
+                <ActivityIndicator color=colors.text size="small" />
               ) : (
                 <Text style={styles.saveButtonText}>Save</Text>
               )}
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: '#0f0f14',
+    backgroundColor: 'colors.background',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     maxHeight: '90%',
@@ -234,15 +234,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f1f2e',
+    borderBottomColor: colors.surfaceAlt,
   },
   title: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 18,
     fontWeight: '700',
   },
   closeButton: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 24,
     fontWeight: '600',
   },
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   avatarNote: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 12,
     fontStyle: 'italic',
   },
@@ -271,22 +271,22 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#1f1f2e',
-    color: '#ffffff',
+    backgroundColor: colors.surfaceAlt,
+    color: colors.text,
     fontSize: 16,
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#2d2d3e',
+    borderColor: colors.surface,
   },
   inputError: {
-    borderColor: '#ef4444',
+    borderColor: colors.danger,
   },
   textArea: {
     height: 100,
@@ -297,20 +297,20 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   charCount: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 12,
   },
   charCountError: {
-    color: '#ef4444',
+    color: colors.danger,
   },
   infoSection: {
-    backgroundColor: '#1f1f2e',
+    backgroundColor: colors.surfaceAlt,
     padding: 12,
     borderRadius: 8,
     marginBottom: 20,
   },
   infoLabel: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 12,
     marginBottom: 4,
   },
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#1f1f2e',
+    borderTopColor: colors.surfaceAlt,
   },
   button: {
     flex: 1,
@@ -334,12 +334,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cancelButton: {
-    backgroundColor: '#1f1f2e',
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#2d2d3e',
+    borderColor: colors.surface,
   },
   cancelButtonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   saveButtonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },

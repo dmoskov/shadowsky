@@ -305,7 +305,7 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
           <TextInput
             style={styles.searchInput}
             placeholder="Search for feeds..."
-            placeholderTextColor="#8899A6"
+            placeholderTextColor=colors.textSecondary
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCapitalize="none"
@@ -349,13 +349,13 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#15202B',
+    backgroundColor: 'colors.surface',
   },
   tabs: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#38444D',
-    backgroundColor: '#192734',
+    borderBottomColor: colors.surface,
+    backgroundColor: colors.surface,
   },
   tab: {
     flex: 1,
@@ -369,35 +369,35 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#8899A6',
+    color: colors.textSecondary,
   },
   tabTextActive: {
     color: colors.primary,
   },
   searchContainer: {
     padding: 12,
-    backgroundColor: '#192734',
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#38444D',
+    borderBottomColor: colors.surface,
   },
   searchInput: {
-    backgroundColor: '#253341',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.text,
   },
   listContent: {
     padding: 12,
   },
   feedCard: {
-    backgroundColor: '#192734',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#38444D',
+    borderColor: colors.surface,
   },
   feedHeader: {
     flexDirection: 'row',
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   feedAvatarPlaceholder: {
-    backgroundColor: '#253341',
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -425,12 +425,12 @@ const styles = StyleSheet.create({
   feedName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.text,
     marginBottom: 2,
   },
   feedCreator: {
     fontSize: 14,
-    color: '#8899A6',
+    color: colors.textSecondary,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -446,14 +446,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   saveButtonActive: {
-    backgroundColor: '#253341',
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.primary,
   },
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text,
   },
   saveButtonTextActive: {
     color: colors.primary,
@@ -462,9 +462,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#253341',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#38444D',
+    borderColor: colors.surface,
     minWidth: 36,
     alignItems: 'center',
     justifyContent: 'center',
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   },
   feedDescription: {
     fontSize: 14,
-    color: '#D9D9D9',
+    color: 'colors.textMuted',
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
   },
   feedLikes: {
     fontSize: 14,
-    color: '#8899A6',
+    color: colors.textSecondary,
   },
   pinnedBadge: {
     fontSize: 12,
@@ -514,13 +514,13 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptyStateSubtext: {
     fontSize: 14,
-    color: '#8899A6',
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   footerLoader: {

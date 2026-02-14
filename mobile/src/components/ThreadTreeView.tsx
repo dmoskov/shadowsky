@@ -83,12 +83,12 @@ function buildThreadTree(
 // Get color based on depth for visual hierarchy
 function getDepthColor(depth: number): string {
   const colors = [
-    "#3b82f6", // blue
-    "#8b5cf6", // purple
-    "#ec4899", // pink
-    "#f59e0b", // amber
-    "#10b981", // emerald
-    "#06b6d4", // cyan
+    colors.info, // blue
+    colors.mention, // purple
+    "colors.accent", // pink
+    colors.warning, // amber
+    colors.success, // emerald
+    colors.quote, // cyan
   ];
   return colors[depth % colors.length];
 }
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   collapseIcon: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 14,
     fontWeight: "bold",
     lineHeight: 20,
@@ -321,18 +321,18 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     elevation: 2,
-    shadowColor: "#000",
+    shadowColor: colors.borderDark,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
   collapsedText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 14,
     fontWeight: "500",
   },
   expandIcon: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "bold",
     marginLeft: 8,

@@ -149,7 +149,7 @@ export function QuotesScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   footerLoader: {
     paddingVertical: 16,
@@ -162,11 +162,11 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   errorText: {
-    color: '#ef4444',
+    color: colors.danger,
     fontSize: 16,
   },
   emptyText: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 16,
   },
   emptyList: {

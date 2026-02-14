@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   tab: {
     flex: 1,
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#6b7280",
+    color: colors.textTertiary,
   },
   activeTabText: {
     color: colors.primary,

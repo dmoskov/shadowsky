@@ -130,33 +130,33 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   loadingText: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 12,
   },
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f1f2e',
-    backgroundColor: '#0f0f14',
+    borderBottomColor: colors.surfaceAlt,
+    backgroundColor: 'colors.background',
   },
   listName: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 6,
   },
   listDescription: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
     marginBottom: 8,
     lineHeight: 20,
@@ -167,11 +167,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   listMemberCount: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 13,
   },
   chevron: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 18,
     marginLeft: 4,
   },

@@ -230,7 +230,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
             style={styles.backButton}
           >
             <View style={styles.backButtonContent}>
-              <ArrowLeftIcon size={20} color="#1DA1F2" />
+              <ArrowLeftIcon size={20} color=colors.info />
               <Text style={styles.backButtonText}>Back</Text>
             </View>
           </TouchableOpacity>
@@ -360,7 +360,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
             value={preferences.showNSFW}
             onValueChange={(value) => updatePreference("showNSFW", value)}
             trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor="#ffffff"
+            thumbColor=colors.text
           />
         </SettingRow>
       </View>
@@ -379,7 +379,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
               updatePreference("notificationsEnabled", value)
             }
             trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor="#ffffff"
+            thumbColor=colors.text
           />
         </SettingRow>
 
@@ -392,7 +392,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                   updatePreference("notifyOnLikes", value)
                 }
                 trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor="#ffffff"
+                thumbColor=colors.text
               />
             </SettingRow>
 
@@ -403,7 +403,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                   updatePreference("notifyOnReplies", value)
                 }
                 trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor="#ffffff"
+                thumbColor=colors.text
               />
             </SettingRow>
 
@@ -414,7 +414,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                   updatePreference("notifyOnFollows", value)
                 }
                 trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor="#ffffff"
+                thumbColor=colors.text
               />
             </SettingRow>
 
@@ -425,7 +425,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                   updatePreference("notifyOnMentions", value)
                 }
                 trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor="#ffffff"
+                thumbColor=colors.text
               />
             </SettingRow>
 
@@ -436,7 +436,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                   updatePreference("notifyOnQuotes", value)
                 }
                 trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor="#ffffff"
+                thumbColor=colors.text
               />
             </SettingRow>
           </>
@@ -457,7 +457,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
               updatePreference("hapticsEnabled", value)
             }
             trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor="#ffffff"
+            thumbColor=colors.text
           />
         </SettingRow>
       </View>
@@ -503,7 +503,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
                 }
               }}
               trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-              thumbColor="#ffffff"
+              thumbColor=colors.text
             />
           </SettingRow>
         </View>
@@ -561,7 +561,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
               }
             }}
             trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor="#ffffff"
+            thumbColor=colors.text
           />
         </SettingRow>
 
@@ -654,7 +654,7 @@ export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigat
             value={preferences.hapticsEnabled}
             onValueChange={(value) => updatePreference("hapticsEnabled", value)}
             trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor="#ffffff"
+            thumbColor=colors.text
           />
         </SettingRow>
       </View>
@@ -784,7 +784,7 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     marginRight: 12,
   },
   accountAvatarText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 20,
     fontWeight: "bold",
   },
@@ -864,7 +864,7 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     fontWeight: "500",
   },
   themeButtonTextActive: {
-    color: "#ffffff",
+    color: colors.text,
   },
   smallButton: {
     paddingHorizontal: 12,
@@ -902,7 +902,7 @@ const createStyles = (themeColors: typeof colors) => StyleSheet.create({
     gap: 4,
   },
   backButtonText: {
-    color: "#1DA1F2",
+    color: colors.info,
     fontSize: 16,
   },
 });

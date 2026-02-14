@@ -205,7 +205,7 @@ export function MutedWordsScreen() {
               value={newWord}
               onChangeText={setNewWord}
               placeholder="Enter word, phrase, or #hashtag"
-              placeholderTextColor="#6b7280"
+              placeholderTextColor=colors.textTertiary
               autoCapitalize="none"
               autoCorrect={false}
             />
@@ -287,21 +287,21 @@ export function MutedWordsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   headerTitle: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 4,
   },
   headerDescription: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
   },
   addButton: {
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   addButtonText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -322,14 +322,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   wordInfo: {
     flex: 1,
     marginRight: 12,
   },
   wordValue: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 4,
@@ -338,24 +338,24 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   wordMetaText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 13,
   },
   expirationText: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 12,
     fontStyle: "italic",
   },
   deleteButton: {
     backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: "#ef4444",
+    borderColor: colors.danger,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
   },
   deleteButtonText: {
-    color: "#ef4444",
+    color: colors.danger,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -367,14 +367,14 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   emptyText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "600",
     marginBottom: 8,
     textAlign: "center",
   },
   emptySubtext: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: "center",
     lineHeight: 20,
@@ -390,33 +390,33 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 12,
     padding: 24,
     width: "100%",
     maxWidth: 400,
   },
   modalTitle: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 20,
   },
   inputLabel: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 8,
     marginTop: 12,
   },
   input: {
-    backgroundColor: "#374151",
-    color: "#ffffff",
+    backgroundColor: colors.borderLight,
+    color: colors.text,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: "#4b5563",
+    borderColor: colors.borderLight,
   },
   optionGroup: {
     flexDirection: "row",
@@ -427,21 +427,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: "#374151",
+    backgroundColor: colors.borderLight,
     borderWidth: 1,
-    borderColor: "#4b5563",
+    borderColor: colors.borderLight,
   },
   optionButtonActive: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
   optionButtonText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: "500",
   },
   optionButtonTextActive: {
-    color: "#ffffff",
+    color: colors.text,
   },
   modalActions: {
     flexDirection: "row",
@@ -453,17 +453,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    backgroundColor: "#374151",
+    backgroundColor: colors.borderLight,
   },
   modalButtonPrimary: {
     backgroundColor: colors.primary,
   },
   modalButtonText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
     fontWeight: "600",
   },
   modalButtonTextPrimary: {
-    color: "#ffffff",
+    color: colors.text,
   },
 });

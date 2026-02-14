@@ -111,7 +111,7 @@ export function FeedCreationScreen() {
             <TextInput
               style={styles.input}
               placeholder="e.g., Tech News Feed"
-              placeholderTextColor="#8899A6"
+              placeholderTextColor=colors.textSecondary
               value={displayName}
               onChangeText={setDisplayName}
               maxLength={100}
@@ -125,7 +125,7 @@ export function FeedCreationScreen() {
             <TextInput
               style={[styles.input, styles.textArea]}
               placeholder="Describe what content your feed will show..."
-              placeholderTextColor="#8899A6"
+              placeholderTextColor=colors.textSecondary
               value={description}
               onChangeText={setDescription}
               multiline
@@ -145,7 +145,7 @@ export function FeedCreationScreen() {
             <TextInput
               style={styles.input}
               placeholder="https://your-feed-service.com"
-              placeholderTextColor="#8899A6"
+              placeholderTextColor=colors.textSecondary
               value={serviceEndpoint}
               onChangeText={setServiceEndpoint}
               autoCapitalize="none"
@@ -182,7 +182,7 @@ export function FeedCreationScreen() {
           disabled={createFeedMutation.isPending || !displayName.trim() || !serviceEndpoint.trim()}
           activeOpacity={0.7}>
           {createFeedMutation.isPending ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
+            <ActivityIndicator color=colors.text size="small" />
           ) : (
             <Text style={styles.buttonText}>Create Feed</Text>
           )}
@@ -195,7 +195,7 @@ export function FeedCreationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#15202B',
+    backgroundColor: 'colors.surface',
   },
   scrollView: {
     flex: 1,
@@ -209,16 +209,16 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.text,
     marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#8899A6',
+    color: colors.textSecondary,
     lineHeight: 20,
   },
   infoBox: {
-    backgroundColor: '#192734',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
@@ -228,12 +228,12 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text,
     marginBottom: 8,
   },
   infoText: {
     fontSize: 14,
-    color: '#8899A6',
+    color: colors.textSecondary,
     lineHeight: 20,
   },
   form: {
@@ -245,20 +245,20 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text,
     marginBottom: 8,
   },
   required: {
-    color: '#F4364C',
+    color: 'colors.danger',
   },
   input: {
-    backgroundColor: '#192734',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: '#FFFFFF',
+    color: colors.text,
     borderWidth: 1,
-    borderColor: '#38444D',
+    borderColor: colors.surface,
   },
   textArea: {
     minHeight: 120,
@@ -266,11 +266,11 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 12,
-    color: '#8899A6',
+    color: colors.textSecondary,
     marginTop: 6,
   },
   exampleBox: {
-    backgroundColor: '#192734',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
@@ -278,21 +278,21 @@ const styles = StyleSheet.create({
   exampleTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text,
     marginBottom: 12,
   },
   exampleText: {
     fontSize: 14,
-    color: '#8899A6',
+    color: colors.textSecondary,
     lineHeight: 24,
   },
   footer: {
     flexDirection: 'row',
     padding: 16,
     gap: 12,
-    backgroundColor: '#192734',
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: '#38444D',
+    borderTopColor: colors.surface,
   },
   button: {
     flex: 1,
@@ -302,9 +302,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cancelButton: {
-    backgroundColor: '#253341',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#38444D',
+    borderColor: colors.surface,
   },
   createButton: {
     backgroundColor: colors.primary,
@@ -315,9 +315,9 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text,
   },
   cancelButtonText: {
-    color: '#8899A6',
+    color: colors.textSecondary,
   },
 });

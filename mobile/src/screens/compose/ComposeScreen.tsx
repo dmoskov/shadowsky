@@ -764,7 +764,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
           disabled={isPostDisabled || createPost.isPending}
         >
           {createPost.isPending || imagePicker.isUploading || videoPicker.isUploading ? (
-            <ActivityIndicator color="#ffffff" size="small" />
+            <ActivityIndicator color=colors.text size="small" />
           ) : (
             <Text style={styles.postButtonText}>Post</Text>
           )}
@@ -812,7 +812,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
           <TextInput
             style={styles.input}
             placeholder={placeholderText}
-            placeholderTextColor="#6b7280"
+            placeholderTextColor=colors.textTertiary
             multiline
             autoFocus
             value={text}
@@ -829,7 +829,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
                     <Image source={{ uri: image.uri }} style={styles.imagePreview} />
                     {imagePicker.isUploading && (
                       <View style={styles.uploadingOverlay}>
-                        <ActivityIndicator color="#ffffff" size="small" />
+                        <ActivityIndicator color=colors.text size="small" />
                       </View>
                     )}
                     <TouchableOpacity
@@ -870,12 +870,12 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
                   />
                 ) : (
                   <View style={[styles.videoPreview, styles.videoPreviewPlaceholder]}>
-                    <VideoIcon size={48} color="#6b7280" />
+                    <VideoIcon size={48} color=colors.textTertiary />
                   </View>
                 )}
                 {videoPicker.isUploading && (
                   <View style={styles.uploadingOverlay}>
-                    <ActivityIndicator color="#ffffff" size="small" />
+                    <ActivityIndicator color=colors.text size="small" />
                   </View>
                 )}
                 <View style={styles.videoDurationBadge}>
@@ -979,7 +979,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
                 onPress={handleImagePicker}
                 disabled={imagePicker.isUploading || imagePicker.selectedImages.length >= 4 || videoPicker.selectedVideo !== null}
               >
-                <ImageIcon size={22} color={(imagePicker.selectedImages.length >= 4 || videoPicker.selectedVideo) ? "#4b5563" : "#6b7280"} />
+                <ImageIcon size={22} color={(imagePicker.selectedImages.length >= 4 || videoPicker.selectedVideo) ? colors.borderLight : colors.textTertiary} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.toolbarButton}
@@ -987,7 +987,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
                 onPress={handleVideoPicker}
                 disabled={videoPicker.isUploading || imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo !== null}
               >
-                <VideoIcon size={22} color={(imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo) ? "#4b5563" : "#6b7280"} />
+                <VideoIcon size={22} color={(imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo) ? colors.borderLight : colors.textTertiary} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.toolbarButton}
@@ -995,14 +995,14 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
                 onPress={handleGifPicker}
                 disabled={imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo !== null || gifPicker.selectedGif !== null}
               >
-                <GifIcon size={22} color={(imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo || gifPicker.selectedGif) ? "#4b5563" : "#6b7280"} />
+                <GifIcon size={22} color={(imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo || gifPicker.selectedGif) ? colors.borderLight : colors.textTertiary} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.toolbarButton}
                 activeOpacity={0.7}
                 onPress={handleEmojiPicker}
               >
-                <EmojiIcon size={22} color="#6b7280" />
+                <EmojiIcon size={22} color=colors.textTertiary />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.toolbarButton}
@@ -1010,14 +1010,14 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
                 onPress={handleToggleThreadMode}
                 disabled={replyTo !== undefined || quoteTo !== undefined}
               >
-                <ThreadIcon size={22} color={isThreadMode ? colors.primary : "#6b7280"} />
+                <ThreadIcon size={22} color={isThreadMode ? colors.primary : colors.textTertiary} />
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.languageButton}
                 activeOpacity={0.7}
                 onPress={() => setLanguagePickerVisible(true)}
               >
-                <GlobeIcon size={18} color="#6b7280" />
+                <GlobeIcon size={18} color=colors.textTertiary />
                 <Text style={styles.languageButtonText}>
                   {selectedLanguages.length > 0
                     ? selectedLanguages.map(getLanguageShortName).join(', ')
@@ -1062,7 +1062,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
             <TextInput
               style={styles.altTextInput}
               placeholder="Describe this image..."
-              placeholderTextColor="#6b7280"
+              placeholderTextColor=colors.textTertiary
               multiline
               value={tempAltText}
               onChangeText={setTempAltText}
@@ -1121,7 +1121,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId }: ComposeScreenProps 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: "row",
@@ -1129,7 +1129,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   headerCenter: {
     flex: 1,
@@ -1151,7 +1151,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   cancelButton: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
   },
   postButton: {
@@ -1165,17 +1165,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   postButtonDisabled: {
-    backgroundColor: "#1e3a5f",
+    backgroundColor: "colors.surface",
     opacity: 0.5,
   },
   postButtonText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
   input: {
     flex: 1,
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 18,
     padding: 16,
     textAlignVertical: "top",
@@ -1186,7 +1186,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: "#1f2937",
+    borderTopColor: colors.surfaceElevated,
   },
   toolbarIcons: {
     flexDirection: "row",
@@ -1202,27 +1202,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: '#111116',
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: '#1f2937',
+    borderColor: colors.surfaceElevated,
   },
   languageButtonText: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 12,
     fontWeight: '600',
   },
   charCount: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 14,
     fontWeight: "500",
   },
   charCountOver: {
-    color: "#ef4444",
+    color: colors.danger,
   },
   replyContext: {
-    backgroundColor: "#111116",
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -1230,7 +1230,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   replyingTo: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 14,
     fontWeight: "500",
   },
@@ -1248,18 +1248,18 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   parentPostAuthor: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 14,
     fontWeight: "600",
     maxWidth: 150,
   },
   parentPostHandle: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 13,
     flex: 1,
   },
   parentPostText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 18,
   },
@@ -1269,10 +1269,10 @@ const styles = StyleSheet.create({
   },
   quoteCard: {
     borderWidth: 1,
-    borderColor: "#1f2937",
+    borderColor: colors.surfaceElevated,
     borderRadius: 12,
     padding: 12,
-    backgroundColor: "#111116",
+    backgroundColor: colors.background,
   },
   quoteHeader: {
     flexDirection: "row",
@@ -1284,17 +1284,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   quoteAuthorName: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 2,
   },
   quoteAuthorHandle: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 13,
   },
   quoteText: {
-    color: "#e5e7eb",
+    color: colors.textMuted,
     fontSize: 14,
     lineHeight: 18,
   },
@@ -1313,7 +1313,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 8,
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
   },
   uploadingOverlay: {
     position: "absolute",
@@ -1333,12 +1333,12 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#374151",
+    backgroundColor: colors.borderLight,
     justifyContent: "center",
     alignItems: "center",
   },
   removeImageText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "600",
     lineHeight: 20,
@@ -1353,12 +1353,12 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   altTextButtonText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 10,
     fontWeight: "600",
   },
   uploadingText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 12,
     marginTop: 8,
     textAlign: "center",
@@ -1369,7 +1369,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: 16,
@@ -1382,17 +1382,17 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   modalTitle: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "600",
   },
   modalCloseButton: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 32,
     lineHeight: 32,
   },
   modalDescription: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     marginBottom: 12,
   },
@@ -1400,17 +1400,17 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 200,
     borderRadius: 8,
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
     marginBottom: 12,
     resizeMode: "contain",
   },
   altTextInput: {
-    backgroundColor: "#111116",
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: "#1f2937",
+    borderColor: colors.surfaceElevated,
     borderRadius: 8,
     padding: 12,
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     minHeight: 100,
     textAlignVertical: "top",
@@ -1423,7 +1423,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveAltTextButtonText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -1451,7 +1451,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 12,
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
   },
   videoPreviewPlaceholder: {
     justifyContent: "center",
@@ -1467,7 +1467,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   videoDurationText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 12,
     fontWeight: "600",
   },
@@ -1489,7 +1489,7 @@ const styles = StyleSheet.create({
     height: 0,
     marginLeft: 3,
     borderLeftWidth: 14,
-    borderLeftColor: "#ffffff",
+    borderLeftColor: colors.text,
     borderTopWidth: 9,
     borderTopColor: "transparent",
     borderBottomWidth: 9,
@@ -1508,7 +1508,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 12,
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
   },
   gifBadge: {
     position: "absolute",
@@ -1520,12 +1520,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   gifBadgeText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 12,
     fontWeight: "600",
   },
   gifHintText: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 12,
     marginTop: 8,
   },

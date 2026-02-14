@@ -124,7 +124,7 @@ export function GifPicker({
         />
         {isSelected && (
           <View style={styles.selectedOverlay}>
-            <ActivityIndicator color="#ffffff" size="large" />
+            <ActivityIndicator color=colors.text size="large" />
           </View>
         )}
       </TouchableOpacity>
@@ -135,12 +135,12 @@ export function GifPicker({
     <View>
       {/* Search bar */}
       <View style={styles.searchContainer}>
-        <SearchIcon size={20} color="#6b7280" />
+        <SearchIcon size={20} color=colors.textTertiary />
         <TextInput
           ref={searchInputRef}
           style={styles.searchInput}
           placeholder="Search GIFs..."
-          placeholderTextColor="#6b7280"
+          placeholderTextColor=colors.textTertiary
           value={localSearchQuery}
           onChangeText={handleSearchChange}
           autoCapitalize="none"
@@ -211,7 +211,7 @@ export function GifPicker({
             style={styles.closeButton}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <CloseIcon size={24} color="#9ca3af" />
+            <CloseIcon size={24} color=colors.textSecondary />
           </TouchableOpacity>
         </View>
 
@@ -251,7 +251,7 @@ export function GifPicker({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: "row",
@@ -260,10 +260,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#1f2937",
+    borderBottomColor: colors.surfaceElevated,
   },
   headerTitle: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "600",
   },
@@ -273,9 +273,9 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#111116",
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: "#1f2937",
+    borderColor: colors.surfaceElevated,
     borderRadius: 8,
     marginHorizontal: 16,
     marginVertical: 12,
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     marginLeft: 8,
   },
@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 8,
     overflow: "hidden",
-    backgroundColor: "#1f2937",
+    backgroundColor: colors.surfaceElevated,
   },
   gifImage: {
     width: "100%",
@@ -323,18 +323,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   errorText: {
-    color: "#ef4444",
+    color: colors.danger,
     fontSize: 14,
     textAlign: "center",
   },
   hintText: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 12,
     textAlign: "center",
     marginTop: 8,
   },
   noResultsText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: "center",
   },
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   trendingText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
   },
   loadingContainer: {
@@ -357,24 +357,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   emptyText: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 14,
     textAlign: "center",
   },
   footer: {
     borderTopWidth: 1,
-    borderTopColor: "#1f2937",
+    borderTopColor: colors.surfaceElevated,
     paddingHorizontal: 16,
     paddingTop: 12,
     alignItems: "center",
   },
   footerText: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 12,
     marginBottom: 4,
   },
   footerHint: {
-    color: "#6b7280",
+    color: colors.textTertiary,
     fontSize: 10,
   },
 });

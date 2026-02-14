@@ -2,6 +2,7 @@ import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 import {Button} from './Button';
 import {AlertTriangleIcon} from './icons';
+import {colors} from '../constants/theme';
 
 interface ErrorStateProps {
   message: string;
@@ -15,7 +16,7 @@ export function ErrorState({message, onRetry}: ErrorStateProps) {
       accessible={true}
       accessibilityRole="alert"
       accessibilityLabel={`Error. ${message}`}>
-      <AlertTriangleIcon size={48} color="#ef4444" />
+      <AlertTriangleIcon size={48} color={colors.danger} />
       <Text style={styles.message}>{message}</Text>
       {onRetry && (
         <Button
@@ -36,10 +37,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   message: {
-    color: '#ef4444',
+    color: colors.danger,
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 20,

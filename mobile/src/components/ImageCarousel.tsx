@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import {ImageCarouselItem} from './ImageCarouselItem';
 import Animated, {FadeIn, FadeOut} from 'react-native-reanimated';
+import {colors} from '../constants/theme';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
@@ -198,7 +199,7 @@ export function ImageCarousel({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: colors.borderDark,
   },
   counterContainer: {
     position: 'absolute',
@@ -210,7 +211,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   counterText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   closeButtonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 20,
     fontWeight: '400',
   },
@@ -247,7 +248,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.4)',
   },
   dotActive: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.text,
     width: 8,
     height: 8,
     borderRadius: 4,
@@ -266,7 +267,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   altBadgeText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   altText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 14,
     lineHeight: 20,
   },

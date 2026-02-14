@@ -68,7 +68,7 @@ export function CreateListScreen({onSuccess}: CreateListScreenProps) {
             value={name}
             onChangeText={setName}
             placeholder="Enter list name"
-            placeholderTextColor="#6b7280"
+            placeholderTextColor=colors.textTertiary
             maxLength={64}
             editable={!isPending}
           />
@@ -81,7 +81,7 @@ export function CreateListScreen({onSuccess}: CreateListScreenProps) {
             value={description}
             onChangeText={setDescription}
             placeholder="Enter list description (optional)"
-            placeholderTextColor="#6b7280"
+            placeholderTextColor=colors.textTertiary
             multiline
             numberOfLines={4}
             maxLength={300}
@@ -138,7 +138,7 @@ export function CreateListScreen({onSuccess}: CreateListScreenProps) {
           onPress={handleCreate}
           disabled={isPending}>
           {isPending ? (
-            <ActivityIndicator color="#ffffff" />
+            <ActivityIndicator color=colors.text />
           ) : (
             <Text style={styles.createButtonText}>Create List</Text>
           )}
@@ -158,7 +158,7 @@ export function CreateListScreen({onSuccess}: CreateListScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   content: {
     padding: 16,
@@ -167,23 +167,23 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   label: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
   },
   helperText: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 13,
     marginBottom: 12,
   },
   input: {
-    backgroundColor: '#1f1f2e',
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#2d2d3e',
+    borderColor: colors.surface,
     borderRadius: 8,
     padding: 12,
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
   },
   textArea: {
@@ -197,9 +197,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     padding: 12,
-    backgroundColor: '#1f1f2e',
+    backgroundColor: colors.surfaceAlt,
     borderWidth: 1,
-    borderColor: '#2d2d3e',
+    borderColor: colors.surface,
     borderRadius: 8,
   },
   purposeOptionSelected: {
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#6b7280',
+    borderColor: colors.textTertiary,
     marginRight: 12,
     marginTop: 2,
     justifyContent: 'center',
@@ -227,13 +227,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   purposeTitle: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 15,
     fontWeight: '600',
     marginBottom: 4,
   },
   purposeDescription: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   createButtonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   cancelButtonText: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 16,
     fontWeight: '600',
   },

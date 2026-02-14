@@ -364,7 +364,7 @@ export function ImageEditor({ images, onSave, onCancel, visible }: ImageEditorPr
               style={[styles.headerButton, styles.doneButton]}
             >
               {isSaving ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color=colors.text />
               ) : (
                 <Text style={styles.doneButtonText}>Done</Text>
               )}
@@ -516,7 +516,7 @@ export function ImageEditor({ images, onSave, onCancel, visible }: ImageEditorPr
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: colors.borderDark,
   },
   header: {
     flexDirection: 'row',
@@ -524,9 +524,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: 'colors.editorBackground',
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: colors.border,
   },
   headerButton: {
     paddingHorizontal: 8,
@@ -537,10 +537,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   resetText: {
-    color: '#999',
+    color: 'colors.editorText',
   },
   headerTitle: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 17,
     fontWeight: '600',
   },
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   doneButtonText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -564,16 +564,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: colors.borderDark,
   },
   previewImage: {
     width: '100%',
     height: '100%',
   },
   controls: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: 'colors.editorBackground',
     borderTopWidth: 1,
-    borderTopColor: '#333',
+    borderTopColor: colors.border,
   },
   controlsScroll: {
     maxHeight: 300,
@@ -581,10 +581,10 @@ const styles = StyleSheet.create({
   section: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
+    borderBottomColor: colors.border,
   },
   sectionTitle: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 12,
@@ -597,22 +597,22 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 12,
-    backgroundColor: '#2a2a2a',
+    backgroundColor: 'colors.editorControl',
     borderRadius: 8,
     borderWidth: 2,
     borderColor: 'transparent',
   },
   controlButtonActive: {
     borderColor: colors.primary,
-    backgroundColor: '#1a3a4a',
+    backgroundColor: 'colors.surface',
   },
   controlButtonText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 24,
     marginBottom: 4,
   },
   controlButtonLabel: {
-    color: '#999',
+    color: 'colors.editorText',
     fontSize: 11,
   },
   aspectRatioScroll: {
@@ -621,7 +621,7 @@ const styles = StyleSheet.create({
   aspectRatioButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: '#2a2a2a',
+    backgroundColor: 'colors.editorControl',
     borderRadius: 16,
     marginRight: 8,
     borderWidth: 2,
@@ -632,11 +632,11 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   aspectRatioButtonText: {
-    color: '#999',
+    color: 'colors.editorText',
     fontSize: 14,
   },
   aspectRatioButtonTextActive: {
-    color: '#fff',
+    color: colors.text,
     fontWeight: '600',
   },
   primaryButton: {
@@ -646,32 +646,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   primaryButtonText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
   secondaryButton: {
     flex: 1,
-    backgroundColor: '#2a2a2a',
+    backgroundColor: 'colors.editorControl',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#444',
+    borderColor: 'colors.editorBorder',
   },
   secondaryButtonText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 16,
   },
   cropHint: {
-    color: '#999',
+    color: 'colors.editorText',
     fontSize: 12,
     marginTop: 8,
     textAlign: 'center',
   },
   thumbnailsContainer: {
     borderTopWidth: 1,
-    borderTopColor: '#333',
+    borderTopColor: colors.border,
     paddingVertical: 8,
     paddingHorizontal: 12,
   },
@@ -695,7 +695,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 2,
     right: 2,
-    backgroundColor: '#4ade80',
+    backgroundColor: 'colors.accentGreen',
     borderRadius: 10,
     width: 16,
     height: 16,
@@ -703,7 +703,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   editedBadgeText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 10,
     fontWeight: 'bold',
   },

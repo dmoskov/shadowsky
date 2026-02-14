@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import type { ToastData, ToastType } from "../contexts/ToastContext";
+import {colors} from '../constants/theme';
 
 interface ToastProps {
   toasts: ToastData[];
@@ -20,24 +21,24 @@ const TOAST_COLORS: Record<
   { bg: string; border: string; text: string }
 > = {
   success: {
-    bg: "#10B981",
-    border: "#059669",
-    text: "#FFFFFF",
+    bg: colors.success,
+    border: colors.success,
+    text: colors.text,
   },
   error: {
-    bg: "#EF4444",
-    border: "#DC2626",
-    text: "#FFFFFF",
+    bg: colors.danger,
+    border: colors.danger,
+    text: colors.text,
   },
   warning: {
-    bg: "#F59E0B",
-    border: "#D97706",
-    text: "#FFFFFF",
+    bg: colors.warning,
+    border: "colors.warning",
+    text: colors.text,
   },
   info: {
-    bg: "#3B82F6",
-    border: "#2563EB",
-    text: "#FFFFFF",
+    bg: colors.info,
+    border: "colors.info",
+    text: colors.text,
   },
 };
 
@@ -249,7 +250,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: colors.borderDark,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

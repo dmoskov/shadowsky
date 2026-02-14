@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badgeText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 12,
     fontWeight: '600',
   },

@@ -276,7 +276,7 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
               onPress={handleDeleteList}
               disabled={isDeleting}>
               {isDeleting ? (
-                <ActivityIndicator color="#ffffff" size="small" />
+                <ActivityIndicator color=colors.text size="small" />
               ) : (
                 <Text style={styles.deleteButtonText}>Delete</Text>
               )}
@@ -337,30 +337,30 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: '#0f0f14',
+    backgroundColor: 'colors.background',
     borderBottomWidth: 1,
-    borderBottomColor: '#1f1f2e',
+    borderBottomColor: colors.surfaceAlt,
   },
   headerContent: {
     padding: 16,
   },
   listName: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 22,
     fontWeight: '700',
     marginBottom: 8,
   },
   listDescription: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 15,
     marginBottom: 8,
     lineHeight: 20,
   },
   listMemberCount: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 14,
     marginBottom: 4,
   },
@@ -377,35 +377,35 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    backgroundColor: '#1f1f2e',
+    backgroundColor: colors.surfaceAlt,
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#2d2d3e',
+    borderColor: colors.surface,
   },
   actionButtonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
   deleteButton: {
-    backgroundColor: '#991b1b',
-    borderColor: '#b91c1c',
+    backgroundColor: 'colors.danger',
+    borderColor: 'colors.danger',
   },
   deleteButtonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
   },
   sectionHeader: {
     padding: 16,
     paddingTop: 12,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   sectionTitle: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1f1f2e',
+    borderBottomColor: colors.surfaceAlt,
   },
   memberContent: {
     flex: 1,
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 20,
     fontWeight: '600',
   },
@@ -441,23 +441,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   displayName: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 2,
   },
   handle: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
   },
   removeButton: {
-    backgroundColor: '#991b1b',
+    backgroundColor: 'colors.danger',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
   },
   removeButtonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -472,29 +472,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 12,
   },
   emptyText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 8,
   },
   emptySubtext: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: 'center',
   },
   errorText: {
-    color: '#ef4444',
+    color: colors.danger,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
   },
   errorSubtext: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 16,
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   retryButtonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 14,
     fontWeight: '600',
   },

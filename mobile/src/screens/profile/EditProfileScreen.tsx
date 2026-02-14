@@ -170,7 +170,7 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
             value={displayName}
             onChangeText={setDisplayName}
             placeholder="Enter display name"
-            placeholderTextColor="#6b7280"
+            placeholderTextColor=colors.textTertiary
             maxLength={MAX_DISPLAY_NAME_LENGTH + 10} // Allow typing slightly over to show error
           />
         </View>
@@ -193,7 +193,7 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
             value={description}
             onChangeText={setDescription}
             placeholder="Tell us about yourself"
-            placeholderTextColor="#6b7280"
+            placeholderTextColor=colors.textTertiary
             multiline
             numberOfLines={4}
             textAlignVertical="top"
@@ -231,7 +231,7 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
           }
         >
           {updateProfile.isPending ? (
-            <ActivityIndicator size="small" color="#ffffff" />
+            <ActivityIndicator size="small" color=colors.text />
           ) : (
             <Text style={styles.saveButtonText}>Save</Text>
           )}
@@ -252,7 +252,7 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0f',
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
@@ -271,14 +271,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   errorText: {
-    color: '#ef4444',
+    color: colors.danger,
     fontSize: 16,
   },
   section: {
     marginBottom: 24,
   },
   sectionLabel: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
@@ -290,11 +290,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   charCount: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 12,
   },
   charCountError: {
-    color: '#ef4444',
+    color: colors.danger,
   },
   avatarContainer: {
     alignItems: 'center',
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   changeAvatarButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 8,
   },
   changeAvatarText: {
@@ -312,21 +312,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   input: {
-    backgroundColor: '#1f2937',
-    color: '#ffffff',
+    backgroundColor: colors.surfaceElevated,
+    color: colors.text,
     fontSize: 16,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: colors.borderLight,
   },
   textArea: {
     minHeight: 100,
     paddingTop: 12,
   },
   handleText: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 16,
     padding: 12,
   },
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#1f2937',
+    borderTopColor: colors.surfaceElevated,
   },
   button: {
     flex: 1,
@@ -345,12 +345,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cancelButton: {
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.surfaceElevated,
     borderWidth: 1,
-    borderColor: '#374151',
+    borderColor: colors.borderLight,
   },
   cancelButtonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },
@@ -358,11 +358,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   saveButtonDisabled: {
-    backgroundColor: '#374151',
+    backgroundColor: colors.borderLight,
     opacity: 0.5,
   },
   saveButtonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '600',
   },

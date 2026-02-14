@@ -53,8 +53,8 @@ export function NotificationTabBar({
 const styles = StyleSheet.create({
   container: {
     borderBottomWidth: 1,
-    borderBottomColor: '#1f2937',
-    backgroundColor: '#0a0a0f',
+    borderBottomColor: colors.surfaceElevated,
+    backgroundColor: colors.background,
   },
   contentContainer: {
     paddingHorizontal: 8,
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#6b7280',
+    color: colors.textTertiary,
   },
   activeTabText: {
     color: colors.primary,

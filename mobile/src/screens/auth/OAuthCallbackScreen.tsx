@@ -67,13 +67,13 @@ export function OAuthCallbackScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
     justifyContent: "center",
     alignItems: "center",
   },
   text: {
     marginTop: 16,
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
   },
 });

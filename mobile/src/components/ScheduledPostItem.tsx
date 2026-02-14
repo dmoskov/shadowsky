@@ -81,9 +81,9 @@ export function ScheduledPostItem({ post, onEdit, onDelete }: ScheduledPostItemP
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#1a1a24',
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#2a2a38',
+    borderBottomColor: colors.surface,
     padding: 16,
   },
   header: {
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   scheduledLabel: {
-    color: '#9ca3af',
+    color: colors.textSecondary,
     fontSize: 12,
     fontWeight: '500',
   },
@@ -108,15 +108,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   charCount: {
-    color: '#6b7280',
+    color: colors.textTertiary,
     fontSize: 12,
     fontWeight: '500',
   },
   charCountOver: {
-    color: '#ef4444',
+    color: colors.danger,
   },
   text: {
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
     lineHeight: 22,
     marginBottom: 16,
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: '#2a2a38',
+    backgroundColor: colors.surface,
     minHeight: 36,
     justifyContent: 'center',
     alignItems: 'center',
@@ -142,9 +142,9 @@ const styles = StyleSheet.create({
   deleteButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#4b5563',
+    borderColor: colors.borderLight,
   },
   deleteButtonText: {
-    color: '#ef4444',
+    color: colors.danger,
   },
 });

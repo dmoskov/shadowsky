@@ -75,7 +75,7 @@ export function FollowButton({
       accessibilityHint={isFollowing ? 'Double tap to unfollow this user' : 'Double tap to follow this user'}
       accessibilityState={{disabled: isPending, busy: isPending}}>
       {isPending ? (
-        <ActivityIndicator size="small" color={isFollowing ? colors.primary : '#ffffff'} />
+        <ActivityIndicator size="small" color={isFollowing ? colors.primary : colors.text} />
       ) : (
         <Text
           style={[
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   buttonText: {
-    color: '#ffffff',
+    color: colors.text,
     fontWeight: '600',
   },
   followingButtonText: {

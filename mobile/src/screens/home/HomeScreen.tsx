@@ -286,12 +286,12 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   feedPickerContainer: {
-    backgroundColor: "#15202B",
+    backgroundColor: "colors.surface",
     borderBottomWidth: 1,
-    borderBottomColor: "#38444D",
+    borderBottomColor: colors.surface,
     maxHeight: 56,
   },
   feedPickerContent: {
@@ -303,9 +303,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: "#192734",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#38444D",
+    borderColor: colors.surface,
     marginRight: 8,
   },
   feedChipActive: {
@@ -315,16 +315,16 @@ const styles = StyleSheet.create({
   feedChipText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#8899A6",
+    color: colors.textSecondary,
   },
   feedChipTextActive: {
-    color: "#FFFFFF",
+    color: colors.text,
   },
   feedChipDiscover: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: "#253341",
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.primary,
     marginRight: 8,

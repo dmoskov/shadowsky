@@ -274,7 +274,7 @@ export function MessagesScreen() {
           style={styles.deleteAction}
           onPress={() => handleDeleteConversation(conversationId)}
         >
-          <TrashIcon size={24} color="#ffffff" />
+          <TrashIcon size={24} color=colors.text />
           <Text style={styles.actionText}>Delete</Text>
         </TouchableOpacity>
       </Animated.View>
@@ -326,7 +326,7 @@ export function MessagesScreen() {
                       "Unknown User"}
                   </Text>
                   {item.muted && (
-                    <BellSlashIcon size={16} color="#9ca3af" />
+                    <BellSlashIcon size={16} color=colors.textSecondary />
                   )}
                 </View>
                 {item.unreadCount > 0 && (
@@ -444,7 +444,7 @@ export function MessagesScreen() {
         <View style={styles.container}>
           <View style={styles.permissionErrorContainer}>
             <View style={{marginBottom: 16}}>
-              <LockIcon size={64} color="#9ca3af" />
+              <LockIcon size={64} color=colors.textSecondary />
             </View>
             <Text style={styles.permissionErrorTitle}>
               App Password Required
@@ -490,7 +490,7 @@ export function MessagesScreen() {
           </TouchableOpacity>
         </View>
         <EmptyState
-          icon={<ChatBubbleIcon size={64} color="#9ca3af" />}
+          icon={<ChatBubbleIcon size={64} color=colors.textSecondary />}
           message="No conversations yet. Tap + to start a new conversation!"
         />
         <NewConversationModal
@@ -539,18 +539,18 @@ export function MessagesScreen() {
           </View>
           {isSearchVisible && (
             <View style={styles.searchContainer}>
-              <SearchIcon size={20} color="#9ca3af" />
+              <SearchIcon size={20} color=colors.textSecondary />
               <TextInput
                 style={styles.searchInput}
                 value={searchText}
                 onChangeText={setSearchText}
                 placeholder="Search conversations..."
-                placeholderTextColor="#666"
+                placeholderTextColor=colors.textTertiary
                 autoFocus
               />
               {searchText.length > 0 && (
                 <TouchableOpacity onPress={() => setSearchText("")}>
-                  <CloseIcon size={20} color="#9ca3af" />
+                  <CloseIcon size={20} color=colors.textSecondary />
                 </TouchableOpacity>
               )}
             </View>
@@ -564,7 +564,7 @@ export function MessagesScreen() {
           ListEmptyComponent={
             searchText.length > 0 ? (
               <EmptyState
-                icon={<SearchIcon size={64} color="#9ca3af" />}
+                icon={<SearchIcon size={64} color=colors.textSecondary />}
                 message="No conversations found"
               />
             ) : null
@@ -684,7 +684,7 @@ export function MessagesScreen() {
                     style={styles.removeImageButton}
                     onPress={() => removeImage(index)}
                   >
-                    <CloseIcon size={16} color="#fff" />
+                    <CloseIcon size={16} color=colors.text />
                   </TouchableOpacity>
                 </View>
               )}
@@ -700,7 +700,7 @@ export function MessagesScreen() {
             onPress={() => pickFromLibrary(true)}
             disabled={isUploading || selectedImages.length >= 4}
           >
-            <ImageIcon size={24} color={selectedImages.length >= 4 ? "#666" : colors.primary} />
+            <ImageIcon size={24} color={selectedImages.length >= 4 ? colors.textTertiary : colors.primary} />
           </TouchableOpacity>
 
           <TextInput
@@ -708,7 +708,7 @@ export function MessagesScreen() {
             value={messageText}
             onChangeText={setMessageText}
             placeholder="Type a message..."
-            placeholderTextColor="#666"
+            placeholderTextColor=colors.textTertiary
             multiline
             maxLength={1000}
           />
@@ -722,7 +722,7 @@ export function MessagesScreen() {
             disabled={(!messageText.trim() && selectedImages.length === 0) || sendMessageMutation.isPending || isUploading}
           >
             {sendMessageMutation.isPending || isUploading ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color=colors.text size="small" />
             ) : (
               <Text style={styles.sendButtonText}>Send</Text>
             )}
@@ -736,11 +736,11 @@ export function MessagesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a0a0f",
+    backgroundColor: colors.background,
   },
   header: {
     borderBottomWidth: 1,
-    borderBottomColor: "#1f1f23",
+    borderBottomColor: colors.surfaceAlt,
   },
   headerTop: {
     flexDirection: 'row',
@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   headerTitle: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 24,
     fontWeight: "bold",
   },
@@ -767,7 +767,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1f1f23',
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -777,7 +777,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: '#ffffff',
+    color: colors.text,
     fontSize: 16,
   },
   conversationsList: {
@@ -785,11 +785,11 @@ const styles = StyleSheet.create({
   },
   conversationItem: {
     borderBottomWidth: 1,
-    borderBottomColor: "#1f1f23",
+    borderBottomColor: colors.surfaceAlt,
     padding: 16,
   },
   selectedConversation: {
-    backgroundColor: "#1a1a1f",
+    backgroundColor: "colors.surface",
   },
   conversationContent: {
     flexDirection: "row",
@@ -804,12 +804,12 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#3a3a3f",
+    backgroundColor: "colors.surface",
     justifyContent: "center",
     alignItems: "center",
   },
   avatarText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 20,
     fontWeight: "600",
   },
@@ -829,18 +829,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   displayName: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
     flexShrink: 1,
   },
   handle: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 2,
   },
   lastMessage: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -852,13 +852,13 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   unreadCount: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 12,
     fontWeight: "600",
   },
   chatHeader: {
     borderBottomWidth: 1,
-    borderBottomColor: "#1f1f23",
+    borderBottomColor: colors.surfaceAlt,
     padding: 12,
   },
   chatHeaderTop: {
@@ -896,7 +896,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#3a3a3f",
+    backgroundColor: "colors.surface",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -905,12 +905,12 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   chatDisplayName: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
   chatHandle: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
   },
   messagesList: {
@@ -937,17 +937,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   otherMessageBubble: {
-    backgroundColor: "#1f1f23",
+    backgroundColor: colors.surfaceAlt,
   },
   messageText: {
     fontSize: 16,
     lineHeight: 20,
   },
   ownMessageText: {
-    color: "#ffffff",
+    color: colors.text,
   },
   otherMessageText: {
-    color: "#ffffff",
+    color: colors.text,
   },
   messageFooter: {
     flexDirection: 'row',
@@ -962,7 +962,7 @@ const styles = StyleSheet.create({
     color: "rgba(255, 255, 255, 0.7)",
   },
   otherMessageTime: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
   },
   deliveryStatus: {
     fontSize: 11,
@@ -984,7 +984,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     padding: 12,
     borderTopWidth: 1,
-    borderTopColor: "#1f1f23",
+    borderTopColor: colors.surfaceAlt,
   },
   imagePreviewContainer: {
     marginBottom: 8,
@@ -1022,11 +1022,11 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: "#1f1f23",
+    backgroundColor: colors.surfaceAlt,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     maxHeight: 100,
   },
@@ -1041,11 +1041,11 @@ const styles = StyleSheet.create({
     minWidth: 60,
   },
   sendButtonDisabled: {
-    backgroundColor: "#3a3a3f",
+    backgroundColor: "colors.surface",
     opacity: 0.5,
   },
   sendButtonText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -1056,20 +1056,20 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   permissionErrorTitle: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 12,
     textAlign: "center",
   },
   permissionErrorText: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 16,
     textAlign: "center",
     marginBottom: 16,
   },
   permissionErrorSteps: {
-    color: "#9ca3af",
+    color: colors.textSecondary,
     fontSize: 14,
     textAlign: "left",
     lineHeight: 22,
@@ -1086,7 +1086,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   creatingText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 16,
   },
   swipeActions: {
@@ -1094,14 +1094,14 @@ const styles = StyleSheet.create({
     width: 80,
   },
   deleteAction: {
-    backgroundColor: "#ef4444",
+    backgroundColor: colors.danger,
     justifyContent: "center",
     alignItems: "center",
     width: 80,
     height: "100%",
   },
   actionText: {
-    color: "#ffffff",
+    color: colors.text,
     fontSize: 12,
     fontWeight: "600",
     marginTop: 4,

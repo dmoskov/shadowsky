@@ -246,7 +246,7 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#15202B',
+    backgroundColor: 'colors.surface',
   },
   header: {
     flexDirection: 'row',
@@ -255,13 +255,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#38444D',
-    backgroundColor: '#192734',
+    borderBottomColor: colors.surface,
+    backgroundColor: colors.surface,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.text,
   },
   headerActions: {
     flexDirection: 'row',
@@ -272,14 +272,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#253341',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#38444D',
+    borderColor: colors.surface,
   },
   reorderButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#8899A6',
+    color: colors.textSecondary,
   },
   reorderButtonTextActive: {
     color: colors.primary,
@@ -288,29 +288,29 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#253341',
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
   closeButtonText: {
     fontSize: 18,
-    color: '#8899A6',
+    color: colors.textSecondary,
   },
   listContent: {
     padding: 12,
   },
   feedCard: {
-    backgroundColor: '#192734',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#38444D',
+    borderColor: colors.surface,
   },
   feedCardDragging: {
     opacity: 0.7,
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: colors.borderDark,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   },
   dragHandleText: {
     fontSize: 20,
-    color: '#8899A6',
+    color: colors.textSecondary,
   },
   feedAvatar: {
     width: 48,
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   feedAvatarPlaceholder: {
-    backgroundColor: '#253341',
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -349,12 +349,12 @@ const styles = StyleSheet.create({
   feedName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.text,
     marginBottom: 2,
   },
   feedCreator: {
     fontSize: 14,
-    color: '#8899A6',
+    color: colors.textSecondary,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -364,9 +364,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#253341',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#38444D',
+    borderColor: colors.surface,
     minWidth: 36,
     alignItems: 'center',
     justifyContent: 'center',
@@ -382,21 +382,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#253341',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#38444D',
+    borderColor: colors.surface,
     minWidth: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },
   removeButtonText: {
     fontSize: 16,
-    color: '#8899A6',
+    color: colors.textSecondary,
     fontWeight: '600',
   },
   feedDescription: {
     fontSize: 14,
-    color: '#D9D9D9',
+    color: 'colors.textMuted',
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   },
   feedLikes: {
     fontSize: 14,
-    color: '#8899A6',
+    color: colors.textSecondary,
   },
   pinnedBadge: {
     fontSize: 12,
@@ -428,13 +428,13 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptyStateSubtext: {
     fontSize: 14,
-    color: '#8899A6',
+    color: colors.textSecondary,
     textAlign: 'center',
   },
 });
