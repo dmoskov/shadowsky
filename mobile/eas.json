@@ -51,7 +51,7 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "mike@moskov.io",
+        "appleId": "%APPLE_ID%",
         "ascAppId": "6738274061",
         "appleTeamId": "2Y3U7TMLHM"
       },
