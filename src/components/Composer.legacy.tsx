@@ -3055,7 +3055,10 @@ export function Composer() {
                   )}
                   <div className="mb-3 flex items-center justify-between">
                     <span className="flex items-center gap-2">
-                      <GripVertical size={16} className="text-gray-400" />
+                      <GripVertical
+                        size={16}
+                        className="text-gray-400 dark:text-gray-500"
+                      />
                       {posts.length > 1 && (
                         <span
                           className="font-semibold"

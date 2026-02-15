@@ -214,9 +214,7 @@ export const ThreadNavigationBar: React.FC<ThreadNavigationBarProps> = ({
             isRootBookmarked ? "text-amber-500" : ""
           }`}
           style={{
-            color: isRootBookmarked
-              ? "rgb(245, 158, 11)"
-              : "var(--asph-text-secondary)",
+            color: isRootBookmarked ? undefined : "var(--asph-text-secondary)",
           }}
           title={
             isRootBookmarked ? "Remove thread bookmark" : "Bookmark thread"

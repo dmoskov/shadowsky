@@ -724,7 +724,7 @@ export const Search: React.FC = () => {
                 setSelectedPostUri(null);
                 setHighlightPostUri(null);
               }}
-              className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all hover:bg-white hover:bg-opacity-10"
+              className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all hover:bg-gray-200/50 dark:hover:bg-white/10"
               style={{ color: "var(--asph-primary)" }}
             >
               <ArrowLeft size={16} />

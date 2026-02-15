@@ -422,7 +422,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
             {(filters.sinceDate || filters.untilDate) && (
               <button
                 onClick={() => setDateFromPreset(null)}
-                className="min-h-[44px] rounded-md px-3 py-2 text-xs transition-colors hover:bg-gray-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
+                className="min-h-[44px] rounded-md px-3 py-2 text-xs transition-colors hover:bg-gray-200/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 dark:hover:bg-gray-700/50"
                 style={{
                   color: "var(--asph-text-tertiary)",
                   // @ts-expect-error CSS custom property for focus ring
@@ -535,7 +535,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
                       filters.fromUsers.filter((_, idx) => idx !== i),
                     )
                   }
-                  className="ml-1 flex h-6 w-6 items-center justify-center rounded hover:bg-gray-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
+                  className="ml-1 flex h-6 w-6 items-center justify-center rounded hover:bg-gray-200/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 dark:hover:bg-gray-700/60"
                   aria-label={`Remove @${user}`}
                   style={{
                     // @ts-expect-error CSS custom property for focus ring
@@ -608,7 +608,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
         {hasActiveFilters && (
           <button
             onClick={resetFilters}
-            className="min-h-[44px] w-full rounded-md py-2 text-xs transition-colors hover:bg-gray-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
+            className="min-h-[44px] w-full rounded-md py-2 text-xs transition-colors hover:bg-gray-200/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 dark:hover:bg-gray-700/50"
             style={{
               color: "var(--asph-text-tertiary)",
               borderWidth: "1px",

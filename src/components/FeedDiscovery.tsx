@@ -156,7 +156,7 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
             </h2>
             <button
               onClick={onClose}
-              className="rounded-full p-2 transition-colors hover:bg-gray-500 hover:bg-opacity-10"
+              className="rounded-full p-2 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
             >
               <X size={20} style={{ color: "var(--asph-text-secondary)" }} />
             </button>
@@ -235,7 +235,7 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
               {filteredFeeds.map((feed: FeedGenerator) => (
                 <div
                   key={feed.uri}
-                  className="flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
+                  className="flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/10"
                   style={{ borderColor: "var(--asph-border-primary)" }}
                 >
                   {feed.avatar ? (

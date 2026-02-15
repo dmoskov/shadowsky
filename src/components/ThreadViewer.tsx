@@ -518,7 +518,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
 
               {/* Post card */}
               <div
-                className={`min-w-0 flex-1 ${maxThreadDepth > 15 ? "p-2" : maxThreadDepth > 10 ? "p-3" : "p-4"} cursor-pointer rounded-lg transition-all hover:bg-blue-500 hover:bg-opacity-5 ${
+                className={`min-w-0 flex-1 ${maxThreadDepth > 15 ? "p-2" : maxThreadDepth > 10 ? "p-3" : "p-4"} cursor-pointer rounded-lg transition-all hover:bg-blue-50 dark:hover:bg-blue-900/10 ${
                   isUnread ? "ring-2 ring-blue-500 ring-opacity-30" : ""
                 } ${isHighlighted && !hasShownInitialHighlight ? "ring-2 ring-orange-500 ring-opacity-50" : ""} ${
                   isFocused ? "ring-2 ring-blue-400 ring-opacity-70" : ""
@@ -928,7 +928,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                         }
                       });
                     }}
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-100 dark:hover:bg-blue-900/20"
                     style={{
                       backgroundColor: "var(--asph-bg-tertiary)",
                       color: "var(--asph-primary)",
@@ -972,7 +972,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                         }
                       });
                     }}
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-100 dark:hover:bg-blue-900/20"
                     style={{
                       backgroundColor: "var(--asph-bg-tertiary)",
                       color: "var(--asph-text-secondary)",
@@ -1173,7 +1173,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             {replyCount > 0 && (
               <button
                 onClick={() => setShowReplies(!showReplies)}
-                className="mt-4 flex w-full items-center justify-between rounded-lg px-4 py-3 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
+                className="mt-4 flex w-full items-center justify-between rounded-lg px-4 py-3 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/10"
                 style={{
                   backgroundColor: "var(--asph-bg-secondary)",
                   border: "1px solid var(--asph-border-primary)",
@@ -1186,10 +1186,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                   >
                     {replyCount} {replyCount === 1 ? "reply" : "replies"}
                     {userParticipationStats.count > 0 && (
-                      <span
-                        className="ml-2"
-                        style={{ color: "rgb(34, 197, 94)" }}
-                      >
+                      <span className="ml-2 text-green-500 dark:text-green-400">
                         · {userParticipationStats.count} from you
                       </span>
                     )}

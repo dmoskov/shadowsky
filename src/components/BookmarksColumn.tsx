@@ -463,7 +463,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
       if (!external) return null;
       return (
         <div
-          className="mt-2 cursor-pointer overflow-hidden rounded-lg border p-2.5 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
+          className="mt-2 cursor-pointer overflow-hidden rounded-lg border p-2.5 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/10"
           style={{
             borderColor: "var(--asph-border-primary)",
             backgroundColor: "var(--asph-bg-primary)",
@@ -544,7 +544,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
         const quotedPost = recordData;
         return (
           <div
-            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
             style={{ borderColor: "var(--asph-border-primary)" }}
             onClick={(e) => {
               e.stopPropagation();
@@ -941,7 +941,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
               return (
                 <div style={style}>
                   <div
-                    className={`group cursor-pointer border-b transition-colors hover:bg-blue-500 hover:bg-opacity-5 ${
+                    className={`group cursor-pointer border-b transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/10 ${
                       isItemFocused
                         ? "border-l-4 border-l-blue-500 bg-blue-500 bg-opacity-10 pl-3"
                         : ""
@@ -996,8 +996,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                                   e.stopPropagation();
                                   handleUnbookmark(bookmark.postUri);
                                 }}
-                                className="rounded p-1 opacity-50 transition-colors hover:bg-yellow-100 group-hover:opacity-100 dark:hover:bg-yellow-900/20"
-                                style={{ color: "#ffad1f" }}
+                                className="rounded p-1 text-yellow-500 opacity-50 transition-colors hover:bg-yellow-100 group-hover:opacity-100 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
                                 title="Remove bookmark"
                               >
                                 <Bookmark size={16} fill="currentColor" />

@@ -424,8 +424,8 @@ export const DirectMessagesColumn: React.FC = () => {
                           className="h-10 w-10 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300">
-                          <span className="text-lg text-gray-600">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-700">
+                          <span className="text-lg text-gray-600 dark:text-gray-400">
                             {(otherMember.displayName ||
                               otherMember.handle ||
                               "U")[0].toUpperCase()}
@@ -498,8 +498,8 @@ export const DirectMessagesColumn: React.FC = () => {
                   className="h-10 w-10 cursor-pointer rounded-full object-cover transition-opacity hover:opacity-80"
                 />
               ) : (
-                <div className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gray-300 transition-opacity hover:opacity-80">
-                  <span className="text-lg text-gray-600">
+                <div className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gray-300 transition-opacity hover:opacity-80 dark:bg-gray-700">
+                  <span className="text-lg text-gray-600 dark:text-gray-400">
                     {(member.displayName ||
                       memberHandle ||
                       "U")[0].toUpperCase()}
@@ -514,8 +514,8 @@ export const DirectMessagesColumn: React.FC = () => {
               className="h-10 w-10 rounded-full object-cover"
             />
           ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300">
-              <span className="text-lg text-gray-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-700">
+              <span className="text-lg text-gray-600 dark:text-gray-400">
                 {(member.displayName || "U")[0].toUpperCase()}
               </span>
             </div>

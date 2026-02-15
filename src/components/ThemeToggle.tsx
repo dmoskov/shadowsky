@@ -15,7 +15,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={handleToggle}
-      className="ios-press rounded-lg p-2 transition-all hover:bg-white hover:bg-opacity-10"
+      className="ios-press rounded-lg p-2 transition-all hover:bg-gray-200/50 dark:hover:bg-white/10"
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
       title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
     >

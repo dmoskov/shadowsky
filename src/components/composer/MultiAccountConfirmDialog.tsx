@@ -79,7 +79,7 @@ export const MultiAccountConfirmDialog: React.FC<
           </div>
           <button
             onClick={onClose}
-            className="rounded p-1 transition-colors hover:bg-white hover:bg-opacity-10"
+            className="rounded p-1 transition-colors hover:bg-gray-200/50 dark:hover:bg-white/10"
           >
             <X size={20} style={{ color: "var(--asph-text-secondary)" }} />
           </button>

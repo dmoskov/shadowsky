@@ -211,7 +211,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
       if (embedData.$type === "app.bsky.embed.external#view") {
         return (
           <div
-            className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-blue-500 hover:bg-opacity-5"
+            className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/10"
             style={{ borderColor: "var(--asph-border-primary)" }}
             onClick={(e) => {
               e.stopPropagation();
@@ -311,7 +311,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
           const packName = packRecord?.name || "Starter Pack";
           return (
             <div
-              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
               style={{ borderColor: "var(--asph-border-primary)" }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -356,7 +356,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
           const feedGen = recordData as any;
           return (
             <div
-              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
               style={{ borderColor: "var(--asph-border-primary)" }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -401,7 +401,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
           const listView = recordData as any;
           return (
             <div
-              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
               style={{ borderColor: "var(--asph-border-primary)" }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -446,7 +446,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
           const labeler = recordData as any;
           return (
             <div
-              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
               style={{ borderColor: "var(--asph-border-primary)" }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -483,7 +483,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
           const quotedPost = recordData;
           return (
             <div
-              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
               style={{ borderColor: "var(--asph-border-primary)" }}
               onClick={(e) => {
                 e.stopPropagation();

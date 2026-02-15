@@ -1068,7 +1068,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                       <span
                         className="rounded-full px-2 py-0.5 text-xs font-medium"
                         style={{
-                          backgroundColor: "rgb(29, 155, 240)",
+                          backgroundColor: "var(--asph-primary)",
                           color: "white",
                         }}
                       >

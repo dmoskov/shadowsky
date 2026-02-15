@@ -68,7 +68,7 @@ export const AISettingsPanel: React.FC<AISettingsPanelProps> = ({
             onChange={(e) =>
               handleChange("autoGenerateAltText", e.target.checked)
             }
-            className="ml-4 h-4 w-4 rounded border-gray-300 text-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="ml-4 h-4 w-4 rounded border-gray-300 text-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-600"
           />
         </label>
 
@@ -95,7 +95,7 @@ export const AISettingsPanel: React.FC<AISettingsPanelProps> = ({
             onChange={(e) =>
               handleChange("enableHashtagSuggestions", e.target.checked)
             }
-            className="ml-4 h-4 w-4 rounded border-gray-300 text-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="ml-4 h-4 w-4 rounded border-gray-300 text-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-600"
           />
         </label>
       </div>
