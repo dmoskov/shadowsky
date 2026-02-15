@@ -588,7 +588,7 @@ export default function SkyDeck() {
                                         {savedFeed.pinned ? (
                                           <Star className="mt-0.5 h-4 w-4 text-yellow-500" />
                                         ) : (
-                                          <Hash className="mt-0.5 h-4 w-4 text-gray-400" />
+                                          <Hash className="mt-0.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
                                         )}
                                         <div className="min-w-0 flex-1">
                                           <div className="truncate text-sm font-medium text-gray-900 dark:text-white">

@@ -175,7 +175,7 @@ const ShowMoreButton: React.FC<ShowMoreButtonProps> = ({
         <button
           onClick={onShowAll}
           disabled={isRevealing}
-          className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10 disabled:cursor-wait disabled:opacity-70"
+          className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-100 disabled:cursor-wait disabled:opacity-70 dark:hover:bg-blue-900/20"
           style={{ color: "var(--asph-text-secondary)" }}
           title="Show all remaining items"
         >
@@ -208,7 +208,7 @@ const CollapseButton: React.FC<CollapseButtonProps> = ({
     <div className="my-4 flex justify-center">
       <button
         onClick={onCollapse}
-        className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-500 hover:bg-opacity-10"
+        className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-100 dark:hover:bg-blue-900/20"
         style={{ color: "var(--asph-text-secondary)" }}
       >
         <ChevronUp size={14} />

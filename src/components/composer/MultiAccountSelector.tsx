@@ -120,7 +120,7 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
                   e.stopPropagation();
                   onRetry(did);
                 }}
-                className="rounded p-0.5 hover:bg-white hover:bg-opacity-10"
+                className="rounded p-0.5 hover:bg-gray-200/50 dark:hover:bg-white/10"
                 title={`Retry: ${status.error || "Unknown error"}`}
               >
                 <RefreshCw size={12} className="text-red-500" />
@@ -159,7 +159,7 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
           }
         }}
         disabled={disabled}
-        className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-white hover:bg-opacity-10 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-gray-200/50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-white/10"
         style={{
           backgroundColor: "var(--asph-bg-secondary)",
           border: "1px solid var(--asph-border-primary)",
@@ -255,7 +255,7 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
                   <button
                     key={account.did}
                     onClick={() => toggleAccount(account.did)}
-                    className="flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-blue-50 hover:bg-opacity-10"
+                    className="flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20"
                     style={{
                       backgroundColor: isSelected
                         ? "rgba(var(--asph-primary-rgb), 0.1)"

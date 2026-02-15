@@ -128,7 +128,7 @@ const BskyUrlEmbed: React.FC<{
           className="flex items-center gap-2 text-sm"
           style={{ color: "var(--asph-text-secondary)" }}
         >
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500 dark:border-gray-600 dark:border-t-blue-400" />
           <span>Loading quoted post...</span>
         </div>
       </div>
@@ -140,7 +140,7 @@ const BskyUrlEmbed: React.FC<{
   const record = quotedPost.record as any;
   return (
     <div
-      className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+      className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
       style={{ borderColor: "var(--asph-border-primary)" }}
       onClick={(e) => {
         e.stopPropagation();
@@ -287,7 +287,7 @@ const ExternalLinkEmbed: React.FC<{
 
   return (
     <div
-      className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+      className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
       style={{ borderColor: "var(--asph-border-primary)" }}
       onClick={handleClick}
     >
@@ -686,7 +686,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
         const packDescription = packRecord?.description || "";
         return (
           <div
-            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
             style={{ borderColor: "var(--asph-border-primary)" }}
             onClick={(e) => {
               e.stopPropagation();
@@ -765,7 +765,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
         const feedGen = recordData as any;
         return (
           <div
-            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
             style={{ borderColor: "var(--asph-border-primary)" }}
             onClick={(e) => {
               e.stopPropagation();
@@ -852,7 +852,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               : "List";
         return (
           <div
-            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
             style={{ borderColor: "var(--asph-border-primary)" }}
             onClick={(e) => {
               e.stopPropagation();
@@ -931,7 +931,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
         const labeler = recordData as any;
         return (
           <div
-            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
             style={{ borderColor: "var(--asph-border-primary)" }}
             onClick={(e) => {
               e.stopPropagation();
@@ -1003,7 +1003,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
         const quotedPost = recordData;
         return (
           <div
-            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
             style={{ borderColor: "var(--asph-border-primary)" }}
             onClick={(e) => {
               e.stopPropagation();
@@ -1077,7 +1077,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
       const quotedPost = embed.record;
       return (
         <div
-          className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+          className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
           style={{ borderColor: "var(--asph-border-primary)" }}
           onClick={(e) => {
             e.stopPropagation();
@@ -1146,7 +1146,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
 
       return (
         <div
-          className="relative mt-2 cursor-pointer overflow-hidden rounded-lg border p-2.5 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
+          className="relative mt-2 cursor-pointer overflow-hidden rounded-lg border p-2.5 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/10"
           style={{
             borderColor: "var(--asph-border-primary)",
             backgroundColor: "var(--asph-bg-primary)",
@@ -1234,7 +1234,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
         {record?.reply?.parent && (
           <div
             className="mb-2 flex items-center gap-2 text-sm"
-            style={{ color: "rgb(29, 155, 240)" }}
+            style={{ color: "var(--asph-primary)" }}
           >
             <Reply size={16} />
             <span>Reply</span>

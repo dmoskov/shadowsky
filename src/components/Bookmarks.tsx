@@ -252,7 +252,7 @@ export const Bookmarks: React.FC = () => {
 
       {!isLoading && !error && bookmarks?.length === 0 && (
         <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
-          <Bookmark className="h-12 w-12 text-gray-400" />
+          <Bookmark className="h-12 w-12 text-gray-400 dark:text-gray-500" />
           <p className="mb-2 mt-4 text-base font-medium text-asph-text-primary">
             {searchQuery
               ? "No bookmarks found matching your search"

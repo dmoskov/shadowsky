@@ -83,7 +83,7 @@ export const AccountSwitcher: React.FC = () => {
           }
           setIsOpen(!isOpen);
         }}
-        className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-all hover:bg-white hover:bg-opacity-10"
+        className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-all hover:bg-gray-200/50 dark:hover:bg-white/10"
         style={{ color: "var(--asph-text-primary)" }}
       >
         {currentAccount?.avatar ? (
@@ -133,7 +133,7 @@ export const AccountSwitcher: React.FC = () => {
                   <button
                     key={account.did}
                     onClick={() => handleSwitchAccount(account.did)}
-                    className="ios-press-light flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-blue-50 hover:bg-opacity-10"
+                    className="ios-press-light flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20"
                     style={{
                       backgroundColor: isActive
                         ? "rgba(var(--asph-primary-rgb), 0.1)"
@@ -185,7 +185,7 @@ export const AccountSwitcher: React.FC = () => {
             >
               <button
                 onClick={handleAddAccount}
-                className="flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-blue-50 hover:bg-opacity-10"
+                className="flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20"
                 style={{ color: "var(--asph-text-primary)" }}
               >
                 <div

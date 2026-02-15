@@ -1883,7 +1883,7 @@ function EmojiCell({
     <div style={style}>
       <button
         onClick={() => onSelect(emoji)}
-        className="flex h-full w-full items-center justify-center rounded text-2xl hover:bg-gray-100"
+        className="flex h-full w-full items-center justify-center rounded text-2xl hover:bg-gray-100 dark:hover:bg-gray-800"
         style={{
           background: "transparent",
           transition: "background 0.2s",

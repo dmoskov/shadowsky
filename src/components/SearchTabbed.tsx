@@ -661,7 +661,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                 setSelectedPostUri(null);
                 setHighlightPostUri(null);
               }}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-white hover:bg-opacity-10"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-gray-200/50 dark:hover:bg-white/10"
               style={{ color: "var(--asph-text-primary)" }}
             >
               <ArrowLeft size={16} />
@@ -787,7 +787,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         saveSearch(filters.query.trim());
                       }
                     }}
-                    className="rounded-xl p-3 transition-all hover:bg-white hover:bg-opacity-10"
+                    className="rounded-xl p-3 transition-all hover:bg-gray-200/50 dark:hover:bg-white/10"
                     style={{ color: "var(--asph-text-secondary)" }}
                     title={isSearchSaved ? "Remove from saved" : "Save search"}
                   >
@@ -837,7 +837,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 e.preventDefault();
                                 navigate(`/profile/${user.handle}`);
                               }}
-                              className="flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-white hover:bg-opacity-10"
+                              className="flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-gray-200/50 dark:hover:bg-white/10"
                             >
                               {user.avatar && (
                                 <img
@@ -884,7 +884,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         {savedSearches.map((search) => (
                           <div
                             key={search.id}
-                            className="group flex items-center gap-2 px-3 py-2 transition-colors hover:bg-white hover:bg-opacity-10"
+                            className="group flex items-center gap-2 px-3 py-2 transition-colors hover:bg-gray-200/50 dark:hover:bg-white/10"
                           >
                             <button
                               onMouseDown={(e) => {
@@ -915,7 +915,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 e.stopPropagation();
                                 removeSavedSearch(search.id);
                               }}
-                              className="rounded p-1 opacity-0 transition-opacity hover:bg-white hover:bg-opacity-10 group-hover:opacity-100"
+                              className="rounded p-1 opacity-0 transition-opacity hover:bg-gray-200/50 group-hover:opacity-100 dark:hover:bg-white/10"
                               style={{ color: "var(--asph-text-secondary)" }}
                             >
                               <X size={14} />
@@ -958,7 +958,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               setShowMainTypeahead(false);
                               setTimeout(() => handleSearch(), 100);
                             }}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-white hover:bg-opacity-10"
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-gray-200/50 dark:hover:bg-white/10"
                           >
                             <Clock
                               size={14}
@@ -1033,7 +1033,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
                     showFacetedFilters
                       ? ""
-                      : "hover:bg-white hover:bg-opacity-10"
+                      : "hover:bg-gray-200/50 dark:hover:bg-white/10"
                   }`}
                   style={{
                     backgroundColor: showFacetedFilters
@@ -1061,7 +1061,9 @@ export const SearchTabbed: React.FC = React.memo(() => {
                 <button
                   onClick={() => setShowAdvanced(!showAdvanced)}
                   className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
-                    showAdvanced ? "" : "hover:bg-white hover:bg-opacity-10"
+                    showAdvanced
+                      ? ""
+                      : "hover:bg-gray-200/50 dark:hover:bg-white/10"
                   }`}
                   style={{
                     backgroundColor: showAdvanced
@@ -1086,7 +1088,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
               className={`relative flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
                 activeTab === "posts"
                   ? ""
-                  : "hover:bg-white hover:bg-opacity-10"
+                  : "hover:bg-gray-200/50 dark:hover:bg-white/10"
               }`}
               style={{
                 backgroundColor:
@@ -1105,7 +1107,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
               className={`relative flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
                 activeTab === "users"
                   ? ""
-                  : "hover:bg-white hover:bg-opacity-10"
+                  : "hover:bg-gray-200/50 dark:hover:bg-white/10"
               }`}
               style={{
                 backgroundColor:
@@ -1124,7 +1126,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
               className={`relative flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
                 activeTab === "feeds"
                   ? ""
-                  : "hover:bg-white hover:bg-opacity-10"
+                  : "hover:bg-gray-200/50 dark:hover:bg-white/10"
               }`}
               style={{
                 backgroundColor:

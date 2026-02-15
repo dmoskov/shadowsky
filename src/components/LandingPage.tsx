@@ -351,7 +351,7 @@ export const LandingPage: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="underline hover:no-underline"
-                        style={{ color: "#7a6330" }}
+                        style={{ color: "var(--asph-text-secondary)" }}
                       >
                         bsky.app/settings/app-passwords
                       </a>
@@ -606,8 +606,7 @@ export const LandingPage: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <BarChart3
                     size={20}
-                    style={{ color: "rgb(168, 85, 247)" }}
-                    className="mt-0.5 flex-shrink-0"
+                    className="mt-0.5 flex-shrink-0 text-purple-500 dark:text-purple-400"
                     aria-hidden="true"
                   />
                   <div>
@@ -632,8 +631,7 @@ export const LandingPage: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <Zap
                     size={20}
-                    style={{ color: "rgb(250, 204, 21)" }}
-                    className="mt-0.5 flex-shrink-0"
+                    className="mt-0.5 flex-shrink-0 text-yellow-500 dark:text-yellow-400"
                     aria-hidden="true"
                   />
                   <div>
@@ -658,8 +656,7 @@ export const LandingPage: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <Activity
                     size={20}
-                    style={{ color: "rgb(251, 146, 60)" }}
-                    className="mt-0.5 flex-shrink-0"
+                    className="mt-0.5 flex-shrink-0 text-orange-400 dark:text-orange-300"
                     aria-hidden="true"
                   />
                   <div>

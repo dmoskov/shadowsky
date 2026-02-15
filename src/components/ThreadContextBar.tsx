@@ -198,8 +198,7 @@ export function ThreadContextBar({
             <div className="flex min-w-0 items-center gap-1.5">
               <Sparkles
                 size={14}
-                className="flex-shrink-0"
-                style={{ color: "rgb(139, 92, 246)" }}
+                className="flex-shrink-0 text-violet-500 dark:text-violet-400"
               />
               <span
                 className="truncate text-xs italic"

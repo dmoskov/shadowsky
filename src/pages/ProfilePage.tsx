@@ -1253,11 +1253,14 @@ export default function ProfilePage() {
                                       style={{
                                         backgroundColor:
                                           theme.frequency === "primary"
-                                            ? "#8b5cf6"
+                                            ? "var(--asph-primary)"
                                             : theme.frequency === "regular"
-                                              ? "#a78bfa"
-                                              : "#c4b5fd",
-                                        color: "white",
+                                              ? "var(--asph-primary-light)"
+                                              : "var(--asph-bg-tertiary)",
+                                        color:
+                                          theme.frequency === "occasional"
+                                            ? "var(--asph-text-primary)"
+                                            : "white",
                                       }}
                                     >
                                       {theme.frequency}
@@ -1331,7 +1334,7 @@ export default function ProfilePage() {
         {activeTab === "top" ? (
           <div style={{ height: listHeight }}>
             {isTopPostsLoading ? (
-              <div className="py-8 text-center text-gray-500">
+              <div className="py-8 text-center text-gray-500 dark:text-gray-400">
                 Loading top posts...
               </div>
             ) : topPostsData?.topPosts.length === 0 ? (

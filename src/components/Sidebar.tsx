@@ -114,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   `group relative flex min-h-[44px] items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} ios-press-light py-2.5 transition-all duration-200 ${
                     isActive
                       ? "scale-[1.02] text-white shadow-md"
-                      : "hover:scale-[1.02] hover:bg-blue-50"
+                      : "hover:scale-[1.02] hover:bg-blue-50 dark:hover:bg-blue-900/20"
                   } `
                 }
                 style={({ isActive }) => ({
@@ -164,7 +164,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             href="https://bsky.app"
             target="_blank"
             rel="noopener noreferrer"
-            className={`group flex min-h-[44px] items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 hover:bg-blue-500 hover:bg-opacity-10`}
+            className={`group flex min-h-[44px] items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900/20`}
             style={{ color: "var(--asph-text-secondary)" }}
             title={isCollapsed ? "Open Bluesky" : undefined}
           >

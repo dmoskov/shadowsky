@@ -97,7 +97,7 @@ export const UserMenu: React.FC = () => {
       icon: LogOut,
       label: "Sign Out",
       onClick: handleLogout,
-      className: "text-red-500 hover:bg-red-50",
+      className: "text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20",
     },
   ];
 
@@ -115,7 +115,7 @@ export const UserMenu: React.FC = () => {
           }
           setIsOpen(!isOpen);
         }}
-        className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-white hover:bg-opacity-10"
+        className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-gray-200/50 dark:hover:bg-white/10"
         style={{ color: "var(--asph-text-primary)" }}
         aria-label="User menu"
         aria-haspopup="menu"

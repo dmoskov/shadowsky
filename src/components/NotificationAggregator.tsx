@@ -569,7 +569,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500"></div>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500 dark:border-gray-600 dark:border-t-blue-400"></div>
                       <span
                         className="text-sm"
                         style={{ color: "var(--asph-text-secondary)" }}

@@ -318,7 +318,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Type a command or search..."
             aria-label="Search commands"
-            className="flex-1 bg-transparent text-base outline-none placeholder:text-gray-500"
+            className="flex-1 bg-transparent text-base outline-none placeholder:text-gray-500 dark:placeholder:text-gray-400"
             style={{ color: "var(--asph-text-primary)" }}
           />
           <kbd
