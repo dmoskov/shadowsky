@@ -6,7 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import {AppBskyNotificationListNotifications, AppBskyFeedPost} from '@atproto/api';
+import {AppBskyFeedPost} from '@atproto/api';
 import {useNotifications} from '../../hooks/api/useNotifications';
 import {LoadingState} from '../../components/LoadingState';
 import {ErrorState} from '../../components/ErrorState';
