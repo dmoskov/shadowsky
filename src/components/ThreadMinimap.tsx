@@ -10,7 +10,7 @@
  */
 
 import type { AppBskyFeedDefs } from "@atproto/api";
-import { ChevronDown, ChevronUp, Map, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Network, X } from "lucide-react";
 import React, {
   useCallback,
   useEffect,
@@ -455,12 +455,15 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
         >
           {!isCollapsed && (
             <div className="flex items-center gap-1">
-              <Map size={12} style={{ color: "var(--asph-text-secondary)" }} />
+              <Network
+                size={12}
+                style={{ color: "var(--asph-text-secondary)" }}
+              />
               <span
                 className="text-xs font-medium"
                 style={{ color: "var(--asph-text-secondary)" }}
               >
-                Map
+                Thread
               </span>
             </div>
           )}
