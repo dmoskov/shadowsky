@@ -33,47 +33,71 @@ struct ProfileHeaderView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Banner (if exists)
-            if let bannerURL = profile.banner.flatMap({ URL(string: $0) }) {
-                AsyncImage(url: bannerURL) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Color.gray.opacity(0.2)
+            // Banner
+            ZStack(alignment: .topTrailing) {
+                if let bannerURL = profile.banner.flatMap({ URL(string: $0) }) {
+                    AsyncImage(url: bannerURL) { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Color.gray.opacity(0.2)
+                    }
+                    .frame(height: 150)
+                    .clipped()
+                } else {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(height: 150)
                 }
-                .frame(height: 120)
-                .clipped()
-            }
 
-            VStack(spacing: 16) {
-                // Avatar and Display Name
-                VStack(spacing: 12) {
-                    // Avatar
-                    if let avatarURL = profile.avatar.flatMap({ URL(string: $0) }) {
-                        AsyncImage(url: avatarURL) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Circle()
-                                .fill(Color.gray.opacity(0.3))
-                        }
-                        .frame(width: 96, height: 96)
-                        .clipShape(Circle())
-                        .overlay(
-                            Circle()
-                                .stroke(Color(UIColor.systemBackground), lineWidth: 4)
-                        )
-                    } else {
-                        Circle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 96, height: 96)
-                            .overlay(
+                // Menu button overlay on banner (for non-own profiles)
+                if !isOwnProfile {
+                    Button(action: {
+                        onMenuPress?()
+                    }) {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 36, height: 36)
+                            .background(
                                 Circle()
-                                    .stroke(Color(UIColor.systemBackground), lineWidth: 4)
+                                    .fill(Color.black.opacity(0.4))
                             )
                     }
+                    .padding(.top, 12)
+                    .padding(.trailing, 12)
+                }
+            }
+
+            // Avatar overlapping banner
+            VStack(spacing: 16) {
+                VStack(spacing: 12) {
+                    // Avatar with background ring
+                    Group {
+                        if let avatarURL = profile.avatar.flatMap({ URL(string: $0) }) {
+                            AsyncImage(url: avatarURL) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            } placeholder: {
+                                Circle()
+                                    .fill(Color.gray.opacity(0.3))
+                            }
+                            .frame(width: 80, height: 80)
+                            .clipShape(Circle())
+                        } else {
+                            Circle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(width: 80, height: 80)
+                        }
+                    }
+                    .overlay(
+                        Circle()
+                            .stroke(Color(UIColor.systemBackground), lineWidth: 3)
+                    )
+                    .offset(y: -40)
+                    .padding(.bottom, -40)
 
                     // Display Name and Handle
                     VStack(spacing: 4) {
@@ -205,7 +229,7 @@ struct ProfileHeaderView: View {
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 24)
+            .padding(.vertical, 16)
         }
         .background(Color(UIColor.systemBackground))
     }

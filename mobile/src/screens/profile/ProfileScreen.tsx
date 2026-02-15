@@ -10,6 +10,7 @@ import {
   Modal,
   Alert,
 } from "react-native";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useProfile, useFollowUser, useUnfollowUser, useBlockUser, useUnblockUser, useMuteUser, useUnmuteUser } from "../../hooks/api/useProfile";
 import { useAuthorFeed, useActorLikes } from "../../hooks/api/useFeed";
@@ -313,19 +314,34 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
 
     return (
       <View style={styles.header}>
-        {/* Menu button for non-own profiles */}
-        {!isOwnProfile && (
-          <TouchableOpacity
-            style={styles.headerMenuButton}
-            onPress={() => setShowMenu(true)}
-            activeOpacity={0.7}>
-            <MoreVerticalIcon size={24} color={colors.textSecondary} />
-          </TouchableOpacity>
-        )}
+        {/* Banner Image */}
+        <View style={styles.bannerContainer}>
+          {profile.banner ? (
+            <Image
+              source={{ uri: profile.banner }}
+              style={styles.bannerImage}
+              contentFit="cover"
+              transition={200}
+            />
+          ) : (
+            <View style={styles.bannerPlaceholder} />
+          )}
+          {/* Menu button for non-own profiles */}
+          {!isOwnProfile && (
+            <TouchableOpacity
+              style={styles.headerMenuButton}
+              onPress={() => setShowMenu(true)}
+              activeOpacity={0.7}>
+              <MoreVerticalIcon size={24} color="#ffffff" />
+            </TouchableOpacity>
+          )}
+        </View>
 
-        {/* Avatar and Display Name */}
+        {/* Avatar overlapping banner */}
         <View style={styles.profileInfo}>
-          <Avatar uri={profile.avatar} size={96} />
+          <View style={styles.avatarWrapper}>
+            <Avatar uri={profile.avatar} size={80} />
+          </View>
           <Text style={styles.displayName}>
             {profile.displayName || profile.handle}
           </Text>
@@ -622,22 +638,45 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingVertical: 24,
     borderBottomWidth: 1,
     borderBottomColor: colors.surfaceElevated,
     position: "relative",
   },
+  bannerContainer: {
+    width: "100%",
+    height: 150,
+    position: "relative",
+  },
+  bannerImage: {
+    width: "100%",
+    height: "100%",
+  },
+  bannerPlaceholder: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: colors.surfaceElevated,
+  },
   headerMenuButton: {
     position: "absolute",
-    top: 16,
-    right: 16,
+    top: 12,
+    right: 12,
     padding: 8,
     zIndex: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    borderRadius: 20,
   },
   profileInfo: {
     alignItems: "center",
     marginBottom: 16,
+    paddingHorizontal: 16,
+  },
+  avatarWrapper: {
+    marginTop: -40,
+    marginBottom: 8,
+    borderRadius: 44,
+    borderWidth: 3,
+    borderColor: colors.background,
+    overflow: "hidden",
   },
   statusBadge: {
     paddingHorizontal: 12,
@@ -676,11 +715,13 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 16,
     textAlign: "center",
+    paddingHorizontal: 16,
   },
   stats: {
     flexDirection: "row",
     justifyContent: "space-around",
     marginBottom: 16,
+    paddingHorizontal: 16,
   },
   stat: {
     alignItems: "center",
@@ -699,6 +740,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     marginBottom: 16,
+    paddingHorizontal: 16,
   },
   followButton: {
     flex: 1,
@@ -803,6 +845,7 @@ const styles = StyleSheet.create({
   starterPacksContainer: {
     marginTop: 16,
     marginBottom: 8,
+    paddingHorizontal: 16,
   },
   starterPacksTitle: {
     color: colors.text,
