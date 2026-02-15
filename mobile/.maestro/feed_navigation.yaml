@@ -22,12 +22,9 @@ appId: com.shadowsky.mobile
 - assertVisible: "Timeline"
 
 # Test Scrolling Feed
-- scroll:
-    direction: DOWN
-- scroll:
-    direction: DOWN
-- scroll:
-    direction: DOWN
+- scroll
+- scroll
+- scroll
 
 # Test Interacting with Post
 - tapOn:
