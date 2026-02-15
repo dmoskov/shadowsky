@@ -122,6 +122,11 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
               const isGenerating = generatingAltText[postKey]?.[idx];
               const shouldShowAlt = showAltText[postKey]?.[idx];
 
+              // Calculate dimensions from aspectRatio if available
+              const aspectRatio = img.aspectRatio
+                ? img.aspectRatio.width / img.aspectRatio.height
+                : undefined;
+
               return (
                 <div
                   key={`embed-img-${img.thumb}-${idx}`}
@@ -131,6 +136,9 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
                       : ""
                   }`}
                   onClick={(e) => handleImageClickInternal(e, idx)}
+                  style={{
+                    aspectRatio: aspectRatio || undefined,
+                  }}
                 >
                   <img
                     src={proxifyBskyImage(img.thumb)}
@@ -143,6 +151,8 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
                         embedData.images.length === 1 ? "600px" : "100%",
                       backgroundColor: "var(--asph-bg-tertiary)",
                     }}
+                    width={img.aspectRatio?.width}
+                    height={img.aspectRatio?.height}
                   />
 
                   {/* Alt text overlay */}

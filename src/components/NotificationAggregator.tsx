@@ -706,7 +706,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                         <div
                           className={`grid gap-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
                         >
-                          {images.slice(0, 4).map((img, idx) => (
+                          {images.slice(0, 4).map((img: any, idx) => (
                             <img
                               key={`notif-img-${img.thumb}-${idx}`}
                               src={proxifyBskyImage(img.thumb)}
@@ -717,6 +717,8 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                                 height: images.length === 1 ? "160px" : "100px",
                               }}
                               loading="lazy"
+                              width={img.aspectRatio?.width}
+                              height={img.aspectRatio?.height}
                             />
                           ))}
                         </div>

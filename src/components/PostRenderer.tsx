@@ -195,6 +195,8 @@ const BskyUrlEmbed: React.FC<{
                       src={proxifyBskyImage(img.thumb) || ""}
                       alt={img.alt || ""}
                       className="h-32 w-full rounded object-cover"
+                      width={img.aspectRatio?.width}
+                      height={img.aspectRatio?.height}
                     />
                   ))}
               </div>
@@ -498,6 +500,13 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               const currentAltText = generatedAltTexts[index] || image.alt;
               const hasAltText = currentAltText && currentAltText.length > 0;
 
+              // Extract aspect ratio from image metadata
+              const imageAspectRatio = image.aspectRatio
+                ? image.aspectRatio.width / image.aspectRatio.height
+                : isThreeImageLayout && index === 0
+                  ? 1
+                  : 16 / 9;
+
               return (
                 <div
                   key={`post-image-${image.thumb}-${index}`}
@@ -506,8 +515,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                   <div
                     className="relative w-full cursor-pointer overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
                     style={{
-                      aspectRatio:
-                        isThreeImageLayout && index === 0 ? "1" : "16/9",
+                      aspectRatio: imageAspectRatio,
                       maxHeight:
                         isThreeImageLayout && index === 0 ? "500px" : "350px",
                     }}
@@ -522,6 +530,9 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                       }
                       placeholderSrc={proxifyBskyImage(image.thumb) || ""}
                       alt={currentAltText || ""}
+                      aspectRatio={imageAspectRatio}
+                      width={image.aspectRatio?.width}
+                      height={image.aspectRatio?.height}
                       className="h-full w-full object-contain hover:opacity-90"
                       style={{
                         filter:
