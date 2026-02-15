@@ -1,14 +1,7 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-
-// react-native-keyevent may not be linked on all platforms
-let KeyEvent: any = null;
-try {
-  KeyEvent = require('react-native-keyevent');
-} catch {
-  // Module not available - keyboard shortcuts will be disabled
-}
+import { useKeyEvent } from 'expo-key-event';
 
 export type KeyboardShortcutHandler = () => void;
 
@@ -35,115 +28,103 @@ export interface KeyboardShortcuts {
  */
 export function useKeyboardShortcuts(shortcuts: KeyboardShortcuts = {}) {
   const router = useRouter();
+  const { keyEvent } = useKeyEvent({ captureModifiers: true });
 
   useEffect(() => {
-    // Only enable keyboard shortcuts on iOS (iPad) with KeyEvent available
-    if (Platform.OS !== 'ios' || !KeyEvent?.onKeyDownListener) {
+    // Only enable keyboard shortcuts on iOS (iPad)
+    if (Platform.OS !== 'ios' || !keyEvent) {
       return;
     }
 
-    const keyDownListener = (keyEvent: any) => {
-      const { pressedKey, keyCode, action } = keyEvent;
+    const { key, metaKey, ctrlKey, shiftKey } = keyEvent;
 
-      // Only handle keyDown events
-      if (action !== 'keyDown') {
-        return;
+    // Check for cmd/meta modifier
+    const hasCmd = metaKey || ctrlKey;
+
+    // cmd+N: New post
+    if (hasCmd && key.toLowerCase() === 'n') {
+      if (shortcuts.onCmdN) {
+        shortcuts.onCmdN();
+      } else {
+        router.push('/(app)/compose');
       }
+      return;
+    }
 
-      // Check for cmd/meta modifier
-      const hasCmd = keyEvent.metaKey || keyEvent.ctrlKey;
-
-      // cmd+N: New post
-      if (hasCmd && (pressedKey === 'n' || pressedKey === 'N')) {
-        if (shortcuts.onCmdN) {
-          shortcuts.onCmdN();
-        } else {
-          router.push('/(app)/compose');
-        }
-        return;
+    // cmd+K: Search
+    if (hasCmd && key.toLowerCase() === 'k') {
+      if (shortcuts.onCmdK) {
+        shortcuts.onCmdK();
+      } else {
+        router.push('/(app)/(tabs)/(search)');
       }
+      return;
+    }
 
-      // cmd+K: Search
-      if (hasCmd && (pressedKey === 'k' || pressedKey === 'K')) {
-        if (shortcuts.onCmdK) {
-          shortcuts.onCmdK();
-        } else {
-          router.push('/(app)/(tabs)/(search)');
-        }
-        return;
+    // cmd+1: Home tab
+    if (hasCmd && (key === '1' || key === 'Digit1')) {
+      if (shortcuts.onCmd1) {
+        shortcuts.onCmd1();
+      } else {
+        router.push('/(app)/(tabs)/(home)');
       }
+      return;
+    }
 
-      // cmd+1: Home tab
-      if (hasCmd && (pressedKey === '1' || keyCode === 30)) {
-        if (shortcuts.onCmd1) {
-          shortcuts.onCmd1();
-        } else {
-          router.push('/(app)/(tabs)/(home)');
-        }
-        return;
+    // cmd+2: Search tab
+    if (hasCmd && (key === '2' || key === 'Digit2')) {
+      if (shortcuts.onCmd2) {
+        shortcuts.onCmd2();
+      } else {
+        router.push('/(app)/(tabs)/(search)');
       }
+      return;
+    }
 
-      // cmd+2: Search tab
-      if (hasCmd && (pressedKey === '2' || keyCode === 31)) {
-        if (shortcuts.onCmd2) {
-          shortcuts.onCmd2();
-        } else {
-          router.push('/(app)/(tabs)/(search)');
-        }
-        return;
+    // cmd+3: Notifications tab
+    if (hasCmd && (key === '3' || key === 'Digit3')) {
+      if (shortcuts.onCmd3) {
+        shortcuts.onCmd3();
+      } else {
+        router.push('/(app)/(tabs)/(notifications)');
       }
+      return;
+    }
 
-      // cmd+3: Notifications tab
-      if (hasCmd && (pressedKey === '3' || keyCode === 32)) {
-        if (shortcuts.onCmd3) {
-          shortcuts.onCmd3();
-        } else {
-          router.push('/(app)/(tabs)/(notifications)');
-        }
-        return;
+    // cmd+4: Profile tab
+    if (hasCmd && (key === '4' || key === 'Digit4')) {
+      if (shortcuts.onCmd4) {
+        shortcuts.onCmd4();
+      } else {
+        router.push('/(app)/(tabs)/(profile)');
       }
+      return;
+    }
 
-      // cmd+4: Profile tab
-      if (hasCmd && (pressedKey === '4' || keyCode === 33)) {
-        if (shortcuts.onCmd4) {
-          shortcuts.onCmd4();
-        } else {
-          router.push('/(app)/(tabs)/(profile)');
-        }
-        return;
+    // cmd+Enter: Submit (only if handler provided)
+    if (hasCmd && (key === 'Enter' || key === '\n')) {
+      if (shortcuts.onCmdEnter) {
+        shortcuts.onCmdEnter();
       }
+      return;
+    }
 
-      // cmd+Enter: Submit (only if handler provided)
-      if (hasCmd && (keyCode === 66 || pressedKey === '\n' || pressedKey === 'Enter')) {
-        if (shortcuts.onCmdEnter) {
-          shortcuts.onCmdEnter();
-        }
-        return;
+    // Arrow Up (without cmd modifier)
+    if (!hasCmd && key === 'ArrowUp') {
+      if (shortcuts.onArrowUp) {
+        shortcuts.onArrowUp();
       }
+      return;
+    }
 
-      // Arrow Up
-      if (keyCode === 19 || pressedKey === 'ArrowUp') {
-        if (shortcuts.onArrowUp) {
-          shortcuts.onArrowUp();
-        }
-        return;
+    // Arrow Down (without cmd modifier)
+    if (!hasCmd && key === 'ArrowDown') {
+      if (shortcuts.onArrowDown) {
+        shortcuts.onArrowDown();
       }
-
-      // Arrow Down
-      if (keyCode === 20 || pressedKey === 'ArrowDown') {
-        if (shortcuts.onArrowDown) {
-          shortcuts.onArrowDown();
-        }
-        return;
-      }
-    };
-
-    KeyEvent.onKeyDownListener(keyDownListener);
-
-    return () => {
-      KeyEvent.removeKeyDownListener();
-    };
-  }, [shortcuts, router]);
+      return;
+    }
+  }, [keyEvent, shortcuts, router]);
 }
 
 /**

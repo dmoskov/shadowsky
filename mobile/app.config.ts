@@ -92,7 +92,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         isAccessMediaLocationEnabled: true,
       },
     ],
-    "./plugins/withKeyEvent",
     "./plugins/withPrivacyManifest",
     // "./plugins/withShareExtension", // Disabled for local build - plugin needs fixing
   ],
