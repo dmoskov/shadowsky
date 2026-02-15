@@ -1,8 +1,10 @@
 import SwiftUI
+import FeedBridge
 
 // MARK: - Facet Models
 
 /// Represents an AT Protocol facet with byte range and features
+/// Uses FacetFeature from FeedBridge module to avoid duplication
 struct ATFacet: Codable {
     let index: ByteSlice
     let features: [FacetFeature]
@@ -11,58 +13,19 @@ struct ATFacet: Codable {
         let byteStart: Int
         let byteEnd: Int
     }
-}
 
-/// Different types of facet features supported by AT Protocol
-enum FacetFeature: Codable {
-    case mention(did: String)
-    case link(uri: String)
-    case tag(tag: String)
-
-    enum CodingKeys: String, CodingKey {
-        case type = "$type"
-        case did
-        case uri
-        case tag
+    /// Convert from FeedBridge.Facet to ATFacet
+    init(from bridgeFacet: Facet) {
+        self.index = ByteSlice(
+            byteStart: bridgeFacet.index.byteStart,
+            byteEnd: bridgeFacet.index.byteEnd
+        )
+        self.features = bridgeFacet.features
     }
 
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let type = try container.decode(String.self, forKey: .type)
-
-        switch type {
-        case "app.bsky.richtext.facet#mention":
-            let did = try container.decode(String.self, forKey: .did)
-            self = .mention(did: did)
-        case "app.bsky.richtext.facet#link":
-            let uri = try container.decode(String.self, forKey: .uri)
-            self = .link(uri: uri)
-        case "app.bsky.richtext.facet#tag":
-            let tag = try container.decode(String.self, forKey: .tag)
-            self = .tag(tag: tag)
-        default:
-            throw DecodingError.dataCorruptedError(
-                forKey: .type,
-                in: container,
-                debugDescription: "Unknown facet type: \(type)"
-            )
-        }
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-
-        switch self {
-        case .mention(let did):
-            try container.encode("app.bsky.richtext.facet#mention", forKey: .type)
-            try container.encode(did, forKey: .did)
-        case .link(let uri):
-            try container.encode("app.bsky.richtext.facet#link", forKey: .type)
-            try container.encode(uri, forKey: .uri)
-        case .tag(let tag):
-            try container.encode("app.bsky.richtext.facet#tag", forKey: .type)
-            try container.encode(tag, forKey: .tag)
-        }
+    init(index: ByteSlice, features: [FacetFeature]) {
+        self.index = index
+        self.features = features
     }
 }
 
@@ -182,16 +145,16 @@ struct RichTextParser {
         }
 
         switch feature {
-        case .mention(let did):
+        case .mention(let mention):
             // Extract handle from text (remove @ prefix if present)
             let handle = text.hasPrefix("@") ? String(text.dropFirst()) : text
-            return RichTextSegment(text: text, type: .mention(handle: handle, did: did))
+            return RichTextSegment(text: text, type: .mention(handle: handle, did: mention.did))
 
-        case .link(let uri):
-            return RichTextSegment(text: text, type: .link(uri: uri))
+        case .link(let link):
+            return RichTextSegment(text: text, type: .link(uri: link.uri))
 
         case .tag(let tag):
-            return RichTextSegment(text: text, type: .hashtag(tag: tag))
+            return RichTextSegment(text: text, type: .hashtag(tag: tag.tag))
         }
     }
 }
@@ -213,10 +176,47 @@ struct RichTextView: View {
         let parser = RichTextParser(text: text, facets: facets)
         let segments = parser.parse()
 
-        // Use Text concatenation for inline rendering
-        segments.reduce(Text("")) { result, segment in
+        // Use a wrapping text view with tap detection
+        // Note: SwiftUI's Text with attributed strings supports some gestures,
+        // but for full tap handling we use an overlay approach
+        WrappingRichText(
+            segments: segments,
+            primaryColor: primaryColor,
+            onMentionTap: onMentionTap,
+            onHashtagTap: onHashtagTap,
+            onLinkTap: onLinkTap
+        )
+    }
+}
+
+// MARK: - Wrapping Rich Text View
+
+/// A view that renders rich text segments with tap handling
+/// Uses Text concatenation for layout with gesture detection overlay
+private struct WrappingRichText: View {
+    let segments: [RichTextSegment]
+    let primaryColor: Color
+    let onMentionTap: (String, String) -> Void
+    let onHashtagTap: (String) -> Void
+    let onLinkTap: (String) -> Void
+
+    var body: some View {
+        // Concatenate all segments into styled text
+        let styledText = segments.reduce(Text("")) { result, segment in
             result + segmentText(for: segment)
         }
+
+        // TODO: Tap handling for individual facets
+        // SwiftUI's Text view with concatenation doesn't support per-segment tap gestures.
+        // Current implementation styles the text correctly (colors, underlines) but taps
+        // are not functional. To enable tap handling, consider these approaches:
+        // 1. Use UIViewRepresentable with UITextView and NSAttributedString with link attributes
+        // 2. Use a custom Layout that positions individual Text views wrapped in Buttons
+        // 3. Wait for SwiftUI to add native support for tappable text segments
+        // The event handlers (onMentionTap, onHashtagTap, onLinkTap) are wired up in
+        // RichTextViewWrapper but cannot be called without proper tap detection.
+        styledText
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func segmentText(for segment: RichTextSegment) -> Text {
@@ -227,6 +227,7 @@ struct RichTextView: View {
         case .mention:
             return Text(segment.text)
                 .foregroundColor(primaryColor)
+                .fontWeight(.medium)
 
         case .link:
             return Text(segment.text)
@@ -236,6 +237,7 @@ struct RichTextView: View {
         case .hashtag:
             return Text(segment.text)
                 .foregroundColor(primaryColor)
+                .fontWeight(.medium)
         }
     }
 }
@@ -262,7 +264,7 @@ struct RichTextView_Previews: PreviewProvider {
                 facets: [
                     ATFacet(
                         index: ATFacet.ByteSlice(byteStart: 6, byteEnd: 24),
-                        features: [.mention(did: "did:plc:alice123")]
+                        features: [.mention(FacetFeatureMention(type: "app.bsky.richtext.facet#mention", did: "did:plc:alice123"))]
                     )
                 ],
                 onMentionTap: { handle, did in
@@ -279,11 +281,11 @@ struct RichTextView_Previews: PreviewProvider {
                 facets: [
                     ATFacet(
                         index: ATFacet.ByteSlice(byteStart: 10, byteEnd: 29),
-                        features: [.link(uri: "https://example.com")]
+                        features: [.link(FacetFeatureLink(type: "app.bsky.richtext.facet#link", uri: "https://example.com"))]
                     ),
                     ATFacet(
                         index: ATFacet.ByteSlice(byteStart: 34, byteEnd: 42),
-                        features: [.tag(tag: "swiftui")]
+                        features: [.tag(FacetFeatureTag(type: "app.bsky.richtext.facet#tag", tag: "swiftui"))]
                     )
                 ],
                 onMentionTap: { _, _ in },
@@ -302,7 +304,7 @@ struct RichTextView_Previews: PreviewProvider {
                 facets: [
                     ATFacet(
                         index: ATFacet.ByteSlice(byteStart: 11, byteEnd: 17),
-                        features: [.mention(did: "did:plc:alice123")]
+                        features: [.mention(FacetFeatureMention(type: "app.bsky.richtext.facet#mention", did: "did:plc:alice123"))]
                     )
                 ],
                 onMentionTap: { handle, did in
