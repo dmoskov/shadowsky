@@ -1,34 +1,6 @@
 import SwiftUI
 import FeedBridge
 
-// MARK: - Facet Models
-
-/// Represents an AT Protocol facet with byte range and features
-/// Uses FacetFeature from FeedBridge module to avoid duplication
-struct ATFacet: Codable {
-    let index: ByteSlice
-    let features: [FacetFeature]
-
-    struct ByteSlice: Codable {
-        let byteStart: Int
-        let byteEnd: Int
-    }
-
-    /// Convert from FeedBridge.Facet to ATFacet
-    init(from bridgeFacet: Facet) {
-        self.index = ByteSlice(
-            byteStart: bridgeFacet.index.byteStart,
-            byteEnd: bridgeFacet.index.byteEnd
-        )
-        self.features = bridgeFacet.features
-    }
-
-    init(index: ByteSlice, features: [FacetFeature]) {
-        self.index = index
-        self.features = features
-    }
-}
-
 // MARK: - Rich Text Segment
 
 /// Represents a parsed segment of rich text
@@ -93,7 +65,7 @@ struct ByteOffsetConverter {
 /// Parses text with AT Protocol facets into segments
 struct RichTextParser {
     let text: String
-    let facets: [ATFacet]
+    let facets: [Facet]
 
     /// Parse text into segments with facet information
     func parse() -> [RichTextSegment] {
@@ -164,7 +136,7 @@ struct RichTextParser {
 /// SwiftUI view for rendering rich text with AT Protocol facets
 struct RichTextView: View {
     let text: String
-    let facets: [ATFacet]
+    let facets: [Facet]
     let onMentionTap: (String, String) -> Void  // (handle, did)
     let onHashtagTap: (String) -> Void
     let onLinkTap: (String) -> Void
@@ -332,8 +304,8 @@ struct RichTextView_Previews: PreviewProvider {
             RichTextView(
                 text: "Hello @alice.bsky.social how are you?",
                 facets: [
-                    ATFacet(
-                        index: ATFacet.ByteSlice(byteStart: 6, byteEnd: 24),
+                    Facet(
+                        index: FacetIndex(byteStart: 6, byteEnd: 24),
                         features: [.mention(FacetFeatureMention(type: "app.bsky.richtext.facet#mention", did: "did:plc:alice123"))]
                     )
                 ],
@@ -349,12 +321,12 @@ struct RichTextView_Previews: PreviewProvider {
             RichTextView(
                 text: "Check out https://example.com and #swiftui",
                 facets: [
-                    ATFacet(
-                        index: ATFacet.ByteSlice(byteStart: 10, byteEnd: 29),
+                    Facet(
+                        index: FacetIndex(byteStart: 10, byteEnd: 29),
                         features: [.link(FacetFeatureLink(type: "app.bsky.richtext.facet#link", uri: "https://example.com"))]
                     ),
-                    ATFacet(
-                        index: ATFacet.ByteSlice(byteStart: 34, byteEnd: 42),
+                    Facet(
+                        index: FacetIndex(byteStart: 34, byteEnd: 42),
                         features: [.tag(FacetFeatureTag(type: "app.bsky.richtext.facet#tag", tag: "swiftui"))]
                     )
                 ],
@@ -370,10 +342,10 @@ struct RichTextView_Previews: PreviewProvider {
 
             // Text with emoji (tests UTF-8 handling)
             RichTextView(
-                text: "Hello 👋 @alice check this 🔥",
+                text: "Hello \u{1F44B} @alice check this \u{1F525}",
                 facets: [
-                    ATFacet(
-                        index: ATFacet.ByteSlice(byteStart: 11, byteEnd: 17),
+                    Facet(
+                        index: FacetIndex(byteStart: 11, byteEnd: 17),
                         features: [.mention(FacetFeatureMention(type: "app.bsky.richtext.facet#mention", did: "did:plc:alice123"))]
                     )
                 ],

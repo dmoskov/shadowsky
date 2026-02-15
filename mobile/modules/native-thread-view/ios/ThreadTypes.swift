@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FeedBridge
 
 // MARK: - Thread Node (for nested structure)
 
@@ -50,7 +51,7 @@ struct ThreadAuthor {
 
 struct ThreadRecord {
     let text: String
-    let facets: [ThreadFacet]?
+    let facets: [Facet]?
     let createdAt: String
 }
 
@@ -70,22 +71,8 @@ struct ThreadReplyRef {
 }
 
 // MARK: - Facets
-
-struct ThreadFacet {
-    let index: ThreadFacetIndex
-    let features: [ThreadFacetFeature]
-}
-
-struct ThreadFacetIndex {
-    let byteStart: Int
-    let byteEnd: Int
-}
-
-enum ThreadFacetFeature {
-    case mention(did: String)
-    case link(uri: String)
-    case hashtag(tag: String)
-}
+// Uses Facet types from FeedBridge module (FacetIndex, FacetFeature, Facet)
+// to avoid duplicating AT Protocol facet type definitions.
 
 // MARK: - Thread Navigation
 

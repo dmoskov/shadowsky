@@ -147,10 +147,10 @@ struct PostCardView: View {
     // MARK: - Helpers
 
     private func renderPostText() -> some View {
-        // Convert PostFacet to ATFacet format for RichTextView
-        let atFacets: [ATFacet] = (post.post.record.facets ?? []).map { postFacet in
-            ATFacet(
-                index: ATFacet.ByteSlice(
+        // Convert PostFacet to FeedBridge Facet format for RichTextView
+        let facets: [Facet] = (post.post.record.facets ?? []).map { postFacet in
+            Facet(
+                index: FacetIndex(
                     byteStart: postFacet.index.byteStart,
                     byteEnd: postFacet.index.byteEnd
                 ),
@@ -169,7 +169,7 @@ struct PostCardView: View {
 
         return RichTextView(
             text: post.post.record.text,
-            facets: atFacets,
+            facets: facets,
             onMentionTap: { handle, did in
                 onMentionPress?(handle, did)
             },
