@@ -6,6 +6,7 @@
  */
 
 import type { AppBskyActorDefs, AppBskyFeedDefs } from "@atproto/api";
+import type React from "react";
 
 /**
  * Post data structure for mobile rendering
@@ -65,6 +66,7 @@ export interface PostDetailViewProps {
   post: AppBskyFeedDefs.PostView;
   replies?: MobilePostData[];
   parentPosts?: AppBskyFeedDefs.PostView[];
+  threadSummary?: React.ReactNode;
   onLike?: () => void;
   onRepost?: () => void;
   onReply?: () => void;

@@ -10,6 +10,7 @@ export { FeedList } from "./FeedList";
 export { FeedView } from "./FeedView";
 export { FollowersListView } from "./FollowersListView";
 export { ListManagementView } from "./ListManagementView";
+export { MobileThreadSummary } from "./MobileThreadSummary";
 export { PostCard } from "./PostCard";
 export { PostDetailView } from "./PostDetailView";
 export { ProfileView } from "./ProfileView";
