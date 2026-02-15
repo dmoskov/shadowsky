@@ -54,6 +54,13 @@ export interface ThreadSummaryResult {
 }
 
 /**
+ * API version prefix for all endpoints.
+ * When updating the API version, change this constant.
+ * The server also supports unversioned /api/ paths for backward compatibility.
+ */
+const API_VERSION = "v1";
+
+/**
  * Get the API base URL for mobile
  * For development, this should point to your local API server or staging
  * For production, this should point to your production API
@@ -61,19 +68,33 @@ export interface ThreadSummaryResult {
 function getApiBaseUrl(): string {
   // In development mode, you might use a different URL
   // Update this based on your setup (e.g., local IP for testing on device)
+  let baseUrl: string;
   if (__DEV__) {
     // For iOS simulator, localhost works
     // For Android emulator, use 10.0.2.2
     // For physical device, use your computer's IP address
     if (Platform.OS === "android") {
-      return "http://10.0.2.2:3002"; // Android emulator
+      baseUrl = "http://10.0.2.2:3002"; // Android emulator
+    } else {
+      baseUrl = "http://localhost:3002"; // iOS simulator
     }
-    return "http://localhost:3002"; // iOS simulator
+  } else {
+    // Production API URL - get from environment or config
+    // This should match your deployed Amplify API Gateway URL
+    baseUrl = process.env.EXPO_PUBLIC_API_URL || "";
   }
 
-  // Production API URL - get from environment or config
-  // This should match your deployed Amplify API Gateway URL
-  return process.env.EXPO_PUBLIC_API_URL || "";
+  return baseUrl;
+}
+
+/**
+ * Get the versioned API path prefix.
+ * Returns the base URL with the version prefix for API calls.
+ * Example: "http://localhost:3002/api/v1" or "https://api.example.com/api/v1"
+ */
+function getVersionedApiUrl(): string {
+  const baseUrl = getApiBaseUrl();
+  return `${baseUrl}/api/${API_VERSION}`;
 }
 
 /**
@@ -102,8 +123,8 @@ export async function generateThreadSummary(
   format: ThreadSummaryFormat = "brief",
 ): Promise<ThreadSummaryResult> {
   try {
-    const apiBaseUrl = getApiBaseUrl();
-    const endpoint = `${apiBaseUrl}/api/thread-summary`;
+    const apiUrl = getVersionedApiUrl();
+    const endpoint = `${apiUrl}/thread-summary`;
 
     const response = await fetch(endpoint, {
       method: "POST",
@@ -184,8 +205,8 @@ export async function generateAltText(imageUri: string): Promise<string> {
     logger.log('Converting image URI to data URL:', imageUri);
     const dataUrl = await fileUriToDataUrl(imageUri);
 
-    const apiBaseUrl = getApiBaseUrl();
-    const endpoint = `${apiBaseUrl}/api/generate-alt-text`;
+    const apiUrl = getVersionedApiUrl();
+    const endpoint = `${apiUrl}/generate-alt-text`;
 
     logger.log('Generating alt text via backend:', { endpoint });
 
@@ -270,8 +291,8 @@ export interface LinkMetadata {
  * Fetch link metadata (title, description, image) for a URL
  */
 export async function fetchLinkMetadata(url: string): Promise<LinkMetadata> {
-  const apiBaseUrl = getApiBaseUrl();
-  const endpoint = `${apiBaseUrl}/api/fetch-link-metadata`;
+  const apiUrl = getVersionedApiUrl();
+  const endpoint = `${apiUrl}/fetch-link-metadata`;
 
   const response = await fetch(endpoint, {
     method: "POST",

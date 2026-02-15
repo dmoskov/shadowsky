@@ -29,7 +29,14 @@ Amplify.configure({
   },
 });
 
-// Get API base URL
+/**
+ * API version prefix for all endpoints.
+ * When updating the API version, change this constant.
+ * The server also supports unversioned /api/ paths for backward compatibility.
+ */
+export const API_VERSION = "v1";
+
+// Get API base URL (without version prefix)
 export function getApiBaseUrl(): string {
   // In development, use Vite proxy to avoid CORS issues
   // The proxy forwards /api/* requests to localhost:3002
@@ -51,6 +58,16 @@ export function getApiBaseUrl(): string {
 
   // Fallback to relative URLs (will use Vite proxy if configured)
   return "";
+}
+
+/**
+ * Get the versioned API path prefix.
+ * Returns the base URL with the version prefix for API calls.
+ * Example: "/api/v1" (dev) or "https://api.example.com/api/v1" (prod)
+ */
+export function getVersionedApiUrl(): string {
+  const baseUrl = getApiBaseUrl();
+  return `${baseUrl}/api/${API_VERSION}`;
 }
 
 export { outputs };

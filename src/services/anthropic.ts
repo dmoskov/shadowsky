@@ -1,5 +1,5 @@
 import type { BskyAgent } from "@atproto/api";
-import { getApiBaseUrl } from "../config/amplify";
+import { getVersionedApiUrl } from "../config/amplify";
 import { getApiAuthHeaders } from "../utils/api-auth";
 import { createLogger } from "../utils/logger";
 import {
@@ -39,9 +39,9 @@ export async function adjustTone(
   tone: ToneOption,
 ): Promise<ToneAdjustmentResult> {
   try {
-    const apiBaseUrl = getApiBaseUrl();
+    const apiUrl = getVersionedApiUrl();
     const response = await fetchWithRetry(
-      `${apiBaseUrl}/api/adjust-tone`,
+      `${apiUrl}/adjust-tone`,
       {
         method: "POST",
         headers: {
@@ -87,9 +87,9 @@ export async function optimizeThread(
   maxCharsPerPost: number = 300,
 ): Promise<ThreadOptimizationResult> {
   try {
-    const apiBaseUrl = getApiBaseUrl();
+    const apiUrl = getVersionedApiUrl();
     const response = await fetchWithRetry(
-      `${apiBaseUrl}/api/optimize-thread`,
+      `${apiUrl}/optimize-thread`,
       {
         method: "POST",
         headers: {
@@ -133,9 +133,9 @@ export async function suggestHashtags(
   existingTags?: string[],
 ): Promise<HashtagResult> {
   try {
-    const apiBaseUrl = getApiBaseUrl();
+    const apiUrl = getVersionedApiUrl();
     const response = await fetchWithRetry(
-      `${apiBaseUrl}/api/suggest-hashtags`,
+      `${apiUrl}/suggest-hashtags`,
       {
         method: "POST",
         headers: {
@@ -182,9 +182,9 @@ export async function getWritingFeedback(
   text: string,
 ): Promise<WritingFeedback> {
   try {
-    const apiBaseUrl = getApiBaseUrl();
+    const apiUrl = getVersionedApiUrl();
     const response = await fetchWithRetry(
-      `${apiBaseUrl}/api/writing-feedback`,
+      `${apiUrl}/writing-feedback`,
       {
         method: "POST",
         headers: {
@@ -237,8 +237,8 @@ export async function generateAltText(imageUrl: string): Promise<string> {
 
     // In production, use Amplify Function (via API Gateway)
     // In development, proxy through Vite dev server to local Express server
-    const apiBaseUrl = getApiBaseUrl();
-    const endpoint = `${apiBaseUrl}/api/generate-alt-text`;
+    const apiUrl = getVersionedApiUrl();
+    const endpoint = `${apiUrl}/generate-alt-text`;
     const payload = {
       imageUrl: processedImageUrl,
     };
@@ -326,9 +326,9 @@ async function analyzeWritingStyle(
   styleNotes: string[];
 }> {
   try {
-    const apiBaseUrl = getApiBaseUrl();
+    const apiUrl = getVersionedApiUrl();
     const response = await fetchWithRetry(
-      `${apiBaseUrl}/api/style-analysis`,
+      `${apiUrl}/style-analysis`,
       {
         method: "POST",
         headers: {
@@ -494,9 +494,9 @@ export async function analyzePosts(
   analysisType: "haiku" | "sonnet" = "sonnet",
 ): Promise<PostAnalysisResult> {
   try {
-    const apiBaseUrl = getApiBaseUrl();
+    const apiUrl = getVersionedApiUrl();
     const response = await fetchWithRetry(
-      `${apiBaseUrl}/api/analyze-posts`,
+      `${apiUrl}/analyze-posts`,
       {
         method: "POST",
         headers: {
@@ -535,9 +535,9 @@ export interface LinkMetadata {
 
 export async function fetchLinkMetadata(url: string): Promise<LinkMetadata> {
   try {
-    const apiBaseUrl = getApiBaseUrl();
+    const apiUrl = getVersionedApiUrl();
     const response = await fetchWithRetry(
-      `${apiBaseUrl}/api/fetch-link-metadata`,
+      `${apiUrl}/fetch-link-metadata`,
       {
         method: "POST",
         headers: {
@@ -626,8 +626,8 @@ export async function generateThreadSummary(
   options?: { forceRefresh?: boolean },
 ): Promise<ThreadSummaryResult> {
   try {
-    const apiBaseUrl = getApiBaseUrl();
-    let endpoint = `${apiBaseUrl}/api/thread-summary`;
+    const apiUrl = getVersionedApiUrl();
+    let endpoint = `${apiUrl}/thread-summary`;
     if (options?.forceRefresh) {
       endpoint += "?forceRefresh=true";
     }
