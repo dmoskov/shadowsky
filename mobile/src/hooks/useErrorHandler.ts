@@ -210,7 +210,6 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
 
       // Handle authentication errors (401)
       if (isAuthError(error)) {
-        const message = getErrorMessage(error);
 
         if (options.onAuthError) {
           options.onAuthError();

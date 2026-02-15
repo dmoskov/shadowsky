@@ -52,12 +52,8 @@ function PostCardComponent({
   onImagePress,
   onLinkPress,
   onQuotePress,
-  onBlock,
-  onMute,
   onPressLikeCount,
   onPressRepostCount,
-  onPressQuoteCount,
-  onReport,
   currentUserDid,
 }: PostCardProps) {
   const { isOnline } = useNetwork();

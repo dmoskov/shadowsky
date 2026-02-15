@@ -1,5 +1,5 @@
 import {getAtProtoClient} from './client';
-import {AppBskyFeedDefs, AppBskyFeedGetTimeline, AppBskyFeedDefs as FeedDefs} from '@atproto/api';
+import { AppBskyFeedDefs, AppBskyFeedDefs as FeedDefs } from '@atproto/api';
 import {withRetry} from '../../utils/with-retry';
 import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
 

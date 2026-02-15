@@ -335,7 +335,7 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
           windowSize={5}
           initialNumToRender={8}
           updateCellsBatchingPeriod={50}
-          getItemLayout={(data, index) => ({
+          getItemLayout={(_data, index) => ({
             length: 160,
             offset: 172 * index,
             index,

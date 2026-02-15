@@ -64,7 +64,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   const [showHistory, setShowHistory] = useState(false);
   const scrollRef = useRef<FlatList>(null);
 
-  const { bookmarks, toggleBookmark, isBookmarked: checkIsBookmarked } = useBookmarks();
+  const { toggleBookmark, isBookmarked: checkIsBookmarked } = useBookmarks();
   const { topics, trends, isLoading: isLoadingTrending } = useTrendingData();
 
   // Enable scroll-to-top on tab press

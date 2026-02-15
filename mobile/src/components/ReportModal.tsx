@@ -8,7 +8,6 @@ import {
   ScrollView,
   TextInput,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import {colors} from '../constants/theme';
 import {getAtProtoClient} from '../services/atproto/client';
@@ -96,8 +95,6 @@ export function ReportModal({
   subjectCid,
   subjectDid,
   subjectHandle,
-  subjectDisplayName,
-  subjectText,
   onReportSubmitted,
   onBlock,
   onMute,

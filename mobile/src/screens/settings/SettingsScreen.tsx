@@ -7,14 +7,12 @@ import {
   StyleSheet,
   Alert,
   Switch,
-  Platform,
 } from "react-native";
 import { AccountSwitcher } from "../../components";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { ArrowLeftIcon } from "../../components/icons";
-import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors } from "../../constants/theme";
 import {
@@ -25,20 +23,15 @@ import { openLink } from "../../utils/browser";
 import { useRouter } from "expo-router";
 import { appLockService } from "../../services/app-lock";
 import { useTranslation } from "../../hooks/useTranslation";
-
+import { useQueryClient } from "@tanstack/react-query";
 
 import { createLogger } from '../../utils/logger';
 
 const logger = createLogger('Settingsscreenx');
-interface SettingsScreenProps {
-  section?: string;
-  onNavigateToBlockedAccounts?: () => void;
-  onNavigateToMutedAccounts?: () => void;
-}
 
 const APP_VERSION = "0.7.0";
 
-export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigateToMutedAccounts }: SettingsScreenProps) {
+export function SettingsScreen() {
   const { signOut, accounts, account } = useAuth();
   const { preferences, updatePreference } = usePreferences();
   const { colors: themeColors } = useTheme();

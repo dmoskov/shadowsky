@@ -6,7 +6,6 @@ import * as Crypto from 'expo-crypto';
 import {
   saveMediaToLocal,
   loadMediaFromLocal,
-  deleteMediaFromLocal,
   deleteMultipleMedia,
   generateImageRefPath,
   generateVideoRefPath,

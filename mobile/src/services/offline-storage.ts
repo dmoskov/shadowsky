@@ -167,7 +167,6 @@ class OfflineStorageService {
 
       // Update metadata
       const metaKey = `feed_${feedType}`;
-      const existingMeta = await this.getMetadata(metaKey);
       await this.saveMetadata({
         key: metaKey,
         lastSyncAt: now,

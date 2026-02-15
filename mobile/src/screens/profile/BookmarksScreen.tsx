@@ -76,7 +76,7 @@ export function BookmarksScreen() {
     toggleBookmark(post.post);
   };
 
-  const handleMentionPress = (handle: string, did: string) => {
+  const handleMentionPress = (handle: string, _did: string) => {
     handleProfilePress(handle);
   };
 

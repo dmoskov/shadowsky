@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
 import { ThreadPostItem, ThreadPost } from "./ThreadPostItem";
-import { ImageAsset } from "../hooks/useImagePicker";
 import { colors } from "../constants/theme";
 
 interface ThreadComposerProps {

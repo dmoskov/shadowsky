@@ -34,7 +34,7 @@ export function ThreadPostItem({
   isUploading = false,
   showRemoveButton,
 }: ThreadPostItemProps) {
-  const [altTextModalImage, setAltTextModalImage] = useState<number | null>(null);
+  const [_altTextModalImage, setAltTextModalImage] = useState<number | null>(null);
 
   const handleRemoveImage = (imageIndex: number) => {
     Alert.alert(

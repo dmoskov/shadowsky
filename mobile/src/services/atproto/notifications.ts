@@ -1,6 +1,5 @@
 import {getAtProtoClient} from './client';
-import {AppBskyNotificationListNotifications} from '@atproto/api';
-import {withRetry} from '../../utils/with-retry';
+import { withRetry } from '../../utils/with-retry';
 import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
 
 export interface NotificationsOptions {

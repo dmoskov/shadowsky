@@ -14,7 +14,6 @@ import { useAppNavigation } from "../../hooks/useNavigation";
 import { useUserAnalytics } from "../../hooks/api/useAnalytics";
 import { TimeRange } from "../../services/atproto/analytics";
 import { PostCard } from "../../components/PostCard";
-import { AppBskyFeedDefs } from "@atproto/api";
 import { colors } from "../../constants/theme";
 
 export function AnalyticsScreen() {
@@ -28,7 +27,7 @@ export function AnalyticsScreen() {
     timeRange
   );
 
-  const handleMentionPress = (handle: string, did: string) => {
+  const handleMentionPress = (handle: string, _did: string) => {
     navigateToProfile(handle);
   };
 

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as VideoThumbnails from 'expo-video-thumbnails';
-import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Alert } from 'react-native';
 
 
@@ -26,7 +25,6 @@ export function useVideoPicker() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
-  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
 
   const generateThumbnail = async (videoUri: string): Promise<string | undefined> => {
     try {

@@ -1,9 +1,8 @@
-import React, { forwardRef, useMemo, useRef, useCallback } from 'react';
+import React, { forwardRef, useMemo, useRef } from 'react';
 import {
   FlatList,
   ActivityIndicator,
   View,
-  Text,
   StyleSheet,
   RefreshControl,
   ListRenderItem,
@@ -12,9 +11,8 @@ import {
 import {AppBskyFeedDefs} from '@atproto/api';
 import {PostCard} from './PostCard';
 import {PostCardSkeleton} from './PostCardSkeleton';
-import {LoadingState} from './LoadingState';
 import {ErrorState} from './ErrorState';
-import {EmptyState} from './EmptyState';
+import { EmptyState } from './EmptyState';
 import {useNetwork} from '../contexts/NetworkContext';
 import {usePreferences} from '../contexts/PreferencesContext';
 import {colors} from '../constants/theme';

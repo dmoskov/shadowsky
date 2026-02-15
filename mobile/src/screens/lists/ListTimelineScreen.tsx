@@ -13,7 +13,7 @@ interface ListTimelineScreenProps {
 
 export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
   const router = useRouter();
-  const {navigateToList, navigateToListMembers} = useAppNavigation();
+  const {navigateToListMembers} = useAppNavigation();
 
   // Decode the listId since it was encoded when passed
   const decodedListId = useMemo(() => {
@@ -71,7 +71,7 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleMentionPress = useCallback(
-    (handle: string, did: string) => {
+    (handle: string, _did: string) => {
       handleProfilePress(handle);
     },
     [handleProfilePress]

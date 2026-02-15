@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
 } from "react-native";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { PostCard } from "./PostCard";
@@ -138,7 +137,7 @@ export function ThreadTreeView({
     });
   };
 
-  const renderThreadNode = (node: ThreadNode, isLast: boolean = false): React.ReactNode => {
+  const renderThreadNode = (node: ThreadNode, _isLast: boolean = false): React.ReactNode => {
     const isCollapsed = collapsedBranches.has(node.uri);
     const hasChildren = node.children.length > 0;
     const descendantCount = countDescendants(node);

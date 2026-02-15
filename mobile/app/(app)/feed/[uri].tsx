@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+
 import { useRequiredParam } from "../../../src/hooks/useRequiredParam";
 import { ErrorState } from "../../../src/components/ErrorState";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";

@@ -6,7 +6,6 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
-  ScrollView,
   RefreshControl,
   Modal,
   Alert,
@@ -116,7 +115,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   const hasNextPage = activeTab === "likes" ? hasNextLikesPage : hasNextFeedPage;
   const isFetchingNextPage = activeTab === "likes" ? isFetchingNextLikesPage : isFetchingNextFeedPage;
 
-  const handleMentionPress = (handle: string, did: string) => {
+  const handleMentionPress = (handle: string, _did: string) => {
     onNavigateToProfile?.(handle);
   };
 

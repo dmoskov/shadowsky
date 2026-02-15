@@ -18,7 +18,6 @@ import { usePostThread } from "../../hooks/api/useFeed";
 import { useLikePost, useUnlikePost, useRepost, useDeleteRepost, useCreatePost } from "../../hooks/api/usePosts";
 import { useAppNavigation } from "../../hooks/useNavigation";
 import { PostCard } from "../../components/PostCard";
-import { LoadingState } from "../../components/LoadingState";
 import { ErrorState } from "../../components/ErrorState";
 import { ThreadSkeleton } from "../../components/ThreadSkeleton";
 import { ThreadSummary } from "../../components/ThreadSummary";
@@ -101,9 +100,8 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   const [isReplyVisible, setIsReplyVisible] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const scrollViewRef = React.useRef<ScrollView>(null);
-  const [scrollPositions, setScrollPositions] = React.useState<Map<number, number>>(new Map());
 
-  const { navigateToProfile, navigateToThread, navigateToCompose } = useAppNavigation();
+  const { navigateToProfile, navigateToCompose } = useAppNavigation();
   const likePost = useLikePost();
   const unlikePost = useUnlikePost();
   const repost = useRepost();
@@ -196,7 +194,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
     navigateToProfile(pressedHandle);
   };
 
-  const handleMentionPress = (handle: string, did: string) => {
+  const handleMentionPress = (handle: string, _did: string) => {
     navigateToProfile(handle);
   };
 

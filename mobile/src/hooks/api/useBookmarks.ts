@@ -3,7 +3,6 @@ import { AppBskyFeedDefs } from '@atproto/api';
 import {
   getBookmarks,
   toggleBookmark as toggleBookmarkService,
-  isBookmarked as isBookmarkedService,
   BookmarkPost,
 } from '../../services/atproto/bookmarks';
 

@@ -17,7 +17,6 @@ import {
   Image,
   ActivityIndicator,
   Dimensions,
-  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SearchIcon, CloseIcon } from "./icons";

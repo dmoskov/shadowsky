@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
@@ -13,8 +12,8 @@ import {
 } from 'react-native';
 import {useStarterPack, useFollowAllFromStarterPack} from '../../hooks/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
-import {AppBskyGraphDefs, AppBskyActorDefs} from '@atproto/api';
-import {colors} from '../../constants/theme';
+import { AppBskyGraphDefs } from '@atproto/api';
+import { colors } from '../../constants/theme';
 import {Avatar} from '../../components/Avatar';
 
 

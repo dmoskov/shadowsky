@@ -4,15 +4,6 @@ import {Platform, PixelRatio} from 'react-native';
  * Dynamic Type scale multipliers for iOS
  * These correspond to the iOS Text Size settings
  */
-const IOS_SCALE_FACTORS = {
-  xSmall: 0.8,
-  small: 0.9,
-  medium: 1.0, // Default
-  large: 1.1,
-  xLarge: 1.2,
-  xxLarge: 1.3,
-  xxxLarge: 1.4,
-};
 
 /**
  * Get scaled font size for Dynamic Type support

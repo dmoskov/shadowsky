@@ -9,7 +9,6 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { AppBskyActorDefs } from "@atproto/api";
 import { searchActors } from "../services/atproto/profiles";

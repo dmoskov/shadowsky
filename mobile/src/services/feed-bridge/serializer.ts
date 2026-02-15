@@ -10,7 +10,6 @@ import {
   SerializedFeedViewPost,
   SerializedPost,
   SerializedAuthor,
-  SerializedRecord,
   SerializedEmbed,
   SerializedViewer,
   SerializedLabel,

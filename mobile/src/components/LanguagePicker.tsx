@@ -15,7 +15,6 @@ import {
   PINNED_LANGUAGES,
   ALL_LANGUAGES,
   Language,
-  getLanguageDisplayName,
 } from '../constants/languages';
 
 interface LanguagePickerProps {
@@ -186,7 +185,7 @@ export function LanguagePicker({
               )}
             </>
           }
-          keyExtractor={(item, index) => `list-${index}`}
+          keyExtractor={(_item, index) => `list-${index}`}
           contentContainerStyle={[
             styles.listContent,
             { paddingBottom: insets.bottom + 80 },

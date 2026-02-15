@@ -3,7 +3,6 @@ import {
   FlatList,
   ActivityIndicator,
   View,
-  Text,
   StyleSheet,
   RefreshControl,
 } from 'react-native';
@@ -18,9 +17,8 @@ import {NotificationItem} from '../../components/NotificationItem';
 import {NotificationItemSkeleton} from '../../components/NotificationItemSkeleton';
 import {AggregatedNotificationItem} from '../../components/AggregatedNotificationItem';
 import {NotificationTabBar, NotificationFilter} from '../../components/NotificationTabBar';
-import {LoadingState} from '../../components/LoadingState';
 import {ErrorState} from '../../components/ErrorState';
-import {EmptyState} from '../../components/EmptyState';
+import { EmptyState } from '../../components/EmptyState';
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {usePreferences} from '../../contexts/PreferencesContext';
 import {clearBadgeCount} from '../../services/notification-poller';
@@ -139,7 +137,7 @@ export function NotificationsScreen() {
   };
 
   const handleMentionPress = useCallback(
-    (handle: string, did: string) => {
+    (handle: string, _did: string) => {
       navigateToProfile(handle);
     },
     [navigateToProfile],
