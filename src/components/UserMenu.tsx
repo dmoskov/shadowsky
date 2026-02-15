@@ -139,7 +139,7 @@ export const UserMenu: React.FC = () => {
             id={menuId}
             role="menu"
             aria-label="User menu"
-            className="asph-glass fixed z-[9999] w-56 overflow-hidden rounded-lg shadow-lg"
+            className="animate-dropdown-in asph-glass fixed z-[9999] w-56 overflow-hidden rounded-lg shadow-lg"
             style={{
               backgroundColor: "var(--asph-bg-secondary)",
               border: "1px solid var(--asph-border-primary)",
@@ -184,7 +184,7 @@ export const UserMenu: React.FC = () => {
                     key={`menu-item-${item.label}-${index}`}
                     role="menuitem"
                     onClick={item.onClick}
-                    className={`flex w-full items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-blue-50 focus-visible:bg-blue-50 focus-visible:outline-none dark:hover:bg-blue-900/20 dark:focus-visible:bg-blue-900/20 ${
+                    className={`ios-press-light flex w-full items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-blue-50 focus-visible:bg-blue-50 focus-visible:outline-none dark:hover:bg-blue-900/20 dark:focus-visible:bg-blue-900/20 ${
                       item.className || ""
                     }`}
                     style={{

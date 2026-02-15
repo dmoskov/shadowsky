@@ -235,7 +235,7 @@ export function Toast({
       role="status"
       aria-live="polite"
       aria-atomic="true"
-      className={`pointer-events-auto relative flex w-full max-w-sm items-start gap-3 rounded-lg border border-l-4 border-asph-border-primary bg-asph-bg-secondary p-4 shadow-lg ${borderColorClass} ${isExiting ? "animate-toast-out" : "animate-toast-in"} ${isDragging ? "cursor-grabbing" : "cursor-grab"} `}
+      className={`pointer-events-auto relative flex w-full max-w-sm items-start gap-3 rounded-lg border border-l-4 border-asph-border-primary bg-asph-bg-secondary p-4 shadow-lg ${borderColorClass} ${isExiting ? "animate-toast-spring-out" : "animate-toast-spring-in"} ${isDragging ? "cursor-grabbing" : "cursor-grab"} `}
       style={{
         transform: `translateX(${translateX}px)`,
         opacity: translateX > 0 ? 1 - translateX / 300 : 1,

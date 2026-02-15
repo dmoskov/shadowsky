@@ -312,7 +312,7 @@ export const ConfirmDestructiveDialog: React.FC<
           <button
             onClick={handleClose}
             disabled={isProcessing}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="ios-press-light rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             {cancelButtonLabel}
           </button>
@@ -320,7 +320,7 @@ export const ConfirmDestructiveDialog: React.FC<
             ref={confirmButtonRef}
             onClick={handleConfirm}
             disabled={isConfirmDisabled}
-            className={`rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${colors.button}`}
+            className={`ios-press-light rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${colors.button}`}
           >
             {isProcessing ? (
               <span className="flex items-center gap-2">

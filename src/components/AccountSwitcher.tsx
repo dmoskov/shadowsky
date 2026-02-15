@@ -111,7 +111,7 @@ export const AccountSwitcher: React.FC = () => {
         ReactDOM.createPortal(
           <div
             ref={menuRef}
-            className="asph-glass fixed z-[9999] w-64 overflow-hidden rounded-lg shadow-lg"
+            className="animate-dropdown-in asph-glass fixed z-[9999] w-64 overflow-hidden rounded-lg shadow-lg"
             style={{
               backgroundColor: "var(--asph-bg-secondary)",
               border: "1px solid var(--asph-border-primary)",
@@ -133,7 +133,7 @@ export const AccountSwitcher: React.FC = () => {
                   <button
                     key={account.did}
                     onClick={() => handleSwitchAccount(account.did)}
-                    className="flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-blue-50 hover:bg-opacity-10"
+                    className="ios-press-light flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-blue-50 hover:bg-opacity-10"
                     style={{
                       backgroundColor: isActive
                         ? "rgba(var(--asph-primary-rgb), 0.1)"

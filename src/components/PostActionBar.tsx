@@ -83,6 +83,8 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
     left: number;
   } | null>(null);
   const repostButtonRef = useRef<HTMLButtonElement>(null);
+  const [likeAnimating, setLikeAnimating] = useState(false);
+  const [repostAnimating, setRepostAnimating] = useState(false);
 
   const iconSize = size === "small" ? 14 : size === "medium" ? 16 : 18;
   const isLiked = !!post.viewer?.like;
@@ -178,7 +180,11 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
           aria-haspopup="menu"
         >
           <span className="relative">
-            <RepostIcon size={iconSize} aria-hidden="true" />
+            <RepostIcon
+              size={iconSize}
+              className={repostAnimating ? "animate-repost-spin" : ""}
+              aria-hidden="true"
+            />
             <SyncStatusBadge
               status={repostStatus}
               onRetry={repostRetryFn}
@@ -208,7 +214,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
               <div
                 role="menu"
                 aria-label="Repost options"
-                className="fixed z-[9999] w-40 rounded-lg border shadow-lg"
+                className="animate-dropdown-in-left fixed z-[9999] w-40 rounded-lg border shadow-lg"
                 style={{
                   ...repostMenuStyle,
                   top: `${menuPosition.top}px`,
@@ -217,8 +223,10 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
               >
                 <button
                   role="menuitem"
-                  className="flex min-h-[44px] w-full items-center gap-3 rounded-t-lg bg-transparent px-4 py-3 text-left text-sm text-asph-text-primary transition-all hover:bg-asph-bg-hover"
+                  className="ios-press-light flex min-h-[44px] w-full items-center gap-3 rounded-t-lg bg-transparent px-4 py-3 text-left text-sm text-asph-text-primary transition-all hover:bg-asph-bg-hover"
                   onClick={(e) => {
+                    setRepostAnimating(true);
+                    setTimeout(() => setRepostAnimating(false), 400);
                     handleAction(e, onRepost);
                     setShowRepostMenu(false);
                   }}
@@ -228,7 +236,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
                 </button>
                 <button
                   role="menuitem"
-                  className="flex min-h-[44px] w-full items-center gap-3 rounded-b-lg bg-transparent px-4 py-3 text-left text-sm text-asph-text-primary transition-all hover:bg-asph-bg-hover"
+                  className="ios-press-light flex min-h-[44px] w-full items-center gap-3 rounded-b-lg bg-transparent px-4 py-3 text-left text-sm text-asph-text-primary transition-all hover:bg-asph-bg-hover"
                   onClick={(e) => {
                     handleAction(e, onQuote);
                     setShowRepostMenu(false);
@@ -248,12 +256,27 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
         className={`touch-target-sm relative flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-asph-text-secondary spring-icon hover:text-red-600 ${
           isLiked ? "text-red-500" : ""
         }`}
-        onClick={(e) => handleAction(e, onLike)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!isLiked) {
+            setLikeAnimating(true);
+            setTimeout(() => setLikeAnimating(false), 450);
+          }
+          onLike?.();
+        }}
         aria-label={`${isLiked ? "Unlike" : "Like"} post${post.likeCount ? `, ${post.likeCount} likes` : ""}`}
         aria-pressed={isLiked}
       >
-        <span className="relative">
-          <HeartIcon size={iconSize} filled={isLiked} aria-hidden="true" />
+        <span
+          className={`like-burst relative ${likeAnimating ? "active" : ""}`}
+        >
+          <HeartIcon
+            size={iconSize}
+            filled={isLiked}
+            className={likeAnimating ? "animate-like-pop" : ""}
+            aria-hidden="true"
+          />
           <SyncStatusBadge
             status={likeStatus}
             onRetry={likeRetryFn}
@@ -272,7 +295,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
 
       {/* Bookmark */}
       <button
-        className={`touch-target-sm relative flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-asph-text-secondary spring-icon hover:text-amber-600 ${
+        className={`touch-target-sm ios-press-light relative flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-asph-text-secondary spring-icon hover:text-amber-600 ${
           bookmarked ? "text-amber-500" : ""
         }`}
         onClick={handleBookmark}
