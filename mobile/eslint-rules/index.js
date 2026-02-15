@@ -5,5 +5,6 @@
 module.exports = {
   rules: {
     'no-quoted-color-references': require('./no-quoted-color-references'),
+    'no-unsafe-native-call': require('./no-unsafe-native-call'),
   },
 };
