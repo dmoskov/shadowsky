@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   saveButtonDisabled: {
-    backgroundColor: 'colors.surface',
+    backgroundColor: colors.surface,
     opacity: 0.5,
   },
   saveButtonText: {

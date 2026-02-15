@@ -349,7 +349,7 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'colors.surface',
+    backgroundColor: colors.surface,
   },
   tabs: {
     flexDirection: 'row',
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   },
   feedDescription: {
     fontSize: 14,
-    color: 'colors.textMuted',
+    color: colors.textMuted,
     lineHeight: 20,
     marginBottom: 12,
   },

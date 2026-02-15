@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   },
   checkMark: {
     fontSize: 18,
-    color: 'colors.success',
+    color: colors.success,
   },
   formContainer: {
     marginTop: 16,

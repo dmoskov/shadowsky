@@ -246,7 +246,7 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'colors.surface',
+    backgroundColor: colors.surface,
   },
   header: {
     flexDirection: 'row',
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   },
   feedDescription: {
     fontSize: 14,
-    color: 'colors.textMuted',
+    color: colors.textMuted,
     lineHeight: 20,
     marginBottom: 12,
   },

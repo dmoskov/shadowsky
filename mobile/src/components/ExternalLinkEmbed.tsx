@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.surfaceElevated,
-    backgroundColor: 'colors.background',
+    backgroundColor: colors.background,
     overflow: 'hidden',
   },
   thumbnail: {
