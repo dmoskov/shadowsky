@@ -417,8 +417,8 @@
 
   /* Blue focus ring variant (for use with blue accent buttons) */
   .focus-ring-blue:focus-visible {
-    --focus-ring-color: #c9a84c;
-    --focus-ring-color-rgb: 59, 130, 246;
+    --focus-ring-color: #2979ff;
+    --focus-ring-color-rgb: 41, 121, 255;
     outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset);
     box-shadow: 0 0 0 var(--focus-ring-glow-size)

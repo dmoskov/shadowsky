@@ -216,7 +216,7 @@ export default {
         },
         highlight: {
           "0%": {
-            backgroundColor: "rgba(201, 168, 76, 0.2)",
+            backgroundColor: "rgba(255, 107, 157, 0.2)",
           },
           "100%": {
             backgroundColor: "transparent",
@@ -224,15 +224,15 @@ export default {
         },
         highlightFlash: {
           "0%": {
-            boxShadow: "0 0 0 0 rgba(201, 168, 76, 0.8)",
+            boxShadow: "0 0 0 0 rgba(255, 107, 157, 0.8)",
             transform: "scale(1)",
           },
           "50%": {
-            boxShadow: "0 0 20px 10px rgba(201, 168, 76, 0.3)",
+            boxShadow: "0 0 20px 10px rgba(255, 107, 157, 0.3)",
             transform: "scale(1.01)",
           },
           "100%": {
-            boxShadow: "0 0 0 0 rgba(201, 168, 76, 0)",
+            boxShadow: "0 0 0 0 rgba(255, 107, 157, 0)",
             transform: "scale(1)",
           },
         },

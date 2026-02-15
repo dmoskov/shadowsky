@@ -102,83 +102,83 @@
     var(--ease-out);
   --transition-all-normal: all var(--transition-normal) var(--ease-default);
 
-  /* Primary colors - shifted towards a unique blue-purple gradient */
-  --asph-primary: #c9a84c;
-  --asph-primary-rgb: 201, 168, 76;
-  --asph-primary-dark: #8a7230;
-  --asph-primary-light: #ddc472;
-  --asph-accent: #9b8ec4; /* Purple accent for distinction */
+  /* Primary colors - vibrant electric gradient with modern edge */
+  --asph-primary: #ff6b9d;
+  --asph-primary-rgb: 255, 107, 157;
+  --asph-primary-dark: #d63a71;
+  --asph-primary-light: #ff8fb5;
+  --asph-accent: #7c3aed; /* Deep vibrant purple accent */
 
-  /* Background colors - much lighter for better readability */
-  --asph-bg-primary: #f8fafc;
+  /* Background colors - crisp white with subtle warmth */
+  --asph-bg-primary: #fafafa;
   --asph-bg-secondary: #ffffff;
-  --asph-bg-tertiary: #f1f5f9;
+  --asph-bg-tertiary: #f4f4f5;
   --asph-bg-hover: rgba(
-    226,
-    232,
-    240,
-    0.5
-  ); /* Reduced opacity for subtler hover */
-  --asph-bg-active: #cbd5e1;
+    244,
+    244,
+    245,
+    0.7
+  ); /* Neutral hover with more opacity */
+  --asph-bg-active: #e4e4e7;
 
-  /* Text colors - dark for light background */
-  --asph-text-primary: #0f172a;
-  --asph-text-secondary: #475569;
-  --asph-text-tertiary: #64748b;
-  --asph-text-link: var(--asph-primary-light);
+  /* Text colors - sharp contrast for modern readability */
+  --asph-text-primary: #09090b;
+  --asph-text-secondary: #52525b;
+  --asph-text-tertiary: #71717a;
+  --asph-text-link: #ff6b9d;
 
-  /* Border colors - light gray for light theme */
-  --asph-border-primary: #e2e8f0;
-  --asph-border-secondary: #cbd5e1;
-  --asph-border-light: #f1f5f9;
+  /* Border colors - subtle modern borders */
+  --asph-border-primary: #e4e4e7;
+  --asph-border-secondary: #d4d4d8;
+  --asph-border-light: #f4f4f5;
 
-  /* Notification type colors - more vibrant */
-  --asph-like: #f91880;
-  --asph-repost: #00ba7c;
-  --asph-follow: var(--asph-primary);
-  --asph-mention: #a855f7;
-  --asph-reply: #06b6d4;
-  --asph-quote: #8b5cf6;
+  /* Notification type colors - bold, diverse, modern palette */
+  --asph-like: #ff1744;
+  --asph-repost: #00e676;
+  --asph-follow: #ff6b9d;
+  --asph-mention: #9c27b0;
+  --asph-reply: #00bcd4;
+  --asph-quote: #651fff;
 
-  /* Status colors */
-  --asph-success: #10b981;
-  --asph-success-light: #22c55e;
-  --asph-success-lighter: #4ade80;
-  --asph-success-lightest: #86efac;
-  --asph-warning: #f59e0b;
-  --asph-warning-light: #fbbf24;
-  --asph-warning-lighter: #fcd34d;
-  --asph-error: #ef4444;
-  --asph-error-light: #f87171;
-  --asph-error-lighter: #fca5a5;
-  --asph-info: #3b82f6;
-  --asph-info-light: #60a5fa;
-  --asph-info-lighter: #93c5fd;
+  /* Status colors - vibrant and modern */
+  --asph-success: #00e676;
+  --asph-success-light: #69f0ae;
+  --asph-success-lighter: #b9f6ca;
+  --asph-success-lightest: #ccffd4;
+  --asph-warning: #ffc107;
+  --asph-warning-light: #ffd54f;
+  --asph-warning-lighter: #ffecb3;
+  --asph-error: #ff1744;
+  --asph-error-light: #ff5252;
+  --asph-error-lighter: #ff8a80;
+  --asph-info: #2979ff;
+  --asph-info-light: #448aff;
+  --asph-info-lighter: #82b1ff;
 
-  /* Extended notification/action colors */
-  --asph-orange: #f97316;
-  --asph-orange-light: #fb923c;
-  --asph-pink: #ec4899;
-  --asph-pink-light: #f472b6;
-  --asph-pink-lighter: #fb7185;
-  --asph-pink-lightest: #fda4af;
-  --asph-teal: #14b8a6;
-  --asph-yellow: #eab308;
-  --asph-yellow-light: #facc15;
+  /* Extended notification/action colors - diverse spectrum */
+  --asph-orange: #ff6d00;
+  --asph-orange-light: #ff9100;
+  --asph-pink: #f50057;
+  --asph-pink-light: #ff4081;
+  --asph-pink-lighter: #ff80ab;
+  --asph-pink-lightest: #ff99bb;
+  --asph-teal: #00bfa5;
+  --asph-yellow: #ffd600;
+  --asph-yellow-light: #ffea00;
 
-  /* Shadows and effects */
-  --asph-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --asph-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
-  --asph-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
-  --asph-glow: 0 0 20px rgba(201, 168, 76, 0.3);
+  /* Shadows and effects - softer, more modern */
+  --asph-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --asph-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
+  --asph-shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.18);
+  --asph-glow: 0 0 24px rgba(255, 107, 157, 0.4);
 
   /* Accent backgrounds (10% opacity for backgrounds) */
-  --asph-primary-10: rgba(201, 168, 76, 0.1);
-  --asph-success-10: rgba(16, 185, 129, 0.1);
-  --asph-error-10: rgba(239, 68, 68, 0.1);
-  --asph-warning-10: rgba(245, 158, 11, 0.1);
-  --asph-info-10: rgba(59, 130, 246, 0.1);
-  --asph-orange-10: rgba(249, 115, 22, 0.1);
+  --asph-primary-10: rgba(255, 107, 157, 0.1);
+  --asph-success-10: rgba(0, 230, 118, 0.1);
+  --asph-error-10: rgba(255, 23, 68, 0.1);
+  --asph-warning-10: rgba(255, 193, 7, 0.1);
+  --asph-info-10: rgba(41, 121, 255, 0.1);
+  --asph-orange-10: rgba(255, 109, 0, 0.1);
 }
 
 /* Dark theme */
@@ -193,83 +193,78 @@
   --focus-ring-color-success: #34d399;
   --focus-ring-color-success-rgb: 52, 211, 153;
 
-  /* Primary colors remain similar for consistency */
-  --asph-primary: #c9a84c;
-  --asph-primary-rgb: 201, 168, 76;
-  --asph-primary-dark: #a68a3a;
-  --asph-primary-light: #ddc472;
-  --asph-accent: #b8a1d4; /* Lighter purple for dark mode */
+  /* Primary colors - vibrant neon for dark mode */
+  --asph-primary: #ff6b9d;
+  --asph-primary-rgb: 255, 107, 157;
+  --asph-primary-dark: #d63a71;
+  --asph-primary-light: #ff8fb5;
+  --asph-accent: #a78bfa; /* Bright purple accent for dark mode */
 
-  /* Background colors - improved contrast for dark theme */
-  --asph-bg-primary: #0a0f1b;
-  --asph-bg-secondary: #111827;
-  --asph-bg-tertiary: #1f2937;
-  --asph-bg-hover: rgba(
-    55,
-    65,
-    81,
-    0.3
-  ); /* Reduced opacity for subtler hover */
-  --asph-bg-active: #4b5563;
+  /* Background colors - deep modern dark with subtle blue tone */
+  --asph-bg-primary: #0a0a0f;
+  --asph-bg-secondary: #13131a;
+  --asph-bg-tertiary: #1c1c26;
+  --asph-bg-hover: rgba(40, 40, 52, 0.5); /* Slightly purple-tinted hover */
+  --asph-bg-active: #2d2d3d;
 
-  /* Text colors - improved contrast for better readability */
-  --asph-text-primary: #f9fafb;
-  --asph-text-secondary: #e5e7eb;
-  --asph-text-tertiary: #d1d5db;
-  --asph-text-link: var(--asph-primary-light);
+  /* Text colors - crisp white for excellent contrast */
+  --asph-text-primary: #fafafa;
+  --asph-text-secondary: #e4e4e7;
+  --asph-text-tertiary: #d4d4d8;
+  --asph-text-link: #ff8fb5;
 
-  /* Border colors - very subtle in dark theme */
-  --asph-border-primary: #151b28;
-  --asph-border-secondary: #1a2332;
-  --asph-border-light: #0f1419;
+  /* Border colors - subtle with slight purple tone */
+  --asph-border-primary: #27272a;
+  --asph-border-secondary: #3f3f46;
+  --asph-border-light: #18181b;
 
-  /* Notification type colors - adjusted for dark mode */
-  --asph-like: #f472b6;
-  --asph-repost: #34d399;
-  --asph-follow: var(--asph-primary);
-  --asph-mention: #c084fc;
-  --asph-reply: #38bdf8;
-  --asph-quote: #a78bfa;
+  /* Notification type colors - bright neon for dark mode */
+  --asph-like: #ff4081;
+  --asph-repost: #00e676;
+  --asph-follow: #ff6b9d;
+  --asph-mention: #ce93d8;
+  --asph-reply: #40c4ff;
+  --asph-quote: #7c4dff;
 
-  /* Status colors - adjusted for dark mode */
-  --asph-success: #34d399;
-  --asph-success-light: #4ade80;
-  --asph-success-lighter: #6ee7b7;
-  --asph-success-lightest: #a7f3d0;
-  --asph-warning: #fbbf24;
-  --asph-warning-light: #fcd34d;
-  --asph-warning-lighter: #fde68a;
-  --asph-error: #f87171;
-  --asph-error-light: #fca5a5;
-  --asph-error-lighter: #fecaca;
-  --asph-info: #60a5fa;
-  --asph-info-light: #93c5fd;
-  --asph-info-lighter: #bfdbfe;
+  /* Status colors - bright neon for dark mode */
+  --asph-success: #00e676;
+  --asph-success-light: #69f0ae;
+  --asph-success-lighter: #b9f6ca;
+  --asph-success-lightest: #ccffd4;
+  --asph-warning: #ffd600;
+  --asph-warning-light: #ffea00;
+  --asph-warning-lighter: #fff59d;
+  --asph-error: #ff1744;
+  --asph-error-light: #ff5252;
+  --asph-error-lighter: #ff8a80;
+  --asph-info: #2979ff;
+  --asph-info-light: #448aff;
+  --asph-info-lighter: #82b1ff;
 
-  /* Extended notification/action colors - dark mode */
-  --asph-orange: #fb923c;
-  --asph-orange-light: #fdba74;
-  --asph-pink: #f472b6;
-  --asph-pink-light: #f9a8d4;
-  --asph-pink-lighter: #fb7185;
-  --asph-pink-lightest: #fda4af;
-  --asph-teal: #2dd4bf;
-  --asph-yellow: #facc15;
-  --asph-yellow-light: #fde047;
+  /* Extended notification/action colors - vibrant dark mode */
+  --asph-orange: #ff6d00;
+  --asph-orange-light: #ff9100;
+  --asph-pink: #f50057;
+  --asph-pink-light: #ff4081;
+  --asph-pink-lighter: #ff80ab;
+  --asph-pink-lightest: #ff99bb;
+  --asph-teal: #00bfa5;
+  --asph-yellow: #ffd600;
+  --asph-yellow-light: #ffea00;
 
-  /* Shadows and effects for dark theme */
-  --asph-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --asph-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.6);
-  --asph-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.7);
-  --asph-glow: 0 0 20px rgba(201, 168, 76, 0.5);
+  /* Shadows and effects for dark theme - enhanced glow */
+  --asph-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.7);
+  --asph-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.8);
+  --asph-shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.9);
+  --asph-glow: 0 0 30px rgba(255, 107, 157, 0.5);
 
-  /* Accent backgrounds - dark theme */
-  --asph-primary-10: rgba(201, 168, 76, 0.15);
-  --asph-success-10: rgba(52, 211, 153, 0.15);
-  --asph-error-10: rgba(248, 113, 113, 0.15);
-  --asph-warning-10: rgba(251, 191, 36, 0.15);
-  --asph-info-10: rgba(96, 165, 250, 0.15);
-  --asph-orange-10: rgba(251, 146, 60, 0.15);
+  /* Accent backgrounds - dark theme with more opacity */
+  --asph-primary-10: rgba(255, 107, 157, 0.15);
+  --asph-success-10: rgba(0, 230, 118, 0.15);
+  --asph-error-10: rgba(255, 23, 68, 0.15);
+  --asph-warning-10: rgba(255, 214, 0, 0.15);
+  --asph-info-10: rgba(41, 121, 255, 0.15);
+  --asph-orange-10: rgba(255, 109, 0, 0.15);
 }
 
 /* High Contrast Theme - Light Mode - WCAG AAA (7:1 minimum contrast ratio) */
@@ -288,11 +283,11 @@
   --focus-ring-color-success-rgb: 20, 83, 45;
 
   /* Primary colors - high contrast */
-  --asph-primary: #8b7335;
-  --asph-primary-rgb: 139, 115, 53;
-  --asph-primary-dark: #6b5a28;
-  --asph-primary-light: #8b7335;
-  --asph-accent: #6b5a8e;
+  --asph-primary: #d1004b;
+  --asph-primary-rgb: 209, 0, 75;
+  --asph-primary-dark: #a3003a;
+  --asph-primary-light: #d1004b;
+  --asph-accent: #5b21b6;
 
   /* Background colors - pure white for maximum contrast */
   --asph-bg-primary: #ffffff;
@@ -315,7 +310,7 @@
   /* Notification type colors - adjusted for high contrast */
   --asph-like: #be123c;
   --asph-repost: #047857;
-  --asph-follow: #8b7335;
+  --asph-follow: #d1004b;
   --asph-mention: #5b21b6;
   --asph-reply: #0e7490;
   --asph-quote: #4c1d95;
@@ -324,16 +319,16 @@
   --asph-success: #047857;
   --asph-warning: #b45309;
   --asph-error: #b91c1c;
-  --asph-info: #8b7335;
+  --asph-info: #1e40af;
 
   /* Shadows - more pronounced for visibility */
   --asph-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
   --asph-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
   --asph-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
-  --asph-glow: 0 0 0 3px rgba(139, 115, 53, 0.5);
+  --asph-glow: 0 0 0 3px rgba(209, 0, 75, 0.5);
 
   /* Landing page accent backgrounds */
-  --asph-primary-10: rgba(139, 115, 53, 0.15);
+  --asph-primary-10: rgba(209, 0, 75, 0.15);
   --asph-success-10: rgba(4, 120, 87, 0.15);
 }
 
@@ -353,10 +348,10 @@
   --focus-ring-color-success-rgb: 187, 247, 208;
 
   /* Primary colors - brighter for dark mode */
-  --asph-primary: #ddc472;
-  --asph-primary-rgb: 221, 196, 114;
-  --asph-primary-dark: #c9a84c;
-  --asph-primary-light: #f0dfa0;
+  --asph-primary: #ff8fb5;
+  --asph-primary-rgb: 255, 143, 181;
+  --asph-primary-dark: #ff6b9d;
+  --asph-primary-light: #ffb3cc;
   --asph-accent: #c4b5fd;
 
   /* Background colors - pure black for maximum contrast */
@@ -378,28 +373,28 @@
   --asph-border-light: #737373;
 
   /* Notification type colors - bright for dark high contrast */
-  --asph-like: #fb7185;
-  --asph-repost: #6ee7b7;
-  --asph-follow: #93c5fd;
-  --asph-mention: #c4b5fd;
-  --asph-reply: #67e8f9;
-  --asph-quote: #a78bfa;
+  --asph-like: #ff5252;
+  --asph-repost: #69f0ae;
+  --asph-follow: #ff8fb5;
+  --asph-mention: #ce93d8;
+  --asph-reply: #40c4ff;
+  --asph-quote: #7c4dff;
 
   /* Status colors - bright versions */
-  --asph-success: #6ee7b7;
-  --asph-warning: #fcd34d;
-  --asph-error: #fca5a5;
-  --asph-info: #93c5fd;
+  --asph-success: #69f0ae;
+  --asph-warning: #ffd600;
+  --asph-error: #ff5252;
+  --asph-info: #448aff;
 
   /* Shadows - brighter for dark mode */
   --asph-shadow-sm: 0 1px 3px rgba(255, 255, 255, 0.1);
   --asph-shadow-md: 0 4px 6px rgba(255, 255, 255, 0.1);
   --asph-shadow-lg: 0 10px 15px rgba(255, 255, 255, 0.1);
-  --asph-glow: 0 0 0 3px rgba(96, 165, 250, 0.5);
+  --asph-glow: 0 0 0 3px rgba(255, 143, 181, 0.5);
 
   /* Landing page accent backgrounds */
-  --asph-primary-10: rgba(96, 165, 250, 0.2);
-  --asph-success-10: rgba(110, 231, 183, 0.2);
+  --asph-primary-10: rgba(255, 143, 181, 0.2);
+  --asph-success-10: rgba(105, 240, 174, 0.2);
 }
 
 /* High Contrast focus indicators - uses enhanced focus ring tokens */
