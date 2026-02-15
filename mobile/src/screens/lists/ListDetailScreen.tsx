@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: 'colors.background',
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.surfaceAlt,
   },
@@ -383,8 +383,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   deleteButton: {
-    backgroundColor: 'colors.danger',
-    borderColor: 'colors.danger',
+    backgroundColor: colors.danger,
+    borderColor: colors.danger,
   },
   deleteButtonText: {
     color: colors.text,
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   removeButton: {
-    backgroundColor: 'colors.danger',
+    backgroundColor: colors.danger,
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,

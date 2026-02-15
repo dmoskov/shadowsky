@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: 'colors.textMuted',
+    backgroundColor: colors.textMuted,
     borderBottomWidth: 1,
     borderBottomColor: colors.textMuted,
   },

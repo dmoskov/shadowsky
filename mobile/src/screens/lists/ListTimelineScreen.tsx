@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.surfaceAlt,
-    backgroundColor: 'colors.background',
+    backgroundColor: colors.background,
   },
   listName: {
     color: colors.text,

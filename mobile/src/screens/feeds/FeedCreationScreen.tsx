@@ -199,7 +199,7 @@ export function FeedCreationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'colors.surface',
+    backgroundColor: colors.surface,
   },
   scrollView: {
     flex: 1,
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   required: {
-    color: 'colors.danger',
+    color: colors.danger,
   },
   input: {
     backgroundColor: colors.surface,

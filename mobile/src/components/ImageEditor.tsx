@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: 'colors.editorBackground',
+    backgroundColor: colors.editorBackground,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   resetText: {
-    color: 'colors.editorText',
+    color: colors.editorText,
   },
   headerTitle: {
     color: colors.text,
@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   controls: {
-    backgroundColor: 'colors.editorBackground',
+    backgroundColor: colors.editorBackground,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
@@ -601,14 +601,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 12,
-    backgroundColor: 'colors.editorControl',
+    backgroundColor: colors.editorControl,
     borderRadius: 8,
     borderWidth: 2,
     borderColor: 'transparent',
   },
   controlButtonActive: {
     borderColor: colors.primary,
-    backgroundColor: 'colors.surface',
+    backgroundColor: colors.surface,
   },
   controlButtonText: {
     color: colors.text,
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   controlButtonLabel: {
-    color: 'colors.editorText',
+    color: colors.editorText,
     fontSize: 11,
   },
   aspectRatioScroll: {
@@ -625,7 +625,7 @@ const styles = StyleSheet.create({
   aspectRatioButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: 'colors.editorControl',
+    backgroundColor: colors.editorControl,
     borderRadius: 16,
     marginRight: 8,
     borderWidth: 2,
@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   aspectRatioButtonText: {
-    color: 'colors.editorText',
+    color: colors.editorText,
     fontSize: 14,
   },
   aspectRatioButtonTextActive: {
@@ -656,19 +656,19 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     flex: 1,
-    backgroundColor: 'colors.editorControl',
+    backgroundColor: colors.editorControl,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'colors.editorBorder',
+    borderColor: colors.editorBorder,
   },
   secondaryButtonText: {
     color: colors.text,
     fontSize: 16,
   },
   cropHint: {
-    color: 'colors.editorText',
+    color: colors.editorText,
     fontSize: 12,
     marginTop: 8,
     textAlign: 'center',
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 2,
     right: 2,
-    backgroundColor: 'colors.accentGreen',
+    backgroundColor: colors.accentGreen,
     borderRadius: 10,
     width: 16,
     height: 16,
