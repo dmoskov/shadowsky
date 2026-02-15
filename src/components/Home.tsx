@@ -10,11 +10,14 @@ import {
   Clock,
   Hash,
   Heart,
+  List,
   Loader,
   type LucideIcon,
   MessageCircle,
   Repeat2,
   Reply,
+  Rss,
+  Shield,
   Sparkles,
   Star,
   TrendingUp,
@@ -1806,10 +1809,395 @@ export const Home: React.FC<HomeProps> = React.memo(
           );
         }
 
-        // Handle quote posts
+        // Handle record embeds (quoted posts, starter packs, feeds, lists, labelers)
         if (embed.$type === "app.bsky.embed.record#view") {
-          const quotedPost = embed.record;
-          if (quotedPost?.$type === "app.bsky.embed.record#viewRecord") {
+          const recordData = embed.record;
+
+          // Handle deleted, blocked, or detached
+          if (
+            recordData?.$type === "app.bsky.embed.record#viewNotFound" ||
+            recordData?.$type === "app.bsky.embed.record#viewDetached"
+          ) {
+            return (
+              <div
+                className="mt-2 overflow-hidden rounded-lg border"
+                style={{ borderColor: "var(--asph-border-primary)" }}
+              >
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
+                  style={{
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    borderBottom: `1px solid var(--asph-border-primary)`,
+                    color: "var(--asph-text-secondary)",
+                  }}
+                >
+                  <MessageCircle size={12} />
+                  <span>Quoted post</span>
+                </div>
+                <div className="p-3">
+                  <div
+                    className="text-sm italic"
+                    style={{ color: "var(--asph-text-secondary)" }}
+                  >
+                    Post not found or deleted
+                  </div>
+                </div>
+              </div>
+            );
+          }
+          if (recordData?.$type === "app.bsky.embed.record#viewBlocked") {
+            return (
+              <div
+                className="mt-2 overflow-hidden rounded-lg border"
+                style={{ borderColor: "var(--asph-border-primary)" }}
+              >
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
+                  style={{
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    borderBottom: `1px solid var(--asph-border-primary)`,
+                    color: "var(--asph-text-secondary)",
+                  }}
+                >
+                  <MessageCircle size={12} />
+                  <span>Quoted post</span>
+                </div>
+                <div className="p-3">
+                  <div
+                    className="text-sm italic"
+                    style={{ color: "var(--asph-text-secondary)" }}
+                  >
+                    Post from blocked user
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // Starter pack embed
+          if (
+            recordData?.$type === "app.bsky.graph.defs#starterPackViewBasic"
+          ) {
+            const starterPack = recordData as any;
+            const packRecord = starterPack.record as any;
+            const packName = packRecord?.name || "Starter Pack";
+            const packDescription = packRecord?.description || "";
+            return (
+              <div
+                className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-all hover:border-opacity-80"
+                style={{ borderColor: "var(--asph-border-primary)" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (starterPack.creator?.handle) {
+                    const rkey = starterPack.uri?.split("/").pop();
+                    if (rkey) {
+                      window.open(
+                        `https://bsky.app/starter-pack/${starterPack.creator.handle}/${rkey}`,
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
+                    }
+                  }
+                }}
+              >
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
+                  style={{
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    borderBottom: `1px solid var(--asph-border-primary)`,
+                    color: "var(--asph-text-secondary)",
+                  }}
+                >
+                  <Users size={12} />
+                  <span>Starter Pack</span>
+                </div>
+                <div className="p-3">
+                  <div className="mb-1 flex items-center gap-2">
+                    {starterPack.creator?.avatar && (
+                      <img
+                        src={
+                          proxifyBskyImage(starterPack.creator.avatar) ||
+                          "/default-avatar.svg"
+                        }
+                        alt=""
+                        className="h-5 w-5 rounded-full"
+                      />
+                    )}
+                    <span
+                      className="text-sm font-semibold"
+                      style={{ color: "var(--asph-text-primary)" }}
+                    >
+                      {packName}
+                    </span>
+                  </div>
+                  {packDescription && (
+                    <p
+                      className="mt-1 line-clamp-2 text-sm"
+                      style={{ color: "var(--asph-text-secondary)" }}
+                    >
+                      {packDescription}
+                    </p>
+                  )}
+                  <div
+                    className="mt-2 flex items-center gap-3 text-xs"
+                    style={{ color: "var(--asph-text-tertiary)" }}
+                  >
+                    {starterPack.creator?.handle && (
+                      <span>by @{starterPack.creator.handle}</span>
+                    )}
+                    {starterPack.listItemCount != null && (
+                      <span>{starterPack.listItemCount} members</span>
+                    )}
+                    {starterPack.joinedAllTimeCount != null && (
+                      <span>{starterPack.joinedAllTimeCount} joined</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          // Feed generator embed
+          if (recordData?.$type === "app.bsky.feed.defs#generatorView") {
+            const feedGen = recordData as any;
+            return (
+              <div
+                className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-all hover:border-opacity-80"
+                style={{ borderColor: "var(--asph-border-primary)" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (feedGen.creator?.handle) {
+                    const rkey = feedGen.uri?.split("/").pop();
+                    if (rkey) {
+                      window.open(
+                        `https://bsky.app/profile/${feedGen.creator.handle}/feed/${rkey}`,
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
+                    }
+                  }
+                }}
+              >
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
+                  style={{
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    borderBottom: `1px solid var(--asph-border-primary)`,
+                    color: "var(--asph-text-secondary)",
+                  }}
+                >
+                  <Rss size={12} />
+                  <span>Feed</span>
+                </div>
+                <div className="p-3">
+                  <div className="flex items-center gap-2">
+                    {feedGen.avatar && (
+                      <img
+                        src={proxifyBskyImage(feedGen.avatar)}
+                        alt=""
+                        className="h-8 w-8 rounded-lg"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: "var(--asph-text-primary)" }}
+                      >
+                        {feedGen.displayName}
+                      </span>
+                      {feedGen.creator?.handle && (
+                        <div
+                          className="text-xs"
+                          style={{ color: "var(--asph-text-tertiary)" }}
+                        >
+                          by @{feedGen.creator.handle}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {feedGen.description && (
+                    <p
+                      className="mt-2 line-clamp-2 text-sm"
+                      style={{ color: "var(--asph-text-secondary)" }}
+                    >
+                      {feedGen.description}
+                    </p>
+                  )}
+                  {feedGen.likeCount != null && feedGen.likeCount > 0 && (
+                    <div
+                      className="mt-2 flex items-center gap-1 text-xs"
+                      style={{ color: "var(--asph-text-tertiary)" }}
+                    >
+                      <Heart size={11} />
+                      <span>{feedGen.likeCount}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          // List embed
+          if (recordData?.$type === "app.bsky.graph.defs#listView") {
+            const listView = recordData as any;
+            const purposeLabel =
+              listView.purpose === "app.bsky.graph.defs#modlist"
+                ? "Moderation List"
+                : listView.purpose === "app.bsky.graph.defs#curatelist"
+                  ? "User List"
+                  : "List";
+            return (
+              <div
+                className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-all hover:border-opacity-80"
+                style={{ borderColor: "var(--asph-border-primary)" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (listView.creator?.handle) {
+                    const rkey = listView.uri?.split("/").pop();
+                    if (rkey) {
+                      window.open(
+                        `https://bsky.app/profile/${listView.creator.handle}/lists/${rkey}`,
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
+                    }
+                  }
+                }}
+              >
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
+                  style={{
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    borderBottom: `1px solid var(--asph-border-primary)`,
+                    color: "var(--asph-text-secondary)",
+                  }}
+                >
+                  <List size={12} />
+                  <span>{purposeLabel}</span>
+                </div>
+                <div className="p-3">
+                  <div className="flex items-center gap-2">
+                    {listView.avatar && (
+                      <img
+                        src={proxifyBskyImage(listView.avatar)}
+                        alt=""
+                        className="h-8 w-8 rounded-lg"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: "var(--asph-text-primary)" }}
+                      >
+                        {listView.name}
+                      </span>
+                      {listView.creator?.handle && (
+                        <div
+                          className="text-xs"
+                          style={{ color: "var(--asph-text-tertiary)" }}
+                        >
+                          by @{listView.creator.handle}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {listView.description && (
+                    <p
+                      className="mt-2 line-clamp-2 text-sm"
+                      style={{ color: "var(--asph-text-secondary)" }}
+                    >
+                      {listView.description}
+                    </p>
+                  )}
+                  {listView.listItemCount != null && (
+                    <div
+                      className="mt-2 text-xs"
+                      style={{ color: "var(--asph-text-tertiary)" }}
+                    >
+                      {listView.listItemCount} members
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          // Labeler service embed
+          if (recordData?.$type === "app.bsky.labeler.defs#labelerView") {
+            const labeler = recordData as any;
+            return (
+              <div
+                className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-all hover:border-opacity-80"
+                style={{ borderColor: "var(--asph-border-primary)" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (labeler.creator?.handle) {
+                    window.open(
+                      `https://bsky.app/profile/${labeler.creator.handle}`,
+                      "_blank",
+                      "noopener,noreferrer",
+                    );
+                  }
+                }}
+              >
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
+                  style={{
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    borderBottom: `1px solid var(--asph-border-primary)`,
+                    color: "var(--asph-text-secondary)",
+                  }}
+                >
+                  <Shield size={12} />
+                  <span>Labeler</span>
+                </div>
+                <div className="p-3">
+                  <div className="flex items-center gap-2">
+                    {labeler.creator?.avatar && (
+                      <img
+                        src={
+                          proxifyBskyImage(labeler.creator.avatar) ||
+                          "/default-avatar.svg"
+                        }
+                        alt=""
+                        className="h-8 w-8 rounded-full"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <span
+                        className="text-sm font-semibold"
+                        style={{ color: "var(--asph-text-primary)" }}
+                      >
+                        {labeler.creator?.displayName ||
+                          labeler.creator?.handle}
+                      </span>
+                      {labeler.creator?.handle && (
+                        <div
+                          className="text-xs"
+                          style={{ color: "var(--asph-text-tertiary)" }}
+                        >
+                          @{labeler.creator.handle}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {labeler.likeCount != null && labeler.likeCount > 0 && (
+                    <div
+                      className="mt-2 flex items-center gap-1 text-xs"
+                      style={{ color: "var(--asph-text-tertiary)" }}
+                    >
+                      <Heart size={11} />
+                      <span>{labeler.likeCount}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          // Normal quoted post
+          if (recordData?.$type === "app.bsky.embed.record#viewRecord") {
+            const quotedPost = recordData;
             return (
               <div
                 className="mt-2 overflow-hidden rounded-lg border transition-all hover:border-opacity-80"
@@ -1904,63 +2292,6 @@ export const Home: React.FC<HomeProps> = React.memo(
                   </div>
                   {quotedPost.embeds?.[0] &&
                     renderEmbed(quotedPost.embeds[0], postUri, postIndex)}
-                </div>
-              </div>
-            );
-          }
-          // Handle deleted or blocked quotes
-          if (quotedPost?.$type === "app.bsky.embed.record#viewNotFound") {
-            return (
-              <div
-                className="mt-2 overflow-hidden rounded-lg border"
-                style={{ borderColor: "var(--asph-border-primary)" }}
-              >
-                <div
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
-                  style={{
-                    backgroundColor: "var(--asph-bg-tertiary)",
-                    borderBottom: `1px solid var(--asph-border-primary)`,
-                    color: "var(--asph-text-secondary)",
-                  }}
-                >
-                  <MessageCircle size={12} />
-                  <span>Quoted post</span>
-                </div>
-                <div className="p-3">
-                  <div
-                    className="text-sm italic"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  >
-                    Post not found or deleted
-                  </div>
-                </div>
-              </div>
-            );
-          }
-          if (quotedPost?.$type === "app.bsky.embed.record#viewBlocked") {
-            return (
-              <div
-                className="mt-2 overflow-hidden rounded-lg border"
-                style={{ borderColor: "var(--asph-border-primary)" }}
-              >
-                <div
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
-                  style={{
-                    backgroundColor: "var(--asph-bg-tertiary)",
-                    borderBottom: `1px solid var(--asph-border-primary)`,
-                    color: "var(--asph-text-secondary)",
-                  }}
-                >
-                  <MessageCircle size={12} />
-                  <span>Quoted post</span>
-                </div>
-                <div className="p-3">
-                  <div
-                    className="text-sm italic"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  >
-                    Post from blocked user
-                  </div>
                 </div>
               </div>
             );

@@ -369,7 +369,11 @@ const QuotedPost = memo(function QuotedPost({
     }
   }, [record?.uri, onPress]);
 
-  if (!record || record.$type === "app.bsky.embed.record#viewNotFound") {
+  if (
+    !record ||
+    record.$type === "app.bsky.embed.record#viewNotFound" ||
+    record.$type === "app.bsky.embed.record#viewDetached"
+  ) {
     return (
       <View style={styles.quotedPostDeleted}>
         <Text style={styles.quotedPostDeletedText}>Post not found</Text>
@@ -381,6 +385,95 @@ const QuotedPost = memo(function QuotedPost({
     return (
       <View style={styles.quotedPostDeleted}>
         <Text style={styles.quotedPostDeletedText}>Post from blocked user</Text>
+      </View>
+    );
+  }
+
+  // Starter pack embed
+  if (record.$type === "app.bsky.graph.defs#starterPackViewBasic") {
+    const packRecord = record.record as any;
+    const packName = packRecord?.name || "Starter Pack";
+    return (
+      <View style={styles.quotedPost}>
+        <View style={styles.quotedPostHeader}>
+          <Text style={styles.quotedPostIcon}>👥</Text>
+          <Text style={styles.quotedPostLabel}>Starter Pack</Text>
+        </View>
+        <View style={styles.quotedPostContent}>
+          <Text style={styles.quotedAuthorName} numberOfLines={1}>
+            {packName}
+          </Text>
+          {record.creator?.handle && (
+            <Text style={styles.quotedText} numberOfLines={1}>
+              by @{record.creator.handle}
+            </Text>
+          )}
+        </View>
+      </View>
+    );
+  }
+
+  // Feed generator embed
+  if (record.$type === "app.bsky.feed.defs#generatorView") {
+    return (
+      <View style={styles.quotedPost}>
+        <View style={styles.quotedPostHeader}>
+          <Text style={styles.quotedPostIcon}>📡</Text>
+          <Text style={styles.quotedPostLabel}>Feed</Text>
+        </View>
+        <View style={styles.quotedPostContent}>
+          <Text style={styles.quotedAuthorName} numberOfLines={1}>
+            {record.displayName}
+          </Text>
+          {record.description && (
+            <Text style={styles.quotedText} numberOfLines={2}>
+              {record.description}
+            </Text>
+          )}
+        </View>
+      </View>
+    );
+  }
+
+  // List embed
+  if (record.$type === "app.bsky.graph.defs#listView") {
+    return (
+      <View style={styles.quotedPost}>
+        <View style={styles.quotedPostHeader}>
+          <Text style={styles.quotedPostIcon}>📋</Text>
+          <Text style={styles.quotedPostLabel}>
+            {record.purpose === "app.bsky.graph.defs#modlist"
+              ? "Moderation List"
+              : "List"}
+          </Text>
+        </View>
+        <View style={styles.quotedPostContent}>
+          <Text style={styles.quotedAuthorName} numberOfLines={1}>
+            {record.name}
+          </Text>
+          {record.description && (
+            <Text style={styles.quotedText} numberOfLines={2}>
+              {record.description}
+            </Text>
+          )}
+        </View>
+      </View>
+    );
+  }
+
+  // Labeler service embed
+  if (record.$type === "app.bsky.labeler.defs#labelerView") {
+    return (
+      <View style={styles.quotedPost}>
+        <View style={styles.quotedPostHeader}>
+          <Text style={styles.quotedPostIcon}>🛡️</Text>
+          <Text style={styles.quotedPostLabel}>Labeler</Text>
+        </View>
+        <View style={styles.quotedPostContent}>
+          <Text style={styles.quotedAuthorName} numberOfLines={1}>
+            {record.creator?.displayName || record.creator?.handle}
+          </Text>
+        </View>
       </View>
     );
   }
