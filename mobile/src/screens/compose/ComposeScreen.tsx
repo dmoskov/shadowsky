@@ -1139,7 +1139,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   postButtonDisabled: {
-    backgroundColor: "colors.surface",
+    backgroundColor: colors.surface,
     opacity: 0.5,
   },
   postButtonText: {

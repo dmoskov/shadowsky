@@ -94,7 +94,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     "./plugins/withKeyEvent",
     "./plugins/withPrivacyManifest",
-    "./plugins/withShareExtension",
+    // "./plugins/withShareExtension", // Disabled for local build - plugin needs fixing
   ],
   experiments: {
     typedRoutes: true,

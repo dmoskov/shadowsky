@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>aps-environment</key>
-	<string>development</string>
-	<key>com.apple.developer.associated-domains</key>
-	<array>
-		<string>applinks:shadowsky.io</string>
-		<string>applinks:main.shadowsky.io</string>
-		<string>applinks:bsky.app</string>
-		<string>applinks:staging.bsky.app</string>
-		<string>applinks:asphodel.is</string>
-		<string>applinks:main.asphodel.is</string>
-	</array>
-</dict>
+  <dict>
+    <key>aps-environment</key>
+    <string>development</string>
+    <key>com.apple.developer.associated-domains</key>
+    <array>
+      <string>applinks:shadowsky.io</string>
+      <string>applinks:main.shadowsky.io</string>
+      <string>applinks:bsky.app</string>
+      <string>applinks:staging.bsky.app</string>
+      <string>applinks:asphodel.is</string>
+      <string>applinks:main.asphodel.is</string>
+    </array>
+  </dict>
 </plist>

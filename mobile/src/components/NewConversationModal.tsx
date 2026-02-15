@@ -161,7 +161,7 @@ export function NewConversationModal({
             value={searchQuery}
             onChangeText={handleSearch}
             placeholder="Search users..."
-            placeholderTextColor="colors.textTertiary"
+            placeholderTextColor={colors.textTertiary}
             autoFocus
             autoCapitalize="none"
             autoCorrect={false}
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "colors.surface",
+    backgroundColor: colors.surface,
     justifyContent: "center",
     alignItems: "center",
   },

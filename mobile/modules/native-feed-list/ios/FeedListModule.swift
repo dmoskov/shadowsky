@@ -122,10 +122,10 @@ class FeedListViewWrapper: ExpoView {
             error: error,
             emptyMessage: emptyMessage,
             onRefresh: { [weak self] in
-                self?.onRefresh([])
+                self?.onRefresh([:])
             },
             onLoadMore: { [weak self] in
-                self?.onLoadMore([])
+                self?.onLoadMore([:])
             },
             onPostPress: { [weak self] uri, handle in
                 self?.onPostPress([

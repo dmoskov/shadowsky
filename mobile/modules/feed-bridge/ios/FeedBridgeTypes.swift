@@ -4,15 +4,21 @@
 //
 // Swift Codable structs for AT Protocol feed data
 // These types match the TypeScript serialization format
+// All types are public for cross-module access (e.g., NativeFeedList)
 //
 
 import Foundation
 
 // MARK: - Rich Text Facets
 
-struct FacetFeatureMention: Codable {
-    let type: String
-    let did: String
+public struct FacetFeatureMention: Codable {
+    public let type: String
+    public let did: String
+
+    public init(type: String, did: String) {
+        self.type = type
+        self.did = did
+    }
 
     enum CodingKeys: String, CodingKey {
         case type = "$type"
@@ -20,9 +26,14 @@ struct FacetFeatureMention: Codable {
     }
 }
 
-struct FacetFeatureLink: Codable {
-    let type: String
-    let uri: String
+public struct FacetFeatureLink: Codable {
+    public let type: String
+    public let uri: String
+
+    public init(type: String, uri: String) {
+        self.type = type
+        self.uri = uri
+    }
 
     enum CodingKeys: String, CodingKey {
         case type = "$type"
@@ -30,9 +41,14 @@ struct FacetFeatureLink: Codable {
     }
 }
 
-struct FacetFeatureTag: Codable {
-    let type: String
-    let tag: String
+public struct FacetFeatureTag: Codable {
+    public let type: String
+    public let tag: String
+
+    public init(type: String, tag: String) {
+        self.type = type
+        self.tag = tag
+    }
 
     enum CodingKeys: String, CodingKey {
         case type = "$type"
@@ -40,12 +56,12 @@ struct FacetFeatureTag: Codable {
     }
 }
 
-enum FacetFeature: Codable {
+public enum FacetFeature: Codable {
     case mention(FacetFeatureMention)
     case link(FacetFeatureLink)
     case tag(FacetFeatureTag)
 
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: TypeCodingKeys.self)
         let type = try container.decode(String.self, forKey: .type)
 
@@ -68,7 +84,7 @@ enum FacetFeature: Codable {
         }
     }
 
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         switch self {
         case .mention(let mention):
             try mention.encode(to: encoder)
@@ -84,33 +100,60 @@ enum FacetFeature: Codable {
     }
 }
 
-struct FacetIndex: Codable {
-    let byteStart: Int
-    let byteEnd: Int
+public struct FacetIndex: Codable {
+    public let byteStart: Int
+    public let byteEnd: Int
+
+    public init(byteStart: Int, byteEnd: Int) {
+        self.byteStart = byteStart
+        self.byteEnd = byteEnd
+    }
 }
 
-struct Facet: Codable {
-    let index: FacetIndex
-    let features: [FacetFeature]
+public struct Facet: Codable {
+    public let index: FacetIndex
+    public let features: [FacetFeature]
+
+    public init(index: FacetIndex, features: [FacetFeature]) {
+        self.index = index
+        self.features = features
+    }
 }
 
 // MARK: - Embeds
 
-struct ViewImage: Codable {
-    let thumb: String
-    let fullsize: String
-    let alt: String
-    let aspectRatio: AspectRatio?
+public struct ViewImage: Codable {
+    public let thumb: String
+    public let fullsize: String
+    public let alt: String
+    public let aspectRatio: AspectRatio?
+
+    public init(thumb: String, fullsize: String, alt: String, aspectRatio: AspectRatio?) {
+        self.thumb = thumb
+        self.fullsize = fullsize
+        self.alt = alt
+        self.aspectRatio = aspectRatio
+    }
 }
 
-struct AspectRatio: Codable {
-    let width: Int
-    let height: Int
+public struct AspectRatio: Codable {
+    public let width: Int
+    public let height: Int
+
+    public init(width: Int, height: Int) {
+        self.width = width
+        self.height = height
+    }
 }
 
-struct EmbedImages: Codable {
-    let type: String
-    let images: [ViewImage]
+public struct EmbedImages: Codable {
+    public let type: String
+    public let images: [ViewImage]
+
+    public init(type: String, images: [ViewImage]) {
+        self.type = type
+        self.images = images
+    }
 
     enum CodingKeys: String, CodingKey {
         case type = "$type"
@@ -118,16 +161,28 @@ struct EmbedImages: Codable {
     }
 }
 
-struct ViewExternal: Codable {
-    let uri: String
-    let title: String
-    let description: String
-    let thumb: String?
+public struct ViewExternal: Codable {
+    public let uri: String
+    public let title: String
+    public let description: String
+    public let thumb: String?
+
+    public init(uri: String, title: String, description: String, thumb: String?) {
+        self.uri = uri
+        self.title = title
+        self.description = description
+        self.thumb = thumb
+    }
 }
 
-struct EmbedExternal: Codable {
-    let type: String
-    let external: ViewExternal
+public struct EmbedExternal: Codable {
+    public let type: String
+    public let external: ViewExternal
+
+    public init(type: String, external: ViewExternal) {
+        self.type = type
+        self.external = external
+    }
 
     enum CodingKeys: String, CodingKey {
         case type = "$type"
@@ -135,14 +190,24 @@ struct EmbedExternal: Codable {
     }
 }
 
-struct ViewRecord: Codable {
-    let type: String
-    let uri: String
-    let cid: String
-    let author: SerializedAuthor
-    let value: RecordValue
-    let embeds: [SerializedEmbed]?
-    let indexedAt: String
+public struct ViewRecord: Codable {
+    public let type: String
+    public let uri: String
+    public let cid: String
+    public let author: SerializedAuthor
+    public let value: RecordValue
+    public let embeds: [SerializedEmbed]?
+    public let indexedAt: String
+
+    public init(type: String, uri: String, cid: String, author: SerializedAuthor, value: RecordValue, embeds: [SerializedEmbed]?, indexedAt: String) {
+        self.type = type
+        self.uri = uri
+        self.cid = cid
+        self.author = author
+        self.value = value
+        self.embeds = embeds
+        self.indexedAt = indexedAt
+    }
 
     enum CodingKeys: String, CodingKey {
         case type = "$type"
@@ -150,14 +215,24 @@ struct ViewRecord: Codable {
     }
 }
 
-struct RecordValue: Codable {
-    let text: String
-    let createdAt: String
+public struct RecordValue: Codable {
+    public let text: String
+    public let createdAt: String
+
+    public init(text: String, createdAt: String) {
+        self.text = text
+        self.createdAt = createdAt
+    }
 }
 
-struct EmbedRecord: Codable {
-    let type: String
-    let record: ViewRecord
+public struct EmbedRecord: Codable {
+    public let type: String
+    public let record: ViewRecord
+
+    public init(type: String, record: ViewRecord) {
+        self.type = type
+        self.record = record
+    }
 
     enum CodingKeys: String, CodingKey {
         case type = "$type"
@@ -165,14 +240,24 @@ struct EmbedRecord: Codable {
     }
 }
 
-struct EmbedRecordWrapper: Codable {
-    let record: ViewRecord
+public struct EmbedRecordWrapper: Codable {
+    public let record: ViewRecord
+
+    public init(record: ViewRecord) {
+        self.record = record
+    }
 }
 
-struct EmbedRecordWithMedia: Codable {
-    let type: String
-    let record: EmbedRecordWrapper
-    let media: SerializedEmbed
+public struct EmbedRecordWithMedia: Codable {
+    public let type: String
+    public let record: EmbedRecordWrapper
+    public let media: SerializedEmbed
+
+    public init(type: String, record: EmbedRecordWrapper, media: SerializedEmbed) {
+        self.type = type
+        self.record = record
+        self.media = media
+    }
 
     enum CodingKeys: String, CodingKey {
         case type = "$type"
@@ -180,16 +265,28 @@ struct EmbedRecordWithMedia: Codable {
     }
 }
 
-struct ViewVideo: Codable {
-    let cid: String
-    let playlist: String
-    let thumbnail: String?
-    let aspectRatio: AspectRatio?
+public struct ViewVideo: Codable {
+    public let cid: String
+    public let playlist: String
+    public let thumbnail: String?
+    public let aspectRatio: AspectRatio?
+
+    public init(cid: String, playlist: String, thumbnail: String?, aspectRatio: AspectRatio?) {
+        self.cid = cid
+        self.playlist = playlist
+        self.thumbnail = thumbnail
+        self.aspectRatio = aspectRatio
+    }
 }
 
-struct EmbedVideo: Codable {
-    let type: String
-    let video: ViewVideo
+public struct EmbedVideo: Codable {
+    public let type: String
+    public let video: ViewVideo
+
+    public init(type: String, video: ViewVideo) {
+        self.type = type
+        self.video = video
+    }
 
     enum CodingKeys: String, CodingKey {
         case type = "$type"
@@ -197,14 +294,14 @@ struct EmbedVideo: Codable {
     }
 }
 
-enum SerializedEmbed: Codable {
+public indirect enum SerializedEmbed: Codable {
     case images(EmbedImages)
     case external(EmbedExternal)
     case record(EmbedRecord)
     case recordWithMedia(EmbedRecordWithMedia)
     case video(EmbedVideo)
 
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: TypeCodingKeys.self)
         let type = try container.decode(String.self, forKey: .type)
 
@@ -233,7 +330,7 @@ enum SerializedEmbed: Codable {
         }
     }
 
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         switch self {
         case .images(let images):
             try images.encode(to: encoder)
@@ -255,70 +352,124 @@ enum SerializedEmbed: Codable {
 
 // MARK: - Author
 
-struct SerializedAuthor: Codable {
-    let did: String
-    let handle: String
-    let displayName: String?
-    let avatar: String?
+public struct SerializedAuthor: Codable {
+    public let did: String
+    public let handle: String
+    public let displayName: String?
+    public let avatar: String?
+
+    public init(did: String, handle: String, displayName: String?, avatar: String?) {
+        self.did = did
+        self.handle = handle
+        self.displayName = displayName
+        self.avatar = avatar
+    }
 }
 
 // MARK: - Post Record
 
-struct SerializedRecord: Codable {
-    let text: String
-    let facets: [Facet]?
-    let createdAt: String
+public struct SerializedRecord: Codable {
+    public let text: String
+    public let facets: [Facet]?
+    public let createdAt: String
+
+    public init(text: String, facets: [Facet]?, createdAt: String) {
+        self.text = text
+        self.facets = facets
+        self.createdAt = createdAt
+    }
 }
 
 // MARK: - Viewer State
 
-struct SerializedViewer: Codable {
-    let like: String?
-    let repost: String?
-    let muted: Bool?
-    let blocked: Bool?
+public struct SerializedViewer: Codable {
+    public let like: String?
+    public let repost: String?
+    public let muted: Bool?
+    public let blocked: Bool?
+
+    public init(like: String?, repost: String?, muted: Bool?, blocked: Bool?) {
+        self.like = like
+        self.repost = repost
+        self.muted = muted
+        self.blocked = blocked
+    }
 }
 
 // MARK: - Labels
 
-struct SerializedLabel: Codable {
-    let val: String
-    let src: String
-    let uri: String
-    let cid: String?
-    let cts: String
+public struct SerializedLabel: Codable {
+    public let val: String
+    public let src: String
+    public let uri: String
+    public let cid: String?
+    public let cts: String
+
+    public init(val: String, src: String, uri: String, cid: String?, cts: String) {
+        self.val = val
+        self.src = src
+        self.uri = uri
+        self.cid = cid
+        self.cts = cts
+    }
 }
 
 // MARK: - Post
 
-struct SerializedPost: Codable {
-    let uri: String
-    let cid: String
-    let author: SerializedAuthor
-    let record: SerializedRecord
-    let embed: SerializedEmbed?
-    let replyCount: Int?
-    let repostCount: Int?
-    let likeCount: Int?
-    let quoteCount: Int?
-    let viewer: SerializedViewer?
-    let labels: [SerializedLabel]?
-    let indexedAt: String
+public struct SerializedPost: Codable {
+    public let uri: String
+    public let cid: String
+    public let author: SerializedAuthor
+    public let record: SerializedRecord
+    public let embed: SerializedEmbed?
+    public let replyCount: Int?
+    public let repostCount: Int?
+    public let likeCount: Int?
+    public let quoteCount: Int?
+    public let viewer: SerializedViewer?
+    public let labels: [SerializedLabel]?
+    public let indexedAt: String
+
+    public init(uri: String, cid: String, author: SerializedAuthor, record: SerializedRecord, embed: SerializedEmbed?, replyCount: Int?, repostCount: Int?, likeCount: Int?, quoteCount: Int?, viewer: SerializedViewer?, labels: [SerializedLabel]?, indexedAt: String) {
+        self.uri = uri
+        self.cid = cid
+        self.author = author
+        self.record = record
+        self.embed = embed
+        self.replyCount = replyCount
+        self.repostCount = repostCount
+        self.likeCount = likeCount
+        self.quoteCount = quoteCount
+        self.viewer = viewer
+        self.labels = labels
+        self.indexedAt = indexedAt
+    }
 }
 
 // MARK: - Reply Reference
 
-struct SerializedReplyRef: Codable {
-    let parent: SerializedPost
-    let root: SerializedPost
+public struct SerializedReplyRef: Codable {
+    public let parent: SerializedPost
+    public let root: SerializedPost
+
+    public init(parent: SerializedPost, root: SerializedPost) {
+        self.parent = parent
+        self.root = root
+    }
 }
 
 // MARK: - Reason
 
-struct SerializedReasonRepost: Codable {
-    let type: String
-    let by: SerializedAuthor
-    let indexedAt: String
+public struct SerializedReasonRepost: Codable {
+    public let type: String
+    public let by: SerializedAuthor
+    public let indexedAt: String
+
+    public init(type: String, by: SerializedAuthor, indexedAt: String) {
+        self.type = type
+        self.by = by
+        self.indexedAt = indexedAt
+    }
 
     enum CodingKeys: String, CodingKey {
         case type = "$type"
@@ -326,10 +477,10 @@ struct SerializedReasonRepost: Codable {
     }
 }
 
-enum SerializedReason: Codable {
+public enum SerializedReason: Codable {
     case repost(SerializedReasonRepost)
 
-    init(from decoder: Decoder) throws {
+    public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: TypeCodingKeys.self)
         let type = try container.decode(String.self, forKey: .type)
 
@@ -345,7 +496,7 @@ enum SerializedReason: Codable {
         }
     }
 
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         switch self {
         case .repost(let repost):
             try repost.encode(to: encoder)
@@ -359,50 +510,83 @@ enum SerializedReason: Codable {
 
 // MARK: - Feed View Post
 
-struct SerializedFeedViewPost: Codable {
-    let post: SerializedPost
-    let reply: SerializedReplyRef?
-    let reason: SerializedReason?
-    let feedContext: String?
+public struct SerializedFeedViewPost: Codable {
+    public let post: SerializedPost
+    public let reply: SerializedReplyRef?
+    public let reason: SerializedReason?
+    public let feedContext: String?
+
+    public init(post: SerializedPost, reply: SerializedReplyRef?, reason: SerializedReason?, feedContext: String?) {
+        self.post = post
+        self.reply = reply
+        self.reason = reason
+        self.feedContext = feedContext
+    }
 }
 
 // MARK: - Metadata
 
-struct FeedUpdateMetadata: Codable {
-    let timestamp: Int
-    let isBookmarked: Bool?
-    let isOnline: Bool
-    let isFromCache: Bool?
+public struct FeedUpdateMetadata: Codable {
+    public let timestamp: Int
+    public let isBookmarked: Bool?
+    public let isOnline: Bool
+    public let isFromCache: Bool?
+
+    public init(timestamp: Int, isBookmarked: Bool?, isOnline: Bool, isFromCache: Bool?) {
+        self.timestamp = timestamp
+        self.isBookmarked = isBookmarked
+        self.isOnline = isOnline
+        self.isFromCache = isFromCache
+    }
 }
 
 // MARK: - Complete Feed Data
 
-struct SerializedFeedData: Codable {
-    let posts: [SerializedFeedViewPost]
-    let metadata: FeedUpdateMetadata
-    let cursor: String?
+public struct SerializedFeedData: Codable {
+    public var posts: [SerializedFeedViewPost]
+    public let metadata: FeedUpdateMetadata
+    public let cursor: String?
+
+    public init(posts: [SerializedFeedViewPost], metadata: FeedUpdateMetadata, cursor: String?) {
+        self.posts = posts
+        self.metadata = metadata
+        self.cursor = cursor
+    }
 }
 
 // MARK: - Incremental Updates
 
-struct PostUpdate: Codable {
-    let uri: String
-    let likeCount: Int?
-    let repostCount: Int?
-    let replyCount: Int?
-    let viewer: SerializedViewer?
-    let isBookmarked: Bool?
+public struct PostUpdate: Codable {
+    public let uri: String
+    public let likeCount: Int?
+    public let repostCount: Int?
+    public let replyCount: Int?
+    public let viewer: SerializedViewer?
+    public let isBookmarked: Bool?
+
+    public init(uri: String, likeCount: Int?, repostCount: Int?, replyCount: Int?, viewer: SerializedViewer?, isBookmarked: Bool?) {
+        self.uri = uri
+        self.likeCount = likeCount
+        self.repostCount = repostCount
+        self.replyCount = replyCount
+        self.viewer = viewer
+        self.isBookmarked = isBookmarked
+    }
 }
 
-struct FeedBatchUpdate: Codable {
-    let updates: [PostUpdate]
-    let timestamp: Int
+public struct FeedBatchUpdate: Codable {
+    public let updates: [PostUpdate]
+    public let timestamp: Int
+
+    public init(updates: [PostUpdate], timestamp: Int) {
+        self.updates = updates
+        self.timestamp = timestamp
+    }
 }
 
 // MARK: - Helper Extensions
 
-extension SerializedFeedData {
-    /// Decode from JSON string
+public extension SerializedFeedData {
     static func decode(from jsonString: String) throws -> SerializedFeedData {
         guard let data = jsonString.data(using: .utf8) else {
             throw DecodingError.dataCorrupted(
@@ -418,8 +602,7 @@ extension SerializedFeedData {
     }
 }
 
-extension FeedBatchUpdate {
-    /// Decode from JSON string
+public extension FeedBatchUpdate {
     static func decode(from jsonString: String) throws -> FeedBatchUpdate {
         guard let data = jsonString.data(using: .utf8) else {
             throw DecodingError.dataCorrupted(

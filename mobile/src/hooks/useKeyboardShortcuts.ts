@@ -1,7 +1,14 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as KeyEvent from 'react-native-keyevent';
+
+// react-native-keyevent may not be linked on all platforms
+let KeyEvent: any = null;
+try {
+  KeyEvent = require('react-native-keyevent');
+} catch {
+  // Module not available - keyboard shortcuts will be disabled
+}
 
 export type KeyboardShortcutHandler = () => void;
 
@@ -30,8 +37,8 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcuts = {}) {
   const router = useRouter();
 
   useEffect(() => {
-    // Only enable keyboard shortcuts on iOS (iPad)
-    if (Platform.OS !== 'ios') {
+    // Only enable keyboard shortcuts on iOS (iPad) with KeyEvent available
+    if (Platform.OS !== 'ios' || !KeyEvent?.onKeyDownListener) {
       return;
     }
 

@@ -793,7 +793,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   selectedConversation: {
-    backgroundColor: "colors.surface",
+    backgroundColor: colors.surface,
   },
   conversationContent: {
     flexDirection: "row",
@@ -808,7 +808,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "colors.surface",
+    backgroundColor: colors.surface,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -900,7 +900,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "colors.surface",
+    backgroundColor: colors.surface,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1045,7 +1045,7 @@ const styles = StyleSheet.create({
     minWidth: 60,
   },
   sendButtonDisabled: {
-    backgroundColor: "colors.surface",
+    backgroundColor: colors.surface,
     opacity: 0.5,
   },
   sendButtonText: {

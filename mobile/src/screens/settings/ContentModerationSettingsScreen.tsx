@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "colors.surface",
+    borderColor: colors.surface,
   },
   labelInfo: {
     marginBottom: 12,
@@ -324,9 +324,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: "colors.surface",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "colors.surface",
+    borderColor: colors.surface,
     alignItems: "center",
   },
   preferenceButtonSelected: {
@@ -348,7 +348,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: "colors.surface",
+    borderColor: colors.surface,
   },
   infoTitle: {
     fontSize: 15,

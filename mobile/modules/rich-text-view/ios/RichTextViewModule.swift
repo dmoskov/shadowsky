@@ -36,6 +36,11 @@ class RichTextViewWrapper: ExpoView {
 
     private var facets: [ATFacet] = []
 
+    // Event dispatchers
+    private let onMentionPress = EventDispatcher()
+    private let onHashtagPress = EventDispatcher()
+    private let onLinkPress = EventDispatcher()
+
     private var hostingController: UIHostingController<RichTextView>?
 
     required init(appContext: AppContext? = nil) {
@@ -83,18 +88,18 @@ class RichTextViewWrapper: ExpoView {
             text: text,
             facets: facets,
             onMentionTap: { [weak self] handle, did in
-                self?.onEvent("onMentionPress", [
+                self?.onMentionPress([
                     "handle": handle,
                     "did": did
                 ])
             },
             onHashtagTap: { [weak self] tag in
-                self?.onEvent("onHashtagPress", [
+                self?.onHashtagPress([
                     "tag": tag
                 ])
             },
             onLinkTap: { [weak self] uri in
-                self?.onEvent("onLinkPress", [
+                self?.onLinkPress([
                     "uri": uri
                 ])
             }
@@ -102,7 +107,7 @@ class RichTextViewWrapper: ExpoView {
 
         // Create hosting controller
         let controller = UIHostingController(rootView: richTextView)
-        controller.view.backgroundColor = .clear
+        controller.view.backgroundColor = UIColor.clear
         self.hostingController = controller
 
         // Add to view hierarchy

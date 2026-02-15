@@ -30,8 +30,8 @@ const withShareExtension = (config) => {
 
   // Add the Share Extension target to Xcode project
   config = withXcodeProject(config, async (config) => {
-    const { modResults, projectRoot } = config;
-    const xcodeProject = modResults;
+    const xcodeProject = config.modResults;
+    const projectRoot = config.modRequest.projectRoot;
 
     const targetName = "ShareExtension";
     const bundleIdentifier = "io.shadowsky.app.ShareExtension";

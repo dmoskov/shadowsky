@@ -32,12 +32,12 @@ const TOAST_COLORS: Record<
   },
   warning: {
     bg: colors.warning,
-    border: "colors.warning",
+    border: colors.warning,
     text: colors.text,
   },
   info: {
     bg: colors.info,
-    border: "colors.info",
+    border: colors.info,
     text: colors.text,
   },
 };

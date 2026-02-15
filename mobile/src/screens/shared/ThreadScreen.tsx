@@ -542,7 +542,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   replyComposer: {
-    backgroundColor: "colors.surface",
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.surfaceElevated,
     padding: 16,
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   replyButtonDisabled: {
-    backgroundColor: "colors.surface",
+    backgroundColor: colors.surface,
     opacity: 0.5,
   },
   replyButtonText: {

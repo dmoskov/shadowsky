@@ -224,27 +224,18 @@ struct RichTextView: View {
         case .plain:
             return Text(segment.text)
 
-        case .mention(let handle, let did):
+        case .mention:
             return Text(segment.text)
                 .foregroundColor(primaryColor)
-                .onTapGesture {
-                    onMentionTap(handle, did)
-                }
 
-        case .link(let uri):
+        case .link:
             return Text(segment.text)
                 .foregroundColor(primaryColor)
                 .underline()
-                .onTapGesture {
-                    onLinkTap(uri)
-                }
 
-        case .hashtag(let tag):
+        case .hashtag:
             return Text(segment.text)
                 .foregroundColor(primaryColor)
-                .onTapGesture {
-                    onHashtagTap(tag)
-                }
         }
     }
 }

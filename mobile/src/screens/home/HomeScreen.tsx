@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   feedPickerContainer: {
-    backgroundColor: "colors.surface",
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.surface,
     maxHeight: 56,

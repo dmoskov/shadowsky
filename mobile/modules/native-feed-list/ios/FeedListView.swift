@@ -8,6 +8,7 @@
 
 import SwiftUI
 import ExpoModulesCore
+import FeedBridge
 
 // MARK: - FeedListView
 
@@ -78,9 +79,7 @@ struct FeedListView: View {
                 }
 
                 // Post items
-                ForEach(feedState.posts.indices, id: \.self) { index in
-                    let feedPost = feedState.posts[index]
-
+                ForEach(feedState.posts, id: \.post.uri) { feedPost in
                     PostCardView(
                         post: convertToFeedViewPost(feedPost),
                         isBookmarked: feedPost.post.viewer?.like != nil, // Placeholder
@@ -126,12 +125,11 @@ struct FeedListView: View {
                             onShare?(feedPost.post.uri)
                         },
                         onMute: nil,
-                        onBlock: nil,
-                        onReport: nil
+                        onBlock: nil
                     )
 
-                    // Load more trigger
-                    if index == feedState.posts.count - 3 {
+                    // Load more trigger - fire when near end of list
+                    if feedPost.post.uri == feedState.posts.dropLast(min(3, feedState.posts.count)).last?.post.uri {
                         Color.clear
                             .frame(height: 1)
                             .onAppear {

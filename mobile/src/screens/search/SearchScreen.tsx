@@ -828,7 +828,7 @@ const styles = StyleSheet.create({
   },
   filterOptionActive: {
     borderColor: colors.primary,
-    backgroundColor: "colors.surface",
+    backgroundColor: colors.surface,
   },
   filterOptionText: {
     color: colors.textSecondary,

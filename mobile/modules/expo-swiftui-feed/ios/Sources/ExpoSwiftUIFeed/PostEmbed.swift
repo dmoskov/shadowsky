@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Enum representing different embed types from AT Protocol
-enum EmbedType {
+indirect enum EmbedType {
     case images([ImageEmbedData])
     case video(VideoEmbedData)
     case external(ExternalLinkEmbedData)
@@ -74,11 +74,10 @@ struct PostEmbed: View {
 
         case .recordWithMedia(let media, let record):
             // RecordWithMedia combines media + quote - render both
+            // Use AnyView to break recursive opaque type inference
             VStack(spacing: 0) {
-                // Render the media part
-                embedView(for: media)
+                AnyView(embedView(for: media))
 
-                // Render the quoted record part
                 if let record = record {
                     QuoteEmbed(
                         record: record,

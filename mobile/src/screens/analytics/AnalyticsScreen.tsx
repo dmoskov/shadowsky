@@ -182,7 +182,7 @@ export function AnalyticsScreen() {
           "Total Engagement",
           analytics.impressions,
           "📊",
-          "colors.accent"
+          colors.accent
         )}
       </View>
 

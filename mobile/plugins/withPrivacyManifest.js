@@ -15,8 +15,8 @@ const fs = require("fs");
  */
 const withPrivacyManifest = (config) => {
   return withXcodeProject(config, async (config) => {
-    const { modResults, projectRoot } = config;
-    const xcodeProject = modResults;
+    const xcodeProject = config.modResults;
+    const projectRoot = config.modRequest.projectRoot;
 
     // Path to the privacy manifest file
     const privacyManifestPath = "PrivacyInfo.xcprivacy";
