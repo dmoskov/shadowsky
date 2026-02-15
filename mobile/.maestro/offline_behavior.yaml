@@ -14,10 +14,8 @@ appId: com.shadowsky.mobile
 - assertVisible: "Home"
 
 # Load some content while online
-- scroll:
-    direction: DOWN
-- scroll:
-    direction: DOWN
+- scroll
+- scroll
 
 # Go offline
 - setAirplaneMode: true
@@ -25,8 +23,7 @@ appId: com.shadowsky.mobile
 
 # Test that cached content is still visible
 - assertVisible: "Timeline"
-- scroll:
-    direction: DOWN
+- scroll
 - assertVisible:
     id: "cached-post"
 
