@@ -1,15 +1,24 @@
-import { AppBskyFeedDefs } from "@atproto/api";
+import {
+  AppBskyActorDefs,
+  AppBskyFeedDefs,
+  RichText as BskyRichText,
+} from "@atproto/api";
 import { getProfileService } from "@bsky/shared";
 import { useQuery } from "@tanstack/react-query";
 import {
+  BadgeCheck,
+  Calendar,
   Edit,
   ExternalLink,
   Flag,
   List as ListIcon,
   MoreHorizontal,
+  Pin,
+  Rss,
   Share2,
   Sparkles,
   UserX,
+  Users,
   VolumeX,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -23,6 +32,7 @@ import { ThreadModal } from "../components/ThreadModal";
 import { DomainVerifiedBadge } from "../components/ui/DomainVerifiedBadge";
 import { EmptyState } from "../components/ui/EmptyState";
 import { LabelBadge } from "../components/ui/LabelBadge";
+import { RichText } from "../components/ui/RichText";
 import { ProfileSkeleton } from "../components/ui/SkeletonLoader";
 import { UserListModal } from "../components/UserListModal";
 import { useAuth } from "../contexts/AuthContext";
@@ -54,16 +64,31 @@ interface ProfileData {
   followersCount?: number;
   followsCount?: number;
   postsCount?: number;
+  createdAt?: string;
+  indexedAt?: string;
+  labels?: AppBskyActorDefs.ProfileViewDetailed["labels"];
+  associated?: AppBskyActorDefs.ProfileAssociated;
+  pinnedPost?: { uri: string; cid: string };
+  verification?: AppBskyActorDefs.VerificationState;
   viewer?: {
     following?: string;
     followedBy?: string;
     muted?: boolean;
     blockedBy?: boolean;
     blocking?: string;
+    knownFollowers?: AppBskyActorDefs.KnownFollowers;
   };
 }
 
-type ProfileTab = "posts" | "replies" | "media" | "top";
+type ProfileTab = "posts" | "replies" | "media" | "likes" | "top";
+
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+};
 
 // Store scroll positions for each profile/tab combination
 const scrollPositions = new Map<string, number>();
@@ -85,7 +110,10 @@ export default function ProfilePage() {
   // Get active tab from URL, default to "posts"
   const tabParam = searchParams.get("tab");
   const activeTab: ProfileTab =
-    tabParam === "replies" || tabParam === "media" || tabParam === "top"
+    tabParam === "replies" ||
+    tabParam === "media" ||
+    tabParam === "likes" ||
+    tabParam === "top"
       ? tabParam
       : "posts";
 
@@ -224,6 +252,33 @@ export default function ProfilePage() {
   // Show error if both haiku and sonnet fail (or sonnet fails after haiku succeeds)
   const analysisError = sonnetError || haikuError;
 
+  // Pinned post
+  const { data: pinnedPostData } = useQuery({
+    queryKey: ["pinned-post", profile?.pinnedPost?.uri],
+    queryFn: async () => {
+      if (!agent || !profile?.pinnedPost) return null;
+      const response = await agent.getPosts({
+        uris: [profile.pinnedPost.uri],
+      });
+      return response.data.posts[0] || null;
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!agent && !!profile?.pinnedPost?.uri,
+  });
+
+  // Bio rich text facets
+  const { data: bioFacets } = useQuery({
+    queryKey: ["bio-facets", profile?.did, profile?.description],
+    queryFn: async () => {
+      if (!agent || !profile?.description) return null;
+      const rt = new BskyRichText({ text: profile.description });
+      await rt.detectFacets(agent);
+      return rt.facets || null;
+    },
+    staleTime: 10 * 60 * 1000,
+    enabled: !!agent && !!profile?.description,
+  });
+
   // Top posts for the "Top Posts" tab
   const { data: topPostsData, isLoading: isTopPostsLoading } = useTopPosts({
     handle: handle || "",
@@ -263,7 +318,15 @@ export default function ProfilePage() {
         const profileRes = await profileService.getProfile(handle);
 
         if (profileRes) {
-          setProfile(profileRes);
+          setProfile({
+            ...profileRes,
+            pinnedPost: profileRes.pinnedPost
+              ? {
+                  uri: profileRes.pinnedPost.uri,
+                  cid: profileRes.pinnedPost.cid,
+                }
+              : undefined,
+          });
           // Update cache
           await db.saveProfiles([
             {
@@ -303,28 +366,45 @@ export default function ProfilePage() {
 
     try {
       setPostsLoading(true);
-      const profileService = getProfileService(agent);
 
-      const filter =
-        activeTab === "replies"
-          ? "posts_with_replies"
-          : activeTab === "media"
-            ? "posts_with_media"
-            : "posts_no_replies";
+      if (activeTab === "likes") {
+        // Fetch liked posts via the API
+        const response = await agent.getActorLikes({
+          actor: handle,
+          limit: 30,
+          cursor: initial ? undefined : cursor,
+        });
+        if (response.data) {
+          setPosts((prev) =>
+            initial ? response.data.feed : [...prev, ...response.data.feed],
+          );
+          setCursor(response.data.cursor);
+          setHasMore(!!response.data.cursor);
+        }
+      } else {
+        const profileService = getProfileService(agent);
 
-      const response = await profileService.getAuthorFeed(
-        handle,
-        30,
-        initial ? undefined : cursor,
-        filter,
-      );
+        const filter =
+          activeTab === "replies"
+            ? "posts_with_replies"
+            : activeTab === "media"
+              ? "posts_with_media"
+              : "posts_no_replies";
 
-      if (response) {
-        setPosts((prev) =>
-          initial ? response.feed : [...prev, ...response.feed],
+        const response = await profileService.getAuthorFeed(
+          handle,
+          30,
+          initial ? undefined : cursor,
+          filter,
         );
-        setCursor(response.cursor);
-        setHasMore(!!response.cursor);
+
+        if (response) {
+          setPosts((prev) =>
+            initial ? response.feed : [...prev, ...response.feed],
+          );
+          setCursor(response.cursor);
+          setHasMore(!!response.cursor);
+        }
       }
     } catch (err) {
       console.error("Error loading posts:", err);
@@ -935,38 +1015,117 @@ export default function ProfilePage() {
           </div>
 
           <div className="mb-4">
-            <h1
-              className="text-2xl font-bold"
-              style={{ color: "var(--asph-text-primary)" }}
-            >
-              {profile.displayName || profile.handle}
-            </h1>
-            <div className="flex items-center gap-1">
-              <p style={{ color: "var(--asph-text-secondary)" }}>
-                @{profile.handle}
-              </p>
-              <DomainVerifiedBadge handle={profile.handle} size="md" />
+            <div className="flex items-center gap-2">
+              <h1
+                className="text-2xl font-bold"
+                style={{ color: "var(--asph-text-primary)" }}
+              >
+                {profile.displayName || profile.handle}
+              </h1>
+              {/* Verification badge */}
+              {profile.verification?.verifiedStatus === "valid" && (
+                <BadgeCheck
+                  className="h-6 w-6 flex-shrink-0 text-blue-500"
+                  aria-label="Verified account"
+                />
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <p style={{ color: "var(--asph-text-secondary)" }}>
+                  @{profile.handle}
+                </p>
+                <DomainVerifiedBadge handle={profile.handle} size="md" />
+              </div>
+              {/* "Follows you" badge */}
+              {!isOwnProfile && profile.viewer?.followedBy && (
+                <span
+                  className="rounded px-1.5 py-0.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: "var(--asph-bg-tertiary)",
+                    color: "var(--asph-text-secondary)",
+                  }}
+                >
+                  Follows you
+                </span>
+              )}
             </div>
             {/* Show profile labels if present */}
-            {(profile as any).labels && (profile as any).labels.length > 0 && (
+            {profile.labels && profile.labels.length > 0 && (
               <div className="mt-2">
-                <LabelBadge
-                  labels={(profile as any).labels}
-                  maxDisplay={3}
-                  size="md"
-                />
+                <LabelBadge labels={profile.labels} maxDisplay={3} size="md" />
               </div>
             )}
           </div>
 
+          {/* Bio with rich text rendering */}
           {profile.description && (
-            <p
+            <div
               className="mb-4 whitespace-pre-wrap"
               style={{ color: "var(--asph-text-primary)" }}
             >
-              {profile.description}
-            </p>
+              {bioFacets ? (
+                <RichText text={profile.description} facets={bioFacets} />
+              ) : (
+                <p>{profile.description}</p>
+              )}
+            </div>
           )}
+
+          {/* Account metadata row */}
+          <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+            {/* Creation date */}
+            {profile.createdAt && (
+              <div
+                className="flex items-center gap-1"
+                style={{ color: "var(--asph-text-secondary)" }}
+              >
+                <Calendar className="h-3.5 w-3.5" />
+                <span>Joined {formatDate(profile.createdAt)}</span>
+              </div>
+            )}
+            {/* Associated feeds */}
+            {profile.associated?.feedgens &&
+              profile.associated.feedgens > 0 && (
+                <div
+                  className="flex items-center gap-1"
+                  style={{ color: "var(--asph-text-secondary)" }}
+                >
+                  <Rss className="h-3.5 w-3.5" />
+                  <span>
+                    {profile.associated.feedgens} feed
+                    {profile.associated.feedgens > 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
+            {/* Associated starter packs */}
+            {profile.associated?.starterPacks &&
+              profile.associated.starterPacks > 0 && (
+                <div
+                  className="flex items-center gap-1"
+                  style={{ color: "var(--asph-text-secondary)" }}
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  <span>
+                    {profile.associated.starterPacks} starter pack
+                    {profile.associated.starterPacks > 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
+            {/* Associated lists */}
+            {profile.associated?.lists && profile.associated.lists > 0 && (
+              <div
+                className="flex items-center gap-1"
+                style={{ color: "var(--asph-text-secondary)" }}
+              >
+                <ListIcon className="h-3.5 w-3.5" />
+                <span>
+                  {profile.associated.lists} list
+                  {profile.associated.lists > 1 ? "s" : ""}
+                </span>
+              </div>
+            )}
+          </div>
 
           <div className="flex gap-6 text-sm">
             <div>
@@ -1018,6 +1177,49 @@ export default function ProfilePage() {
               </span>
             </button>
           </div>
+
+          {/* Known followers */}
+          {!isOwnProfile &&
+            profile.viewer?.knownFollowers &&
+            profile.viewer.knownFollowers.count > 0 && (
+              <div className="mt-3 flex items-center gap-2 text-sm">
+                <div className="flex -space-x-2">
+                  {profile.viewer.knownFollowers.followers
+                    .slice(0, 3)
+                    .map((follower) => (
+                      <img
+                        key={follower.did}
+                        src={
+                          follower.avatar
+                            ? proxifyBskyImage(follower.avatar)
+                            : "/default-avatar.svg"
+                        }
+                        alt={follower.displayName || follower.handle}
+                        className="h-6 w-6 rounded-full border-2"
+                        style={{
+                          borderColor: "var(--asph-bg-secondary)",
+                          backgroundColor: "var(--asph-bg-tertiary)",
+                        }}
+                      />
+                    ))}
+                </div>
+                <span style={{ color: "var(--asph-text-secondary)" }}>
+                  Followed by{" "}
+                  {(() => {
+                    const followers = profile.viewer.knownFollowers.followers;
+                    const total = profile.viewer.knownFollowers.count;
+                    const names = followers
+                      .slice(0, 2)
+                      .map((f) => f.displayName || f.handle);
+
+                    if (total === 1) return names[0];
+                    if (total === 2) return `${names[0]} and ${names[1]}`;
+                    const othersCount = total - names.length;
+                    return `${names.join(", ")}, and ${othersCount} other${othersCount > 1 ? "s" : ""} you follow`;
+                  })()}
+                </span>
+              </div>
+            )}
         </div>
       </div>
 
@@ -1086,6 +1288,26 @@ export default function ProfilePage() {
           >
             Media
             {activeTab === "media" && (
+              <div
+                className="absolute bottom-0 left-0 right-0 h-0.5"
+                style={{ backgroundColor: "var(--asph-primary)" }}
+              />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("likes")}
+            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+              activeTab === "likes" ? "" : "hover:scale-105"
+            }`}
+            style={{
+              color:
+                activeTab === "likes"
+                  ? "var(--asph-primary)"
+                  : "var(--asph-text-secondary)",
+            }}
+          >
+            Likes
+            {activeTab === "likes" && (
               <div
                 className="absolute bottom-0 left-0 right-0 h-0.5"
                 style={{ backgroundColor: "var(--asph-primary)" }}
@@ -1325,6 +1547,46 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
+
+      {/* Pinned Post */}
+      {pinnedPostData && activeTab === "posts" && (
+        <div
+          className="relative border-b"
+          style={{ borderColor: "var(--asph-border-primary)" }}
+        >
+          <div
+            className="flex items-center gap-1.5 px-4 pt-2 text-xs font-medium"
+            style={{ color: "var(--asph-text-secondary)" }}
+          >
+            <Pin className="h-3 w-3" />
+            Pinned
+          </div>
+          <PostCard
+            post={pinnedPostData}
+            reason={undefined}
+            onClick={() => {
+              setSelectedPost(pinnedPostData);
+              setOpenThreadToReply(false);
+              setOpenThreadToQuote(false);
+              setShowThread(true);
+            }}
+            onReply={() => {
+              setSelectedPost(pinnedPostData);
+              setOpenThreadToReply(true);
+              setOpenThreadToQuote(false);
+              setShowThread(true);
+            }}
+            onQuote={() => {
+              setSelectedPost(pinnedPostData);
+              setOpenThreadToReply(false);
+              setOpenThreadToQuote(true);
+              setShowThread(true);
+            }}
+            onLike={() => handleLike(pinnedPostData)}
+            onRepost={() => handleRepost(pinnedPostData)}
+          />
+        </div>
+      )}
 
       {/* Posts - Virtualized */}
       <div ref={listContainerRef}>
