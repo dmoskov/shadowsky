@@ -6,6 +6,7 @@ import {
   ChevronDown,
   Cloud,
   Folder,
+  MessageCircle,
   Search,
   Settings,
   X,
@@ -38,6 +39,8 @@ import {
 import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
 import { ThreadModal } from "./ThreadModal";
+import { ProfileHoverCard } from "./ui/ProfileHoverCard";
+import { RichText } from "./ui/RichText";
 import { FeedSkeleton } from "./ui/SkeletonLoader";
 import { VideoPlayer } from "./VideoPlayer";
 
@@ -357,7 +360,20 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
   const renderEmbed = (embed: AppBskyFeedDefs.PostView["embed"]) => {
     if (!embed) return null;
 
-    if ((embed as { $type?: string }).$type === "app.bsky.embed.images#view") {
+    const embedType = (embed as { $type?: string }).$type;
+
+    // Record with media (quoted post + images/video)
+    if (embedType === "app.bsky.embed.recordWithMedia#view") {
+      const rwm = embed as any;
+      return (
+        <div className="mt-2 space-y-2">
+          {rwm.media && renderEmbed(rwm.media)}
+          {rwm.record && renderEmbed(rwm.record)}
+        </div>
+      );
+    }
+
+    if (embedType === "app.bsky.embed.images#view") {
       const imageEmbed = embed as {
         images: Array<{ thumb: string; fullsize: string; alt?: string }>;
       };
@@ -407,7 +423,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
       );
     }
 
-    if ((embed as { $type?: string }).$type === "app.bsky.embed.video#view") {
+    if (embedType === "app.bsky.embed.video#view") {
       const videoEmbed = embed as {
         playlist: string;
         thumbnail?: string;
@@ -431,6 +447,173 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
           />
         </div>
       );
+    }
+
+    // External link embed
+    if (embedType === "app.bsky.embed.external#view") {
+      const extEmbed = embed as {
+        external: {
+          uri: string;
+          title?: string;
+          description?: string;
+          thumb?: string;
+        };
+      };
+      const external = extEmbed.external;
+      if (!external) return null;
+      return (
+        <div
+          className="mt-2 cursor-pointer overflow-hidden rounded-lg border p-2.5 transition-colors hover:bg-blue-500 hover:bg-opacity-5"
+          style={{
+            borderColor: "var(--asph-border-primary)",
+            backgroundColor: "var(--asph-bg-primary)",
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (external.uri) {
+              window.open(external.uri, "_blank", "noopener,noreferrer");
+            }
+          }}
+        >
+          {external.thumb && (
+            <img
+              src={proxifyBskyImage(external.thumb)}
+              alt=""
+              className="mb-2 h-auto w-full rounded object-cover"
+              style={{
+                maxHeight: "200px",
+                backgroundColor: "var(--asph-bg-tertiary)",
+              }}
+            />
+          )}
+          <div
+            className="line-clamp-2 text-sm font-semibold"
+            style={{ color: "var(--asph-text-primary)" }}
+          >
+            {external.title}
+          </div>
+          <div
+            className="mt-1 line-clamp-2 text-xs"
+            style={{ color: "var(--asph-text-secondary)" }}
+          >
+            {external.description}
+          </div>
+        </div>
+      );
+    }
+
+    // Record embed (quoted posts, starter packs, feeds, lists, labelers)
+    if (embedType === "app.bsky.embed.record#view") {
+      const recordData = (embed as any).record;
+      if (!recordData) return null;
+
+      // Deleted or detached
+      if (
+        recordData.$type === "app.bsky.embed.record#viewNotFound" ||
+        recordData.$type === "app.bsky.embed.record#viewDetached"
+      ) {
+        return (
+          <div
+            className="mt-2 overflow-hidden rounded-lg border p-3 text-sm italic"
+            style={{
+              borderColor: "var(--asph-border-primary)",
+              color: "var(--asph-text-secondary)",
+            }}
+          >
+            Post not found or deleted
+          </div>
+        );
+      }
+
+      if (recordData.$type === "app.bsky.embed.record#viewBlocked") {
+        return (
+          <div
+            className="mt-2 overflow-hidden rounded-lg border p-3 text-sm italic"
+            style={{
+              borderColor: "var(--asph-border-primary)",
+              color: "var(--asph-text-secondary)",
+            }}
+          >
+            Post from blocked user
+          </div>
+        );
+      }
+
+      // Normal quoted post
+      if (recordData.$type === "app.bsky.embed.record#viewRecord") {
+        const quotedPost = recordData;
+        return (
+          <div
+            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+            style={{ borderColor: "var(--asph-border-primary)" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (quotedPost.uri && quotedPost.author?.handle) {
+                const quotedPostId = quotedPost.uri.split("/").pop();
+                navigate(`/thread/${quotedPost.author.handle}/${quotedPostId}`);
+              }
+            }}
+          >
+            <div
+              className="flex items-center gap-2 px-3 py-1.5 text-xs"
+              style={{
+                backgroundColor: "var(--asph-bg-tertiary)",
+                borderBottom: "1px solid var(--asph-border-primary)",
+                color: "var(--asph-text-secondary)",
+              }}
+            >
+              <MessageCircle size={12} />
+              <span>Quoted post</span>
+            </div>
+            <div className="p-3">
+              <div className="mb-2 flex items-center gap-2">
+                {quotedPost.author?.handle && (
+                  <ProfileHoverCard handle={quotedPost.author.handle}>
+                    <img
+                      src={
+                        proxifyBskyImage(quotedPost.author?.avatar) ||
+                        "/default-avatar.svg"
+                      }
+                      alt=""
+                      className="h-5 w-5 rounded-full"
+                    />
+                  </ProfileHoverCard>
+                )}
+                {quotedPost.author?.handle ? (
+                  <ProfileHoverCard handle={quotedPost.author.handle}>
+                    <span
+                      className="cursor-pointer text-sm font-semibold hover:underline"
+                      style={{ color: "var(--asph-text-primary)" }}
+                    >
+                      {quotedPost.author?.displayName ||
+                        quotedPost.author?.handle}
+                    </span>
+                  </ProfileHoverCard>
+                ) : (
+                  <span
+                    className="text-sm font-semibold"
+                    style={{ color: "var(--asph-text-primary)" }}
+                  >
+                    Unknown
+                  </span>
+                )}
+              </div>
+              <div
+                className="text-sm"
+                style={{ color: "var(--asph-text-primary)" }}
+              >
+                <RichText
+                  text={quotedPost.value?.text || ""}
+                  facets={quotedPost.value?.facets}
+                />
+              </div>
+              {quotedPost.embeds?.[0] && (
+                <div className="mt-2">{renderEmbed(quotedPost.embeds[0])}</div>
+              )}
+            </div>
+          </div>
+        );
+      }
     }
 
     return null;
