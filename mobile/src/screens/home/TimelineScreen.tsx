@@ -198,7 +198,7 @@ export function TimelineScreen() {
         windowSize={7}
         initialNumToRender={15}
         updateCellsBatchingPeriod={50}
-        getItemLayout={(data, index) => ({
+        getItemLayout={(_data, index) => ({
           length: ITEM_SIZE + GRID_SPACING,
           offset: (ITEM_SIZE + GRID_SPACING) * Math.floor(index / GRID_COLUMNS),
           index,

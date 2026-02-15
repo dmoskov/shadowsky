@@ -1,9 +1,8 @@
-import React, { forwardRef, useMemo, useRef, useCallback } from 'react';
+import React, { forwardRef, useMemo, useRef } from 'react';
 import {
   FlatList,
   ActivityIndicator,
   View,
-  Text,
   StyleSheet,
   RefreshControl,
   ListRenderItem,

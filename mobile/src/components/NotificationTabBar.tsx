@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, ScrollView} from 'react-native';
+import {Text, StyleSheet, TouchableOpacity, ScrollView} from 'react-native';
 import {colors} from '../constants/theme';
 
 export type NotificationFilter = 'all' | 'likes' | 'replies' | 'follows' | 'mentions' | 'quotes';

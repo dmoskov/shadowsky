@@ -29,7 +29,6 @@ import { LightboxOverlay } from "../src/components/LightboxOverlay";
 import {
   queryClient,
   setupAppStateListener,
-  cleanupAppStateListener,
   setupNetworkListener,
   PersistQueryClientProvider,
   asyncStoragePersister,

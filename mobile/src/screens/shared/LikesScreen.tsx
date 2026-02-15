@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
-import {AppBskyFeedDefs, AppBskyFeedGetLikes} from '@atproto/api';
+import {AppBskyFeedGetLikes} from '@atproto/api';
 import {usePostLikes} from '../../hooks/api/usePosts';
 import {Avatar} from '../../components/Avatar';
 import {FollowButton} from '../../components/FollowButton';

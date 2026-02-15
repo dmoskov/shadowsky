@@ -13,7 +13,6 @@ import {
   Alert,
   Animated,
 } from "react-native";
-import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import Swipeable from "react-native-gesture-handler/Swipeable";
 import { useAuth } from "../../contexts/AuthContext";
@@ -39,7 +38,6 @@ import { createLogger } from '../../utils/logger';
 const logger = createLogger('Messagesscreenx');
 export function MessagesScreen() {
   const { session } = useAuth();
-  const queryClient = useQueryClient();
   const [selectedConversation, setSelectedConversation] = useState<
     string | null
   >(null);
@@ -53,7 +51,6 @@ export function MessagesScreen() {
   // Image picker for media attachments
   const {
     pickFromLibrary,
-    pickFromCamera,
     selectedImages,
     removeImage,
     clearImages,
@@ -255,7 +252,7 @@ export function MessagesScreen() {
   };
 
   const renderRightActions = (
-    progress: Animated.AnimatedInterpolation<number>,
+    _progress: Animated.AnimatedInterpolation<number>,
     dragX: Animated.AnimatedInterpolation<number>,
     conversationId: string
   ) => {
@@ -356,10 +353,8 @@ export function MessagesScreen() {
     );
   };
 
-  const renderMessage = ({ item, index }: { item: DmMessage; index: number }) => {
+  const renderMessage = ({ item }: { item: DmMessage }) => {
     const isOwnMessage = item.sender.did === session?.did;
-    const messages = conversationData?.messages || [];
-    const isLastMessage = index === messages.length - 1;
 
     // Determine delivery status for own messages
     // If message exists on server, it's delivered

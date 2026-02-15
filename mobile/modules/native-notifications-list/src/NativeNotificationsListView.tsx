@@ -11,7 +11,7 @@ import NotificationBridge from '../../notification-bridge';
 import { useCompleteNotificationSerializer } from '../../../src/services/notification-bridge';
 import { UseInfiniteQueryResult, InfiniteData } from '@tanstack/react-query';
 import { AppBskyNotificationListNotifications } from '@atproto/api';
-import { ProcessedNotification, aggregateNotifications, filterNotificationsByType } from '../../../src/utils/notification-aggregator';
+import { aggregateNotifications, filterNotificationsByType } from '../../../src/utils/notification-aggregator';
 import { usePreferences } from '../../../src/contexts/PreferencesContext';
 import { filterMutedNotifications } from '../../../src/utils/content-filter';
 
@@ -56,7 +56,7 @@ export interface NativeNotificationsListWithDataProps extends Omit<NativeNotific
  * Low-level Native Notifications List component
  * Renders the native SwiftUI view with provided props
  */
-export const NativeNotificationsListView = forwardRef<any, NativeNotificationsListProps>((props, ref) => {
+export const NativeNotificationsListView = forwardRef<any, NativeNotificationsListProps>((props, _ref) => {
   const {
     isLoading = false,
     isRefreshing = false,

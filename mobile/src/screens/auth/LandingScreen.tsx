@@ -19,7 +19,7 @@ import { useTranslation } from "../../hooks/useTranslation";
 
 export function LandingScreen() {
   const insets = useSafeAreaInsets();
-  const { signIn, signInWithOAuth } = useAuth();
+  const { signIn } = useAuth();
   const { t } = useTranslation();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -38,20 +38,6 @@ export function LandingScreen() {
       Alert.alert(
         t("auth.sign_in_failed_title"),
         t("auth.sign_in_failed_invalid_credentials"),
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleOAuthLogin = async () => {
-    try {
-      setIsLoading(true);
-      await signInWithOAuth();
-    } catch {
-      Alert.alert(
-        t("auth.sign_in_failed_title"),
-        t("auth.sign_in_failed_oauth"),
       );
     } finally {
       setIsLoading(false);

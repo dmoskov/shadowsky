@@ -3,7 +3,6 @@ import {
   FlatList,
   ActivityIndicator,
   View,
-  Text,
   StyleSheet,
   RefreshControl,
 } from 'react-native';
@@ -138,7 +137,7 @@ export function NotificationsScreen() {
   };
 
   const handleMentionPress = useCallback(
-    (handle: string, did: string) => {
+    (handle: string, _did: string) => {
       navigateToProfile(handle);
     },
     [navigateToProfile],

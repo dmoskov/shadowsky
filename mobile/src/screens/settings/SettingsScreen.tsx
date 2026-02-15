@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Alert,
   Switch,
-  Platform,
 } from "react-native";
 import { AccountSwitcher } from "../../components";
 import { useAuth } from "../../contexts/AuthContext";
@@ -38,7 +37,7 @@ interface SettingsScreenProps {
 
 const APP_VERSION = "0.7.0";
 
-export function SettingsScreen({ section, onNavigateToBlockedAccounts, onNavigateToMutedAccounts }: SettingsScreenProps) {
+export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts: _onNavigateToBlockedAccounts, onNavigateToMutedAccounts: _onNavigateToMutedAccounts }: SettingsScreenProps) {
   const { signOut, accounts, account } = useAuth();
   const { preferences, updatePreference } = usePreferences();
   const { colors: themeColors } = useTheme();

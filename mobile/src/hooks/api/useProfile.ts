@@ -63,11 +63,11 @@ export function useFollowUser() {
 
   return useMutation({
     mutationFn: followUser,
-    onSuccess: (_, did) => {
+    onSuccess: () => {
       // Invalidate profile query to refetch updated follow status
       queryClient.invalidateQueries({queryKey: ['profile']});
     },
-    onError: async (error, did: string) => {
+    onError: async (_error, did: string) => {
       // Queue the mutation for retry
       logger.log('Failed to follow user, queueing for retry');
       await mutationQueue.enqueue({
@@ -90,7 +90,7 @@ export function useUnfollowUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['profile']});
     },
-    onError: async (error, followUri: string) => {
+    onError: async (_error, followUri: string) => {
       // Queue the mutation for retry
       logger.log('Failed to unfollow user, queueing for retry');
       await mutationQueue.enqueue({
@@ -220,7 +220,7 @@ export function useUpdateProfile() {
 
       return {previousProfiles};
     },
-    onError: (error, variables, context) => {
+    onError: (_error, _variables, context) => {
       // Rollback to previous profile data on error
       if (context?.previousProfiles) {
         context.previousProfiles.forEach(([queryKey, data]) => {

@@ -139,7 +139,7 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
   };
 
   const handlePostPress = (event: { nativeEvent: { uri: string; handle: string } }) => {
-    const { uri, handle } = event.nativeEvent;
+    const { uri } = event.nativeEvent;
     navigateToThreadFromUri(uri, navigateToThread);
   };
 

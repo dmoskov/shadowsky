@@ -21,18 +21,6 @@ export interface PushTokenRecord {
 }
 
 /**
- * Get stored push token from local storage
- */
-async function getStoredPushToken(): Promise<string | null> {
-  try {
-    return await AsyncStorage.getItem(PUSH_TOKEN_STORAGE_KEY);
-  } catch (error) {
-    logger.error('Error getting stored push token:', error);
-    return null;
-  }
-}
-
-/**
  * Save push token to local storage
  */
 async function savePushToken(token: string): Promise<void> {

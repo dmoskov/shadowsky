@@ -5,7 +5,7 @@
  * Similar to FeedBridge but handles hierarchical thread structures.
  */
 
-import { AppBskyFeedDefs, AppBskyFeedGetPostThread } from '@atproto/api';
+import { AppBskyFeedDefs } from '@atproto/api';
 import { requireNativeModule } from 'expo-modules-core';
 
 const ThreadBridgeModule = requireNativeModule('ThreadBridge');
