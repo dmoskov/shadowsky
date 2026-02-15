@@ -19,8 +19,10 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAuthorFeed, useActorLikes } from "../../hooks/api/useFeed";
 import { useProfile } from "../../hooks/api/useProfile";
 import { useActorStarterPacks } from "../../hooks/api/useStarterPacks";
+import { useBookmarks, useBookmarkCount } from "../../hooks/api/useBookmarks";
 import { colors } from "../../constants/theme";
 import { AuthorFeedFilter } from "../../services/atproto/feeds";
+import { triggerHaptic } from "../../utils/haptics";
 
 interface MyProfileScreenProps {
   onNavigateToPost?: (uri: string) => void;
@@ -85,6 +87,8 @@ export function MyProfileScreen({
 
   // Fetch starter packs for this user
   const { data: starterPacksData } = useActorStarterPacks(account?.handle || "");
+  const { isBookmarked, toggleBookmark } = useBookmarks();
+  const bookmarkCount = useBookmarkCount();
 
   // Enable scroll-to-top on tab press
   useScrollToTop(scrollRef);
@@ -132,11 +136,18 @@ export function MyProfileScreen({
     scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
+  const handleBookmark = (post: AppBskyFeedDefs.FeedViewPost) => {
+    triggerHaptic("light");
+    toggleBookmark(post.post);
+  };
+
   const renderPost = ({ item }: { item: AppBskyFeedDefs.FeedViewPost }) => (
     <PostCard
       post={item}
       onPress={() => onNavigateToPost?.(item.post.uri)}
       onPressProfile={(handle) => onNavigateToProfile?.(handle)}
+      onBookmark={() => handleBookmark(item)}
+      isBookmarked={isBookmarked(item.post.uri)}
       onMentionPress={handleMentionPress}
       onHashtagPress={handleHashtagPress}
     />
@@ -225,10 +236,22 @@ export function MyProfileScreen({
           </View>
         )}
 
-        {/* Edit Profile Button */}
-        <TouchableOpacity style={styles.editProfileButton} onPress={onNavigateToEditProfile}>
-          <Text style={styles.editProfileButtonText}>Edit Profile</Text>
-        </TouchableOpacity>
+        {/* Action Buttons */}
+        <View style={styles.actionButtons}>
+          <TouchableOpacity style={styles.editProfileButton} onPress={onNavigateToEditProfile}>
+            <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.bookmarksButton}
+            onPress={() => router.push("/(app)/(tabs)/(profile)/bookmarks")}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.bookmarksButtonText}>
+              Bookmarks{bookmarkCount > 0 ? ` (${bookmarkCount})` : ''}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Sign Out Button */}
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
@@ -382,15 +405,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
   },
-  editProfileButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 24,
-    alignItems: "center",
+  actionButtons: {
+    flexDirection: "row",
+    gap: 12,
     marginBottom: 12,
   },
+  editProfileButton: {
+    flex: 1,
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    alignItems: "center",
+  },
   editProfileButtonText: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  bookmarksButton: {
+    flex: 1,
+    backgroundColor: colors.surfaceElevated,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  bookmarksButtonText: {
     color: colors.text,
     fontSize: 16,
     fontWeight: "600",

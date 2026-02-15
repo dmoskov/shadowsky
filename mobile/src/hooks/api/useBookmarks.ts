@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AppBskyFeedDefs } from '@atproto/api';
 import {
   getBookmarks,
+  getBookmarkCount,
   toggleBookmark as toggleBookmarkService,
   BookmarkPost,
 } from '../../services/atproto/bookmarks';
@@ -67,8 +68,9 @@ export function useBookmarks() {
       }
     },
     onSettled: () => {
-      // Refetch to ensure consistency with AsyncStorage
+      // Refetch to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['bookmarks'] });
+      queryClient.invalidateQueries({ queryKey: ['bookmarkCount'] });
     },
   });
 
@@ -91,6 +93,19 @@ export function useBookmarks() {
     toggleBookmark,
     isToggling: toggleBookmarkMutation.isPending,
   };
+}
+
+/**
+ * Hook to get the bookmark count (lightweight, for badges)
+ */
+export function useBookmarkCount() {
+  const { data: count = 0 } = useQuery({
+    queryKey: ['bookmarkCount'],
+    queryFn: getBookmarkCount,
+    staleTime: 30000,
+  });
+
+  return count;
 }
 
 export type { BookmarkPost };

@@ -23,51 +23,145 @@ export interface BookmarkPost extends Bookmark {
 }
 
 /**
- * Get all bookmarks from local storage
+ * Bookmark view from the official AT Protocol API
+ */
+interface BookmarkView {
+  subject: {
+    uri: string;
+    cid: string;
+  };
+  createdAt?: string;
+  item?: AppBskyFeedDefs.PostView & { $type?: string };
+}
+
+/**
+ * Check if the official bookmarks API is available
+ */
+async function hasOfficialApi(): Promise<boolean> {
+  try {
+    const client = getAtProtoClient();
+    if (!client.isAuthenticated()) return false;
+    const agent = client.getAgent();
+    // Check if the bookmark namespace exists on the agent
+    return !!(agent.app?.bsky?.bookmark?.getBookmarks);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get all bookmarks - tries official API first, falls back to AsyncStorage
  */
 export async function getBookmarks(): Promise<BookmarkPost[]> {
   try {
-    const stored = await AsyncStorage.getItem(BOOKMARKS_STORAGE_KEY);
-    if (!stored) {
-      return [];
+    const useOfficial = await hasOfficialApi();
+
+    if (useOfficial) {
+      return await getBookmarksFromApi();
     }
 
-    const bookmarks: Bookmark[] = JSON.parse(stored);
-    const client = getAtProtoClient();
-    const agent = client.getAgent();
+    return await getBookmarksFromStorage();
+  } catch (error) {
+    logger.error('Failed to get bookmarks from API, falling back to storage:', error);
+    return await getBookmarksFromStorage();
+  }
+}
 
-    // Fetch post data for each bookmark
-    const bookmarkPosts: BookmarkPost[] = [];
-    for (const bookmark of bookmarks) {
-      try {
-        const response = await rateLimited(
-          async () => agent.getPostThread({
-            uri: bookmark.postUri,
-          }),
-          ATProtoEndpointType.FEED
-        );
+/**
+ * Get bookmarks from the official AT Protocol API
+ */
+async function getBookmarksFromApi(): Promise<BookmarkPost[]> {
+  const client = getAtProtoClient();
+  const agent = client.getAgent();
+  const allBookmarks: BookmarkPost[] = [];
+  let cursor: string | undefined;
 
-        if (response.data.thread && 'post' in response.data.thread) {
-          bookmarkPosts.push({
-            ...bookmark,
-            post: response.data.thread.post as AppBskyFeedDefs.PostView,
+  do {
+    const response = await rateLimited(
+      async () => agent.app.bsky.bookmark.getBookmarks({
+        limit: 100,
+        cursor,
+      }),
+      ATProtoEndpointType.FEED
+    );
+
+    if (response.data.bookmarks.length > 0) {
+      for (const bookmarkView of response.data.bookmarks as BookmarkView[]) {
+        const uri = bookmarkView.subject.uri;
+        const createdAt = bookmarkView.createdAt || new Date().toISOString();
+
+        if (
+          bookmarkView.item &&
+          bookmarkView.item.$type === 'app.bsky.feed.defs#postView'
+        ) {
+          allBookmarks.push({
+            postUri: uri,
+            createdAt,
+            post: bookmarkView.item as AppBskyFeedDefs.PostView,
           });
         } else {
-          // Include bookmark even if post couldn't be fetched
-          bookmarkPosts.push(bookmark);
+          // Include bookmark even without full post data
+          allBookmarks.push({
+            postUri: uri,
+            createdAt,
+          });
         }
-      } catch (error) {
-        logger.error('Failed to fetch bookmarked post:', error);
-        // Include bookmark even if post fetch failed
-        bookmarkPosts.push(bookmark);
       }
+      cursor = response.data.cursor;
+    } else {
+      cursor = undefined;
     }
+  } while (cursor);
 
-    return bookmarkPosts;
-  } catch (error) {
-    logger.error('Failed to get bookmarks:', error);
+  // Sync to local storage for offline access
+  const localBookmarks = allBookmarks.map(b => ({
+    postUri: b.postUri,
+    createdAt: b.createdAt,
+  }));
+  await AsyncStorage.setItem(BOOKMARKS_STORAGE_KEY, JSON.stringify(localBookmarks));
+
+  return allBookmarks;
+}
+
+/**
+ * Get bookmarks from local AsyncStorage (fallback)
+ */
+async function getBookmarksFromStorage(): Promise<BookmarkPost[]> {
+  const stored = await AsyncStorage.getItem(BOOKMARKS_STORAGE_KEY);
+  if (!stored) {
     return [];
   }
+
+  const bookmarks: Bookmark[] = JSON.parse(stored);
+  const client = getAtProtoClient();
+  const agent = client.getAgent();
+
+  // Fetch post data for each bookmark
+  const bookmarkPosts: BookmarkPost[] = [];
+  for (const bookmark of bookmarks) {
+    try {
+      const response = await rateLimited(
+        async () => agent.getPostThread({
+          uri: bookmark.postUri,
+        }),
+        ATProtoEndpointType.FEED
+      );
+
+      if (response.data.thread && 'post' in response.data.thread) {
+        bookmarkPosts.push({
+          ...bookmark,
+          post: response.data.thread.post as AppBskyFeedDefs.PostView,
+        });
+      } else {
+        bookmarkPosts.push(bookmark);
+      }
+    } catch (error) {
+      logger.error('Failed to fetch bookmarked post:', error);
+      bookmarkPosts.push(bookmark);
+    }
+  }
+
+  return bookmarkPosts;
 }
 
 /**
@@ -93,15 +187,28 @@ export async function isBookmarked(postUri: string): Promise<boolean> {
  */
 export async function addBookmark(post: AppBskyFeedDefs.PostView): Promise<void> {
   try {
+    // Try official API first
+    const useOfficial = await hasOfficialApi();
+    if (useOfficial) {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
+      await rateLimited(
+        async () => agent.app.bsky.bookmark.createBookmark({
+          uri: post.uri,
+          cid: post.cid,
+        }),
+        ATProtoEndpointType.RECORD
+      );
+    }
+
+    // Always update local storage for offline access and fast lookups
     const stored = await AsyncStorage.getItem(BOOKMARKS_STORAGE_KEY);
     const bookmarks: Bookmark[] = stored ? JSON.parse(stored) : [];
 
-    // Check if already bookmarked
     if (bookmarks.some((b) => b.postUri === post.uri)) {
       return;
     }
 
-    // Add new bookmark
     bookmarks.unshift({
       postUri: post.uri,
       createdAt: new Date().toISOString(),
@@ -119,15 +226,26 @@ export async function addBookmark(post: AppBskyFeedDefs.PostView): Promise<void>
  */
 export async function removeBookmark(postUri: string): Promise<void> {
   try {
-    const stored = await AsyncStorage.getItem(BOOKMARKS_STORAGE_KEY);
-    if (!stored) {
-      return;
+    // Try official API first
+    const useOfficial = await hasOfficialApi();
+    if (useOfficial) {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
+      await rateLimited(
+        async () => agent.app.bsky.bookmark.deleteBookmark({
+          uri: postUri,
+        }),
+        ATProtoEndpointType.RECORD
+      );
     }
 
-    const bookmarks: Bookmark[] = JSON.parse(stored);
-    const filtered = bookmarks.filter((b) => b.postUri !== postUri);
-
-    await AsyncStorage.setItem(BOOKMARKS_STORAGE_KEY, JSON.stringify(filtered));
+    // Always update local storage
+    const stored = await AsyncStorage.getItem(BOOKMARKS_STORAGE_KEY);
+    if (stored) {
+      const bookmarks: Bookmark[] = JSON.parse(stored);
+      const filtered = bookmarks.filter((b) => b.postUri !== postUri);
+      await AsyncStorage.setItem(BOOKMARKS_STORAGE_KEY, JSON.stringify(filtered));
+    }
 
     // Also remove from all collections
     await bookmarkCollectionStorage.removeBookmarkFromAllCollections(postUri);
@@ -161,6 +279,23 @@ export async function clearAllBookmarks(): Promise<void> {
   } catch (error) {
     logger.error('Failed to clear bookmarks:', error);
     throw error;
+  }
+}
+
+/**
+ * Get the count of bookmarks from local storage
+ */
+export async function getBookmarkCount(): Promise<number> {
+  try {
+    const stored = await AsyncStorage.getItem(BOOKMARKS_STORAGE_KEY);
+    if (!stored) {
+      return 0;
+    }
+    const bookmarks: Bookmark[] = JSON.parse(stored);
+    return bookmarks.length;
+  } catch (error) {
+    logger.error('Failed to get bookmark count:', error);
+    return 0;
   }
 }
 

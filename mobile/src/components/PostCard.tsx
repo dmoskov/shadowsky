@@ -14,6 +14,7 @@ import {triggerHaptic} from '../utils/haptics';
 import {useModeration} from '../contexts/ModerationContext';
 import {ContentLabelWarning} from './ContentLabelWarning';
 import {ReportModal} from './ReportModal';
+import {SaveToCollectionModal} from './SaveToCollectionModal';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -65,6 +66,7 @@ function PostCardComponent({
   const author = postView.author;
   const [showMenu, setShowMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showSaveToCollection, setShowSaveToCollection] = useState(false);
   const blockMutation = useBlockUser();
   const muteMutation = useMuteUser();
   const {
@@ -182,6 +184,15 @@ function PostCardComponent({
     triggerHaptic('light');
     onBookmark?.();
   }, [onBookmark]);
+
+  const handleBookmarkLongPress = useCallback(() => {
+    triggerHaptic('medium');
+    // First ensure the post is bookmarked
+    if (!isBookmarked && onBookmark) {
+      onBookmark();
+    }
+    setShowSaveToCollection(true);
+  }, [isBookmarked, onBookmark]);
 
   // Memoized computed values
   const timestamp = useMemo(
@@ -343,11 +354,13 @@ function PostCardComponent({
           <TouchableOpacity
             style={styles.engagementButton}
             onPress={handleBookmarkPress}
+            onLongPress={handleBookmarkLongPress}
+            delayLongPress={400}
             activeOpacity={0.7}
             disabled={!isOnline}
             accessibilityRole="button"
             accessibilityLabel={isBookmarked ? 'Remove bookmark' : 'Bookmark post'}
-            accessibilityHint={`Double tap to ${isBookmarked ? 'remove' : 'add'} bookmark`}
+            accessibilityHint={`Double tap to ${isBookmarked ? 'remove' : 'add'} bookmark. Long press to save to collection.`}
             accessibilityState={{disabled: !isOnline, selected: isBookmarked}}>
             <BookmarkIcon size={18} color={isOnline ? (isBookmarked ? colors.primary : colors.textSecondary) : colors.borderLight} filled={isBookmarked} />
           </TouchableOpacity>
@@ -388,6 +401,7 @@ function PostCardComponent({
     postView.likeCount,
     onPressLikeCount,
     handleBookmarkPress,
+    handleBookmarkLongPress,
     isBookmarked,
     handleShare,
   ]);
@@ -475,6 +489,13 @@ function PostCardComponent({
         subjectText={postText}
         onBlock={handleBlockAfterReport}
         onMute={handleMuteAfterReport}
+      />
+
+      {/* Save to Collection Modal */}
+      <SaveToCollectionModal
+        visible={showSaveToCollection}
+        postUri={postView.uri}
+        onClose={() => setShowSaveToCollection(false)}
       />
     </TouchableOpacity>
   );
