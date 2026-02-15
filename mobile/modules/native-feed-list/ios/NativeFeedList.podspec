@@ -13,6 +13,7 @@ Pod::Spec.new do |s|
   s.dependency 'ExpoModulesCore'
   s.dependency 'FeedBridge'
   s.dependency 'ExpoSwiftUIFeed'
+  s.dependency 'RichTextView'
 
   s.source_files = '**/*.{h,m,mm,swift,cpp}'
 end
