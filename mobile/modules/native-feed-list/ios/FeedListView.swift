@@ -9,6 +9,7 @@
 import SwiftUI
 import ExpoModulesCore
 import FeedBridge
+import ExpoSwiftUIFeed
 
 // MARK: - FeedListView
 
@@ -39,6 +40,9 @@ struct FeedListView: View {
     let onMentionPress: ((String, String) -> Void)? // (handle, did)
     let onHashtagPress: ((String) -> Void)? // tag
     let onShare: ((String) -> Void)? // uri
+    let onImagePress: (([ImageEmbedData], Int) -> Void)?
+    let onLinkPress: ((String) -> Void)?
+    let onQuotePress: ((String, String) -> Void)?
 
     // MARK: - Body
 
@@ -125,7 +129,10 @@ struct FeedListView: View {
                             onShare?(feedPost.post.uri)
                         },
                         onMute: nil,
-                        onBlock: nil
+                        onBlock: nil,
+                        onImagePress: onImagePress,
+                        onLinkPress: onLinkPress,
+                        onQuotePress: onQuotePress
                     )
 
                     // Load more trigger - fire when near end of list
@@ -219,7 +226,8 @@ struct FeedListView: View {
                 record: PostRecord(
                     text: post.record.text,
                     facets: convertFacets(post.record.facets),
-                    createdAt: post.record.createdAt
+                    createdAt: post.record.createdAt,
+                    embed: post.embed.flatMap { PostEmbedData.from(serializedEmbed: $0) }
                 ),
                 indexedAt: post.indexedAt,
                 likeCount: post.likeCount ?? 0,

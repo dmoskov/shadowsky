@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ExpoSwiftUIFeed
 
 struct PostCardView: View {
     let post: FeedViewPost
@@ -25,6 +26,9 @@ struct PostCardView: View {
     let onShare: (() -> Void)?
     let onMute: (() -> Void)?
     let onBlock: (() -> Void)?
+    let onImagePress: (([ImageEmbedData], Int) -> Void)?
+    let onLinkPress: ((String) -> Void)?
+    let onQuotePress: ((String, String) -> Void)?
 
     var body: some View {
         Button(action: { onPress?() }) {
@@ -80,6 +84,17 @@ struct PostCardView: View {
                         .foregroundColor(.primary)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
+                }
+
+                // Embed (images, video, links, quotes)
+                if let embed = post.post.record.embed {
+                    PostEmbed(
+                        embed: embed,
+                        onImagePress: onImagePress,
+                        onLinkPress: onLinkPress,
+                        onQuotePress: onQuotePress,
+                        blurImages: false
+                    )
                 }
 
                 // Action bar

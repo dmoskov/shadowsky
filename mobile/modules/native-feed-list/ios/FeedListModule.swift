@@ -8,6 +8,7 @@
 
 import ExpoModulesCore
 import SwiftUI
+import ExpoSwiftUIFeed
 
 public class FeedListModule: Module {
     public func definition() -> ModuleDefinition {
@@ -39,7 +40,8 @@ public class FeedListModule: Module {
             // Events
             Events("onRefresh", "onLoadMore", "onPostPress", "onProfilePress",
                    "onLike", "onRepost", "onReply", "onBookmark",
-                   "onMentionPress", "onHashtagPress", "onShare")
+                   "onMentionPress", "onHashtagPress", "onShare",
+                   "onImagePress", "onLinkPress", "onQuotePress")
         }
     }
 }
@@ -81,6 +83,9 @@ class FeedListViewWrapper: ExpoView {
     private let onMentionPress = EventDispatcher()
     private let onHashtagPress = EventDispatcher()
     private let onShare = EventDispatcher()
+    private let onImagePress = EventDispatcher()
+    private let onLinkPress = EventDispatcher()
+    private let onQuotePress = EventDispatcher()
 
     // SwiftUI hosting controller
     private var hostingController: UIHostingController<FeedListView>?
@@ -178,6 +183,32 @@ class FeedListViewWrapper: ExpoView {
             onShare: { [weak self] uri in
                 self?.onShare([
                     "uri": uri
+                ])
+            },
+            onImagePress: { [weak self] images, index in
+                // Convert images to serializable format
+                let imageData = images.map { image in
+                    [
+                        "thumb": image.thumb,
+                        "fullsize": image.fullsize,
+                        "alt": image.alt ?? "",
+                        "aspectRatio": image.aspectRatio ?? 1.0
+                    ] as [String: Any]
+                }
+                self?.onImagePress([
+                    "images": imageData,
+                    "index": index
+                ])
+            },
+            onLinkPress: { [weak self] uri in
+                self?.onLinkPress([
+                    "uri": uri
+                ])
+            },
+            onQuotePress: { [weak self] uri, handle in
+                self?.onQuotePress([
+                    "uri": uri,
+                    "handle": handle
                 ])
             }
         )
