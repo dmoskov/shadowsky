@@ -1721,3 +1721,371 @@ html[data-reduce-motion="true"] .animate-skeleton-reveal {
   opacity: 1;
   transform: none;
 }
+
+/* ============================================
+ * iOS-STYLE INTERACTION POLISH
+ * ============================================
+ * Enhanced animations for native-feeling interactions
+ * on mobile and desktop. All animations respect
+ * prefers-reduced-motion preferences.
+ * ============================================ */
+
+/* --- Like heart animation (iOS-style pop + scale) --- */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-like-pop {
+    animation: like-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes like-pop {
+    0% {
+      transform: scale(1);
+    }
+    15% {
+      transform: scale(0.8);
+    }
+    40% {
+      transform: scale(1.25);
+    }
+    70% {
+      transform: scale(0.95);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* Like heart particle burst effect */
+  .like-burst {
+    position: relative;
+  }
+
+  .like-burst::before,
+  .like-burst::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .like-burst.active::before {
+    animation: like-particle-1 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    background-color: currentColor;
+  }
+
+  .like-burst.active::after {
+    animation: like-particle-2 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    background-color: currentColor;
+  }
+
+  @keyframes like-particle-1 {
+    0% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(0);
+    }
+    50% {
+      opacity: 0.8;
+      transform: translate(calc(-50% - 8px), calc(-50% - 10px)) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(calc(-50% - 12px), calc(-50% - 16px)) scale(0);
+    }
+  }
+
+  @keyframes like-particle-2 {
+    0% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(0);
+    }
+    50% {
+      opacity: 0.8;
+      transform: translate(calc(-50% + 8px), calc(-50% - 8px)) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(calc(-50% + 14px), calc(-50% - 14px)) scale(0);
+    }
+  }
+
+  /* --- Repost spin animation --- */
+  .animate-repost-spin {
+    animation: repost-spin 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes repost-spin {
+    0% {
+      transform: scale(1) rotate(0deg);
+    }
+    30% {
+      transform: scale(0.85) rotate(-30deg);
+    }
+    60% {
+      transform: scale(1.15) rotate(15deg);
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+    }
+  }
+}
+
+/* --- Dropdown menu iOS-style entrance --- */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-dropdown-in {
+    animation: dropdown-in 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1) forwards;
+    transform-origin: top right;
+  }
+
+  .animate-dropdown-in-left {
+    animation: dropdown-in 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1) forwards;
+    transform-origin: top left;
+  }
+
+  @keyframes dropdown-in {
+    from {
+      opacity: 0;
+      transform: scale(0.92) translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .animate-dropdown-out {
+    animation: dropdown-out 0.15s cubic-bezier(0.4, 0, 1, 1) forwards;
+    transform-origin: top right;
+  }
+
+  @keyframes dropdown-out {
+    from {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.95) translateY(-2px);
+    }
+  }
+}
+
+/* --- iOS-style tab bar bounce --- */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-tab-bounce {
+    animation: tab-bounce 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes tab-bounce {
+    0% {
+      transform: scale(1);
+    }
+    40% {
+      transform: scale(0.85);
+    }
+    70% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1.05);
+    }
+  }
+
+  .animate-tab-icon-bounce {
+    animation: tab-icon-bounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes tab-icon-bounce {
+    0% {
+      transform: translateY(0);
+    }
+    30% {
+      transform: translateY(-3px);
+    }
+    50% {
+      transform: translateY(1px);
+    }
+    70% {
+      transform: translateY(-1px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* --- Command palette iOS-style entrance --- */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-command-palette-in {
+    animation: command-palette-in 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.05)
+      forwards;
+  }
+
+  @keyframes command-palette-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96) translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .animate-command-palette-backdrop-in {
+    animation: command-palette-backdrop 0.2s ease-out forwards;
+  }
+
+  @keyframes command-palette-backdrop {
+    from {
+      opacity: 0;
+      backdrop-filter: blur(0px);
+    }
+    to {
+      opacity: 1;
+      backdrop-filter: blur(8px);
+    }
+  }
+}
+
+/* --- Notification badge pulse animation --- */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-badge-pulse {
+    animation: badge-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes badge-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 0 currentColor;
+    }
+    50% {
+      transform: scale(1.15);
+      box-shadow: 0 0 0 3px transparent;
+    }
+  }
+
+  /* Badge entrance animation */
+  .animate-badge-in {
+    animation: badge-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes badge-in {
+    from {
+      opacity: 0;
+      transform: scale(0);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+/* --- Toast iOS-style spring entrance --- */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-toast-spring-in {
+    animation: toast-spring-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes toast-spring-in {
+    from {
+      opacity: 0;
+      transform: translateX(100%) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  .animate-toast-spring-out {
+    animation: toast-spring-out 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+
+  @keyframes toast-spring-out {
+    from {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(100%) scale(0.95);
+    }
+  }
+}
+
+/* --- iOS-style press feedback for touch targets --- */
+@media (prefers-reduced-motion: no-preference) {
+  .ios-press {
+    transition:
+      transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1),
+      opacity 0.1s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ios-press:active {
+    transform: scale(0.96);
+    opacity: 0.85;
+  }
+
+  /* Lighter press for smaller elements */
+  .ios-press-light {
+    transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ios-press-light:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Reduced motion fallbacks for new animations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-like-pop,
+  .animate-repost-spin,
+  .animate-dropdown-in,
+  .animate-dropdown-in-left,
+  .animate-dropdown-out,
+  .animate-tab-bounce,
+  .animate-tab-icon-bounce,
+  .animate-command-palette-in,
+  .animate-command-palette-backdrop-in,
+  .animate-badge-pulse,
+  .animate-badge-in,
+  .animate-toast-spring-in,
+  .animate-toast-spring-out {
+    animation: none !important;
+  }
+
+  .ios-press:active,
+  .ios-press-light:active {
+    transform: none !important;
+  }
+}
+
+/* User-toggled reduced motion for new animations */
+html[data-reduce-motion="true"] .animate-like-pop,
+html[data-reduce-motion="true"] .animate-repost-spin,
+html[data-reduce-motion="true"] .animate-dropdown-in,
+html[data-reduce-motion="true"] .animate-dropdown-in-left,
+html[data-reduce-motion="true"] .animate-dropdown-out,
+html[data-reduce-motion="true"] .animate-tab-bounce,
+html[data-reduce-motion="true"] .animate-tab-icon-bounce,
+html[data-reduce-motion="true"] .animate-command-palette-in,
+html[data-reduce-motion="true"] .animate-command-palette-backdrop-in,
+html[data-reduce-motion="true"] .animate-badge-pulse,
+html[data-reduce-motion="true"] .animate-badge-in,
+html[data-reduce-motion="true"] .animate-toast-spring-in,
+html[data-reduce-motion="true"] .animate-toast-spring-out {
+  animation: none !important;
+}
+
+html[data-reduce-motion="true"] .ios-press:active,
+html[data-reduce-motion="true"] .ios-press-light:active {
+  transform: none !important;
+}

@@ -43,7 +43,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   return (
     <button
       onClick={handleClick}
-      className={`fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg lg:hidden ${prefersReducedMotion ? "" : "transition-all duration-300"} ${className}`}
+      className={`ios-press fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg lg:hidden ${prefersReducedMotion ? "" : "transition-all duration-300"} ${className}`}
       style={{
         backgroundColor: "var(--asph-primary)",
         color: "white",
@@ -52,6 +52,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
         pointerEvents: isVisible ? "auto" : "none",
         boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
         marginBottom: "env(safe-area-inset-bottom)",
+        transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
       }}
       aria-label="Compose new post"
     >

@@ -1,5 +1,5 @@
 import { Bell, Home, Mail, Search, User } from "lucide-react";
-import React, { useRef } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useUnreadNotificationCount } from "../hooks/useNotifications";
@@ -11,6 +11,7 @@ export const MobileTabBar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const lastTapRef = useRef<number>(0);
+  const [bouncingTab, setBouncingTab] = useState<string | null>(null);
   const { getRoutePrefetchHandlers, getProfilePrefetchHandlers } =
     useRoutePrefetch();
 
@@ -27,8 +28,14 @@ export const MobileTabBar: React.FC = () => {
     },
   ];
 
+  const triggerBounce = useCallback((path: string) => {
+    setBouncingTab(path);
+    setTimeout(() => setBouncingTab(null), 400);
+  }, []);
+
   const handleHomeClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    triggerBounce("/");
 
     const now = Date.now();
     const timeSinceLastTap = now - lastTapRef.current;
@@ -79,6 +86,7 @@ export const MobileTabBar: React.FC = () => {
       <div className="flex h-16 items-center justify-around">
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.path;
+          const isBouncing = bouncingTab === tab.path;
 
           if (tab.path === "/") {
             // Special handling for Home tab
@@ -97,7 +105,9 @@ export const MobileTabBar: React.FC = () => {
                     : "var(--asph-text-secondary)",
                 }}
               >
-                <div className="relative">
+                <div
+                  className={`relative ${isBouncing ? "animate-tab-icon-bounce" : ""}`}
+                >
                   {React.createElement(tab.icon, {
                     size: 20,
                     "aria-hidden": true,
@@ -120,6 +130,7 @@ export const MobileTabBar: React.FC = () => {
               key={tab.path}
               to={tab.path}
               aria-label={tab.label}
+              onClick={() => triggerBounce(tab.path)}
               className={({ isActive }) =>
                 `touch-target relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 transition-all ${
                   isActive ? "scale-105" : "opacity-70 hover:opacity-100"
@@ -132,7 +143,9 @@ export const MobileTabBar: React.FC = () => {
               })}
               {...prefetchHandlers}
             >
-              <div className="relative">
+              <div
+                className={`relative ${isBouncing ? "animate-tab-icon-bounce" : ""}`}
+              >
                 {React.createElement(tab.icon, {
                   size: 20,
                   "aria-hidden": true,
@@ -142,7 +155,7 @@ export const MobileTabBar: React.FC = () => {
                   unreadCount !== null &&
                   unreadCount > 0 && (
                     <span
-                      className="absolute -right-1 -top-1 h-2 w-2 rounded-full"
+                      className="animate-badge-in animate-badge-pulse absolute -right-1 -top-1 h-2 w-2 rounded-full"
                       style={{
                         backgroundColor: "var(--asph-accent)",
                       }}

@@ -286,7 +286,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20">
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        className="animate-command-palette-backdrop-in fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -296,7 +296,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"
-        className="relative z-10 w-full max-w-2xl rounded-lg shadow-2xl"
+        className="animate-command-palette-in relative z-10 w-full max-w-2xl rounded-lg shadow-2xl"
         style={{
           backgroundColor: "var(--asph-bg-primary)",
           border: "1px solid var(--asph-border-primary)",
@@ -364,7 +364,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                       <div
                         key={cmd.id}
                         data-command-item
-                        className={`flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors ${
+                        className={`ios-press-light flex cursor-pointer items-center gap-3 px-4 py-2.5 transition-colors ${
                           isSelected ? "bg-opacity-10" : ""
                         }`}
                         style={{

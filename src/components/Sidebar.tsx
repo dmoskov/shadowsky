@@ -111,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 to={item.path}
                 onClick={() => onClose()}
                 className={({ isActive }) =>
-                  `group relative flex min-h-[44px] items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 ${
+                  `group relative flex min-h-[44px] items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} ios-press-light py-2.5 transition-all duration-200 ${
                     isActive
                       ? "scale-[1.02] text-white shadow-md"
                       : "hover:scale-[1.02] hover:bg-blue-50"
@@ -135,7 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     unreadCount !== undefined &&
                     unreadCount > 0 && (
                       <span
-                        className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full"
+                        className="animate-badge-in animate-badge-pulse absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full"
                         style={{
                           backgroundColor: "var(--asph-accent)",
                         }}
