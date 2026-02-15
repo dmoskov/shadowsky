@@ -192,53 +192,123 @@ struct RichTextView: View {
 // MARK: - Wrapping Rich Text View
 
 /// A view that renders rich text segments with tap handling
-/// Uses Text concatenation for layout with gesture detection overlay
-private struct WrappingRichText: View {
+/// Uses UITextView for proper link/tap detection
+private struct WrappingRichText: UIViewRepresentable {
     let segments: [RichTextSegment]
     let primaryColor: Color
     let onMentionTap: (String, String) -> Void
     let onHashtagTap: (String) -> Void
     let onLinkTap: (String) -> Void
 
-    var body: some View {
-        // Concatenate all segments into styled text
-        let styledText = segments.reduce(Text("")) { result, segment in
-            result + segmentText(for: segment)
-        }
-
-        // TODO: Tap handling for individual facets
-        // SwiftUI's Text view with concatenation doesn't support per-segment tap gestures.
-        // Current implementation styles the text correctly (colors, underlines) but taps
-        // are not functional. To enable tap handling, consider these approaches:
-        // 1. Use UIViewRepresentable with UITextView and NSAttributedString with link attributes
-        // 2. Use a custom Layout that positions individual Text views wrapped in Buttons
-        // 3. Wait for SwiftUI to add native support for tappable text segments
-        // The event handlers (onMentionTap, onHashtagTap, onLinkTap) are wired up in
-        // RichTextViewWrapper but cannot be called without proper tap detection.
-        styledText
-            .frame(maxWidth: .infinity, alignment: .leading)
+    func makeUIView(context: Context) -> UITextView {
+        let textView = UITextView()
+        textView.isEditable = false
+        textView.isScrollEnabled = false
+        textView.backgroundColor = .clear
+        textView.textContainerInset = .zero
+        textView.textContainer.lineFragmentPadding = 0
+        textView.delegate = context.coordinator
+        textView.linkTextAttributes = [
+            .foregroundColor: UIColor(primaryColor),
+            .underlineStyle: NSUnderlineStyle.single.rawValue
+        ]
+        return textView
     }
 
-    private func segmentText(for segment: RichTextSegment) -> Text {
-        switch segment.type {
-        case .plain:
-            return Text(segment.text)
+    func updateUIView(_ textView: UITextView, context: Context) {
+        // Build attributed string from segments
+        let attributedString = NSMutableAttributedString()
 
-        case .mention:
-            return Text(segment.text)
-                .foregroundColor(primaryColor)
-                .fontWeight(.medium)
+        // Default text attributes
+        let defaultFont = UIFont.preferredFont(forTextStyle: .subheadline)
+        let defaultColor = UIColor.label
 
-        case .link:
-            return Text(segment.text)
-                .foregroundColor(primaryColor)
-                .underline()
+        for segment in segments {
+            let text = segment.text
+            let attributes: [NSAttributedString.Key: Any]
 
-        case .hashtag:
-            return Text(segment.text)
-                .foregroundColor(primaryColor)
-                .fontWeight(.medium)
+            switch segment.type {
+            case .plain:
+                attributes = [
+                    .font: defaultFont,
+                    .foregroundColor: defaultColor
+                ]
+
+            case .mention(let handle, let did):
+                attributes = [
+                    .font: UIFont.preferredFont(forTextStyle: .subheadline).withWeight(.medium),
+                    .foregroundColor: UIColor(primaryColor),
+                    .link: "mention://\(did)|\(handle)"
+                ]
+
+            case .link(let uri):
+                attributes = [
+                    .font: defaultFont,
+                    .foregroundColor: UIColor(primaryColor),
+                    .underlineStyle: NSUnderlineStyle.single.rawValue,
+                    .link: uri
+                ]
+
+            case .hashtag(let tag):
+                attributes = [
+                    .font: UIFont.preferredFont(forTextStyle: .subheadline).withWeight(.medium),
+                    .foregroundColor: UIColor(primaryColor),
+                    .link: "hashtag://\(tag)"
+                ]
+            }
+
+            attributedString.append(NSAttributedString(string: text, attributes: attributes))
         }
+
+        textView.attributedText = attributedString
+        context.coordinator.onMentionTap = onMentionTap
+        context.coordinator.onHashtagTap = onHashtagTap
+        context.coordinator.onLinkTap = onLinkTap
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
+    class Coordinator: NSObject, UITextViewDelegate {
+        var onMentionTap: ((String, String) -> Void)?
+        var onHashtagTap: ((String) -> Void)?
+        var onLinkTap: ((String) -> Void)?
+
+        func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
+            let urlString = URL.absoluteString
+
+            if urlString.hasPrefix("mention://") {
+                // Parse mention URL: mention://did|handle
+                let components = urlString.replacingOccurrences(of: "mention://", with: "").split(separator: "|")
+                if components.count == 2 {
+                    let did = String(components[0])
+                    let handle = String(components[1])
+                    onMentionTap?(handle, did)
+                }
+                return false
+            } else if urlString.hasPrefix("hashtag://") {
+                // Parse hashtag URL: hashtag://tag
+                let tag = urlString.replacingOccurrences(of: "hashtag://", with: "")
+                onHashtagTap?(tag)
+                return false
+            } else {
+                // Regular link
+                onLinkTap?(urlString)
+                return false
+            }
+        }
+    }
+}
+
+// MARK: - UIFont Extension
+
+private extension UIFont {
+    func withWeight(_ weight: UIFont.Weight) -> UIFont {
+        let descriptor = fontDescriptor.addingAttributes([
+            .traits: [UIFontDescriptor.TraitKey.weight: weight]
+        ])
+        return UIFont(descriptor: descriptor, size: pointSize)
     }
 }
 

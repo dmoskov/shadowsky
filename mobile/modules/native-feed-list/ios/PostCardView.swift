@@ -7,6 +7,8 @@
 
 import SwiftUI
 import ExpoSwiftUIFeed
+import RichTextView
+import FeedBridge
 
 struct PostCardView: View {
     let post: FeedViewPost
@@ -79,11 +81,7 @@ struct PostCardView: View {
 
                 // Post text
                 if !post.post.record.text.isEmpty {
-                    Text(post.post.record.text)
-                        .font(.subheadline)
-                        .foregroundColor(.primary)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
+                    renderPostText()
                 }
 
                 // Embed (images, video, links, quotes)
@@ -147,6 +145,46 @@ struct PostCardView: View {
     }
 
     // MARK: - Helpers
+
+    private func renderPostText() -> some View {
+        // Convert PostFacet to ATFacet format for RichTextView
+        let atFacets: [ATFacet] = (post.post.record.facets ?? []).map { postFacet in
+            ATFacet(
+                index: ATFacet.ByteSlice(
+                    byteStart: postFacet.index.byteStart,
+                    byteEnd: postFacet.index.byteEnd
+                ),
+                features: postFacet.features.map { feature in
+                    switch feature {
+                    case .mention(let did):
+                        return .mention(FacetFeatureMention(type: "app.bsky.richtext.facet#mention", did: did))
+                    case .link(let uri):
+                        return .link(FacetFeatureLink(type: "app.bsky.richtext.facet#link", uri: uri))
+                    case .hashtag(let tag):
+                        return .tag(FacetFeatureTag(type: "app.bsky.richtext.facet#tag", tag: tag))
+                    }
+                }
+            )
+        }
+
+        return RichTextView(
+            text: post.post.record.text,
+            facets: atFacets,
+            onMentionTap: { handle, did in
+                onMentionPress?(handle, did)
+            },
+            onHashtagTap: { tag in
+                onHashtagPress?(tag)
+            },
+            onLinkTap: { uri in
+                onLinkPress?(uri)
+            }
+        )
+        .font(.subheadline)
+        .foregroundColor(.primary)
+        .multilineTextAlignment(.leading)
+        .fixedSize(horizontal: false, vertical: true)
+    }
 
     private func actionButton(icon: String, count: Int, isActive: Bool, activeColor: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
