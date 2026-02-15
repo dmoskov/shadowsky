@@ -30,7 +30,7 @@ import { NewConversationModal } from "../../components/NewConversationModal";
 import { LockIcon, ChatBubbleIcon, ArrowLeftIcon, SearchIcon, CloseIcon, PlusIcon, TrashIcon, BellIcon, BellSlashIcon } from "../../components/icons";
 import { useConversations, useConversation, useSendMessage, useMarkAsRead, useMuteConversation, useUnmuteConversation, useLeaveConversation } from "../../hooks/api";
 import { colors } from "../../constants/theme";
-import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
+import { useImagePicker } from "../../hooks/useImagePicker";
 import { ImageIcon } from "../../components/icons/ImageIcon";
 
 

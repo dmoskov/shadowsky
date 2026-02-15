@@ -18,7 +18,6 @@ import { usePostThread } from "../../hooks/api/useFeed";
 import { useLikePost, useUnlikePost, useRepost, useDeleteRepost, useCreatePost } from "../../hooks/api/usePosts";
 import { useAppNavigation } from "../../hooks/useNavigation";
 import { PostCard } from "../../components/PostCard";
-import { LoadingState } from "../../components/LoadingState";
 import { ErrorState } from "../../components/ErrorState";
 import { ThreadSkeleton } from "../../components/ThreadSkeleton";
 import { ThreadSummary } from "../../components/ThreadSummary";

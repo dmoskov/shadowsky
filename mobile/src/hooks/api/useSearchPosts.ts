@@ -1,5 +1,5 @@
 import {useInfiniteQuery} from '@tanstack/react-query';
-import {searchPosts, SearchPostsOptions} from '../../services/atproto/feeds';
+import {searchPosts} from '../../services/atproto/feeds';
 
 export interface SearchFilters {
   sort?: 'top' | 'latest';

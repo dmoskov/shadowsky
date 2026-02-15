@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { fetchLinkMetadata, type LinkMetadata } from "../services/ai-service";
+import { fetchLinkMetadata } from "../services/ai-service";
+import type { LinkMetadata } from "../services/ai-service";
 
 const URL_REGEX = /https?:\/\/[^\s<>)"']+/i;
 const BSKY_POST_REGEX = /bsky\.app\/profile\/[^/]+\/post\//;

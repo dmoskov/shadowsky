@@ -14,7 +14,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { ArrowLeftIcon } from "../../components/icons";
-import { QueryClient, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors } from "../../constants/theme";
 import {

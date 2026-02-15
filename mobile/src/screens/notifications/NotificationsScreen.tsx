@@ -18,7 +18,6 @@ import {NotificationItem} from '../../components/NotificationItem';
 import {NotificationItemSkeleton} from '../../components/NotificationItemSkeleton';
 import {AggregatedNotificationItem} from '../../components/AggregatedNotificationItem';
 import {NotificationTabBar, NotificationFilter} from '../../components/NotificationTabBar';
-import {LoadingState} from '../../components/LoadingState';
 import {ErrorState} from '../../components/ErrorState';
 import {EmptyState} from '../../components/EmptyState';
 import {useAppNavigation} from '../../hooks/useNavigation';

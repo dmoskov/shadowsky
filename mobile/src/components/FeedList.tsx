@@ -12,7 +12,6 @@ import {
 import {AppBskyFeedDefs} from '@atproto/api';
 import {PostCard} from './PostCard';
 import {PostCardSkeleton} from './PostCardSkeleton';
-import {LoadingState} from './LoadingState';
 import {ErrorState} from './ErrorState';
 import {EmptyState} from './EmptyState';
 import {useNetwork} from '../contexts/NetworkContext';
