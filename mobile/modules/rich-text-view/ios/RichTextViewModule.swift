@@ -1,4 +1,5 @@
 import ExpoModulesCore
+import FeedBridge
 import SwiftUI
 
 // MARK: - Module Definition
@@ -34,7 +35,7 @@ class RichTextViewWrapper: ExpoView {
         }
     }
 
-    private var facets: [ATFacet] = []
+    private var facets: [Facet] = []
 
     // Event dispatchers
     private let onMentionPress = EventDispatcher()
@@ -66,7 +67,7 @@ class RichTextViewWrapper: ExpoView {
 
         do {
             let decoder = JSONDecoder()
-            self.facets = try decoder.decode([ATFacet].self, from: data)
+            self.facets = try decoder.decode([Facet].self, from: data)
             updateView()
         } catch {
             print("[RichTextView] Failed to decode facets: \(error)")

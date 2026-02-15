@@ -6,8 +6,23 @@
 // These types match the TypeScript serialization format
 // All types are public for cross-module access (e.g., NativeNotificationsList)
 //
+// Facet types (FacetIndex, FacetFeature, Facet, etc.) are imported from FeedBridge
+// to avoid duplication across modules.
+//
 
 import Foundation
+import FeedBridge
+
+// MARK: - Facet Type Aliases (for backwards compatibility)
+
+/// Aliases to FeedBridge facet types, preserving the Notification-prefixed names
+/// for existing consumers that reference them.
+public typealias NotificationFacetIndex = FacetIndex
+public typealias NotificationFacetFeatureMention = FacetFeatureMention
+public typealias NotificationFacetFeatureLink = FacetFeatureLink
+public typealias NotificationFacetFeatureTag = FacetFeatureTag
+public typealias NotificationFacetFeature = FacetFeature
+public typealias NotificationFacet = Facet
 
 // MARK: - Author (reusing from FeedBridge pattern)
 
@@ -29,124 +44,13 @@ public struct NotificationAuthor: Codable {
 
 public struct NotificationRecord: Codable {
     public let text: String?
-    public let facets: [NotificationFacet]?
+    public let facets: [Facet]?
     public let createdAt: String
 
-    public init(text: String?, facets: [NotificationFacet]?, createdAt: String) {
+    public init(text: String?, facets: [Facet]?, createdAt: String) {
         self.text = text
         self.facets = facets
         self.createdAt = createdAt
-    }
-}
-
-// MARK: - Facets (simplified for notifications)
-
-public struct NotificationFacetIndex: Codable {
-    public let byteStart: Int
-    public let byteEnd: Int
-
-    public init(byteStart: Int, byteEnd: Int) {
-        self.byteStart = byteStart
-        self.byteEnd = byteEnd
-    }
-}
-
-public struct NotificationFacetFeatureMention: Codable {
-    public let type: String
-    public let did: String
-
-    public init(type: String, did: String) {
-        self.type = type
-        self.did = did
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case type = "$type"
-        case did
-    }
-}
-
-public struct NotificationFacetFeatureLink: Codable {
-    public let type: String
-    public let uri: String
-
-    public init(type: String, uri: String) {
-        self.type = type
-        self.uri = uri
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case type = "$type"
-        case uri
-    }
-}
-
-public struct NotificationFacetFeatureTag: Codable {
-    public let type: String
-    public let tag: String
-
-    public init(type: String, tag: String) {
-        self.type = type
-        self.tag = tag
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case type = "$type"
-        case tag
-    }
-}
-
-public enum NotificationFacetFeature: Codable {
-    case mention(NotificationFacetFeatureMention)
-    case link(NotificationFacetFeatureLink)
-    case tag(NotificationFacetFeatureTag)
-
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: TypeCodingKeys.self)
-        let type = try container.decode(String.self, forKey: .type)
-
-        switch type {
-        case "app.bsky.richtext.facet#mention":
-            let mention = try NotificationFacetFeatureMention(from: decoder)
-            self = .mention(mention)
-        case "app.bsky.richtext.facet#link":
-            let link = try NotificationFacetFeatureLink(from: decoder)
-            self = .link(link)
-        case "app.bsky.richtext.facet#tag":
-            let tag = try NotificationFacetFeatureTag(from: decoder)
-            self = .tag(tag)
-        default:
-            throw DecodingError.dataCorruptedError(
-                forKey: .type,
-                in: container,
-                debugDescription: "Unknown facet feature type: \(type)"
-            )
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        switch self {
-        case .mention(let mention):
-            try mention.encode(to: encoder)
-        case .link(let link):
-            try link.encode(to: encoder)
-        case .tag(let tag):
-            try tag.encode(to: encoder)
-        }
-    }
-
-    private enum TypeCodingKeys: String, CodingKey {
-        case type = "$type"
-    }
-}
-
-public struct NotificationFacet: Codable {
-    public let index: NotificationFacetIndex
-    public let features: [NotificationFacetFeature]
-
-    public init(index: NotificationFacetIndex, features: [NotificationFacetFeature]) {
-        self.index = index
-        self.features = features
     }
 }
 
