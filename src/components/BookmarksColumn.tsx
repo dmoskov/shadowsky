@@ -380,19 +380,29 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
         <div
           className={`mt-2 grid gap-1 ${imageEmbed.images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
         >
-          {imageEmbed.images.map((img, idx: number) => (
-            <div
-              key={`bookmark-img-${img.thumb}-${idx}`}
-              className="relative overflow-hidden rounded-lg bg-asph-bg-tertiary"
-            >
-              <img
-                src={proxifyBskyImage(img.thumb)}
-                alt={img.alt || ""}
-                className="h-auto max-h-80 w-full cursor-pointer object-contain hover:opacity-95"
-                onClick={(e) => handleImageClick(e, idx)}
-              />
-            </div>
-          ))}
+          {imageEmbed.images.map((img: any, idx: number) => {
+            const imgAspectRatio = img.aspectRatio
+              ? img.aspectRatio.width / img.aspectRatio.height
+              : undefined;
+            return (
+              <div
+                key={`bookmark-img-${img.thumb}-${idx}`}
+                className="relative overflow-hidden rounded-lg bg-asph-bg-tertiary"
+                style={{
+                  aspectRatio: imgAspectRatio,
+                }}
+              >
+                <img
+                  src={proxifyBskyImage(img.thumb)}
+                  alt={img.alt || ""}
+                  className="h-auto max-h-80 w-full cursor-pointer object-contain hover:opacity-95"
+                  onClick={(e) => handleImageClick(e, idx)}
+                  width={img.aspectRatio?.width}
+                  height={img.aspectRatio?.height}
+                />
+              </div>
+            );
+          })}
         </div>
       );
     }

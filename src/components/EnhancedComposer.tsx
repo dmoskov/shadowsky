@@ -829,6 +829,8 @@ export function EnhancedComposer({
                                 src={proxifyBskyImage(img.thumb)}
                                 alt=""
                                 className="h-16 w-16 rounded object-cover"
+                                width={img.aspectRatio?.width}
+                                height={img.aspectRatio?.height}
                               />
                             ))}
                           {(displayPost.embed as any).images?.length > 2 && (
