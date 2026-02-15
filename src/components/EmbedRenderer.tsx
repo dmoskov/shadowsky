@@ -11,7 +11,7 @@
  * Extracted from ThreadViewer for better maintainability and reusability.
  */
 
-import { Sparkles } from "lucide-react";
+import { List, Rss, Shield, Sparkles, Users } from "lucide-react";
 import React, { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
@@ -269,10 +269,218 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
         );
       }
 
-      // Quote post embeds
+      // Record embeds (quoted posts, starter packs, feeds, lists, labelers)
       if (embedData.$type === "app.bsky.embed.record#view") {
-        const quotedPost = embedData.record;
-        if (quotedPost?.$type === "app.bsky.embed.record#viewRecord") {
+        const recordData = embedData.record;
+
+        if (
+          recordData?.$type === "app.bsky.embed.record#viewNotFound" ||
+          recordData?.$type === "app.bsky.embed.record#viewDetached"
+        ) {
+          return (
+            <div
+              className="mt-2 rounded-lg border p-2 text-xs italic"
+              style={{
+                borderColor: "var(--asph-border-primary)",
+                color: "var(--asph-text-secondary)",
+              }}
+            >
+              Post not found or deleted
+            </div>
+          );
+        }
+
+        if (recordData?.$type === "app.bsky.embed.record#viewBlocked") {
+          return (
+            <div
+              className="mt-2 rounded-lg border p-2 text-xs italic"
+              style={{
+                borderColor: "var(--asph-border-primary)",
+                color: "var(--asph-text-secondary)",
+              }}
+            >
+              Post from blocked user
+            </div>
+          );
+        }
+
+        // Starter pack embed
+        if (recordData?.$type === "app.bsky.graph.defs#starterPackViewBasic") {
+          const starterPack = recordData as any;
+          const packRecord = starterPack.record as any;
+          const packName = packRecord?.name || "Starter Pack";
+          return (
+            <div
+              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+              style={{ borderColor: "var(--asph-border-primary)" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (starterPack.creator?.handle) {
+                  const rkey = starterPack.uri?.split("/").pop();
+                  if (rkey) {
+                    window.open(
+                      `https://bsky.app/starter-pack/${starterPack.creator.handle}/${rkey}`,
+                      "_blank",
+                      "noopener,noreferrer",
+                    );
+                  }
+                }
+              }}
+            >
+              <div className="mb-1 flex items-center gap-1">
+                <Users
+                  size={12}
+                  style={{ color: "var(--asph-text-secondary)" }}
+                />
+                <span
+                  className="font-semibold"
+                  style={{ color: "var(--asph-text-primary)" }}
+                >
+                  {packName}
+                </span>
+              </div>
+              <div style={{ color: "var(--asph-text-secondary)" }}>
+                {starterPack.creator?.handle && (
+                  <span>by @{starterPack.creator.handle}</span>
+                )}
+                {starterPack.listItemCount != null && (
+                  <span> · {starterPack.listItemCount} members</span>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        // Feed generator embed
+        if (recordData?.$type === "app.bsky.feed.defs#generatorView") {
+          const feedGen = recordData as any;
+          return (
+            <div
+              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+              style={{ borderColor: "var(--asph-border-primary)" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (feedGen.creator?.handle) {
+                  const rkey = feedGen.uri?.split("/").pop();
+                  if (rkey) {
+                    window.open(
+                      `https://bsky.app/profile/${feedGen.creator.handle}/feed/${rkey}`,
+                      "_blank",
+                      "noopener,noreferrer",
+                    );
+                  }
+                }
+              }}
+            >
+              <div className="mb-1 flex items-center gap-1">
+                <Rss
+                  size={12}
+                  style={{ color: "var(--asph-text-secondary)" }}
+                />
+                <span
+                  className="font-semibold"
+                  style={{ color: "var(--asph-text-primary)" }}
+                >
+                  {feedGen.displayName}
+                </span>
+              </div>
+              {feedGen.description && (
+                <div
+                  className="line-clamp-2"
+                  style={{ color: "var(--asph-text-secondary)" }}
+                >
+                  {feedGen.description}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // List embed
+        if (recordData?.$type === "app.bsky.graph.defs#listView") {
+          const listView = recordData as any;
+          return (
+            <div
+              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+              style={{ borderColor: "var(--asph-border-primary)" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (listView.creator?.handle) {
+                  const rkey = listView.uri?.split("/").pop();
+                  if (rkey) {
+                    window.open(
+                      `https://bsky.app/profile/${listView.creator.handle}/lists/${rkey}`,
+                      "_blank",
+                      "noopener,noreferrer",
+                    );
+                  }
+                }
+              }}
+            >
+              <div className="mb-1 flex items-center gap-1">
+                <List
+                  size={12}
+                  style={{ color: "var(--asph-text-secondary)" }}
+                />
+                <span
+                  className="font-semibold"
+                  style={{ color: "var(--asph-text-primary)" }}
+                >
+                  {listView.name}
+                </span>
+              </div>
+              {listView.description && (
+                <div
+                  className="line-clamp-2"
+                  style={{ color: "var(--asph-text-secondary)" }}
+                >
+                  {listView.description}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        // Labeler embed
+        if (recordData?.$type === "app.bsky.labeler.defs#labelerView") {
+          const labeler = recordData as any;
+          return (
+            <div
+              className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-500 hover:bg-opacity-5"
+              style={{ borderColor: "var(--asph-border-primary)" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (labeler.creator?.handle) {
+                  window.open(
+                    `https://bsky.app/profile/${labeler.creator.handle}`,
+                    "_blank",
+                    "noopener,noreferrer",
+                  );
+                }
+              }}
+            >
+              <div className="mb-1 flex items-center gap-1">
+                <Shield
+                  size={12}
+                  style={{ color: "var(--asph-text-secondary)" }}
+                />
+                <span
+                  className="font-semibold"
+                  style={{ color: "var(--asph-text-primary)" }}
+                >
+                  {labeler.creator?.displayName || labeler.creator?.handle}
+                </span>
+              </div>
+              <div style={{ color: "var(--asph-text-secondary)" }}>
+                Labeler service
+              </div>
+            </div>
+          );
+        }
+
+        // Quoted post (app.bsky.embed.record#viewRecord)
+        if (recordData?.$type === "app.bsky.embed.record#viewRecord") {
+          const quotedPost = recordData;
           return (
             <div
               className="mt-2 cursor-pointer rounded-lg border p-2 text-xs transition-colors hover:bg-gray-500 hover:bg-opacity-5"
