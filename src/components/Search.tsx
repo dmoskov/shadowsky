@@ -1124,7 +1124,7 @@ export const Search: React.FC = () => {
                                     style={{
                                       backgroundColor:
                                         idx === selectedSuggestionIndex
-                                          ? "rgba(201, 168, 76, 0.1)"
+                                          ? "rgba(255, 107, 157, 0.1)"
                                           : "transparent",
                                     }}
                                   >
@@ -1627,7 +1627,7 @@ export const Search: React.FC = () => {
                                     style={{
                                       backgroundColor:
                                         idx === selectedSuggestionIndex
-                                          ? "rgba(201, 168, 76, 0.1)"
+                                          ? "rgba(255, 107, 157, 0.1)"
                                           : "transparent",
                                     }}
                                   >

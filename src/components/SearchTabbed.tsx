@@ -1034,7 +1034,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     backgroundColor: showFacetedFilters
                       ? "var(--asph-primary)"
                       : hasFacetedFiltersActive
-                        ? "rgba(201, 168, 76, 0.2)"
+                        ? "rgba(255, 107, 157, 0.2)"
                         : "transparent",
                     color: showFacetedFilters
                       ? "white"
@@ -1433,7 +1433,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                     style={{
                                       backgroundColor:
                                         idx === selectedSuggestionIndex
-                                          ? "rgba(201, 168, 76, 0.1)"
+                                          ? "rgba(255, 107, 157, 0.1)"
                                           : "transparent",
                                     }}
                                   >
@@ -1613,7 +1613,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                     style={{
                                       backgroundColor:
                                         idx === selectedSuggestionIndex
-                                          ? "rgba(201, 168, 76, 0.1)"
+                                          ? "rgba(255, 107, 157, 0.1)"
                                           : "transparent",
                                     }}
                                   >
