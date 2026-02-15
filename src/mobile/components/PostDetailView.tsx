@@ -13,7 +13,7 @@
 
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { formatDistanceToNow } from "date-fns";
-import { memo, useCallback, useMemo } from "react";
+import React, { memo, useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -37,6 +37,7 @@ export interface PostDetailViewProps {
   post: AppBskyFeedDefs.PostView;
   replies?: MobilePostData[];
   parentPosts?: AppBskyFeedDefs.PostView[];
+  threadSummary?: React.ReactNode;
   onLike?: () => void;
   onRepost?: () => void;
   onReply?: () => void;
@@ -637,6 +638,7 @@ function PostDetailViewComponent({
   post,
   replies = [],
   parentPosts = [],
+  threadSummary,
   onLike,
   onRepost,
   onReply,
@@ -790,6 +792,9 @@ function PostDetailViewComponent({
             onQuote={onQuote}
             onBookmark={onBookmark}
           />
+
+          {/* Thread summary */}
+          {threadSummary}
         </View>
 
         {/* Replies section header */}

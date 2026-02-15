@@ -34,6 +34,7 @@
 export {
   FeedList,
   FeedView,
+  MobileThreadSummary,
   PostCard,
   PostDetailView,
   ProfileView,
