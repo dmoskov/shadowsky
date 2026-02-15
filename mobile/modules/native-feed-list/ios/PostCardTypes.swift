@@ -7,6 +7,8 @@
 //
 
 import Foundation
+import FeedBridge
+import ExpoSwiftUIFeed
 
 // MARK: - Feed View Post (UI Model)
 
@@ -38,6 +40,7 @@ struct PostRecord {
     let text: String
     let facets: [PostFacet]?
     let createdAt: String
+    let embed: PostEmbedData?
 }
 
 struct PostViewer {
@@ -66,4 +69,89 @@ enum PostFacetFeature {
     case mention(did: String)
     case link(uri: String)
     case hashtag(tag: String)
+}
+
+// MARK: - Embed Conversion
+
+extension PostEmbedData {
+    /// Convert from FeedBridge SerializedEmbed to ExpoSwiftUIFeed PostEmbedData
+    static func from(serializedEmbed: SerializedEmbed) -> PostEmbedData? {
+        switch serializedEmbed {
+        case .images(let embedImages):
+            return fromImages(embedImages)
+        case .external(let embedExternal):
+            return fromExternal(embedExternal)
+        case .record(let embedRecord):
+            return fromRecord(embedRecord)
+        case .recordWithMedia(let embedRecordWithMedia):
+            return fromRecordWithMedia(embedRecordWithMedia)
+        case .video(let embedVideo):
+            return fromVideo(embedVideo)
+        }
+    }
+
+    private static func fromImages(_ embedImages: EmbedImages) -> PostEmbedData? {
+        let images = embedImages.images.map { viewImage in
+            ImageEmbedData(
+                thumb: viewImage.thumb,
+                fullsize: viewImage.fullsize,
+                alt: viewImage.alt,
+                aspectRatio: viewImage.aspectRatio.map { Double($0.width) / Double($0.height) }
+            )
+        }
+        guard !images.isEmpty else { return nil }
+        return PostEmbedData(embedType: .images(images))
+    }
+
+    private static func fromVideo(_ embedVideo: EmbedVideo) -> PostEmbedData? {
+        let video = VideoEmbedData(
+            playlist: embedVideo.video.playlist,
+            thumbnail: embedVideo.video.thumbnail,
+            alt: nil,
+            aspectRatio: embedVideo.video.aspectRatio.map { Double($0.width) / Double($0.height) }
+        )
+        return PostEmbedData(embedType: .video(video))
+    }
+
+    private static func fromExternal(_ embedExternal: EmbedExternal) -> PostEmbedData? {
+        let external = ExternalLinkEmbedData(
+            uri: embedExternal.external.uri,
+            title: embedExternal.external.title,
+            description: embedExternal.external.description,
+            thumb: embedExternal.external.thumb
+        )
+        return PostEmbedData(embedType: .external(external))
+    }
+
+    private static func fromRecord(_ embedRecord: EmbedRecord) -> PostEmbedData? {
+        let quote = parseQuoteRecord(viewRecord: embedRecord.record)
+        return PostEmbedData(embedType: .quote(quote))
+    }
+
+    private static func fromRecordWithMedia(_ embedRecordWithMedia: EmbedRecordWithMedia) -> PostEmbedData? {
+        // Convert media first
+        guard let mediaEmbed = PostEmbedData.from(serializedEmbed: embedRecordWithMedia.media) else {
+            return nil
+        }
+
+        // Convert record
+        let quote = parseQuoteRecord(viewRecord: embedRecordWithMedia.record.record)
+
+        return PostEmbedData(embedType: .recordWithMedia(media: mediaEmbed.embedType, record: quote))
+    }
+
+    private static func parseQuoteRecord(viewRecord: ViewRecord) -> QuoteEmbedData? {
+        let author = AuthorData(
+            handle: viewRecord.author.handle,
+            displayName: viewRecord.author.displayName,
+            avatar: viewRecord.author.avatar
+        )
+
+        return QuoteEmbedData(
+            uri: viewRecord.uri,
+            author: author,
+            text: viewRecord.value.text,
+            createdAt: viewRecord.value.createdAt
+        )
+    }
 }
