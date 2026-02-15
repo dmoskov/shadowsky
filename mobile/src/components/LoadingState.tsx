@@ -24,8 +24,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   message: {
-    marginTop: 12,
+    marginTop: 16,
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '500',
   },
 });

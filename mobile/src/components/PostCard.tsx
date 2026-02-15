@@ -525,9 +525,18 @@ export const PostCard = React.memo(PostCardComponent, arePropsEqual);
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.cardBackground,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
+    borderBottomColor: colors.cardBorder,
+    // Subtle shadow for depth
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   content: {
     padding: 16,
@@ -585,8 +594,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 4,
+    paddingVertical: 6,
     paddingHorizontal: 12,
+    borderRadius: 8,
+    // Add subtle background for tap target
   },
   iconButton: {
     padding: 0,
