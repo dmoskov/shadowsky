@@ -30,6 +30,17 @@ export default tseslint.config(
           ignoreRestSiblings: true,
         },
       ],
+      "no-console": ["warn", { allow: ["warn", "error", "info"] }],
+    },
+  },
+  {
+    files: [
+      "src/shared/debug.ts",
+      "src/utils/debug-control.ts",
+      "src/components/DebugConsole.tsx",
+    ],
+    rules: {
+      "no-console": "off",
     },
   },
 );
