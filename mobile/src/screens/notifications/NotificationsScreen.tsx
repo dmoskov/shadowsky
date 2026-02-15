@@ -189,6 +189,9 @@ export function NotificationsScreen() {
 
   return (
     <View style={[styles.container, {paddingTop: insets.top}]}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Notifications</Text>
+      </View>
       <NotificationTabBar
         activeFilter={activeFilter}
         onFilterChange={handleFilterChange}
@@ -225,6 +228,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
   },
   list: {
     flex: 1,
