@@ -1,0 +1,40 @@
+name: Build Server
+
+on:
+  push:
+    branches:
+      - main
+      - prod
+      - "task/*"
+    paths:
+      - "server/**"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "server/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build and Test Server Image
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build server image
+        run: |
+          cd server
+          docker build --platform linux/amd64 -t shadowsky-api-server:test .
+          echo "✅ Server image built successfully"
+
+      - name: Test image can start
+        run: |
+          docker run --rm -d --name shadowsky-test -p 3000:3000 shadowsky-api-server:test
+          sleep 5
+          docker logs shadowsky-test || true
+          docker stop shadowsky-test
+          echo "✅ Server image starts successfully"
