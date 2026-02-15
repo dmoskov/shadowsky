@@ -1,4 +1,5 @@
 import { ErrorInfo } from "react";
+import { getVersionedApiUrl } from "../config/amplify";
 
 export const useErrorTracking = () => {
   const logError = async (
@@ -32,8 +33,8 @@ export const useErrorTracking = () => {
 
     // Try to send to API server (silent fail if offline or API unavailable)
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3002";
-      const response = await fetch(`${apiUrl}/api/log-error`, {
+      const apiUrl = getVersionedApiUrl();
+      const response = await fetch(`${apiUrl}/log-error`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
