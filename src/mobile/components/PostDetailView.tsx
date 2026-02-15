@@ -678,7 +678,19 @@ function PostDetailViewComponent({
     const embed = post.embed as any;
     if (!embed) return null;
 
-    // Images
+    // Record with media (quoted post + images/video)
+    if (embed.$type === "app.bsky.embed.recordWithMedia#view") {
+      return (
+        <View style={{ gap: 8 }}>
+          {images.length > 0 && <PostImages images={images} />}
+          {embed.record && (
+            <QuotedPost embed={embed.record} onPress={onQuotePress} />
+          )}
+        </View>
+      );
+    }
+
+    // Images (standalone, not part of recordWithMedia)
     if (images.length > 0) {
       return <PostImages images={images} />;
     }
