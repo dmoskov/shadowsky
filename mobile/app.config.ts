@@ -93,7 +93,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "./plugins/withPrivacyManifest",
-    // "./plugins/withShareExtension", // Disabled for local build - plugin needs fixing
   ],
   experiments: {
     typedRoutes: true,
