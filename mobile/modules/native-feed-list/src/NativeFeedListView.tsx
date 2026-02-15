@@ -6,14 +6,19 @@
 
 import React, { useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { requireNativeViewManager, NativeModulesProxy } from 'expo-modules-core';
-import { ViewProps, Platform } from 'react-native';
-import FeedBridge from '../../feed-bridge';
+import { ViewProps, Platform, View } from 'react-native';
 import { useCompleteFeedSerializer } from '../../../src/services/feed-bridge';
 import { UseInfiniteQueryResult, InfiniteData } from '@tanstack/react-query';
 import { AppBskyFeedDefs } from '@atproto/api';
 
-// Native view manager
-const NativeFeedListNative = requireNativeViewManager('NativeFeedList');
+// Lazy-load native modules (only available on iOS)
+let FeedBridge: any = null;
+let NativeFeedListNative: any = null;
+
+if (Platform.OS === 'ios') {
+  FeedBridge = require('../../feed-bridge').default;
+  NativeFeedListNative = requireNativeViewManager('NativeFeedList');
+}
 
 // Event types
 export interface FeedListEvents {
@@ -75,9 +80,9 @@ export const NativeFeedListView = forwardRef<any, NativeFeedListProps>((props, r
     ...viewProps
   } = props;
 
-  // iOS only - on Android, this would render a fallback
-  if (Platform.OS !== 'ios') {
-    return null;
+  // iOS only - native view not available on other platforms
+  if (Platform.OS !== 'ios' || !NativeFeedListNative) {
+    return <View {...viewProps} />;
   }
 
   return (
@@ -127,7 +132,7 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
     isOnline,
     bookmarkedPostUris,
     onIncrementalUpdate: useCallback((update: unknown) => {
-      if (isOnline) {
+      if (isOnline && FeedBridge) {
         const json = JSON.stringify(update);
         FeedBridge.updateFeedIncremental(json);
       }
@@ -136,7 +141,7 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
 
   // Update feed data in Swift whenever it changes
   useEffect(() => {
-    if (serializedJSON) {
+    if (serializedJSON && FeedBridge) {
       FeedBridge.updateFeedData(serializedJSON);
     }
   }, [serializedJSON]);
@@ -144,7 +149,9 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
   // Clear feed data on unmount
   useEffect(() => {
     return () => {
-      FeedBridge.clearFeedData();
+      if (FeedBridge) {
+        FeedBridge.clearFeedData();
+      }
     };
   }, []);
 

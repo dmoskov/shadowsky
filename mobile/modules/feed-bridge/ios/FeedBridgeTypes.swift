@@ -600,6 +600,50 @@ public extension SerializedFeedData {
         let decoder = JSONDecoder()
         return try decoder.decode(SerializedFeedData.self, from: data)
     }
+
+    /// Lenient decoder that skips individual posts that fail to decode
+    static func decodeLenient(from jsonString: String) throws -> SerializedFeedData {
+        guard let data = jsonString.data(using: .utf8) else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: [],
+                    debugDescription: "Invalid UTF-8 string"
+                )
+            )
+        }
+
+        // First try strict decode
+        let decoder = JSONDecoder()
+        do {
+            return try decoder.decode(SerializedFeedData.self, from: data)
+        } catch {
+            // Fall back to lenient: decode metadata/cursor, then decode posts individually
+            let raw = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+            guard let raw = raw else { throw error }
+
+            // Decode metadata
+            guard let metadataDict = raw["metadata"] else { throw error }
+            let metadataData = try JSONSerialization.data(withJSONObject: metadataDict)
+            let metadata = try decoder.decode(FeedUpdateMetadata.self, from: metadataData)
+            let cursor = raw["cursor"] as? String
+
+            // Decode posts individually, skipping failures
+            var posts: [SerializedFeedViewPost] = []
+            if let postsArray = raw["posts"] as? [[String: Any]] {
+                for postDict in postsArray {
+                    do {
+                        let postData = try JSONSerialization.data(withJSONObject: postDict)
+                        let post = try decoder.decode(SerializedFeedViewPost.self, from: postData)
+                        posts.append(post)
+                    } catch {
+                        print("[FeedBridge] Skipping post that failed to decode: \(error.localizedDescription)")
+                    }
+                }
+            }
+
+            return SerializedFeedData(posts: posts, metadata: metadata, cursor: cursor)
+        }
+    }
 }
 
 public extension FeedBatchUpdate {

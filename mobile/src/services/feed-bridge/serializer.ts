@@ -41,31 +41,33 @@ function serializeAuthor(author: AppBskyActorDefs.ProfileViewBasic): SerializedA
 function serializeFacets(facets: unknown[] | undefined): Facet[] | undefined {
   if (!facets || facets.length === 0) return undefined;
 
-  return facets.map((facet: any) => ({
-    index: {
-      byteStart: facet.index.byteStart,
-      byteEnd: facet.index.byteEnd,
-    },
-    features: facet.features.map((feature: any) => {
-      if (feature.$type === 'app.bsky.richtext.facet#mention') {
-        return {
-          $type: 'app.bsky.richtext.facet#mention',
-          did: feature.did,
-        };
-      } else if (feature.$type === 'app.bsky.richtext.facet#link') {
-        return {
-          $type: 'app.bsky.richtext.facet#link',
-          uri: feature.uri,
-        };
-      } else if (feature.$type === 'app.bsky.richtext.facet#tag') {
-        return {
-          $type: 'app.bsky.richtext.facet#tag',
-          tag: feature.tag,
-        };
-      }
-      return feature;
-    }),
-  }));
+  return facets
+    .filter((facet: any) => facet?.index && facet?.features)
+    .map((facet: any) => ({
+      index: {
+        byteStart: facet.index.byteStart,
+        byteEnd: facet.index.byteEnd,
+      },
+      features: facet.features.map((feature: any) => {
+        if (feature.$type === 'app.bsky.richtext.facet#mention') {
+          return {
+            $type: 'app.bsky.richtext.facet#mention',
+            did: feature.did,
+          };
+        } else if (feature.$type === 'app.bsky.richtext.facet#link') {
+          return {
+            $type: 'app.bsky.richtext.facet#link',
+            uri: feature.uri,
+          };
+        } else if (feature.$type === 'app.bsky.richtext.facet#tag') {
+          return {
+            $type: 'app.bsky.richtext.facet#tag',
+            tag: feature.tag,
+          };
+        }
+        return feature;
+      }),
+    }));
 }
 
 /**
@@ -76,6 +78,7 @@ function serializeEmbed(embed: any): SerializedEmbed | undefined {
 
   switch (embed.$type) {
     case 'app.bsky.embed.images#view':
+      if (!embed.images) return undefined;
       return {
         $type: 'app.bsky.embed.images#view',
         images: embed.images.map((img: any) => ({
@@ -87,24 +90,26 @@ function serializeEmbed(embed: any): SerializedEmbed | undefined {
       };
 
     case 'app.bsky.embed.external#view':
+      if (!embed.external) return undefined;
       return {
         $type: 'app.bsky.embed.external#view',
         external: {
           uri: embed.external.uri,
-          title: embed.external.title,
-          description: embed.external.description,
+          title: embed.external.title || '',
+          description: embed.external.description || '',
           thumb: embed.external.thumb,
         },
       };
 
     case 'app.bsky.embed.record#view':
+      if (!embed.record?.cid || !embed.record?.author) return undefined;
       return {
         $type: 'app.bsky.embed.record#view',
         record: {
           $type: embed.record.$type || 'app.bsky.embed.record#viewRecord',
           uri: embed.record.uri,
           cid: embed.record.cid,
-          author: serializeAuthor(embed.record.author),
+          author: embed.record.author ? serializeAuthor(embed.record.author) : undefined,
           value: {
             text: embed.record.value?.text || '',
             createdAt: embed.record.value?.createdAt || embed.record.indexedAt,
@@ -115,6 +120,7 @@ function serializeEmbed(embed: any): SerializedEmbed | undefined {
       };
 
     case 'app.bsky.embed.recordWithMedia#view':
+      if (!embed.record?.record?.cid || !embed.record?.record?.author) return undefined;
       return {
         $type: 'app.bsky.embed.recordWithMedia#view',
         record: {
@@ -122,7 +128,7 @@ function serializeEmbed(embed: any): SerializedEmbed | undefined {
             $type: embed.record.record.$type || 'app.bsky.embed.record#viewRecord',
             uri: embed.record.record.uri,
             cid: embed.record.record.cid,
-            author: serializeAuthor(embed.record.record.author),
+            author: embed.record.record.author ? serializeAuthor(embed.record.record.author) : undefined,
             value: {
               text: embed.record.record.value?.text || '',
               createdAt: embed.record.record.value?.createdAt || embed.record.record.indexedAt,
@@ -135,13 +141,14 @@ function serializeEmbed(embed: any): SerializedEmbed | undefined {
       };
 
     case 'app.bsky.embed.video#view':
+      if (!embed.cid && !embed.video) return undefined;
       return {
         $type: 'app.bsky.embed.video#view',
         video: {
-          cid: embed.video.cid,
-          playlist: embed.video.playlist,
-          thumbnail: embed.video.thumbnail,
-          aspectRatio: embed.video.aspectRatio,
+          cid: (embed.video ?? embed).cid,
+          playlist: (embed.video ?? embed).playlist,
+          thumbnail: (embed.video ?? embed).thumbnail,
+          aspectRatio: (embed.video ?? embed).aspectRatio,
         },
       };
 
@@ -192,17 +199,16 @@ function serializePost(post: AppBskyFeedDefs.PostView): SerializedPost {
     record: {
       text: record?.text || '',
       facets: serializeFacets(record?.facets),
-      createdAt: record?.createdAt || post.indexedAt,
-      embed: record?.embed,
+      createdAt: record?.createdAt || post.indexedAt || new Date().toISOString(),
     },
     embed: serializeEmbed(post.embed),
-    replyCount: post.replyCount,
-    repostCount: post.repostCount,
-    likeCount: post.likeCount,
-    quoteCount: post.quoteCount,
+    replyCount: post.replyCount ?? 0,
+    repostCount: post.repostCount ?? 0,
+    likeCount: post.likeCount ?? 0,
+    quoteCount: post.quoteCount ?? 0,
     viewer: serializeViewer(post.viewer),
     labels: serializeLabels(post.labels),
-    indexedAt: post.indexedAt,
+    indexedAt: post.indexedAt || new Date().toISOString(),
   };
 }
 
@@ -210,7 +216,7 @@ function serializePost(post: AppBskyFeedDefs.PostView): SerializedPost {
  * Serialize reply reference
  */
 function serializeReplyRef(reply: any): SerializedReplyRef | undefined {
-  if (!reply) return undefined;
+  if (!reply?.parent || !reply?.root) return undefined;
 
   return {
     parent: serializePost(reply.parent),
@@ -224,7 +230,7 @@ function serializeReplyRef(reply: any): SerializedReplyRef | undefined {
 function serializeReason(reason: any): SerializedReason | undefined {
   if (!reason) return undefined;
 
-  if (reason.$type === 'app.bsky.feed.defs#reasonRepost') {
+  if (reason.$type === 'app.bsky.feed.defs#reasonRepost' && reason.by) {
     return {
       $type: 'app.bsky.feed.defs#reasonRepost',
       by: serializeAuthor(reason.by),
@@ -255,7 +261,9 @@ export function serializeFeedViewPost(
 export function serializeFeedPosts(
   posts: AppBskyFeedDefs.FeedViewPost[]
 ): SerializedFeedViewPost[] {
-  return posts.map(serializeFeedViewPost);
+  return posts
+    .filter(p => p?.post?.uri)
+    .map(serializeFeedViewPost);
 }
 
 /**

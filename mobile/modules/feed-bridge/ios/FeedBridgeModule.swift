@@ -24,7 +24,7 @@ public class FeedBridgeModule: Module {
         // Update feed data with full serialized data
         Function("updateFeedData") { (jsonData: String) in
             do {
-                let feedData = try SerializedFeedData.decode(from: jsonData)
+                let feedData = try SerializedFeedData.decodeLenient(from: jsonData)
 
                 self.feedDataLock.lock()
                 self.currentFeedData = feedData
@@ -38,7 +38,6 @@ public class FeedBridgeModule: Module {
                 )
             } catch {
                 print("[FeedBridge] Failed to decode feed data: \(error)")
-                throw error
             }
         }
 
