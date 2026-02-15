@@ -100,9 +100,8 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   const [isReplyVisible, setIsReplyVisible] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const scrollViewRef = React.useRef<ScrollView>(null);
-  const [scrollPositions, setScrollPositions] = React.useState<Map<number, number>>(new Map());
 
-  const { navigateToProfile, navigateToThread, navigateToCompose } = useAppNavigation();
+  const { navigateToProfile, navigateToCompose } = useAppNavigation();
   const likePost = useLikePost();
   const unlikePost = useUnlikePost();
   const repost = useRepost();
@@ -195,7 +194,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
     navigateToProfile(pressedHandle);
   };
 
-  const handleMentionPress = (handle: string, did: string) => {
+  const handleMentionPress = (handle: string, _did: string) => {
     navigateToProfile(handle);
   };
 

@@ -116,7 +116,7 @@ export default function PostQuotesRoute() {
     toggleBookmark({ uri: postUri, cid } as AppBskyFeedDefs.PostView);
   };
 
-  const handleMentionPress = (handle: string, did: string) => {
+  const handleMentionPress = (handle: string, _did: string) => {
     handleNavigateToProfile(handle);
   };
 

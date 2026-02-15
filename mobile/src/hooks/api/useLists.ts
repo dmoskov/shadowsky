@@ -120,7 +120,7 @@ export function useRemoveFromList() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({listItemUri, listUri}: {listItemUri: string; listUri: string}) =>
+    mutationFn: ({listItemUri, listUri: _listUri}: {listItemUri: string; listUri: string}) =>
       removeUserFromList(listItemUri),
     onSuccess: (_, {listUri}) => {
       // Invalidate list members and list details to refetch

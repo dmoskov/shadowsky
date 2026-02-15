@@ -80,7 +80,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
   const deleteDraft = useDeleteDraft();
   const { data: draftsData } = useDrafts();
   const [loadedDraftId, setLoadedDraftId] = useState<string | undefined>(draftId);
-  const [isDirty, setIsDirty] = useState(false);
+  const [, setIsDirty] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [altTextModalVisible, setAltTextModalVisible] = useState(false);
   const [tempAltText, setTempAltText] = useState("");
@@ -206,7 +206,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
   // Thread mode state
   const [isThreadMode, setIsThreadMode] = useState(false);
   const [threadPosts, setThreadPosts] = useState<ThreadPost[]>([{ text: "", images: [] }]);
-  const [activeThreadPostIndex, setActiveThreadPostIndex] = useState<number | null>(null);
+  const [, setActiveThreadPostIndex] = useState<number | null>(null);
 
   // Load draft if draftId is provided
   useEffect(() => {
@@ -566,7 +566,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
               onPress: () => {
                 setText(threadPosts[0].text);
                 imagePicker.clearImages();
-                threadPosts[0].images.forEach(img => {
+                threadPosts[0].images.forEach(_img => {
                   // Note: We can't easily restore images to the single post picker
                   // This is a limitation we'll document
                 });
@@ -848,7 +848,6 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
   });
 
   const charCount = text.length;
-  const isOverLimit = charCount > MAX_POST_LENGTH;
 
   const placeholderText = replyTo
     ? "Post your reply"

@@ -3,7 +3,7 @@
  * React Native wrapper for the native SwiftUI profile view
  */
 
-import React, { useEffect, useCallback, forwardRef } from 'react';
+import React, { useEffect, forwardRef } from 'react';
 import { requireNativeViewManager, NativeModulesProxy } from 'expo-modules-core';
 import { Platform } from 'react-native';
 import { NativeProfileViewProps, ProfileData } from './NativeProfileViewTypes';
@@ -18,7 +18,7 @@ const NativeProfileViewNative = Platform.OS === 'ios' ? requireNativeViewManager
  * Low-level Native Profile View component
  * Renders the native SwiftUI view with provided props
  */
-export const NativeProfileView = forwardRef<any, NativeProfileViewProps>((props, ref) => {
+export const NativeProfileView = forwardRef<any, NativeProfileViewProps>((props, _ref) => {
   const {
     isOwnProfile = false,
     isLoadingProfile = false,

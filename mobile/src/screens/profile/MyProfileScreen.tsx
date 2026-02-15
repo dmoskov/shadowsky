@@ -108,7 +108,7 @@ export function MyProfileScreen({
   const hasNextPage = activeTab === "likes" ? hasNextLikesPage : hasNextFeedPage;
   const isFetchingNextPage = activeTab === "likes" ? isFetchingNextLikesPage : isFetchingNextFeedPage;
 
-  const handleMentionPress = (handle: string, did: string) => {
+  const handleMentionPress = (handle: string, _did: string) => {
     onNavigateToProfile?.(handle);
   };
 

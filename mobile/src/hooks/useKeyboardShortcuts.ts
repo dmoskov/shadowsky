@@ -36,7 +36,7 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcuts = {}) {
       return;
     }
 
-    const { key, metaKey, ctrlKey, shiftKey } = keyEvent;
+    const { key, metaKey, ctrlKey } = keyEvent;
 
     // Check for cmd/meta modifier
     const hasCmd = metaKey || ctrlKey;

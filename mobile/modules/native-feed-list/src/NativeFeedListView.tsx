@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
-import { requireNativeViewManager, NativeModulesProxy } from 'expo-modules-core';
+import { requireNativeViewManager } from 'expo-modules-core';
 import { ViewProps, Platform, View } from 'react-native';
 import { useCompleteFeedSerializer } from '../../../src/services/feed-bridge';
 import { UseInfiniteQueryResult, InfiniteData } from '@tanstack/react-query';
@@ -59,7 +59,7 @@ export interface NativeFeedListWithDataProps extends Omit<NativeFeedListProps, '
  * Low-level Native Feed List component
  * Renders the native SwiftUI view with provided props
  */
-export const NativeFeedListView = forwardRef<any, NativeFeedListProps>((props, ref) => {
+export const NativeFeedListView = forwardRef<any, NativeFeedListProps>((props, _ref) => {
   const {
     isLoading = false,
     isRefreshing = false,
@@ -125,7 +125,7 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
     ...eventHandlers
   } = props;
 
-  const { data, isLoading, isRefetching, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = query;
+  const { isLoading, isRefetching, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = query;
 
   // Serialize feed data for Swift
   const { serializedJSON } = useCompleteFeedSerializer(query, {

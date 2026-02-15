@@ -27,7 +27,7 @@ export function AggregatedNotificationItem({
   notifications,
   reason,
   onPress,
-  onProfilePress,
+  onProfilePress: _onProfilePress,
   onMentionPress,
   onHashtagPress,
 }: AggregatedNotificationItemProps) {

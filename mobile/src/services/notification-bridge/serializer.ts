@@ -5,7 +5,7 @@
  * optimized for Swift consumption via JSON serialization.
  */
 
-import { useMemo, useEffect, useCallback } from 'react';
+import { useMemo } from 'react';
 import { AppBskyNotificationListNotifications, AppBskyFeedPost } from '@atproto/api';
 import { UseInfiniteQueryResult, InfiniteData } from '@tanstack/react-query';
 import { ProcessedNotification } from '../../utils/notification-aggregator';

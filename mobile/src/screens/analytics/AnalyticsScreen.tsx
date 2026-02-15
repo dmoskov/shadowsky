@@ -27,7 +27,7 @@ export function AnalyticsScreen() {
     timeRange
   );
 
-  const handleMentionPress = (handle: string, did: string) => {
+  const handleMentionPress = (handle: string, _did: string) => {
     navigateToProfile(handle);
   };
 

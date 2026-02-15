@@ -29,7 +29,7 @@ export function HomeScreen() {
   const unlikePost = useUnlikePost();
   const repost = useRepost();
   const deleteRepost = useDeleteRepost();
-  const { toggleBookmark, isBookmarked, bookmarks } = useBookmarks();
+  const { toggleBookmark, bookmarks } = useBookmarks();
   const scrollRef = useRef<any>(null);
 
   // Compute bookmarked post URIs for the native feed list
@@ -45,7 +45,7 @@ export function HomeScreen() {
   const customFeedQuery = useCustomFeed(selectedFeedUri || '');
 
   // Use the appropriate query based on selection
-  const { data, isLoading, isRefetching, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data } =
     selectedFeedUri ? customFeedQuery : timelineQuery;
 
   // Enable scroll-to-top on tab press
@@ -170,7 +170,7 @@ export function HomeScreen() {
   };
 
   const handleReply = (event: { nativeEvent: { uri: string; cid: string; handle: string } }) => {
-    const { uri, cid, handle } = event.nativeEvent;
+    const { uri } = event.nativeEvent;
 
     // Get post data for reply
     const posts = data?.pages.flatMap((page) => page.feed) ?? [];
@@ -218,7 +218,7 @@ export function HomeScreen() {
     }
   };
 
-  const handleShare = (event: { nativeEvent: { uri: string } }) => {
+  const handleShare = (_event: { nativeEvent: { uri: string } }) => {
     // Share functionality can be implemented later
     // TODO: Implement share functionality
   };

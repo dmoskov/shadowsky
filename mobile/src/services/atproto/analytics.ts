@@ -1,8 +1,6 @@
-import { getAtProtoClient } from "./client";
 import { getProfile } from "./profiles";
 import { getAuthorFeed } from "./feeds";
-import { AppBskyFeedDefs, AppBskyFeedPost } from "@atproto/api";
-import { withRetry } from "../../utils/with-retry";
+import { AppBskyFeedDefs } from "@atproto/api";
 
 // Note: getProfile and getAuthorFeed are already rate-limited,
 // so analytics functions inherit rate limiting automatically
@@ -31,9 +29,6 @@ export async function getUserAnalytics(
   actor: string,
   timeRange: TimeRange = "week"
 ): Promise<AnalyticsMetrics> {
-  const client = getAtProtoClient();
-  const agent = client.getAgent();
-
   // Get user profile for follower count
   const profile = await getProfile(actor);
 

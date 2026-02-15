@@ -186,7 +186,7 @@ export function useLikePost() {
       queryClient.invalidateQueries({queryKey: ['authorFeed']});
       queryClient.invalidateQueries({queryKey: ['thread']});
     },
-    onError: async (error, {uri, cid}, context) => {
+    onError: async (_error, {uri, cid}, context) => {
       // Rollback optimistic update
       if (context) {
         queryClient.setQueryData(['timeline'], context.previousTimeline);
@@ -221,7 +221,7 @@ export function useUnlikePost() {
   const {showToast} = useToast();
 
   return useMutation({
-    mutationFn: ({likeUri, postUri}: {likeUri: string; postUri: string}) => unlikePost(likeUri),
+    mutationFn: ({likeUri, postUri: _postUri}: {likeUri: string; postUri: string}) => unlikePost(likeUri),
     onMutate: async ({postUri}) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({queryKey: ['timeline']});
@@ -266,7 +266,7 @@ export function useUnlikePost() {
       queryClient.invalidateQueries({queryKey: ['authorFeed']});
       queryClient.invalidateQueries({queryKey: ['thread']});
     },
-    onError: async (error, {likeUri, postUri}, context) => {
+    onError: async (_error, {likeUri, postUri: _postUri}, context) => {
       // Rollback optimistic update
       if (context) {
         queryClient.setQueryData(['timeline'], context.previousTimeline);
@@ -334,7 +334,7 @@ export function useRepost() {
       queryClient.invalidateQueries({queryKey: ['timeline']});
       queryClient.invalidateQueries({queryKey: ['authorFeed']});
     },
-    onError: async (error, {uri, cid}, context) => {
+    onError: async (_error, {uri, cid}, context) => {
       // Rollback optimistic update
       if (context) {
         queryClient.setQueryData(['timeline'], context.previousTimeline);
@@ -366,7 +366,7 @@ export function useDeleteRepost() {
   const {showToast} = useToast();
 
   return useMutation({
-    mutationFn: ({repostUri, postUri}: {repostUri: string; postUri: string}) =>
+    mutationFn: ({repostUri, postUri: _postUri}: {repostUri: string; postUri: string}) =>
       deleteRepost(repostUri),
     onMutate: async ({postUri}) => {
       // Cancel outgoing refetches
@@ -401,7 +401,7 @@ export function useDeleteRepost() {
       queryClient.invalidateQueries({queryKey: ['timeline']});
       queryClient.invalidateQueries({queryKey: ['authorFeed']});
     },
-    onError: async (error, {repostUri, postUri}, context) => {
+    onError: async (_error, {repostUri, postUri: _postUri}, context) => {
       // Rollback optimistic update
       if (context) {
         queryClient.setQueryData(['timeline'], context.previousTimeline);

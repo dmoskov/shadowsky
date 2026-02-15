@@ -19,7 +19,7 @@ export default function ProfileRoute() {
     router.push(`/(app)/(tabs)/(profile)/following/${actor}`);
   };
 
-  const handleNavigateToMessages = (conversationId: string) => {
+  const handleNavigateToMessages = (_conversationId: string) => {
     router.push('/(app)/(tabs)/(profile)/messages');
   };
 
