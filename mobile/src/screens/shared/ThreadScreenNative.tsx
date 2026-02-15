@@ -43,6 +43,38 @@ async function buildPostUri(handle: string, postId: string): Promise<string> {
   return `at://${did}/app.bsky.feed.post/${postId}`;
 }
 
+/**
+ * Parse AT Protocol URI to extract DID and post ID
+ * Format: at://did/app.bsky.feed.post/postId
+ * Returns null if invalid
+ */
+function parsePostUri(uri: string): { did: string; postId: string } | null {
+  const match = uri.match(/^at:\/\/([^/]+)\/app\.bsky\.feed\.post\/(.+)$/);
+  if (!match) return null;
+  return { did: match[1], postId: match[2] };
+}
+
+/**
+ * Navigate to thread from URI
+ * Resolves DID to handle if needed
+ */
+async function navigateToThreadFromUri(uri: string, navigateToThread: (handle: string, postId: string) => void) {
+  const parsed = parsePostUri(uri);
+  if (!parsed) {
+    logger.error('Invalid post URI:', uri);
+    return;
+  }
+
+  try {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
+    const profile = await agent.getProfile({ actor: parsed.did });
+    navigateToThread(profile.data.handle, parsed.postId);
+  } catch (error) {
+    logger.error('Failed to resolve DID to handle:', error);
+  }
+}
+
 export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
   const router = useRouter();
   const [postUri, setPostUri] = useState<string | null>(null);
@@ -108,7 +140,7 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
 
   const handlePostPress = (event: { nativeEvent: { uri: string; handle: string } }) => {
     const { uri, handle } = event.nativeEvent;
-    navigateToThread(uri);
+    navigateToThreadFromUri(uri, navigateToThread);
   };
 
   const handleProfilePress = (event: { nativeEvent: { handle: string } }) => {
@@ -317,7 +349,7 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
         style={styles.threadView}
         isLoading={isLoading}
         isRefreshing={isRefreshing}
-        error={error ? (error instanceof Error ? error.message : "Failed to load thread") : undefined}
+        error={error ? (typeof error === 'object' && error !== null && 'message' in error ? (error as Error).message : "Failed to load thread") : undefined}
         threadUri={postUri}
         onRefresh={handleRefresh}
         onPostPress={handlePostPress}
@@ -329,8 +361,8 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
         onMentionPress={handleMentionPress}
         onHashtagPress={handleHashtagPress}
         onShare={handleShare}
-        onNavigateToParent={(event) => navigateToThread(event.nativeEvent.uri)}
-        onNavigateToRoot={(event) => navigateToThread(event.nativeEvent.uri)}
+        onNavigateToParent={(event) => navigateToThreadFromUri(event.nativeEvent.uri, navigateToThread)}
+        onNavigateToRoot={(event) => navigateToThreadFromUri(event.nativeEvent.uri, navigateToThread)}
         onPressLikeCount={handlePressLikeCount}
         onPressRepostCount={handlePressRepostCount}
         onPressQuoteCount={handlePressQuoteCount}

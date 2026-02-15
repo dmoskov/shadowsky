@@ -11,7 +11,6 @@ export {
 
 export type {
   NativeProfileViewProps,
-  NativeProfileViewWithDataProps,
   ProfileData,
   ProfileViewer,
   ProfileTab,
@@ -21,5 +20,4 @@ export type {
   ListViewerState,
 } from './NativeProfileViewTypes';
 
-// Re-export the view types for convenience
-export { default as NativeProfileView } from './NativeProfileView';
+export type { NativeProfileViewWithDataProps } from './NativeProfileView';

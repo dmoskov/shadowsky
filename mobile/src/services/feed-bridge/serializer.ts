@@ -109,7 +109,7 @@ function serializeEmbed(embed: any): SerializedEmbed | undefined {
           $type: embed.record.$type || 'app.bsky.embed.record#viewRecord',
           uri: embed.record.uri,
           cid: embed.record.cid,
-          author: embed.record.author ? serializeAuthor(embed.record.author) : undefined,
+          author: serializeAuthor(embed.record.author),
           value: {
             text: embed.record.value?.text || '',
             createdAt: embed.record.value?.createdAt || embed.record.indexedAt,
@@ -128,7 +128,7 @@ function serializeEmbed(embed: any): SerializedEmbed | undefined {
             $type: embed.record.record.$type || 'app.bsky.embed.record#viewRecord',
             uri: embed.record.record.uri,
             cid: embed.record.record.cid,
-            author: embed.record.record.author ? serializeAuthor(embed.record.record.author) : undefined,
+            author: serializeAuthor(embed.record.record.author),
             value: {
               text: embed.record.record.value?.text || '',
               createdAt: embed.record.record.value?.createdAt || embed.record.record.indexedAt,

@@ -18,7 +18,8 @@ appId: com.shadowsky.mobile
 - scroll
 
 # Go offline
-- setAirplaneMode: true
+- setAirplaneMode:
+    value: enabled
 - wait: 2000
 
 # Test that cached content is still visible
@@ -44,7 +45,8 @@ appId: com.shadowsky.mobile
 - assertVisible: "Check your internet connection"
 
 # Come back online
-- setAirplaneMode: false
+- setAirplaneMode:
+    value: disabled
 - wait: 2000
 
 # Test that app syncs
