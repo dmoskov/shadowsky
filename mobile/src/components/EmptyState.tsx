@@ -32,11 +32,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   iconWrapper: {
-    marginBottom: 16,
+    marginBottom: 20,
+    opacity: 0.6,
   },
   message: {
     color: colors.textSecondary,
     fontSize: 16,
     textAlign: 'center',
+    fontWeight: '500',
+    lineHeight: 24,
   },
 });

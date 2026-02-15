@@ -47,7 +47,7 @@ export function Button({
       ]}
       onPress={onPress}
       disabled={isDisabled}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel || title}
       accessibilityHint={accessibilityHint}
@@ -74,25 +74,41 @@ export function Button({
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 8,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
+    // iOS-style shadow for depth
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   // Variants
   primary: {
     backgroundColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.3,
   },
   secondary: {
     backgroundColor: colors.surfaceElevated,
     borderWidth: 1,
     borderColor: colors.borderLight,
+    shadowOpacity: 0.1,
   },
   danger: {
     backgroundColor: colors.danger,
+    shadowColor: colors.danger,
+    shadowOpacity: 0.3,
   },
   ghost: {
     backgroundColor: 'transparent',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   // Sizes
   smallButton: {

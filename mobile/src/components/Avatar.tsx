@@ -35,6 +35,17 @@ export function Avatar({uri, size = 40, style, accessibilityLabel}: AvatarProps)
 const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
+    // Add subtle ring and shadow for premium feel
+    borderWidth: 2,
+    borderColor: colors.cardBorder,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   image: {
     backgroundColor: colors.surfaceElevated,

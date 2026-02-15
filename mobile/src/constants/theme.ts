@@ -31,11 +31,22 @@ export const darkColors = {
   // Special colors
   accent: "#F91880",
   accentGreen: "#4ade80",
+  accentBlue: "#3b82f6",
+  accentPurple: "#8b5cf6",
   editorBackground: "#1a1a1a",
   editorBorder: "#444444",
   editorControl: "#2a2a2a",
   editorText: "#999999",
   modalOverlay: "rgba(0, 0, 0, 0.6)",
+  // Visual polish colors
+  primaryLight: "#e0c86b",
+  shadowLight: "rgba(0, 0, 0, 0.1)",
+  shadowMedium: "rgba(0, 0, 0, 0.2)",
+  shadowHeavy: "rgba(0, 0, 0, 0.4)",
+  glowPrimary: "rgba(201, 168, 76, 0.15)",
+  glowAccent: "rgba(249, 24, 128, 0.15)",
+  cardBackground: "#16161f",
+  cardBorder: "#2a2a35",
 } as const;
 
 // Light mode colors
@@ -71,11 +82,22 @@ export const lightColors = {
   // Special colors
   accent: "#F91880",
   accentGreen: "#4ade80",
+  accentBlue: "#3b82f6",
+  accentPurple: "#8b5cf6",
   editorBackground: "#f3f4f6",
   editorBorder: "#d1d5db",
   editorControl: "#e5e7eb",
   editorText: "#6b7280",
   modalOverlay: "rgba(0, 0, 0, 0.4)",
+  // Visual polish colors
+  primaryLight: "#e0c86b",
+  shadowLight: "rgba(0, 0, 0, 0.05)",
+  shadowMedium: "rgba(0, 0, 0, 0.1)",
+  shadowHeavy: "rgba(0, 0, 0, 0.2)",
+  glowPrimary: "rgba(201, 168, 76, 0.1)",
+  glowAccent: "rgba(249, 24, 128, 0.1)",
+  cardBackground: "#ffffff",
+  cardBorder: "#e5e7eb",
 } as const;
 
 // For backwards compatibility
