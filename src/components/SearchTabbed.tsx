@@ -56,7 +56,6 @@ import {
   type SearchTab,
   type UserSuggestion,
 } from "./search/search-utils";
-import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 
 export const SearchTabbed: React.FC = React.memo(() => {
   const { agent } = useAuth();
@@ -728,8 +727,16 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         setShowMainTypeahead(true);
                       }
                     }}
-                    onBlur={() => {
-                      setTimeout(() => setShowMainTypeahead(false), 200);
+                    onBlur={(e) => {
+                      // Check if focus is moving to an element inside the typeahead dropdown
+                      const related = e.relatedTarget as HTMLElement | null;
+                      if (
+                        related &&
+                        mainTypeaheadRef.current?.contains(related)
+                      ) {
+                        return; // Don't close if clicking inside typeahead
+                      }
+                      setTimeout(() => setShowMainTypeahead(false), 150);
                     }}
                     placeholder="Search posts, users, or paste a Bluesky post URL..."
                     className="w-full rounded-xl border py-3 pl-10 pr-4 focus-visible:outline-none focus-visible:ring-2"
@@ -804,7 +811,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                       trendingTopics.suggested?.length > 0))) && (
                   <div
                     ref={mainTypeaheadRef}
-                    className="absolute z-10 mt-2 w-full overflow-hidden rounded-xl border shadow-lg"
+                    className="absolute z-50 mt-2 max-h-[60vh] w-full overflow-y-auto rounded-xl border shadow-lg"
                     style={{
                       backgroundColor: "var(--asph-bg-secondary)",
                       borderColor: "var(--asph-border-primary)",
@@ -833,13 +840,11 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               className="flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-white hover:bg-opacity-10"
                             >
                               {user.avatar && (
-                                <ProfileHoverCard handle={user.handle}>
-                                  <img
-                                    src={proxifyBskyImage(user.avatar)}
-                                    alt=""
-                                    className="h-8 w-8 rounded-full"
-                                  />
-                                </ProfileHoverCard>
+                                <img
+                                  src={proxifyBskyImage(user.avatar)}
+                                  alt=""
+                                  className="h-8 w-8 rounded-full"
+                                />
                               )}
                               <div className="min-w-0 flex-1">
                                 <div
@@ -1354,7 +1359,15 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               setShowingFollowers(false);
                               if (user.length >= 2) setShowSuggestions(true);
                             }}
-                            onBlur={() => {
+                            onBlur={(e) => {
+                              const related =
+                                e.relatedTarget as HTMLElement | null;
+                              if (
+                                related &&
+                                suggestionsRef.current?.contains(related)
+                              ) {
+                                return; // Don't close if clicking inside suggestions
+                              }
                               setTimeout(() => {
                                 if (
                                   activeUserInput?.field === "from" &&
@@ -1364,7 +1377,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                   setShowingFollowers(false);
                                   setSelectedSuggestionIndex(-1);
                                 }
-                              }, 200);
+                              }, 150);
                             }}
                             placeholder="e.g., alice.bsky.social"
                             className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
@@ -1405,7 +1418,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           userSuggestions.length > 0 && (
                             <div
                               ref={suggestionsRef}
-                              className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border shadow-lg"
+                              className="absolute z-50 mt-1 max-h-[40vh] w-full overflow-y-auto rounded-lg border shadow-lg"
                               style={{
                                 backgroundColor: "var(--asph-bg-secondary)",
                                 borderColor: "var(--asph-border-primary)",
@@ -1438,17 +1451,13 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                     }}
                                   >
                                     {suggestion.avatar && (
-                                      <ProfileHoverCard
-                                        handle={suggestion.handle}
-                                      >
-                                        <img
-                                          src={proxifyBskyImage(
-                                            suggestion.avatar,
-                                          )}
-                                          alt=""
-                                          className="h-8 w-8 rounded-full"
-                                        />
-                                      </ProfileHoverCard>
+                                      <img
+                                        src={proxifyBskyImage(
+                                          suggestion.avatar,
+                                        )}
+                                        alt=""
+                                        className="h-8 w-8 rounded-full"
+                                      />
                                     )}
                                     <div className="min-w-0 flex-1">
                                       <div
@@ -1531,7 +1540,15 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               setShowingFollowers(false);
                               if (user.length >= 2) setShowSuggestions(true);
                             }}
-                            onBlur={() => {
+                            onBlur={(e) => {
+                              const related =
+                                e.relatedTarget as HTMLElement | null;
+                              if (
+                                related &&
+                                suggestionsRef.current?.contains(related)
+                              ) {
+                                return; // Don't close if clicking inside suggestions
+                              }
                               setTimeout(() => {
                                 if (
                                   activeUserInput?.field === "mentions" &&
@@ -1541,7 +1558,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                   setShowingFollowers(false);
                                   setSelectedSuggestionIndex(-1);
                                 }
-                              }, 200);
+                              }, 150);
                             }}
                             placeholder="e.g., alice.bsky.social or me"
                             className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
@@ -1585,7 +1602,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           userSuggestions.length > 0 && (
                             <div
                               ref={suggestionsRef}
-                              className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border shadow-lg"
+                              className="absolute z-50 mt-1 max-h-[40vh] w-full overflow-y-auto rounded-lg border shadow-lg"
                               style={{
                                 backgroundColor: "var(--asph-bg-secondary)",
                                 borderColor: "var(--asph-border-primary)",
@@ -1618,17 +1635,13 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                     }}
                                   >
                                     {suggestion.avatar && (
-                                      <ProfileHoverCard
-                                        handle={suggestion.handle}
-                                      >
-                                        <img
-                                          src={proxifyBskyImage(
-                                            suggestion.avatar,
-                                          )}
-                                          alt=""
-                                          className="h-8 w-8 rounded-full"
-                                        />
-                                      </ProfileHoverCard>
+                                      <img
+                                        src={proxifyBskyImage(
+                                          suggestion.avatar,
+                                        )}
+                                        alt=""
+                                        className="h-8 w-8 rounded-full"
+                                      />
                                     )}
                                     <div className="min-w-0 flex-1">
                                       <div

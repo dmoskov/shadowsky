@@ -1057,8 +1057,15 @@ export const Search: React.FC = () => {
                               setShowingFollowers(false);
                               if (user.length >= 2) setShowSuggestions(true);
                             }}
-                            onBlur={() => {
-                              // Use setTimeout to allow click events on suggestions to fire first
+                            onBlur={(e) => {
+                              const related =
+                                e.relatedTarget as HTMLElement | null;
+                              if (
+                                related &&
+                                suggestionsRef.current?.contains(related)
+                              ) {
+                                return; // Don't close if clicking inside suggestions
+                              }
                               setTimeout(() => {
                                 if (
                                   activeUserInput?.field === "from" &&
@@ -1068,7 +1075,7 @@ export const Search: React.FC = () => {
                                   setShowingFollowers(false);
                                   setSelectedSuggestionIndex(-1);
                                 }
-                              }, 200);
+                              }, 150);
                             }}
                             placeholder="e.g., jay.bsky.team or me"
                             className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
@@ -1096,7 +1103,7 @@ export const Search: React.FC = () => {
                           userSuggestions.length > 0 && (
                             <div
                               ref={suggestionsRef}
-                              className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border shadow-lg"
+                              className="absolute z-50 mt-1 max-h-[40vh] w-full overflow-y-auto rounded-lg border shadow-lg"
                               style={{
                                 backgroundColor: "var(--asph-bg-secondary)",
                                 borderColor: "var(--asph-border-primary)",
@@ -1560,8 +1567,15 @@ export const Search: React.FC = () => {
                               setShowingFollowers(false);
                               if (user.length >= 2) setShowSuggestions(true);
                             }}
-                            onBlur={() => {
-                              // Use setTimeout to allow click events on suggestions to fire first
+                            onBlur={(e) => {
+                              const related =
+                                e.relatedTarget as HTMLElement | null;
+                              if (
+                                related &&
+                                suggestionsRef.current?.contains(related)
+                              ) {
+                                return; // Don't close if clicking inside suggestions
+                              }
                               setTimeout(() => {
                                 if (
                                   activeUserInput?.field === "mentions" &&
@@ -1571,7 +1585,7 @@ export const Search: React.FC = () => {
                                   setShowingFollowers(false);
                                   setSelectedSuggestionIndex(-1);
                                 }
-                              }, 200);
+                              }, 150);
                             }}
                             placeholder="e.g., alice.bsky.social or me"
                             className="flex-1 rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2"
@@ -1599,7 +1613,7 @@ export const Search: React.FC = () => {
                           userSuggestions.length > 0 && (
                             <div
                               ref={suggestionsRef}
-                              className="absolute z-10 mt-1 w-full overflow-hidden rounded-lg border shadow-lg"
+                              className="absolute z-50 mt-1 max-h-[40vh] w-full overflow-y-auto rounded-lg border shadow-lg"
                               style={{
                                 backgroundColor: "var(--asph-bg-secondary)",
                                 borderColor: "var(--asph-border-primary)",
