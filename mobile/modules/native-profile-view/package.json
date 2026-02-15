@@ -1,0 +1,22 @@
+{
+  "name": "native-profile-view",
+  "version": "1.0.0",
+  "description": "Native SwiftUI profile view component for React Native",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {},
+  "keywords": [
+    "react-native",
+    "expo",
+    "swiftui",
+    "profile",
+    "native"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "expo-modules-core": "*"
+  }
+}
