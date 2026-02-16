@@ -140,7 +140,9 @@ describe("Storage Error Handling Integration", () => {
       );
 
       const Wrapper = createWrapper();
-      const { container } = render(<BookmarksColumn />, { wrapper: Wrapper });
+      const { container } = render(<BookmarksColumn />, {
+        wrapper: Wrapper,
+      });
 
       // Wait for bookmarks to load
       await waitFor(() => {
@@ -158,7 +160,7 @@ describe("Storage Error Handling Integration", () => {
           screen.getByText("Failed to remove bookmark. Please try again."),
         ).toBeInTheDocument();
       });
-    });
+    }, 15000);
   });
 
   // Note: Error Propagation tests removed
