@@ -3,7 +3,6 @@ import {
   FlatList,
   ActivityIndicator,
   View,
-  Text,
   StyleSheet,
   RefreshControl,
 } from 'react-native';
@@ -19,7 +18,7 @@ import {NotificationItemSkeleton} from '../../components/NotificationItemSkeleto
 import {AggregatedNotificationItem} from '../../components/AggregatedNotificationItem';
 import {NotificationTabBar, NotificationFilter} from '../../components/NotificationTabBar';
 import {ErrorState} from '../../components/ErrorState';
-import {EmptyState} from '../../components/EmptyState';
+import { EmptyState } from '../../components/EmptyState';
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {usePreferences} from '../../contexts/PreferencesContext';
 import {clearBadgeCount} from '../../services/notification-poller';

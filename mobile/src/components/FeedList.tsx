@@ -12,7 +12,7 @@ import {AppBskyFeedDefs} from '@atproto/api';
 import {PostCard} from './PostCard';
 import {PostCardSkeleton} from './PostCardSkeleton';
 import {ErrorState} from './ErrorState';
-import {EmptyState} from './EmptyState';
+import { EmptyState } from './EmptyState';
 import {useNetwork} from '../contexts/NetworkContext';
 import {usePreferences} from '../contexts/PreferencesContext';
 import {colors} from '../constants/theme';
