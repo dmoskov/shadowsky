@@ -1,6 +1,6 @@
 {
   "platforms": ["ios"],
   "ios": {
-    "modules": ["NativeProfileView", "ProfileBridge"]
+    "modules": ["ProfileViewModule", "ProfileBridgeModule"]
   }
 }

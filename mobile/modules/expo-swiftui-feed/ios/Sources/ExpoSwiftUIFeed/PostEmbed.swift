@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Enum representing different embed types from AT Protocol
-indirect enum EmbedType {
+public indirect enum EmbedType {
     case images([ImageEmbedData])
     case video(VideoEmbedData)
     case external(ExternalLinkEmbedData)
@@ -10,19 +10,22 @@ indirect enum EmbedType {
 }
 
 /// Model for post embed data that includes type information
-struct PostEmbedData {
-    let embedType: EmbedType
+public struct PostEmbedData {
+    public let embedType: EmbedType
+    public init(embedType: EmbedType) {
+        self.embedType = embedType
+    }
 }
 
 /// Dispatcher view that routes to the correct embed component based on AT Protocol type
-struct PostEmbed: View {
+public struct PostEmbed: View {
     let embed: PostEmbedData?
     let onImagePress: (([ImageEmbedData], Int) -> Void)?
     let onLinkPress: ((String) -> Void)?
     let onQuotePress: ((String, String) -> Void)?
     let blurImages: Bool
 
-    init(
+    public init(
         embed: PostEmbedData?,
         onImagePress: (([ImageEmbedData], Int) -> Void)? = nil,
         onLinkPress: ((String) -> Void)? = nil,
@@ -36,7 +39,7 @@ struct PostEmbed: View {
         self.blurImages = blurImages
     }
 
-    var body: some View {
+    public var body: some View {
         Group {
             if let embed = embed {
                 embedView(for: embed.embedType)
@@ -96,7 +99,7 @@ struct PostEmbed: View {
 extension PostEmbedData {
     /// Create PostEmbedData from a dictionary representation
     /// This mirrors the type guard logic from the React Native PostEmbed.tsx
-    static func from(dict: [String: Any]) -> PostEmbedData? {
+    public static func from(dict: [String: Any]) -> PostEmbedData? {
         guard let type = dict["$type"] as? String else { return nil }
 
         switch type {

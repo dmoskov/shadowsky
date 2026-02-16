@@ -1,5 +1,8 @@
-import {BskyAgent, AtpSessionData} from '@atproto/api';
+import {BskyAgent, AtpSessionData, AtpSessionEvent} from '@atproto/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
+
+const AUTH_STORAGE_KEY = '@shadowsky/auth_session';
 
 /**
  * AT Protocol Client Wrapper
@@ -10,7 +13,24 @@ export class AtProtoClient {
   private session: AtpSessionData | null = null;
 
   constructor(service: string = 'https://bsky.social') {
-    this.agent = new BskyAgent({service});
+    this.agent = new BskyAgent({
+      service,
+      persistSession: (evt: AtpSessionEvent, sess?: AtpSessionData) => {
+        if (evt === 'update' && sess) {
+          this.session = sess;
+          AsyncStorage.getItem(AUTH_STORAGE_KEY).then(stored => {
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              const updated = {...parsed, accessJwt: sess.accessJwt, refreshJwt: sess.refreshJwt};
+              AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
+            }
+          }).catch(() => {});
+        } else if (evt === 'expired') {
+          this.session = null;
+          AsyncStorage.removeItem(AUTH_STORAGE_KEY).catch(() => {});
+        }
+      },
+    });
   }
 
   /**

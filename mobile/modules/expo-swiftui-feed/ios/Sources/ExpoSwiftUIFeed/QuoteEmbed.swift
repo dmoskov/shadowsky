@@ -1,18 +1,29 @@
 import SwiftUI
 
 /// Model for author data in quoted posts
-struct AuthorData {
-    let handle: String
-    let displayName: String?
-    let avatar: String?
+public struct AuthorData {
+    public let handle: String
+    public let displayName: String?
+    public let avatar: String?
+    public init(handle: String, displayName: String?, avatar: String?) {
+        self.handle = handle
+        self.displayName = displayName
+        self.avatar = avatar
+    }
 }
 
 /// Model for quoted post embed data
-struct QuoteEmbedData {
-    let uri: String
-    let author: AuthorData
-    let text: String?
-    let createdAt: String?
+public struct QuoteEmbedData {
+    public let uri: String
+    public let author: AuthorData
+    public let text: String?
+    public let createdAt: String?
+    public init(uri: String, author: AuthorData, text: String?, createdAt: String?) {
+        self.uri = uri
+        self.author = author
+        self.text = text
+        self.createdAt = createdAt
+    }
 }
 
 /// SwiftUI view for quoted post embeds

@@ -1,11 +1,17 @@
 import SwiftUI
 
 /// Model for external link embed data
-struct ExternalLinkEmbedData {
-    let uri: String
-    let title: String?
-    let description: String?
-    let thumb: String?
+public struct ExternalLinkEmbedData {
+    public let uri: String
+    public let title: String?
+    public let description: String?
+    public let thumb: String?
+    public init(uri: String, title: String?, description: String?, thumb: String?) {
+        self.uri = uri
+        self.title = title
+        self.description = description
+        self.thumb = thumb
+    }
 }
 
 /// SwiftUI view for external link embeds with thumbnail and metadata

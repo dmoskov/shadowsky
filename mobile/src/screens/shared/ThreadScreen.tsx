@@ -32,7 +32,7 @@ import { triggerHaptic } from "../../utils/haptics";
 
 import { createLogger } from '../../utils/logger';
 
-const logger = createLogger('Threadscreenx');
+const logger = createLogger('ThreadScreen');
 interface ThreadScreenProps {
   handle: string;
   postId: string;

@@ -250,6 +250,8 @@ PODS:
     - ExpoModulesCore
   - ExpoKeepAwake (15.0.8):
     - ExpoModulesCore
+  - ExpoKeyEvent (1.8.3):
+    - ExpoModulesCore
   - ExpoLinking (8.0.11):
     - ExpoModulesCore
   - ExpoLocalAuthentication (17.0.8):
@@ -352,6 +354,19 @@ PODS:
   - libwebp/webp (1.5.0):
     - libwebp/sharpyuv
   - NativeFeedList (1.0.0):
+    - ExpoModulesCore
+    - ExpoSwiftUIFeed
+    - FeedBridge
+    - RichTextView
+  - NativeNotificationsList (1.0.0):
+    - ExpoModulesCore
+    - NotificationBridge
+  - NativeProfileView (1.0.0):
+    - ExpoModulesCore
+  - NativeThreadView (1.0.0):
+    - ExpoModulesCore
+    - FeedBridge
+  - NotificationBridge (1.0.0):
     - ExpoModulesCore
     - FeedBridge
   - RCTDeprecation (0.81.5)
@@ -1634,8 +1649,6 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - react-native-keyevent (0.3.2):
-    - React
   - react-native-netinfo (11.4.1):
     - React-Core
   - react-native-safe-area-context (5.6.2):
@@ -2059,6 +2072,7 @@ PODS:
   - ReactNativeDependencies (0.81.5)
   - RichTextView (1.0.0):
     - ExpoModulesCore
+    - FeedBridge
   - RNCAsyncStorage (2.2.0):
     - hermes-engine
     - RCTRequired
@@ -2352,6 +2366,8 @@ PODS:
   - Sentry (9.4.1):
     - Sentry/Core (= 9.4.1)
   - Sentry/Core (9.4.1)
+  - ThreadBridge (1.0.0):
+    - ExpoModulesCore
   - UMAppLoader (6.0.8)
   - Yoga (0.0.0)
   - ZXingObjC/Core (3.6.9)
@@ -2388,6 +2404,7 @@ DEPENDENCIES:
   - ExpoImageManipulator (from `../node_modules/expo-image-manipulator/ios`)
   - ExpoImagePicker (from `../node_modules/expo-image-picker/ios`)
   - ExpoKeepAwake (from `../node_modules/expo-keep-awake/ios`)
+  - ExpoKeyEvent (from `../node_modules/expo-key-event/ios`)
   - ExpoLinking (from `../node_modules/expo-linking/ios`)
   - ExpoLocalAuthentication (from `../node_modules/expo-local-authentication/ios`)
   - ExpoLocalization (from `../node_modules/expo-localization/ios`)
@@ -2407,6 +2424,10 @@ DEPENDENCIES:
   - FeedNative (from `../modules/feed-native/ios`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - NativeFeedList (from `../modules/native-feed-list/ios`)
+  - NativeNotificationsList (from `../modules/native-notifications-list/ios`)
+  - NativeProfileView (from `../modules/native-profile-view/ios`)
+  - NativeThreadView (from `../modules/native-thread-view/ios`)
+  - NotificationBridge (from `../modules/notification-bridge/ios`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../node_modules/react-native/Libraries/Required`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -2441,7 +2462,6 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
-  - react-native-keyevent (from `../node_modules/react-native-keyevent`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -2482,6 +2502,7 @@ DEPENDENCIES:
   - RNScreens (from `../node_modules/react-native-screens`)
   - "RNSentry (from `../node_modules/@sentry/react-native`)"
   - RNSVG (from `../node_modules/react-native-svg`)
+  - ThreadBridge (from `../modules/thread-bridge/ios`)
   - UMAppLoader (from `../node_modules/unimodules-app-loader/ios`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
@@ -2553,6 +2574,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-image-picker/ios"
   ExpoKeepAwake:
     :path: "../node_modules/expo-keep-awake/ios"
+  ExpoKeyEvent:
+    :path: "../node_modules/expo-key-event/ios"
   ExpoLinking:
     :path: "../node_modules/expo-linking/ios"
   ExpoLocalAuthentication:
@@ -2592,6 +2615,14 @@ EXTERNAL SOURCES:
     :tag: hermes-2025-07-07-RNv0.81.0-e0fc67142ec0763c6b6153ca2bf96df815539782
   NativeFeedList:
     :path: "../modules/native-feed-list/ios"
+  NativeNotificationsList:
+    :path: "../modules/native-notifications-list/ios"
+  NativeProfileView:
+    :path: "../modules/native-profile-view/ios"
+  NativeThreadView:
+    :path: "../modules/native-thread-view/ios"
+  NotificationBridge:
+    :path: "../modules/notification-bridge/ios"
   RCTDeprecation:
     :path: "../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation"
   RCTRequired:
@@ -2658,8 +2689,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
-  react-native-keyevent:
-    :path: "../node_modules/react-native-keyevent"
   react-native-netinfo:
     :path: "../node_modules/@react-native-community/netinfo"
   react-native-safe-area-context:
@@ -2740,6 +2769,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@sentry/react-native"
   RNSVG:
     :path: "../node_modules/react-native-svg"
+  ThreadBridge:
+    :path: "../modules/thread-bridge/ios"
   UMAppLoader:
     :path: "../node_modules/unimodules-app-loader/ios"
   Yoga:
@@ -2773,6 +2804,7 @@ SPEC CHECKSUMS:
   ExpoImageManipulator: 607a5c8c88085381639458a46cc55fb9d3869148
   ExpoImagePicker: 1af3e4e31512d2f34c95c2a3018a3edc40aee748
   ExpoKeepAwake: 55f75eca6499bb9e4231ebad6f3e9cb8f99c0296
+  ExpoKeyEvent: 0106f581db9217864cec860e8610c9cf34aaf04b
   ExpoLinking: 8f0aaf69aa56f832913030503b6263dc6f647f37
   ExpoLocalAuthentication: 8a31808565da7af926dd9b595e98594d8b1553b6
   ExpoLocalization: d9168d5300a5b03e5e78b986124d11fb6ec3ebbd
@@ -2794,7 +2826,11 @@ SPEC CHECKSUMS:
   libavif: 5f8e715bea24debec477006f21ef9e95432e254d
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
-  NativeFeedList: 381dfe84043de10540ebe2f180d77ce1e8c73b44
+  NativeFeedList: d7adafc2ce4df71e7ac29b4b0a5b915dfbab9439
+  NativeNotificationsList: a14200f44931e6ab2958101bac5a9a3a3aeb72dc
+  NativeProfileView: b64a71527b4acfe895e98bf83b2286aad2709417
+  NativeThreadView: 9211732b89e8f2415f3c591af833a4bbc54cb420
+  NotificationBridge: 5d0197e2b98521a8ada3f585c6150621b7d48489
   RCTDeprecation: 943572d4be82d480a48f4884f670135ae30bf990
   RCTRequired: 8f3cfc90cc25cf6e420ddb3e7caaaabc57df6043
   RCTTypeSafety: 16a4144ca3f959583ab019b57d5633df10b5e97c
@@ -2829,7 +2865,6 @@ SPEC CHECKSUMS:
   React-logger: 50fdb9a8236da90c0b1072da5c32ee03aeb5bf28
   React-Mapbuffer: 9050ee10c19f4f7fca8963d0211b2854d624973e
   React-microtasksnativemodule: f775db9e991c6f3b8ccbc02bfcde22770f96e23b
-  react-native-keyevent: b546896a528d3f4afe4fa3c89b82748dfdfcc2c1
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
   react-native-safe-area-context: 37e680fc4cace3c0030ee46e8987d24f5d3bdab2
   React-NativeModulesApple: 8969913947d5b576de4ed371a939455a8daf28aa
@@ -2863,7 +2898,7 @@ SPEC CHECKSUMS:
   ReactCodegen: 7d4593f7591f002d137fe40cef3f6c11f13c88cc
   ReactCommon: 08810150b1206cc44aecf5f6ae19af32f29151a8
   ReactNativeDependencies: 71ce9c28beb282aa720ea7b46980fff9669f428a
-  RichTextView: eb0e652c756c9ca2b8cc3fcea4522686a9682987
+  RichTextView: d53cbfe1ad2f783f4da705f3be7b7961fa541d76
   RNCAsyncStorage: 3a4f5e2777dae1688b781a487923a08569e27fe4
   RNGestureHandler: 2914750df066d89bf9d8f48a10ad5f0051108ac3
   RNReanimated: 8921f120e4c22fc6b254aa9cc230efc142d6bd08
@@ -2875,6 +2910,7 @@ SPEC CHECKSUMS:
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
   Sentry: 990a381d8592207a52e7be654b31a27738c3a6a8
+  ThreadBridge: 6585da93da99818627e7ac39f9c3f41f5a510e28
   UMAppLoader: 145337733539f9af9b3dd97eeaa7f3bd97cacb23
   Yoga: 5934998fbeaef7845dbf698f698518695ab4cd1a
   ZXingObjC: 8898711ab495761b2dbbdec76d90164a6d7e14c5

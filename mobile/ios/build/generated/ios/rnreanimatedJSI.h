@@ -68,4 +68,58 @@ private:
   Delegate delegate_;
 };
 
+
+  class JSI_EXPORT NativeWorkletsModuleCxxSpecJSI : public TurboModule {
+protected:
+  NativeWorkletsModuleCxxSpecJSI(std::shared_ptr<CallInvoker> jsInvoker);
+
+public:
+  virtual bool installTurboModule(jsi::Runtime &rt, jsi::String valueUnpackerCode) = 0;
+
+};
+
+template <typename T>
+class JSI_EXPORT NativeWorkletsModuleCxxSpec : public TurboModule {
+public:
+  jsi::Value create(jsi::Runtime &rt, const jsi::PropNameID &propName) override {
+    return delegate_.create(rt, propName);
+  }
+
+  std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime& runtime) override {
+    return delegate_.getPropertyNames(runtime);
+  }
+
+  static constexpr std::string_view kModuleName = "WorkletsModule";
+
+protected:
+  NativeWorkletsModuleCxxSpec(std::shared_ptr<CallInvoker> jsInvoker)
+    : TurboModule(std::string{NativeWorkletsModuleCxxSpec::kModuleName}, jsInvoker),
+      delegate_(reinterpret_cast<T*>(this), jsInvoker) {}
+
+
+private:
+  class Delegate : public NativeWorkletsModuleCxxSpecJSI {
+  public:
+    Delegate(T *instance, std::shared_ptr<CallInvoker> jsInvoker) :
+      NativeWorkletsModuleCxxSpecJSI(std::move(jsInvoker)), instance_(instance) {
+
+    }
+
+    bool installTurboModule(jsi::Runtime &rt, jsi::String valueUnpackerCode) override {
+      static_assert(
+          bridging::getParameterCount(&T::installTurboModule) == 2,
+          "Expected installTurboModule(...) to have 2 parameters");
+
+      return bridging::callFromJs<bool>(
+          rt, &T::installTurboModule, jsInvoker_, instance_, std::move(valueUnpackerCode));
+    }
+
+  private:
+    friend class NativeWorkletsModuleCxxSpec;
+    T *instance_;
+  };
+
+  Delegate delegate_;
+};
+
 } // namespace facebook::react

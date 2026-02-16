@@ -33,7 +33,7 @@ import { LinkPreviewCard } from "../../components/LinkPreviewCard";
 
 import { createLogger } from '../../utils/logger';
 
-const logger = createLogger('Composescreenx');
+const logger = createLogger('ComposeScreen');
 const MAX_POST_LENGTH = 300;
 
 export interface ReplyToPost {
