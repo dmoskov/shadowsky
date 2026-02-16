@@ -81,7 +81,7 @@ struct ThreadPostCard: View {
             Text(node.post.record.text)
                 .font(.system(size: 16))
                 .foregroundColor(.primary)
-                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             // Action buttons
             HStack(spacing: 24) {

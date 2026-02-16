@@ -1,12 +1,18 @@
 import SwiftUI
 
 /// Model for image embed data
-struct ImageEmbedData: Identifiable {
-    let id = UUID()
-    let thumb: String
-    let fullsize: String
-    let alt: String?
-    let aspectRatio: Double?
+public struct ImageEmbedData: Identifiable {
+    public let id = UUID()
+    public let thumb: String
+    public let fullsize: String
+    public let alt: String?
+    public let aspectRatio: Double?
+    public init(thumb: String, fullsize: String, alt: String?, aspectRatio: Double?) {
+        self.thumb = thumb
+        self.fullsize = fullsize
+        self.alt = alt
+        self.aspectRatio = aspectRatio
+    }
 }
 
 /// SwiftUI view for image embeds with 1-4 image grid layouts
@@ -77,33 +83,35 @@ struct ImageEmbed: View {
 
     // Triple image: First large (240h, 2/3 width) + two small stacked (118h each, 1/3 width)
     private var tripleImageLayout: some View {
-        HStack(spacing: 4) {
-            // First image takes 2/3 width
-            ImageTile(
-                imageData: images[0],
-                blurImage: blurImages,
-                index: 0,
-                onPress: handleImagePress
-            )
-            .frame(maxWidth: .infinity, maxHeight: 240)
-            .frame(width: UIScreen.main.bounds.width * 0.66)
-            .cornerRadius(12)
+        GeometryReader { geometry in
+            HStack(spacing: 4) {
+                // First image takes 2/3 width
+                ImageTile(
+                    imageData: images[0],
+                    blurImage: blurImages,
+                    index: 0,
+                    onPress: handleImagePress
+                )
+                .frame(width: (geometry.size.width - 4) * 0.66, height: 240)
+                .cornerRadius(12)
 
-            // Remaining images stacked vertically
-            VStack(spacing: 4) {
-                ForEach(Array(images.dropFirst().prefix(2).enumerated()), id: \.element.id) { offset, image in
-                    let index = offset + 1
-                    ImageTile(
-                        imageData: image,
-                        blurImage: blurImages,
-                        index: index,
-                        onPress: handleImagePress
-                    )
-                    .frame(height: 118)
-                    .cornerRadius(12)
+                // Remaining images stacked vertically
+                VStack(spacing: 4) {
+                    ForEach(Array(images.dropFirst().prefix(2).enumerated()), id: \.element.id) { offset, image in
+                        let index = offset + 1
+                        ImageTile(
+                            imageData: image,
+                            blurImage: blurImages,
+                            index: index,
+                            onPress: handleImagePress
+                        )
+                        .frame(height: 118)
+                        .cornerRadius(12)
+                    }
                 }
             }
         }
+        .frame(height: 240)
     }
 
     // Quad image: 2x2 grid, 150h each
