@@ -7,7 +7,7 @@
 
 import SwiftUI
 import ExpoSwiftUIFeed
-import RichTextView
+import struct RichTextView.RichTextView
 import FeedBridge
 
 struct PostCardView: View {
@@ -180,10 +180,7 @@ struct PostCardView: View {
                 onLinkPress?(uri)
             }
         )
-        .font(.subheadline)
-        .foregroundColor(.primary)
-        .multilineTextAlignment(.leading)
-        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func actionButton(icon: String, count: Int, isActive: Bool, activeColor: Color, action: @escaping () -> Void) -> some View {

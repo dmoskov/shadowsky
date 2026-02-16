@@ -134,17 +134,25 @@ struct RichTextParser {
 // MARK: - SwiftUI View
 
 /// SwiftUI view for rendering rich text with AT Protocol facets
-struct RichTextView: View {
-    let text: String
-    let facets: [Facet]
-    let onMentionTap: (String, String) -> Void  // (handle, did)
-    let onHashtagTap: (String) -> Void
-    let onLinkTap: (String) -> Void
+public struct RichTextView: View {
+    public let text: String
+    public let facets: [Facet]
+    public let onMentionTap: (String, String) -> Void  // (handle, did)
+    public let onHashtagTap: (String) -> Void
+    public let onLinkTap: (String) -> Void
+
+    public init(text: String, facets: [Facet], onMentionTap: @escaping (String, String) -> Void, onHashtagTap: @escaping (String) -> Void, onLinkTap: @escaping (String) -> Void) {
+        self.text = text
+        self.facets = facets
+        self.onMentionTap = onMentionTap
+        self.onHashtagTap = onHashtagTap
+        self.onLinkTap = onLinkTap
+    }
 
     // Theme colors - matching React Native theme (primary blue #1d9bf0)
     private let primaryColor = Color(red: 0x1d / 255.0, green: 0x9b / 255.0, blue: 0xf0 / 255.0)
 
-    var body: some View {
+    public var body: some View {
         let parser = RichTextParser(text: text, facets: facets)
         let segments = parser.parse()
 
@@ -184,6 +192,11 @@ private struct WrappingRichText: UIViewRepresentable {
             .foregroundColor: UIColor(primaryColor),
             .underlineStyle: NSUnderlineStyle.single.rawValue
         ]
+        // Prevent the text view from expanding beyond its container width.
+        // Without this, UITextView's intrinsic content size can be wider than
+        // the available space, causing parent SwiftUI views to overflow.
+        textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        textView.setContentHuggingPriority(.defaultHigh, for: .vertical)
         return textView
     }
 

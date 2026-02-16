@@ -49,16 +49,12 @@ struct FeedListView: View {
     var body: some View {
         ZStack {
             if isLoading && feedState.posts.isEmpty {
-                // Initial loading state
                 loadingView
             } else if let error = error, feedState.posts.isEmpty {
-                // Error state
                 errorView(error)
             } else if feedState.posts.isEmpty {
-                // Empty state
                 emptyView
             } else {
-                // Feed content
                 feedScrollView
             }
         }
