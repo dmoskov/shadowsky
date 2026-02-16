@@ -7,6 +7,31 @@ import { AppBskyFeedDefs } from "@atproto/api";
 
 export type TimeRange = "today" | "week" | "month" | "quarter";
 
+export interface DailyEngagement {
+  date: string; // YYYY-MM-DD
+  likes: number;
+  reposts: number;
+  replies: number;
+  posts: number;
+}
+
+export interface PostEngagementData {
+  uri: string;
+  text: string;
+  createdAt: string;
+  likes: number;
+  reposts: number;
+  replies: number;
+  totalEngagement: number;
+}
+
+export interface PostingTimeData {
+  hourCounts: number[];
+  hourEngagement: number[];
+  bestEngagementHour: number;
+  mostActiveHour: number;
+}
+
 export interface AnalyticsMetrics {
   likesReceived: number;
   repostsReceived: number;
@@ -14,12 +39,23 @@ export interface AnalyticsMetrics {
   followersCount: number;
   postsCount: number;
   impressions: number;
+  engagementRate: number;
   topPosts: AppBskyFeedDefs.FeedViewPost[];
+  dailyEngagement: DailyEngagement[];
+  postingTimes: PostingTimeData;
+  postsForAnalysis: PostEngagementData[];
 }
 
 export interface FollowerMetrics {
   current: number;
   gained: number;
+}
+
+/**
+ * Format a date as YYYY-MM-DD
+ */
+function formatDateKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 /**
@@ -87,16 +123,78 @@ export async function getUserAnalytics(
   let repliesReceived = 0;
   let impressions = 0;
 
+  // Daily engagement aggregation
+  const dailyMap: Record<string, DailyEngagement> = {};
+
+  // Posting time analysis
+  const hourCounts = new Array(24).fill(0);
+  const hourEngagement = new Array(24).fill(0);
+
+  // Posts for AI analysis
+  const postsForAnalysis: PostEngagementData[] = [];
+
   for (const post of allPosts) {
-    likesReceived += post.post.likeCount || 0;
-    repostsReceived += post.post.repostCount || 0;
-    repliesReceived += post.post.replyCount || 0;
-    // Estimate impressions as sum of all engagement
-    impressions +=
-      (post.post.likeCount || 0) +
-      (post.post.repostCount || 0) +
-      (post.post.replyCount || 0);
+    const likes = post.post.likeCount || 0;
+    const reposts = post.post.repostCount || 0;
+    const replies = post.post.replyCount || 0;
+    const total = likes + reposts + replies;
+
+    likesReceived += likes;
+    repostsReceived += reposts;
+    repliesReceived += replies;
+    impressions += total;
+
+    // Aggregate daily engagement
+    const postDate = new Date(post.post.indexedAt);
+    const dateKey = formatDateKey(postDate);
+    if (!dailyMap[dateKey]) {
+      dailyMap[dateKey] = { date: dateKey, likes: 0, reposts: 0, replies: 0, posts: 0 };
+    }
+    dailyMap[dateKey].likes += likes;
+    dailyMap[dateKey].reposts += reposts;
+    dailyMap[dateKey].replies += replies;
+    dailyMap[dateKey].posts += 1;
+
+    // Posting time analysis
+    const hour = postDate.getHours();
+    hourCounts[hour]++;
+    hourEngagement[hour] += total;
+
+    // Collect post data for AI analysis
+    const record = post.post.record as { text?: string } | undefined;
+    postsForAnalysis.push({
+      uri: post.post.uri,
+      text: record?.text || "",
+      createdAt: post.post.indexedAt,
+      likes,
+      reposts,
+      replies,
+      totalEngagement: total,
+    });
   }
+
+  // Build sorted daily engagement array
+  const days = timeRange === "today" ? 1 : timeRange === "week" ? 7 : timeRange === "month" ? 30 : 90;
+  const dailyEngagement: DailyEngagement[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = formatDateKey(d);
+    dailyEngagement.push(dailyMap[key] || { date: key, likes: 0, reposts: 0, replies: 0, posts: 0 });
+  }
+
+  // Calculate best posting times
+  const avgEngagementByHour = hourEngagement.map((total, hour) =>
+    hourCounts[hour] > 0 ? total / hourCounts[hour] : 0,
+  );
+  const bestEngagementHour = avgEngagementByHour.reduce(
+    (maxIdx, val, idx, arr) => (val > arr[maxIdx] ? idx : maxIdx),
+    0,
+  );
+  const mostActiveHour = hourCounts.reduce(
+    (maxIdx, val, idx, arr) => (val > arr[maxIdx] ? idx : maxIdx),
+    0,
+  );
 
   // Sort posts by engagement (likes + reposts + replies) to get top posts
   const topPosts = [...allPosts]
@@ -113,6 +211,10 @@ export async function getUserAnalytics(
     })
     .slice(0, 5); // Top 5 posts
 
+  const engagementRate = allPosts.length > 0
+    ? impressions / allPosts.length
+    : 0;
+
   return {
     likesReceived,
     repostsReceived,
@@ -120,7 +222,16 @@ export async function getUserAnalytics(
     followersCount: profile.followersCount || 0,
     postsCount: allPosts.length,
     impressions,
+    engagementRate,
     topPosts,
+    dailyEngagement,
+    postingTimes: {
+      hourCounts,
+      hourEngagement: avgEngagementByHour,
+      bestEngagementHour,
+      mostActiveHour,
+    },
+    postsForAnalysis,
   };
 }
 

@@ -280,6 +280,111 @@ export async function generateAltText(imageUri: string): Promise<string> {
   }
 }
 
+// Post Analysis Types (AI Analytics)
+export interface PostAnalysisPost {
+  text: string;
+  createdAt: string;
+  likes: number;
+  reposts: number;
+  replies: number;
+}
+
+export interface ContentTheme {
+  theme: string;
+  description: string;
+  frequency: "primary" | "regular" | "occasional";
+  examples: string[];
+}
+
+export interface WritingStyleAnalysis {
+  tone: string;
+  characteristics: string[];
+  voiceDescription: string;
+}
+
+export interface EngagementPatterns {
+  topPerformers: string[];
+  contentStrengths: string[];
+  suggestions?: string[];
+  observations?: string[];
+}
+
+export interface OptimalTimeRecommendation {
+  hour: number;
+  dayOfWeek: number; // 0 = Sunday, -1 = any day
+  avgEngagement: number;
+  confidence: "high" | "medium" | "low";
+}
+
+export interface OptimalPostingTimes {
+  recommendations: OptimalTimeRecommendation[];
+  hourlyEngagement: number[];
+  weekdayEngagement: number[];
+  lastCalculated: string;
+}
+
+export interface PostAnalysisResult {
+  contentThemes: ContentTheme[];
+  writingStyle: WritingStyleAnalysis;
+  engagementPatterns: EngagementPatterns;
+  summary: string;
+  optimalPostingTimes?: OptimalPostingTimes;
+}
+
+/**
+ * Analyze user posts using AI to identify themes, writing style, and engagement patterns
+ */
+export async function analyzePosts(
+  posts: PostAnalysisPost[],
+  analysisType: "haiku" | "sonnet" = "sonnet",
+): Promise<PostAnalysisResult> {
+  try {
+    const apiUrl = getVersionedApiUrl();
+    const endpoint = `${apiUrl}/analyze-posts`;
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getApiAuthHeaders(),
+      },
+      body: JSON.stringify({ posts, analysisType }),
+    });
+
+    if (!response.ok) {
+      const status = response.status;
+      if (status === 401) {
+        throw new Error("Post analysis failed: Invalid API key");
+      } else if (status === 429) {
+        throw new Error("Post analysis failed: Rate limit exceeded");
+      } else {
+        throw new Error(
+          `Post analysis failed: ${response.statusText || "Unknown error"}`,
+        );
+      }
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      throw new Error("Post analysis unavailable: API server not reachable");
+    }
+
+    if (error instanceof Error && error.message.includes("Post analysis")) {
+      throw error;
+    }
+
+    logger.error('Error analyzing posts:', error);
+    throw new Error(
+      `Post analysis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+}
+
 export interface LinkMetadata {
   url: string;
   title: string;
