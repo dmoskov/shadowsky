@@ -2,11 +2,17 @@ import SwiftUI
 import AVKit
 
 /// Model for video embed data
-struct VideoEmbedData {
-    let playlist: String
-    let thumbnail: String?
-    let alt: String?
-    let aspectRatio: Double?
+public struct VideoEmbedData {
+    public let playlist: String
+    public let thumbnail: String?
+    public let alt: String?
+    public let aspectRatio: Double?
+    public init(playlist: String, thumbnail: String?, alt: String?, aspectRatio: Double?) {
+        self.playlist = playlist
+        self.thumbnail = thumbnail
+        self.alt = alt
+        self.aspectRatio = aspectRatio
+    }
 }
 
 /// SwiftUI view for video embeds with thumbnail and player
@@ -18,6 +24,7 @@ struct VideoEmbed: View {
     @State private var isLoading = false
     @State private var showThumbnail = true
     @State private var player: AVPlayer?
+    @State private var endObserver: NSObjectProtocol?
 
     init(video: VideoEmbedData, onPress: ((String) -> Void)? = nil) {
         self.video = video
@@ -141,8 +148,7 @@ struct VideoEmbed: View {
         guard let url = URL(string: video.playlist) else { return }
         player = AVPlayer(url: url)
 
-        // Observe player status
-        NotificationCenter.default.addObserver(
+        endObserver = NotificationCenter.default.addObserver(
             forName: .AVPlayerItemDidPlayToEndTime,
             object: player?.currentItem,
             queue: .main
@@ -153,6 +159,10 @@ struct VideoEmbed: View {
 
     private func cleanupPlayer() {
         player?.pause()
+        if let observer = endObserver {
+            NotificationCenter.default.removeObserver(observer)
+            endObserver = nil
+        }
         player = nil
     }
 

@@ -86,7 +86,7 @@ struct FeedListView: View {
                 ForEach(feedState.posts, id: \.post.uri) { feedPost in
                     PostCardView(
                         post: convertToFeedViewPost(feedPost),
-                        isBookmarked: feedPost.post.viewer?.like != nil, // Placeholder
+                        isBookmarked: feedPost.isBookmarked ?? false,
                         isOnline: true,
                         currentUserDid: nil,
                         onPress: {
@@ -356,7 +356,8 @@ class FeedState: ObservableObject {
                             post: post,
                             reply: self.posts[index].reply,
                             reason: self.posts[index].reason,
-                            feedContext: self.posts[index].feedContext
+                            feedContext: self.posts[index].feedContext,
+                            isBookmarked: update.isBookmarked ?? self.posts[index].isBookmarked
                         )
                     }
                 }
@@ -407,7 +408,10 @@ struct FeedListView_Previews: PreviewProvider {
             onBookmark: { uri in print("Bookmark: \(uri)") },
             onMentionPress: { handle, did in print("Mention: \(handle)") },
             onHashtagPress: { tag in print("Hashtag: \(tag)") },
-            onShare: { uri in print("Share: \(uri)") }
+            onShare: { uri in print("Share: \(uri)") },
+            onImagePress: { images, index in print("Image: \(index)") },
+            onLinkPress: { url in print("Link: \(url)") },
+            onQuotePress: { uri, handle in print("Quote: \(uri)") }
         )
     }
 }

@@ -217,21 +217,17 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
       if (draft) {
         draftToComposerState(draft).then((state) => {
           setText(state.text);
-          // Load images one by one using the image picker API
+          // Load images using the image picker API
           if (state.images && state.images.length > 0) {
-            // Clear existing images first
             imagePicker.clearImages();
-            // Add each image
-            for (const img of state.images) {
-              const imageAsset: ImageAsset = {
-                uri: img.uri,
-                width: 0,
-                height: 0,
-                mimeType: img.mimeType || 'image/jpeg',
-                altText: img.altText || '',
-              };
-              imagePicker.selectedImages.push(imageAsset);
-            }
+            const imageAssets: ImageAsset[] = state.images.map((img) => ({
+              uri: img.uri,
+              width: 0,
+              height: 0,
+              mimeType: img.mimeType || 'image/jpeg',
+              altText: img.altText || '',
+            }));
+            imagePicker.addImages(imageAssets);
           }
           setLoadedDraftId(draftId);
           setIsDirty(false);

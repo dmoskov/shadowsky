@@ -136,10 +136,10 @@ struct ThreadPostCard: View {
     }
 
     private func formatTimestamp(_ timestamp: String) -> String {
-        // Simple formatting - just show time ago
-        // In production, use proper date formatting
         let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: timestamp) else {
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        guard let date = formatter.date(from: timestamp) ?? ISO8601DateFormatter().date(from: timestamp) else {
             return ""
         }
 

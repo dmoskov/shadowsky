@@ -80,13 +80,19 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
     const timer = setTimeout(() => {
       setDebouncedQuery(searchQuery);
       if (searchQuery && searchQuery.length > 0) {
-        saveToHistory(searchQuery);
         setShowHistory(false);
       }
     }, 300);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Save to history only when debounced query settles (not on every keystroke)
+  useEffect(() => {
+    if (debouncedQuery && debouncedQuery.trim().length > 1) {
+      saveToHistory(debouncedQuery);
+    }
+  }, [debouncedQuery]);
 
   const loadSearchHistory = async () => {
     try {

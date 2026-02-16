@@ -191,7 +191,9 @@ struct NotificationCellView: View {
 
     private func relativeTimeString(from isoString: String) -> String {
         let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: isoString) else {
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        guard let date = formatter.date(from: isoString) ?? ISO8601DateFormatter().date(from: isoString) else {
             return ""
         }
 
@@ -383,7 +385,9 @@ struct AggregatedNotificationCellView: View {
 
     private func relativeTimeString(from isoString: String) -> String {
         let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: isoString) else {
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        guard let date = formatter.date(from: isoString) ?? ISO8601DateFormatter().date(from: isoString) else {
             return ""
         }
 
@@ -410,15 +414,105 @@ struct AggregatedNotificationCellView: View {
 
 // MARK: - RichTextView
 
-/// Simple rich text view for displaying notification text with facets
+/// Rich text view for displaying notification text with facets
+/// Renders mentions, links, and hashtags with styled text
 struct RichTextView: View {
     let text: String
     let facets: [NotificationFacet]?
     let onMentionPress: ((String, String) -> Void)?
     let onHashtagPress: ((String) -> Void)?
 
+    private let primaryColor = Color(red: 0x1d / 255.0, green: 0x9b / 255.0, blue: 0xf0 / 255.0)
+
     var body: some View {
-        Text(text)
-            .lineLimit(nil)
+        if let facets = facets, !facets.isEmpty {
+            buildAttributedText(facets: facets)
+                .lineLimit(nil)
+        } else {
+            Text(text)
+                .lineLimit(nil)
+        }
+    }
+
+    @ViewBuilder
+    private func buildAttributedText(facets: [NotificationFacet]) -> some View {
+        let segments = parseSegments(facets: facets)
+        segments.reduce(Text("")) { result, segment in
+            switch segment.type {
+            case .plain:
+                return result + Text(segment.text)
+            case .mention:
+                return result + Text(segment.text).foregroundColor(primaryColor).fontWeight(.medium)
+            case .link:
+                return result + Text(segment.text).foregroundColor(primaryColor).underline()
+            case .hashtag:
+                return result + Text(segment.text).foregroundColor(primaryColor).fontWeight(.medium)
+            }
+        }
+    }
+
+    private enum SegmentType {
+        case plain, mention, link, hashtag
+    }
+
+    private struct Segment {
+        let text: String
+        let type: SegmentType
+    }
+
+    private func parseSegments(facets: [NotificationFacet]) -> [Segment] {
+        var segments: [Segment] = []
+        let utf8 = text.utf8
+        let sortedFacets = facets.sorted { $0.index.byteStart < $1.index.byteStart }
+        var currentByteOffset = 0
+
+        for facet in sortedFacets {
+            let byteStart = facet.index.byteStart
+            let byteEnd = facet.index.byteEnd
+
+            guard byteStart >= currentByteOffset,
+                  byteStart <= utf8.count,
+                  byteEnd <= utf8.count else { continue }
+
+            if currentByteOffset < byteStart {
+                if let plainText = substringFromBytes(start: currentByteOffset, end: byteStart) {
+                    segments.append(Segment(text: plainText, type: .plain))
+                }
+            }
+
+            if let facetText = substringFromBytes(start: byteStart, end: byteEnd) {
+                let segType: SegmentType
+                if let feature = facet.features.first {
+                    switch feature {
+                    case .mention: segType = .mention
+                    case .link: segType = .link
+                    case .tag: segType = .hashtag
+                    }
+                } else {
+                    segType = .plain
+                }
+                segments.append(Segment(text: facetText, type: segType))
+            }
+
+            currentByteOffset = max(currentByteOffset, byteEnd)
+        }
+
+        if currentByteOffset < utf8.count {
+            if let remainingText = substringFromBytes(start: currentByteOffset, end: utf8.count) {
+                segments.append(Segment(text: remainingText, type: .plain))
+            }
+        }
+
+        return segments
+    }
+
+    private func substringFromBytes(start: Int, end: Int) -> String? {
+        let utf8View = text.utf8
+        guard start >= 0, end <= utf8View.count, start <= end else { return nil }
+        let startIdx = utf8View.index(utf8View.startIndex, offsetBy: start)
+        let endIdx = utf8View.index(utf8View.startIndex, offsetBy: end)
+        guard let startStrIdx = startIdx.samePosition(in: text),
+              let endStrIdx = endIdx.samePosition(in: text) else { return nil }
+        return String(text[startStrIdx..<endStrIdx])
     }
 }

@@ -332,7 +332,7 @@ class ThreadState: ObservableObject {
             ),
             record: ThreadRecord(
                 text: recordData["text"] as? String ?? "",
-                facets: nil, // TODO: Parse facets if needed
+                facets: parseFacets(from: recordData["facets"] as? [[String: Any]]),
                 createdAt: recordData["createdAt"] as? String ?? ""
             ),
             indexedAt: data["indexedAt"] as? String ?? "",
@@ -348,6 +348,42 @@ class ThreadState: ObservableObject {
         )
     }
 
+    private func parseFacets(from facetsData: [[String: Any]]?) -> [Facet]? {
+        guard let facetsData = facetsData else { return nil }
+
+        return facetsData.compactMap { facetDict -> Facet? in
+            guard let indexDict = facetDict["index"] as? [String: Any],
+                  let byteStart = indexDict["byteStart"] as? Int,
+                  let byteEnd = indexDict["byteEnd"] as? Int,
+                  let featuresArray = facetDict["features"] as? [[String: Any]] else {
+                return nil
+            }
+
+            let features: [FacetFeature] = featuresArray.compactMap { featureDict in
+                guard let type = featureDict["$type"] as? String else { return nil }
+
+                switch type {
+                case "app.bsky.richtext.facet#mention":
+                    guard let did = featureDict["did"] as? String else { return nil }
+                    return .mention(FacetFeatureMention(type: type, did: did))
+                case "app.bsky.richtext.facet#link":
+                    guard let uri = featureDict["uri"] as? String else { return nil }
+                    return .link(FacetFeatureLink(type: type, uri: uri))
+                case "app.bsky.richtext.facet#tag":
+                    guard let tag = featureDict["tag"] as? String else { return nil }
+                    return .tag(FacetFeatureTag(type: type, tag: tag))
+                default:
+                    return nil
+                }
+            }
+
+            return Facet(
+                index: FacetIndex(byteStart: byteStart, byteEnd: byteEnd),
+                features: features
+            )
+        }
+    }
+
     private func parseReplyRef(from data: [String: Any]?) -> ThreadReplyRef? {
         guard let data = data else { return nil }
         return ThreadReplyRef(
@@ -357,10 +393,36 @@ class ThreadState: ObservableObject {
     }
 
     private func applyIncrementalUpdate(_ update: [String: Any]) {
-        // Update the thread tree with new like/repost data
-        // This is a simplified version - full implementation would recursively update nodes
-        guard let uri = update["uri"] as? String else { return }
-        // TODO: Implement recursive update of thread nodes
+        guard let uri = update["uri"] as? String,
+              let rootPost = rootPost else { return }
+
+        self.rootPost = updateNodeRecursively(rootPost, uri: uri, update: update)
+    }
+
+    private func updateNodeRecursively(_ node: ThreadNode, uri: String, update: [String: Any]) -> ThreadNode {
+        if node.post.uri == uri {
+            let viewerData = update["viewer"] as? [String: Any]
+            let updatedPost = ThreadPost(
+                uri: node.post.uri,
+                cid: node.post.cid,
+                author: node.post.author,
+                record: node.post.record,
+                indexedAt: node.post.indexedAt,
+                likeCount: update["likeCount"] as? Int ?? node.post.likeCount,
+                repostCount: update["repostCount"] as? Int ?? node.post.repostCount,
+                replyCount: update["replyCount"] as? Int ?? node.post.replyCount,
+                quoteCount: update["quoteCount"] as? Int ?? node.post.quoteCount,
+                viewer: viewerData.map { ThreadViewer(
+                    like: $0["like"] as? String,
+                    repost: $0["repost"] as? String
+                )} ?? node.post.viewer,
+                labels: node.post.labels
+            )
+            return ThreadNode(post: updatedPost, parent: node.parent, replies: node.replies, depth: node.depth)
+        }
+
+        let updatedReplies = node.replies.map { updateNodeRecursively($0, uri: uri, update: update) }
+        return ThreadNode(post: node.post, parent: node.parent, replies: updatedReplies, depth: node.depth)
     }
 }
 

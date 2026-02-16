@@ -515,12 +515,14 @@ public struct SerializedFeedViewPost: Codable {
     public let reply: SerializedReplyRef?
     public let reason: SerializedReason?
     public let feedContext: String?
+    public var isBookmarked: Bool?
 
-    public init(post: SerializedPost, reply: SerializedReplyRef?, reason: SerializedReason?, feedContext: String?) {
+    public init(post: SerializedPost, reply: SerializedReplyRef?, reason: SerializedReason?, feedContext: String?, isBookmarked: Bool? = nil) {
         self.post = post
         self.reply = reply
         self.reason = reason
         self.feedContext = feedContext
+        self.isBookmarked = isBookmarked
     }
 }
 

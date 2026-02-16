@@ -171,6 +171,26 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
     }
   };
 
+  // Helper to find a post's data within the thread tree
+  const findPostInThread = (uri: string): AppBskyFeedDefs.ThreadViewPost | null => {
+    if (!thread || !AppBskyFeedDefs.isThreadViewPost(thread)) return null;
+
+    const search = (node: AppBskyFeedDefs.ThreadViewPost): AppBskyFeedDefs.ThreadViewPost | null => {
+      if (node.post.uri === uri) return node;
+      if (node.replies) {
+        for (const reply of node.replies) {
+          if (AppBskyFeedDefs.isThreadViewPost(reply)) {
+            const found = search(reply);
+            if (found) return found;
+          }
+        }
+      }
+      return null;
+    };
+
+    return search(thread);
+  };
+
   const handleRepost = (event: { nativeEvent: { uri: string; cid: string; repostUri?: string } }) => {
     const { uri, cid, repostUri } = event.nativeEvent;
 
@@ -185,6 +205,11 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
       });
       return;
     }
+
+    // Get post data from thread for author info
+    const postNode = findPostInThread(uri);
+    const postAuthor = postNode?.post.author;
+    const postRecord = postNode?.post.record as any;
 
     // Show menu: Repost, Quote, or Share
     if (Platform.OS === 'ios') {
@@ -209,8 +234,12 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
               quoteTo: {
                 uri,
                 cid,
-                author: { handle: '', displayName: '', avatar: '' }, // TODO: Get from post
-                text: '',
+                author: {
+                  handle: postAuthor?.handle || '',
+                  displayName: postAuthor?.displayName || '',
+                  avatar: postAuthor?.avatar || '',
+                },
+                text: postRecord?.text?.substring(0, 150) || '',
               },
             });
           } else if (buttonIndex === 3) {
@@ -245,8 +274,12 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
                 quoteTo: {
                   uri,
                   cid,
-                  author: { handle: '', displayName: '', avatar: '' },
-                  text: '',
+                  author: {
+                    handle: postAuthor?.handle || '',
+                    displayName: postAuthor?.displayName || '',
+                    avatar: postAuthor?.avatar || '',
+                  },
+                  text: postRecord?.text?.substring(0, 150) || '',
                 },
               });
             },
@@ -262,18 +295,23 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
   };
 
   const handleReply = (event: { nativeEvent: { uri: string; cid: string; handle: string } }) => {
-    const { uri, cid, handle } = event.nativeEvent;
+    const { uri, cid, handle: eventHandle } = event.nativeEvent;
+
+    // Get post data from thread for author info and text preview
+    const postNode = findPostInThread(uri);
+    const postAuthor = postNode?.post.author;
+    const postRecord = postNode?.post.record as any;
 
     navigateToCompose({
       replyTo: {
         uri,
         cid,
         author: {
-          handle,
-          displayName: '',
-          avatar: '',
+          handle: postAuthor?.handle || eventHandle,
+          displayName: postAuthor?.displayName || '',
+          avatar: postAuthor?.avatar || '',
         },
-        text: '',
+        text: postRecord?.text?.substring(0, 100) || '',
       },
     });
   };
