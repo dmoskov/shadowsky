@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@atproto/api": "^0.18.21",
-    "@atproto/oauth-client-browser": "^0.3.37",
+    "@atproto/oauth-client-browser": "^0.3.40",
     "@aws-sdk/client-cloudwatch-logs": "^3.978.0",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
