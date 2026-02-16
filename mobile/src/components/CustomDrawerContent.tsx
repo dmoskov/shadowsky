@@ -4,8 +4,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, usePathname } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
 import { colors } from "../constants/theme";
-import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon, ChatBubbleIcon, SearchIcon, ImageIcon } from "./icons";
-import { useUnreadMessageCount, useDraftCount } from "../hooks/api";
+import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon, ChatBubbleIcon, SearchIcon, ImageIcon, BookmarkIcon } from "./icons";
+import { useUnreadMessageCount, useDraftCount, useBookmarkCount } from "../hooks/api";
 
 interface DrawerItemProps {
   label: string;
@@ -46,6 +46,7 @@ export function CustomDrawerContent() {
   const { account } = useAuth();
   const unreadCount = useUnreadMessageCount();
   const draftCount = useDraftCount();
+  const bookmarkCount = useBookmarkCount();
 
   return (
     <ScrollView style={[styles.drawerContent, { paddingTop: insets.top }]}>
@@ -78,6 +79,13 @@ export function CustomDrawerContent() {
           isActive={pathname.includes("/messages")}
           onPress={() => router.push("/(app)/(tabs)/(profile)/messages")}
           badge={unreadCount}
+        />
+        <DrawerItem
+          label="Bookmarks"
+          icon={<BookmarkIcon size={20} color={pathname.includes("/bookmarks") ? colors.primary : colors.text} />}
+          isActive={pathname.includes("/bookmarks")}
+          onPress={() => router.push("/(app)/(tabs)/(profile)/bookmarks")}
+          badge={bookmarkCount}
         />
         <DrawerItem
           label="My Feeds"

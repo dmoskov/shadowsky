@@ -16,6 +16,7 @@ import { AppBskyFeedDefs } from "@atproto/api";
 import { useRouter } from "expo-router";
 import { usePostThread } from "../../hooks/api/useFeed";
 import { useLikePost, useUnlikePost, useRepost, useDeleteRepost, useCreatePost } from "../../hooks/api/usePosts";
+import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useAppNavigation } from "../../hooks/useNavigation";
 import { PostCard } from "../../components/PostCard";
 import { ErrorState } from "../../components/ErrorState";
@@ -107,6 +108,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   const repost = useRepost();
   const deleteRepost = useDeleteRepost();
   const createPost = useCreatePost();
+  const { isBookmarked, toggleBookmark } = useBookmarks();
 
   // Resolve handle to URI on mount
   React.useEffect(() => {
@@ -321,6 +323,11 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
     sharePost(post);
   };
 
+  const handleBookmark = (post: AppBskyFeedDefs.FeedViewPost) => {
+    triggerHaptic("light");
+    toggleBookmark(post.post);
+  };
+
   const handlePostReply = async () => {
     if (!replyText.trim()) {
       return;
@@ -407,6 +414,8 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
           onLike={() => handleLike(rootPost)}
           onRepost={() => handleRepost(rootPost)}
           onReply={() => handleReply(rootPost)}
+          onBookmark={() => handleBookmark(rootPost)}
+          isBookmarked={isBookmarked(rootPost.post.uri)}
           onMentionPress={handleMentionPress}
           onHashtagPress={handleHashtagPress}
           onPressLikeCount={() => handlePressLikeCount(rootPost.post.uri)}
@@ -435,6 +444,8 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
             onLike={handleLike}
             onRepost={handleRepost}
             onReply={handleReply}
+            onBookmark={handleBookmark}
+            isBookmarked={isBookmarked}
             onMentionPress={handleMentionPress}
             onHashtagPress={handleHashtagPress}
             onPressLikeCount={handlePressLikeCount}

@@ -25,6 +25,8 @@ interface ThreadTreeViewProps {
   onLike: (post: AppBskyFeedDefs.FeedViewPost) => void;
   onRepost: (post: AppBskyFeedDefs.FeedViewPost) => void;
   onReply: (post: AppBskyFeedDefs.FeedViewPost) => void;
+  onBookmark?: (post: AppBskyFeedDefs.FeedViewPost) => void;
+  isBookmarked?: (postUri: string) => boolean;
   onMentionPress: (handle: string, did: string) => void;
   onHashtagPress: (tag: string) => void;
   onPressLikeCount?: (postUri: string) => void;
@@ -108,6 +110,8 @@ export function ThreadTreeView({
   onLike,
   onRepost,
   onReply,
+  onBookmark,
+  isBookmarked,
   onMentionPress,
   onHashtagPress,
   onPressLikeCount,
@@ -199,6 +203,8 @@ export function ThreadTreeView({
               onLike={() => onLike(node.post)}
               onRepost={() => onRepost(node.post)}
               onReply={() => onReply(node.post)}
+              onBookmark={onBookmark ? () => onBookmark(node.post) : undefined}
+              isBookmarked={isBookmarked ? isBookmarked(node.post.post.uri) : false}
               onMentionPress={onMentionPress}
               onHashtagPress={onHashtagPress}
               onPressLikeCount={
