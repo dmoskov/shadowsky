@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useMemo} from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import {useCreateList} from '../../hooks/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
-import {colors} from '../../constants/theme';
+import {useTheme} from '../../contexts/ThemeContext';
 
 interface CreateListScreenProps {
   onSuccess?: () => void;
@@ -23,6 +23,8 @@ export function CreateListScreen({onSuccess}: CreateListScreenProps) {
   const [purpose, setPurpose] = useState<'curatelist' | 'modlist'>('curatelist');
   const {mutateAsync: createList, isPending} = useCreateList();
   const {goBack} = useAppNavigation();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const handleCreate = async () => {
     if (!name.trim()) {
@@ -155,112 +157,114 @@ export function CreateListScreen({onSuccess}: CreateListScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: 16,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  label: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  helperText: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    marginBottom: 12,
-  },
-  input: {
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: colors.surface,
-    borderRadius: 8,
-    padding: 12,
-    color: colors.text,
-    fontSize: 16,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  purposeContainer: {
-    gap: 12,
-  },
-  purposeOption: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    padding: 12,
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: colors.surface,
-    borderRadius: 8,
-  },
-  purposeOptionSelected: {
-    borderColor: colors.primary,
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-  },
-  radioButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: colors.textTertiary,
-    marginRight: 12,
-    marginTop: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  radioButtonSelected: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.primary,
-  },
-  purposeTextContainer: {
-    flex: 1,
-  },
-  purposeTitle: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  purposeDescription: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  createButton: {
-    backgroundColor: colors.primary,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  createButtonDisabled: {
-    opacity: 0.5,
-  },
-  createButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  cancelButton: {
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  cancelButtonText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      padding: 16,
+    },
+    section: {
+      marginBottom: 24,
+    },
+    label: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    helperText: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      marginBottom: 12,
+    },
+    input: {
+      backgroundColor: colors.surfaceAlt,
+      borderWidth: 1,
+      borderColor: colors.surface,
+      borderRadius: 8,
+      padding: 12,
+      color: colors.text,
+      fontSize: 16,
+    },
+    textArea: {
+      height: 100,
+      textAlignVertical: 'top',
+    },
+    purposeContainer: {
+      gap: 12,
+    },
+    purposeOption: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      padding: 12,
+      backgroundColor: colors.surfaceAlt,
+      borderWidth: 1,
+      borderColor: colors.surface,
+      borderRadius: 8,
+    },
+    purposeOptionSelected: {
+      borderColor: colors.primary,
+      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    },
+    radioButton: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: colors.textTertiary,
+      marginRight: 12,
+      marginTop: 2,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    radioButtonSelected: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: colors.primary,
+    },
+    purposeTextContainer: {
+      flex: 1,
+    },
+    purposeTitle: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: '600',
+      marginBottom: 4,
+    },
+    purposeDescription: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    createButton: {
+      backgroundColor: colors.primary,
+      padding: 16,
+      borderRadius: 8,
+      alignItems: 'center',
+      marginTop: 8,
+    },
+    createButtonDisabled: {
+      opacity: 0.5,
+    },
+    createButtonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    cancelButton: {
+      padding: 16,
+      borderRadius: 8,
+      alignItems: 'center',
+      marginTop: 12,
+    },
+    cancelButtonText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  });
+}

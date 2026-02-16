@@ -15,7 +15,7 @@ import { useTimeline } from "../../hooks/api/useFeed";
 import { useAppNavigation } from "../../hooks/useNavigation";
 import { EmptyState } from "../../components/EmptyState";
 import { ErrorState } from "../../components/ErrorState";
-import { colors } from "../../constants/theme";
+import { useTheme } from "../../contexts/ThemeContext";
 import { useOfflineFeedEnhancer } from "../../hooks/useOfflineFeed";
 import StaleContentIndicator from "../../components/StaleContentIndicator";
 import { useOfflineFeedStatus } from "../../hooks/useOfflineFeed";
@@ -57,6 +57,8 @@ interface MediaGridItemProps {
 }
 
 function MediaGridItem({ post, onPress }: MediaGridItemProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const imageUri = getFirstImage(post);
   const likeCount = post.post.likeCount || 0;
   const replyCount = post.post.replyCount || 0;
@@ -94,12 +96,14 @@ function MediaGridItem({ post, onPress }: MediaGridItemProps) {
 }
 
 export function TimelineScreen() {
+  const { colors } = useTheme();
   const timelineQuery = useTimeline();
   const enhancedQuery = useOfflineFeedEnhancer(timelineQuery, 'timeline', ['timeline']);
   const { data, isLoading, isRefetching, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = enhancedQuery;
   const { isServingCached, isStale, isOnline } = enhancedQuery;
   const offlineStatus = useOfflineFeedStatus();
   const { navigateToThread } = useAppNavigation();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Flatten paginated data and filter for posts with images
   const postsWithMedia = useMemo(() => {
@@ -208,7 +212,8 @@ export function TimelineScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -260,4 +265,5 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: "center",
   },
-});
+  });
+}

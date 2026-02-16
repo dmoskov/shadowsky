@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { ImageIcon, VideoIcon, GifIcon, EmojiIcon, ThreadIcon, GlobeIcon } from "../../../components/icons";
-import { colors } from "../../../constants/theme";
+import { useTheme } from "../../../contexts/ThemeContext";
 import { getLanguageShortName } from "../../../constants/languages";
 import type { ImageAsset } from "../../../hooks/useImagePicker";
 import type { VideoAsset } from "../../../hooks/useVideoPicker";
@@ -59,6 +59,8 @@ export function ComposeToolbar({
   selectedLanguages,
   bottomInset,
 }: ComposeToolbarProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const isOverLimit = charCount > maxLength;
 
   if (isThreadMode) {
@@ -150,7 +152,8 @@ export function ComposeToolbar({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   toolbar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -201,4 +204,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-});
+  });
+}

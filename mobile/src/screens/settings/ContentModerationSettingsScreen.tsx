@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -8,13 +8,13 @@ import {
   SafeAreaView,
 } from "react-native";
 import { useModeration, LabelType, LabelPreference } from "../../contexts/ModerationContext";
-import { colors } from "../../constants/theme";
+import { useTheme } from "../../contexts/ThemeContext";
 import { ChevronLeft } from "lucide-react-native";
 
 
 import { createLogger } from '../../utils/logger';
 
-const logger = createLogger('Contentmoderationsettingsscreenx');
+const logger = createLogger('ContentModerationSettingsScreen');
 interface ContentModerationSettingsScreenProps {
   navigation: {
     goBack: () => void;
@@ -102,6 +102,8 @@ const PREFERENCE_OPTIONS: Array<{
 export function ContentModerationSettingsScreen({
   navigation,
 }: ContentModerationSettingsScreenProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const {
     contentFilterPreferences,
     setContentFilterPreference,
@@ -237,7 +239,8 @@ export function ContentModerationSettingsScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
@@ -366,4 +369,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.text,
   },
-});
+  });
+}

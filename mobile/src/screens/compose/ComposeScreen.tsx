@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image, Modal } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -9,7 +9,7 @@ import { draftToComposerState, ComposerState } from "../../services/drafts";
 import { Avatar } from "../../components/Avatar";
 import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
 import { useVideoPicker } from "../../hooks/useVideoPicker";
-import { colors } from "../../constants/theme";
+import { useTheme } from "../../contexts/ThemeContext";
 import { useSearchActors } from "../../hooks/api/useProfile";
 import { MentionSuggestions } from "../../components/MentionSuggestions";
 import { ThreadComposer } from "../../components/ThreadComposer";
@@ -68,6 +68,7 @@ export interface ComposeScreenProps {
 }
 
 export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText, initialText }: ComposeScreenProps = {}) {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation();
@@ -851,6 +852,8 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
     ? "Add your thoughts"
     : "What's happening?";
 
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
@@ -1087,7 +1090,8 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -1277,4 +1281,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-});
+  });
+}

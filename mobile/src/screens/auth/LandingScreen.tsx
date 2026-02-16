@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,10 +14,11 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
-import { colors } from "../../constants/theme";
+import { useTheme } from "../../contexts/ThemeContext";
 import { useTranslation } from "../../hooks/useTranslation";
 
 export function LandingScreen() {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { signIn } = useAuth();
   const { t } = useTranslation();
@@ -54,6 +55,8 @@ export function LandingScreen() {
       );
     }
   };
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <KeyboardAvoidingView
@@ -160,7 +163,8 @@ export function LandingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -305,4 +309,5 @@ const styles = StyleSheet.create({
     color: colors.info,
     textDecorationLine: "underline",
   },
-});
+  });
+}

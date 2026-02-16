@@ -5,7 +5,7 @@
  * Collections are stored locally (AsyncStorage) with the bookmark-to-collection mappings.
  */
 
-import { colors } from "../../constants/theme";
+import { colors as defaultColors } from "../../constants/theme";
 
 export interface BookmarkCollection {
   id: string;
@@ -28,17 +28,28 @@ export interface BookmarkCollectionMapping {
 export const DEFAULT_COLLECTION_ID = "__all__";
 export const UNCATEGORIZED_COLLECTION_ID = "__uncategorized__";
 
-// Collection color options
-export const COLLECTION_COLORS = [
-  { id: "blue", name: "Blue", value: colors.info },
-  { id: "green", name: "Green", value: colors.success },
-  { id: "purple", name: "Purple", value: "#a855f7" },
-  { id: "pink", name: "Pink", value: colors.accent },
-  { id: "orange", name: "Orange", value: "#f97316" },
-  { id: "yellow", name: "Yellow", value: "#eab308" },
-  { id: "red", name: "Red", value: colors.danger },
-  { id: "teal", name: "Teal", value: "#14b8a6" },
+// Collection color option IDs (for type safety)
+export const COLLECTION_COLOR_IDS = [
+  "blue", "green", "purple", "pink", "orange", "yellow", "red", "teal",
 ] as const;
+
+// Function to get collection colors with dynamic theme colors
+export function getCollectionColors(colors?: any) {
+  const themeColors = colors || defaultColors;
+  return [
+    { id: "blue" as const, name: "Blue", value: themeColors.info },
+    { id: "green" as const, name: "Green", value: themeColors.success },
+    { id: "purple" as const, name: "Purple", value: "#a855f7" },
+    { id: "pink" as const, name: "Pink", value: themeColors.accent },
+    { id: "orange" as const, name: "Orange", value: "#f97316" },
+    { id: "yellow" as const, name: "Yellow", value: "#eab308" },
+    { id: "red" as const, name: "Red", value: themeColors.danger },
+    { id: "teal" as const, name: "Teal", value: "#14b8a6" },
+  ];
+}
+
+// Backward-compatible constant using default colors
+export const COLLECTION_COLORS = getCollectionColors();
 
 // Collection icon options
 export const COLLECTION_ICONS = [
@@ -62,5 +73,5 @@ export const COLLECTION_ICONS = [
   "zap",
 ] as const;
 
-export type CollectionColor = (typeof COLLECTION_COLORS)[number]["id"];
+export type CollectionColor = (typeof COLLECTION_COLOR_IDS)[number];
 export type CollectionIcon = (typeof COLLECTION_ICONS)[number];

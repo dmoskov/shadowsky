@@ -3,7 +3,7 @@
  * Displays list of accounts and allows switching between them
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -14,9 +14,9 @@ import {
   View,
 } from "react-native";
 import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext";
 import { AuthAccount } from "../services/auth/auth-service";
 import { CheckIcon, CloseIcon, PlusIcon } from "./icons";
-import {colors} from '../constants/theme';
 
 interface AccountSwitcherProps {
   onAccountSwitch?: () => void;
@@ -27,6 +27,7 @@ export function AccountSwitcher({
   onAccountSwitch,
   onAddAccount,
 }: AccountSwitcherProps) {
+  const { colors } = useTheme();
   const {
     accounts,
     account: currentAccount,
@@ -35,6 +36,7 @@ export function AccountSwitcher({
   } = useAuth();
   const [switchingTo, setSwitchingTo] = useState<string | null>(null);
   const [removingAccount, setRemovingAccount] = useState<string | null>(null);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const handleSwitchAccount = async (did: string) => {
     if (did === currentAccount?.did) {
@@ -167,111 +169,113 @@ export function AccountSwitcher({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.borderDark,
-  },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: colors.text,
-  },
-  accountsList: {
-    paddingVertical: 8,
-  },
-  accountContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-  },
-  accountButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: colors.editorBackground,
-  },
-  activeAccount: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.info,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  avatarPlaceholder: {
-    backgroundColor: colors.border,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  accountInfo: {
-    flex: 1,
-  },
-  displayName: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  handle: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-  spinner: {
-    marginLeft: 8,
-  },
-  activeIndicator: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.info,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 8,
-  },
-  removeButton: {
-    width: 32,
-    height: 32,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 8,
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    textAlign: "center",
-    padding: 24,
-  },
-  addAccountButton: {
-    margin: 16,
-    padding: 16,
-    borderRadius: 8,
-    backgroundColor: colors.info,
-    alignItems: "center",
-  },
-  addAccountContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  addAccountButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: colors.borderDark,
+    },
+    header: {
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: colors.text,
+    },
+    accountsList: {
+      paddingVertical: 8,
+    },
+    accountContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 4,
+    },
+    accountButton: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 12,
+      borderRadius: 8,
+      backgroundColor: colors.editorBackground,
+    },
+    activeAccount: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.info,
+    },
+    avatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: 12,
+    },
+    avatarPlaceholder: {
+      backgroundColor: colors.border,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    avatarText: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+    accountInfo: {
+      flex: 1,
+    },
+    displayName: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+      marginBottom: 2,
+    },
+    handle: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+    spinner: {
+      marginLeft: 8,
+    },
+    activeIndicator: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: colors.info,
+      justifyContent: "center",
+      alignItems: "center",
+      marginLeft: 8,
+    },
+    removeButton: {
+      width: 32,
+      height: 32,
+      justifyContent: "center",
+      alignItems: "center",
+      marginLeft: 8,
+    },
+    emptyText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: "center",
+      padding: 24,
+    },
+    addAccountButton: {
+      margin: 16,
+      padding: 16,
+      borderRadius: 8,
+      backgroundColor: colors.info,
+      alignItems: "center",
+    },
+    addAccountContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    addAccountButtonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+  });
+}

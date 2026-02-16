@@ -3,7 +3,7 @@
  * Modal for editing list name, description, and avatar
  */
 
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import {
   Image,
 } from 'react-native';
 import {AppBskyGraphDefs} from '@atproto/api';
-import {colors} from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 
 const MAX_NAME_LENGTH = 64;
 const MAX_DESCRIPTION_LENGTH = 300;
@@ -40,9 +40,11 @@ export function EditListModal({
   onClose,
   onSave,
 }: EditListModalProps) {
+  const { colors } = useTheme();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     if (list) {
@@ -216,142 +218,144 @@ export function EditListModal({
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    maxHeight: '90%',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceAlt,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  closeButton: {
-    color: colors.textSecondary,
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  disabledText: {
-    opacity: 0.5,
-  },
-  content: {
-    padding: 16,
-  },
-  avatarSection: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  avatarNote: {
-    color: colors.textTertiary,
-    fontSize: 12,
-    fontStyle: 'italic',
-  },
-  inputSection: {
-    marginBottom: 20,
-  },
-  label: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: colors.surfaceAlt,
-    color: colors.text,
-    fontSize: 16,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.surface,
-  },
-  inputError: {
-    borderColor: colors.danger,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  charCountContainer: {
-    alignItems: 'flex-end',
-    marginTop: 4,
-  },
-  charCount: {
-    color: colors.textTertiary,
-    fontSize: 12,
-  },
-  charCountError: {
-    color: colors.danger,
-  },
-  infoSection: {
-    backgroundColor: colors.surfaceAlt,
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  infoLabel: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  infoValue: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  footer: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: colors.surfaceAlt,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButton: {
-    backgroundColor: colors.surfaceAlt,
-    borderWidth: 1,
-    borderColor: colors.surface,
-  },
-  cancelButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveButton: {
-    backgroundColor: colors.primary,
-  },
-  saveButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      justifyContent: 'flex-end',
+    },
+    modalContainer: {
+      backgroundColor: colors.background,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      maxHeight: '90%',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceAlt,
+    },
+    title: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '700',
+    },
+    closeButton: {
+      color: colors.textSecondary,
+      fontSize: 24,
+      fontWeight: '600',
+    },
+    disabledText: {
+      opacity: 0.5,
+    },
+    content: {
+      padding: 16,
+    },
+    avatarSection: {
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    avatar: {
+      width: 80,
+      height: 80,
+      borderRadius: 8,
+      marginBottom: 8,
+    },
+    avatarNote: {
+      color: colors.textTertiary,
+      fontSize: 12,
+      fontStyle: 'italic',
+    },
+    inputSection: {
+      marginBottom: 20,
+    },
+    label: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    input: {
+      backgroundColor: colors.surfaceAlt,
+      color: colors.text,
+      fontSize: 16,
+      padding: 12,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.surface,
+    },
+    inputError: {
+      borderColor: colors.danger,
+    },
+    textArea: {
+      height: 100,
+      textAlignVertical: 'top',
+    },
+    charCountContainer: {
+      alignItems: 'flex-end',
+      marginTop: 4,
+    },
+    charCount: {
+      color: colors.textTertiary,
+      fontSize: 12,
+    },
+    charCountError: {
+      color: colors.danger,
+    },
+    infoSection: {
+      backgroundColor: colors.surfaceAlt,
+      padding: 12,
+      borderRadius: 8,
+      marginBottom: 20,
+    },
+    infoLabel: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      marginBottom: 4,
+    },
+    infoValue: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    footer: {
+      flexDirection: 'row',
+      gap: 12,
+      padding: 16,
+      borderTopWidth: 1,
+      borderTopColor: colors.surfaceAlt,
+    },
+    button: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cancelButton: {
+      backgroundColor: colors.surfaceAlt,
+      borderWidth: 1,
+      borderColor: colors.surface,
+    },
+    cancelButtonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    saveButton: {
+      backgroundColor: colors.primary,
+    },
+    saveButtonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+  });
+}

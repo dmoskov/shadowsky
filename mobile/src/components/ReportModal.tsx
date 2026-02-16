@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useMemo} from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
-import {colors} from '../constants/theme';
+import {useTheme} from '../contexts/ThemeContext';
 import {getAtProtoClient} from '../services/atproto/client';
 
 export type ReportType = 'post' | 'account';
@@ -101,6 +101,9 @@ export function ReportModal({
   onBlock,
   onMute,
 }: ReportModalProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [additionalContext, setAdditionalContext] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -373,208 +376,210 @@ export function ReportModal({
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  container: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    maxHeight: '90%',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
-  },
-  closeButton: {
-    padding: 8,
-  },
-  closeButtonText: {
-    fontSize: 24,
-    color: '#666',
-  },
-  content: {
-    padding: 16,
-  },
-  description: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
-  },
-  successText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
-  },
-  categoriesContainer: {
-    marginBottom: 16,
-  },
-  categoryItem: {
-    flexDirection: 'row',
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  categoryItemSelected: {
-    backgroundColor: '#e3f2fd',
-    borderColor: colors.primary,
-  },
-  radioButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#ccc',
-    marginRight: 12,
-    marginTop: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioButtonSelected: {
-    borderColor: colors.primary,
-  },
-  radioButtonInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.primary,
-  },
-  categoryContent: {
-    flex: 1,
-  },
-  categoryLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 4,
-  },
-  categoryDescription: {
-    fontSize: 13,
-    color: '#666',
-  },
-  contextContainer: {
-    marginTop: 8,
-  },
-  contextLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 8,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 14,
-    color: '#000',
-    minHeight: 100,
-  },
-  charCount: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'right',
-    marginTop: 4,
-  },
-  errorContainer: {
-    backgroundColor: '#fee',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 16,
-  },
-  errorText: {
-    color: '#c00',
-    fontSize: 14,
-  },
-  postReportActions: {
-    marginTop: 8,
-    padding: 16,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-  },
-  postReportTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 8,
-  },
-  postReportDescription: {
-    fontSize: 13,
-    color: '#666',
-    marginBottom: 12,
-  },
-  actionButton: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    alignItems: 'center',
-  },
-  blockButton: {
-    backgroundColor: '#dc3545',
-  },
-  muteButton: {
-    backgroundColor: '#6c757d',
-  },
-  actionButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 8,
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  button: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    minWidth: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryButton: {
-    backgroundColor: '#f0f0f0',
-  },
-  secondaryButtonText: {
-    color: '#333',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  primaryButton: {
-    backgroundColor: colors.primary,
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  dangerButton: {
-    backgroundColor: '#dc3545',
-  },
-  dangerButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    container: {
+      backgroundColor: '#fff',
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      maxHeight: '90%',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: '#e0e0e0',
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: '#000',
+    },
+    closeButton: {
+      padding: 8,
+    },
+    closeButtonText: {
+      fontSize: 24,
+      color: '#666',
+    },
+    content: {
+      padding: 16,
+    },
+    description: {
+      fontSize: 14,
+      color: '#666',
+      marginBottom: 16,
+    },
+    successText: {
+      fontSize: 14,
+      color: '#666',
+      marginBottom: 16,
+    },
+    categoriesContainer: {
+      marginBottom: 16,
+    },
+    categoryItem: {
+      flexDirection: 'row',
+      padding: 12,
+      borderWidth: 1,
+      borderColor: '#e0e0e0',
+      borderRadius: 8,
+      marginBottom: 8,
+    },
+    categoryItemSelected: {
+      backgroundColor: '#e3f2fd',
+      borderColor: colors.primary,
+    },
+    radioButton: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: '#ccc',
+      marginRight: 12,
+      marginTop: 2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    radioButtonSelected: {
+      borderColor: colors.primary,
+    },
+    radioButtonInner: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: colors.primary,
+    },
+    categoryContent: {
+      flex: 1,
+    },
+    categoryLabel: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: '#000',
+      marginBottom: 4,
+    },
+    categoryDescription: {
+      fontSize: 13,
+      color: '#666',
+    },
+    contextContainer: {
+      marginTop: 8,
+    },
+    contextLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#000',
+      marginBottom: 8,
+    },
+    textInput: {
+      borderWidth: 1,
+      borderColor: '#e0e0e0',
+      borderRadius: 8,
+      padding: 12,
+      fontSize: 14,
+      color: '#000',
+      minHeight: 100,
+    },
+    charCount: {
+      fontSize: 12,
+      color: '#999',
+      textAlign: 'right',
+      marginTop: 4,
+    },
+    errorContainer: {
+      backgroundColor: '#fee',
+      padding: 12,
+      borderRadius: 8,
+      marginTop: 16,
+    },
+    errorText: {
+      color: '#c00',
+      fontSize: 14,
+    },
+    postReportActions: {
+      marginTop: 8,
+      padding: 16,
+      backgroundColor: '#f5f5f5',
+      borderRadius: 8,
+    },
+    postReportTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: '#000',
+      marginBottom: 8,
+    },
+    postReportDescription: {
+      fontSize: 13,
+      color: '#666',
+      marginBottom: 12,
+    },
+    actionButton: {
+      padding: 12,
+      borderRadius: 8,
+      marginBottom: 8,
+      alignItems: 'center',
+    },
+    blockButton: {
+      backgroundColor: '#dc3545',
+    },
+    muteButton: {
+      backgroundColor: '#6c757d',
+    },
+    actionButtonText: {
+      color: '#fff',
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    footer: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: 8,
+      padding: 16,
+      borderTopWidth: 1,
+      borderTopColor: '#e0e0e0',
+    },
+    button: {
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 8,
+      minWidth: 100,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    secondaryButton: {
+      backgroundColor: '#f0f0f0',
+    },
+    secondaryButtonText: {
+      color: '#333',
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    primaryButton: {
+      backgroundColor: colors.primary,
+    },
+    primaryButtonText: {
+      color: '#fff',
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    dangerButton: {
+      backgroundColor: '#dc3545',
+    },
+    dangerButtonText: {
+      color: '#fff',
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+  });
+}

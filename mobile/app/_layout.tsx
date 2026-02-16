@@ -165,10 +165,10 @@ function RootLayout() {
             client={queryClient}
             persistOptions={{ persister: asyncStoragePersister }}
           >
-            <NetworkProvider>
-              <AuthProvider>
-                <PreferencesProvider>
-                  <ThemeProvider>
+            <AuthProvider>
+              <PreferencesProvider>
+                <ThemeProvider>
+                  <NetworkProvider>
                     <ModerationProvider>
                       <ToastProvider>
                         <LightboxProvider>
@@ -180,10 +180,10 @@ function RootLayout() {
                         </LightboxProvider>
                       </ToastProvider>
                     </ModerationProvider>
-                  </ThemeProvider>
-                </PreferencesProvider>
-              </AuthProvider>
-            </NetworkProvider>
+                  </NetworkProvider>
+                </ThemeProvider>
+              </PreferencesProvider>
+            </AuthProvider>
           </PersistQueryClientProvider>
         </GestureHandlerRootView>
       </SafeAreaProvider>

@@ -1,10 +1,13 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {View, StyleSheet, ScrollView} from 'react-native';
 import {SkeletonShimmer} from './SkeletonShimmer';
 import {PostCardSkeleton} from './PostCardSkeleton';
-import {colors} from '../constants/theme';
+import {useTheme} from '../contexts/ThemeContext';
 
 export function ProfileSkeleton() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <ScrollView style={styles.container}>
       {/* Banner */}
@@ -74,51 +77,53 @@ export function ProfileSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  profileInfo: {
-    padding: 16,
-  },
-  avatarContainer: {
-    marginTop: -40,
-    marginBottom: 12,
-  },
-  actionButton: {
-    position: 'absolute',
-    top: 8,
-    right: 16,
-  },
-  nameSection: {
-    marginBottom: 12,
-  },
-  bioSection: {
-    marginBottom: 16,
-  },
-  stats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  stat: {
-    alignItems: 'center',
-  },
-  tabBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.background,
-  },
-  spacer: {
-    height: 8,
-  },
-  smallSpacer: {
-    height: 4,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    profileInfo: {
+      padding: 16,
+    },
+    avatarContainer: {
+      marginTop: -40,
+      marginBottom: 12,
+    },
+    actionButton: {
+      position: 'absolute',
+      top: 8,
+      right: 16,
+    },
+    nameSection: {
+      marginBottom: 12,
+    },
+    bioSection: {
+      marginBottom: 16,
+    },
+    stats: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      paddingVertical: 12,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    stat: {
+      alignItems: 'center',
+    },
+    tabBar: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      backgroundColor: colors.background,
+    },
+    spacer: {
+      height: 8,
+    },
+    smallSpacer: {
+      height: 4,
+    },
+  });
+}

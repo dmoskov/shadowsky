@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 import {AppBskyFeedDefs} from '@atproto/api';
 import {usePostQuotes} from '../../hooks/api/usePosts';
 import {PostCard} from '../../components/PostCard';
-import {colors} from '../../constants/theme';
+import {useTheme} from '../../contexts/ThemeContext';
 
 interface QuotesScreenProps {
   postUri: string;
@@ -45,6 +45,8 @@ export function QuotesScreen({
   onQuotePress,
   currentUserDid,
 }: QuotesScreenProps) {
+  const {colors} = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const {
     data,
     isLoading,
@@ -146,30 +148,32 @@ export function QuotesScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  footerLoader: {
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 48,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 16,
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-  },
-  emptyList: {
-    flexGrow: 1,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    footerLoader: {
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 48,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: 16,
+    },
+    emptyText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+    },
+    emptyList: {
+      flexGrow: 1,
+    },
+  });
+}

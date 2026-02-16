@@ -1,8 +1,8 @@
-import React, {useRef, useCallback} from 'react';
+import React, {useRef, useCallback, useMemo} from 'react';
 import {View, StyleSheet, TouchableOpacity, Text, useWindowDimensions} from 'react-native';
 import {Image} from 'expo-image';
 import {AppBskyEmbedImages} from '@atproto/api';
-import {colors} from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 import {getOptimizedUrl} from '../utils/image-cdn';
 import {useLightbox, LightboxImage} from '../contexts/LightboxContext';
 
@@ -28,9 +28,11 @@ interface ImageEmbedProps {
 }
 
 export function ImageEmbed({images, onImagePress, blurImages = false}: ImageEmbedProps) {
+  const { colors } = useTheme();
   const {width: windowWidth} = useWindowDimensions();
   const {openLightbox} = useLightbox();
   const imageRefs = useRef<Record<number, View | null>>({});
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Account for horizontal padding (16px each side)
   const containerWidth = windowWidth - 32;
@@ -217,63 +219,65 @@ export function ImageEmbed({images, onImagePress, blurImages = false}: ImageEmbe
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  singleContainer: {
-    width: '100%',
-  },
-  doubleContainer: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  tripleContainer: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  quadContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-  },
-  imageWrapper: {
-    overflow: 'hidden',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  blurredImage: {
-    opacity: 0.8,
-  },
-  altBadge: {
-    position: 'absolute',
-    bottom: 8,
-    left: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  altText: {
-    color: colors.text,
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  countBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-  },
-  countBadgeText: {
-    color: colors.text,
-    fontSize: 11,
-    fontWeight: '600',
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      marginTop: 8,
+      marginBottom: 8,
+    },
+    singleContainer: {
+      width: '100%',
+    },
+    doubleContainer: {
+      flexDirection: 'row',
+      gap: 4,
+    },
+    tripleContainer: {
+      flexDirection: 'row',
+      gap: 4,
+    },
+    quadContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 4,
+    },
+    imageWrapper: {
+      overflow: 'hidden',
+    },
+    image: {
+      width: '100%',
+      height: '100%',
+    },
+    blurredImage: {
+      opacity: 0.8,
+    },
+    altBadge: {
+      position: 'absolute',
+      bottom: 8,
+      left: 8,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 4,
+    },
+    altText: {
+      color: colors.text,
+      fontSize: 11,
+      fontWeight: '600',
+    },
+    countBadge: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 10,
+    },
+    countBadgeText: {
+      color: colors.text,
+      fontSize: 11,
+      fontWeight: '600',
+    },
+  });
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useProfile, useUpdateProfile } from '../../hooks/api/useProfile';
 import { useImagePicker, ImageAsset } from '../../hooks/useImagePicker';
 import { ImageEditor } from '../../components/ImageEditor';
-import { colors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 
 
 import { createLogger } from '../../utils/logger';
@@ -29,6 +29,8 @@ const MAX_DISPLAY_NAME_LENGTH = 64;
 const MAX_DESCRIPTION_LENGTH = 256;
 
 export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { account } = useAuth();
   const { data: profile, isLoading } = useProfile(account?.handle || '');
   const updateProfile = useUpdateProfile();
@@ -253,121 +255,123 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 16,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionLabel: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  charCount: {
-    color: colors.textTertiary,
-    fontSize: 12,
-  },
-  charCountError: {
-    color: colors.danger,
-  },
-  avatarContainer: {
-    alignItems: 'center',
-    gap: 12,
-  },
-  changeAvatarButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: 8,
-  },
-  changeAvatarText: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  input: {
-    backgroundColor: colors.surfaceElevated,
-    color: colors.text,
-    fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  textArea: {
-    minHeight: 100,
-    paddingTop: 12,
-  },
-  handleText: {
-    color: colors.textTertiary,
-    fontSize: 16,
-    padding: 12,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: colors.surfaceElevated,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButton: {
-    backgroundColor: colors.surfaceElevated,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  cancelButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveButton: {
-    backgroundColor: colors.primary,
-  },
-  saveButtonDisabled: {
-    backgroundColor: colors.borderLight,
-    opacity: 0.5,
-  },
-  saveButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      padding: 16,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: 16,
+    },
+    section: {
+      marginBottom: 24,
+    },
+    sectionLabel: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    labelRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    charCount: {
+      color: colors.textTertiary,
+      fontSize: 12,
+    },
+    charCountError: {
+      color: colors.danger,
+    },
+    avatarContainer: {
+      alignItems: 'center',
+      gap: 12,
+    },
+    changeAvatarButton: {
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      backgroundColor: colors.surfaceElevated,
+      borderRadius: 8,
+    },
+    changeAvatarText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    input: {
+      backgroundColor: colors.surfaceElevated,
+      color: colors.text,
+      fontSize: 16,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.borderLight,
+    },
+    textArea: {
+      minHeight: 100,
+      paddingTop: 12,
+    },
+    handleText: {
+      color: colors.textTertiary,
+      fontSize: 16,
+      padding: 12,
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      gap: 12,
+      padding: 16,
+      borderTopWidth: 1,
+      borderTopColor: colors.surfaceElevated,
+    },
+    button: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cancelButton: {
+      backgroundColor: colors.surfaceElevated,
+      borderWidth: 1,
+      borderColor: colors.borderLight,
+    },
+    cancelButtonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    saveButton: {
+      backgroundColor: colors.primary,
+    },
+    saveButtonDisabled: {
+      backgroundColor: colors.borderLight,
+      opacity: 0.5,
+    },
+    saveButtonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  });
+}

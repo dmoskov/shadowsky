@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { colors } from "../constants/theme";
+import { useTheme } from "../contexts/ThemeContext";
 
 export interface TrendingTopic {
   topic: string;
@@ -35,11 +35,14 @@ export function TrendingTopics({
   onTopicClick,
   isLoading = false,
 }: TrendingTopicsProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   if (isLoading) {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerIcon}>🔥</Text>
+          <Text style={styles.headerIcon}>{"\uD83D\uDD25"}</Text>
           <Text style={styles.headerText}>Trending</Text>
         </View>
         <View style={styles.loadingContainer}>
@@ -72,7 +75,7 @@ export function TrendingTopics({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerIcon}>🔥</Text>
+        <Text style={styles.headerIcon}>{"\uD83D\uDD25"}</Text>
         <Text style={styles.headerText}>Trending Now</Text>
       </View>
 
@@ -93,7 +96,7 @@ export function TrendingTopics({
             activeOpacity={0.7}
           >
             <Text style={styles.topicIcon}>
-              {item.isHot ? "🔥" : "#"}
+              {item.isHot ? "\uD83D\uDD25" : "#"}
             </Text>
             <Text style={styles.topicText} numberOfLines={1}>
               {item.topic}
@@ -112,62 +115,64 @@ export function TrendingTopics({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginVertical: 12,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    marginBottom: 12,
-  },
-  headerIcon: {
-    fontSize: 16,
-    marginRight: 6,
-  },
-  headerText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  loadingContainer: {
-    paddingVertical: 16,
-    alignItems: "center",
-  },
-  scrollView: {
-    paddingHorizontal: 16,
-  },
-  scrollContent: {
-    gap: 8,
-  },
-  topicChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    gap: 6,
-  },
-  topicChipHot: {
-    borderColor: colors.primary,
-    backgroundColor: "rgba(201, 168, 76, 0.1)",
-  },
-  topicIcon: {
-    fontSize: 14,
-  },
-  topicText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "500",
-    maxWidth: 120,
-  },
-  postCount: {
-    color: colors.textTertiary,
-    fontSize: 12,
-    marginLeft: 4,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      marginVertical: 12,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      marginBottom: 12,
+    },
+    headerIcon: {
+      fontSize: 16,
+      marginRight: 6,
+    },
+    headerText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    loadingContainer: {
+      paddingVertical: 16,
+      alignItems: "center",
+    },
+    scrollView: {
+      paddingHorizontal: 16,
+    },
+    scrollContent: {
+      gap: 8,
+    },
+    topicChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.surfaceElevated,
+      borderRadius: 20,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      borderWidth: 1,
+      borderColor: colors.borderLight,
+      gap: 6,
+    },
+    topicChipHot: {
+      borderColor: colors.primary,
+      backgroundColor: "rgba(201, 168, 76, 0.1)",
+    },
+    topicIcon: {
+      fontSize: 14,
+    },
+    topicText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "500",
+      maxWidth: 120,
+    },
+    postCount: {
+      color: colors.textTertiary,
+      fontSize: 12,
+      marginLeft: 4,
+    },
+  });
+}

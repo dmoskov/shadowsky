@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Avatar } from "../../../components/Avatar";
-import { colors } from "../../../constants/theme";
+import { useTheme } from "../../../contexts/ThemeContext";
 
 export interface QuoteToPost {
   uri: string;
@@ -19,6 +19,9 @@ export interface ComposeQuotePreviewProps {
 }
 
 export function ComposeQuotePreview({ quoteTo }: ComposeQuotePreviewProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.quotePreview}>
       <View style={styles.quoteCard}>
@@ -41,7 +44,8 @@ export function ComposeQuotePreview({ quoteTo }: ComposeQuotePreviewProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   quotePreview: {
     paddingHorizontal: 16,
     paddingBottom: 16,
@@ -77,4 +81,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 18,
   },
-});
+  });
+}

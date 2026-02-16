@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
-import { colors } from "../../../constants/theme";
+import { useTheme } from "../../../contexts/ThemeContext";
 import { VideoIcon } from "../../../components/icons";
 import type { ImageAsset } from "../../../hooks/useImagePicker";
 import type { VideoAsset } from "../../../hooks/useVideoPicker";
@@ -36,6 +36,9 @@ export function ComposeMediaPreview({
   selectedGif,
   onRemoveGif,
 }: ComposeMediaPreviewProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   // Image Previews
   if (selectedImages.length > 0) {
     return (
@@ -152,7 +155,8 @@ export function ComposeMediaPreview({
   return null;
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   imagePreviewContainer: {
     paddingHorizontal: 16,
     paddingBottom: 12,
@@ -309,4 +313,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 8,
   },
-});
+  });
+}

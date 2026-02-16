@@ -1,7 +1,7 @@
 import React from 'react';
 import {Text, Alert, TextStyle} from 'react-native';
 import {RichText as AtpRichText, AppBskyRichtextFacet} from '@atproto/api';
-import {colors} from '../constants/theme';
+import {useTheme} from '../contexts/ThemeContext';
 import {openLink} from './browser';
 
 interface RichTextProps {
@@ -21,6 +21,8 @@ export function RichText({
   style,
   numberOfLines,
 }: RichTextProps) {
+  const {colors} = useTheme();
+
   // If no facets, just render plain text
   if (!facets || facets.length === 0) {
     return <Text style={style} numberOfLines={numberOfLines}>{text}</Text>;

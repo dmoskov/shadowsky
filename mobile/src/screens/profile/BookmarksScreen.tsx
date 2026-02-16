@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Modal, TextInput } from 'react-native';
 import { FeedList } from '../../components/FeedList';
 import { useBookmarks } from '../../hooks/api';
@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { triggerHaptic } from '../../../src/utils/haptics';
 import { useCollectionBookmarks } from '../../hooks/useBookmarkCollections';
 import { CollectionManager } from '../../components/CollectionManager';
-import { colors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useThreadSummaryPreGeneration } from '../../hooks/useThreadSummaryPreGeneration';
 import { usePreferences } from '../../contexts/PreferencesContext';
 
@@ -15,6 +15,8 @@ export function BookmarksScreen() {
   const router = useRouter();
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const { preferences } = usePreferences();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   useThreadSummaryPreGeneration({ enabled: preferences?.enableThreadSummaryPreGen });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
@@ -162,58 +164,60 @@ export function BookmarksScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  toolbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.background,
-  },
-  collectionButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  collectionButtonText: {
-    fontSize: 14,
-    color: colors.text,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-    fontSize: 14,
-    color: colors.text,
-  },
-  clearButton: {
-    position: 'absolute',
-    right: 24,
-    padding: 4,
-  },
-  clearButtonText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    toolbar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      backgroundColor: colors.background,
+    },
+    collectionButton: {
+      flex: 1,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      backgroundColor: colors.surface,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    collectionButtonText: {
+      fontSize: 14,
+      color: colors.text,
+    },
+    searchContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    searchInput: {
+      flex: 1,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      backgroundColor: colors.surface,
+      borderRadius: 8,
+      fontSize: 14,
+      color: colors.text,
+    },
+    clearButton: {
+      position: 'absolute',
+      right: 24,
+      padding: 4,
+    },
+    clearButtonText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+    },
+  });
+}

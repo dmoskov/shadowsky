@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   StyleSheet,
@@ -14,7 +14,7 @@ import { useAppNavigation } from "../../hooks/useNavigation";
 import { ThreadSkeleton } from "../../components/ThreadSkeleton";
 import { ErrorState } from "../../components/ErrorState";
 import { getAtProtoClient } from "../../services/atproto/client";
-import { colors } from "../../constants/theme";
+import { useTheme } from "../../contexts/ThemeContext";
 import { sharePost } from "../../utils/share";
 import { triggerHaptic } from "../../utils/haptics";
 import { createLogger } from '../../utils/logger';
@@ -76,6 +76,8 @@ async function navigateToThreadFromUri(uri: string, navigateToThread: (handle: s
 }
 
 export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const [postUri, setPostUri] = useState<string | null>(null);
   const [isResolvingUri, setIsResolvingUri] = useState(false);
@@ -409,12 +411,14 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  threadView: {
-    flex: 1,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    threadView: {
+      flex: 1,
+    },
+  });
+}

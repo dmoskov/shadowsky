@@ -5,7 +5,7 @@
  * Uses rn-emoji-picker for emoji selection with recently used tracking
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -20,7 +20,7 @@ import { emojis } from "rn-emoji-picker/dist/data";
 import type { Emoji } from "rn-emoji-picker/dist/interfaces";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CloseIcon } from "./icons";
-import { colors } from "../constants/theme";
+import { useTheme } from "../contexts/ThemeContext";
 
 
 import { createLogger } from '../utils/logger';
@@ -40,6 +40,8 @@ export function EmojiPickerModal({
   onSelectEmoji,
   onClose,
 }: EmojiPickerModalProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
@@ -137,42 +139,44 @@ export function EmojiPickerModal({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  closeButton: {
-    padding: 4,
-  },
-  pickerContainer: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  footer: {
-    borderTopWidth: 1,
-    borderTopColor: colors.surfaceElevated,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    alignItems: "center",
-  },
-  footerText: {
-    color: colors.textTertiary,
-    fontSize: 12,
-    textAlign: "center",
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceElevated,
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "600",
+    },
+    closeButton: {
+      padding: 4,
+    },
+    pickerContainer: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    footer: {
+      borderTopWidth: 1,
+      borderTopColor: colors.surfaceElevated,
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      alignItems: "center",
+    },
+    footerText: {
+      color: colors.textTertiary,
+      fontSize: 12,
+      textAlign: "center",
+    },
+  });
+}

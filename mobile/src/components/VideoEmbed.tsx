@@ -1,9 +1,9 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useMemo} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, ActivityIndicator} from 'react-native';
 import {Video, ResizeMode, AVPlaybackStatus} from 'expo-av';
 import {Image} from 'expo-image';
 import {AppBskyEmbedVideo} from '@atproto/api';
-import {colors} from '../constants/theme';
+import {useTheme} from '../contexts/ThemeContext';
 
 
 import { createLogger } from '../utils/logger';
@@ -15,6 +15,8 @@ interface VideoEmbedProps {
 }
 
 export function VideoEmbed({video}: VideoEmbedProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showThumbnail, setShowThumbnail] = useState(true);
@@ -107,71 +109,73 @@ export function VideoEmbed({video}: VideoEmbedProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 8,
-    marginBottom: 8,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: colors.surfaceElevated,
-    position: 'relative',
-  },
-  thumbnailContainer: {
-    position: 'relative',
-  },
-  thumbnail: {
-    width: '100%',
-    height: 240,
-  },
-  videoContainer: {
-    position: 'relative',
-    width: '100%',
-    height: 240,
-    backgroundColor: colors.borderDark,
-  },
-  video: {
-    width: '100%',
-    height: '100%',
-  },
-  playButtonContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  playButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  playIcon: {
-    width: 0,
-    height: 0,
-    marginLeft: 4,
-    borderLeftWidth: 20,
-    borderLeftColor: colors.text,
-    borderTopWidth: 12,
-    borderTopColor: 'transparent',
-    borderBottomWidth: 12,
-    borderBottomColor: 'transparent',
-  },
-  altContainer: {
-    position: 'absolute',
-    bottom: 8,
-    left: 8,
-    right: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    padding: 8,
-    borderRadius: 6,
-  },
-  altText: {
-    color: colors.text,
-    fontSize: 12,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      marginTop: 8,
+      marginBottom: 8,
+      borderRadius: 12,
+      overflow: 'hidden',
+      backgroundColor: colors.surfaceElevated,
+      position: 'relative',
+    },
+    thumbnailContainer: {
+      position: 'relative',
+    },
+    thumbnail: {
+      width: '100%',
+      height: 240,
+    },
+    videoContainer: {
+      position: 'relative',
+      width: '100%',
+      height: 240,
+      backgroundColor: colors.borderDark,
+    },
+    video: {
+      width: '100%',
+      height: '100%',
+    },
+    playButtonContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    playButton: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    playIcon: {
+      width: 0,
+      height: 0,
+      marginLeft: 4,
+      borderLeftWidth: 20,
+      borderLeftColor: colors.text,
+      borderTopWidth: 12,
+      borderTopColor: 'transparent',
+      borderBottomWidth: 12,
+      borderBottomColor: 'transparent',
+    },
+    altContainer: {
+      position: 'absolute',
+      bottom: 8,
+      left: 8,
+      right: 8,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      padding: 8,
+      borderRadius: 6,
+    },
+    altText: {
+      color: colors.text,
+      fontSize: 12,
+    },
+  });
+}

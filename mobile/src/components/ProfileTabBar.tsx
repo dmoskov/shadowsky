@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { colors } from "../constants/theme";
+import { useTheme } from "../contexts/ThemeContext";
 
 export type ProfileTab = "posts" | "replies" | "media" | "likes";
 
@@ -10,6 +10,9 @@ interface ProfileTabBarProps {
 }
 
 export function ProfileTabBar({ activeTab, onTabChange }: ProfileTabBarProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const tabs: { key: ProfileTab; label: string }[] = [
     { key: "posts", label: "Posts" },
     { key: "replies", label: "Replies" },
@@ -40,28 +43,30 @@ export function ProfileTabBar({ activeTab, onTabChange }: ProfileTabBarProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 16,
-    alignItems: "center",
-    borderBottomWidth: 2,
-    borderBottomColor: "transparent",
-  },
-  activeTab: {
-    borderBottomColor: colors.primary,
-  },
-  tabText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: colors.textTertiary,
-  },
-  activeTabText: {
-    color: colors.primary,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: "row",
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceElevated,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: 16,
+      alignItems: "center",
+      borderBottomWidth: 2,
+      borderBottomColor: "transparent",
+    },
+    activeTab: {
+      borderBottomColor: colors.primary,
+    },
+    tabText: {
+      fontSize: 16,
+      fontWeight: "600",
+      color: colors.textTertiary,
+    },
+    activeTabText: {
+      color: colors.primary,
+    },
+  });
+}

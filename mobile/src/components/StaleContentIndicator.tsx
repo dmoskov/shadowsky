@@ -12,10 +12,10 @@
  * - Tap to retry connection (when available)
  */
 
-import React from 'react';
+import React, {useMemo} from 'react';
 import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
 import {AlertTriangleIcon} from './icons';
-import {colors} from '../constants/theme';
+import {useTheme} from '../contexts/ThemeContext';
 
 interface StaleContentIndicatorProps {
   isStale: boolean;
@@ -30,6 +30,9 @@ export default function StaleContentIndicator({
   onRetry,
   isOnline = false,
 }: StaleContentIndicatorProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   if (!isStale) return null;
 
   const getTimeAgoText = () => {
@@ -75,30 +78,32 @@ export default function StaleContentIndicator({
   return content;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: colors.textMuted,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.textMuted,
-  },
-  iconContainer: {
-    marginRight: 8,
-  },
-  text: {
-    fontSize: 13,
-    color: colors.textTertiary,
-    fontWeight: '500',
-    flex: 1,
-  },
-  retryText: {
-    fontSize: 12,
-    color: colors.info,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      backgroundColor: colors.textMuted,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.textMuted,
+    },
+    iconContainer: {
+      marginRight: 8,
+    },
+    text: {
+      fontSize: 13,
+      color: colors.textTertiary,
+      fontWeight: '500',
+      flex: 1,
+    },
+    retryText: {
+      fontSize: 12,
+      color: colors.info,
+      fontWeight: '600',
+      marginLeft: 8,
+    },
+  });
+}

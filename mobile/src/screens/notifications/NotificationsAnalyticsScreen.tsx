@@ -11,7 +11,7 @@ import {useNotifications} from '../../hooks/api/useNotifications';
 import {LoadingState} from '../../components/LoadingState';
 import {ErrorState} from '../../components/ErrorState';
 import {EmptyState} from '../../components/EmptyState';
-import {colors} from '../../constants/theme';
+import {useTheme} from '../../contexts/ThemeContext';
 import {
   format,
   startOfDay,
@@ -45,6 +45,8 @@ interface TopPost {
 export function NotificationsAnalyticsScreen() {
   const [timeRange, setTimeRange] = React.useState<TimeRange>('week');
   const {data, isLoading, isError, error, refetch} = useNotifications();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Flatten all notifications
   const notifications = useMemo(
@@ -133,7 +135,7 @@ export function NotificationsAnalyticsScreen() {
         };
       })
       .sort((a, b) => b.count - a.count);
-  }, [filteredNotifications]);
+  }, [filteredNotifications, colors]);
 
   // Calculate top engaged posts
   const topEngagedPosts = useMemo<TopPost[]>(() => {
@@ -389,200 +391,202 @@ export function NotificationsAnalyticsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  section: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-  },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-  },
-  timeRangeSelector: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  timeRangeButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: colors.surfaceElevated,
-    alignItems: 'center',
-  },
-  timeRangeButtonActive: {
-    backgroundColor: colors.primary,
-  },
-  timeRangeButtonText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  timeRangeButtonTextActive: {
-    color: colors.text,
-  },
-  metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  metricCard: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  metricValue: {
-    color: colors.text,
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  metricLabel: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  chartContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    height: 160,
-    gap: 4,
-  },
-  barContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  barWrapper: {
-    width: '100%',
-    height: 120,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  bar: {
-    width: '80%',
-    backgroundColor: colors.primary,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
-    minHeight: 2,
-  },
-  barEmpty: {
-    backgroundColor: colors.surfaceElevated,
-  },
-  barLabel: {
-    color: colors.textTertiary,
-    fontSize: 11,
-    marginTop: 4,
-  },
-  barCount: {
-    color: colors.textSecondary,
-    fontSize: 10,
-    marginTop: 2,
-  },
-  typeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  typeInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
-  },
-  typeIcon: {
-    fontSize: 20,
-  },
-  typeLabel: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  typeStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 2,
-  },
-  progressBarContainer: {
-    flex: 1,
-    height: 8,
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressBar: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  typeCount: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-    minWidth: 30,
-    textAlign: 'right',
-  },
-  typePercentage: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    minWidth: 40,
-    textAlign: 'right',
-  },
-  postCard: {
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  postHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  postRank: {
-    color: colors.primary,
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  postEngagement: {
-    alignItems: 'flex-end',
-  },
-  postEngagementCount: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  postEngagementLabel: {
-    color: colors.textSecondary,
-    fontSize: 12,
-  },
-  postText: {
-    color: colors.borderLight,
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  postTypes: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  postTypeIcon: {
-    fontSize: 16,
-  },
-  bottomSpacer: {
-    height: 20,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    section: {
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceElevated,
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '600',
+      marginBottom: 16,
+    },
+    timeRangeSelector: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    timeRangeButton: {
+      flex: 1,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      backgroundColor: colors.surfaceElevated,
+      alignItems: 'center',
+    },
+    timeRangeButtonActive: {
+      backgroundColor: colors.primary,
+    },
+    timeRangeButtonText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    timeRangeButtonTextActive: {
+      color: colors.text,
+    },
+    metricsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    metricCard: {
+      flex: 1,
+      minWidth: '45%',
+      backgroundColor: colors.surfaceElevated,
+      borderRadius: 12,
+      padding: 16,
+      alignItems: 'center',
+    },
+    metricValue: {
+      color: colors.text,
+      fontSize: 28,
+      fontWeight: 'bold',
+      marginBottom: 4,
+    },
+    metricLabel: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      textAlign: 'center',
+    },
+    chartContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-end',
+      height: 160,
+      gap: 4,
+    },
+    barContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+    },
+    barWrapper: {
+      width: '100%',
+      height: 120,
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+    },
+    bar: {
+      width: '80%',
+      backgroundColor: colors.primary,
+      borderTopLeftRadius: 4,
+      borderTopRightRadius: 4,
+      minHeight: 2,
+    },
+    barEmpty: {
+      backgroundColor: colors.surfaceElevated,
+    },
+    barLabel: {
+      color: colors.textTertiary,
+      fontSize: 11,
+      marginTop: 4,
+    },
+    barCount: {
+      color: colors.textSecondary,
+      fontSize: 10,
+      marginTop: 2,
+    },
+    typeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 16,
+    },
+    typeInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      flex: 1,
+    },
+    typeIcon: {
+      fontSize: 20,
+    },
+    typeLabel: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: '500',
+    },
+    typeStats: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      flex: 2,
+    },
+    progressBarContainer: {
+      flex: 1,
+      height: 8,
+      backgroundColor: colors.surfaceElevated,
+      borderRadius: 4,
+      overflow: 'hidden',
+    },
+    progressBar: {
+      height: '100%',
+      borderRadius: 4,
+    },
+    typeCount: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+      minWidth: 30,
+      textAlign: 'right',
+    },
+    typePercentage: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      minWidth: 40,
+      textAlign: 'right',
+    },
+    postCard: {
+      backgroundColor: colors.surfaceElevated,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+    },
+    postHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    postRank: {
+      color: colors.primary,
+      fontSize: 20,
+      fontWeight: 'bold',
+    },
+    postEngagement: {
+      alignItems: 'flex-end',
+    },
+    postEngagementCount: {
+      color: colors.text,
+      fontSize: 24,
+      fontWeight: 'bold',
+    },
+    postEngagementLabel: {
+      color: colors.textSecondary,
+      fontSize: 12,
+    },
+    postText: {
+      color: colors.borderLight,
+      fontSize: 14,
+      lineHeight: 20,
+      marginBottom: 12,
+    },
+    postTypes: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    postTypeIcon: {
+      fontSize: 16,
+    },
+    bottomSpacer: {
+      height: 20,
+    },
+  });
+}

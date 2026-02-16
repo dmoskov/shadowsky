@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import {
   Animated,
   Dimensions,
@@ -9,38 +9,40 @@ import {
   View,
 } from "react-native";
 import type { ToastData, ToastType } from "../contexts/ToastContext";
-import {colors} from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 
 interface ToastProps {
   toasts: ToastData[];
   onDismiss: (id: string) => void;
 }
 
-const TOAST_COLORS: Record<
+function getToastColors(colors: any): Record<
   ToastType,
   { bg: string; border: string; text: string }
-> = {
-  success: {
-    bg: colors.success,
-    border: colors.success,
-    text: colors.text,
-  },
-  error: {
-    bg: colors.danger,
-    border: colors.danger,
-    text: colors.text,
-  },
-  warning: {
-    bg: colors.warning,
-    border: colors.warning,
-    text: colors.text,
-  },
-  info: {
-    bg: colors.info,
-    border: colors.info,
-    text: colors.text,
-  },
-};
+> {
+  return {
+    success: {
+      bg: colors.success,
+      border: colors.success,
+      text: colors.text,
+    },
+    error: {
+      bg: colors.danger,
+      border: colors.danger,
+      text: colors.text,
+    },
+    warning: {
+      bg: colors.warning,
+      border: colors.warning,
+      text: colors.text,
+    },
+    info: {
+      bg: colors.info,
+      border: colors.info,
+      text: colors.text,
+    },
+  };
+}
 
 function ToastItem({
   toast,
@@ -51,12 +53,15 @@ function ToastItem({
   onDismiss: (id: string) => void;
   index: number;
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const translateY = useRef(new Animated.Value(100)).current;
   const translateX = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const [timeLeft, setTimeLeft] = useState(toast.duration);
 
-  const colors = TOAST_COLORS[toast.type];
+  const toastColors = useMemo(() => getToastColors(colors), [colors]);
+  const typeColors = toastColors[toast.type];
 
   useEffect(() => {
     // Entrance animation
@@ -186,13 +191,13 @@ function ToastItem({
         style={[
           styles.toast,
           {
-            backgroundColor: colors.bg,
-            borderColor: colors.border,
+            backgroundColor: typeColors.bg,
+            borderColor: typeColors.border,
           },
         ]}
       >
         <View style={styles.toastContent}>
-          <Text style={[styles.toastText, { color: colors.text }]}>
+          <Text style={[styles.toastText, { color: typeColors.text }]}>
             {toast.message}
           </Text>
           {toast.action && (
@@ -200,7 +205,7 @@ function ToastItem({
               style={styles.actionButton}
               onPress={handleAction}
             >
-              <Text style={[styles.actionText, { color: colors.text }]}>
+              <Text style={[styles.actionText, { color: typeColors.text }]}>
                 {toast.action.label}
               </Text>
             </TouchableOpacity>
@@ -213,7 +218,7 @@ function ToastItem({
                 styles.progressFill,
                 {
                   width: `${progress * 100}%`,
-                  backgroundColor: colors.border,
+                  backgroundColor: typeColors.border,
                 },
               ]}
             />
@@ -239,51 +244,53 @@ export default function Toast({ toasts, onDismiss }: ToastProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  toastContainer: {
-    position: "absolute",
-    left: 16,
-    right: 16,
-    zIndex: 9999,
-  },
-  toast: {
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: "hidden",
-    shadowColor: colors.borderDark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  toastContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  toastText: {
-    fontSize: 14,
-    fontWeight: "500",
-    flex: 1,
-    marginRight: 8,
-  },
-  actionButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  progressBar: {
-    height: 3,
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
-  },
-  progressFill: {
-    height: "100%",
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    toastContainer: {
+      position: "absolute",
+      left: 16,
+      right: 16,
+      zIndex: 9999,
+    },
+    toast: {
+      borderRadius: 12,
+      borderWidth: 1,
+      overflow: "hidden",
+      shadowColor: colors.borderDark,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 5,
+    },
+    toastContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+    },
+    toastText: {
+      fontSize: 14,
+      fontWeight: "500",
+      flex: 1,
+      marginRight: 8,
+    },
+    actionButton: {
+      paddingVertical: 4,
+      paddingHorizontal: 12,
+      borderRadius: 6,
+      backgroundColor: "rgba(255, 255, 255, 0.2)",
+    },
+    actionText: {
+      fontSize: 14,
+      fontWeight: "600",
+    },
+    progressBar: {
+      height: 3,
+      backgroundColor: "rgba(0, 0, 0, 0.1)",
+    },
+    progressFill: {
+      height: "100%",
+    },
+  });
+}

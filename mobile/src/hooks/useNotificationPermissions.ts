@@ -3,7 +3,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import {Platform} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {colors} from '../constants/theme';
+import {colors as defaultColors} from '../constants/theme';
 
 
 import { createLogger } from '../utils/logger';
@@ -115,7 +115,8 @@ export function useNotificationPermissions(): NotificationPermissions {
  * Configure notification handler for foreground notifications
  * Call this once in your app initialization
  */
-export function configureNotificationHandler(): void {
+export function configureNotificationHandler(colors?: any): void {
+  const themeColors = colors || defaultColors;
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
@@ -132,7 +133,7 @@ export function configureNotificationHandler(): void {
       name: 'Default',
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: colors.primary,
+      lightColor: themeColors.primary,
     });
   }
 }

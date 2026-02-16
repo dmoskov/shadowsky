@@ -20,7 +20,7 @@ import {
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {useAuth} from '../../contexts/AuthContext';
 import {AppBskyGraphDefs} from '@atproto/api';
-import {colors} from '../../constants/theme';
+import {useTheme} from '../../contexts/ThemeContext';
 import {EditListModal} from '../../components/EditListModal';
 
 interface ListDetailScreenProps {
@@ -32,10 +32,12 @@ interface MemberItemProps {
   onRemove: (uri: string) => void;
   onProfilePress: (handle: string) => void;
   isOwner: boolean;
+  colors: any;
 }
 
-function MemberItem({member, onRemove, onProfilePress, isOwner}: MemberItemProps) {
+function MemberItem({member, onRemove, onProfilePress, isOwner, colors}: MemberItemProps) {
   const subject = member.subject;
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={styles.memberItem}>
@@ -86,6 +88,8 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
   const {mutateAsync: updateList} = useUpdateList();
   const {goBack, router} = useAppNavigation();
   const {session} = useAuth();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -292,6 +296,7 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
             onRemove={handleRemoveMember}
             onProfilePress={handleProfilePress}
             isOwner={isOwner}
+            colors={colors}
           />
         )}
         keyExtractor={(item) => item.uri}
@@ -326,184 +331,186 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceAlt,
-  },
-  headerContent: {
-    padding: 16,
-  },
-  listName: {
-    color: colors.text,
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  listDescription: {
-    color: colors.textSecondary,
-    fontSize: 15,
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  listMemberCount: {
-    color: colors.textTertiary,
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  listPurpose: {
-    color: colors.primary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  actionButton: {
-    flex: 1,
-    backgroundColor: colors.surfaceAlt,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.surface,
-  },
-  actionButtonText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  deleteButton: {
-    backgroundColor: colors.danger,
-    borderColor: colors.danger,
-  },
-  deleteButtonText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  sectionHeader: {
-    padding: 16,
-    paddingTop: 12,
-    backgroundColor: colors.background,
-  },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  memberItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceAlt,
-  },
-  memberContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    marginRight: 12,
-  },
-  avatarPlaceholder: {
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  memberInfo: {
-    flex: 1,
-  },
-  displayName: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  handle: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-  removeButton: {
-    backgroundColor: colors.danger,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-  },
-  removeButtonText: {
-    color: colors.text,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  emptyContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  loadingText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    marginTop: 12,
-  },
-  emptyText: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  errorSubtext: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  retryButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  footerLoader: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceAlt,
+    },
+    headerContent: {
+      padding: 16,
+    },
+    listName: {
+      color: colors.text,
+      fontSize: 22,
+      fontWeight: '700',
+      marginBottom: 8,
+    },
+    listDescription: {
+      color: colors.textSecondary,
+      fontSize: 15,
+      marginBottom: 8,
+      lineHeight: 20,
+    },
+    listMemberCount: {
+      color: colors.textTertiary,
+      fontSize: 14,
+      marginBottom: 4,
+    },
+    listPurpose: {
+      color: colors.primary,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    headerActions: {
+      flexDirection: 'row',
+      gap: 12,
+      paddingHorizontal: 16,
+      paddingBottom: 16,
+    },
+    actionButton: {
+      flex: 1,
+      backgroundColor: colors.surfaceAlt,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.surface,
+    },
+    actionButtonText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    deleteButton: {
+      backgroundColor: colors.danger,
+      borderColor: colors.danger,
+    },
+    deleteButtonText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    sectionHeader: {
+      padding: 16,
+      paddingTop: 12,
+      backgroundColor: colors.background,
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    memberItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceAlt,
+    },
+    memberContent: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    avatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      marginRight: 12,
+    },
+    avatarPlaceholder: {
+      backgroundColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    avatarText: {
+      color: colors.text,
+      fontSize: 20,
+      fontWeight: '600',
+    },
+    memberInfo: {
+      flex: 1,
+    },
+    displayName: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+    handle: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+    removeButton: {
+      backgroundColor: colors.danger,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 6,
+    },
+    removeButtonText: {
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+    emptyContainer: {
+      flexGrow: 1,
+      justifyContent: 'center',
+    },
+    loadingText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      marginTop: 12,
+    },
+    emptyText: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    emptySubtext: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: 'center',
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: 16,
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    errorSubtext: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: 'center',
+      marginBottom: 16,
+    },
+    retryButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 8,
+    },
+    retryButtonText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    footerLoader: {
+      paddingVertical: 20,
+      alignItems: 'center',
+    },
+  });
+}

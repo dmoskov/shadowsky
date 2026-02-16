@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 import {Image} from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImageManipulator from 'expo-image-manipulator';
-import { colors } from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 import { ImageAsset } from '../hooks/useImagePicker';
 
 
@@ -66,6 +66,7 @@ const DEFAULT_EDITS: ImageEdits = {
 };
 
 export function ImageEditor({ images, onSave, onCancel, visible }: ImageEditorProps) {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editedImages, setEditedImages] = useState<Map<number, EditedImage>>(new Map());
@@ -74,6 +75,7 @@ export function ImageEditor({ images, onSave, onCancel, visible }: ImageEditorPr
   const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatioKey>('free');
   const [isSaving, setIsSaving] = useState(false);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const currentImage = images[currentIndex];
 
@@ -516,198 +518,200 @@ export function ImageEditor({ images, onSave, onCancel, visible }: ImageEditorPr
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.borderDark,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: colors.editorBackground,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  headerButtonText: {
-    color: colors.primary,
-    fontSize: 16,
-  },
-  resetText: {
-    color: colors.editorText,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: 17,
-    fontWeight: '600',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  doneButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  doneButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  previewContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.borderDark,
-  },
-  previewImage: {
-    width: '100%',
-    height: '100%',
-  },
-  controls: {
-    backgroundColor: colors.editorBackground,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  controlsScroll: {
-    maxHeight: 300,
-  },
-  section: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  sectionTitle: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  controlButton: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 12,
-    backgroundColor: colors.editorControl,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  controlButtonActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.surface,
-  },
-  controlButtonText: {
-    color: colors.text,
-    fontSize: 24,
-    marginBottom: 4,
-  },
-  controlButtonLabel: {
-    color: colors.editorText,
-    fontSize: 11,
-  },
-  aspectRatioScroll: {
-    marginBottom: 12,
-  },
-  aspectRatioButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: colors.editorControl,
-    borderRadius: 16,
-    marginRight: 8,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  aspectRatioButtonActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  aspectRatioButtonText: {
-    color: colors.editorText,
-    fontSize: 14,
-  },
-  aspectRatioButtonTextActive: {
-    color: colors.text,
-    fontWeight: '600',
-  },
-  primaryButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    flex: 1,
-    backgroundColor: colors.editorControl,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.editorBorder,
-  },
-  secondaryButtonText: {
-    color: colors.text,
-    fontSize: 16,
-  },
-  cropHint: {
-    color: colors.editorText,
-    fontSize: 12,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  thumbnailsContainer: {
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  thumbnail: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 8,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    overflow: 'hidden',
-  },
-  thumbnailActive: {
-    borderColor: colors.primary,
-  },
-  thumbnailImage: {
-    width: '100%',
-    height: '100%',
-  },
-  editedBadge: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-    backgroundColor: colors.accentGreen,
-    borderRadius: 10,
-    width: 16,
-    height: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  editedBadgeText: {
-    color: colors.text,
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.borderDark,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      backgroundColor: colors.editorBackground,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerButton: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    headerButtonText: {
+      color: colors.primary,
+      fontSize: 16,
+    },
+    resetText: {
+      color: colors.editorText,
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: 17,
+      fontWeight: '600',
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    doneButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 16,
+      paddingVertical: 6,
+      borderRadius: 16,
+    },
+    doneButtonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    previewContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.borderDark,
+    },
+    previewImage: {
+      width: '100%',
+      height: '100%',
+    },
+    controls: {
+      backgroundColor: colors.editorBackground,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    controlsScroll: {
+      maxHeight: 300,
+    },
+    section: {
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+      marginBottom: 12,
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    controlButton: {
+      flex: 1,
+      alignItems: 'center',
+      padding: 12,
+      backgroundColor: colors.editorControl,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    controlButtonActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.surface,
+    },
+    controlButtonText: {
+      color: colors.text,
+      fontSize: 24,
+      marginBottom: 4,
+    },
+    controlButtonLabel: {
+      color: colors.editorText,
+      fontSize: 11,
+    },
+    aspectRatioScroll: {
+      marginBottom: 12,
+    },
+    aspectRatioButton: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      backgroundColor: colors.editorControl,
+      borderRadius: 16,
+      marginRight: 8,
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    aspectRatioButtonActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    aspectRatioButtonText: {
+      color: colors.editorText,
+      fontSize: 14,
+    },
+    aspectRatioButtonTextActive: {
+      color: colors.text,
+      fontWeight: '600',
+    },
+    primaryButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: 12,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    primaryButtonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    secondaryButton: {
+      flex: 1,
+      backgroundColor: colors.editorControl,
+      paddingVertical: 12,
+      borderRadius: 8,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.editorBorder,
+    },
+    secondaryButtonText: {
+      color: colors.text,
+      fontSize: 16,
+    },
+    cropHint: {
+      color: colors.editorText,
+      fontSize: 12,
+      marginTop: 8,
+      textAlign: 'center',
+    },
+    thumbnailsContainer: {
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+    },
+    thumbnail: {
+      width: 60,
+      height: 60,
+      borderRadius: 8,
+      marginRight: 8,
+      borderWidth: 2,
+      borderColor: 'transparent',
+      overflow: 'hidden',
+    },
+    thumbnailActive: {
+      borderColor: colors.primary,
+    },
+    thumbnailImage: {
+      width: '100%',
+      height: '100%',
+    },
+    editedBadge: {
+      position: 'absolute',
+      bottom: 2,
+      right: 2,
+      backgroundColor: colors.accentGreen,
+      borderRadius: 10,
+      width: 16,
+      height: 16,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    editedBadgeText: {
+      color: colors.text,
+      fontSize: 10,
+      fontWeight: 'bold',
+    },
+  });
+}

@@ -15,7 +15,6 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { ArrowLeftIcon } from "../../components/icons";
 import { useQueryClient } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { colors } from "../../constants/theme";
 import {
   registerBackgroundFetch,
   unregisterBackgroundFetch,
@@ -28,7 +27,7 @@ import { useTranslation } from "../../hooks/useTranslation";
 
 import { createLogger } from '../../utils/logger';
 
-const logger = createLogger('Settingsscreenx');
+const logger = createLogger('SettingsScreen');
 interface SettingsScreenProps {
   section?: string;
   onNavigateToBlockedAccounts?: () => void;
@@ -233,7 +232,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
             style={styles.backButton}
           >
             <View style={styles.backButtonContent}>
-              <ArrowLeftIcon size={20} color={colors.info} />
+              <ArrowLeftIcon size={20} color={themeColors.info} />
               <Text style={styles.backButtonText}>Back</Text>
             </View>
           </TouchableOpacity>
@@ -363,7 +362,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
             value={preferences.showNSFW}
             onValueChange={(value) => updatePreference("showNSFW", value)}
             trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor={colors.text}
+            thumbColor={themeColors.text}
           />
         </SettingRow>
       </View>
@@ -382,7 +381,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
               updatePreference("notificationsEnabled", value)
             }
             trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor={colors.text}
+            thumbColor={themeColors.text}
           />
         </SettingRow>
 
@@ -395,7 +394,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
                   updatePreference("notifyOnLikes", value)
                 }
                 trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor={colors.text}
+                thumbColor={themeColors.text}
               />
             </SettingRow>
 
@@ -406,7 +405,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
                   updatePreference("notifyOnReplies", value)
                 }
                 trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor={colors.text}
+                thumbColor={themeColors.text}
               />
             </SettingRow>
 
@@ -417,7 +416,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
                   updatePreference("notifyOnFollows", value)
                 }
                 trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor={colors.text}
+                thumbColor={themeColors.text}
               />
             </SettingRow>
 
@@ -428,7 +427,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
                   updatePreference("notifyOnMentions", value)
                 }
                 trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor={colors.text}
+                thumbColor={themeColors.text}
               />
             </SettingRow>
 
@@ -439,7 +438,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
                   updatePreference("notifyOnQuotes", value)
                 }
                 trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor={colors.text}
+                thumbColor={themeColors.text}
               />
             </SettingRow>
           </>
@@ -460,7 +459,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
               updatePreference("hapticsEnabled", value)
             }
             trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor={colors.text}
+            thumbColor={themeColors.text}
           />
         </SettingRow>
       </View>
@@ -506,7 +505,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
                 }
               }}
               trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-              thumbColor={colors.text}
+              thumbColor={themeColors.text}
             />
           </SettingRow>
         </View>
@@ -564,7 +563,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
               }
             }}
             trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor={colors.text}
+            thumbColor={themeColors.text}
           />
         </SettingRow>
 
@@ -657,7 +656,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
             value={preferences.autoGenerateAltText}
             onValueChange={(value) => updatePreference("autoGenerateAltText", value)}
             trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor={colors.text}
+            thumbColor={themeColors.text}
           />
         </SettingRow>
 
@@ -669,7 +668,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
             value={preferences.enableThreadSummaryPreGen}
             onValueChange={(value) => updatePreference("enableThreadSummaryPreGen", value)}
             trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor={colors.text}
+            thumbColor={themeColors.text}
           />
         </SettingRow>
       </View>
@@ -801,7 +800,7 @@ const createStyles = (themeColors: Record<string, string>) => StyleSheet.create(
     marginRight: 12,
   },
   accountAvatarText: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 20,
     fontWeight: "bold",
   },
@@ -881,7 +880,7 @@ const createStyles = (themeColors: Record<string, string>) => StyleSheet.create(
     fontWeight: "500",
   },
   themeButtonTextActive: {
-    color: colors.text,
+    color: themeColors.text,
   },
   smallButton: {
     paddingHorizontal: 12,
@@ -919,7 +918,7 @@ const createStyles = (themeColors: Record<string, string>) => StyleSheet.create(
     gap: 4,
   },
   backButtonText: {
-    color: colors.info,
+    color: themeColors.info,
     fontSize: 16,
   },
 });

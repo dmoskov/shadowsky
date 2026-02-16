@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {Text, StyleSheet, TouchableOpacity, ScrollView} from 'react-native';
-import {colors} from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 
 export type NotificationFilter = 'all' | 'likes' | 'replies' | 'follows' | 'mentions' | 'quotes';
 
@@ -15,6 +15,9 @@ export function NotificationTabBar({
   onFilterChange,
   counts,
 }: NotificationTabBarProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const tabs: {key: NotificationFilter; label: string}[] = [
     {key: 'all', label: 'All'},
     {key: 'replies', label: 'Replies'},
@@ -50,31 +53,33 @@ export function NotificationTabBar({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-    backgroundColor: colors.background,
-  },
-  contentContainer: {
-    paddingHorizontal: 8,
-  },
-  tab: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginHorizontal: 4,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  activeTab: {
-    borderBottomColor: colors.primary,
-  },
-  tabText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.textTertiary,
-  },
-  activeTabText: {
-    color: colors.primary,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceElevated,
+      backgroundColor: colors.background,
+    },
+    contentContainer: {
+      paddingHorizontal: 8,
+    },
+    tab: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      marginHorizontal: 4,
+      borderBottomWidth: 2,
+      borderBottomColor: 'transparent',
+    },
+    activeTab: {
+      borderBottomColor: colors.primary,
+    },
+    tabText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.textTertiary,
+    },
+    activeTabText: {
+      color: colors.primary,
+    },
+  });
+}

@@ -5,7 +5,7 @@ import {useListFeed, useList} from '../../hooks/api';
 import {AppBskyFeedDefs} from '@atproto/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {useRouter} from 'expo-router';
-import {colors} from '../../constants/theme';
+import {useTheme} from '../../contexts/ThemeContext';
 
 interface ListTimelineScreenProps {
   listId: string;
@@ -14,6 +14,8 @@ interface ListTimelineScreenProps {
 export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
   const router = useRouter();
   const {navigateToListMembers} = useAppNavigation();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Decode the listId since it was encoded when passed
   const decodedListId = useMemo(() => {
@@ -127,52 +129,54 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-  loadingText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    marginTop: 12,
-  },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceAlt,
-    backgroundColor: colors.background,
-  },
-  listName: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  listDescription: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  manageMembersButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  listMemberCount: {
-    color: colors.textTertiary,
-    fontSize: 13,
-  },
-  chevron: {
-    color: colors.textTertiary,
-    fontSize: 18,
-    marginLeft: 4,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+    },
+    loadingText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      marginTop: 12,
+    },
+    header: {
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceAlt,
+      backgroundColor: colors.background,
+    },
+    listName: {
+      color: colors.text,
+      fontSize: 20,
+      fontWeight: '700',
+      marginBottom: 6,
+    },
+    listDescription: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      marginBottom: 8,
+      lineHeight: 20,
+    },
+    manageMembersButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 4,
+    },
+    listMemberCount: {
+      color: colors.textTertiary,
+      fontSize: 13,
+    },
+    chevron: {
+      color: colors.textTertiary,
+      fontSize: 18,
+      marginLeft: 4,
+    },
+  });
+}

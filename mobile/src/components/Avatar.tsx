@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {View, StyleSheet, ViewStyle} from 'react-native';
 import {Image} from 'expo-image';
-import {colors} from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 
 interface AvatarProps {
   uri?: string;
@@ -11,6 +11,9 @@ interface AvatarProps {
 }
 
 export function Avatar({uri, size = 40, style, accessibilityLabel}: AvatarProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View
       style={[styles.container, {width: size, height: size, borderRadius: size / 2}, style]}
@@ -32,25 +35,27 @@ export function Avatar({uri, size = 40, style, accessibilityLabel}: AvatarProps)
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    overflow: 'hidden',
-    // Add subtle ring and shadow for premium feel
-    borderWidth: 2,
-    borderColor: colors.cardBorder,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      overflow: 'hidden',
+      // Add subtle ring and shadow for premium feel
+      borderWidth: 2,
+      borderColor: colors.cardBorder,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 1,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  image: {
-    backgroundColor: colors.surfaceElevated,
-  },
-  placeholder: {
-    backgroundColor: colors.borderLight,
-  },
-});
+    image: {
+      backgroundColor: colors.surfaceElevated,
+    },
+    placeholder: {
+      backgroundColor: colors.borderLight,
+    },
+  });
+}

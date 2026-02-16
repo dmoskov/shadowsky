@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { handleOAuthCallback } from "../../services/auth/oauth";
 import { signInWithOAuth } from "../../services/auth/auth-service";
-import { colors } from "../../constants/theme";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface OAuthCallbackScreenProps {
   code?: string;
@@ -18,6 +18,8 @@ export function OAuthCallbackScreen({
   error,
   iss,
 }: OAuthCallbackScreenProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -64,16 +66,18 @@ export function OAuthCallbackScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  text: {
-    marginTop: 16,
-    color: colors.textSecondary,
-    fontSize: 16,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    text: {
+      marginTop: 16,
+      color: colors.textSecondary,
+      fontSize: 16,
+    },
+  });
+}

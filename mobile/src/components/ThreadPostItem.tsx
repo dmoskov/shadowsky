@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Alert } from "react-native";
 import { ImageIcon, CloseIcon } from "./icons";
 import { ImageAsset } from "../hooks/useImagePicker";
-import { colors } from "../constants/theme";
+import { useTheme } from "../contexts/ThemeContext";
 
 const MAX_POST_LENGTH = 300;
 
@@ -34,6 +34,8 @@ export function ThreadPostItem({
   isUploading = false,
   showRemoveButton,
 }: ThreadPostItemProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [_altTextModalImage, setAltTextModalImage] = useState<number | null>(null);
 
   const handleRemoveImage = (imageIndex: number) => {
@@ -99,7 +101,7 @@ export function ThreadPostItem({
                   onPress={() => handleRemoveImage(imageIndex)}
                   disabled={isUploading}
                 >
-                  <Text style={styles.removeImageText}>×</Text>
+                  <Text style={styles.removeImageText}>{"\u00D7"}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.altTextButton}
@@ -107,7 +109,7 @@ export function ThreadPostItem({
                   disabled={isUploading}
                 >
                   <Text style={styles.altTextButtonText}>
-                    {image.altText ? "✓ ALT" : "ALT"}
+                    {image.altText ? "\u2713 ALT" : "ALT"}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -132,106 +134,108 @@ export function ThreadPostItem({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.background,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.surfaceElevated,
-    padding: 12,
-    marginBottom: 12,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  postNumber: {
-    backgroundColor: colors.surfaceElevated,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  postNumberText: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  removeButton: {
-    padding: 4,
-  },
-  input: {
-    color: colors.text,
-    fontSize: 16,
-    minHeight: 80,
-    textAlignVertical: "top",
-    marginBottom: 8,
-  },
-  imagePreviewContainer: {
-    marginBottom: 8,
-  },
-  imagePreviewWrapper: {
-    position: "relative",
-    marginRight: 8,
-  },
-  imagePreview: {
-    width: 60,
-    height: 60,
-    borderRadius: 6,
-    backgroundColor: colors.surfaceElevated,
-  },
-  removeImageButton: {
-    position: "absolute",
-    top: -6,
-    right: -6,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: colors.borderLight,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  removeImageText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "600",
-    lineHeight: 16,
-  },
-  altTextButton: {
-    position: "absolute",
-    bottom: 3,
-    left: 3,
-    paddingHorizontal: 4,
-    paddingVertical: 1,
-    borderRadius: 3,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-  },
-  altTextButtonText: {
-    color: colors.text,
-    fontSize: 9,
-    fontWeight: "600",
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: colors.surfaceElevated,
-  },
-  imageButton: {
-    padding: 4,
-  },
-  imageButtonDisabled: {
-    opacity: 0.5,
-  },
-  charCount: {
-    color: colors.textTertiary,
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  charCountOver: {
-    color: colors.danger,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: colors.background,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.surfaceElevated,
+      padding: 12,
+      marginBottom: 12,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 8,
+    },
+    postNumber: {
+      backgroundColor: colors.surfaceElevated,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    postNumberText: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    removeButton: {
+      padding: 4,
+    },
+    input: {
+      color: colors.text,
+      fontSize: 16,
+      minHeight: 80,
+      textAlignVertical: "top",
+      marginBottom: 8,
+    },
+    imagePreviewContainer: {
+      marginBottom: 8,
+    },
+    imagePreviewWrapper: {
+      position: "relative",
+      marginRight: 8,
+    },
+    imagePreview: {
+      width: 60,
+      height: 60,
+      borderRadius: 6,
+      backgroundColor: colors.surfaceElevated,
+    },
+    removeImageButton: {
+      position: "absolute",
+      top: -6,
+      right: -6,
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: colors.borderLight,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    removeImageText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "600",
+      lineHeight: 16,
+    },
+    altTextButton: {
+      position: "absolute",
+      bottom: 3,
+      left: 3,
+      paddingHorizontal: 4,
+      paddingVertical: 1,
+      borderRadius: 3,
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
+    },
+    altTextButtonText: {
+      color: colors.text,
+      fontSize: 9,
+      fontWeight: "600",
+    },
+    footer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingTop: 8,
+      borderTopWidth: 1,
+      borderTopColor: colors.surfaceElevated,
+    },
+    imageButton: {
+      padding: 4,
+    },
+    imageButtonDisabled: {
+      opacity: 0.5,
+    },
+    charCount: {
+      color: colors.textTertiary,
+      fontSize: 12,
+      fontWeight: "500",
+    },
+    charCountOver: {
+      color: colors.danger,
+    },
+  });
+}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {AppBskyActorDefs} from '@atproto/api';
 import {usePostReposts} from '../../hooks/api/usePosts';
 import {Avatar} from '../../components/Avatar';
 import {FollowButton} from '../../components/FollowButton';
-import {colors} from '../../constants/theme';
+import {useTheme} from '../../contexts/ThemeContext';
 import {useAuth} from '../../contexts/AuthContext';
 
 interface RepostsScreenProps {
@@ -21,6 +21,8 @@ interface RepostsScreenProps {
 }
 
 export function RepostsScreen({postUri, onNavigateToProfile}: RepostsScreenProps) {
+  const {colors} = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const {account} = useAuth();
   const {
     data,
@@ -133,62 +135,64 @@ export function RepostsScreen({postUri, onNavigateToProfile}: RepostsScreenProps
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  repostItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-  },
-  userInfo: {
-    flex: 1,
-    marginLeft: 12,
-    marginRight: 8,
-  },
-  displayName: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  handle: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  description: {
-    color: colors.borderLight,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  buttonContainer: {
-    marginLeft: 8,
-  },
-  footerLoader: {
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 48,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 16,
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-  },
-  emptyList: {
-    flexGrow: 1,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    repostItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceElevated,
+    },
+    userInfo: {
+      flex: 1,
+      marginLeft: 12,
+      marginRight: 8,
+    },
+    displayName: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+    handle: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      marginBottom: 4,
+    },
+    description: {
+      color: colors.borderLight,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+    buttonContainer: {
+      marginLeft: 8,
+    },
+    footerLoader: {
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 48,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: 16,
+    },
+    emptyText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+    },
+    emptyList: {
+      flexGrow: 1,
+    },
+  });
+}

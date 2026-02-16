@@ -23,12 +23,12 @@ import { TrendingTopics } from "../../components/TrendingTopics";
 import { AppBskyActorDefs, AppBskyFeedDefs } from "@atproto/api";
 import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useTrendingData } from "../../hooks/useTrending";
-import { colors } from "../../constants/theme";
+import { useTheme } from "../../contexts/ThemeContext";
 
 
 import { createLogger } from '../../utils/logger';
 
-const logger = createLogger('Searchscreenx');
+const logger = createLogger('SearchScreen');
 const SEARCH_HISTORY_KEY = "@search_history";
 const MAX_HISTORY_ITEMS = 20;
 
@@ -49,6 +49,7 @@ interface SearchFilters {
 }
 
 export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("posts");
@@ -324,6 +325,8 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
       <Text style={styles.historyText}>{item}</Text>
     </TouchableOpacity>
   );
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -632,7 +635,8 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -857,4 +861,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-});
+  });
+}

@@ -3,6 +3,7 @@ import {
   FlatList,
   ActivityIndicator,
   View,
+  Text,
   StyleSheet,
   RefreshControl,
 } from 'react-native';
@@ -20,9 +21,10 @@ import {NotificationTabBar, NotificationFilter} from '../../components/Notificat
 import {ErrorState} from '../../components/ErrorState';
 import { EmptyState } from '../../components/EmptyState';
 import {useAppNavigation} from '../../hooks/useNavigation';
+import {AppBskyNotificationListNotifications} from '@atproto/api';
 import {usePreferences} from '../../contexts/PreferencesContext';
 import {clearBadgeCount} from '../../services/notification-poller';
-import {colors} from '../../constants/theme';
+import {useTheme} from '../../contexts/ThemeContext';
 import {filterMutedNotifications} from '../../utils/content-filter';
 import {
   aggregateNotifications,
@@ -31,10 +33,23 @@ import {
   ProcessedNotification,
 } from '../../utils/notification-aggregator';
 
+function getPostIdFromUri(uri: string): string {
+  const parts = uri.split('/');
+  return parts[parts.length - 1];
+}
+
+function getHandleFromUri(uri: string): string {
+  // AT URI format: at://did:plc:xxx/app.bsky.feed.post/rkey
+  const parts = uri.split('/');
+  return parts[2] || '';
+}
+
 export function NotificationsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const {preferences} = usePreferences();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const {
     data,
     isLoading,
@@ -48,7 +63,7 @@ export function NotificationsScreen() {
   } = useNotifications();
 
   const markNotificationsSeen = useMarkNotificationsSeen();
-  const {navigateToProfile} = useAppNavigation();
+  const {navigateToProfile, navigateToThread} = useAppNavigation();
   const scrollRef = useRef<FlatList>(null);
 
   // Filter state
@@ -132,8 +147,11 @@ export function NotificationsScreen() {
     }
   };
 
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+
   const handleRefresh = () => {
-    refetch();
+    setIsManualRefreshing(true);
+    refetch().finally(() => setIsManualRefreshing(false));
   };
 
   const handleMentionPress = useCallback(
@@ -150,6 +168,36 @@ export function NotificationsScreen() {
     [router],
   );
 
+  const handleNotificationPress = useCallback(
+    (notification: AppBskyNotificationListNotifications.Notification) => {
+      const reason = notification.reason;
+
+      if (reason === 'follow') {
+        navigateToProfile(notification.author.handle);
+        return;
+      }
+
+      // For like/repost, navigate to the target post (reasonSubject)
+      if ((reason === 'like' || reason === 'repost') && notification.reasonSubject) {
+        const postId = getPostIdFromUri(notification.reasonSubject);
+        const handle = getHandleFromUri(notification.reasonSubject);
+        navigateToThread(handle, postId);
+        return;
+      }
+
+      // For reply/mention/quote, navigate to the notification post itself
+      if (reason === 'reply' || reason === 'mention' || reason === 'quote') {
+        const postId = getPostIdFromUri(notification.uri);
+        navigateToThread(notification.author.handle, postId);
+        return;
+      }
+
+      // Fallback: navigate to author profile
+      navigateToProfile(notification.author.handle);
+    },
+    [navigateToProfile, navigateToThread],
+  );
+
   const handleFilterChange = useCallback((filter: NotificationFilter) => {
     setActiveFilter(filter);
     // Scroll to top when filter changes
@@ -163,6 +211,12 @@ export function NotificationsScreen() {
           <AggregatedNotificationItem
             notifications={item.notifications}
             reason={item.reason}
+            onPress={() => {
+              const notif = item.notifications[0];
+              if (notif) {
+                handleNotificationPress(notif);
+              }
+            }}
             onMentionPress={handleMentionPress}
             onHashtagPress={handleHashtagPress}
           />
@@ -171,12 +225,13 @@ export function NotificationsScreen() {
       return (
         <NotificationItem
           notification={item.notification}
+          onPress={() => handleNotificationPress(item.notification)}
           onMentionPress={handleMentionPress}
           onHashtagPress={handleHashtagPress}
         />
       );
     },
-    [handleMentionPress, handleHashtagPress],
+    [handleMentionPress, handleHashtagPress, handleNotificationPress],
   );
 
   const getItemKey = useCallback((item: ProcessedNotification, index: number) => {
@@ -207,7 +262,7 @@ export function NotificationsScreen() {
         onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
+            refreshing={isManualRefreshing}
             onRefresh={handleRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
@@ -223,28 +278,30 @@ export function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  list: {
-    flex: 1,
-  },
-  footer: {
-    padding: 20,
-    alignItems: 'center',
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    list: {
+      flex: 1,
+    },
+    footer: {
+      padding: 20,
+      alignItems: 'center',
+    },
+  });
+}

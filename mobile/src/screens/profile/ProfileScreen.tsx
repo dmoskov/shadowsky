@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -24,14 +24,14 @@ import { ProfileSkeleton } from "../../components/ProfileSkeleton";
 import { MoreVerticalIcon, SendIcon } from "../../components/icons";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useAuth } from "../../contexts/AuthContext";
-import { colors } from "../../constants/theme";
+import { useTheme } from "../../contexts/ThemeContext";
 import { AuthorFeedFilter } from "../../services/atproto/feeds";
 import { dmService } from "../../services/dm-service";
 
 
 import { createLogger } from '../../utils/logger';
 
-const logger = createLogger('Profilescreenx');
+const logger = createLogger('ProfileScreen');
 interface ProfileScreenProps {
   handle: string;
   onNavigateToPost?: (uri: string) => void;
@@ -42,10 +42,12 @@ interface ProfileScreenProps {
 }
 
 export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, onNavigateToFollowers, onNavigateToFollowing, onNavigateToMessages }: ProfileScreenProps) {
+  const { colors } = useTheme();
   const router = useRouter();
   const { data: profile, isLoading: isLoadingProfile, error: profileError, refetch: refetchProfile } = useProfile(handle);
   const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
   const [isStartingConversation, setIsStartingConversation] = useState(false);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Get the appropriate filter based on the active tab
   const getFilter = (): AuthorFeedFilter | undefined => {
@@ -616,7 +618,8 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -881,4 +884,5 @@ const styles = StyleSheet.create({
     fontWeight: "300",
     marginLeft: 8,
   },
-});
+  });
+}

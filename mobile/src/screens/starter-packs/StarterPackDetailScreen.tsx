@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useMemo} from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
 import {useStarterPack, useFollowAllFromStarterPack} from '../../hooks/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {AppBskyGraphDefs} from '@atproto/api';
-import {colors} from '../../constants/theme';
+import {useTheme} from '../../contexts/ThemeContext';
 import {Avatar} from '../../components/Avatar';
 
 
@@ -28,9 +28,10 @@ interface StarterPackDetailScreenProps {
 interface MemberItemProps {
   member: AppBskyGraphDefs.ListItemView;
   onProfilePress: (handle: string) => void;
+  styles: any;
 }
 
-function MemberItem({member, onProfilePress}: MemberItemProps) {
+function MemberItem({member, onProfilePress, styles}: MemberItemProps) {
   const subject = member.subject;
 
   return (
@@ -56,9 +57,10 @@ function MemberItem({member, onProfilePress}: MemberItemProps) {
 interface FeedItemProps {
   feed: any; // AppBskyFeedDefs.GeneratorView type
   onPress: () => void;
+  styles: any;
 }
 
-function FeedItem({feed, onPress}: FeedItemProps) {
+function FeedItem({feed, onPress, styles}: FeedItemProps) {
   return (
     <TouchableOpacity style={styles.feedItem} onPress={onPress}>
       {feed.avatar && (
@@ -78,6 +80,8 @@ export function StarterPackDetailScreen({
   starterPackUri,
   onNavigateToProfile,
 }: StarterPackDetailScreenProps) {
+  const {colors} = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const {data: starterPack, isLoading, error, refetch} = useStarterPack(starterPackUri);
   const followAllMutation = useFollowAllFromStarterPack();
   const {router} = useAppNavigation();
@@ -237,6 +241,7 @@ export function StarterPackDetailScreen({
             <FeedItem
               key={feed.uri || index}
               feed={feed}
+              styles={styles}
               onPress={() => {
                 // Navigate to feed detail if implemented
                 logger.log('Navigate to feed:', feed.uri);
@@ -257,6 +262,7 @@ export function StarterPackDetailScreen({
               key={member.uri || index}
               member={member}
               onProfilePress={handleProfilePress}
+              styles={styles}
             />
           ))}
         </View>
@@ -265,180 +271,182 @@ export function StarterPackDetailScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    padding: 20,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 16,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  retryButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
-  },
-  retryButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 16,
-  },
-  creatorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    padding: 12,
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: 12,
-  },
-  creatorInfo: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  creatorLabel: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginBottom: 2,
-  },
-  creatorName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  creatorHandle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  description: {
-    fontSize: 16,
-    color: colors.textMuted,
-    lineHeight: 24,
-    marginBottom: 16,
-  },
-  stats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 16,
-    padding: 12,
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: 12,
-  },
-  stat: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-  followAllButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 56,
-  },
-  followAllButtonText: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  section: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 16,
-  },
-  memberItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-  },
-  memberInfo: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  displayName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  handle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  memberDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-  feedItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-  },
-  feedAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: colors.surfaceElevated,
-  },
-  feedInfo: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  feedName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  feedDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      padding: 20,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: 16,
+      marginBottom: 16,
+      textAlign: 'center',
+    },
+    retryButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 24,
+    },
+    retryButtonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    header: {
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceElevated,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 16,
+    },
+    creatorContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+      padding: 12,
+      backgroundColor: colors.surfaceElevated,
+      borderRadius: 12,
+    },
+    creatorInfo: {
+      marginLeft: 12,
+      flex: 1,
+    },
+    creatorLabel: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginBottom: 2,
+    },
+    creatorName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    creatorHandle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    description: {
+      fontSize: 16,
+      color: colors.textMuted,
+      lineHeight: 24,
+      marginBottom: 16,
+    },
+    stats: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginBottom: 16,
+      padding: 12,
+      backgroundColor: colors.surfaceElevated,
+      borderRadius: 12,
+    },
+    stat: {
+      alignItems: 'center',
+    },
+    statValue: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: colors.primary,
+    },
+    statLabel: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+    followAllButton: {
+      backgroundColor: colors.primary,
+      paddingVertical: 16,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 56,
+    },
+    followAllButtonText: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '600',
+    },
+    section: {
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceElevated,
+    },
+    sectionTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: colors.text,
+      marginBottom: 16,
+    },
+    memberItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceElevated,
+    },
+    memberInfo: {
+      marginLeft: 12,
+      flex: 1,
+    },
+    displayName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    handle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    memberDescription: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+    feedItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceElevated,
+    },
+    feedAvatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 8,
+      backgroundColor: colors.surfaceElevated,
+    },
+    feedInfo: {
+      marginLeft: 12,
+      flex: 1,
+    },
+    feedName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    feedDescription: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+  });
+}

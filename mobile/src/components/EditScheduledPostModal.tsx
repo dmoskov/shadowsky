@@ -3,7 +3,7 @@
  * Modal for editing scheduled post text and time
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { ScheduledPost } from '../services/scheduled-posts';
-import { colors } from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 
 
 import { createLogger } from '../utils/logger';
@@ -37,8 +37,10 @@ export function EditScheduledPostModal({
   onClose,
   onSave,
 }: EditScheduledPostModalProps) {
+  const { colors } = useTheme();
   const [text, setText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     if (post) {
@@ -140,95 +142,97 @@ export function EditScheduledPostModal({
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '80%',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  closeButton: {
-    color: colors.textSecondary,
-    fontSize: 24,
-    fontWeight: '300',
-  },
-  disabledText: {
-    opacity: 0.5,
-  },
-  content: {
-    flex: 1,
-  },
-  input: {
-    color: colors.text,
-    fontSize: 16,
-    padding: 16,
-    minHeight: 150,
-    textAlignVertical: 'top',
-  },
-  footer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  charCount: {
-    color: colors.textTertiary,
-    fontSize: 12,
-    fontWeight: '500',
-    textAlign: 'right',
-  },
-  charCountOver: {
-    color: colors.danger,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: colors.surface,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 48,
-  },
-  cancelButton: {
-    backgroundColor: colors.surface,
-  },
-  cancelButtonText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveButton: {
-    backgroundColor: colors.primary,
-  },
-  saveButtonDisabled: {
-    backgroundColor: colors.surface,
-    opacity: 0.5,
-  },
-  saveButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      justifyContent: 'flex-end',
+    },
+    modalContainer: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      maxHeight: '80%',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surface,
+    },
+    title: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '600',
+    },
+    closeButton: {
+      color: colors.textSecondary,
+      fontSize: 24,
+      fontWeight: '300',
+    },
+    disabledText: {
+      opacity: 0.5,
+    },
+    content: {
+      flex: 1,
+    },
+    input: {
+      color: colors.text,
+      fontSize: 16,
+      padding: 16,
+      minHeight: 150,
+      textAlignVertical: 'top',
+    },
+    footer: {
+      paddingHorizontal: 16,
+      paddingBottom: 16,
+    },
+    charCount: {
+      color: colors.textTertiary,
+      fontSize: 12,
+      fontWeight: '500',
+      textAlign: 'right',
+    },
+    charCountOver: {
+      color: colors.danger,
+    },
+    actions: {
+      flexDirection: 'row',
+      gap: 12,
+      padding: 16,
+      borderTopWidth: 1,
+      borderTopColor: colors.surface,
+    },
+    button: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: 48,
+    },
+    cancelButton: {
+      backgroundColor: colors.surface,
+    },
+    cancelButtonText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    saveButton: {
+      backgroundColor: colors.primary,
+    },
+    saveButtonDisabled: {
+      backgroundColor: colors.surface,
+      opacity: 0.5,
+    },
+    saveButtonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  });
+}

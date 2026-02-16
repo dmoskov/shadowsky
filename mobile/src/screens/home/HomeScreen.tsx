@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo } from "react";
 import { View, StyleSheet, Alert, ActionSheetIOS, Platform, ScrollView, TouchableOpacity, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors } from "../../constants/theme";
+import { useTheme } from "../../contexts/ThemeContext";
 import { useScrollToTop } from "@react-navigation/native";
 import { useTimeline, useCustomFeed, useSavedFeeds } from "../../hooks/api";
 import { useLikePost, useUnlikePost, useRepost, useDeleteRepost } from "../../hooks/api/usePosts";
@@ -21,6 +21,7 @@ function getPostIdFromUri(uri: string): string {
 }
 
 export function HomeScreen() {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [selectedFeedUri, setSelectedFeedUri] = useState<string | null>(null);
@@ -226,6 +227,8 @@ export function HomeScreen() {
   // Note: Arrow key navigation disabled for native SwiftUI view
   // Can be re-implemented if needed with native bridge
 
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Feed Picker Chips */}
@@ -283,7 +286,8 @@ export function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -334,4 +338,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.primary,
   },
-});
+  });
+}

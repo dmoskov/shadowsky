@@ -15,7 +15,7 @@ import {ErrorState} from './ErrorState';
 import { EmptyState } from './EmptyState';
 import {useNetwork} from '../contexts/NetworkContext';
 import {usePreferences} from '../contexts/PreferencesContext';
-import {colors} from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 import {triggerHaptic} from '../utils/haptics';
 import {filterMutedPosts} from '../utils/content-filter';
 import {useImagePrefetch} from '../hooks/useImagePrefetch';
@@ -61,8 +61,10 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   onHashtagPress,
   feedType = 'other',
 }: FeedListProps, ref) {
+  const { colors } = useTheme();
   const { isOnline } = useNetwork();
   const { preferences } = usePreferences();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Filter posts based on muted words
   const filteredPosts = useMemo(() => {
@@ -178,13 +180,15 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   );
 });
 
-const styles = StyleSheet.create({
-  list: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  footer: {
-    padding: 20,
-    alignItems: 'center',
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    list: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    footer: {
+      padding: 20,
+      alignItems: 'center',
+    },
+  });
+}

@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {Image} from 'expo-image';
 import {AppBskyEmbedExternal} from '@atproto/api';
 import {openLink} from '../utils/browser';
-import {colors} from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 
 
 import { createLogger } from '../utils/logger';
@@ -15,6 +15,9 @@ interface ExternalLinkEmbedProps {
 }
 
 export function ExternalLinkEmbed({external, onPress}: ExternalLinkEmbedProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const handlePress = async () => {
     if (onPress) {
       onPress(external.uri);
@@ -68,38 +71,40 @@ export function ExternalLinkEmbed({external, onPress}: ExternalLinkEmbedProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 8,
-    marginBottom: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.surfaceElevated,
-    backgroundColor: colors.background,
-    overflow: 'hidden',
-  },
-  thumbnail: {
-    width: '100%',
-    height: 180,
-    backgroundColor: colors.surfaceElevated,
-  },
-  textContainer: {
-    padding: 12,
-  },
-  domain: {
-    color: colors.textTertiary,
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  description: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      marginTop: 8,
+      marginBottom: 8,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.surfaceElevated,
+      backgroundColor: colors.background,
+      overflow: 'hidden',
+    },
+    thumbnail: {
+      width: '100%',
+      height: 180,
+      backgroundColor: colors.surfaceElevated,
+    },
+    textContainer: {
+      padding: 12,
+    },
+    domain: {
+      color: colors.textTertiary,
+      fontSize: 12,
+      marginBottom: 4,
+    },
+    title: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: '600',
+      marginBottom: 4,
+    },
+    description: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      lineHeight: 18,
+    },
+  });
+}

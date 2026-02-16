@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import {useRouter} from 'expo-router';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {colors} from '../../constants/theme';
+import {useTheme} from '../../contexts/ThemeContext';
 import {
   useSavedFeeds,
   useUnsaveFeed,
@@ -34,6 +34,8 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
   const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isReorderMode, setIsReorderMode] = useState(false);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const {data: savedFeedsData, isLoading, refetch} = useSavedFeeds();
   const {data: pinnedFeedUris} = usePinnedFeeds();
@@ -243,198 +245,200 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
-    backgroundColor: colors.surface,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-  },
-  reorderButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surface,
-  },
-  reorderButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  reorderButtonTextActive: {
-    color: colors.primary,
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    fontSize: 18,
-    color: colors.textSecondary,
-  },
-  listContent: {
-    padding: 12,
-  },
-  feedCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.surface,
-  },
-  feedCardDragging: {
-    opacity: 0.7,
-    elevation: 5,
-    shadowColor: colors.borderDark,
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  feedHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  dragHandle: {
-    marginRight: 12,
-    paddingVertical: 4,
-  },
-  dragHandleText: {
-    fontSize: 20,
-    color: colors.textSecondary,
-  },
-  feedAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  feedAvatarPlaceholder: {
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  feedAvatarText: {
-    fontSize: 24,
-  },
-  feedInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  feedName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  feedCreator: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  pinButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surface,
-    minWidth: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pinButtonActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  pinButtonText: {
-    fontSize: 14,
-  },
-  removeButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surface,
-    minWidth: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  removeButtonText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  feedDescription: {
-    fontSize: 14,
-    color: colors.textMuted,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  feedFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  feedLikes: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  pinnedBadge: {
-    fontSize: 12,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  emptyStateText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptyStateSubtext: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surface,
+      backgroundColor: colors.surface,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      gap: 12,
+      alignItems: 'center',
+    },
+    reorderButton: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.surface,
+    },
+    reorderButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    reorderButtonTextActive: {
+      color: colors.primary,
+    },
+    closeButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.surface,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    closeButtonText: {
+      fontSize: 18,
+      color: colors.textSecondary,
+    },
+    listContent: {
+      padding: 12,
+    },
+    feedCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: colors.surface,
+    },
+    feedCardDragging: {
+      opacity: 0.7,
+      elevation: 5,
+      shadowColor: colors.borderDark,
+      shadowOffset: {width: 0, height: 2},
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+    feedHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    dragHandle: {
+      marginRight: 12,
+      paddingVertical: 4,
+    },
+    dragHandleText: {
+      fontSize: 20,
+      color: colors.textSecondary,
+    },
+    feedAvatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 8,
+      marginRight: 12,
+    },
+    feedAvatarPlaceholder: {
+      backgroundColor: colors.surface,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    feedAvatarText: {
+      fontSize: 24,
+    },
+    feedInfo: {
+      flex: 1,
+      marginRight: 12,
+    },
+    feedName: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    feedCreator: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    actionButtons: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    pinButton: {
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.surface,
+      minWidth: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    pinButtonActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    pinButtonText: {
+      fontSize: 14,
+    },
+    removeButton: {
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.surface,
+      minWidth: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    removeButtonText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      fontWeight: '600',
+    },
+    feedDescription: {
+      fontSize: 14,
+      color: colors.textMuted,
+      lineHeight: 20,
+      marginBottom: 12,
+    },
+    feedFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    feedLikes: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    pinnedBadge: {
+      fontSize: 12,
+      color: colors.primary,
+      fontWeight: '600',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    emptyState: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 32,
+    },
+    emptyStateText: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    emptyStateSubtext: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+  });
+}

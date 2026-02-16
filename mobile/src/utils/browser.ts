@@ -5,7 +5,7 @@
 
 import * as WebBrowser from 'expo-web-browser';
 import {router} from 'expo-router';
-import {colors} from '../constants/theme';
+import {colors as defaultColors} from '../constants/theme';
 
 
 import { createLogger } from '../utils/logger';
@@ -86,7 +86,8 @@ function handleBskyDeepLink(url: string): boolean {
  * @param url - The URL to open
  * @returns Promise that resolves when the browser is dismissed
  */
-export async function openLink(url: string): Promise<void> {
+export async function openLink(url: string, colors?: any): Promise<void> {
+  const themeColors = colors || defaultColors;
   try {
     // For bsky.app URLs, try to handle them as deep links within the app
     if (isBskyDeepLink(url)) {
@@ -101,9 +102,9 @@ export async function openLink(url: string): Promise<void> {
     // Open the URL in an in-app browser
     await WebBrowser.openBrowserAsync(url, {
       // Toolbar color matching app dark theme
-      toolbarColor: colors.background, // #0a0a0f
+      toolbarColor: themeColors.background, // #0a0a0f
       // Control tint color (buttons, etc.)
-      controlsColor: colors.primary, // #c9a84c
+      controlsColor: themeColors.primary, // #c9a84c
       // Collapse the toolbar when scrolling (iOS only)
       enableBarCollapsing: true,
       // Show the page title in the toolbar

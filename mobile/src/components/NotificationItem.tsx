@@ -1,11 +1,11 @@
-import React, {ReactNode} from 'react';
+import React, {ReactNode, useMemo} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {AppBskyNotificationListNotifications, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
 import {HeartIcon, RepostIcon, FollowIcon, AtSignIcon, ReplyIcon, QuoteIcon, BellIcon} from './icons';
 import {RichText} from '../utils/rich-text';
-import {colors} from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 
 interface NotificationItemProps {
   notification: AppBskyNotificationListNotifications.Notification;
@@ -22,7 +22,9 @@ export function NotificationItem({
   onMentionPress,
   onHashtagPress,
 }: NotificationItemProps) {
+  const { colors } = useTheme();
   const author = notification.author;
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Format timestamp
   const timestamp = formatDistanceToNow(new Date(notification.indexedAt), {
@@ -157,85 +159,87 @@ export function NotificationItem({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    position: 'relative',
-  },
-  unread: {
-    backgroundColor: colors.unreadBackground,
-  },
-  content: {
-    padding: 16,
-    flexDirection: 'row',
-    gap: 12,
-  },
-  iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  main: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  avatarContainer: {
-    marginRight: 8,
-  },
-  headerText: {
-    flex: 1,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    marginBottom: 2,
-  },
-  displayName: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  message: {
-    color: colors.textSecondary,
-    fontSize: 15,
-  },
-  handle: {
-    color: colors.textTertiary,
-    fontSize: 13,
-  },
-  timestamp: {
-    color: colors.textTertiary,
-    fontSize: 12,
-    marginLeft: 8,
-  },
-  postPreview: {
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: 8,
-    padding: 12,
-    marginTop: 8,
-  },
-  postText: {
-    color: colors.borderLight,
-    fontSize: 14,
-    lineHeight: 18,
-  },
-  unreadIndicator: {
-    position: 'absolute',
-    left: 4,
-    top: '50%',
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.primary,
-    transform: [{translateY: -3}],
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      position: 'relative',
+    },
+    unread: {
+      backgroundColor: colors.unreadBackground,
+    },
+    content: {
+      padding: 16,
+      flexDirection: 'row',
+      gap: 12,
+    },
+    iconContainer: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    main: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginBottom: 8,
+    },
+    avatarContainer: {
+      marginRight: 8,
+    },
+    headerText: {
+      flex: 1,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      marginBottom: 2,
+    },
+    displayName: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    message: {
+      color: colors.textSecondary,
+      fontSize: 15,
+    },
+    handle: {
+      color: colors.textTertiary,
+      fontSize: 13,
+    },
+    timestamp: {
+      color: colors.textTertiary,
+      fontSize: 12,
+      marginLeft: 8,
+    },
+    postPreview: {
+      backgroundColor: colors.surfaceElevated,
+      borderRadius: 8,
+      padding: 12,
+      marginTop: 8,
+    },
+    postText: {
+      color: colors.borderLight,
+      fontSize: 14,
+      lineHeight: 18,
+    },
+    unreadIndicator: {
+      position: 'absolute',
+      left: 4,
+      top: '50%',
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.primary,
+      transform: [{translateY: -3}],
+    },
+  });
+}

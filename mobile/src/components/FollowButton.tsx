@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {TouchableOpacity, Text, StyleSheet, ActivityIndicator} from 'react-native';
 import {useFollowUser, useUnfollowUser} from '../hooks/api/useProfile';
-import {colors} from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 
 interface FollowButtonProps {
   did: string;
@@ -18,8 +18,10 @@ export function FollowButton({
   size = 'medium',
   style,
 }: FollowButtonProps) {
+  const { colors } = useTheme();
   const followMutation = useFollowUser();
   const unfollowMutation = useUnfollowUser();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const handlePress = () => {
     if (isFollowing && followUri) {
@@ -90,24 +92,26 @@ export function FollowButton({
   );
 }
 
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 80,
-  },
-  followingButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  buttonText: {
-    color: colors.text,
-    fontWeight: '600',
-  },
-  followingButtonText: {
-    color: colors.primary,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    button: {
+      backgroundColor: colors.primary,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: 80,
+    },
+    followingButton: {
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: colors.primary,
+    },
+    buttonText: {
+      color: colors.text,
+      fontWeight: '600',
+    },
+    followingButtonText: {
+      color: colors.primary,
+    },
+  });
+}

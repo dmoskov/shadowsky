@@ -1,9 +1,12 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {View, StyleSheet} from 'react-native';
 import {SkeletonShimmer} from './SkeletonShimmer';
-import {colors} from '../constants/theme';
+import {useTheme} from '../contexts/ThemeContext';
 
 export function PostCardSkeleton() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       {/* Header: Avatar + Name + Handle */}
@@ -36,31 +39,33 @@ export function PostCardSkeleton() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    padding: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  headerText: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  content: {
-    marginBottom: 12,
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 8,
-  },
-  spacer: {
-    height: 8,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      padding: 16,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    headerText: {
+      marginLeft: 12,
+      flex: 1,
+    },
+    content: {
+      marginBottom: 12,
+    },
+    actions: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingTop: 8,
+    },
+    spacer: {
+      height: 8,
+    },
+  });
+}

@@ -12,7 +12,7 @@
  * - Doesn't overlap with navigation header
  */
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { StyleSheet, Text } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -21,16 +21,18 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {colors} from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 
 interface OfflineBannerProps {
   isOnline: boolean;
 }
 
 export default function OfflineBanner({ isOnline }: OfflineBannerProps) {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const translateY = useSharedValue(-100);
   const backgroundColor = useSharedValue(0); // 0 = offline (orange), 1 = online (green)
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Track previous online state to detect transitions
   useEffect(() => {
@@ -78,6 +80,7 @@ export default function OfflineBanner({ isOnline }: OfflineBannerProps) {
 
   return (
     <Animated.View
+      pointerEvents={isOnline ? "none" : "auto"}
       style={[
         styles.banner,
         { paddingTop: insets.top + 8 },
@@ -92,25 +95,27 @@ export default function OfflineBanner({ isOnline }: OfflineBannerProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  banner: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    zIndex: 9999,
-    shadowColor: colors.borderDark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  bannerText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.text,
-    textAlign: "center",
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    banner: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+      zIndex: 9999,
+      shadowColor: colors.borderDark,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    bannerText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.text,
+      textAlign: "center",
+    },
+  });
+}

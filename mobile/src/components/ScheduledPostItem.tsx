@@ -3,10 +3,10 @@
  * Displays a scheduled post with edit/delete actions
  */
 
-import React from 'react';
+import React, {useMemo} from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ScheduledPost } from '../services/scheduled-posts';
-import { colors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 const MAX_POST_LENGTH = 300;
 
@@ -17,6 +17,9 @@ interface ScheduledPostItemProps {
 }
 
 export function ScheduledPostItem({ post, onEdit, onDelete }: ScheduledPostItemProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const formatScheduledTime = (date: Date): string => {
     const now = new Date();
     const diff = date.getTime() - now.getTime();
@@ -79,72 +82,74 @@ export function ScheduledPostItem({ post, onEdit, onDelete }: ScheduledPostItemP
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
-    padding: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  scheduledInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  scheduledLabel: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  scheduledTime: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  charCount: {
-    color: colors.textTertiary,
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  charCountOver: {
-    color: colors.danger,
-  },
-  text: {
-    color: colors.text,
-    fontSize: 16,
-    lineHeight: 22,
-    marginBottom: 16,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: colors.surface,
-    minHeight: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  deleteButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  deleteButtonText: {
-    color: colors.danger,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surface,
+      padding: 16,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    scheduledInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    scheduledLabel: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '500',
+    },
+    scheduledTime: {
+      color: colors.primary,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    charCount: {
+      color: colors.textTertiary,
+      fontSize: 12,
+      fontWeight: '500',
+    },
+    charCountOver: {
+      color: colors.danger,
+    },
+    text: {
+      color: colors.text,
+      fontSize: 16,
+      lineHeight: 22,
+      marginBottom: 16,
+    },
+    actions: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    actionButton: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 8,
+      backgroundColor: colors.surface,
+      minHeight: 36,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    actionButtonText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    deleteButton: {
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: colors.borderLight,
+    },
+    deleteButtonText: {
+      color: colors.danger,
+    },
+  });
+}

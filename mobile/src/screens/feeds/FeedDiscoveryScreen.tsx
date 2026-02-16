@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import {useRouter} from 'expo-router';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {colors} from '../../constants/theme';
+import {useTheme} from '../../contexts/ThemeContext';
 import {
   usePopularFeedGenerators,
   useSuggestedFeeds,
@@ -39,6 +39,8 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const {data: savedFeedsData} = useSavedFeeds();
   const savedFeedUris = useMemo(() => {
@@ -346,185 +348,187 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  tabs: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
-    backgroundColor: colors.surface,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  tabActive: {
-    borderBottomWidth: 2,
-    borderBottomColor: colors.primary,
-  },
-  tabText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  tabTextActive: {
-    color: colors.primary,
-  },
-  searchContainer: {
-    padding: 12,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
-  },
-  searchInput: {
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: colors.text,
-  },
-  listContent: {
-    padding: 12,
-  },
-  feedCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.surface,
-  },
-  feedHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  feedAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  feedAvatarPlaceholder: {
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  feedAvatarText: {
-    fontSize: 24,
-  },
-  feedInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  feedName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  feedCreator: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  saveButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.primary,
-    minWidth: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  saveButtonActive: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.primary,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  saveButtonTextActive: {
-    color: colors.primary,
-  },
-  pinButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surface,
-    minWidth: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pinButtonActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  pinButtonText: {
-    fontSize: 14,
-  },
-  pinButtonTextActive: {
-    fontSize: 14,
-  },
-  feedDescription: {
-    fontSize: 14,
-    color: colors.textMuted,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  feedFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  feedLikes: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  pinnedBadge: {
-    fontSize: 12,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 64,
-  },
-  emptyStateText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptyStateSubtext: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  footerLoader: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    tabs: {
+      flexDirection: 'row',
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surface,
+      backgroundColor: colors.surface,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    tabActive: {
+      borderBottomWidth: 2,
+      borderBottomColor: colors.primary,
+    },
+    tabText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    tabTextActive: {
+      color: colors.primary,
+    },
+    searchContainer: {
+      padding: 12,
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surface,
+    },
+    searchInput: {
+      backgroundColor: colors.surface,
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      fontSize: 16,
+      color: colors.text,
+    },
+    listContent: {
+      padding: 12,
+    },
+    feedCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: colors.surface,
+    },
+    feedHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    feedAvatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 8,
+      marginRight: 12,
+    },
+    feedAvatarPlaceholder: {
+      backgroundColor: colors.surface,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    feedAvatarText: {
+      fontSize: 24,
+    },
+    feedInfo: {
+      flex: 1,
+      marginRight: 12,
+    },
+    feedName: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    feedCreator: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    actionButtons: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    saveButton: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: colors.primary,
+      minWidth: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    saveButtonActive: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.primary,
+    },
+    saveButtonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    saveButtonTextActive: {
+      color: colors.primary,
+    },
+    pinButton: {
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.surface,
+      minWidth: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    pinButtonActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    pinButtonText: {
+      fontSize: 14,
+    },
+    pinButtonTextActive: {
+      fontSize: 14,
+    },
+    feedDescription: {
+      fontSize: 14,
+      color: colors.textMuted,
+      lineHeight: 20,
+      marginBottom: 12,
+    },
+    feedFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    feedLikes: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    pinnedBadge: {
+      fontSize: 12,
+      color: colors.primary,
+      fontWeight: '600',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    emptyState: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 32,
+      paddingVertical: 64,
+    },
+    emptyStateText: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    emptyStateSubtext: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    footerLoader: {
+      paddingVertical: 20,
+      alignItems: 'center',
+    },
+  });
+}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import {useLists, useAddToList} from '../hooks/api';
 import {AppBskyGraphDefs} from '@atproto/api';
-import {colors} from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 
 interface AddToListModalProps {
   visible: boolean;
@@ -26,8 +26,10 @@ export function AddToListModal({
   userDid,
   userHandle,
 }: AddToListModalProps) {
+  const { colors } = useTheme();
   const {data, isLoading, error} = useLists();
   const {mutateAsync: addToList, isPending} = useAddToList();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const lists = data?.lists || [];
 
@@ -115,92 +117,94 @@ export function AddToListModal({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceAlt,
-  },
-  title: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  closeButton: {
-    padding: 4,
-  },
-  closeButtonText: {
-    color: colors.textSecondary,
-    fontSize: 24,
-    fontWeight: '300',
-  },
-  listItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceAlt,
-  },
-  listContent: {
-    flex: 1,
-  },
-  listName: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  listDescription: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  listMemberCount: {
-    color: colors.textTertiary,
-    fontSize: 13,
-  },
-  chevron: {
-    color: colors.textTertiary,
-    fontSize: 24,
-    fontWeight: '300',
-    marginLeft: 8,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  emptyContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-  },
-  loadingText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    marginTop: 12,
-  },
-  emptyText: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceAlt,
+    },
+    title: {
+      color: colors.text,
+      fontSize: 20,
+      fontWeight: '700',
+    },
+    closeButton: {
+      padding: 4,
+    },
+    closeButtonText: {
+      color: colors.textSecondary,
+      fontSize: 24,
+      fontWeight: '300',
+    },
+    listItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceAlt,
+    },
+    listContent: {
+      flex: 1,
+    },
+    listName: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+      marginBottom: 4,
+    },
+    listDescription: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      marginBottom: 4,
+    },
+    listMemberCount: {
+      color: colors.textTertiary,
+      fontSize: 13,
+    },
+    chevron: {
+      color: colors.textTertiary,
+      fontSize: 24,
+      fontWeight: '300',
+      marginLeft: 8,
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 24,
+    },
+    emptyContainer: {
+      flexGrow: 1,
+      justifyContent: 'center',
+    },
+    loadingText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      marginTop: 12,
+    },
+    emptyText: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '600',
+      marginBottom: 8,
+    },
+    emptySubtext: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: 'center',
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: 16,
+      fontWeight: '600',
+    },
+  });
+}

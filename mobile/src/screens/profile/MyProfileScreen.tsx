@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import { AppBskyFeedDefs } from "@atproto/api";
 import {
   ActivityIndicator,
@@ -20,7 +20,7 @@ import { useAuthorFeed, useActorLikes } from "../../hooks/api/useFeed";
 import { useProfile } from "../../hooks/api/useProfile";
 import { useActorStarterPacks } from "../../hooks/api/useStarterPacks";
 import { useBookmarks, useBookmarkCount } from "../../hooks/api/useBookmarks";
-import { colors } from "../../constants/theme";
+import { useTheme } from "../../contexts/ThemeContext";
 import { AuthorFeedFilter } from "../../services/atproto/feeds";
 import { triggerHaptic } from "../../utils/haptics";
 
@@ -41,6 +41,8 @@ export function MyProfileScreen({
   onNavigateToFollowing,
   onSignOut,
 }: MyProfileScreenProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { account, signOut } = useAuth();
@@ -339,7 +341,8 @@ export function MyProfileScreen({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -509,4 +512,5 @@ const styles = StyleSheet.create({
     fontWeight: "300",
     marginLeft: 8,
   },
-});
+  });
+}

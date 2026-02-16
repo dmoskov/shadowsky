@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useMemo} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {AppBskyNotificationListNotifications} from '@atproto/api';
 import {Avatar} from './Avatar';
@@ -11,7 +11,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
 } from './icons';
-import {colors} from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 import {NotificationItem} from './NotificationItem';
 
 interface AggregatedNotificationItemProps {
@@ -31,7 +31,9 @@ export function AggregatedNotificationItem({
   onMentionPress,
   onHashtagPress,
 }: AggregatedNotificationItemProps) {
+  const { colors } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Extract unique users
   const uniqueUsers = React.useMemo(() => {
@@ -196,106 +198,108 @@ export function AggregatedNotificationItem({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-  },
-  mainContent: {
-    position: 'relative',
-  },
-  unread: {
-    backgroundColor: colors.unreadBackground,
-  },
-  content: {
-    padding: 16,
-    flexDirection: 'row',
-    gap: 12,
-  },
-  iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  main: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  avatarStack: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarWrapper: {
-    borderWidth: 2,
-    borderColor: colors.background,
-    borderRadius: 16,
-  },
-  moreCount: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.surfaceElevated,
-    borderWidth: 2,
-    borderColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  moreCountText: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  textContainer: {
-    flex: 1,
-  },
-  summaryText: {
-    fontSize: 15,
-    lineHeight: 20,
-    marginBottom: 2,
-  },
-  userName: {
-    color: colors.text,
-    fontWeight: '600',
-  },
-  actionText: {
-    color: colors.textSecondary,
-  },
-  timestamp: {
-    color: colors.textTertiary,
-    fontSize: 12,
-  },
-  unreadIndicator: {
-    position: 'absolute',
-    left: 4,
-    top: '50%',
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.primary,
-    transform: [{translateY: -3}],
-  },
-  expandButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderTopWidth: 1,
-    borderTopColor: colors.surfaceElevated,
-  },
-  expandText: {
-    color: colors.textTertiary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  expandedList: {
-    borderTopWidth: 1,
-    borderTopColor: colors.surfaceElevated,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceElevated,
+    },
+    mainContent: {
+      position: 'relative',
+    },
+    unread: {
+      backgroundColor: colors.unreadBackground,
+    },
+    content: {
+      padding: 16,
+      flexDirection: 'row',
+      gap: 12,
+    },
+    iconContainer: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    main: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    avatarStack: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    avatarWrapper: {
+      borderWidth: 2,
+      borderColor: colors.background,
+      borderRadius: 16,
+    },
+    moreCount: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.surfaceElevated,
+      borderWidth: 2,
+      borderColor: colors.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    moreCountText: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    textContainer: {
+      flex: 1,
+    },
+    summaryText: {
+      fontSize: 15,
+      lineHeight: 20,
+      marginBottom: 2,
+    },
+    userName: {
+      color: colors.text,
+      fontWeight: '600',
+    },
+    actionText: {
+      color: colors.textSecondary,
+    },
+    timestamp: {
+      color: colors.textTertiary,
+      fontSize: 12,
+    },
+    unreadIndicator: {
+      position: 'absolute',
+      left: 4,
+      top: '50%',
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: colors.primary,
+      transform: [{translateY: -3}],
+    },
+    expandButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderTopWidth: 1,
+      borderTopColor: colors.surfaceElevated,
+    },
+    expandText: {
+      color: colors.textTertiary,
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    expandedList: {
+      borderTopWidth: 1,
+      borderTopColor: colors.surfaceElevated,
+    },
+  });
+}

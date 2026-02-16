@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
   View,
   Text,
@@ -12,13 +12,15 @@ import {
 import { useBlockedAccounts, useUnblockUser } from '../../hooks/api/useProfile';
 import { Avatar } from '../../components/Avatar';
 import { AppBskyActorDefs } from '@atproto/api';
-import {colors} from '../../constants/theme';
+import {useTheme} from '../../contexts/ThemeContext';
 
 interface BlockedAccountsScreenProps {
   onNavigateToProfile?: (handle: string) => void;
 }
 
 export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsScreenProps) {
+  const {colors} = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const {
     data,
     isLoading,
@@ -162,97 +164,99 @@ export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsSc
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  headerDescription: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-  accountItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-  },
-  accountInfo: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  accountDetails: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  displayName: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  handle: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-  unblockButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.danger,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-  },
-  unblockButtonText: {
-    color: colors.danger,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  footerLoader: {
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 48,
-  },
-  emptyText: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  emptyList: {
-    flexGrow: 1,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceElevated,
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: 24,
+      fontWeight: 'bold',
+      marginBottom: 4,
+    },
+    headerDescription: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+    accountItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceElevated,
+    },
+    accountInfo: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    accountDetails: {
+      flex: 1,
+      marginLeft: 12,
+    },
+    displayName: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+    handle: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+    unblockButton: {
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: colors.danger,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 20,
+    },
+    unblockButtonText: {
+      color: colors.danger,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    footerLoader: {
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 32,
+      paddingVertical: 48,
+    },
+    emptyText: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '600',
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    emptySubtext: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: 'center',
+      lineHeight: 20,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: 16,
+      textAlign: 'center',
+    },
+    emptyList: {
+      flexGrow: 1,
+    },
+  });
+}

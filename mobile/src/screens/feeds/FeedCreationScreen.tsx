@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useMemo} from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import {useRouter} from 'expo-router';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {colors} from '../../constants/theme';
+import {useTheme} from '../../contexts/ThemeContext';
 import {useCreateFeedGenerator} from '../../hooks/api';
 
 
@@ -26,6 +26,8 @@ export function FeedCreationScreen() {
   const [displayName, setDisplayName] = useState('');
   const [description, setDescription] = useState('');
   const [serviceEndpoint, setServiceEndpoint] = useState('');
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const createFeedMutation = useCreateFeedGenerator();
 
@@ -196,132 +198,134 @@ export function FeedCreationScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  header: {
-    marginBottom: 24,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  infoBox: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
-  },
-  infoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  infoText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  form: {
-    gap: 20,
-  },
-  fieldGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  required: {
-    color: colors.danger,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: colors.text,
-    borderWidth: 1,
-    borderColor: colors.surface,
-  },
-  textArea: {
-    minHeight: 120,
-    textAlignVertical: 'top',
-  },
-  helperText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginTop: 6,
-  },
-  exampleBox: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 8,
-  },
-  exampleTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  exampleText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 24,
-  },
-  footer: {
-    flexDirection: 'row',
-    padding: 16,
-    gap: 12,
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.surface,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 16,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButton: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surface,
-  },
-  createButton: {
-    backgroundColor: colors.primary,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  cancelButtonText: {
-    color: colors.textSecondary,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      padding: 16,
+    },
+    header: {
+      marginBottom: 24,
+    },
+    headerTitle: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    headerSubtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      lineHeight: 20,
+    },
+    infoBox: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 24,
+      borderLeftWidth: 4,
+      borderLeftColor: colors.primary,
+    },
+    infoTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    infoText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      lineHeight: 20,
+    },
+    form: {
+      gap: 20,
+    },
+    fieldGroup: {
+      marginBottom: 20,
+    },
+    label: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    required: {
+      color: colors.danger,
+    },
+    input: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      fontSize: 16,
+      color: colors.text,
+      borderWidth: 1,
+      borderColor: colors.surface,
+    },
+    textArea: {
+      minHeight: 120,
+      textAlignVertical: 'top',
+    },
+    helperText: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 6,
+    },
+    exampleBox: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 16,
+      marginTop: 8,
+    },
+    exampleTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 12,
+    },
+    exampleText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      lineHeight: 24,
+    },
+    footer: {
+      flexDirection: 'row',
+      padding: 16,
+      gap: 12,
+      backgroundColor: colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: colors.surface,
+    },
+    button: {
+      flex: 1,
+      paddingVertical: 16,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    cancelButton: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.surface,
+    },
+    createButton: {
+      backgroundColor: colors.primary,
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    cancelButtonText: {
+      color: colors.textSecondary,
+    },
+  });
+}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -25,7 +25,7 @@ import { ThreadSummary } from "../../components/ThreadSummary";
 import { ThreadTreeView } from "../../components/ThreadTreeView";
 import { ThreadNavigator } from "../../components/ThreadNavigator";
 import { getAtProtoClient } from "../../services/atproto/client";
-import { colors } from "../../constants/theme";
+import { useTheme } from "../../contexts/ThemeContext";
 import { sharePost } from "../../utils/share";
 import { triggerHaptic } from "../../utils/haptics";
 
@@ -93,6 +93,7 @@ function extractReplies(node: any): AppBskyFeedDefs.FeedViewPost[] {
 }
 
 export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
+  const { colors } = useTheme();
   const router = useRouter();
   const [postUri, setPostUri] = useState<string | null>(null);
   const [isResolvingUri, setIsResolvingUri] = useState(false);
@@ -393,6 +394,8 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
     });
   };
 
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       <ScrollView
@@ -529,7 +532,8 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -634,4 +638,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-});
+  });
+}

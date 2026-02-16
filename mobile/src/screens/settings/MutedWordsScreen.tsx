@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,15 +12,17 @@ import {
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { MutedWord } from "../../services/preferences";
 import { calculateExpirationTime, getActiveMutedWords } from "../../utils/content-filter";
-import { colors } from "../../constants/theme";
+import { useTheme } from "../../contexts/ThemeContext";
 import { triggerHaptic } from "../../utils/haptics";
 
 export function MutedWordsScreen() {
+  const { colors } = useTheme();
   const { preferences, updatePreference } = usePreferences();
   const [showAddModal, setShowAddModal] = useState(false);
   const [newWord, setNewWord] = useState("");
   const [selectedDuration, setSelectedDuration] = useState<MutedWord["duration"]>("forever");
   const [selectedAppliesTo, setSelectedAppliesTo] = useState<MutedWord["appliesTo"]>("all");
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Clean up expired muted words on mount
   useEffect(() => {
@@ -284,7 +286,8 @@ export function MutedWordsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -466,4 +469,5 @@ const styles = StyleSheet.create({
   modalButtonTextPrimary: {
     color: colors.text,
   },
-});
+  });
+}

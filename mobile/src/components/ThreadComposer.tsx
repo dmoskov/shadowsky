@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
 import { ThreadPostItem, ThreadPost } from "./ThreadPostItem";
-import { colors } from "../constants/theme";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface ThreadComposerProps {
   posts: ThreadPost[];
@@ -20,6 +20,9 @@ export function ThreadComposer({
   onImagePicker,
   isUploading = false,
 }: ThreadComposerProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const handleRemovePost = (index: number) => {
     if (posts.length <= 1) {
       Alert.alert("Cannot Remove", "A thread must have at least one post.");
@@ -77,56 +80,58 @@ export function ThreadComposer({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-  },
-  headerText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  threadBadge: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  threadBadgeText: {
-    color: colors.text,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  postsContainer: {
-    flex: 1,
-    padding: 16,
-  },
-  addPostButton: {
-    backgroundColor: colors.surfaceElevated,
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    borderStyle: "dashed",
-  },
-  addPostButtonDisabled: {
-    opacity: 0.5,
-  },
-  addPostButtonText: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceElevated,
+    },
+    headerText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    threadBadge: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    threadBadgeText: {
+      color: colors.text,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    postsContainer: {
+      flex: 1,
+      padding: 16,
+    },
+    addPostButton: {
+      backgroundColor: colors.surfaceElevated,
+      marginHorizontal: 16,
+      marginBottom: 16,
+      padding: 16,
+      borderRadius: 8,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: colors.borderLight,
+      borderStyle: "dashed",
+    },
+    addPostButtonDisabled: {
+      opacity: 0.5,
+    },
+    addPostButtonText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: "600",
+    },
+  });
+}

@@ -9,7 +9,7 @@ import {useNetwork} from '../contexts/NetworkContext';
 import {sharePost} from '../utils/share';
 import {PostEmbed} from './PostEmbed';
 import {useBlockUser, useMuteUser} from '../hooks/api/useProfile';
-import {colors} from '../constants/theme';
+import {useTheme} from '../contexts/ThemeContext';
 import {triggerHaptic} from '../utils/haptics';
 import {useModeration} from '../contexts/ModerationContext';
 import {ContentLabelWarning} from './ContentLabelWarning';
@@ -61,6 +61,8 @@ function PostCardComponent({
   onReport: _onReport,
   currentUserDid,
 }: PostCardProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { isOnline } = useNetwork();
   const postView = post.post;
   const author = postView.author;
@@ -404,6 +406,7 @@ function PostCardComponent({
     handleBookmarkLongPress,
     isBookmarked,
     handleShare,
+    colors,
   ]);
 
   return (
@@ -544,7 +547,8 @@ function arePropsEqual(prevProps: PostCardProps, nextProps: PostCardProps): bool
 // Export memoized component
 export const PostCard = React.memo(PostCardComponent, arePropsEqual);
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   container: {
     backgroundColor: colors.cardBackground,
     borderBottomWidth: 1,
@@ -663,4 +667,5 @@ const styles = StyleSheet.create({
   menuItemDanger: {
     color: colors.danger,
   },
-});
+  });
+}

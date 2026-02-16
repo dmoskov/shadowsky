@@ -1,4 +1,4 @@
-import React, {useState, useRef, useCallback} from 'react';
+import React, {useState, useRef, useCallback, useMemo} from 'react';
 import {
   View,
   StyleSheet,
@@ -16,7 +16,7 @@ import {Image} from 'expo-image';
 import {Download} from 'lucide-react-native';
 import {ImageCarouselItem} from './ImageCarouselItem';
 import Animated, {FadeIn, FadeOut} from 'react-native-reanimated';
-import {colors} from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 import {getOptimizedUrl} from '../utils/image-cdn';
 import {saveImageToGallery} from '../utils/save-image';
 import {triggerHaptic} from '../utils/haptics';
@@ -42,11 +42,13 @@ export function ImageCarousel({
   visible,
   onClose,
 }: ImageCarouselProps) {
+  const { colors } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [showAlt, setShowAlt] = useState(false);
   const [bgOpacity, setBgOpacity] = useState(1);
   const [controlsVisible, setControlsVisible] = useState(true);
   const flatListRef = useRef<FlatList>(null);
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   React.useEffect(() => {
     if (visible) {
@@ -289,107 +291,109 @@ export function ImageCarousel({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  counterContainer: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 20,
-    left: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  counterText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 20,
-    right: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: '400',
-  },
-  bottomControls: {
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 50 : 20,
-    right: 16,
-    flexDirection: 'row',
-    gap: 12,
-  },
-  bottomButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  shareIcon: {
-    color: colors.text,
-    fontSize: 16,
-  },
-  dotsContainer: {
-    position: 'absolute',
-    bottom: 40,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-  },
-  dotActive: {
-    backgroundColor: colors.text,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  altContainer: {
-    position: 'absolute',
-    bottom: 70,
-    left: 16,
-    right: 16,
-  },
-  altBadge: {
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    alignSelf: 'flex-start',
-  },
-  altBadgeText: {
-    color: colors.text,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  altTextExpanded: {
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    padding: 12,
-    borderRadius: 12,
-  },
-  altText: {
-    color: colors.text,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    counterContainer: {
+      position: 'absolute',
+      top: Platform.OS === 'ios' ? 50 : 20,
+      left: 20,
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+    },
+    counterText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    closeButton: {
+      position: 'absolute',
+      top: Platform.OS === 'ios' ? 50 : 20,
+      right: 20,
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    closeButtonText: {
+      color: colors.text,
+      fontSize: 20,
+      fontWeight: '400',
+    },
+    bottomControls: {
+      position: 'absolute',
+      bottom: Platform.OS === 'ios' ? 50 : 20,
+      right: 16,
+      flexDirection: 'row',
+      gap: 12,
+    },
+    bottomButton: {
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    shareIcon: {
+      color: colors.text,
+      fontSize: 16,
+    },
+    dotsContainer: {
+      position: 'absolute',
+      bottom: 40,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 8,
+    },
+    dot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    },
+    dotActive: {
+      backgroundColor: colors.text,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    altContainer: {
+      position: 'absolute',
+      bottom: 70,
+      left: 16,
+      right: 16,
+    },
+    altBadge: {
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      alignSelf: 'flex-start',
+    },
+    altBadgeText: {
+      color: colors.text,
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    altTextExpanded: {
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      padding: 12,
+      borderRadius: 12,
+    },
+    altText: {
+      color: colors.text,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+  });
+}

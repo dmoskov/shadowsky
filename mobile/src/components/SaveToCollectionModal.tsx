@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import {
   useBookmarkInCollections,
 } from '../hooks/useBookmarkCollections';
 import { COLLECTION_COLORS } from '../services/bookmark-collections';
-import { colors } from '../constants/theme';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface SaveToCollectionModalProps {
   visible: boolean;
@@ -27,6 +27,9 @@ export function SaveToCollectionModal({
   postUri,
   onClose,
 }: SaveToCollectionModalProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [showNewCollectionForm, setShowNewCollectionForm] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
   const [selectedColor, setSelectedColor] = useState('blue');
@@ -171,146 +174,148 @@ export function SaveToCollectionModal({
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modal: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    maxHeight: '80%',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  closeButton: {
-    padding: 4,
-  },
-  closeButtonText: {
-    fontSize: 20,
-    color: colors.textSecondary,
-  },
-  content: {
-    padding: 16,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    paddingVertical: 16,
-  },
-  collectionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  colorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 12,
-  },
-  collectionName: {
-    flex: 1,
-    fontSize: 16,
-    color: colors.text,
-  },
-  checkMark: {
-    fontSize: 18,
-    color: colors.success,
-  },
-  formContainer: {
-    marginTop: 16,
-    padding: 16,
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-  },
-  input: {
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: colors.text,
-    marginBottom: 12,
-  },
-  colorPicker: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 16,
-  },
-  colorOption: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    marginRight: 8,
-    marginBottom: 8,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  selectedColorOption: {
-    borderColor: colors.text,
-  },
-  formButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  createButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: colors.info,
-    alignItems: 'center',
-  },
-  disabledButton: {
-    opacity: 0.5,
-  },
-  createButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  newCollectionButton: {
-    marginTop: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  newCollectionButtonText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    modal: {
+      backgroundColor: colors.background,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      maxHeight: '80%',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    closeButton: {
+      padding: 4,
+    },
+    closeButtonText: {
+      fontSize: 20,
+      color: colors.textSecondary,
+    },
+    content: {
+      padding: 16,
+    },
+    emptyText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      paddingVertical: 16,
+    },
+    collectionItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 8,
+      borderRadius: 8,
+      marginBottom: 8,
+    },
+    colorDot: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      marginRight: 12,
+    },
+    collectionName: {
+      flex: 1,
+      fontSize: 16,
+      color: colors.text,
+    },
+    checkMark: {
+      fontSize: 18,
+      color: colors.success,
+    },
+    formContainer: {
+      marginTop: 16,
+      padding: 16,
+      backgroundColor: colors.surface,
+      borderRadius: 8,
+    },
+    input: {
+      backgroundColor: colors.background,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      fontSize: 14,
+      color: colors.text,
+      marginBottom: 12,
+    },
+    colorPicker: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      marginBottom: 16,
+    },
+    colorOption: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      marginRight: 8,
+      marginBottom: 8,
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    selectedColorOption: {
+      borderColor: colors.text,
+    },
+    formButtons: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    cancelButton: {
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: 8,
+      backgroundColor: colors.background,
+      alignItems: 'center',
+    },
+    cancelButtonText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    createButton: {
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: 8,
+      backgroundColor: colors.info,
+      alignItems: 'center',
+    },
+    disabledButton: {
+      opacity: 0.5,
+    },
+    createButtonText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    newCollectionButton: {
+      marginTop: 16,
+      paddingVertical: 12,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderStyle: 'dashed',
+      borderColor: colors.border,
+      alignItems: 'center',
+    },
+    newCollectionButtonText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+  });
+}

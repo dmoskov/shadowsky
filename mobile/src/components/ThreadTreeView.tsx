@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { PostCard } from "./PostCard";
-import { colors } from "../constants/theme";
+import { useTheme } from "../contexts/ThemeContext";
 import { triggerHaptic } from "../utils/haptics";
 
 interface ThreadNode {
@@ -82,7 +82,7 @@ function buildThreadTree(
 }
 
 // Get color based on depth for visual hierarchy
-function getDepthColor(depth: number): string {
+function getDepthColor(depth: number, colors: any): string {
   const depthColors = [
     colors.info, // blue
     colors.mention, // purple
@@ -118,6 +118,8 @@ export function ThreadTreeView({
   onPressRepostCount,
   onPressQuoteCount,
 }: ThreadTreeViewProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [collapsedBranches, setCollapsedBranches] = useState<Set<string>>(
     new Set()
   );
@@ -145,7 +147,7 @@ export function ThreadTreeView({
     const isCollapsed = collapsedBranches.has(node.uri);
     const hasChildren = node.children.length > 0;
     const descendantCount = countDescendants(node);
-    const depthColor = getDepthColor(node.depth);
+    const depthColor = getDepthColor(node.depth, colors);
 
     return (
       <View key={node.uri} style={styles.nodeContainer}>
@@ -180,7 +182,7 @@ export function ThreadTreeView({
               activeOpacity={0.7}
             >
               <Text style={styles.collapseIcon}>
-                {isCollapsed ? "+" : "−"}
+                {isCollapsed ? "+" : "\u2212"}
               </Text>
             </TouchableOpacity>
           )}
@@ -243,9 +245,9 @@ export function ThreadTreeView({
               ]}
             >
               <Text style={styles.collapsedText}>
-                💬 {descendantCount} hidden {descendantCount === 1 ? "reply" : "replies"}
+                {descendantCount} hidden {descendantCount === 1 ? "reply" : "replies"}
               </Text>
-              <Text style={styles.expandIcon}>›</Text>
+              <Text style={styles.expandIcon}>{"\u203A"}</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -266,80 +268,82 @@ export function ThreadTreeView({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  nodeContainer: {
-    position: "relative",
-  },
-  depthLine: {
-    position: "absolute",
-    top: 0,
-    width: 2,
-    height: "100%",
-    opacity: 0.3,
-  },
-  postContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    position: "relative",
-  },
-  collapseButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 8,
-    marginTop: 16,
-    zIndex: 1,
-  },
-  collapseIcon: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "bold",
-    lineHeight: 20,
-  },
-  branchIndicator: {
-    width: 12,
-    height: 12,
-    borderLeftWidth: 2,
-    borderTopWidth: 2,
-    borderTopLeftRadius: 4,
-    marginRight: 8,
-    marginTop: 20,
-    marginLeft: 4,
-  },
-  postCardWrapper: {
-    flex: 1,
-  },
-  collapsedIndicator: {
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  collapsedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    elevation: 2,
-    shadowColor: colors.borderDark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  collapsedText: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  expandIcon: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: "bold",
-    marginLeft: 8,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    nodeContainer: {
+      position: "relative",
+    },
+    depthLine: {
+      position: "absolute",
+      top: 0,
+      width: 2,
+      height: "100%",
+      opacity: 0.3,
+    },
+    postContainer: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      position: "relative",
+    },
+    collapseButton: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: 8,
+      marginTop: 16,
+      zIndex: 1,
+    },
+    collapseIcon: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "bold",
+      lineHeight: 20,
+    },
+    branchIndicator: {
+      width: 12,
+      height: 12,
+      borderLeftWidth: 2,
+      borderTopWidth: 2,
+      borderTopLeftRadius: 4,
+      marginRight: 8,
+      marginTop: 20,
+      marginLeft: 4,
+    },
+    postCardWrapper: {
+      flex: 1,
+    },
+    collapsedIndicator: {
+      marginTop: 8,
+      marginBottom: 8,
+    },
+    collapsedBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 8,
+      elevation: 2,
+      shadowColor: colors.borderDark,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+    },
+    collapsedText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: "500",
+    },
+    expandIcon: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "bold",
+      marginLeft: 8,
+    },
+  });
+}

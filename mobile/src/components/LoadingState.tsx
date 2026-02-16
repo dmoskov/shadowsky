@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {View, ActivityIndicator, Text, StyleSheet} from 'react-native';
-import {colors} from '../constants/theme';
+import { useTheme } from "../contexts/ThemeContext";
 
 interface LoadingStateProps {
   message?: string;
 }
 
 export function LoadingState({message = 'Loading...'}: LoadingStateProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color={colors.primary} />
@@ -15,18 +18,20 @@ export function LoadingState({message = 'Loading...'}: LoadingStateProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: colors.background,
-  },
-  message: {
-    marginTop: 16,
-    color: colors.textSecondary,
-    fontSize: 15,
-    fontWeight: '500',
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+      backgroundColor: colors.background,
+    },
+    message: {
+      marginTop: 16,
+      color: colors.textSecondary,
+      fontSize: 15,
+      fontWeight: '500',
+    },
+  });
+}

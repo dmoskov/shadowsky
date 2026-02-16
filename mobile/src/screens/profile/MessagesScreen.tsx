@@ -28,15 +28,16 @@ import { EmptyState } from "../../components/EmptyState";
 import { NewConversationModal } from "../../components/NewConversationModal";
 import { LockIcon, ChatBubbleIcon, ArrowLeftIcon, SearchIcon, CloseIcon, PlusIcon, TrashIcon, BellIcon, BellSlashIcon } from "../../components/icons";
 import { useConversations, useConversation, useSendMessage, useMarkAsRead, useMuteConversation, useUnmuteConversation, useLeaveConversation } from "../../hooks/api";
-import { colors } from "../../constants/theme";
+import { useTheme } from "../../contexts/ThemeContext";
 import { useImagePicker } from "../../hooks/useImagePicker";
 import { ImageIcon } from "../../components/icons/ImageIcon";
 
 
 import { createLogger } from '../../utils/logger';
 
-const logger = createLogger('Messagesscreenx');
+const logger = createLogger('MessagesScreen');
 export function MessagesScreen() {
+  const { colors } = useTheme();
   const { session } = useAuth();
   const [selectedConversation, setSelectedConversation] = useState<
     string | null
@@ -57,6 +58,8 @@ export function MessagesScreen() {
     isUploading,
     setIsUploading,
   } = useImagePicker();
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Set up DM service with agent
   useEffect(() => {
@@ -732,7 +735,8 @@ export function MessagesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: any) {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -1105,4 +1109,5 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 4,
   },
-});
+  });
+}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
   type ThreadSummaryResult,
 } from "../services/ai-service";
 import { getCachedSummary, cacheSummary } from "../services/thread-summary-cache";
-import { colors } from "../constants/theme";
+import { useTheme } from "../contexts/ThemeContext";
 
 type Post = AppBskyFeedDefs.PostView;
 
@@ -38,6 +38,8 @@ export function ThreadSummary({
   threadUri,
   parentUris,
 }: ThreadSummaryProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [isExpanded, setIsExpanded] = useState(true);
   const [summaryMode, setSummaryMode] = useState<SummaryMode>("quick");
 
@@ -141,14 +143,14 @@ export function ThreadSummary({
         onPress={() => isComprehensive && setIsExpanded(!isExpanded)}
         disabled={!isComprehensive}
       >
-        <Text style={styles.sparkle}>✨</Text>
+        <Text style={styles.sparkle}>&#10024;</Text>
         <View style={styles.headerTextContainer}>
           <Text style={styles.headerLabel}>AI Summary</Text>
           {isCached && <Text style={styles.cachedBadge}> cached</Text>}
           {summary.metadata?.postCount && (
             <Text style={styles.headerMeta}>
               {" "}
-              • {summary.metadata.postCount} posts
+              &bull; {summary.metadata.postCount} posts
               {summary.metadata.authors &&
                 `, ${summary.metadata.authors.length} participants`}
             </Text>
@@ -168,7 +170,7 @@ export function ThreadSummary({
           </TouchableOpacity>
         </View>
         {isComprehensive && (
-          <Text style={styles.chevron}>{isExpanded ? "▼" : "▶"}</Text>
+          <Text style={styles.chevron}>{isExpanded ? "\u25BC" : "\u25B6"}</Text>
         )}
       </TouchableOpacity>
 
@@ -212,119 +214,121 @@ export function ThreadSummary({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-    marginHorizontal: 12,
-    marginVertical: 8,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  loadingContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    gap: 8,
-  },
-  loadingText: {
-    color: colors.textSecondary,
-    fontSize: 13,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 12,
-    gap: 8,
-  },
-  sparkle: {
-    fontSize: 14,
-  },
-  headerTextContainer: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-  },
-  headerLabel: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  cachedBadge: {
-    color: colors.textTertiary,
-    fontSize: 10,
-    fontStyle: "italic",
-  },
-  headerMeta: {
-    color: colors.textTertiary,
-    fontSize: 11,
-  },
-  modeToggle: {
-    flexDirection: "row",
-    gap: 4,
-  },
-  modeButton: {
-    color: colors.textTertiary,
-    fontSize: 12,
-    fontWeight: "500",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  modeButtonActive: {
-    color: colors.primary,
-  },
-  chevron: {
-    color: colors.textSecondary,
-    fontSize: 12,
-  },
-  content: {
-    paddingHorizontal: 12,
-    paddingBottom: 12,
-  },
-  summaryText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  highlightsContainer: {
-    marginTop: 12,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.borderLight,
-    marginBottom: 8,
-  },
-  highlightsLabel: {
-    color: colors.textSecondary,
-    fontSize: 11,
-    fontWeight: "600",
-    marginBottom: 6,
-    textTransform: "uppercase",
-  },
-  highlightsList: {
-    gap: 4,
-  },
-  highlightItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    backgroundColor: colors.background,
-    borderRadius: 4,
-    flexWrap: "wrap",
-  },
-  highlightAuthor: {
-    color: colors.primary,
-    fontSize: 12,
-  },
-  highlightEngagement: {
-    color: colors.textTertiary,
-    fontSize: 11,
-  },
-  engagementText: {
-    color: colors.textTertiary,
-    fontSize: 11,
-    marginTop: 8,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: colors.surface,
+      borderRadius: 8,
+      marginHorizontal: 12,
+      marginVertical: 8,
+      borderWidth: 1,
+      borderColor: colors.borderLight,
+    },
+    loadingContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 12,
+      gap: 8,
+    },
+    loadingText: {
+      color: colors.textSecondary,
+      fontSize: 13,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      padding: 12,
+      gap: 8,
+    },
+    sparkle: {
+      fontSize: 14,
+    },
+    headerTextContainer: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+    },
+    headerLabel: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      fontWeight: "600",
+    },
+    cachedBadge: {
+      color: colors.textTertiary,
+      fontSize: 10,
+      fontStyle: "italic",
+    },
+    headerMeta: {
+      color: colors.textTertiary,
+      fontSize: 11,
+    },
+    modeToggle: {
+      flexDirection: "row",
+      gap: 4,
+    },
+    modeButton: {
+      color: colors.textTertiary,
+      fontSize: 12,
+      fontWeight: "500",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    modeButtonActive: {
+      color: colors.primary,
+    },
+    chevron: {
+      color: colors.textSecondary,
+      fontSize: 12,
+    },
+    content: {
+      paddingHorizontal: 12,
+      paddingBottom: 12,
+    },
+    summaryText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    highlightsContainer: {
+      marginTop: 12,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: colors.borderLight,
+      marginBottom: 8,
+    },
+    highlightsLabel: {
+      color: colors.textSecondary,
+      fontSize: 11,
+      fontWeight: "600",
+      marginBottom: 6,
+      textTransform: "uppercase",
+    },
+    highlightsList: {
+      gap: 4,
+    },
+    highlightItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      backgroundColor: colors.background,
+      borderRadius: 4,
+      flexWrap: "wrap",
+    },
+    highlightAuthor: {
+      color: colors.primary,
+      fontSize: 12,
+    },
+    highlightEngagement: {
+      color: colors.textTertiary,
+      fontSize: 11,
+    },
+    engagementText: {
+      color: colors.textTertiary,
+      fontSize: 11,
+      marginTop: 8,
+    },
+  });
+}

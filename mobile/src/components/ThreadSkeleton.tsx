@@ -1,9 +1,9 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {View, StyleSheet, ScrollView} from 'react-native';
 import {SkeletonShimmer} from './SkeletonShimmer';
-import {colors} from '../constants/theme';
+import {useTheme} from '../contexts/ThemeContext';
 
-function ThreadPostSkeleton({isParent = false, isReply = false}) {
+function ThreadPostSkeleton({isParent = false, isReply = false, styles}: {isParent?: boolean; isReply?: boolean; styles: any}) {
   return (
     <View style={[styles.post, isParent && styles.parentPost, isReply && styles.replyPost]}>
       {/* Connector line for replies */}
@@ -40,73 +40,78 @@ function ThreadPostSkeleton({isParent = false, isReply = false}) {
 }
 
 export function ThreadSkeleton() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <ScrollView style={styles.container}>
       {/* Parent posts in thread */}
-      <ThreadPostSkeleton isParent />
-      <ThreadPostSkeleton isParent />
+      <ThreadPostSkeleton isParent styles={styles} />
+      <ThreadPostSkeleton isParent styles={styles} />
 
       {/* Main post (highlighted) */}
       <View style={styles.mainPost}>
-        <ThreadPostSkeleton />
+        <ThreadPostSkeleton styles={styles} />
       </View>
 
       {/* Reply posts */}
-      <ThreadPostSkeleton isReply />
-      <ThreadPostSkeleton isReply />
-      <ThreadPostSkeleton isReply />
+      <ThreadPostSkeleton isReply styles={styles} />
+      <ThreadPostSkeleton isReply styles={styles} />
+      <ThreadPostSkeleton isReply styles={styles} />
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  post: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  parentPost: {
-    backgroundColor: colors.background,
-  },
-  mainPost: {
-    backgroundColor: colors.surface,
-    borderTopWidth: 2,
-    borderBottomWidth: 2,
-    borderColor: colors.borderLight,
-  },
-  replyPost: {
-    paddingLeft: 32,
-  },
-  connector: {
-    position: 'absolute',
-    left: 36,
-    top: 0,
-    width: 2,
-    height: '100%',
-    backgroundColor: colors.border,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  headerText: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  content: {
-    marginBottom: 12,
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 8,
-  },
-  spacer: {
-    height: 8,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    post: {
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    parentPost: {
+      backgroundColor: colors.background,
+    },
+    mainPost: {
+      backgroundColor: colors.surface,
+      borderTopWidth: 2,
+      borderBottomWidth: 2,
+      borderColor: colors.borderLight,
+    },
+    replyPost: {
+      paddingLeft: 32,
+    },
+    connector: {
+      position: 'absolute',
+      left: 36,
+      top: 0,
+      width: 2,
+      height: '100%',
+      backgroundColor: colors.border,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    headerText: {
+      marginLeft: 12,
+      flex: 1,
+    },
+    content: {
+      marginBottom: 12,
+    },
+    actions: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingTop: 8,
+    },
+    spacer: {
+      height: 8,
+    },
+  });
+}

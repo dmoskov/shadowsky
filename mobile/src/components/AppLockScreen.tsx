@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Alert,
 } from "react-native";
 import { appLockService } from "../services/app-lock";
-import { colors } from "../constants/theme";
+import { useTheme } from "../contexts/ThemeContext";
 
 
 import { createLogger } from '../utils/logger';
@@ -19,6 +19,8 @@ interface AppLockScreenProps {
 }
 
 export function AppLockScreen({ onUnlock }: AppLockScreenProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [biometricType, setBiometricType] = useState<string>("Biometric");
 
@@ -119,69 +121,71 @@ export function AppLockScreen({ onUnlock }: AppLockScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  content: {
-    alignItems: "center",
-    paddingHorizontal: 32,
-    width: "100%",
-  },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  iconText: {
-    color: colors.text,
-    fontSize: 40,
-    fontWeight: "bold",
-  },
-  title: {
-    color: colors.text,
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: colors.textSecondary,
-    fontSize: 16,
-    marginBottom: 48,
-  },
-  authenticatingContainer: {
-    alignItems: "center",
-    gap: 16,
-  },
-  authenticatingText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-  },
-  unlockButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 24,
-    minWidth: 240,
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  unlockButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  helpText: {
-    color: colors.textTertiary,
-    fontSize: 14,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    content: {
+      alignItems: "center",
+      paddingHorizontal: 32,
+      width: "100%",
+    },
+    iconContainer: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: colors.primary,
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 24,
+    },
+    iconText: {
+      color: colors.text,
+      fontSize: 40,
+      fontWeight: "bold",
+    },
+    title: {
+      color: colors.text,
+      fontSize: 28,
+      fontWeight: "bold",
+      marginBottom: 8,
+    },
+    subtitle: {
+      color: colors.textSecondary,
+      fontSize: 16,
+      marginBottom: 48,
+    },
+    authenticatingContainer: {
+      alignItems: "center",
+      gap: 16,
+    },
+    authenticatingText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+    },
+    unlockButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 32,
+      paddingVertical: 16,
+      borderRadius: 24,
+      minWidth: 240,
+      alignItems: "center",
+      marginBottom: 24,
+    },
+    unlockButtonText: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    helpText: {
+      color: colors.textTertiary,
+      fontSize: 14,
+      textAlign: "center",
+      lineHeight: 20,
+    },
+  });
+}

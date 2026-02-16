@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useDrafts, useDeleteDraft } from '../../hooks/api';
 import { EnrichedDraft } from '../../services/drafts';
-import { colors } from '../../constants/theme';
+import { useTheme } from '../../contexts/ThemeContext';
 import { CloseIcon } from '../../components/icons';
 
 /**
@@ -23,6 +23,8 @@ export function DraftsScreen() {
   const router = useRouter();
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useDrafts();
   const deleteDraft = useDeleteDraft();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Flatten all pages of drafts
   const drafts = data?.pages.flatMap((page) => page.drafts) || [];
@@ -187,100 +189,102 @@ export function DraftsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  closeButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  headerRight: {
-    width: 40,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  listContent: {
-    flexGrow: 1,
-  },
-  draftItem: {
-    flexDirection: 'row',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    alignItems: 'flex-start',
-  },
-  draftContent: {
-    flex: 1,
-    marginRight: 12,
-  },
-  draftPreview: {
-    fontSize: 16,
-    color: colors.text,
-    marginBottom: 8,
-  },
-  draftMeta: {
-    gap: 4,
-  },
-  draftMetaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  draftMetaText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  deviceName: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontStyle: 'italic',
-    marginTop: 4,
-  },
-  warningText: {
-    fontSize: 13,
-    color: colors.danger,
-    marginTop: 4,
-  },
-  deleteButton: {
-    padding: 8,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  emptyStateText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  footer: {
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    closeButton: {
+      padding: 8,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    headerRight: {
+      width: 40,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    listContent: {
+      flexGrow: 1,
+    },
+    draftItem: {
+      flexDirection: 'row',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      alignItems: 'flex-start',
+    },
+    draftContent: {
+      flex: 1,
+      marginRight: 12,
+    },
+    draftPreview: {
+      fontSize: 16,
+      color: colors.text,
+      marginBottom: 8,
+    },
+    draftMeta: {
+      gap: 4,
+    },
+    draftMetaRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+    },
+    draftMetaText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    deviceName: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      fontStyle: 'italic',
+      marginTop: 4,
+    },
+    warningText: {
+      fontSize: 13,
+      color: colors.danger,
+      marginTop: 4,
+    },
+    deleteButton: {
+      padding: 8,
+    },
+    emptyState: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 32,
+    },
+    emptyStateTitle: {
+      fontSize: 20,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    emptyStateText: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+    },
+    footer: {
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+  });
+}

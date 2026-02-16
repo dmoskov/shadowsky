@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
 import { AppBskyActorDefs } from "@atproto/api";
 import { searchActors } from "../services/atproto/profiles";
 import { CloseIcon, SearchIcon } from "./icons";
-import { colors } from "../constants/theme";
+import { useTheme } from "../contexts/ThemeContext";
 
 
 import { createLogger } from '../utils/logger';
@@ -30,6 +30,8 @@ export function NewConversationModal({
   onClose,
   onSelectUser,
 }: NewConversationModalProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<
     AppBskyActorDefs.ProfileView[]
@@ -192,108 +194,110 @@ export function NewConversationModal({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceAlt,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  closeButton: {
-    padding: 4,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    margin: 16,
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    color: colors.text,
-    fontSize: 16,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  resultsList: {
-    flex: 1,
-  },
-  userItem: {
-    flexDirection: "row",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceAlt,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  avatarPlaceholder: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.surface,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: {
-    color: colors.text,
-    fontSize: 20,
-    fontWeight: "600",
-  },
-  userDetails: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  displayName: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  handle: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    marginTop: 2,
-  },
-  description: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    marginTop: 4,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
-  emptyText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-    textAlign: "center",
-    marginTop: 12,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 16,
-    textAlign: "center",
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceAlt,
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: 20,
+      fontWeight: "bold",
+    },
+    closeButton: {
+      padding: 4,
+    },
+    searchContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      margin: 16,
+      gap: 8,
+    },
+    searchInput: {
+      flex: 1,
+      color: colors.text,
+      fontSize: 16,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    resultsList: {
+      flex: 1,
+    },
+    userItem: {
+      flexDirection: "row",
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceAlt,
+    },
+    avatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+    },
+    avatarPlaceholder: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: colors.surface,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    avatarText: {
+      color: colors.text,
+      fontSize: 20,
+      fontWeight: "600",
+    },
+    userDetails: {
+      flex: 1,
+      marginLeft: 12,
+    },
+    displayName: {
+      color: colors.text,
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    handle: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      marginTop: 2,
+    },
+    description: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      marginTop: 4,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 24,
+    },
+    emptyText: {
+      color: colors.textSecondary,
+      fontSize: 16,
+      textAlign: "center",
+      marginTop: 12,
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: 16,
+      textAlign: "center",
+    },
+  });
+}

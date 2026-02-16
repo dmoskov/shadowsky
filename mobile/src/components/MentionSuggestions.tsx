@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { AppBskyActorDefs } from "@atproto/api";
 import { Avatar } from "./Avatar";
-import { colors } from "../constants/theme";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface MentionSuggestionsProps {
   suggestions: AppBskyActorDefs.ProfileView[];
@@ -22,6 +22,9 @@ export function MentionSuggestions({
   onSelectMention,
   isLoading = false,
 }: MentionSuggestionsProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -65,56 +68,58 @@ export function MentionSuggestions({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    maxHeight: 250,
-    shadowColor: colors.borderDark,
-    shadowOffset: {
-      width: 0,
-      height: -2,
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      maxHeight: 250,
+      shadowColor: colors.borderDark,
+      shadowOffset: {
+        width: 0,
+        height: -2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  loadingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 16,
-    gap: 12,
-  },
-  loadingText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-  suggestionItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  suggestionContent: {
-    flex: 1,
-  },
-  displayName: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  handle: {
-    color: colors.textTertiary,
-    fontSize: 13,
-  },
-});
+    loadingContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingVertical: 16,
+      gap: 12,
+    },
+    loadingText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+    suggestionItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      gap: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    suggestionContent: {
+      flex: 1,
+    },
+    displayName: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: "600",
+      marginBottom: 2,
+    },
+    handle: {
+      color: colors.textTertiary,
+      fontSize: 13,
+    },
+  });
+}

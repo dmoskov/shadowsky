@@ -5,7 +5,7 @@
  * Uses Tenor API for GIF search and trending GIFs
  */
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -22,7 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SearchIcon, CloseIcon } from "./icons";
 import type { TenorGif } from "../services/tenor";
 import { getBestGifUrl } from "../services/tenor";
-import { colors } from "../constants/theme";
+import { useTheme } from "../contexts/ThemeContext";
 import Constants from "expo-constants";
 
 interface GifPickerProps {
@@ -49,6 +49,8 @@ export function GifPicker({
   searchQuery,
   onSearch,
 }: GifPickerProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const searchInputRef = useRef<TextInput>(null);
   const [selectedGifId, setSelectedGifId] = useState<string | null>(null);
@@ -247,133 +249,135 @@ export function GifPicker({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-  },
-  headerTitle: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  closeButton: {
-    padding: 4,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.surfaceElevated,
-    borderRadius: 8,
-    marginHorizontal: 16,
-    marginVertical: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  searchInput: {
-    flex: 1,
-    color: colors.text,
-    fontSize: 16,
-    marginLeft: 8,
-  },
-  listContent: {
-    paddingBottom: 16,
-  },
-  row: {
-    paddingHorizontal: 16,
-    justifyContent: "space-between",
-  },
-  gifItem: {
-    width: ITEM_WIDTH,
-    height: ITEM_WIDTH,
-    marginBottom: 12,
-    borderRadius: 8,
-    overflow: "hidden",
-    backgroundColor: colors.surfaceElevated,
-  },
-  gifImage: {
-    width: "100%",
-    height: "100%",
-  },
-  selectedOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  messageContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 24,
-    alignItems: "center",
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 14,
-    textAlign: "center",
-  },
-  hintText: {
-    color: colors.textTertiary,
-    fontSize: 12,
-    textAlign: "center",
-    marginTop: 8,
-  },
-  noResultsText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    textAlign: "center",
-  },
-  trendingHeader: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    alignItems: "center",
-  },
-  trendingText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-  loadingContainer: {
-    paddingVertical: 24,
-    alignItems: "center",
-  },
-  emptyContainer: {
-    paddingVertical: 48,
-    paddingHorizontal: 16,
-    alignItems: "center",
-  },
-  emptyText: {
-    color: colors.textTertiary,
-    fontSize: 14,
-    textAlign: "center",
-  },
-  footer: {
-    borderTopWidth: 1,
-    borderTopColor: colors.surfaceElevated,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    alignItems: "center",
-  },
-  footerText: {
-    color: colors.textTertiary,
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  footerHint: {
-    color: colors.textTertiary,
-    fontSize: 10,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surfaceElevated,
+    },
+    headerTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: "600",
+    },
+    closeButton: {
+      padding: 4,
+    },
+    searchContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.background,
+      borderWidth: 1,
+      borderColor: colors.surfaceElevated,
+      borderRadius: 8,
+      marginHorizontal: 16,
+      marginVertical: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    searchInput: {
+      flex: 1,
+      color: colors.text,
+      fontSize: 16,
+      marginLeft: 8,
+    },
+    listContent: {
+      paddingBottom: 16,
+    },
+    row: {
+      paddingHorizontal: 16,
+      justifyContent: "space-between",
+    },
+    gifItem: {
+      width: ITEM_WIDTH,
+      height: ITEM_WIDTH,
+      marginBottom: 12,
+      borderRadius: 8,
+      overflow: "hidden",
+      backgroundColor: colors.surfaceElevated,
+    },
+    gifImage: {
+      width: "100%",
+      height: "100%",
+    },
+    selectedOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    messageContainer: {
+      paddingHorizontal: 16,
+      paddingVertical: 24,
+      alignItems: "center",
+    },
+    errorText: {
+      color: colors.danger,
+      fontSize: 14,
+      textAlign: "center",
+    },
+    hintText: {
+      color: colors.textTertiary,
+      fontSize: 12,
+      textAlign: "center",
+      marginTop: 8,
+    },
+    noResultsText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: "center",
+    },
+    trendingHeader: {
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+      alignItems: "center",
+    },
+    trendingText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+    loadingContainer: {
+      paddingVertical: 24,
+      alignItems: "center",
+    },
+    emptyContainer: {
+      paddingVertical: 48,
+      paddingHorizontal: 16,
+      alignItems: "center",
+    },
+    emptyText: {
+      color: colors.textTertiary,
+      fontSize: 14,
+      textAlign: "center",
+    },
+    footer: {
+      borderTopWidth: 1,
+      borderTopColor: colors.surfaceElevated,
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      alignItems: "center",
+    },
+    footerText: {
+      color: colors.textTertiary,
+      fontSize: 12,
+      marginBottom: 4,
+    },
+    footerHint: {
+      color: colors.textTertiary,
+      fontSize: 10,
+    },
+  });
+}

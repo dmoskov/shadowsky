@@ -1,9 +1,9 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {AppBskyEmbedRecord, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {RichText} from '../utils/rich-text';
-import {colors} from '../constants/theme';
+import {useTheme} from '../contexts/ThemeContext';
 
 interface QuoteEmbedProps {
   record: any;
@@ -11,6 +11,9 @@ interface QuoteEmbedProps {
 }
 
 export function QuoteEmbed({record, onPress}: QuoteEmbedProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   // Handle deleted/blocked/not-found posts
   if (!record || record.$type !== 'app.bsky.embed.record#viewRecord') {
     return (
@@ -62,50 +65,52 @@ export function QuoteEmbed({record, onPress}: QuoteEmbedProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 8,
-    marginBottom: 8,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.surfaceElevated,
-    backgroundColor: colors.background,
-  },
-  notFoundContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-  },
-  notFoundText: {
-    color: colors.textTertiary,
-    fontSize: 14,
-    fontStyle: 'italic',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  authorInfo: {
-    flex: 1,
-    marginLeft: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  displayName: {
-    color: colors.text,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  handle: {
-    color: colors.textTertiary,
-    fontSize: 13,
-  },
-  text: {
-    color: colors.textMuted,
-    fontSize: 14,
-    lineHeight: 18,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      marginTop: 8,
+      marginBottom: 8,
+      padding: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.surfaceElevated,
+      backgroundColor: colors.background,
+    },
+    notFoundContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 16,
+    },
+    notFoundText: {
+      color: colors.textTertiary,
+      fontSize: 14,
+      fontStyle: 'italic',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    authorInfo: {
+      flex: 1,
+      marginLeft: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    displayName: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    handle: {
+      color: colors.textTertiary,
+      fontSize: 13,
+    },
+    text: {
+      color: colors.textMuted,
+      fontSize: 14,
+      lineHeight: 18,
+    },
+  });
+}

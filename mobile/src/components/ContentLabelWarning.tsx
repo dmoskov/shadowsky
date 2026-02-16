@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { EyeOff, Eye, AlertTriangle } from "lucide-react-native";
-import { colors } from "../constants/theme";
+import { useTheme } from "../contexts/ThemeContext";
 
 interface ContentLabelWarningProps {
   labels: Array<{ val: string }>;
@@ -29,6 +29,8 @@ export function ContentLabelWarning({
   style,
   blurImages = false,
 }: ContentLabelWarningProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [revealed, setRevealed] = useState(false);
 
   // Get icon based on label severity
@@ -127,68 +129,70 @@ export function ContentLabelWarning({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    position: "relative",
-    minHeight: 200,
-  },
-  blurredContent: {
-    opacity: 0.1,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  content: {
-    alignItems: "center",
-    gap: 12,
-  },
-  warningText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: colors.text,
-    textAlign: "center",
-  },
-  description: {
-    fontSize: 14,
-    color: colors.text,
-    opacity: 0.9,
-    textAlign: "center",
-  },
-  button: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    marginTop: 8,
-  },
-  buttonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  labelContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: 6,
-    marginTop: 8,
-  },
-  labelBadge: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  labelText: {
-    fontSize: 11,
-    color: colors.text,
-    fontWeight: "500",
-    textTransform: "uppercase",
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      position: "relative",
+      minHeight: 200,
+    },
+    blurredContent: {
+      opacity: 0.1,
+    },
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 20,
+    },
+    content: {
+      alignItems: "center",
+      gap: 12,
+    },
+    warningText: {
+      fontSize: 18,
+      fontWeight: "600",
+      color: colors.text,
+      textAlign: "center",
+    },
+    description: {
+      fontSize: 14,
+      color: colors.text,
+      opacity: 0.9,
+      textAlign: "center",
+    },
+    button: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: "rgba(255, 255, 255, 0.2)",
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 20,
+      marginTop: 8,
+    },
+    buttonText: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    labelContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      gap: 6,
+      marginTop: 8,
+    },
+    labelBadge: {
+      backgroundColor: "rgba(255, 255, 255, 0.2)",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    labelText: {
+      fontSize: 11,
+      color: colors.text,
+      fontWeight: "500",
+      textTransform: "uppercase",
+    },
+  });
+}
