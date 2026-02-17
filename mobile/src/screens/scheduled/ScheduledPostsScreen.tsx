@@ -107,6 +107,11 @@ export function ScheduledPostsScreen() {
             colors={[colors.primary]}
           />
         }
+        removeClippedSubviews={true}
+        windowSize={7}
+        maxToRenderPerBatch={5}
+        initialNumToRender={8}
+        updateCellsBatchingPeriod={50}
         ListEmptyComponent={
           <EmptyState message="No scheduled posts yet. Your queued posts will appear here." />
         }

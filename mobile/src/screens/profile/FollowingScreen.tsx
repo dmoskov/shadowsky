@@ -121,6 +121,16 @@ export function FollowingScreen({actor, onNavigateToProfile}: FollowingScreenPro
           }
         }}
         onEndReachedThreshold={0.5}
+        removeClippedSubviews={true}
+        windowSize={10}
+        maxToRenderPerBatch={15}
+        initialNumToRender={15}
+        updateCellsBatchingPeriod={50}
+        getItemLayout={(_data, index) => ({
+          length: 73,
+          offset: 73 * index,
+          index,
+        })}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching && !isLoading}
