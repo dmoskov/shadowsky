@@ -92,6 +92,37 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         isAccessMediaLocationEnabled: true,
       },
     ],
+    [
+      "expo-quick-actions",
+      {
+        iosActions: [
+          {
+            id: "compose",
+            title: "New Post",
+            icon: "compose",
+            params: { href: "/(app)/compose" },
+          },
+          {
+            id: "search",
+            title: "Search",
+            icon: "search",
+            params: { href: "/(app)/(tabs)/(search)" },
+          },
+          {
+            id: "notifications",
+            title: "Notifications",
+            icon: "symbol:bell.fill",
+            params: { href: "/(app)/(tabs)/(notifications)" },
+          },
+          {
+            id: "messages",
+            title: "Messages",
+            icon: "message",
+            params: { href: "/(app)/(tabs)/(profile)/messages" },
+          },
+        ],
+      },
+    ],
     "./plugins/withPrivacyManifest",
   ],
   experiments: {
