@@ -4,7 +4,11 @@ import {
   RichText as BskyRichText,
 } from "@atproto/api";
 import { getProfileService } from "@bsky/shared";
-import { useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   BadgeCheck,
   Calendar,
@@ -21,7 +25,7 @@ import {
   Users,
   VolumeX,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import { List, ListImperativeAPI, useDynamicRowHeight } from "react-window";
@@ -99,13 +103,7 @@ export default function ProfilePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { session, agent } = useAuth();
   const { showToast } = useToast();
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [posts, setPosts] = useState<AppBskyFeedDefs.FeedViewPost[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [postsLoading, setPostsLoading] = useState(false);
-  const [cursor, setCursor] = useState<string | undefined>();
-  const [hasMore, setHasMore] = useState(true);
+  const queryClient = useQueryClient();
 
   // Get active tab from URL, default to "posts"
   const tabParam = searchParams.get("tab");
@@ -153,6 +151,137 @@ export default function ProfilePage() {
 
   const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
     useOptimisticPosts();
+
+  // Fetch profile data via React Query for request deduplication
+  // Uses the same ["profile", handle] key as prefetch hooks and hover cards
+  const {
+    data: profile,
+    isLoading: loading,
+    error: profileError,
+  } = useQuery({
+    queryKey: ["profile", handle],
+    queryFn: async () => {
+      if (!agent || !handle) throw new Error("Missing agent or handle");
+      const profileService = getProfileService(agent);
+      const profileRes = await profileService.getProfile(handle);
+      if (!profileRes) throw new Error("Profile not found");
+
+      // Update IndexedDB cache in background
+      getFollowerCacheDB().then((db) =>
+        db.saveProfiles([
+          {
+            did: profileRes.did,
+            handle: profileRes.handle,
+            displayName: profileRes.displayName,
+            avatar: profileRes.avatar,
+            description: profileRes.description,
+            banner: profileRes.banner,
+            followersCount: profileRes.followersCount || 0,
+            followingCount: profileRes.followsCount || 0,
+            followsCount: profileRes.followsCount || 0,
+            postsCount: profileRes.postsCount || 0,
+            viewer: profileRes.viewer,
+            createdAt: profileRes.createdAt,
+            lastFetched: new Date(),
+          },
+        ]),
+      );
+
+      return {
+        ...profileRes,
+        pinnedPost: profileRes.pinnedPost
+          ? {
+              uri: profileRes.pinnedPost.uri,
+              cid: profileRes.pinnedPost.cid,
+            }
+          : undefined,
+      } as ProfileData;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes - reuses prefetched/hover card data
+    gcTime: 30 * 60 * 1000,
+    enabled: !!agent && !!handle,
+    // Use IndexedDB cached profile as placeholder while fetching
+    placeholderData: () => {
+      // Check React Query cache first (from prefetch or hover card)
+      const cached = queryClient.getQueryData<ProfileData>(["profile", handle]);
+      return cached || undefined;
+    },
+  });
+
+  const error = profileError ? "Failed to load profile" : null;
+
+  // Helper to locally update the profile in the query cache
+  const setProfile = useCallback(
+    (updater: ProfileData | ((prev: ProfileData) => ProfileData)) => {
+      queryClient.setQueryData<ProfileData>(
+        ["profile", handle],
+        (old: ProfileData | undefined) => {
+          if (!old) return old;
+          return typeof updater === "function" ? updater(old) : updater;
+        },
+      );
+    },
+    [queryClient, handle],
+  );
+
+  // Fetch posts via useInfiniteQuery for request deduplication
+  const postsFilter =
+    activeTab === "replies"
+      ? "posts_with_replies"
+      : activeTab === "media"
+        ? "posts_with_media"
+        : "posts_no_replies";
+
+  const {
+    data: postsData,
+    isLoading: postsLoading,
+    fetchNextPage,
+    hasNextPage: hasMore,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: [
+      "author-feed",
+      handle,
+      activeTab === "likes" ? "likes" : postsFilter,
+    ],
+    queryFn: async ({ pageParam }: { pageParam: string | undefined }) => {
+      if (!agent || !handle) throw new Error("Missing agent or handle");
+
+      if (activeTab === "likes") {
+        const response = await agent.getActorLikes({
+          actor: handle,
+          limit: 30,
+          cursor: pageParam,
+        });
+        return {
+          feed: response.data.feed as AppBskyFeedDefs.FeedViewPost[],
+          cursor: response.data.cursor as string | undefined,
+        };
+      } else {
+        const profileService = getProfileService(agent);
+        const response = await profileService.getAuthorFeed(
+          handle,
+          30,
+          pageParam,
+          postsFilter,
+        );
+        return {
+          feed: (response?.feed || []) as AppBskyFeedDefs.FeedViewPost[],
+          cursor: response?.cursor as string | undefined,
+        };
+      }
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.cursor || undefined,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    enabled: !!agent && !!handle && activeTab !== "top",
+  });
+
+  // Flatten paginated posts for rendering
+  const posts = useMemo(
+    () => postsData?.pages.flatMap((page) => page.feed) || [],
+    [postsData],
+  );
 
   // Transform posts already in memory for quick haiku analysis
   const postsInMemory = posts
@@ -286,133 +415,6 @@ export default function ProfilePage() {
     enabled: activeTab === "top" && !!handle,
   });
 
-  useEffect(() => {
-    if (!handle || !agent) return;
-
-    const loadProfile = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // First try to get from cache
-        const db = await getFollowerCacheDB();
-        const cachedProfile = await db.getProfileByHandle(handle);
-        if (cachedProfile) {
-          setProfile({
-            did: cachedProfile.did,
-            handle: cachedProfile.handle,
-            displayName: cachedProfile.displayName,
-            description: cachedProfile.description,
-            avatar: cachedProfile.avatar,
-            banner: cachedProfile.banner,
-            followersCount: cachedProfile.followersCount,
-            followsCount:
-              cachedProfile.followsCount || cachedProfile.followingCount,
-            postsCount: cachedProfile.postsCount,
-            viewer: cachedProfile.viewer,
-          });
-        }
-
-        // Then fetch full profile data
-        const profileService = getProfileService(agent);
-        const profileRes = await profileService.getProfile(handle);
-
-        if (profileRes) {
-          setProfile({
-            ...profileRes,
-            pinnedPost: profileRes.pinnedPost
-              ? {
-                  uri: profileRes.pinnedPost.uri,
-                  cid: profileRes.pinnedPost.cid,
-                }
-              : undefined,
-          });
-          // Update cache
-          await db.saveProfiles([
-            {
-              did: profileRes.did,
-              handle: profileRes.handle,
-              displayName: profileRes.displayName,
-              avatar: profileRes.avatar,
-              description: profileRes.description,
-              banner: profileRes.banner,
-              followersCount: profileRes.followersCount || 0,
-              followingCount: profileRes.followsCount || 0,
-              followsCount: profileRes.followsCount || 0,
-              postsCount: profileRes.postsCount || 0,
-              viewer: profileRes.viewer,
-              createdAt: profileRes.createdAt,
-              lastFetched: new Date(),
-            },
-          ]);
-        }
-
-        // Load initial posts
-        loadPosts(true);
-      } catch (err) {
-        console.error("Error loading profile:", err);
-        setError("Failed to load profile");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProfile();
-  }, [handle, agent]);
-
-  const loadPosts = async (initial = false) => {
-    if (!handle || !agent || postsLoading) return;
-    if (activeTab === "top") return;
-
-    try {
-      setPostsLoading(true);
-
-      if (activeTab === "likes") {
-        // Fetch liked posts via the API
-        const response = await agent.getActorLikes({
-          actor: handle,
-          limit: 30,
-          cursor: initial ? undefined : cursor,
-        });
-        if (response.data) {
-          setPosts((prev) =>
-            initial ? response.data.feed : [...prev, ...response.data.feed],
-          );
-          setCursor(response.data.cursor);
-          setHasMore(!!response.data.cursor);
-        }
-      } else {
-        const profileService = getProfileService(agent);
-
-        const filter =
-          activeTab === "replies"
-            ? "posts_with_replies"
-            : activeTab === "media"
-              ? "posts_with_media"
-              : "posts_no_replies";
-
-        const response = await profileService.getAuthorFeed(
-          handle,
-          30,
-          initial ? undefined : cursor,
-          filter,
-        );
-
-        if (response) {
-          setPosts((prev) =>
-            initial ? response.feed : [...prev, ...response.feed],
-          );
-          setCursor(response.cursor);
-          setHasMore(!!response.cursor);
-        }
-      }
-    } catch (err) {
-      console.error("Error loading posts:", err);
-    } finally {
-      setPostsLoading(false);
-    }
-  };
-
   // Measure container height for virtual list
   useEffect(() => {
     if (!listContainerRef.current) return;
@@ -485,25 +487,17 @@ export default function ProfilePage() {
       visibleRows: { startIndex: number; stopIndex: number },
       _allRows: { startIndex: number; stopIndex: number },
     ) => {
-      if (!hasMore || postsLoading || posts.length === 0) return;
+      if (!hasMore || postsLoading || isFetchingNextPage || posts.length === 0)
+        return;
 
       // Trigger load at 80% scroll position
       const scrollPercentage = visibleRows.stopIndex / posts.length;
       if (scrollPercentage >= 0.8) {
-        loadPosts();
+        fetchNextPage();
       }
     },
-    [hasMore, postsLoading, posts.length],
+    [hasMore, postsLoading, isFetchingNextPage, posts.length, fetchNextPage],
   );
-
-  useEffect(() => {
-    if (profile) {
-      setPosts([]);
-      setCursor(undefined);
-      setHasMore(true);
-      loadPosts(true);
-    }
-  }, [activeTab]);
 
   const handleFollow = async () => {
     if (!profile || !agent) return;
@@ -1703,7 +1697,7 @@ export default function ProfilePage() {
                 <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
               </div>
             ) : null}
-            {posts.length > 0 && postsLoading && (
+            {posts.length > 0 && (postsLoading || isFetchingNextPage) && (
               <div className="flex justify-center p-4">
                 <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
               </div>
