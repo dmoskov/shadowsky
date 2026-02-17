@@ -10,7 +10,6 @@ import {
   Alert,
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
-import { useAuth } from "../../contexts/AuthContext";
 import { ChevronLeft } from "lucide-react-native";
 
 interface LabelersSettingsScreenProps {
@@ -23,7 +22,6 @@ export function LabelersSettingsScreen({
   navigation,
 }: LabelersSettingsScreenProps) {
   const { colors } = useTheme();
-  const _auth = useAuth();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [labelers, setLabelers] = useState<string[]>([]);
   const [didInput, setDidInput] = useState("");

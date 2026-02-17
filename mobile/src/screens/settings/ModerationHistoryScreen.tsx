@@ -8,7 +8,6 @@ import {
   SafeAreaView,
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
-import { useModeration } from "../../contexts/ModerationContext";
 import { ChevronLeft } from "lucide-react-native";
 
 interface ModerationHistoryScreenProps {
@@ -31,7 +30,6 @@ export function ModerationHistoryScreen({
 }: ModerationHistoryScreenProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const _moderation = useModeration();
   const [activeTab, setActiveTab] = useState<TabType>("all");
 
   return (

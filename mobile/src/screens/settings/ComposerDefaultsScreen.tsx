@@ -195,7 +195,7 @@ export function ComposerDefaultsScreen({
                   updatePreference("autoGenerateAltText", value)
                 }
                 trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor="#ffffff"
+                thumbColor={colors.background}
               />
             </View>
           </View>
@@ -214,7 +214,7 @@ export function ComposerDefaultsScreen({
                   updatePreference("enableHashtagSuggestions", value)
                 }
                 trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor="#ffffff"
+                thumbColor={colors.background}
               />
             </View>
           </View>

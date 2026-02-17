@@ -69,7 +69,7 @@ export function AccessibilitySettingsScreen({
                 value={preferences.highContrast}
                 onValueChange={(value) => updatePreference("highContrast", value)}
                 trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor="#ffffff"
+                thumbColor={colors.background}
               />
             </View>
           </View>
@@ -86,7 +86,7 @@ export function AccessibilitySettingsScreen({
                 value={preferences.largeText}
                 onValueChange={(value) => updatePreference("largeText", value)}
                 trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor="#ffffff"
+                thumbColor={colors.background}
               />
             </View>
           </View>
@@ -105,7 +105,7 @@ export function AccessibilitySettingsScreen({
                   updatePreference("screenReaderOptimized", value)
                 }
                 trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor="#ffffff"
+                thumbColor={colors.background}
               />
             </View>
           </View>

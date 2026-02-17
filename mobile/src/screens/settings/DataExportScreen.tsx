@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Alert,
-  ActivityIndicator,
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { ChevronLeft } from "lucide-react-native";
@@ -22,7 +21,7 @@ export function DataExportScreen({ navigation }: DataExportScreenProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const handleExport = (type: string) => {
+  const handleExport = (_type: string) => {
     Alert.alert("Export Started", "Your data is being prepared for export...");
   };
 

@@ -170,7 +170,7 @@ export function PrivacySettingsScreen({
             value={preferences.hideFromSearch}
             onValueChange={(value) => updatePreference("hideFromSearch", value)}
             trackColor={{ false: colors.border, true: colors.primary }}
-            thumbColor="#ffffff"
+            thumbColor={colors.background}
           />
         </View>
 
@@ -186,7 +186,7 @@ export function PrivacySettingsScreen({
             value={preferences.filterContent}
             onValueChange={(value) => updatePreference("filterContent", value)}
             trackColor={{ false: colors.border, true: colors.primary }}
-            thumbColor="#ffffff"
+            thumbColor={colors.background}
           />
         </View>
 

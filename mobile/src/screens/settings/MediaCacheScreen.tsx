@@ -355,7 +355,7 @@ function createStyles(colors: any) {
       alignItems: "center",
       justifyContent: "space-between",
       borderWidth: 1,
-      borderColor: colors.danger || "#ef4444",
+      borderColor: colors.danger,
     },
     cardInfo: {
       flex: 1,
@@ -410,7 +410,7 @@ function createStyles(colors: any) {
       paddingHorizontal: 16,
       paddingVertical: 8,
       borderRadius: 8,
-      backgroundColor: colors.danger || "#ef4444",
+      backgroundColor: colors.danger,
     },
     dangerButtonText: {
       fontSize: 14,

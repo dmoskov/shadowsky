@@ -150,7 +150,7 @@ export function PerformanceSettingsScreen({
                   updatePreference("backgroundFetchEnabled", value)
                 }
                 trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor="#ffffff"
+                thumbColor={colors.background}
               />
             </View>
           </View>
@@ -171,7 +171,7 @@ export function PerformanceSettingsScreen({
                   updatePreference("enableThreadSummaryPreGen", value)
                 }
                 trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor="#ffffff"
+                thumbColor={colors.background}
               />
             </View>
           </View>

@@ -91,7 +91,7 @@ export function NotificationPreferencesScreen({
               updatePreference("notificationsEnabled", value)
             }
             trackColor={{ false: colors.border, true: colors.primary }}
-            thumbColor="#ffffff"
+            thumbColor={colors.background}
           />
         </View>
 
@@ -109,7 +109,7 @@ export function NotificationPreferencesScreen({
                   value={preferences[key]}
                   onValueChange={(value) => updatePreference(key, value)}
                   trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor="#ffffff"
+                  thumbColor={colors.background}
                 />
               </View>
             ))}
