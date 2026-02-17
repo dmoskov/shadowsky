@@ -1,42 +1,46 @@
 import {useInfiniteQuery, useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import {getNotifications, getUnreadCount, updateSeenNotifications} from '../../services/atproto/notifications';
-import {useJetstreamOptional} from '../../contexts/JetstreamContext';
+import {useAdaptivePolling} from '../useAdaptivePolling';
 
-// When Jetstream is connected, real-time events invalidate the cache,
-// so we can poll less frequently as a fallback. When disconnected,
-// fall back to the original 30s polling interval.
-const POLL_INTERVAL_REALTIME = 120000; // 2 minutes (safety net)
-const POLL_INTERVAL_POLLING = 30000;   // 30 seconds (original)
+// Polling intervals for notifications
+const POLL_ACTIVE = 30000;        // 30s when app is active, no real-time
+const POLL_ACTIVE_REALTIME = 120000; // 2min safety net when Jetstream connected
 
 /**
- * Hook to fetch notifications with infinite scroll
+ * Hook to fetch notifications with infinite scroll.
+ * Polling adapts to app state and Jetstream connection.
  */
 export function useNotifications() {
-  const jetstream = useJetstreamOptional();
-  const interval = jetstream?.isConnected ? POLL_INTERVAL_REALTIME : POLL_INTERVAL_POLLING;
+  const refetchInterval = useAdaptivePolling({
+    activeInterval: POLL_ACTIVE,
+    activeRealtimeInterval: POLL_ACTIVE_REALTIME,
+  });
 
   return useInfiniteQuery({
     queryKey: ['notifications'],
     queryFn: ({pageParam}) => getNotifications({cursor: pageParam}),
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
-    refetchInterval: interval,
+    refetchInterval,
     refetchIntervalInBackground: false,
     maxPages: 10,
   });
 }
 
 /**
- * Hook to fetch unread notification count
+ * Hook to fetch unread notification count.
+ * Polling adapts to app state and Jetstream connection.
  */
 export function useUnreadCount() {
-  const jetstream = useJetstreamOptional();
-  const interval = jetstream?.isConnected ? POLL_INTERVAL_REALTIME : POLL_INTERVAL_POLLING;
+  const refetchInterval = useAdaptivePolling({
+    activeInterval: POLL_ACTIVE,
+    activeRealtimeInterval: POLL_ACTIVE_REALTIME,
+  });
 
   return useQuery({
     queryKey: ['unreadCount'],
     queryFn: getUnreadCount,
-    refetchInterval: interval,
+    refetchInterval,
     refetchIntervalInBackground: false,
   });
 }
