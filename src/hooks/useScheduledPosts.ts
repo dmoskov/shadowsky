@@ -15,6 +15,7 @@ import {
   schedulerService,
   UpdateScheduledPostInput,
 } from "../services/scheduled-posts";
+import { usePageVisibility } from "./usePageVisibility";
 
 const QUERY_KEYS = {
   all: ["scheduledPosts"] as const,
@@ -106,11 +107,13 @@ export function useScheduledPostsByDateRange(startDate: Date, endDate: Date) {
  * Hook to fetch queue statistics
  */
 export function useScheduledPostStats() {
+  const isVisible = usePageVisibility();
+
   return useQuery({
     queryKey: QUERY_KEYS.stats(),
     queryFn: () => schedulerService.getStats(),
     staleTime: 10 * 1000, // 10 seconds
-    refetchInterval: 30 * 1000, // Auto-refresh every 30 seconds
+    refetchInterval: isVisible ? 30 * 1000 : false, // Auto-refresh every 30 seconds, paused when tab hidden
   });
 }
 

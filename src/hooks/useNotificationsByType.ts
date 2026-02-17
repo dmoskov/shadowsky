@@ -3,6 +3,7 @@ import { debug } from "@bsky/shared";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import { getNotificationService } from "../services/atproto/notifications";
+import { usePageVisibility } from "./usePageVisibility";
 
 const MAX_NOTIFICATIONS_PER_TYPE = 5000;
 const MAX_DAYS = 90; // 3 months
@@ -26,6 +27,7 @@ export function useNotificationsByType(
 ) {
   const { session, agent } = useAuth();
   const { reasons, priority, enabled = true } = options;
+  const isVisible = usePageVisibility();
 
   return useInfiniteQuery({
     queryKey: ["notifications", "byType", reasons, priority],
@@ -102,7 +104,7 @@ export function useNotificationsByType(
     },
     enabled: !!session && !!agent && enabled,
     staleTime: 30 * 60 * 1000, // 30 minutes - conversations don't change that often
-    refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
+    refetchInterval: isVisible ? 60 * 1000 : false, // Refetch every 60 seconds, paused when tab hidden
     refetchOnWindowFocus: false, // Already disabled globally, but be explicit
     refetchOnReconnect: false, // Prevent refetch on network reconnect
     refetchOnMount: false, // Don't refetch on mount - use stale time instead

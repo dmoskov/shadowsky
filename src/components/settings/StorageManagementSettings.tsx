@@ -2,10 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, Database, HardDrive, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 import { useModal } from "../../contexts/ModalContext";
+import { usePageVisibility } from "../../hooks/usePageVisibility";
 import { IndexedDBCleanupService } from "../../services/indexeddb-cleanup-service";
 
 export const StorageManagementSettings: React.FC = () => {
   const { showConfirm } = useModal();
+  const isVisible = usePageVisibility();
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [isClearingAll, setIsClearingAll] = useState(false);
   const [message, setMessage] = useState<{
@@ -21,7 +23,7 @@ export const StorageManagementSettings: React.FC = () => {
     queryFn: async () => {
       return await cleanupService.getStorageStats();
     },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: isVisible ? 30000 : false, // Refresh every 30 seconds, paused when tab hidden
   });
 
   const formatBytes = (bytes: number): string => {

@@ -11,6 +11,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { getNotificationService } from "../services/atproto/notifications";
 import { NotificationCache } from "../utils/notificationCache";
 import { useErrorHandler } from "./useErrorHandler";
+import { usePageVisibility } from "./usePageVisibility";
 
 const MAX_NOTIFICATIONS = 10000;
 const MAX_DAYS = 90; // 3 months
@@ -18,6 +19,7 @@ const MAX_DAYS = 90; // 3 months
 export function useNotifications(priority: boolean = false) {
   const { session, agent } = useAuth();
   const queryClient = useQueryClient();
+  const isVisible = usePageVisibility();
 
   // Try to load cached data first
   const cachedData = session ? NotificationCache.load(priority) : null;
@@ -97,7 +99,7 @@ export function useNotifications(priority: boolean = false) {
     },
     enabled: !!session && !!agent,
     staleTime: 30 * 1000, // Data is considered fresh for 30 seconds
-    refetchInterval: 30 * 1000, // Refetch every 30 seconds for more timely updates
+    refetchInterval: isVisible ? 30 * 1000 : false, // Refetch every 30 seconds, paused when tab hidden
     refetchOnWindowFocus: true, // Refetch on window focus to get latest notifications
     refetchOnMount: "always", // Always fetch on mount to ensure fresh data
     // Use cached data as initial data if available
@@ -163,6 +165,7 @@ export function useNotifications(priority: boolean = false) {
 
 export function useUnreadNotificationCount() {
   const { session, agent } = useAuth();
+  const isVisible = usePageVisibility();
 
   return useQuery({
     queryKey: ["notificationCount"],
@@ -173,7 +176,7 @@ export function useUnreadNotificationCount() {
     },
     enabled: !!session && !!agent,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
+    refetchInterval: isVisible ? 60 * 1000 : false, // Refetch every 60 seconds, paused when tab hidden
     refetchOnMount: "always", // Always fetch fresh data on mount
   });
 }
