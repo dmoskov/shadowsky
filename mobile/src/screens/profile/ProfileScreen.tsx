@@ -594,11 +594,6 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           />
         }
         contentContainerStyle={posts.length === 0 ? styles.emptyList : undefined}
-        removeClippedSubviews={true}
-        maxToRenderPerBatch={10}
-        windowSize={7}
-        initialNumToRender={10}
-        updateCellsBatchingPeriod={50}
       />
       {profile && showAddToList && (
         <AddToListModal
