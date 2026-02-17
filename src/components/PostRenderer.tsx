@@ -27,6 +27,7 @@ import { isValidUrl } from "../utils/security";
 import { parseBskyUrl } from "../utils/url-helpers";
 import { extractFirstLinkUrl } from "./composer/utils";
 import { ImageGallery } from "./ImageGallery";
+import { GateIndicator } from "./ReplyControls";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
 import { LabelBadge, getContentWarningLabels } from "./ui/LabelBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
@@ -359,6 +360,16 @@ function arePostRendererPropsEqual(
   // Compare viewer state
   if (prevProps.post.viewer?.like !== nextProps.post.viewer?.like) return false;
   if (prevProps.post.viewer?.repost !== nextProps.post.viewer?.repost)
+    return false;
+  if (
+    prevProps.post.viewer?.replyDisabled !==
+    nextProps.post.viewer?.replyDisabled
+  )
+    return false;
+  if (
+    prevProps.post.viewer?.embeddingDisabled !==
+    nextProps.post.viewer?.embeddingDisabled
+  )
     return false;
 
   // Compare UI props
@@ -1356,6 +1367,13 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                   />
                 </>
               )}
+              {/* Gate indicators */}
+              <GateIndicator
+                replyDisabled={post.viewer?.replyDisabled}
+                embeddingDisabled={post.viewer?.embeddingDisabled}
+                threadgate={post.threadgate}
+                className="mt-2"
+              />
             </div>
 
             {/* Actions */}
@@ -1368,11 +1386,27 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onReply?.();
+                    if (!post.viewer?.replyDisabled) {
+                      onReply?.();
+                    }
                   }}
-                  className="flex items-center gap-1 text-sm transition-colors hover:text-blue-500"
+                  className={`flex items-center gap-1 text-sm transition-colors ${
+                    post.viewer?.replyDisabled
+                      ? "cursor-not-allowed opacity-40"
+                      : "hover:text-blue-500"
+                  }`}
                   style={{ color: "var(--asph-text-secondary)" }}
-                  aria-label={`Reply to post, ${post.replyCount || 0} replies`}
+                  aria-label={
+                    post.viewer?.replyDisabled
+                      ? "Replies are restricted on this post"
+                      : `Reply to post, ${post.replyCount || 0} replies`
+                  }
+                  aria-disabled={post.viewer?.replyDisabled}
+                  title={
+                    post.viewer?.replyDisabled
+                      ? "Replies are restricted"
+                      : undefined
+                  }
                 >
                   <MessageCircle size={18} aria-hidden="true" />
                   <span aria-hidden="true">{post.replyCount || 0}</span>

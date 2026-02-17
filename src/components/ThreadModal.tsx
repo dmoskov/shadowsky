@@ -747,14 +747,14 @@ export function ThreadModal({
     if (posts.length > 0) {
       const targetPost = posts.find((p) => p.uri === postUri) || posts[0];
 
-      if (openToReply && targetPost) {
+      if (openToReply && targetPost && !targetPost.viewer?.replyDisabled) {
         setReplyState({
           isReplying: true,
           replyToPost: targetPost,
         });
       }
 
-      if (openToQuote && targetPost) {
+      if (openToQuote && targetPost && !targetPost.viewer?.embeddingDisabled) {
         setQuoteState({
           isQuoting: true,
           quotedPost: targetPost,

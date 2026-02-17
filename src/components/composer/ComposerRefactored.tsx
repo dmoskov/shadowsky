@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import React, { useCallback, useEffect, useRef } from "react";
 import { useGifPicker } from "../../hooks/useGifPicker";
+import { PostgateService } from "../../services/atproto/postgate";
 import { ThreadgateService } from "../../services/atproto/threadgate";
 import {
   deleteDraft,
@@ -48,7 +49,7 @@ import { createLogger } from "../../utils/logger";
 import { EmojiPicker } from "../EmojiPicker";
 import { GifPicker } from "../GifPicker";
 import type { MentionTypeaheadHandle } from "../MentionTypeahead";
-import { ReplyControls } from "../ReplyControls";
+import { QuoteControl, ReplyControls } from "../ReplyControls";
 import { ThreadComposer } from "../ThreadComposer";
 import { UploadProgressBar } from "../ui/UploadProgressBar";
 import { ComposerAIFeatures } from "./ComposerAIFeatures";
@@ -1072,6 +1073,16 @@ export function ComposerRefactored() {
           }
         }
 
+        // Create postgate to disable quoting/embedding
+        if (state.quotingDisabled) {
+          try {
+            const postgateService = new PostgateService(state.agent);
+            await postgateService.createPostgate(result.uri);
+          } catch {
+            // Don't fail if postgate creation fails
+          }
+        }
+
         if (i < numberedPosts.length - 1) {
           await new Promise((resolve) => setTimeout(resolve, 500));
         }
@@ -1576,13 +1587,18 @@ export function ComposerRefactored() {
           />
         </div>
 
-        {/* Reply Controls */}
-        <div className="mt-4">
+        {/* Reply & Quote Controls */}
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <ReplyControls
             value={state.replyPermission}
             onChange={state.setReplyPermission}
             disabled={state.isPosting}
             compact
+          />
+          <QuoteControl
+            quotingDisabled={state.quotingDisabled}
+            onChange={state.setQuotingDisabled}
+            disabled={state.isPosting}
           />
         </div>
       </div>
