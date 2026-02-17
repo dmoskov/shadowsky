@@ -273,6 +273,7 @@ export function NotificationsScreen() {
         maxToRenderPerBatch={10}
         windowSize={10}
         initialNumToRender={10}
+        updateCellsBatchingPeriod={50}
         style={styles.list}
       />
     </View>

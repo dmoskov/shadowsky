@@ -147,6 +147,16 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
           }
         }}
         onEndReachedThreshold={0.5}
+        removeClippedSubviews={true}
+        windowSize={10}
+        maxToRenderPerBatch={15}
+        initialNumToRender={15}
+        updateCellsBatchingPeriod={50}
+        getItemLayout={(_data, index) => ({
+          length: 81,
+          offset: 81 * index,
+          index,
+        })}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}

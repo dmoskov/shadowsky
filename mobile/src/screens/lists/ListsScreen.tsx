@@ -108,6 +108,11 @@ export function ListsScreen() {
         keyExtractor={(item) => item.uri}
         ListEmptyComponent={renderEmpty}
         contentContainerStyle={lists.length === 0 ? styles.emptyContainer : undefined}
+        removeClippedSubviews={true}
+        windowSize={10}
+        maxToRenderPerBatch={10}
+        initialNumToRender={10}
+        updateCellsBatchingPeriod={50}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}

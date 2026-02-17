@@ -469,6 +469,11 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
               renderItem={renderSearchResult}
               contentContainerStyle={styles.listContent}
               ListEmptyComponent={renderEmptyState}
+              removeClippedSubviews={true}
+              windowSize={10}
+              maxToRenderPerBatch={15}
+              initialNumToRender={15}
+              updateCellsBatchingPeriod={50}
               refreshControl={
                 <RefreshControl
                   refreshing={isRefreshing}
