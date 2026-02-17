@@ -26,7 +26,7 @@ import type { NetworkStatus } from "../hooks/useNetworkStatus";
 
 import { createLogger } from '../utils/logger';
 
-const logger = createLogger('Networkcontextx');
+const logger = createLogger('NetworkContext');
 interface NetworkContextType extends NetworkStatus {
   isOnline: boolean;
   waitForConnection: () => Promise<void>;

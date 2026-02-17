@@ -27,7 +27,7 @@ import { addBreadcrumb, setUser, clearUser } from "../utils/error-reporting";
 
 import { createLogger } from '../utils/logger';
 
-const logger = createLogger('Authcontextx');
+const logger = createLogger('AuthContext');
 const AUTH_STORAGE_KEY = "@shadowsky/auth_session";
 const SESSION_REFRESH_INTERVAL = 50 * 60 * 1000;
 const SESSION_CHECK_INTERVAL = 5 * 60 * 1000;
