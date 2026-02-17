@@ -4,6 +4,7 @@ import {AppBskyFeedDefs, AppBskyEmbedImages} from '@atproto/api';
 import {getOptimizedUrl} from '../utils/image-cdn';
 
 const PREFETCH_WINDOW = 5; // prefetch thumbs for posts 3-8 ahead
+const MAX_PREFETCH_SET_SIZE = 200; // cap to prevent unbounded memory growth
 
 function extractImageUrls(post: AppBskyFeedDefs.FeedViewPost): string[] {
   const embed = post.post.embed;
@@ -47,6 +48,16 @@ export function useImagePrefetch(posts: AppBskyFeedDefs.FeedViewPost[]) {
         }
       }
 
+      // Evict oldest entries when the set grows too large to prevent
+      // unbounded memory growth during long scrolling sessions.
+      if (prefetchedUrls.current.size > MAX_PREFETCH_SET_SIZE) {
+        const entries = Array.from(prefetchedUrls.current);
+        const toRemove = entries.length - MAX_PREFETCH_SET_SIZE;
+        for (let i = 0; i < toRemove; i++) {
+          prefetchedUrls.current.delete(entries[i]);
+        }
+      }
+
       if (urlsToPrefetch.length > 0) {
         Image.prefetch(urlsToPrefetch);
       }
@@ -54,5 +65,13 @@ export function useImagePrefetch(posts: AppBskyFeedDefs.FeedViewPost[]) {
     [posts],
   );
 
-  return {prefetchVisibleWindow};
+  /**
+   * Reset the prefetch tracking set. Call this on feed refresh so that
+   * images are re-prefetched for the new content.
+   */
+  const resetPrefetchCache = useCallback(() => {
+    prefetchedUrls.current.clear();
+  }, []);
+
+  return {prefetchVisibleWindow, resetPrefetchCache};
 }

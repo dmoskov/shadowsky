@@ -26,6 +26,8 @@ export function Avatar({uri, size = 40, style, accessibilityLabel}: AvatarProps)
           style={[styles.image, {width: size, height: size, borderRadius: size / 2}]}
           contentFit="cover"
           transition={200}
+          cachePolicy="memory-disk"
+          recyclingKey={uri}
           accessibilityIgnoresInvertColors={true}
         />
       ) : (

@@ -71,6 +71,8 @@ export function VideoEmbed({video}: VideoEmbedProps) {
               source={{uri: video.thumbnail}}
               style={styles.thumbnail}
               contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={video.thumbnail}
               transition={200}
             />
           )}

@@ -14,10 +14,10 @@ import {
   StyleSheet,
   Modal,
   FlatList,
-  Image,
   ActivityIndicator,
   Dimensions,
 } from "react-native";
+import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SearchIcon, CloseIcon } from "./icons";
 import type { TenorGif } from "../services/tenor";
@@ -121,7 +121,9 @@ export function GifPicker({
         <Image
           source={{ uri: gifUrl }}
           style={styles.gifImage}
-          resizeMode="cover"
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          recyclingKey={gifUrl}
         />
         {isSelected && (
           <View style={styles.selectedOverlay}>

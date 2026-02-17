@@ -122,6 +122,7 @@ export function LightboxOverlay() {
             placeholderContentFit="cover"
             style={StyleSheet.absoluteFill}
             contentFit="cover"
+            cachePolicy="memory-disk"
             transition={0}
           />
         </Animated.View>

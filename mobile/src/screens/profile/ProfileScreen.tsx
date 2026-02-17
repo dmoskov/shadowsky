@@ -323,6 +323,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
               source={{ uri: profile.banner }}
               style={styles.bannerImage}
               contentFit="cover"
+              cachePolicy="memory-disk"
               transition={200}
             />
           ) : (

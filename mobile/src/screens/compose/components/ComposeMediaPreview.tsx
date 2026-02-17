@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import { Image } from "expo-image";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { VideoIcon } from "../../../components/icons";
 import type { ImageAsset } from "../../../hooks/useImagePicker";
@@ -46,7 +47,7 @@ export function ComposeMediaPreview({
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScrollView}>
           {selectedImages.map((image, index) => (
             <View key={index} style={styles.imagePreviewWrapper}>
-              <Image source={{ uri: image.uri }} style={styles.imagePreview} />
+              <Image source={{ uri: image.uri }} style={styles.imagePreview} contentFit="cover" cachePolicy="memory-disk" />
               {isImageUploading && (
                 <View style={styles.uploadingOverlay}>
                   <ActivityIndicator color={colors.text} size="small" />
@@ -89,6 +90,8 @@ export function ComposeMediaPreview({
             <Image
               source={{ uri: selectedVideo.thumbnail }}
               style={styles.videoPreview}
+              contentFit="cover"
+              cachePolicy="memory-disk"
             />
           ) : (
             <View style={[styles.videoPreview, styles.videoPreviewPlaceholder]}>
@@ -133,7 +136,8 @@ export function ComposeMediaPreview({
           <Image
             source={{ uri: selectedGif.url }}
             style={styles.gifPreview}
-            resizeMode="cover"
+            contentFit="cover"
+            cachePolicy="memory-disk"
           />
           <TouchableOpacity
             style={styles.removeButton}

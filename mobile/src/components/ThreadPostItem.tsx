@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native";
+import { Image } from "expo-image";
 import { ImageIcon, CloseIcon } from "./icons";
 import { ImageAsset } from "../hooks/useImagePicker";
 import { useTheme } from "../contexts/ThemeContext";
@@ -95,7 +96,7 @@ export function ThreadPostItem({
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {post.images.map((image, imageIndex) => (
               <View key={imageIndex} style={styles.imagePreviewWrapper}>
-                <Image source={{ uri: image.uri }} style={styles.imagePreview} />
+                <Image source={{ uri: image.uri }} style={styles.imagePreview} contentFit="cover" cachePolicy="memory-disk" />
                 <TouchableOpacity
                   style={styles.removeImageButton}
                   onPress={() => handleRemoveImage(imageIndex)}

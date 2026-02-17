@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 import { useTheme } from "../contexts/ThemeContext";
 import type { LinkMetadata } from "../services/ai-service";
 
@@ -23,7 +24,7 @@ export function LinkPreviewCard({ metadata, onDismiss }: LinkPreviewCardProps) {
   return (
     <View style={styles.container}>
       {metadata.imageUrl && (
-        <Image source={{ uri: metadata.imageUrl }} style={styles.thumbnail} />
+        <Image source={{ uri: metadata.imageUrl }} style={styles.thumbnail} contentFit="cover" cachePolicy="memory-disk" />
       )}
       <View style={styles.textContainer}>
         {metadata.title ? (

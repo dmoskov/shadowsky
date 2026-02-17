@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image, Modal } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Modal } from "react-native";
+import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as Localization from "expo-localization";
@@ -1015,6 +1016,8 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
               <Image
                 source={{ uri: imagePicker.selectedImages[selectedImageIndex].uri }}
                 style={styles.modalImage}
+                contentFit="cover"
+                cachePolicy="memory-disk"
               />
             )}
             <TouchableOpacity
