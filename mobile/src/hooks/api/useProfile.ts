@@ -17,7 +17,7 @@ import {
   getBlocks,
 } from '../../services/atproto/profiles';
 import {mutationQueue} from '../../services/mutation-queue';
-
+import {invalidateMany} from '../../utils/query-helpers';
 
 import { createLogger } from '../../utils/logger';
 
@@ -139,9 +139,11 @@ export function useMuteUser() {
   return useMutation({
     mutationFn: muteUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['profile']});
-      queryClient.invalidateQueries({queryKey: ['mutes']});
-      queryClient.invalidateQueries({queryKey: ['mutedAccounts']});
+      invalidateMany(queryClient, [
+        {queryKey: ['profile']},
+        {queryKey: ['mutes']},
+        {queryKey: ['mutedAccounts']},
+      ]);
     },
   });
 }
@@ -155,9 +157,11 @@ export function useUnmuteUser() {
   return useMutation({
     mutationFn: unmuteUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['profile']});
-      queryClient.invalidateQueries({queryKey: ['mutes']});
-      queryClient.invalidateQueries({queryKey: ['mutedAccounts']});
+      invalidateMany(queryClient, [
+        {queryKey: ['profile']},
+        {queryKey: ['mutes']},
+        {queryKey: ['mutedAccounts']},
+      ]);
     },
   });
 }
@@ -171,9 +175,11 @@ export function useBlockUser() {
   return useMutation({
     mutationFn: blockUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['profile']});
-      queryClient.invalidateQueries({queryKey: ['blocks']});
-      queryClient.invalidateQueries({queryKey: ['blockedAccounts']});
+      invalidateMany(queryClient, [
+        {queryKey: ['profile']},
+        {queryKey: ['blocks']},
+        {queryKey: ['blockedAccounts']},
+      ]);
     },
   });
 }
@@ -187,9 +193,11 @@ export function useUnblockUser() {
   return useMutation({
     mutationFn: unblockUser,
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['profile']});
-      queryClient.invalidateQueries({queryKey: ['blocks']});
-      queryClient.invalidateQueries({queryKey: ['blockedAccounts']});
+      invalidateMany(queryClient, [
+        {queryKey: ['profile']},
+        {queryKey: ['blocks']},
+        {queryKey: ['blockedAccounts']},
+      ]);
     },
   });
 }
