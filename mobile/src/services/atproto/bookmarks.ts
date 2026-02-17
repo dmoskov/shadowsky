@@ -16,6 +16,9 @@ const BOOKMARKS_STORAGE_KEY = '@shadowsky/bookmarks';
 /** Maximum number of post URIs per getPosts() call (AT Protocol limit) */
 const BATCH_SIZE = 25;
 
+/** Maximum number of pages to fetch when paginating bookmark API results */
+const MAX_PAGES = 50;
+
 /**
  * Fetch posts in batches using getPosts() API instead of individual getPostThread() calls.
  * Chunks URIs into groups of 25 (API limit) and fetches batches concurrently.
@@ -122,6 +125,7 @@ async function getBookmarksFromApi(): Promise<BookmarkPost[]> {
   const agent = client.getAgent();
   const allBookmarks: BookmarkPost[] = [];
   let cursor: string | undefined;
+  let pageCount = 0;
 
   do {
     const response = await rateLimited(
@@ -157,6 +161,12 @@ async function getBookmarksFromApi(): Promise<BookmarkPost[]> {
       cursor = response.data.cursor;
     } else {
       cursor = undefined;
+    }
+
+    pageCount++;
+    if (pageCount >= MAX_PAGES) {
+      logger.error(`Bookmark pagination hit MAX_PAGES limit (${MAX_PAGES}), stopping`);
+      break;
     }
   } while (cursor);
 
