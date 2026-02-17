@@ -1,15 +1,19 @@
 import { Stack } from "expo-router";
+import { useTheme } from "../../../../src/contexts/ThemeContext";
 
 export default function ProfileLayout() {
+  const { colors } = useTheme();
+
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: "#0a0a0f" },
-        headerTintColor: "#ffffff",
-        contentStyle: { backgroundColor: "#0a0a0f" },
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.text,
+        contentStyle: { backgroundColor: colors.background },
+        headerBackTitle: "Back",
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: false, headerBackTitle: "Back" }} />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="edit" options={{ title: "Edit Profile" }} />
       <Stack.Screen name="user/[handle]" options={{ title: "Profile" }} />
       <Stack.Screen

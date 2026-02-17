@@ -223,6 +223,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   const [postUri, setPostUri] = useState<string | null>(null);
   const [isResolvingUri, setIsResolvingUri] = useState(false);
   const [resolveError, setResolveError] = useState<string | null>(null);
+  const [resolveRetry, setResolveRetry] = useState(0);
   const [replyText, setReplyText] = useState("");
   const [isReplyVisible, setIsReplyVisible] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -266,7 +267,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
     if (handle && postId) {
       resolveUri();
     }
-  }, [handle, postId]);
+  }, [handle, postId, resolveRetry]);
 
   // Fetch thread data
   const { data: thread, isLoading, error, refetch } = usePostThread(postUri || "");
@@ -726,7 +727,7 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   }
 
   if (resolveError) {
-    return <ErrorState message={resolveError} onRetry={refetch} />;
+    return <ErrorState message={resolveError} onRetry={() => setResolveRetry(n => n + 1)} />;
   }
 
   if (isLoading) {

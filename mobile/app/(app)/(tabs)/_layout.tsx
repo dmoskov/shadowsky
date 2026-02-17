@@ -3,6 +3,7 @@ import {Text, View} from 'react-native';
 import {HomeIcon, SearchIcon, BellIcon, PersonIcon} from '../../../src/components/icons';
 import {useUnreadCount} from '../../../src/hooks/api/useNotifications';
 import {useIPadLayout} from '../../../src/contexts/IPadLayoutContext';
+import {useTheme} from '../../../src/contexts/ThemeContext';
 
 function NotificationsBadge() {
   const {data: unreadCount} = useUnreadCount();
@@ -57,6 +58,7 @@ function NotificationsIcon({
 
 export default function TabsLayout() {
   const {isMultiColumn} = useIPadLayout();
+  const {colors} = useTheme();
 
   return (
     <Tabs
@@ -65,12 +67,12 @@ export default function TabsLayout() {
         tabBarStyle: isMultiColumn
           ? {display: 'none'}
           : {
-              backgroundColor: '#0a0a0f',
-              borderTopColor: '#1f2937',
+              backgroundColor: colors.background,
+              borderTopColor: colors.border,
               borderTopWidth: 1,
             },
-        tabBarActiveTintColor: '#3b82f6',
-        tabBarInactiveTintColor: '#6b7280',
+        tabBarActiveTintColor: colors.info,
+        tabBarInactiveTintColor: colors.textTertiary,
       }}>
       <Tabs.Screen
         name="(home)"

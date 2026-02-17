@@ -113,6 +113,7 @@ struct PostCardView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+            .contentShape(Rectangle())
             .onTapGesture {
                 onPressProfile?(post.post.author.handle)
             }

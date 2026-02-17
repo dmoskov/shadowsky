@@ -1,15 +1,19 @@
 import { Stack } from "expo-router";
+import { useTheme } from "../../../../src/contexts/ThemeContext";
 
 export default function HomeLayout() {
+  const { colors } = useTheme();
+
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: "#0a0a0f" },
-        headerTintColor: "#ffffff",
-        contentStyle: { backgroundColor: "#0a0a0f" },
+        headerStyle: { backgroundColor: colors.background },
+        headerTintColor: colors.text,
+        contentStyle: { backgroundColor: colors.background },
+        headerBackTitle: "Back",
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: false, headerBackTitle: "Back" }} />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="timeline" options={{ title: "Timeline" }} />
       <Stack.Screen
         name="thread/[postId]"
