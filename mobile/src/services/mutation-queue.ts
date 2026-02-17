@@ -388,6 +388,7 @@ class MutationQueue {
       this.processingTimer = null;
     }
     this.listeners.clear();
+    this.isProcessing = false;
     this.isInitialized = false;
   }
 }

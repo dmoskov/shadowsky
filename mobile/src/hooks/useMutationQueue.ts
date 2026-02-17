@@ -118,6 +118,7 @@ export function useMutationQueue(): UseMutationQueueReturn {
 
     return () => {
       mounted = false;
+      mutationQueue.destroy();
     };
   }, []);
 
