@@ -7,6 +7,8 @@ import {VideoEmbed} from './VideoEmbed';
 
 interface PostEmbedProps {
   embed: AppBskyFeedDefs.PostView['embed'];
+  postUri?: string;
+  isVisible?: boolean;
   onImagePress?: (images: Array<{thumb: string; fullsize: string; alt?: string}>, index: number) => void;
   onLinkPress?: (url: string) => void;
   onQuotePress?: (uri: string, handle: string) => void;
@@ -15,6 +17,8 @@ interface PostEmbedProps {
 
 export function PostEmbed({
   embed,
+  postUri,
+  isVisible = false,
   onImagePress,
   onLinkPress,
   onQuotePress,
@@ -41,6 +45,8 @@ export function PostEmbed({
         {embed.media && (
           <PostEmbed
             embed={embed.media as AppBskyFeedDefs.PostView['embed']}
+            postUri={postUri}
+            isVisible={isVisible}
             onImagePress={onImagePress}
             onLinkPress={onLinkPress}
             onQuotePress={onQuotePress}
@@ -55,7 +61,7 @@ export function PostEmbed({
   }
 
   if (AppBskyEmbedVideo.isView(embed)) {
-    return <VideoEmbed video={embed} onPress={onLinkPress} />;
+    return <VideoEmbed video={embed} postUri={postUri} isVisible={isVisible} onPress={onLinkPress} />;
   }
 
   return null;
