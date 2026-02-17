@@ -157,6 +157,11 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
     refetch: refetchActors,
   } = useSearchActors(activeTab === "people" ? debouncedQuery : "");
 
+  const apiFilters = useMemo(() => {
+    const { mediaFilter: _media, ...rest } = filters;
+    return rest;
+  }, [filters]);
+
   const {
     data: postsData,
     isLoading: isLoadingPosts,
@@ -167,7 +172,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
     refetch: refetchPosts,
   } = useSearchPosts(
     activeTab === "posts" || activeTab === "hashtags" ? effectiveQuery : "",
-    filters
+    apiFilters
   );
 
   const posts = useMemo(() => {
@@ -258,6 +263,8 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
     setFilters(newFilters);
   }, []);
 
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.sort !== "top") count++;
@@ -333,8 +340,6 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
       <Text style={styles.historyText}>{item}</Text>
     </TouchableOpacity>
   );
-
-  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -486,7 +491,10 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
               onProfilePress={handleProfilePress}
               onBookmark={handleBookmark}
               isBookmarked={isBookmarked}
-              emptyMessage={renderEmptyState() as any}
+              emptyMessage={!debouncedQuery
+                ? (activeTab === "hashtags" ? "Search for posts by hashtag" : "Search for posts by keyword")
+                : "No results found"
+              }
             />
           )}
         </>

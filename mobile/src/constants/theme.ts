@@ -54,7 +54,7 @@ export const lightColors = {
   background: "#ffffff",
   surface: "#f9fafb",
   surfaceAlt: "#f3f4f6",
-  surfaceElevated: "#ffffff",
+  surfaceElevated: "#f3f4f6",
   border: "#e5e7eb",
   borderLight: "#d1d5db",
   borderDark: "#111827",

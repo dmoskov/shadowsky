@@ -248,7 +248,7 @@ export function SearchFilterSheet({
               )}
 
               {/* Sort By */}
-              <Text style={styles.sectionLabel}>Sort By</Text>
+              <Text style={[styles.sectionLabel, styles.sectionSpacing]}>Sort By</Text>
               <View style={styles.optionRow}>
                 {(['top', 'latest'] as const).map((sort) => (
                   <TouchableOpacity
@@ -273,7 +273,7 @@ export function SearchFilterSheet({
               </View>
 
               {/* Media Type */}
-              <Text style={styles.sectionLabel}>Media Type</Text>
+              <Text style={[styles.sectionLabel, styles.sectionSpacing]}>Media Type</Text>
               <View style={styles.optionRow}>
                 {mediaTypes.map((type) => (
                   <TouchableOpacity
@@ -514,6 +514,8 @@ function createStyles(colors: any) {
       fontSize: 14,
       fontWeight: '600',
       color: colors.textSecondary,
+    },
+    sectionSpacing: {
       marginTop: 16,
       marginBottom: 8,
     },
