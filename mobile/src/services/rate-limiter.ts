@@ -47,6 +47,7 @@ export enum ATProtoEndpointType {
   RECORD = 'record',
   UPLOAD = 'upload',
   NOTIFICATION = 'notification',
+  CHAT = 'chat',
 }
 
 /**
@@ -258,6 +259,11 @@ const DEFAULT_CONFIGS: Record<ATProtoEndpointType, RateLimiterConfig> = {
     refillInterval: 6000, // 10 per minute = 1 per 6 seconds
   },
   [ATProtoEndpointType.NOTIFICATION]: {
+    capacity: 15,
+    refillRate: 1,
+    refillInterval: 4000, // 15 per minute = 1 per 4 seconds
+  },
+  [ATProtoEndpointType.CHAT]: {
     capacity: 15,
     refillRate: 1,
     refillInterval: 4000, // 15 per minute = 1 per 4 seconds
