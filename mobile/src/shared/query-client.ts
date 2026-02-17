@@ -4,6 +4,13 @@
  * and persistent offline cache for viewing content without network connection
  */
 
+/**
+ * Captured at module load time to measure cold start performance.
+ * Used by PersistQueryClientProvider's onSuccess callback to report
+ * how long cache deserialization took.
+ */
+export const startupTimestamp = Date.now();
+
 import { QueryClient, QueryCache, MutationCache, onlineManager } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';

@@ -196,31 +196,41 @@ describe('auth-service', () => {
       expect(result).toBeNull();
     });
 
-    it('should handle expired session by refreshing', async () => {
+    it('should return session immediately and refresh profile in background', async () => {
       mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockStoredSession));
       mockAgent.getProfile.mockRejectedValueOnce(new Error('Unauthorized'));
 
       const result = await resumeSession();
 
-      expect(mockClient.refreshSession).toHaveBeenCalled();
-      expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-        '@shadowsky/auth_session',
-        expect.stringContaining('new-access-jwt')
-      );
+      // resumeSession now returns immediately after client.resumeSession,
+      // deferring profile refresh to the background for faster cold start.
       expect(result).toBeTruthy();
+      expect(result?.did).toBe(mockSessionData.did);
+
+      // Allow background refreshProfileInBackground to settle
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      // Background refresh should have attempted token refresh
+      expect(mockClient.refreshSession).toHaveBeenCalled();
     });
 
-    it('should sign out if session refresh fails', async () => {
+    it('should sign out in background if session refresh fails', async () => {
       mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockStoredSession));
       mockAgent.getProfile.mockRejectedValue(new Error('Unauthorized'));
       mockClient.refreshSession.mockRejectedValue(new Error('Refresh failed'));
 
       const result = await resumeSession();
 
+      // resumeSession returns the stored session immediately; sign-out
+      // happens in the background when both profile fetch and token refresh fail.
+      expect(result).toBeTruthy();
+
+      // Allow background refreshProfileInBackground to settle
+      await new Promise(resolve => setTimeout(resolve, 50));
+
       expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith('@shadowsky/auth_session');
       expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith('@shadowsky/active_account');
       expect(clientModule.resetAtProtoClient).toHaveBeenCalled();
-      expect(result).toBeNull();
     });
 
     it('should return null on invalid JSON in storage', async () => {

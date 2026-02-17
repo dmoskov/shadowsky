@@ -100,7 +100,13 @@ export async function signInWithOAuth(
 }
 
 /**
- * Resume existing session from storage
+ * Resume existing session from storage.
+ *
+ * Returns the cached session immediately after restoring credentials so the
+ * app can render the authenticated UI without waiting for a network round-trip.
+ * Profile data (avatar, displayName) is refreshed in the background via
+ * `refreshProfileInBackground` and the returned callback, keeping the cold
+ * start path off the critical rendering chain.
  */
 export async function resumeSession(): Promise<StoredSession | null> {
   try {
@@ -114,35 +120,48 @@ export async function resumeSession(): Promise<StoredSession | null> {
     const client = getAtProtoClient();
     await client.resumeSession(session);
 
-    try {
-      const agent = client.getAgent();
-      const profile = await agent.getProfile({actor: session.did});
-
-      session.account = {
-        ...session.account,
-        handle: profile.data.handle,
-        displayName: profile.data.displayName,
-        avatar: profile.data.avatar,
-      };
-
-      await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-      await addSession(session);
-    } catch {
-      // Session might be expired, try to refresh
-      try {
-        const refreshedSession = await client.refreshSession();
-        session.accessJwt = refreshedSession.accessJwt;
-        session.refreshJwt = refreshedSession.refreshJwt;
-        await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-      } catch {
-        await signOut();
-        return null;
-      }
-    }
+    // Return immediately — profile refresh happens in the background so the
+    // provider chain and first feed frame are not blocked by a network call.
+    refreshProfileInBackground(session);
 
     return session;
   } catch {
     return null;
+  }
+}
+
+/**
+ * Refresh the user's profile data in the background after session resume.
+ * Updates stored session with latest handle/displayName/avatar without
+ * blocking the cold start path.
+ */
+async function refreshProfileInBackground(session: StoredSession): Promise<void> {
+  try {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
+    const profile = await agent.getProfile({actor: session.did});
+
+    session.account = {
+      ...session.account,
+      handle: profile.data.handle,
+      displayName: profile.data.displayName,
+      avatar: profile.data.avatar,
+    };
+
+    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+    await addSession(session);
+  } catch {
+    // Profile fetch failed — session tokens may be stale. Attempt a refresh.
+    try {
+      const client = getAtProtoClient();
+      const refreshedSession = await client.refreshSession();
+      session.accessJwt = refreshedSession.accessJwt;
+      session.refreshJwt = refreshedSession.refreshJwt;
+      await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+    } catch {
+      // Token refresh also failed — sign the user out so they can re-auth.
+      await signOut();
+    }
   }
 }
 

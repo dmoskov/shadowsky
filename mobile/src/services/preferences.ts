@@ -1,5 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { MMKV } from "react-native-mmkv";
 
 import { createLogger } from '../utils/logger';
 
@@ -54,7 +53,7 @@ export interface AppPreferences {
   enableThreadSummaryPreGen: boolean;
 }
 
-const PREFERENCES_KEY = "@shadowsky_preferences";
+const PREFERENCES_KEY = "shadowsky_preferences";
 
 // Default preferences
 const DEFAULT_PREFERENCES: AppPreferences = {
@@ -99,32 +98,90 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   enableThreadSummaryPreGen: true,
 };
 
+/**
+ * MMKV-backed preferences storage.
+ *
+ * Migrated from AsyncStorage to MMKV for synchronous reads on the cold start
+ * path. MMKV is a C++ key-value store (~30x faster than AsyncStorage) that
+ * avoids the JS bridge overhead, making preference loading non-blocking and
+ * eliminating an async gap before the first frame.
+ */
+const mmkvPreferences = new MMKV({ id: 'shadowsky-preferences' });
+
 class PreferencesService {
   private cache: AppPreferences | null = null;
 
-  /**
-   * Get all preferences
-   */
-  async get(): Promise<AppPreferences> {
-    // Return cached preferences if available
-    if (this.cache) {
-      return this.cache;
-    }
+  constructor() {
+    // Attempt one-time migration from AsyncStorage (@ prefixed key) to MMKV.
+    // This runs synchronously on first access; if there is no MMKV value yet
+    // but AsyncStorage had data, the PreferencesContext will call migrateFromAsyncStorage().
+    this._loadFromMMKV();
+  }
 
+  /**
+   * Synchronously load preferences from MMKV into cache.
+   */
+  private _loadFromMMKV(): void {
     try {
-      const stored = await AsyncStorage.getItem(PREFERENCES_KEY);
+      const stored = mmkvPreferences.getString(PREFERENCES_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as AppPreferences;
         this.cache = { ...DEFAULT_PREFERENCES, ...parsed };
-        return this.cache;
+      } else {
+        this.cache = DEFAULT_PREFERENCES;
       }
     } catch (error) {
-      logger.error('Failed to load preferences:', error);
+      logger.error('Failed to load preferences from MMKV:', error);
+      this.cache = DEFAULT_PREFERENCES;
+    }
+  }
+
+  /**
+   * Migrate preferences from AsyncStorage to MMKV (one-time).
+   * Call this early in the app lifecycle. If MMKV already has data this is a no-op.
+   */
+  async migrateFromAsyncStorage(): Promise<void> {
+    // Only migrate if MMKV is empty (first launch after upgrade)
+    if (mmkvPreferences.getString(PREFERENCES_KEY)) {
+      return;
     }
 
-    // Return default preferences
-    this.cache = DEFAULT_PREFERENCES;
-    return DEFAULT_PREFERENCES;
+    try {
+      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+      const stored = await AsyncStorage.getItem('@shadowsky_preferences');
+      if (stored) {
+        mmkvPreferences.set(PREFERENCES_KEY, stored);
+        this._loadFromMMKV();
+        // Clean up old key after successful migration
+        await AsyncStorage.removeItem('@shadowsky_preferences');
+      }
+    } catch (error) {
+      logger.error('Failed to migrate preferences from AsyncStorage:', error);
+    }
+  }
+
+  /**
+   * Get all preferences (synchronous — returns cached MMKV data).
+   * The async signature is preserved for backward compatibility with callers.
+   */
+  async get(): Promise<AppPreferences> {
+    if (this.cache) {
+      return this.cache;
+    }
+    this._loadFromMMKV();
+    return this.cache!;
+  }
+
+  /**
+   * Get preferences synchronously (no await needed).
+   * Preferred on the cold start path to avoid async gaps.
+   */
+  getSync(): AppPreferences {
+    if (this.cache) {
+      return this.cache;
+    }
+    this._loadFromMMKV();
+    return this.cache!;
   }
 
   /**
@@ -132,9 +189,9 @@ class PreferencesService {
    */
   async set(key: keyof AppPreferences, value: unknown): Promise<void> {
     try {
-      const current = await this.get();
+      const current = this.getSync();
       const updated = { ...current, [key]: value };
-      await AsyncStorage.setItem(PREFERENCES_KEY, JSON.stringify(updated));
+      mmkvPreferences.set(PREFERENCES_KEY, JSON.stringify(updated));
       this.cache = updated;
     } catch (error) {
       logger.error('Failed to save preference:', error);
@@ -147,9 +204,9 @@ class PreferencesService {
    */
   async setMultiple(updates: Partial<AppPreferences>): Promise<void> {
     try {
-      const current = await this.get();
+      const current = this.getSync();
       const updated = { ...current, ...updates };
-      await AsyncStorage.setItem(PREFERENCES_KEY, JSON.stringify(updated));
+      mmkvPreferences.set(PREFERENCES_KEY, JSON.stringify(updated));
       this.cache = updated;
     } catch (error) {
       logger.error('Failed to save preferences:', error);
@@ -162,7 +219,7 @@ class PreferencesService {
    */
   async reset(): Promise<void> {
     try {
-      await AsyncStorage.removeItem(PREFERENCES_KEY);
+      mmkvPreferences.delete(PREFERENCES_KEY);
       this.cache = DEFAULT_PREFERENCES;
     } catch (error) {
       logger.error('Failed to reset preferences:', error);

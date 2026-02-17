@@ -3,7 +3,7 @@ import * as Device from "expo-device";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState, useRef } from "react";
-import { LogBox, Platform, AppState, AppStateStatus } from "react-native";
+import { InteractionManager, LogBox, Platform, AppState, AppStateStatus } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // Suppress known harmless warnings from dependencies
@@ -34,6 +34,7 @@ import {
   setupNetworkListener,
   PersistQueryClientProvider,
   persistOptions,
+  startupTimestamp,
 } from "../src/shared/query-client";
 import { registerBackgroundFetch } from "../src/services/background-fetch";
 import {
@@ -139,32 +140,35 @@ function RootLayout() {
   useImageMemoryManagement();
 
   useEffect(() => {
-    // Set device and app tags for Sentry
-    setTags({
-      app_version: Constants.expoConfig?.version || "unknown",
-      platform: Platform.OS,
-      os_version: Platform.Version?.toString() || "unknown",
-      device_model: Device.modelName || "unknown",
-      device_brand: Device.brand || "unknown",
-    });
-
-    // Setup AppState listener for query invalidation on foreground
+    // Critical path: AppState and network listeners are needed immediately
+    // for correct query behavior and online/offline handling.
     const cleanup = setupAppStateListener();
-
-    // Setup network listener for online/offline handling
     setupNetworkListener();
 
-    // Register background fetch for fresh content
-    registerBackgroundFetch();
-
-    // Setup offline storage cleanup (periodic eviction of old cached data)
+    // Deferred work: background fetch registration, offline storage cleanup,
+    // and Sentry tagging are not needed for the first frame. Run them after
+    // the initial render + animations complete so they don't compete with
+    // the feed list layout pass.
     let offlineCleanup: (() => void) | undefined;
-    setupOfflineStorageCleanup().then(teardown => {
-      offlineCleanup = teardown;
+    const deferredHandle = InteractionManager.runAfterInteractions(() => {
+      setTags({
+        app_version: Constants.expoConfig?.version || "unknown",
+        platform: Platform.OS,
+        os_version: Platform.Version?.toString() || "unknown",
+        device_model: Device.modelName || "unknown",
+        device_brand: Device.brand || "unknown",
+      });
+
+      registerBackgroundFetch();
+
+      setupOfflineStorageCleanup().then(teardown => {
+        offlineCleanup = teardown;
+      });
     });
 
     return () => {
       cleanup();
+      deferredHandle.cancel();
       offlineCleanup?.();
     };
   }, []);
@@ -176,6 +180,16 @@ function RootLayout() {
           <PersistQueryClientProvider
             client={queryClient}
             persistOptions={persistOptions}
+            onSuccess={() => {
+              // Log how long cache restoration took from module load.
+              // This is the time PersistQueryClientProvider spent deserializing
+              // the MMKV-backed query cache before children could render.
+              if (__DEV__) {
+                const elapsed = Date.now() - startupTimestamp;
+                // eslint-disable-next-line no-console
+                console.log(`[Startup] Query cache restored in ${elapsed}ms`);
+              }
+            }}
           >
             <AuthProvider>
               <PreferencesProvider>

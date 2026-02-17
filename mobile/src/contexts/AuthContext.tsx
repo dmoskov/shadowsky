@@ -254,8 +254,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const restoredSession = await resumeSession();
       if (restoredSession) {
         setSession(restoredSession);
-        // Set user context for error tracking
-        await setUser(restoredSession.did);
+        // Set user context for error tracking (fire-and-forget — don't
+        // block the loading gate on a non-critical side-effect)
+        setUser(restoredSession.did).catch(() => {});
         addBreadcrumb("auth", "Session restored on app start");
       }
     } catch {
