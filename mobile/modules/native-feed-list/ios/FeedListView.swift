@@ -11,6 +11,30 @@ import ExpoModulesCore
 import FeedBridge
 import ExpoSwiftUIFeed
 
+// MARK: - Pre-computed Post Model
+
+/// Holds a pre-converted FeedViewPost alongside its serialized source data.
+/// Conversions happen once when data arrives, not per-cell during render.
+struct ConvertedFeedPost: Identifiable {
+    let id: String // post URI
+    let feedViewPost: FeedViewPost
+    let isBookmarked: Bool
+    let sourcePost: SerializedFeedViewPost
+}
+
+// MARK: - Feed List Props
+
+/// ObservableObject for props passed from React Native.
+/// Using an observable object allows SwiftUI to diff individual property
+/// changes instead of replacing the entire rootView on every prop update.
+class FeedListProps: ObservableObject {
+    @Published var isLoading: Bool = false
+    @Published var isRefreshing: Bool = false
+    @Published var isLoadingMore: Bool = false
+    @Published var error: String? = nil
+    @Published var emptyMessage: String = "No posts yet"
+}
+
 // MARK: - FeedListView
 
 /// SwiftUI view that displays a scrollable feed of posts
@@ -21,12 +45,8 @@ struct FeedListView: View {
     // Feed data
     @StateObject private var feedState = FeedState()
 
-    // Configuration
-    let isLoading: Bool
-    let isRefreshing: Bool
-    let isLoadingMore: Bool
-    let error: String?
-    let emptyMessage: String
+    // Configuration (observable to avoid full rootView replacement)
+    @ObservedObject var props: FeedListProps
 
     // Event handlers (sent back to React Native)
     let onRefresh: (() -> Void)?
@@ -48,11 +68,11 @@ struct FeedListView: View {
 
     var body: some View {
         ZStack {
-            if isLoading && feedState.posts.isEmpty {
+            if props.isLoading && feedState.convertedPosts.isEmpty {
                 loadingView
-            } else if let error = error, feedState.posts.isEmpty {
+            } else if let error = props.error, feedState.convertedPosts.isEmpty {
                 errorView(error)
-            } else if feedState.posts.isEmpty {
+            } else if feedState.convertedPosts.isEmpty {
                 emptyView
             } else {
                 feedScrollView
@@ -73,47 +93,47 @@ struct FeedListView: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 // Pull to refresh indicator
-                if isRefreshing {
+                if props.isRefreshing {
                     ProgressView()
                         .padding()
                 }
 
-                // Post items
-                ForEach(feedState.posts, id: \.post.uri) { feedPost in
+                // Post items - uses pre-computed conversions
+                ForEach(feedState.convertedPosts) { converted in
                     PostCardView(
-                        post: convertToFeedViewPost(feedPost),
-                        isBookmarked: feedPost.isBookmarked ?? false,
+                        post: converted.feedViewPost,
+                        isBookmarked: converted.isBookmarked,
                         isOnline: true,
                         currentUserDid: nil,
                         onPress: {
-                            onPostPress?(feedPost.post.uri, feedPost.post.author.handle)
+                            onPostPress?(converted.sourcePost.post.uri, converted.sourcePost.post.author.handle)
                         },
                         onPressProfile: { handle in
                             onProfilePress?(handle)
                         },
                         onLike: {
                             onLike?(
-                                feedPost.post.uri,
-                                feedPost.post.cid,
-                                feedPost.post.viewer?.like
+                                converted.sourcePost.post.uri,
+                                converted.sourcePost.post.cid,
+                                converted.sourcePost.post.viewer?.like
                             )
                         },
                         onRepost: {
                             onRepost?(
-                                feedPost.post.uri,
-                                feedPost.post.cid,
-                                feedPost.post.viewer?.repost
+                                converted.sourcePost.post.uri,
+                                converted.sourcePost.post.cid,
+                                converted.sourcePost.post.viewer?.repost
                             )
                         },
                         onReply: {
                             onReply?(
-                                feedPost.post.uri,
-                                feedPost.post.cid,
-                                feedPost.post.author.handle
+                                converted.sourcePost.post.uri,
+                                converted.sourcePost.post.cid,
+                                converted.sourcePost.post.author.handle
                             )
                         },
                         onBookmark: {
-                            onBookmark?(feedPost.post.uri)
+                            onBookmark?(converted.sourcePost.post.uri)
                         },
                         onMentionPress: { handle, did in
                             onMentionPress?(handle, did)
@@ -122,7 +142,7 @@ struct FeedListView: View {
                             onHashtagPress?(tag)
                         },
                         onShare: {
-                            onShare?(feedPost.post.uri)
+                            onShare?(converted.sourcePost.post.uri)
                         },
                         onMute: nil,
                         onBlock: nil,
@@ -132,11 +152,11 @@ struct FeedListView: View {
                     )
 
                     // Load more trigger - fire when near end of list
-                    if feedPost.post.uri == feedState.posts.dropLast(min(3, feedState.posts.count)).last?.post.uri {
+                    if converted.id == feedState.convertedPosts.dropLast(min(3, feedState.convertedPosts.count)).last?.id {
                         Color.clear
                             .frame(height: 1)
                             .onAppear {
-                                if !isLoadingMore {
+                                if !props.isLoadingMore {
                                     onLoadMore?()
                                 }
                             }
@@ -144,7 +164,7 @@ struct FeedListView: View {
                 }
 
                 // Loading more indicator
-                if isLoadingMore {
+                if props.isLoadingMore {
                     ProgressView()
                         .padding()
                 }
@@ -195,76 +215,23 @@ struct FeedListView: View {
                 .font(.system(size: 48))
                 .foregroundColor(.secondary)
 
-            Text(emptyMessage)
+            Text(props.emptyMessage)
                 .foregroundColor(.secondary)
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
         }
     }
-
-    // MARK: - Conversion Helpers
-
-    /// Convert SerializedFeedViewPost to FeedViewPost for PostCardView
-    private func convertToFeedViewPost(_ serializedPost: SerializedFeedViewPost) -> FeedViewPost {
-        let post = serializedPost.post
-
-        return FeedViewPost(
-            post: PostView(
-                uri: post.uri,
-                cid: post.cid,
-                author: PostAuthor(
-                    did: post.author.did,
-                    handle: post.author.handle,
-                    displayName: post.author.displayName,
-                    avatar: post.author.avatar
-                ),
-                record: PostRecord(
-                    text: post.record.text,
-                    facets: convertFacets(post.record.facets),
-                    createdAt: post.record.createdAt,
-                    embed: post.embed.flatMap { PostEmbedData.from(serializedEmbed: $0) }
-                ),
-                indexedAt: post.indexedAt,
-                likeCount: post.likeCount ?? 0,
-                repostCount: post.repostCount ?? 0,
-                replyCount: post.replyCount ?? 0,
-                viewer: post.viewer.map { PostViewer(like: $0.like, repost: $0.repost) },
-                labels: post.labels?.map { ContentLabel(val: $0.val, src: $0.src) }
-            )
-        )
-    }
-
-    /// Convert serialized facets to PostFacet
-    private func convertFacets(_ facets: [Facet]?) -> [PostFacet]? {
-        guard let facets = facets else { return nil }
-
-        return facets.map { facet in
-            PostFacet(
-                index: PostFacetIndex(
-                    byteStart: facet.index.byteStart,
-                    byteEnd: facet.index.byteEnd
-                ),
-                features: facet.features.compactMap { feature in
-                    switch feature {
-                    case .mention(let mention):
-                        return .mention(did: mention.did)
-                    case .link(let link):
-                        return .link(uri: link.uri)
-                    case .tag(let tag):
-                        return .hashtag(tag: tag.tag)
-                    }
-                }
-            )
-        }
-    }
 }
 
 // MARK: - Feed State
 
-/// Observable object that manages feed data from FeedBridge
+/// Observable object that manages feed data from FeedBridge.
+/// Pre-computes FeedViewPost conversions when data arrives so the
+/// ForEach body doesn't run convertToFeedViewPost per cell per render.
 class FeedState: ObservableObject {
     @Published var posts: [SerializedFeedViewPost] = []
+    @Published var convertedPosts: [ConvertedFeedPost] = []
 
     private var feedDataObserver: NSObjectProtocol?
     private var incrementalUpdateObserver: NSObjectProtocol?
@@ -278,7 +245,7 @@ class FeedState: ObservableObject {
             queue: .main
         ) { [weak self] notification in
             if let feedData = notification.userInfo?["feedData"] as? SerializedFeedData {
-                self?.posts = feedData.posts
+                self?.updatePosts(feedData.posts)
             }
         }
 
@@ -348,13 +315,19 @@ class FeedState: ObservableObject {
                         }
 
                         // Update the post
-                        self.posts[index] = SerializedFeedViewPost(
+                        let updatedPost = SerializedFeedViewPost(
                             post: post,
                             reply: self.posts[index].reply,
                             reason: self.posts[index].reason,
                             feedContext: self.posts[index].feedContext,
                             isBookmarked: update.isBookmarked ?? self.posts[index].isBookmarked
                         )
+                        self.posts[index] = updatedPost
+
+                        // Re-convert only the changed post
+                        if index < self.convertedPosts.count {
+                            self.convertedPosts[index] = Self.convertPost(updatedPost)
+                        }
                     }
                 }
             }
@@ -367,6 +340,7 @@ class FeedState: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             self?.posts = []
+            self?.convertedPosts = []
         }
     }
 
@@ -381,6 +355,75 @@ class FeedState: ObservableObject {
             NotificationCenter.default.removeObserver(observer)
         }
     }
+
+    // MARK: - Pre-computation
+
+    private func updatePosts(_ newPosts: [SerializedFeedViewPost]) {
+        posts = newPosts
+        convertedPosts = newPosts.map { Self.convertPost($0) }
+    }
+
+    /// Convert a single SerializedFeedViewPost to ConvertedFeedPost.
+    /// This is a static method so it can be called without capturing self.
+    static func convertPost(_ serializedPost: SerializedFeedViewPost) -> ConvertedFeedPost {
+        let post = serializedPost.post
+
+        let feedViewPost = FeedViewPost(
+            post: PostView(
+                uri: post.uri,
+                cid: post.cid,
+                author: PostAuthor(
+                    did: post.author.did,
+                    handle: post.author.handle,
+                    displayName: post.author.displayName,
+                    avatar: post.author.avatar
+                ),
+                record: PostRecord(
+                    text: post.record.text,
+                    facets: Self.convertFacets(post.record.facets),
+                    createdAt: post.record.createdAt,
+                    embed: post.embed.flatMap { PostEmbedData.from(serializedEmbed: $0) }
+                ),
+                indexedAt: post.indexedAt,
+                likeCount: post.likeCount ?? 0,
+                repostCount: post.repostCount ?? 0,
+                replyCount: post.replyCount ?? 0,
+                viewer: post.viewer.map { PostViewer(like: $0.like, repost: $0.repost) },
+                labels: post.labels?.map { ContentLabel(val: $0.val, src: $0.src) }
+            )
+        )
+
+        return ConvertedFeedPost(
+            id: post.uri,
+            feedViewPost: feedViewPost,
+            isBookmarked: serializedPost.isBookmarked ?? false,
+            sourcePost: serializedPost
+        )
+    }
+
+    /// Convert serialized facets to PostFacet
+    private static func convertFacets(_ facets: [Facet]?) -> [PostFacet]? {
+        guard let facets = facets else { return nil }
+
+        return facets.map { facet in
+            PostFacet(
+                index: PostFacetIndex(
+                    byteStart: facet.index.byteStart,
+                    byteEnd: facet.index.byteEnd
+                ),
+                features: facet.features.compactMap { feature in
+                    switch feature {
+                    case .mention(let mention):
+                        return .mention(did: mention.did)
+                    case .link(let link):
+                        return .link(uri: link.uri)
+                    case .tag(let tag):
+                        return .hashtag(tag: tag.tag)
+                    }
+                }
+            )
+        }
+    }
 }
 
 // MARK: - Preview
@@ -388,12 +431,9 @@ class FeedState: ObservableObject {
 #if DEBUG
 struct FeedListView_Previews: PreviewProvider {
     static var previews: some View {
+        let props = FeedListProps()
         FeedListView(
-            isLoading: false,
-            isRefreshing: false,
-            isLoadingMore: false,
-            error: nil,
-            emptyMessage: "No posts yet",
+            props: props,
             onRefresh: { print("Refresh") },
             onLoadMore: { print("Load more") },
             onPostPress: { uri, handle in print("Post: \(uri)") },

@@ -9,6 +9,43 @@
 import SwiftUI
 import NotificationBridge
 
+// MARK: - Static Date Formatters
+
+private enum NotificationDateFormatting {
+    static let iso8601WithFractional: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    static let iso8601Standard: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    static func relativeTimeString(from isoString: String) -> String {
+        guard let date = iso8601WithFractional.date(from: isoString)
+                ?? iso8601Standard.date(from: isoString) else {
+            return ""
+        }
+
+        let interval = Date().timeIntervalSince(date)
+
+        if interval < 60 {
+            return "now"
+        } else if interval < 3600 {
+            return "\(Int(interval / 60))m"
+        } else if interval < 86400 {
+            return "\(Int(interval / 3600))h"
+        } else if interval < 604800 {
+            return "\(Int(interval / 86400))d"
+        } else {
+            return "\(Int(interval / 604800))w"
+        }
+    }
+}
+
 // MARK: - NotificationCellView
 
 /// SwiftUI view for a single notification
@@ -77,7 +114,7 @@ struct NotificationCellView: View {
                         Spacer()
 
                         // Timestamp
-                        Text(relativeTimeString(from: notification.indexedAt))
+                        Text(NotificationDateFormatting.relativeTimeString(from: notification.indexedAt))
                             .font(.system(size: 12))
                             .foregroundColor(.secondary)
                     }
@@ -189,33 +226,6 @@ struct NotificationCellView: View {
         }
     }
 
-    private func relativeTimeString(from isoString: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-        guard let date = formatter.date(from: isoString) ?? ISO8601DateFormatter().date(from: isoString) else {
-            return ""
-        }
-
-        let now = Date()
-        let interval = now.timeIntervalSince(date)
-
-        if interval < 60 {
-            return "now"
-        } else if interval < 3600 {
-            let minutes = Int(interval / 60)
-            return "\(minutes)m"
-        } else if interval < 86400 {
-            let hours = Int(interval / 3600)
-            return "\(hours)h"
-        } else if interval < 604800 {
-            let days = Int(interval / 86400)
-            return "\(days)d"
-        } else {
-            let weeks = Int(interval / 604800)
-            return "\(weeks)w"
-        }
-    }
 }
 
 // MARK: - AggregatedNotificationCellView
@@ -290,7 +300,7 @@ struct AggregatedNotificationCellView: View {
                 Spacer()
 
                 // Timestamp
-                Text(relativeTimeString(from: aggregatedNotification.latestTimestamp))
+                Text(NotificationDateFormatting.relativeTimeString(from: aggregatedNotification.latestTimestamp))
                     .font(.system(size: 12))
                     .foregroundColor(.secondary)
             }
@@ -383,33 +393,6 @@ struct AggregatedNotificationCellView: View {
         }
     }
 
-    private func relativeTimeString(from isoString: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-        guard let date = formatter.date(from: isoString) ?? ISO8601DateFormatter().date(from: isoString) else {
-            return ""
-        }
-
-        let now = Date()
-        let interval = now.timeIntervalSince(date)
-
-        if interval < 60 {
-            return "now"
-        } else if interval < 3600 {
-            let minutes = Int(interval / 60)
-            return "\(minutes)m"
-        } else if interval < 86400 {
-            let hours = Int(interval / 3600)
-            return "\(hours)h"
-        } else if interval < 604800 {
-            let days = Int(interval / 86400)
-            return "\(days)d"
-        } else {
-            let weeks = Int(interval / 604800)
-            return "\(weeks)w"
-        }
-    }
 }
 
 // MARK: - RichTextView

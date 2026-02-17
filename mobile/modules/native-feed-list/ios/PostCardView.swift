@@ -10,6 +10,45 @@ import ExpoSwiftUIFeed
 import struct RichTextView.RichTextView
 import FeedBridge
 
+// MARK: - Static Date Formatters
+
+/// Shared ISO8601 formatters to avoid per-cell allocation overhead.
+/// ISO8601DateFormatter is expensive to create and should be reused.
+enum DateFormatting {
+    static let iso8601WithFractional: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    static let iso8601Standard: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    static func parseISO8601(_ isoString: String) -> Date? {
+        return iso8601WithFractional.date(from: isoString)
+            ?? iso8601Standard.date(from: isoString)
+    }
+
+    static func relativeTimeString(from isoString: String) -> String {
+        guard let date = parseISO8601(isoString) else { return "" }
+
+        let interval = Date().timeIntervalSince(date)
+
+        if interval < 60 {
+            return "\(Int(interval))s"
+        } else if interval < 3600 {
+            return "\(Int(interval / 60))m"
+        } else if interval < 86400 {
+            return "\(Int(interval / 3600))h"
+        } else {
+            return "\(Int(interval / 86400))d"
+        }
+    }
+}
+
 struct PostCardView: View {
     let post: FeedViewPost
     let isBookmarked: Bool
@@ -70,7 +109,7 @@ struct PostCardView: View {
                 Spacer()
 
                 // Timestamp
-                Text(relativeTime(post.post.record.createdAt))
+                Text(DateFormatting.relativeTimeString(from: post.post.record.createdAt))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -207,24 +246,4 @@ struct PostCardView: View {
         return "\(count)"
     }
 
-    private func relativeTime(_ isoString: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-        guard let date = formatter.date(from: isoString) ?? ISO8601DateFormatter().date(from: isoString) else {
-            return ""
-        }
-
-        let interval = Date().timeIntervalSince(date)
-
-        if interval < 60 {
-            return "\(Int(interval))s"
-        } else if interval < 3600 {
-            return "\(Int(interval / 60))m"
-        } else if interval < 86400 {
-            return "\(Int(interval / 3600))h"
-        } else {
-            return "\(Int(interval / 86400))d"
-        }
-    }
 }

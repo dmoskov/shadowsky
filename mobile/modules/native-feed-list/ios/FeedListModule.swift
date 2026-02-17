@@ -16,25 +16,26 @@ public class FeedListModule: Module {
 
         // View component that can be used in React Native
         View(FeedListViewWrapper.self) {
-            // Props
+            // Props - update the shared FeedListProps object directly
+            // instead of replacing the entire SwiftUI rootView
             Prop("isLoading") { (view: FeedListViewWrapper, isLoading: Bool) in
-                view.isLoading = isLoading
+                view.feedListProps.isLoading = isLoading
             }
 
             Prop("isRefreshing") { (view: FeedListViewWrapper, isRefreshing: Bool) in
-                view.isRefreshing = isRefreshing
+                view.feedListProps.isRefreshing = isRefreshing
             }
 
             Prop("isLoadingMore") { (view: FeedListViewWrapper, isLoadingMore: Bool) in
-                view.isLoadingMore = isLoadingMore
+                view.feedListProps.isLoadingMore = isLoadingMore
             }
 
             Prop("error") { (view: FeedListViewWrapper, error: String?) in
-                view.error = error
+                view.feedListProps.error = error
             }
 
             Prop("emptyMessage") { (view: FeedListViewWrapper, emptyMessage: String) in
-                view.emptyMessage = emptyMessage
+                view.feedListProps.emptyMessage = emptyMessage
             }
 
             // Events
@@ -48,28 +49,13 @@ public class FeedListModule: Module {
 
 // MARK: - View Wrapper
 
-/// UIKit wrapper for SwiftUI FeedListView
+/// UIKit wrapper for SwiftUI FeedListView.
+/// Props are stored in a shared FeedListProps ObservableObject so that
+/// SwiftUI can diff individual property changes without replacing the
+/// entire rootView (which would destroy scroll state and re-render all cells).
 class FeedListViewWrapper: ExpoView {
-    // Props
-    var isLoading: Bool = false {
-        didSet { updateView() }
-    }
-
-    var isRefreshing: Bool = false {
-        didSet { updateView() }
-    }
-
-    var isLoadingMore: Bool = false {
-        didSet { updateView() }
-    }
-
-    var error: String? = nil {
-        didSet { updateView() }
-    }
-
-    var emptyMessage: String = "No posts yet" {
-        didSet { updateView() }
-    }
+    // Shared props object - mutated by Expo prop setters, observed by SwiftUI
+    let feedListProps = FeedListProps()
 
     // Event handlers
     private let onRefresh = EventDispatcher()
@@ -114,18 +100,9 @@ class FeedListViewWrapper: ExpoView {
         self.hostingController = hostingController
     }
 
-    private func updateView() {
-        guard let hostingController = hostingController else { return }
-        hostingController.rootView = createFeedListView()
-    }
-
     private func createFeedListView() -> FeedListView {
         FeedListView(
-            isLoading: isLoading,
-            isRefreshing: isRefreshing,
-            isLoadingMore: isLoadingMore,
-            error: error,
-            emptyMessage: emptyMessage,
+            props: feedListProps,
             onRefresh: { [weak self] in
                 self?.onRefresh([:])
             },
