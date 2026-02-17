@@ -13,6 +13,8 @@ import * as Linking from "expo-linking";
  * - bsky.app/feeds/{feedUri} -> /feeds/[uri]
  * - shadowsky://oauth/callback -> OAuth handler
  * - shadowsky://compose?url={url}&text={text} -> Compose screen with shared content
+ * - shadowsky://profile/{handle} -> Profile screen (from Spotlight search)
+ * - shadowsky://post/{handle}/{rkey} -> Thread screen (from Spotlight search)
  */
 
 export default function NativeIntent() {
@@ -45,6 +47,26 @@ export default function NativeIntent() {
         if (queryParams?.hasImages) params.append("hasImages", "true");
         setRedirect(`/(app)/compose?${params.toString()}`);
         return;
+      }
+
+      // Handle Spotlight deep links (shadowsky://profile/{handle})
+      if (hostname === "profile" && path) {
+        const handle = path.split("/").filter(Boolean)[0];
+        if (handle) {
+          setRedirect(`/(app)/(tabs)/(home)/profile/${handle}`);
+          return;
+        }
+      }
+
+      // Handle Spotlight deep links (shadowsky://post/{handle}/{rkey})
+      if (hostname === "post" && path) {
+        const segments = path.split("/").filter(Boolean);
+        if (segments.length >= 2) {
+          const handle = segments[0];
+          const rkey = segments[1];
+          setRedirect(`/(app)/(tabs)/(home)/thread/${rkey}?handle=${handle}`);
+          return;
+        }
       }
 
       // Handle bsky.app URLs

@@ -28,6 +28,7 @@ import { getAtProtoClient } from "../../services/atproto/client";
 import { useTheme } from "../../contexts/ThemeContext";
 import { sharePost } from "../../utils/share";
 import { triggerHaptic } from "../../utils/haptics";
+import { useSpotlightPost } from "../../hooks/useSpotlightIndex";
 
 
 import { createLogger } from '../../utils/logger';
@@ -135,6 +136,22 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
 
   // Fetch thread data
   const { data: thread, isLoading, error, refetch } = usePostThread(postUri || "");
+
+  // Index root post in Spotlight when thread is viewed
+  const spotlightPostData = useMemo(() => {
+    if (!thread || !("post" in thread)) return null;
+    const post = (thread as any).post;
+    if (!post) return null;
+    const record = post.record as any;
+    return {
+      uri: post.uri as string,
+      text: (record?.text as string) || "",
+      authorHandle: post.author?.handle as string,
+      authorName: post.author?.displayName as string | undefined,
+      authorAvatar: post.author?.avatar as string | undefined,
+    };
+  }, [thread]);
+  useSpotlightPost(spotlightPostData);
 
   if (isResolvingUri || !postUri) {
     return <ThreadSkeleton />;
