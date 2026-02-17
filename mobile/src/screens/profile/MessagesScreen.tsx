@@ -563,6 +563,11 @@ export function MessagesScreen() {
           renderItem={renderConversationItem}
           keyExtractor={(item) => item.id}
           style={styles.conversationsList}
+          removeClippedSubviews={true}
+          windowSize={10}
+          maxToRenderPerBatch={10}
+          initialNumToRender={10}
+          updateCellsBatchingPeriod={50}
           ListEmptyComponent={
             searchText.length > 0 ? (
               <EmptyState

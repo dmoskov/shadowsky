@@ -228,6 +228,11 @@ export function GifPicker({
           contentContainerStyle={styles.listContent}
           ListHeaderComponent={renderHeader}
           ListFooterComponent={renderFooter}
+          removeClippedSubviews={true}
+          windowSize={5}
+          maxToRenderPerBatch={8}
+          initialNumToRender={8}
+          updateCellsBatchingPeriod={50}
           ListEmptyComponent={
             !loading && !error && !searchQuery ? (
               <View style={styles.emptyContainer}>

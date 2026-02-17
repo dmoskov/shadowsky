@@ -1,0 +1,96 @@
+# Auto-sync task branches with main
+# When CI fixes land on main, task branches need them to pass CI.
+# This workflow merges main into all task/* branches after each push to main.
+name: Sync Task Branches
+
+on:
+  push:
+    branches: [main]
+    paths:
+      # Only trigger on CI/infra changes, not every commit
+      - '.github/workflows/**'
+      - 'requirements*.txt'
+      - 'package*.json'
+      - 'Dockerfile*'
+      - 'conftest.py'
+      - 'setup.cfg'
+      - 'pyproject.toml'
+      - 'schema_ci.sql'
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync task branches
+        run: |
+          echo "=== Syncing task/* branches with main ==="
+          git fetch --all --prune
+
+          SYNCED=0
+          SKIPPED=0
+          FAILED=0
+
+          for branch in $(git branch -r | grep 'origin/task/' | sed 's|origin/||' | xargs); do
+            echo ""
+            echo "--- $branch ---"
+
+            # Check if branch is behind main
+            BEHIND=$(git rev-list --count "origin/$branch..origin/main" 2>/dev/null || echo "0")
+            if [ "$BEHIND" = "0" ]; then
+              echo "  Already up to date"
+              SKIPPED=$((SKIPPED + 1))
+              continue
+            fi
+            echo "  Behind main by $BEHIND commits"
+
+            # Checkout the task branch
+            git checkout -B "$branch" "origin/$branch" 2>/dev/null
+            if [ $? -ne 0 ]; then
+              echo "  Failed to checkout"
+              FAILED=$((FAILED + 1))
+              continue
+            fi
+
+            # Try to merge main (not rebase - safer with concurrent executors)
+            git merge origin/main --no-edit 2>/dev/null
+            if [ $? -ne 0 ]; then
+              echo "  Merge conflict - skipping (executor will handle)"
+              git merge --abort 2>/dev/null
+              FAILED=$((FAILED + 1))
+              continue
+            fi
+
+            # Push the merged branch
+            git push origin "$branch" 2>/dev/null
+            if [ $? -ne 0 ]; then
+              echo "  Push failed"
+              FAILED=$((FAILED + 1))
+              continue
+            fi
+
+            echo "  Synced"
+            SYNCED=$((SYNCED + 1))
+          done
+
+          echo ""
+          echo "=== Summary ==="
+          echo "  Synced: $SYNCED"
+          echo "  Up to date: $SKIPPED"
+          echo "  Failed/conflict: $FAILED"
+
+          # Always succeed - individual branch failures are expected
+          exit 0

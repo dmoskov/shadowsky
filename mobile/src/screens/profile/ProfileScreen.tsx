@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -27,6 +27,9 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { AuthorFeedFilter } from "../../services/atproto/feeds";
 import { dmService } from "../../services/dm-service";
+import { useSpotlightProfile } from "../../hooks/useSpotlightIndex";
+import { useOfflineFeedEnhancer, useOfflineFeedStatus } from "../../hooks/useOfflineFeed";
+import StaleContentIndicator from "../../components/StaleContentIndicator";
 
 
 import { createLogger } from '../../utils/logger';
@@ -49,6 +52,15 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   const [isStartingConversation, setIsStartingConversation] = useState(false);
   const styles = useMemo(() => createStyles(colors), [colors]);
 
+  // Index profile in Spotlight when viewed
+  useSpotlightProfile(profile ? {
+    handle: profile.handle,
+    displayName: profile.displayName,
+    description: profile.description,
+    avatar: profile.avatar,
+    did: profile.did,
+  } : null);
+
   // Get the appropriate filter based on the active tab
   const getFilter = (): AuthorFeedFilter | undefined => {
     switch (activeTab) {
@@ -63,6 +75,8 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
     }
   };
 
+  const authorFeedQuery = useAuthorFeed(handle, getFilter());
+  const enhancedFeedQuery = useOfflineFeedEnhancer(authorFeedQuery, 'author', ['authorFeed', handle, getFilter()]);
   const {
     data: feedData,
     isLoading: isLoadingFeed,
@@ -70,7 +84,9 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
     hasNextPage: hasNextFeedPage,
     isFetchingNextPage: isFetchingNextFeedPage,
     refetch: refetchFeed,
-  } = useAuthorFeed(handle, getFilter());
+  } = enhancedFeedQuery;
+  const { isServingCached: isFeedServingCached, isStale: isFeedStale, isOnline: isFeedOnline } = enhancedFeedQuery;
+  const feedOfflineStatus = useOfflineFeedStatus();
 
   const {
     data: likesData,
@@ -123,13 +139,13 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   const hasNextPage = activeTab === "likes" ? hasNextLikesPage : hasNextFeedPage;
   const isFetchingNextPage = activeTab === "likes" ? isFetchingNextLikesPage : isFetchingNextFeedPage;
 
-  const handleMentionPress = (handle: string, _did: string) => {
-    onNavigateToProfile?.(handle);
-  };
+  const handleMentionPress = useCallback((mentionHandle: string, _did: string) => {
+    onNavigateToProfile?.(mentionHandle);
+  }, [onNavigateToProfile]);
 
-  const handleHashtagPress = (tag: string) => {
+  const handleHashtagPress = useCallback((tag: string) => {
     router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } } as any);
-  };
+  }, [router]);
 
   const handleBlock = () => {
     if (!profile) return;
@@ -288,15 +304,21 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
     }
   };
 
-  const renderPost = ({ item }: { item: AppBskyFeedDefs.FeedViewPost }) => (
+  const renderPost = useCallback(({ item }: { item: AppBskyFeedDefs.FeedViewPost }) => (
     <PostCard
       post={item}
       onPress={() => onNavigateToPost?.(item.post.uri)}
-      onPressProfile={(handle) => onNavigateToProfile?.(handle)}
+      onPressProfile={(profileHandle) => onNavigateToProfile?.(profileHandle)}
       onMentionPress={handleMentionPress}
       onHashtagPress={handleHashtagPress}
     />
-  );
+  ), [onNavigateToPost, onNavigateToProfile, handleMentionPress, handleHashtagPress]);
+
+  const handleEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const renderHeader = () => {
     if (isLoadingProfile) {
@@ -524,6 +546,12 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
 
   return (
     <View style={styles.container}>
+      <StaleContentIndicator
+        isStale={isFeedServingCached || isFeedStale}
+        lastCachedAt={feedOfflineStatus.lastCachedAt}
+        onRetry={isFeedOnline ? refetchFeed : undefined}
+        isOnline={isFeedOnline}
+      />
       <FlatList
         data={posts}
         renderItem={renderPost}
@@ -550,12 +578,13 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
         }
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
-        onEndReached={() => {
-          if (hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
-          }
-        }}
+        onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
+        removeClippedSubviews={true}
+        windowSize={7}
+        maxToRenderPerBatch={5}
+        initialNumToRender={8}
+        updateCellsBatchingPeriod={50}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -565,8 +594,13 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           />
         }
         contentContainerStyle={posts.length === 0 ? styles.emptyList : undefined}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={7}
+        initialNumToRender={10}
+        updateCellsBatchingPeriod={50}
       />
-      {profile && (
+      {profile && showAddToList && (
         <AddToListModal
           visible={showAddToList}
           onClose={() => setShowAddToList(false)}
@@ -576,7 +610,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
       )}
 
       {/* Menu Modal */}
-      {profile && !isOwnProfile && (
+      {profile && !isOwnProfile && showMenu && (
         <Modal
           visible={showMenu}
           transparent={true}
@@ -621,7 +655,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
       )}
 
       {/* Report Modal */}
-      {profile && (
+      {profile && showReportModal && (
         <ReportModal
           visible={showReportModal}
           onClose={() => setShowReportModal(false)}

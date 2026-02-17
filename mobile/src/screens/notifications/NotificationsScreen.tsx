@@ -25,6 +25,8 @@ import {AppBskyNotificationListNotifications} from '@atproto/api';
 import {usePreferences} from '../../contexts/PreferencesContext';
 import {clearBadgeCount} from '../../utils/badge';
 import {useTheme} from '../../contexts/ThemeContext';
+import {useOfflineNotificationsEnhancer, useOfflineFeedStatus} from '../../hooks/useOfflineFeed';
+import StaleContentIndicator from '../../components/StaleContentIndicator';
 import {filterMutedNotifications} from '../../utils/content-filter';
 import {
   aggregateNotifications,
@@ -50,6 +52,8 @@ export function NotificationsScreen() {
   const {preferences} = usePreferences();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const notificationsQuery = useNotifications();
+  const enhancedNotificationsQuery = useOfflineNotificationsEnhancer(notificationsQuery, ['notifications']);
   const {
     data,
     isLoading,
@@ -59,7 +63,9 @@ export function NotificationsScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useNotifications();
+  } = enhancedNotificationsQuery;
+  const { isServingCached: isNotifServingCached, isStale: isNotifStale, isOnline: isNotifOnline } = enhancedNotificationsQuery;
+  const notifOfflineStatus = useOfflineFeedStatus();
 
   const markNotificationsSeen = useMarkNotificationsSeen();
   const {navigateToProfile, navigateToThread} = useAppNavigation();
@@ -84,13 +90,13 @@ export function NotificationsScreen() {
   );
 
   // Flatten all pages of notifications and filter by muted words
-  const allNotifications = data?.pages?.flatMap(page => page.notifications) || [];
   const notifications = useMemo(() => {
+    const allNotifications = data?.pages?.flatMap(page => page.notifications) || [];
     if (!preferences?.mutedWords || preferences.mutedWords.length === 0) {
       return allNotifications;
     }
     return filterMutedNotifications(allNotifications, preferences.mutedWords);
-  }, [allNotifications, preferences?.mutedWords]);
+  }, [data?.pages, preferences?.mutedWords]);
 
   // Count notifications by type
   const notificationCounts = useMemo(() => {
@@ -107,16 +113,16 @@ export function NotificationsScreen() {
     return aggregateNotifications(filteredNotifications);
   }, [filteredNotifications]);
 
-  const renderFooter = () => {
+  const renderFooter = useCallback(() => {
     if (!isFetchingNextPage) return null;
     return (
       <View style={styles.footer}>
         <ActivityIndicator color={colors.primary} />
       </View>
     );
-  };
+  }, [isFetchingNextPage, styles.footer, colors.primary]);
 
-  const renderEmpty = () => {
+  const renderEmpty = useCallback(() => {
     if (isLoading) {
       return (
         <View>
@@ -138,20 +144,20 @@ export function NotificationsScreen() {
       );
     }
     return <EmptyState message="No notifications yet" />;
-  };
+  }, [isLoading, isError, error?.message, refetch]);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
-  };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     setIsManualRefreshing(true);
     refetch().finally(() => setIsManualRefreshing(false));
-  };
+  }, [refetch]);
 
   const handleMentionPress = useCallback(
     (handle: string, _did: string) => {
@@ -233,11 +239,13 @@ export function NotificationsScreen() {
     [handleMentionPress, handleHashtagPress, handleNotificationPress],
   );
 
-  const getItemKey = useCallback((item: ProcessedNotification, index: number) => {
+  const getItemKey = useCallback((item: ProcessedNotification) => {
     if (item.type === 'aggregated') {
-      return `aggregated-${item.reason}-${item.latestTimestamp}-${index}`;
+      // Use targetPostUri or first notification URI to disambiguate groups with the same reason
+      const targetKey = item.targetPostUri || item.notifications[0]?.uri || '';
+      return `agg-${item.reason}-${targetKey}`;
     }
-    return item.notification.uri + index;
+    return item.notification.uri;
   }, []);
 
   return (
@@ -249,6 +257,12 @@ export function NotificationsScreen() {
         activeFilter={activeFilter}
         onFilterChange={handleFilterChange}
         counts={notificationCounts as any}
+      />
+      <StaleContentIndicator
+        isStale={isNotifServingCached || isNotifStale}
+        lastCachedAt={notifOfflineStatus.lastCachedAt}
+        onRetry={isNotifOnline ? () => refetch() : undefined}
+        isOnline={isNotifOnline}
       />
       <FlatList
         ref={scrollRef}
@@ -271,6 +285,7 @@ export function NotificationsScreen() {
         maxToRenderPerBatch={10}
         windowSize={10}
         initialNumToRender={10}
+        updateCellsBatchingPeriod={50}
         style={styles.list}
       />
     </View>

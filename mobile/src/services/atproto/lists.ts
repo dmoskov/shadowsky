@@ -1,6 +1,5 @@
 import {getAtProtoClient} from './client';
 import {AppBskyGraphDefs} from '@atproto/api';
-import {withRetry} from '../../utils/with-retry';
 import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
 
 
@@ -27,8 +26,7 @@ export interface ListFeedResponse {
  */
 export async function getUserLists(): Promise<ListsResponse> {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
+    async () => {
         const client = getAtProtoClient();
         const agent = client.getAgent();
         const session = client.getSession();
@@ -46,7 +44,7 @@ export async function getUserLists(): Promise<ListsResponse> {
           lists: response.data.lists,
           cursor: response.data.cursor,
         };
-      }),
+    },
     ATProtoEndpointType.FEED
   );
 }
@@ -57,8 +55,7 @@ export async function getUserLists(): Promise<ListsResponse> {
 export async function getList(listUri: string): Promise<AppBskyGraphDefs.ListView | null> {
   try {
     return await rateLimited(
-      async () =>
-        withRetry(async () => {
+      async () => {
           const client = getAtProtoClient();
           const agent = client.getAgent();
 
@@ -68,7 +65,7 @@ export async function getList(listUri: string): Promise<AppBskyGraphDefs.ListVie
           });
 
           return response.data.list;
-        }),
+      },
       ATProtoEndpointType.FEED
     );
   } catch (error) {
@@ -85,8 +82,7 @@ export async function getListFeed(
   options: ListFeedOptions = {}
 ): Promise<ListFeedResponse> {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
+    async () => {
         const client = getAtProtoClient();
         const agent = client.getAgent();
 
@@ -100,7 +96,7 @@ export async function getListFeed(
           feed: response.data.feed,
           cursor: response.data.cursor,
         };
-      }),
+    },
     ATProtoEndpointType.FEED
   );
 }
@@ -114,8 +110,7 @@ export async function createList(
   purpose: string = 'app.bsky.graph.defs#curatelist'
 ): Promise<{uri: string; cid: string}> {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
+    async () => {
         const client = getAtProtoClient();
         const agent = client.getAgent();
         const session = client.getSession();
@@ -142,7 +137,7 @@ export async function createList(
           uri: response.data.uri,
           cid: response.data.cid,
         };
-      }),
+    },
     ATProtoEndpointType.RECORD
   );
 }
@@ -152,8 +147,7 @@ export async function createList(
  */
 export async function deleteList(listUri: string): Promise<void> {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
+    async () => {
         const client = getAtProtoClient();
         const agent = client.getAgent();
         const session = client.getSession();
@@ -172,7 +166,7 @@ export async function deleteList(listUri: string): Promise<void> {
           collection: 'app.bsky.graph.list',
           rkey,
         });
-      }),
+    },
     ATProtoEndpointType.RECORD
   );
 }
@@ -185,8 +179,7 @@ export async function getListMembers(
   options: {limit?: number; cursor?: string} = {}
 ): Promise<{items: AppBskyGraphDefs.ListItemView[]; cursor?: string}> {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
+    async () => {
         const client = getAtProtoClient();
         const agent = client.getAgent();
 
@@ -200,7 +193,7 @@ export async function getListMembers(
           items: response.data.items,
           cursor: response.data.cursor,
         };
-      }),
+    },
     ATProtoEndpointType.FEED
   );
 }
@@ -213,8 +206,7 @@ export async function addUserToList(
   did: string
 ): Promise<{uri: string; cid: string}> {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
+    async () => {
         const client = getAtProtoClient();
         const agent = client.getAgent();
         const session = client.getSession();
@@ -240,7 +232,7 @@ export async function addUserToList(
           uri: response.data.uri,
           cid: response.data.cid,
         };
-      }),
+    },
     ATProtoEndpointType.RECORD
   );
 }
@@ -250,8 +242,7 @@ export async function addUserToList(
  */
 export async function removeUserFromList(listItemUri: string): Promise<void> {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
+    async () => {
         const client = getAtProtoClient();
         const agent = client.getAgent();
         const session = client.getSession();
@@ -270,7 +261,7 @@ export async function removeUserFromList(listItemUri: string): Promise<void> {
           collection: 'app.bsky.graph.listitem',
           rkey,
         });
-      }),
+    },
     ATProtoEndpointType.RECORD
   );
 }
@@ -283,8 +274,7 @@ export async function updateList(
   updates: {name?: string; description?: string; purpose?: string}
 ): Promise<{uri: string; cid: string}> {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
+    async () => {
         const client = getAtProtoClient();
         const agent = client.getAgent();
         const session = client.getSession();
@@ -324,7 +314,7 @@ export async function updateList(
           uri: response.data.uri,
           cid: response.data.cid,
         };
-      }),
+    },
     ATProtoEndpointType.RECORD
   );
 }

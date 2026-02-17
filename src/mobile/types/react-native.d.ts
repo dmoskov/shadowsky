@@ -166,6 +166,8 @@ declare module "react-native" {
     testID?: string;
     accessibilityRole?: string;
     accessibilityLabel?: string;
+    allowFontScaling?: boolean;
+    maxFontSizeMultiplier?: number;
   }
 
   export const Text: ComponentType<TextProps>;
@@ -367,6 +369,7 @@ declare module "react-native" {
     color?: string;
     size?: "small" | "large" | number;
     hidesWhenStopped?: boolean;
+    style?: ViewStyle | (ViewStyle | false | undefined | null)[];
     testID?: string;
   }
 
@@ -436,4 +439,74 @@ declare module "react-native" {
   }
 
   export const Dimensions: DimensionsStatic;
+
+  // Modal Component
+  export interface ModalProps {
+    visible?: boolean;
+    animationType?: "none" | "slide" | "fade";
+    transparent?: boolean;
+    presentationStyle?:
+      | "fullScreen"
+      | "pageSheet"
+      | "formSheet"
+      | "overFullScreen";
+    onRequestClose?: () => void;
+    onShow?: () => void;
+    onDismiss?: () => void;
+    children?: ReactNode;
+    testID?: string;
+    accessibilityLabel?: string;
+  }
+
+  export const Modal: ComponentType<ModalProps>;
+
+  // Alert
+  export interface AlertButton {
+    text?: string;
+    onPress?: () => void;
+    style?: "default" | "cancel" | "destructive";
+  }
+
+  export interface AlertStatic {
+    alert(
+      title: string,
+      message?: string,
+      buttons?: AlertButton[],
+      options?: { cancelable?: boolean },
+    ): void;
+  }
+
+  export const Alert: AlertStatic;
+
+  // PixelRatio
+  export interface PixelRatioStatic {
+    get(): number;
+    getFontScale(): number;
+    getPixelSizeForLayoutSize(layoutSize: number): number;
+    roundToNearestPixel(layoutSize: number): number;
+  }
+
+  export const PixelRatio: PixelRatioStatic;
+
+  // TextInput Component
+  export interface TextInputProps {
+    style?: TextStyle | (TextStyle | false | undefined | null)[];
+    value?: string;
+    onChangeText?: (text: string) => void;
+    placeholder?: string;
+    placeholderTextColor?: string;
+    multiline?: boolean;
+    numberOfLines?: number;
+    maxLength?: number;
+    autoFocus?: boolean;
+    editable?: boolean;
+    keyboardType?: string;
+    returnKeyType?: string;
+    secureTextEntry?: boolean;
+    testID?: string;
+    accessibilityLabel?: string;
+    allowFontScaling?: boolean;
+  }
+
+  export const TextInput: ComponentType<TextInputProps>;
 }

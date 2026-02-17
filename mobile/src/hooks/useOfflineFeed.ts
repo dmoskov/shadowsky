@@ -70,7 +70,7 @@ export interface OfflineFeedStatus {
  */
 function transformToOfflineItem(
   item: FeedItem,
-  feedType: 'timeline' | 'author' | 'list' = 'timeline'
+  feedType: 'timeline' | 'author' | 'list' | 'search' = 'timeline'
 ): Omit<OfflineFeedItem, '_offlineCachedAt'> {
   const post = item.post || item;
   return {
@@ -172,7 +172,7 @@ export function useOfflineFeedStatus(): OfflineFeedStatus {
 /**
  * Hook to cache feed items after successful fetch
  */
-export function useFeedCaching(feedType: 'timeline' | 'author' | 'list' = 'timeline') {
+export function useFeedCaching(feedType: 'timeline' | 'author' | 'list' | 'search' = 'timeline') {
   const cacheFeedItems = useCallback(
     async (items: unknown[]) => {
       if (!items || items.length === 0) return;
@@ -199,7 +199,7 @@ export function useFeedCaching(feedType: 'timeline' | 'author' | 'list' = 'timel
 /**
  * Hook to get cached feed items
  */
-export function useCachedFeed(feedType?: 'timeline' | 'author' | 'list', limit = 100) {
+export function useCachedFeed(feedType?: 'timeline' | 'author' | 'list' | 'search', limit = 100) {
   return useQuery({
     queryKey: ['offline-feed', feedType, limit],
     queryFn: async () => {
@@ -222,7 +222,7 @@ export function useCachedFeed(feedType?: 'timeline' | 'author' | 'list', limit =
  */
 export function useOfflineFeedEnhancer<T extends {pages: Array<{feed: unknown[]}> | undefined}>(
   query: UseInfiniteQueryResult<T>,
-  feedType: 'timeline' | 'author' | 'list' = 'timeline',
+  feedType: 'timeline' | 'author' | 'list' | 'search' = 'timeline',
   queryKey: unknown[] = ['timeline']
 ) {
   const {isConnected} = useNetworkStatus();
@@ -396,6 +396,154 @@ export function useOfflineThreadEnhancer<T extends {thread?: {posts?: unknown[]}
   return {
     ...query,
     isServingCached,
+    isOnline: isConnected,
+  };
+}
+
+/**
+ * Notification item type for transformations
+ */
+interface NotificationLike {
+  uri: string;
+  cid: string;
+  reason: string;
+  reasonSubject?: string;
+  isRead: boolean;
+  indexedAt: string;
+  author: {
+    did: string;
+    handle: string;
+    displayName?: string;
+    avatar?: string;
+  };
+  record?: unknown;
+}
+
+/**
+ * Hook to cache notification items after successful fetch
+ */
+function useNotificationCaching() {
+  const cacheNotifications = useCallback(
+    async (items: unknown[]) => {
+      if (!items || items.length === 0) return;
+
+      try {
+        await offlineStorage.init();
+
+        const offlineItems = items.map((item) => {
+          const notif = item as NotificationLike;
+          return {
+            uri: notif.uri,
+            cid: notif.cid,
+            reason: notif.reason,
+            reasonSubject: notif.reasonSubject,
+            isRead: notif.isRead,
+            indexedAt: notif.indexedAt,
+            author: {
+              did: notif.author.did,
+              handle: notif.author.handle,
+              displayName: notif.author.displayName,
+              avatar: notif.author.avatar,
+            },
+            record: notif.record,
+          };
+        });
+
+        await offlineStorage.saveNotificationItems(offlineItems);
+        logger.log(`Cached ${offlineItems.length} notification items`);
+      } catch (error) {
+        logger.error('Failed to cache notifications:', error);
+      }
+    },
+    []
+  );
+
+  return {cacheNotifications};
+}
+
+/**
+ * Hook to enhance notification queries with offline support
+ *
+ * Similar to useOfflineFeedEnhancer but handles the notification page shape
+ * ({notifications: []} instead of {feed: []}).
+ */
+export function useOfflineNotificationsEnhancer<T extends {pages: Array<{notifications: unknown[]}> | undefined}>(
+  query: UseInfiniteQueryResult<T>,
+  queryKey: unknown[] = ['notifications']
+) {
+  const {isConnected} = useNetworkStatus();
+  const {cacheNotifications} = useNotificationCaching();
+  const queryClient = useQueryClient();
+  const [offlineStatus, setOfflineStatus] = useState<{
+    isServingCached: boolean;
+    isStale: boolean;
+  }>({
+    isServingCached: false,
+    isStale: false,
+  });
+
+  // Cache successful fetch results
+  useEffect(() => {
+    if (query.data?.pages && query.isSuccess && isConnected) {
+      const allNotifications = query.data.pages.flatMap(page => page.notifications || []);
+
+      if (allNotifications.length > 0) {
+        cacheNotifications(allNotifications);
+      }
+    }
+  }, [query.data, query.isSuccess, isConnected, cacheNotifications]);
+
+  // Load cached data when offline
+  useEffect(() => {
+    const loadCachedData = async () => {
+      if (!isConnected && !query.data && query.isError) {
+        try {
+          await offlineStorage.init();
+          const cachedItems = await offlineStorage.getNotificationItems(100);
+
+          if (cachedItems.length > 0) {
+            logger.log(`Loading ${cachedItems.length} cached notifications`);
+
+            const metadata = await offlineStorage.getMetadata('notifications');
+            const isStale = metadata?.lastSyncAt
+              ? Date.now() - metadata.lastSyncAt > 5 * 60 * 1000
+              : true;
+
+            setOfflineStatus({
+              isServingCached: true,
+              isStale,
+            });
+
+            // Inject cached data into query cache
+            queryClient.setQueryData(queryKey, {
+              pages: [
+                {
+                  notifications: cachedItems,
+                  cursor: undefined,
+                  _fromCache: true,
+                },
+              ],
+              pageParams: [undefined],
+            });
+          }
+        } catch (error) {
+          logger.error('Failed to load cached notifications:', error);
+        }
+      } else if (isConnected && offlineStatus.isServingCached) {
+        setOfflineStatus({
+          isServingCached: false,
+          isStale: false,
+        });
+      }
+    };
+
+    loadCachedData();
+  }, [isConnected, query.data, query.isError, queryKey, queryClient, offlineStatus.isServingCached]);
+
+  return {
+    ...query,
+    isServingCached: offlineStatus.isServingCached,
+    isStale: offlineStatus.isStale,
     isOnline: isConnected,
   };
 }

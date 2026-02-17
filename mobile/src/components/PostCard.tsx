@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useMemo} from 'react';
+import React, {useState, useCallback, useMemo, useRef} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Modal, Alert, ActivityIndicator} from 'react-native';
 import {AppBskyFeedDefs, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
 import {Avatar} from './Avatar';
@@ -16,6 +16,7 @@ import {ContentLabelWarning} from './ContentLabelWarning';
 import {ReportModal} from './ReportModal';
 import {SaveToCollectionModal} from './SaveToCollectionModal';
 import {usePostTranslation} from '../hooks/usePostTranslation';
+import {useSharedTransition} from '../contexts/SharedTransitionContext';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -67,6 +68,8 @@ function PostCardComponent({
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { isOnline } = useNetwork();
+  const {prepareTransition} = useSharedTransition();
+  const cardRef = useRef<React.ElementRef<typeof TouchableOpacity>>(null);
   const postView = post.post;
   const author = postView.author;
   const [showMenu, setShowMenu] = useState(false);
@@ -248,6 +251,43 @@ function PostCardComponent({
   const hideContent = useMemo(() => shouldHideContent(labels), [shouldHideContent, labels]);
   const warnContent = useMemo(() => shouldWarnContent(labels), [shouldWarnContent, labels]);
   const blurImages = useMemo(() => shouldBlurImages(labels), [shouldBlurImages, labels]);
+
+  // Extract first image thumbnail for transition preview
+  const firstImageThumb = useMemo(() => {
+    const embed = postView.embed;
+    if (!embed) return undefined;
+    if ('images' in embed && Array.isArray(embed.images) && embed.images.length > 0) {
+      return (embed.images[0] as any)?.thumb as string | undefined;
+    }
+    return undefined;
+  }, [postView.embed]);
+
+  // Handle press with shared element transition measurement
+  const handleCardPress = useCallback(() => {
+    if (!onPress) return;
+    if (cardRef.current) {
+      (cardRef.current as any).measureInWindow?.(
+        (x: number, y: number, width: number, height: number) => {
+          if (width > 0 && height > 0) {
+            prepareTransition(
+              {x, y, width, height},
+              {
+                uri: postView.uri,
+                authorAvatar: author.avatar,
+                authorName: author.displayName || undefined,
+                authorHandle: author.handle,
+                text: postText || undefined,
+                imageThumb: firstImageThumb,
+              },
+            );
+          }
+          onPress();
+        },
+      );
+    } else {
+      onPress();
+    }
+  }, [onPress, prepareTransition, postView.uri, author.avatar, author.displayName, author.handle, postText, firstImageThumb]);
 
   // Don't render hidden content
   if (hideContent) {
@@ -476,8 +516,9 @@ function PostCardComponent({
 
   return (
     <TouchableOpacity
+      ref={cardRef}
       style={styles.container}
-      onPress={onPress}
+      onPress={handleCardPress}
       activeOpacity={0.9}
       accessible={true}
       accessibilityRole="button"

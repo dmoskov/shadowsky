@@ -17,6 +17,7 @@ import { createLogger } from '../utils/logger';
 const logger = createLogger('MutationQueue');
 const QUEUE_KEY = '@BskyMutationQueue';
 const MAX_RETRIES = 3;
+const MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours - mutations older than this are discarded
 
 // Mutation types supported
 export type MutationType =
@@ -74,6 +75,9 @@ class MutationQueue {
         this.queue = JSON.parse(stored);
         logger.log(`Loaded ${this.queue.length} mutations from storage`);
       }
+
+      // Clean up expired mutations on startup
+      await this.removeExpired();
 
       // Set up AppState listener
       this.setupAppStateListener();
@@ -193,12 +197,28 @@ class MutationQueue {
     };
   }
 
+  // Remove mutations older than MAX_AGE_MS
+  async removeExpired(): Promise<void> {
+    const now = Date.now();
+    const before = this.queue.length;
+    this.queue = this.queue.filter(m => now - m.timestamp < MAX_AGE_MS);
+    const removed = before - this.queue.length;
+    if (removed > 0) {
+      logger.log(`Removed ${removed} expired mutations (older than 24h)`);
+      await this.persistQueue();
+      this.notifyListeners();
+    }
+  }
+
   // Process queue
   async processQueue(): Promise<void> {
     if (this.isProcessing) {
       logger.log('Already processing, skipping');
       return;
     }
+
+    // Discard expired mutations before processing
+    await this.removeExpired();
 
     const pendingMutations = this.queue.filter(m => m.status === 'pending');
     if (pendingMutations.length === 0) {
@@ -368,6 +388,7 @@ class MutationQueue {
       this.processingTimer = null;
     }
     this.listeners.clear();
+    this.isProcessing = false;
     this.isInitialized = false;
   }
 }

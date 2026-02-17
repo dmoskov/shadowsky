@@ -21,6 +21,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from "react-native";
+import { useDynamicType, type ScaledFontFn } from "../hooks/useDynamicType";
 import type { MobilePostData } from "../types";
 import { FeedList } from "./FeedList";
 
@@ -68,16 +69,58 @@ export interface FeedViewProps {
 }
 
 /**
+ * Create styles with Dynamic Type font scaling
+ */
+function createStyles(scaledFont: ScaledFontFn) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "#ffffff",
+    } as ViewStyle,
+    feedSelector: {
+      flexDirection: "row",
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: "#e1e1e1",
+      backgroundColor: "#ffffff",
+    } as ViewStyle,
+    tab: {
+      flex: 1,
+      minHeight: 48,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingVertical: 12,
+      paddingHorizontal: 8,
+    } as ViewStyle,
+    tabActive: {
+      borderBottomWidth: 3,
+      borderBottomColor: "#1d9bf0",
+    } as ViewStyle,
+    tabText: {
+      fontSize: scaledFont(14),
+      fontWeight: "600",
+      color: "#687684",
+    } as TextStyle,
+    tabTextActive: {
+      color: "#0f1419",
+    } as TextStyle,
+  });
+}
+
+type Styles = ReturnType<typeof createStyles>;
+
+/**
  * Feed selector tab component
  */
 const FeedTab = memo(function FeedTab({
   label,
   isActive,
   onPress,
+  styles,
 }: {
   label: string;
   isActive: boolean;
   onPress: () => void;
+  styles: Styles;
 }) {
   return (
     <Pressable
@@ -100,10 +143,12 @@ const FeedSelector = memo(function FeedSelector({
   activeFeed,
   availableFeeds,
   onFeedChange,
+  styles,
 }: {
   activeFeed: FeedType;
   availableFeeds?: FeedDescriptor[];
   onFeedChange?: (feedType: FeedType) => void;
+  styles: Styles;
 }) {
   // Default feeds
   const defaultFeeds: Array<{ type: FeedType; label: string }> = [
@@ -120,6 +165,7 @@ const FeedSelector = memo(function FeedSelector({
           label={feed.label}
           isActive={activeFeed === feed.type}
           onPress={() => onFeedChange?.(feed.type)}
+          styles={styles}
         />
       ))}
       {availableFeeds?.map((feed) => (
@@ -128,6 +174,7 @@ const FeedSelector = memo(function FeedSelector({
           label={feed.displayName}
           isActive={activeFeed === feed.uri}
           onPress={() => onFeedChange?.(feed.uri)}
+          styles={styles}
         />
       ))}
     </View>
@@ -157,6 +204,9 @@ function FeedViewComponent({
   isRefreshing = false,
   showFeedSelector = true,
 }: FeedViewProps) {
+  const { scaledFont } = useDynamicType();
+  const styles = useMemo(() => createStyles(scaledFont), [scaledFont]);
+
   // Feed selector header
   const ListHeader = useMemo(() => {
     if (!showFeedSelector) return undefined;
@@ -166,9 +216,10 @@ function FeedViewComponent({
         activeFeed={activeFeed}
         availableFeeds={availableFeeds}
         onFeedChange={onFeedChange}
+        styles={styles}
       />
     );
-  }, [showFeedSelector, activeFeed, availableFeeds, onFeedChange]);
+  }, [showFeedSelector, activeFeed, availableFeeds, onFeedChange, styles]);
 
   return (
     <View style={styles.container}>
@@ -224,36 +275,3 @@ function arePropsEqual(
  * Memoized export
  */
 export const FeedView = memo(FeedViewComponent, arePropsEqual);
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  } as ViewStyle,
-  feedSelector: {
-    flexDirection: "row",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e1e1e1",
-    backgroundColor: "#ffffff",
-  } as ViewStyle,
-  tab: {
-    flex: 1,
-    minHeight: 48,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-  } as ViewStyle,
-  tabActive: {
-    borderBottomWidth: 3,
-    borderBottomColor: "#1d9bf0",
-  } as ViewStyle,
-  tabText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#687684",
-  } as TextStyle,
-  tabTextActive: {
-    color: "#0f1419",
-  } as TextStyle,
-});

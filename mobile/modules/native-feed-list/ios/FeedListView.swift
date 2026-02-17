@@ -260,73 +260,36 @@ class FeedState: ObservableObject {
             if let batchUpdate = notification.userInfo?["batchUpdate"] as? FeedBatchUpdate {
                 for update in batchUpdate.updates {
                     if let index = self.posts.firstIndex(where: { $0.post.uri == update.uri }) {
-                        var post = self.posts[index].post
+                        let existing = self.posts[index].post
 
-                        // Update counts
-                        if let likeCount = update.likeCount {
-                            post = SerializedPost(
-                                uri: post.uri,
-                                cid: post.cid,
-                                author: post.author,
-                                record: post.record,
-                                embed: post.embed,
-                                replyCount: post.replyCount,
-                                repostCount: post.repostCount,
-                                likeCount: likeCount,
-                                quoteCount: post.quoteCount,
-                                viewer: update.viewer ?? post.viewer,
-                                labels: post.labels,
-                                indexedAt: post.indexedAt
-                            )
-                        }
+                        // Consolidate all count updates into a single struct creation
+                        let updatedPost = SerializedPost(
+                            uri: existing.uri,
+                            cid: existing.cid,
+                            author: existing.author,
+                            record: existing.record,
+                            embed: existing.embed,
+                            replyCount: update.replyCount ?? existing.replyCount,
+                            repostCount: update.repostCount ?? existing.repostCount,
+                            likeCount: update.likeCount ?? existing.likeCount,
+                            quoteCount: existing.quoteCount,
+                            viewer: update.viewer ?? existing.viewer,
+                            labels: existing.labels,
+                            indexedAt: existing.indexedAt
+                        )
 
-                        if let repostCount = update.repostCount {
-                            post = SerializedPost(
-                                uri: post.uri,
-                                cid: post.cid,
-                                author: post.author,
-                                record: post.record,
-                                embed: post.embed,
-                                replyCount: post.replyCount,
-                                repostCount: repostCount,
-                                likeCount: post.likeCount,
-                                quoteCount: post.quoteCount,
-                                viewer: update.viewer ?? post.viewer,
-                                labels: post.labels,
-                                indexedAt: post.indexedAt
-                            )
-                        }
-
-                        if let replyCount = update.replyCount {
-                            post = SerializedPost(
-                                uri: post.uri,
-                                cid: post.cid,
-                                author: post.author,
-                                record: post.record,
-                                embed: post.embed,
-                                replyCount: replyCount,
-                                repostCount: post.repostCount,
-                                likeCount: post.likeCount,
-                                quoteCount: post.quoteCount,
-                                viewer: update.viewer ?? post.viewer,
-                                labels: post.labels,
-                                indexedAt: post.indexedAt
-                            )
-                        }
-
-                        // Update the post
-                        let updatedPost = SerializedFeedViewPost(
-                            post: post,
+                        let updatedFeedViewPost = SerializedFeedViewPost(
+                            post: updatedPost,
                             reply: self.posts[index].reply,
                             reason: self.posts[index].reason,
                             feedContext: self.posts[index].feedContext,
                             isBookmarked: update.isBookmarked ?? self.posts[index].isBookmarked
                         )
-                        self.posts[index] = updatedPost
+                        self.posts[index] = updatedFeedViewPost
 
                         // Re-convert only the changed post
                         if index < self.convertedPosts.count {
-                            self.convertedPosts[index] = Self.convertPost(updatedPost)
+                            self.convertedPosts[index] = Self.convertPost(updatedFeedViewPost)
                         }
                     }
                 }

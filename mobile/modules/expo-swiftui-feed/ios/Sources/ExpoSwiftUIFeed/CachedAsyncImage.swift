@@ -10,6 +10,18 @@
 import SwiftUI
 import SDWebImage
 
+// MARK: - SDWebImage Cache Configuration
+
+/// Configure SDWebImage memory cache to prevent unbounded growth during
+/// sustained feed scrolling. Without this, decoded image bitmaps accumulate
+/// until the OS sends a memory warning (see ISSUE-MEM-3 in profiling report).
+private let _configureSDWebImageCache: Void = {
+    // Cap memory cache at 100MB (prevents unbounded growth during long scroll sessions)
+    SDImageCache.shared.config.maxMemoryCost = 100 * 1024 * 1024
+    // Limit memory cache to 256 images max
+    SDImageCache.shared.config.maxMemoryCount = 256
+}()
+
 /// A SwiftUI view that loads and caches remote images using SDWebImage.
 ///
 /// Provides the same two API styles as AsyncImage:
@@ -56,6 +68,7 @@ public struct CachedAsyncImage<Content: View>: View {
     }
 
     private func loadImage(for overrideURL: URL? = nil) {
+        _ = _configureSDWebImageCache // Ensure cache limits are set (runs once)
         let targetURL = overrideURL ?? url
         guard let targetURL = targetURL else {
             phase = .empty

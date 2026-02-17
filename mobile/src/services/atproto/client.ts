@@ -1,8 +1,13 @@
 import {BskyAgent, AtpSessionData, AtpSessionEvent} from '@atproto/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
+import {
+  saveSessionTokens,
+  deleteSessionTokens,
+  clearActiveSessionDid,
+} from '../auth/secure-token-storage';
+import {createLogger} from '../../utils/logger';
 
-const AUTH_STORAGE_KEY = '@shadowsky/auth_session';
+const logger = createLogger('AtProtoClient');
 
 /**
  * AT Protocol Client Wrapper
@@ -18,16 +23,29 @@ export class AtProtoClient {
       persistSession: (evt: AtpSessionEvent, sess?: AtpSessionData) => {
         if (evt === 'update' && sess) {
           this.session = sess;
-          AsyncStorage.getItem(AUTH_STORAGE_KEY).then(stored => {
-            if (stored) {
-              const parsed = JSON.parse(stored);
-              const updated = {...parsed, accessJwt: sess.accessJwt, refreshJwt: sess.refreshJwt};
-              AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
-            }
-          }).catch(() => {});
+          // Persist refreshed tokens to SecureStore
+          saveSessionTokens(sess.did, {
+            did: sess.did,
+            handle: sess.handle,
+            accessJwt: sess.accessJwt,
+            refreshJwt: sess.refreshJwt,
+            email: sess.email,
+            emailConfirmed: sess.emailConfirmed,
+            active: sess.active,
+          }).catch(error => {
+            logger.error('Failed to persist session tokens:', error);
+          });
         } else if (evt === 'expired') {
+          const expiredDid = this.session?.did;
           this.session = null;
-          AsyncStorage.removeItem(AUTH_STORAGE_KEY).catch(() => {});
+          if (expiredDid) {
+            deleteSessionTokens(expiredDid).catch(error => {
+              logger.error('Failed to delete expired session tokens:', error);
+            });
+            clearActiveSessionDid().catch(error => {
+              logger.error('Failed to clear active session DID:', error);
+            });
+          }
         }
       },
     });
@@ -133,9 +151,9 @@ let clientInstance: AtProtoClient | null = null;
 /**
  * Get or create the global AT Protocol client instance
  */
-export function getAtProtoClient(): AtProtoClient {
+export function getAtProtoClient(service?: string): AtProtoClient {
   if (!clientInstance) {
-    clientInstance = new AtProtoClient();
+    clientInstance = new AtProtoClient(service);
   }
   return clientInstance;
 }

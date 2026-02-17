@@ -1,4 +1,5 @@
 import {useInfiniteQuery, useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {useAuth} from '../../contexts/AuthContext';
 import {
   getPopularFeedGenerators,
   getSuggestedFeeds,
@@ -58,9 +59,11 @@ export function useSearchFeedGenerators(query: string) {
  * Hook to fetch the user's saved feeds
  */
 export function useSavedFeeds() {
+  const {session} = useAuth();
   return useQuery({
     queryKey: ['savedFeeds'],
     queryFn: () => getSavedFeeds(),
+    enabled: !!session,
   });
 }
 
@@ -130,9 +133,11 @@ export function useUnpinFeed() {
  * Hook to fetch the user's pinned feeds
  */
 export function usePinnedFeeds() {
+  const {session} = useAuth();
   return useQuery({
     queryKey: ['pinnedFeeds'],
     queryFn: () => getPinnedFeeds(),
+    enabled: !!session,
   });
 }
 

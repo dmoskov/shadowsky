@@ -26,6 +26,11 @@ import {
   type TextStyle,
   type ViewStyle,
 } from "react-native";
+import {
+  scaledLineHeight,
+  useDynamicType,
+  type ScaledFontFn,
+} from "../hooks/useDynamicType";
 import type { MobilePostData } from "../types";
 import { PostCard } from "./PostCard";
 
@@ -60,16 +65,220 @@ const DEFAULT_BANNER_URI =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 200'%3E%3Crect width='600' height='200' fill='%23e1e1e1'/%3E%3C/svg%3E";
 
 /**
+ * Creates styles with Dynamic Type-scaled font sizes.
+ * ViewStyle and ImageStyle properties remain unchanged;
+ * only fontSize and associated lineHeight values are scaled.
+ */
+function createStyles(scaledFont: ScaledFontFn) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "#ffffff",
+    } as ViewStyle,
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: "#e1e1e1",
+      backgroundColor: "#ffffff",
+    } as ViewStyle,
+    backButton: {
+      minWidth: 44,
+      minHeight: 44,
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: 12,
+    } as ViewStyle,
+    backIcon: {
+      fontSize: scaledFont(24),
+      color: "#0f1419",
+    } as TextStyle,
+    headerInfo: {
+      flex: 1,
+    } as ViewStyle,
+    headerName: {
+      fontSize: scaledFont(18),
+      fontWeight: "700",
+      color: "#0f1419",
+    } as TextStyle,
+    headerHandle: {
+      fontSize: scaledFont(13),
+      color: "#687684",
+    } as TextStyle,
+    list: {
+      flex: 1,
+    } as ViewStyle,
+    listContent: {
+      flexGrow: 1,
+    } as ViewStyle,
+    banner: {
+      width: "100%",
+      height: 150,
+      backgroundColor: "#e1e1e1",
+    } as ImageStyle,
+    avatarContainer: {
+      marginTop: -40,
+      marginLeft: 16,
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      borderWidth: 4,
+      borderColor: "#ffffff",
+      backgroundColor: "#e1e1e1",
+      overflow: "hidden",
+    } as ViewStyle,
+    avatar: {
+      width: "100%",
+      height: "100%",
+    } as ImageStyle,
+    infoSection: {
+      padding: 16,
+    } as ViewStyle,
+    nameSection: {
+      marginBottom: 12,
+    } as ViewStyle,
+    displayName: {
+      fontSize: scaledFont(22),
+      fontWeight: "700",
+      color: "#0f1419",
+      marginBottom: 2,
+    } as TextStyle,
+    handle: {
+      fontSize: scaledFont(14),
+      color: "#687684",
+    } as TextStyle,
+    actionButtons: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginBottom: 12,
+    } as ViewStyle,
+    messageButton: {
+      minWidth: 44,
+      minHeight: 44,
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: 22,
+      borderWidth: 1,
+      borderColor: "#e1e1e1",
+      backgroundColor: "#ffffff",
+    } as ViewStyle,
+    messageIcon: {
+      fontSize: scaledFont(18),
+    } as TextStyle,
+    followButton: {
+      flex: 1,
+      minHeight: 44,
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: 22,
+      backgroundColor: "#0f1419",
+      paddingHorizontal: 24,
+    } as ViewStyle,
+    followButtonFollowing: {
+      backgroundColor: "#ffffff",
+      borderWidth: 1,
+      borderColor: "#e1e1e1",
+    } as ViewStyle,
+    followButtonText: {
+      fontSize: scaledFont(15),
+      fontWeight: "700",
+      color: "#ffffff",
+    } as TextStyle,
+    followButtonTextFollowing: {
+      color: "#0f1419",
+    } as TextStyle,
+    bio: {
+      fontSize: scaledFont(15),
+      lineHeight: scaledLineHeight(scaledFont, 15, 20),
+      color: "#0f1419",
+      marginBottom: 12,
+    } as TextStyle,
+    stats: {
+      flexDirection: "row",
+      gap: 24,
+    } as ViewStyle,
+    statItem: {
+      flexDirection: "row",
+      alignItems: "center",
+    } as ViewStyle,
+    statValue: {
+      fontSize: scaledFont(16),
+      fontWeight: "700",
+      color: "#0f1419",
+      marginRight: 4,
+    } as TextStyle,
+    statLabel: {
+      fontSize: scaledFont(14),
+      color: "#687684",
+    } as TextStyle,
+    tabBar: {
+      flexDirection: "row",
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: "#e1e1e1",
+      backgroundColor: "#ffffff",
+    } as ViewStyle,
+    tab: {
+      flex: 1,
+      minHeight: 48,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingVertical: 12,
+    } as ViewStyle,
+    tabActive: {
+      borderBottomWidth: 3,
+      borderBottomColor: "#1d9bf0",
+    } as ViewStyle,
+    tabText: {
+      fontSize: scaledFont(14),
+      fontWeight: "600",
+      color: "#687684",
+    } as TextStyle,
+    tabTextActive: {
+      color: "#0f1419",
+    } as TextStyle,
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 32,
+      minHeight: 300,
+    } as ViewStyle,
+    emptyText: {
+      fontSize: scaledFont(18),
+      fontWeight: "600",
+      color: "#0f1419",
+      marginBottom: 8,
+    } as TextStyle,
+    emptySubtext: {
+      fontSize: scaledFont(14),
+      color: "#687684",
+      textAlign: "center",
+    } as TextStyle,
+    loadingFooter: {
+      paddingVertical: 20,
+      alignItems: "center",
+    } as ViewStyle,
+  });
+}
+
+type Styles = ReturnType<typeof createStyles>;
+
+/**
  * Profile header with back button and options
  */
 const ProfileHeader = memo(function ProfileHeader({
   displayName,
   handle,
   onBack,
+  styles,
 }: {
   displayName?: string;
   handle: string;
   onBack?: () => void;
+  styles: Styles;
 }) {
   return (
     <View style={styles.header}>
@@ -95,7 +304,13 @@ const ProfileHeader = memo(function ProfileHeader({
 /**
  * Profile banner image
  */
-const BannerImage = memo(function BannerImage({ banner }: { banner?: string }) {
+const BannerImage = memo(function BannerImage({
+  banner,
+  styles,
+}: {
+  banner?: string;
+  styles: Styles;
+}) {
   return (
     <Image
       source={{ uri: banner || DEFAULT_BANNER_URI }}
@@ -110,8 +325,10 @@ const BannerImage = memo(function BannerImage({ banner }: { banner?: string }) {
  */
 const ProfileAvatar = memo(function ProfileAvatar({
   avatar,
+  styles,
 }: {
   avatar?: string;
+  styles: Styles;
 }) {
   return (
     <View style={styles.avatarContainer}>
@@ -131,11 +348,13 @@ const ProfileInfo = memo(function ProfileInfo({
   onFollow,
   onUnfollow,
   onMessage,
+  styles,
 }: {
   profile: AppBskyActorDefs.ProfileViewDetailed;
   onFollow?: () => void;
   onUnfollow?: () => void;
   onMessage?: () => void;
+  styles: Styles;
 }) {
   const isFollowing = !!profile.viewer?.following;
 
@@ -221,9 +440,11 @@ const ProfileInfo = memo(function ProfileInfo({
 const TabBar = memo(function TabBar({
   activeTab,
   onTabChange,
+  styles,
 }: {
   activeTab: "posts" | "replies" | "media" | "likes";
   onTabChange: (tab: "posts" | "replies" | "media" | "likes") => void;
+  styles: Styles;
 }) {
   return (
     <View style={styles.tabBar}>
@@ -292,8 +513,10 @@ const TabBar = memo(function TabBar({
  */
 const LoadingFooter = memo(function LoadingFooter({
   isLoading,
+  styles,
 }: {
   isLoading: boolean;
+  styles: Styles;
 }) {
   if (!isLoading) return null;
 
@@ -307,7 +530,13 @@ const LoadingFooter = memo(function LoadingFooter({
 /**
  * Empty state for no posts
  */
-const EmptyState = memo(function EmptyState({ tab }: { tab: string }) {
+const EmptyState = memo(function EmptyState({
+  tab,
+  styles,
+}: {
+  tab: string;
+  styles: Styles;
+}) {
   return (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyText}>No {tab} yet</Text>
@@ -341,6 +570,9 @@ function ProfileViewComponent({
   isRefreshing = false,
   onBack,
 }: ProfileViewProps) {
+  const { scaledFont } = useDynamicType();
+  const styles = useMemo(() => createStyles(scaledFont), [scaledFont]);
+
   const [activeTab, setActiveTab] = useState<
     "posts" | "replies" | "media" | "likes"
   >("posts");
@@ -373,30 +605,35 @@ function ProfileViewComponent({
   const ListHeader = useMemo(
     () => (
       <View>
-        <BannerImage banner={profile.banner} />
-        <ProfileAvatar avatar={profile.avatar} />
+        <BannerImage banner={profile.banner} styles={styles} />
+        <ProfileAvatar avatar={profile.avatar} styles={styles} />
         <ProfileInfo
           profile={profile}
           onFollow={onFollow}
           onUnfollow={onUnfollow}
           onMessage={onMessage}
+          styles={styles}
         />
-        <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+        <TabBar
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          styles={styles}
+        />
       </View>
     ),
-    [profile, onFollow, onUnfollow, onMessage, activeTab],
+    [profile, onFollow, onUnfollow, onMessage, activeTab, styles],
   );
 
   // Empty component
   const EmptyComponent = useMemo(
-    () => <EmptyState tab={activeTab} />,
-    [activeTab],
+    () => <EmptyState tab={activeTab} styles={styles} />,
+    [activeTab, styles],
   );
 
   // Footer component
   const ListFooter = useMemo(
-    () => <LoadingFooter isLoading={isLoading && hasMore} />,
-    [isLoading, hasMore],
+    () => <LoadingFooter isLoading={isLoading && hasMore} styles={styles} />,
+    [isLoading, hasMore, styles],
   );
 
   // Handle end reached
@@ -412,6 +649,7 @@ function ProfileViewComponent({
         displayName={profile.displayName}
         handle={profile.handle}
         onBack={onBack}
+        styles={styles}
       />
 
       <FlatList
@@ -481,196 +719,3 @@ function arePropsEqual(
  * Memoized export
  */
 export const ProfileView = memo(ProfileViewComponent, arePropsEqual);
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  } as ViewStyle,
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e1e1e1",
-    backgroundColor: "#ffffff",
-  } as ViewStyle,
-  backButton: {
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  } as ViewStyle,
-  backIcon: {
-    fontSize: 24,
-    color: "#0f1419",
-  } as TextStyle,
-  headerInfo: {
-    flex: 1,
-  } as ViewStyle,
-  headerName: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#0f1419",
-  } as TextStyle,
-  headerHandle: {
-    fontSize: 13,
-    color: "#687684",
-  } as TextStyle,
-  list: {
-    flex: 1,
-  } as ViewStyle,
-  listContent: {
-    flexGrow: 1,
-  } as ViewStyle,
-  banner: {
-    width: "100%",
-    height: 150,
-    backgroundColor: "#e1e1e1",
-  } as ImageStyle,
-  avatarContainer: {
-    marginTop: -40,
-    marginLeft: 16,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 4,
-    borderColor: "#ffffff",
-    backgroundColor: "#e1e1e1",
-    overflow: "hidden",
-  } as ViewStyle,
-  avatar: {
-    width: "100%",
-    height: "100%",
-  } as ImageStyle,
-  infoSection: {
-    padding: 16,
-  } as ViewStyle,
-  nameSection: {
-    marginBottom: 12,
-  } as ViewStyle,
-  displayName: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#0f1419",
-    marginBottom: 2,
-  } as TextStyle,
-  handle: {
-    fontSize: 14,
-    color: "#687684",
-  } as TextStyle,
-  actionButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 12,
-  } as ViewStyle,
-  messageButton: {
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: "#e1e1e1",
-    backgroundColor: "#ffffff",
-  } as ViewStyle,
-  messageIcon: {
-    fontSize: 18,
-  } as TextStyle,
-  followButton: {
-    flex: 1,
-    minHeight: 44,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 22,
-    backgroundColor: "#0f1419",
-    paddingHorizontal: 24,
-  } as ViewStyle,
-  followButtonFollowing: {
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e1e1e1",
-  } as ViewStyle,
-  followButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#ffffff",
-  } as TextStyle,
-  followButtonTextFollowing: {
-    color: "#0f1419",
-  } as TextStyle,
-  bio: {
-    fontSize: 15,
-    lineHeight: 20,
-    color: "#0f1419",
-    marginBottom: 12,
-  } as TextStyle,
-  stats: {
-    flexDirection: "row",
-    gap: 24,
-  } as ViewStyle,
-  statItem: {
-    flexDirection: "row",
-    alignItems: "center",
-  } as ViewStyle,
-  statValue: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#0f1419",
-    marginRight: 4,
-  } as TextStyle,
-  statLabel: {
-    fontSize: 14,
-    color: "#687684",
-  } as TextStyle,
-  tabBar: {
-    flexDirection: "row",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e1e1e1",
-    backgroundColor: "#ffffff",
-  } as ViewStyle,
-  tab: {
-    flex: 1,
-    minHeight: 48,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 12,
-  } as ViewStyle,
-  tabActive: {
-    borderBottomWidth: 3,
-    borderBottomColor: "#1d9bf0",
-  } as ViewStyle,
-  tabText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#687684",
-  } as TextStyle,
-  tabTextActive: {
-    color: "#0f1419",
-  } as TextStyle,
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
-    minHeight: 300,
-  } as ViewStyle,
-  emptyText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#0f1419",
-    marginBottom: 8,
-  } as TextStyle,
-  emptySubtext: {
-    fontSize: 14,
-    color: "#687684",
-    textAlign: "center",
-  } as TextStyle,
-  loadingFooter: {
-    paddingVertical: 20,
-    alignItems: "center",
-  } as ViewStyle,
-});

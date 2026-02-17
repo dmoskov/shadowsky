@@ -4,7 +4,14 @@
  * and persistent offline cache for viewing content without network connection
  */
 
-import { QueryClient, QueryCache, MutationCache, onlineManager } from '@tanstack/react-query';
+/**
+ * Captured at module load time to measure cold start performance.
+ * Used by PersistQueryClientProvider's onSuccess callback to report
+ * how long cache deserialization took.
+ */
+export const startupTimestamp = Date.now();
+
+import { QueryClient, QueryCache, MutationCache, onlineManager, focusManager } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
 import { MMKV } from 'react-native-mmkv';
@@ -203,6 +210,21 @@ export const queryClient = new QueryClient({
 });
 
 /**
+ * Configure React Query's focusManager to use React Native AppState.
+ * This makes `refetchIntervalInBackground: false` actually work on mobile,
+ * since the default focusManager uses browser `visibilitychange` which
+ * doesn't exist in React Native.
+ */
+export function setupFocusManager() {
+  focusManager.setEventListener((setFocused) => {
+    const sub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      setFocused(state === 'active');
+    });
+    return () => sub.remove();
+  });
+}
+
+/**
  * AppState listener for mobile-specific query behavior
  * Handles app backgrounding/foregrounding intelligently
  */
@@ -213,6 +235,9 @@ let appStateSubscription: any = null;
  * Setup AppState listener for query invalidation on foreground
  */
 export function setupAppStateListener() {
+  // Configure focusManager for React Native AppState integration
+  setupFocusManager();
+
   // Cleanup existing listener if any
   if (appStateSubscription) {
     appStateSubscription.remove();

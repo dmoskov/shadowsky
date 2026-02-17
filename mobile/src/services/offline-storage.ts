@@ -24,14 +24,17 @@ const STORAGE_KEYS = {
   FEED_METADATA: '@offline/feed_metadata',
   THREAD_ITEMS: '@offline/thread_items',
   THREAD_METADATA: '@offline/thread_metadata',
+  NOTIFICATION_ITEMS: '@offline/notification_items',
 } as const;
 
 // Storage limits
 const LIMITS = {
   MAX_FEED_ITEMS: 500,
   MAX_THREAD_ITEMS: 100,
+  MAX_NOTIFICATION_ITEMS: 200,
   FEED_MAX_AGE_DAYS: 7,
   THREAD_MAX_AGE_DAYS: 30,
+  NOTIFICATION_MAX_AGE_DAYS: 7,
 } as const;
 
 export interface OfflineFeedItem {
@@ -54,7 +57,24 @@ export interface OfflineFeedItem {
   repostCount?: number;
   likeCount?: number;
   _offlineCachedAt: number;
-  _feedType: 'timeline' | 'author' | 'list';
+  _feedType: 'timeline' | 'author' | 'list' | 'search';
+}
+
+export interface OfflineNotificationItem {
+  uri: string;
+  cid: string;
+  reason: string;
+  reasonSubject?: string;
+  isRead: boolean;
+  indexedAt: string;
+  author: {
+    did: string;
+    handle: string;
+    displayName?: string;
+    avatar?: string;
+  };
+  record?: unknown;
+  _offlineCachedAt: number;
 }
 
 export interface OfflineThreadItem {
@@ -128,7 +148,7 @@ class OfflineStorageService {
 
   async saveFeedItems(
     items: Omit<OfflineFeedItem, '_offlineCachedAt'>[],
-    feedType: 'timeline' | 'author' | 'list' = 'timeline'
+    feedType: 'timeline' | 'author' | 'list' | 'search' = 'timeline'
   ): Promise<void> {
     try {
       const existingData = await AsyncStorage.getItem(STORAGE_KEYS.FEED_ITEMS);
@@ -184,7 +204,7 @@ class OfflineStorageService {
 
   async getFeedItems(
     limit = 50,
-    feedType?: 'timeline' | 'author' | 'list'
+    feedType?: 'timeline' | 'author' | 'list' | 'search'
   ): Promise<OfflineFeedItem[]> {
     try {
       const data = await AsyncStorage.getItem(STORAGE_KEYS.FEED_ITEMS);
@@ -293,6 +313,89 @@ class OfflineStorageService {
       return threads.some(t => t.threadUri === threadUri);
     } catch {
       return false;
+    }
+  }
+
+  // ==================== Notification Operations ====================
+
+  async saveNotificationItems(
+    items: Omit<OfflineNotificationItem, '_offlineCachedAt'>[]
+  ): Promise<void> {
+    try {
+      const existingData = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATION_ITEMS);
+      const existingItems: OfflineNotificationItem[] = existingData ? JSON.parse(existingData) : [];
+
+      const now = Date.now();
+      const newItems: OfflineNotificationItem[] = items.map(item => ({
+        ...item,
+        _offlineCachedAt: now,
+      }));
+
+      // Merge with existing items, avoiding duplicates by URI
+      const itemMap = new Map<string, OfflineNotificationItem>();
+      existingItems.forEach(item => {
+        itemMap.set(item.uri, item);
+      });
+      newItems.forEach(item => {
+        itemMap.set(item.uri, item);
+      });
+
+      // Sort by indexedAt (newest first) and enforce limit
+      const allItems = Array.from(itemMap.values()).sort(
+        (a, b) => new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime()
+      );
+      const limitedItems = allItems.slice(0, LIMITS.MAX_NOTIFICATION_ITEMS);
+
+      await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATION_ITEMS, JSON.stringify(limitedItems));
+
+      await this.saveMetadata({
+        key: 'notifications',
+        lastSyncAt: now,
+        itemCount: limitedItems.length,
+        newestItemAt: limitedItems[0]?.indexedAt,
+        oldestItemAt: limitedItems[limitedItems.length - 1]?.indexedAt,
+      });
+
+      logger.log(`Saved ${newItems.length} notification items, total: ${limitedItems.length}`);
+    } catch (error) {
+      logger.error('Failed to save notification items:', error);
+      throw error;
+    }
+  }
+
+  async getNotificationItems(limit = 50): Promise<OfflineNotificationItem[]> {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATION_ITEMS);
+      if (!data) return [];
+
+      const items: OfflineNotificationItem[] = JSON.parse(data);
+      return items.slice(0, limit);
+    } catch (error) {
+      logger.error('Failed to get notification items:', error);
+      return [];
+    }
+  }
+
+  async evictOldNotifications(): Promise<number> {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATION_ITEMS);
+      if (!data) return 0;
+
+      const items: OfflineNotificationItem[] = JSON.parse(data);
+      const cutoffTime = Date.now() - LIMITS.NOTIFICATION_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+
+      const filteredItems = items.filter(item => item._offlineCachedAt > cutoffTime);
+      const deletedCount = items.length - filteredItems.length;
+
+      if (deletedCount > 0) {
+        await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATION_ITEMS, JSON.stringify(filteredItems));
+        logger.log(`Evicted ${deletedCount} old notification items`);
+      }
+
+      return deletedCount;
+    } catch (error) {
+      logger.error('Failed to evict old notifications:', error);
+      return 0;
     }
   }
 
@@ -410,6 +513,7 @@ class OfflineStorageService {
     await Promise.all([
       this.evictOldFeedItems(),
       this.evictOldThreads(),
+      this.evictOldNotifications(),
     ]);
   }
 
@@ -420,6 +524,7 @@ class OfflineStorageService {
         AsyncStorage.removeItem(STORAGE_KEYS.FEED_METADATA),
         AsyncStorage.removeItem(STORAGE_KEYS.THREAD_ITEMS),
         AsyncStorage.removeItem(STORAGE_KEYS.THREAD_METADATA),
+        AsyncStorage.removeItem(STORAGE_KEYS.NOTIFICATION_ITEMS),
       ]);
       this.initialized = false;
       logger.log('Cleared all offline storage');

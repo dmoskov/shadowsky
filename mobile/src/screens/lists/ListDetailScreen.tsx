@@ -313,6 +313,16 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
         }
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
+        removeClippedSubviews={true}
+        windowSize={10}
+        maxToRenderPerBatch={15}
+        initialNumToRender={15}
+        updateCellsBatchingPeriod={50}
+        getItemLayout={(_data, index) => ({
+          length: 81,
+          offset: 81 * index,
+          index,
+        })}
         ListFooterComponent={
           isFetchingNextPage ? (
             <View style={styles.footerLoader}>

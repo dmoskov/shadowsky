@@ -1,6 +1,6 @@
 import { BskyAgent } from "@atproto/api";
 import { withRetry } from "../utils/with-retry";
-
+import { rateLimited, ATProtoEndpointType } from './rate-limiter';
 
 import { createLogger } from '../utils/logger';
 
@@ -127,126 +127,27 @@ class DmService {
       throw new Error("Not authenticated");
     }
 
-    return withRetry(async () => {
-      try {
-        const headers = await this.getAuthHeaders();
+    return rateLimited(
+      async () => withRetry(async () => {
+        try {
+          const headers = await this.getAuthHeaders();
 
-        const response = await fetch(
-          "https://api.bsky.chat/xrpc/chat.bsky.convo.listConvos",
-          {
-            headers,
-          }
-        );
-
-        if (!response.ok) {
-          const error: any = new Error(`HTTP ${response.status}: ${response.statusText}`);
-          error.status = response.status;
-          throw error;
-        }
-
-        const data = (await response.json()) as ApiListConvosResponse;
-
-        return data.convos.map((convo: ApiConvo) => ({
-          id: convo.id,
-          rev: convo.rev,
-          members: convo.members.map((member: ApiConvoMember) => ({
-            did: member.did,
-            handle: member.handle,
-            displayName: member.displayName,
-            avatar: member.avatar,
-          })),
-          muted: convo.muted || false,
-          unreadCount: convo.unreadCount || 0,
-          lastMessage: convo.lastMessage
-            ? {
-                id: convo.lastMessage.id,
-                rev: convo.lastMessage.rev,
-                text: convo.lastMessage.text,
-                sentAt: convo.lastMessage.sentAt,
-                sender: {
-                  did: convo.lastMessage.sender.did,
-                },
-              }
-            : undefined,
-        }));
-      } catch (error: unknown) {
-        const apiErr = error as ApiError;
-        if (apiErr.status === 401 || apiErr.statusCode === 401) {
-          throw new Error("Authentication required. Please sign in again.");
-        }
-        if (apiErr.status === 403 || apiErr.statusCode === 403) {
-          throw new Error(
-            "This app password doesn't have permission to access direct messages. Please create a new app password with Direct Messages enabled."
+          const response = await fetch(
+            "https://api.bsky.chat/xrpc/chat.bsky.convo.listConvos",
+            {
+              headers,
+            }
           );
-        }
-        throw error;
-      }
-    });
-  }
 
-  async getConversation(conversationId: string): Promise<{
-    conversation: DmConversation;
-    messages: DmMessage[];
-  }> {
-    if (!this.agent) {
-      throw new Error("Not authenticated");
-    }
-
-    return withRetry(async () => {
-      try {
-        const headers = await this.getAuthHeaders();
-
-        const messagesResponse = await fetch(
-          `https://api.bsky.chat/xrpc/chat.bsky.convo.getMessages?convoId=${conversationId}`,
-          {
-            headers,
+          if (!response.ok) {
+            const error: any = new Error(`HTTP ${response.status}: ${response.statusText}`);
+            error.status = response.status;
+            throw error;
           }
-        );
 
-        if (!messagesResponse.ok) {
-          const error: any = new Error(
-            `HTTP ${messagesResponse.status}: ${messagesResponse.statusText}`
-          );
-          error.status = messagesResponse.status;
-          throw error;
-        }
+          const data = (await response.json()) as ApiListConvosResponse;
 
-        const messagesData =
-          (await messagesResponse.json()) as ApiGetMessagesResponse;
-
-        const convoResponse = await fetch(
-          `https://api.bsky.chat/xrpc/chat.bsky.convo.getConvo?convoId=${conversationId}`,
-          {
-            headers,
-          }
-        );
-
-        if (!convoResponse.ok) {
-          const error: any = new Error(
-            `HTTP ${convoResponse.status}: ${convoResponse.statusText}`
-          );
-          error.status = convoResponse.status;
-          throw error;
-        }
-
-        const convoData = (await convoResponse.json()) as ApiGetConvoResponse;
-        const convo = convoData.convo;
-
-        const messages = messagesData.messages
-          .map((msg: ApiMessage) => ({
-            id: msg.id,
-            rev: msg.rev,
-            text: msg.text,
-            sentAt: msg.sentAt,
-            sender: {
-              did: msg.sender.did,
-            },
-            embed: msg.embed,
-          }))
-          .reverse(); // Reverse to show oldest first
-
-        return {
-          conversation: {
+          return data.convos.map((convo: ApiConvo) => ({
             id: convo.id,
             rev: convo.rev,
             members: convo.members.map((member: ApiConvoMember) => ({
@@ -268,18 +169,123 @@ class DmService {
                   },
                 }
               : undefined,
-          },
-          messages,
-        };
-      } catch (error: unknown) {
-        logger.error('Failed to get conversation:', error);
-        const apiErr = error as ApiError;
-        if (apiErr.status === 401 || apiErr.statusCode === 401) {
-          throw new Error("Authentication required. Please sign in again.");
+          }));
+        } catch (error: unknown) {
+          const apiErr = error as ApiError;
+          if (apiErr.status === 401 || apiErr.statusCode === 401) {
+            throw new Error("Authentication required. Please sign in again.");
+          }
+          if (apiErr.status === 403 || apiErr.statusCode === 403) {
+            throw new Error(
+              "This app password doesn't have permission to access direct messages. Please create a new app password with Direct Messages enabled."
+            );
+          }
+          throw error;
         }
-        throw error;
-      }
-    });
+      }),
+      ATProtoEndpointType.CHAT
+    );
+  }
+
+  async getConversation(conversationId: string): Promise<{
+    conversation: DmConversation;
+    messages: DmMessage[];
+  }> {
+    if (!this.agent) {
+      throw new Error("Not authenticated");
+    }
+
+    return rateLimited(
+      async () => withRetry(async () => {
+        try {
+          const headers = await this.getAuthHeaders();
+
+          const messagesResponse = await fetch(
+            `https://api.bsky.chat/xrpc/chat.bsky.convo.getMessages?convoId=${conversationId}`,
+            {
+              headers,
+            }
+          );
+
+          if (!messagesResponse.ok) {
+            const error: any = new Error(
+              `HTTP ${messagesResponse.status}: ${messagesResponse.statusText}`
+            );
+            error.status = messagesResponse.status;
+            throw error;
+          }
+
+          const messagesData =
+            (await messagesResponse.json()) as ApiGetMessagesResponse;
+
+          const convoResponse = await fetch(
+            `https://api.bsky.chat/xrpc/chat.bsky.convo.getConvo?convoId=${conversationId}`,
+            {
+              headers,
+            }
+          );
+
+          if (!convoResponse.ok) {
+            const error: any = new Error(
+              `HTTP ${convoResponse.status}: ${convoResponse.statusText}`
+            );
+            error.status = convoResponse.status;
+            throw error;
+          }
+
+          const convoData = (await convoResponse.json()) as ApiGetConvoResponse;
+          const convo = convoData.convo;
+
+          const messages = messagesData.messages
+            .map((msg: ApiMessage) => ({
+              id: msg.id,
+              rev: msg.rev,
+              text: msg.text,
+              sentAt: msg.sentAt,
+              sender: {
+                did: msg.sender.did,
+              },
+              embed: msg.embed,
+            }))
+            .reverse(); // Reverse to show oldest first
+
+          return {
+            conversation: {
+              id: convo.id,
+              rev: convo.rev,
+              members: convo.members.map((member: ApiConvoMember) => ({
+                did: member.did,
+                handle: member.handle,
+                displayName: member.displayName,
+                avatar: member.avatar,
+              })),
+              muted: convo.muted || false,
+              unreadCount: convo.unreadCount || 0,
+              lastMessage: convo.lastMessage
+                ? {
+                    id: convo.lastMessage.id,
+                    rev: convo.lastMessage.rev,
+                    text: convo.lastMessage.text,
+                    sentAt: convo.lastMessage.sentAt,
+                    sender: {
+                      did: convo.lastMessage.sender.did,
+                    },
+                  }
+                : undefined,
+            },
+            messages,
+          };
+        } catch (error: unknown) {
+          logger.error('Failed to get conversation:', error);
+          const apiErr = error as ApiError;
+          if (apiErr.status === 401 || apiErr.statusCode === 401) {
+            throw new Error("Authentication required. Please sign in again.");
+          }
+          throw error;
+        }
+      }),
+      ATProtoEndpointType.CHAT
+    );
   }
 
   async uploadBlob(uri: string): Promise<{ ref: { $link: string }; mimeType: string; size: number }> {
@@ -287,21 +293,24 @@ class DmService {
       throw new Error("Not authenticated");
     }
 
-    return withRetry(async () => {
-      // Fetch the media file
-      const response = await fetch(uri);
-      const blob = await response.blob();
+    return rateLimited(
+      async () => withRetry(async () => {
+        // Fetch the media file
+        const response = await fetch(uri);
+        const blob = await response.blob();
 
-      // Convert blob to Uint8Array for upload
-      const arrayBuffer = await blob.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
+        // Convert blob to Uint8Array for upload
+        const arrayBuffer = await blob.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
 
-      const uploadResponse = await this.agent!.uploadBlob(uint8Array, {
-        encoding: blob.type,
-      });
+        const uploadResponse = await this.agent!.uploadBlob(uint8Array, {
+          encoding: blob.type,
+        });
 
-      return uploadResponse.data.blob;
-    });
+        return uploadResponse.data.blob;
+      }),
+      ATProtoEndpointType.UPLOAD
+    );
   }
 
   async sendMessage(
@@ -313,59 +322,62 @@ class DmService {
       throw new Error("Not authenticated");
     }
 
-    return withRetry(async () => {
-      try {
-        const headers = await this.getAuthHeaders();
-        headers["Content-Type"] = "application/json";
+    return rateLimited(
+      async () => withRetry(async () => {
+        try {
+          const headers = await this.getAuthHeaders();
+          headers["Content-Type"] = "application/json";
 
-        const message: any = {
-          text,
-        };
+          const message: any = {
+            text,
+          };
 
-        // Upload images if provided
-        if (images && images.length > 0) {
-          const imageBlobs = await Promise.all(
-            images.map(async (img) => {
-              const blob = await this.uploadBlob(img.uri);
-              return {
-                image: blob,
-                alt: img.alt || "",
-              };
-            })
+          // Upload images if provided
+          if (images && images.length > 0) {
+            const imageBlobs = await Promise.all(
+              images.map(async (img) => {
+                const blob = await this.uploadBlob(img.uri);
+                return {
+                  image: blob,
+                  alt: img.alt || "",
+                };
+              })
+            );
+
+            message.embed = {
+              $type: "chat.bsky.convo.defs#messageEmbed",
+              images: imageBlobs,
+            };
+          }
+
+          const response = await fetch(
+            "https://api.bsky.chat/xrpc/chat.bsky.convo.sendMessage",
+            {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                convoId: conversationId,
+                message,
+              }),
+            }
           );
 
-          message.embed = {
-            $type: "chat.bsky.convo.defs#messageEmbed",
-            images: imageBlobs,
-          };
-        }
-
-        const response = await fetch(
-          "https://api.bsky.chat/xrpc/chat.bsky.convo.sendMessage",
-          {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              convoId: conversationId,
-              message,
-            }),
+          if (!response.ok) {
+            const error: any = new Error(`HTTP ${response.status}: ${response.statusText}`);
+            error.status = response.status;
+            throw error;
           }
-        );
-
-        if (!response.ok) {
-          const error: any = new Error(`HTTP ${response.status}: ${response.statusText}`);
-          error.status = response.status;
+        } catch (error: unknown) {
+          logger.error('Failed to send message:', error);
+          const apiErr = error as ApiError;
+          if (apiErr.status === 401 || apiErr.statusCode === 401) {
+            throw new Error("Authentication required. Please sign in again.");
+          }
           throw error;
         }
-      } catch (error: unknown) {
-        logger.error('Failed to send message:', error);
-        const apiErr = error as ApiError;
-        if (apiErr.status === 401 || apiErr.statusCode === 401) {
-          throw new Error("Authentication required. Please sign in again.");
-        }
-        throw error;
-      }
-    });
+      }),
+      ATProtoEndpointType.CHAT
+    );
   }
 
   async updateRead(conversationId: string): Promise<void> {
@@ -374,35 +386,40 @@ class DmService {
     }
 
     try {
-      const headers = await this.getAuthHeaders();
-      headers["Content-Type"] = "application/json";
+      await rateLimited(
+        async () => {
+          const headers = await this.getAuthHeaders();
+          headers["Content-Type"] = "application/json";
 
-      const convoResponse = await fetch(
-        `https://api.bsky.chat/xrpc/chat.bsky.convo.getConvo?convoId=${conversationId}`,
-        {
-          headers,
-        }
+          const convoResponse = await fetch(
+            `https://api.bsky.chat/xrpc/chat.bsky.convo.getConvo?convoId=${conversationId}`,
+            {
+              headers,
+            }
+          );
+
+          if (!convoResponse.ok) {
+            return;
+          }
+
+          const convoData = await convoResponse.json();
+          const convo = convoData.convo;
+
+          if (!convo.lastMessage || convo.unreadCount === 0) {
+            return;
+          }
+
+          await fetch("https://api.bsky.chat/xrpc/chat.bsky.convo.updateRead", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              convoId: conversationId,
+              messageId: convo.lastMessage.id,
+            }),
+          });
+        },
+        ATProtoEndpointType.CHAT
       );
-
-      if (!convoResponse.ok) {
-        return;
-      }
-
-      const convoData = await convoResponse.json();
-      const convo = convoData.convo;
-
-      if (!convo.lastMessage || convo.unreadCount === 0) {
-        return;
-      }
-
-      await fetch("https://api.bsky.chat/xrpc/chat.bsky.convo.updateRead", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          convoId: conversationId,
-          messageId: convo.lastMessage.id,
-        }),
-      });
     } catch (error: unknown) {
       logger.error('Failed to update read status:', error);
       // Don't throw - marking as read is not critical
@@ -418,70 +435,73 @@ class DmService {
       throw new Error("Not authenticated");
     }
 
-    return withRetry(async () => {
-      try {
-        const headers = await this.getAuthHeaders();
-        headers["Content-Type"] = "application/json";
+    return rateLimited(
+      async () => withRetry(async () => {
+        try {
+          const headers = await this.getAuthHeaders();
+          headers["Content-Type"] = "application/json";
 
-        const response = await fetch(
-          "https://api.bsky.chat/xrpc/chat.bsky.convo.getConvoForMembers",
-          {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              members: memberDids,
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          const error: any = new Error(
-            `HTTP ${response.status}: ${response.statusText}`
+          const response = await fetch(
+            "https://api.bsky.chat/xrpc/chat.bsky.convo.getConvoForMembers",
+            {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                members: memberDids,
+              }),
+            }
           );
-          error.status = response.status;
+
+          if (!response.ok) {
+            const error: any = new Error(
+              `HTTP ${response.status}: ${response.statusText}`
+            );
+            error.status = response.status;
+            throw error;
+          }
+
+          const data = (await response.json()) as ApiGetConvoResponse;
+          const convo = data.convo;
+
+          return {
+            id: convo.id,
+            rev: convo.rev,
+            members: convo.members.map((member: ApiConvoMember) => ({
+              did: member.did,
+              handle: member.handle,
+              displayName: member.displayName,
+              avatar: member.avatar,
+            })),
+            muted: convo.muted || false,
+            unreadCount: convo.unreadCount || 0,
+            lastMessage: convo.lastMessage
+              ? {
+                  id: convo.lastMessage.id,
+                  rev: convo.lastMessage.rev,
+                  text: convo.lastMessage.text,
+                  sentAt: convo.lastMessage.sentAt,
+                  sender: {
+                    did: convo.lastMessage.sender.did,
+                  },
+                }
+              : undefined,
+          };
+        } catch (error: unknown) {
+          logger.error('Failed to get conversation for members:', error);
+          const apiErr = error as ApiError;
+          if (apiErr.status === 401 || apiErr.statusCode === 401) {
+            throw new Error("Authentication required. Please sign in again.");
+          }
+          if (apiErr.status === 403 || apiErr.statusCode === 403) {
+            throw new Error(
+              "This app password doesn't have permission to access direct messages. Please create a new app password with Direct Messages enabled."
+            );
+          }
           throw error;
         }
-
-        const data = (await response.json()) as ApiGetConvoResponse;
-        const convo = data.convo;
-
-        return {
-          id: convo.id,
-          rev: convo.rev,
-          members: convo.members.map((member: ApiConvoMember) => ({
-            did: member.did,
-            handle: member.handle,
-            displayName: member.displayName,
-            avatar: member.avatar,
-          })),
-          muted: convo.muted || false,
-          unreadCount: convo.unreadCount || 0,
-          lastMessage: convo.lastMessage
-            ? {
-                id: convo.lastMessage.id,
-                rev: convo.lastMessage.rev,
-                text: convo.lastMessage.text,
-                sentAt: convo.lastMessage.sentAt,
-                sender: {
-                  did: convo.lastMessage.sender.did,
-                },
-              }
-            : undefined,
-        };
-      } catch (error: unknown) {
-        logger.error('Failed to get conversation for members:', error);
-        const apiErr = error as ApiError;
-        if (apiErr.status === 401 || apiErr.statusCode === 401) {
-          throw new Error("Authentication required. Please sign in again.");
-        }
-        if (apiErr.status === 403 || apiErr.statusCode === 403) {
-          throw new Error(
-            "This app password doesn't have permission to access direct messages. Please create a new app password with Direct Messages enabled."
-          );
-        }
-        throw error;
-      }
-    });
+      }),
+      ATProtoEndpointType.CHAT
+    );
   }
 
   /**
@@ -492,38 +512,41 @@ class DmService {
       throw new Error("Not authenticated");
     }
 
-    return withRetry(async () => {
-      try {
-        const headers = await this.getAuthHeaders();
-        headers["Content-Type"] = "application/json";
+    return rateLimited(
+      async () => withRetry(async () => {
+        try {
+          const headers = await this.getAuthHeaders();
+          headers["Content-Type"] = "application/json";
 
-        const response = await fetch(
-          "https://api.bsky.chat/xrpc/chat.bsky.convo.muteConvo",
-          {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              convoId: conversationId,
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          const error: any = new Error(
-            `HTTP ${response.status}: ${response.statusText}`
+          const response = await fetch(
+            "https://api.bsky.chat/xrpc/chat.bsky.convo.muteConvo",
+            {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                convoId: conversationId,
+              }),
+            }
           );
-          error.status = response.status;
+
+          if (!response.ok) {
+            const error: any = new Error(
+              `HTTP ${response.status}: ${response.statusText}`
+            );
+            error.status = response.status;
+            throw error;
+          }
+        } catch (error: unknown) {
+          logger.error('Failed to mute conversation:', error);
+          const apiErr = error as ApiError;
+          if (apiErr.status === 401 || apiErr.statusCode === 401) {
+            throw new Error("Authentication required. Please sign in again.");
+          }
           throw error;
         }
-      } catch (error: unknown) {
-        logger.error('Failed to mute conversation:', error);
-        const apiErr = error as ApiError;
-        if (apiErr.status === 401 || apiErr.statusCode === 401) {
-          throw new Error("Authentication required. Please sign in again.");
-        }
-        throw error;
-      }
-    });
+      }),
+      ATProtoEndpointType.CHAT
+    );
   }
 
   /**
@@ -534,38 +557,41 @@ class DmService {
       throw new Error("Not authenticated");
     }
 
-    return withRetry(async () => {
-      try {
-        const headers = await this.getAuthHeaders();
-        headers["Content-Type"] = "application/json";
+    return rateLimited(
+      async () => withRetry(async () => {
+        try {
+          const headers = await this.getAuthHeaders();
+          headers["Content-Type"] = "application/json";
 
-        const response = await fetch(
-          "https://api.bsky.chat/xrpc/chat.bsky.convo.unmuteConvo",
-          {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              convoId: conversationId,
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          const error: any = new Error(
-            `HTTP ${response.status}: ${response.statusText}`
+          const response = await fetch(
+            "https://api.bsky.chat/xrpc/chat.bsky.convo.unmuteConvo",
+            {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                convoId: conversationId,
+              }),
+            }
           );
-          error.status = response.status;
+
+          if (!response.ok) {
+            const error: any = new Error(
+              `HTTP ${response.status}: ${response.statusText}`
+            );
+            error.status = response.status;
+            throw error;
+          }
+        } catch (error: unknown) {
+          logger.error('Failed to unmute conversation:', error);
+          const apiErr = error as ApiError;
+          if (apiErr.status === 401 || apiErr.statusCode === 401) {
+            throw new Error("Authentication required. Please sign in again.");
+          }
           throw error;
         }
-      } catch (error: unknown) {
-        logger.error('Failed to unmute conversation:', error);
-        const apiErr = error as ApiError;
-        if (apiErr.status === 401 || apiErr.statusCode === 401) {
-          throw new Error("Authentication required. Please sign in again.");
-        }
-        throw error;
-      }
-    });
+      }),
+      ATProtoEndpointType.CHAT
+    );
   }
 
   /**
@@ -576,38 +602,41 @@ class DmService {
       throw new Error("Not authenticated");
     }
 
-    return withRetry(async () => {
-      try {
-        const headers = await this.getAuthHeaders();
-        headers["Content-Type"] = "application/json";
+    return rateLimited(
+      async () => withRetry(async () => {
+        try {
+          const headers = await this.getAuthHeaders();
+          headers["Content-Type"] = "application/json";
 
-        const response = await fetch(
-          "https://api.bsky.chat/xrpc/chat.bsky.convo.leaveConvo",
-          {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              convoId: conversationId,
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          const error: any = new Error(
-            `HTTP ${response.status}: ${response.statusText}`
+          const response = await fetch(
+            "https://api.bsky.chat/xrpc/chat.bsky.convo.leaveConvo",
+            {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                convoId: conversationId,
+              }),
+            }
           );
-          error.status = response.status;
+
+          if (!response.ok) {
+            const error: any = new Error(
+              `HTTP ${response.status}: ${response.statusText}`
+            );
+            error.status = response.status;
+            throw error;
+          }
+        } catch (error: unknown) {
+          logger.error('Failed to leave conversation:', error);
+          const apiErr = error as ApiError;
+          if (apiErr.status === 401 || apiErr.statusCode === 401) {
+            throw new Error("Authentication required. Please sign in again.");
+          }
           throw error;
         }
-      } catch (error: unknown) {
-        logger.error('Failed to leave conversation:', error);
-        const apiErr = error as ApiError;
-        if (apiErr.status === 401 || apiErr.statusCode === 401) {
-          throw new Error("Authentication required. Please sign in again.");
-        }
-        throw error;
-      }
-    });
+      }),
+      ATProtoEndpointType.CHAT
+    );
   }
 }
 

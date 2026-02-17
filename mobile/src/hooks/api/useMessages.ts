@@ -1,19 +1,34 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../../contexts/AuthContext";
 import { dmService } from "../../services/dm-service";
+import { useAdaptivePolling } from "../useAdaptivePolling";
+
+// Polling intervals for conversations list
+const CONVERSATIONS_POLL_ACTIVE = 30000;   // 30s (was 10s — excessive for a list)
+const CONVERSATIONS_POLL_REALTIME = 120000; // 2min when Jetstream connected
+
+// Polling intervals for active conversation messages
+const CONVERSATION_POLL_ACTIVE = 10000;    // 10s when viewing a conversation (was 5s)
+const CONVERSATION_POLL_REALTIME = 60000;  // 1min when Jetstream connected
 
 /**
- * Hook to fetch all DM conversations
+ * Hook to fetch all DM conversations.
+ * Polling pauses when app is backgrounded and adapts to Jetstream state.
  */
 export function useConversations() {
   const { session } = useAuth();
+  const refetchInterval = useAdaptivePolling({
+    activeInterval: CONVERSATIONS_POLL_ACTIVE,
+    activeRealtimeInterval: CONVERSATIONS_POLL_REALTIME,
+  });
 
   return useQuery({
     queryKey: ["dm-conversations"],
     queryFn: () => dmService.listConversations(),
     enabled: !!session,
-    refetchInterval: 10000, // Refresh every 10 seconds
-    staleTime: 5000, // Consider data stale after 5 seconds
+    refetchInterval,
+    refetchIntervalInBackground: false,
+    staleTime: 5000,
   });
 }
 
@@ -32,10 +47,16 @@ export function useUnreadMessageCount() {
 }
 
 /**
- * Hook to fetch a specific conversation and its messages
+ * Hook to fetch a specific conversation and its messages.
+ * Polls more frequently since the user is actively viewing it,
+ * but still pauses when backgrounded.
  */
 export function useConversation(conversationId: string | null) {
   const { session } = useAuth();
+  const refetchInterval = useAdaptivePolling({
+    activeInterval: CONVERSATION_POLL_ACTIVE,
+    activeRealtimeInterval: CONVERSATION_POLL_REALTIME,
+  });
 
   return useQuery({
     queryKey: ["dm-conversation", conversationId],
@@ -44,8 +65,9 @@ export function useConversation(conversationId: string | null) {
         ? dmService.getConversation(conversationId)
         : Promise.resolve(null),
     enabled: !!conversationId && !!session,
-    refetchInterval: conversationId ? 5000 : false, // Refresh every 5 seconds when viewing
-    staleTime: 2000, // Consider data stale after 2 seconds
+    refetchInterval: conversationId ? refetchInterval : false,
+    refetchIntervalInBackground: false,
+    staleTime: 2000,
   });
 }
 

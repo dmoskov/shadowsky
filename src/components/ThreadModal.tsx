@@ -252,6 +252,7 @@ export function ThreadModal({
         throw new Error("NETWORK_ERROR");
       }
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes - reuses prefetched thread data
     enabled: !!agent && !!postUri,
   });
 

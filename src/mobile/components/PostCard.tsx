@@ -34,6 +34,11 @@ import {
   shouldHideContent,
   shouldWarnContent,
 } from "../../utils/labels";
+import {
+  scaledLineHeight,
+  useDynamicType,
+  type ScaledFontFn,
+} from "../hooks/useDynamicType";
 import type { PostCardProps, PostImage } from "../types";
 
 // Placeholder for expo-image - will be used when available
@@ -43,6 +48,331 @@ import type { PostCardProps, PostImage } from "../types";
 // For web builds, this will be handled by the bundler
 const DEFAULT_AVATAR_URI =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23e1e1e1'/%3E%3Ccircle cx='50' cy='40' r='18' fill='%23a1a1a1'/%3E%3Cellipse cx='50' cy='80' rx='30' ry='22' fill='%23a1a1a1'/%3E%3C/svg%3E";
+
+/**
+ * Creates styles with Dynamic Type-scaled font sizes.
+ * ViewStyle and ImageStyle properties remain unchanged;
+ * only fontSize and associated lineHeight values are scaled.
+ */
+function createStyles(scaledFont: ScaledFontFn) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: "#ffffff",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    } as ViewStyle,
+    containerBorder: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: "#e1e1e1",
+    } as ViewStyle,
+    repostReason: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 8,
+      marginLeft: 60,
+      minHeight: 44,
+      paddingVertical: 8,
+    } as ViewStyle,
+    repostIcon: {
+      fontSize: scaledFont(14),
+      color: "#687684",
+      marginRight: 4,
+    } as TextStyle,
+    repostText: {
+      fontSize: scaledFont(13),
+      color: "#687684",
+    } as TextStyle,
+    postContent: {
+      flexDirection: "row",
+    } as ViewStyle,
+    mainContent: {
+      flex: 1,
+      marginLeft: 12,
+    } as ViewStyle,
+    authorContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+    } as ViewStyle,
+    authorInfo: {
+      flexDirection: "row",
+      alignItems: "center",
+      flexShrink: 1,
+      minHeight: 44,
+      paddingVertical: 8,
+    } as ViewStyle,
+    displayName: {
+      fontSize: scaledFont(15),
+      fontWeight: "600",
+      color: "#0f1419",
+      marginRight: 4,
+    } as TextStyle,
+    handle: {
+      fontSize: scaledFont(14),
+      color: "#687684",
+      flexShrink: 1,
+    } as TextStyle,
+    timestamp: {
+      fontSize: scaledFont(14),
+      color: "#687684",
+      marginLeft: 4,
+    } as TextStyle,
+    postText: {
+      fontSize: scaledFont(15),
+      lineHeight: scaledLineHeight(scaledFont, 15, 20),
+      color: "#0f1419",
+      marginTop: 4,
+    } as TextStyle,
+    actionBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 12,
+      justifyContent: "space-between",
+      maxWidth: 280,
+    } as ViewStyle,
+    actionButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      minWidth: 44,
+      minHeight: 44,
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+    } as ViewStyle,
+    actionIcon: {
+      fontSize: scaledFont(16),
+      marginRight: 4,
+    } as TextStyle,
+    actionCount: {
+      fontSize: scaledFont(13),
+      color: "#687684",
+    } as TextStyle,
+    actionActive: {
+      color: "#00ba7c",
+    } as TextStyle,
+    countActive: {
+      color: "#00ba7c",
+    } as TextStyle,
+    likeActive: {
+      color: "#f91880",
+    } as TextStyle,
+    likeCountActive: {
+      color: "#f91880",
+    } as TextStyle,
+    imageContainer: {
+      marginTop: 12,
+      borderRadius: 12,
+      overflow: "hidden",
+    } as ViewStyle,
+    singleImage: {
+      aspectRatio: 16 / 9,
+    } as ViewStyle,
+    twoImages: {
+      flexDirection: "row",
+      gap: 2,
+      aspectRatio: 2,
+    } as ViewStyle,
+    threeImages: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 2,
+      aspectRatio: 1.5,
+    } as ViewStyle,
+    fourImages: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 2,
+      aspectRatio: 1,
+    } as ViewStyle,
+    imageWrapper: {
+      flex: 1,
+      minWidth: "48%",
+      position: "relative",
+    } as ViewStyle,
+    largeImage: {
+      minWidth: "66%",
+      minHeight: "100%",
+    } as ViewStyle,
+    postImage: {
+      width: "100%",
+      height: "100%",
+      backgroundColor: "#e1e1e1",
+    } as ImageStyle,
+    altBadge: {
+      position: "absolute",
+      bottom: 8,
+      left: 8,
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+    } as ViewStyle,
+    altText: {
+      fontSize: scaledFont(11),
+      fontWeight: "600",
+      color: "#ffffff",
+    } as TextStyle,
+    quotedPost: {
+      marginTop: 12,
+      borderWidth: 1,
+      borderColor: "#e1e1e1",
+      borderRadius: 12,
+      overflow: "hidden",
+    } as ViewStyle,
+    quotedPostHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: "#f7f9fa",
+      borderBottomWidth: 1,
+      borderBottomColor: "#e1e1e1",
+    } as ViewStyle,
+    quotedPostIcon: {
+      fontSize: scaledFont(12),
+      marginRight: 6,
+    } as TextStyle,
+    quotedPostLabel: {
+      fontSize: scaledFont(12),
+      color: "#687684",
+    } as TextStyle,
+    quotedPostContent: {
+      padding: 12,
+    } as ViewStyle,
+    quotedAuthor: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 4,
+    } as ViewStyle,
+    quotedAvatar: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      marginRight: 8,
+      backgroundColor: "#e1e1e1",
+    } as ImageStyle,
+    quotedAuthorName: {
+      fontSize: scaledFont(14),
+      fontWeight: "600",
+      color: "#0f1419",
+    } as TextStyle,
+    quotedText: {
+      fontSize: scaledFont(14),
+      lineHeight: scaledLineHeight(scaledFont, 14, 18),
+      color: "#0f1419",
+    } as TextStyle,
+    quotedPostDeleted: {
+      marginTop: 12,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: "#e1e1e1",
+      borderRadius: 12,
+      backgroundColor: "#f7f9fa",
+    } as ViewStyle,
+    quotedPostDeletedText: {
+      fontSize: scaledFont(14),
+      color: "#687684",
+      fontStyle: "italic",
+    } as TextStyle,
+    externalEmbed: {
+      marginTop: 12,
+      borderWidth: 1,
+      borderColor: "#e1e1e1",
+      borderRadius: 12,
+      overflow: "hidden",
+    } as ViewStyle,
+    externalImage: {
+      width: "100%",
+      height: 150,
+      backgroundColor: "#e1e1e1",
+    } as ImageStyle,
+    externalContent: {
+      padding: 12,
+    } as ViewStyle,
+    externalTitle: {
+      fontSize: scaledFont(15),
+      fontWeight: "600",
+      color: "#0f1419",
+      marginBottom: 4,
+    } as TextStyle,
+    externalDescription: {
+      fontSize: scaledFont(13),
+      color: "#687684",
+      lineHeight: scaledLineHeight(scaledFont, 13, 18),
+    } as TextStyle,
+    contentWarningOverlay: {
+      marginTop: 12,
+      padding: 24,
+      backgroundColor: "#f7f9fa",
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: "#e1e1e1",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: 150,
+    } as ViewStyle,
+    contentWarningContent: {
+      alignItems: "center",
+      justifyContent: "center",
+    } as ViewStyle,
+    contentWarningIcon: {
+      fontSize: scaledFont(32),
+      marginBottom: 8,
+    } as TextStyle,
+    contentWarningTitle: {
+      fontSize: scaledFont(16),
+      fontWeight: "600",
+      color: "#0f1419",
+      marginBottom: 4,
+      textAlign: "center",
+    } as TextStyle,
+    contentWarningDescription: {
+      fontSize: scaledFont(14),
+      color: "#687684",
+      marginBottom: 16,
+      textAlign: "center",
+    } as TextStyle,
+    contentWarningButton: {
+      backgroundColor: "#0085ff",
+      paddingHorizontal: 24,
+      paddingVertical: 10,
+      borderRadius: 20,
+      minWidth: 100,
+      alignItems: "center",
+      minHeight: 44,
+      justifyContent: "center",
+    } as ViewStyle,
+    contentWarningButtonText: {
+      fontSize: scaledFont(15),
+      fontWeight: "600",
+      color: "#ffffff",
+    } as TextStyle,
+    blurredImage: {
+      opacity: 0.5,
+    } as ImageStyle,
+    blurOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.3)",
+      alignItems: "center",
+      justifyContent: "center",
+    } as ViewStyle,
+    blurOverlayText: {
+      fontSize: scaledFont(14),
+      fontWeight: "600",
+      color: "#ffffff",
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+    } as TextStyle,
+  });
+}
+
+type Styles = ReturnType<typeof createStyles>;
 
 /**
  * Avatar component with lazy loading optimization
@@ -98,10 +428,12 @@ const AuthorHeader = memo(function AuthorHeader({
   author,
   indexedAt,
   onAuthorPress,
+  styles,
 }: {
   author: AppBskyFeedDefs.PostView["author"];
   indexedAt: string;
   onAuthorPress?: (handle: string) => void;
+  styles: Styles;
 }) {
   const handlePress = useCallback(() => {
     onAuthorPress?.(author.handle);
@@ -141,9 +473,11 @@ const AuthorHeader = memo(function AuthorHeader({
 const RepostReason = memo(function RepostReason({
   reason,
   onPress,
+  styles,
 }: {
   reason: AppBskyFeedDefs.FeedViewPost["reason"];
   onPress?: (handle: string) => void;
+  styles: Styles;
 }) {
   const by = (reason as any)?.by;
   const handlePress = useCallback(() => {
@@ -181,6 +515,7 @@ const ActionBar = memo(function ActionBar({
   onReply,
   onQuote: _onQuote,
   onBookmark,
+  styles,
 }: {
   post: AppBskyFeedDefs.PostView;
   onLike?: () => void;
@@ -188,6 +523,7 @@ const ActionBar = memo(function ActionBar({
   onReply?: () => void;
   onQuote?: () => void;
   onBookmark?: () => void;
+  styles: Styles;
 }) {
   // Note: onQuote is available for future quote button implementation
   void _onQuote;
@@ -258,9 +594,11 @@ const ActionBar = memo(function ActionBar({
 const ContentWarningOverlay = memo(function ContentWarningOverlay({
   labels,
   onReveal,
+  styles,
 }: {
   labels: any[];
   onReveal: () => void;
+  styles: Styles;
 }) {
   const warningText = getContentWarningText(labels);
   const warningDescription = getContentWarningDescription(labels);
@@ -294,10 +632,12 @@ const PostImages = memo(function PostImages({
   images,
   onPress,
   shouldBlur,
+  styles,
 }: {
   images: PostImage[];
   onPress?: (index: number) => void;
   shouldBlur?: boolean;
+  styles: Styles;
 }) {
   const gridStyle = useMemo<ViewStyle>(() => {
     if (!images || images.length === 0) return styles.singleImage;
@@ -305,7 +645,7 @@ const PostImages = memo(function PostImages({
     if (images.length === 2) return styles.twoImages;
     if (images.length === 3) return styles.threeImages;
     return styles.fourImages;
-  }, [images?.length]);
+  }, [images?.length, styles]);
 
   if (!images || images.length === 0) return null;
 
@@ -357,9 +697,11 @@ const PostImages = memo(function PostImages({
 const QuotedPost = memo(function QuotedPost({
   embed,
   onPress,
+  styles,
 }: {
   embed: any;
   onPress?: (uri: string) => void;
+  styles: Styles;
 }) {
   const record = embed?.record;
 
@@ -508,9 +850,11 @@ const QuotedPost = memo(function QuotedPost({
 const ExternalEmbed = memo(function ExternalEmbed({
   external,
   onPress,
+  styles,
 }: {
   external: any;
   onPress?: () => void;
+  styles: Styles;
 }) {
   if (!external) return null;
 
@@ -553,6 +897,9 @@ function PostCardComponent({
 }: PostCardProps) {
   const record = post.record as any;
   const [contentRevealed, setContentRevealed] = useState(false);
+
+  const { scaledFont } = useDynamicType();
+  const styles = useMemo(() => createStyles(scaledFont), [scaledFont]);
 
   // Use default content filter preferences (can be extended to use user preferences later)
   const contentFilterPreferences = DEFAULT_CONTENT_FILTER_PREFERENCES;
@@ -631,10 +978,15 @@ function PostCardComponent({
             <PostImages
               images={images}
               shouldBlur={blurImages && !contentRevealed}
+              styles={styles}
             />
           )}
           {embed.record && (
-            <QuotedPost embed={embed.record} onPress={onQuotePress} />
+            <QuotedPost
+              embed={embed.record}
+              onPress={onQuotePress}
+              styles={styles}
+            />
           )}
         </View>
       );
@@ -646,6 +998,7 @@ function PostCardComponent({
         <PostImages
           images={images}
           shouldBlur={blurImages && !contentRevealed}
+          styles={styles}
         />
       );
     }
@@ -655,16 +1008,18 @@ function PostCardComponent({
       embed.$type === "app.bsky.embed.record#view" ||
       embed.record?.$type === "app.bsky.embed.record#viewRecord"
     ) {
-      return <QuotedPost embed={embed} onPress={onQuotePress} />;
+      return (
+        <QuotedPost embed={embed} onPress={onQuotePress} styles={styles} />
+      );
     }
 
     // External link
     if (embed.external) {
-      return <ExternalEmbed external={embed.external} />;
+      return <ExternalEmbed external={embed.external} styles={styles} />;
     }
 
     return null;
-  }, [post.embed, images, onQuotePress, blurImages, contentRevealed]);
+  }, [post.embed, images, onQuotePress, blurImages, contentRevealed, styles]);
 
   // If content should be completely hidden, don't render it
   if (hideContent) {
@@ -679,7 +1034,7 @@ function PostCardComponent({
       accessibilityLabel={`Post by ${post.author.displayName || post.author.handle}`}
     >
       {/* Repost indicator */}
-      <RepostReason reason={reason} onPress={onAuthorPress} />
+      <RepostReason reason={reason} onPress={onAuthorPress} styles={styles} />
 
       <View style={styles.postContent}>
         {/* Avatar */}
@@ -695,6 +1050,7 @@ function PostCardComponent({
             author={post.author}
             indexedAt={post.indexedAt}
             onAuthorPress={onAuthorPress}
+            styles={styles}
           />
 
           {/* Content warning overlay or content */}
@@ -702,6 +1058,7 @@ function PostCardComponent({
             <ContentWarningOverlay
               labels={post.labels || []}
               onReveal={handleRevealContent}
+              styles={styles}
             />
           ) : (
             <>
@@ -723,6 +1080,7 @@ function PostCardComponent({
             onReply={handleReply}
             onQuote={onQuote}
             onBookmark={handleBookmark}
+            styles={styles}
           />
         </View>
       </View>
@@ -764,319 +1122,3 @@ function arePropsEqual(
  * Memoized PostCard for optimal FlatList performance
  */
 export const PostCard = memo(PostCardComponent, arePropsEqual);
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  } as ViewStyle,
-  containerBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e1e1e1",
-  } as ViewStyle,
-  repostReason: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-    marginLeft: 60,
-    minHeight: 44,
-    paddingVertical: 8,
-  } as ViewStyle,
-  repostIcon: {
-    fontSize: 14,
-    color: "#687684",
-    marginRight: 4,
-  } as TextStyle,
-  repostText: {
-    fontSize: 13,
-    color: "#687684",
-  } as TextStyle,
-  postContent: {
-    flexDirection: "row",
-  } as ViewStyle,
-  mainContent: {
-    flex: 1,
-    marginLeft: 12,
-  } as ViewStyle,
-  authorContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-  } as ViewStyle,
-  authorInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexShrink: 1,
-    minHeight: 44,
-    paddingVertical: 8,
-  } as ViewStyle,
-  displayName: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#0f1419",
-    marginRight: 4,
-  } as TextStyle,
-  handle: {
-    fontSize: 14,
-    color: "#687684",
-    flexShrink: 1,
-  } as TextStyle,
-  timestamp: {
-    fontSize: 14,
-    color: "#687684",
-    marginLeft: 4,
-  } as TextStyle,
-  postText: {
-    fontSize: 15,
-    lineHeight: 20,
-    color: "#0f1419",
-    marginTop: 4,
-  } as TextStyle,
-  actionBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-    justifyContent: "space-between",
-    maxWidth: 280,
-  } as ViewStyle,
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 44,
-    minHeight: 44,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  } as ViewStyle,
-  actionIcon: {
-    fontSize: 16,
-    marginRight: 4,
-  } as TextStyle,
-  actionCount: {
-    fontSize: 13,
-    color: "#687684",
-  } as TextStyle,
-  actionActive: {
-    color: "#00ba7c",
-  } as TextStyle,
-  countActive: {
-    color: "#00ba7c",
-  } as TextStyle,
-  likeActive: {
-    color: "#f91880",
-  } as TextStyle,
-  likeCountActive: {
-    color: "#f91880",
-  } as TextStyle,
-  imageContainer: {
-    marginTop: 12,
-    borderRadius: 12,
-    overflow: "hidden",
-  } as ViewStyle,
-  singleImage: {
-    aspectRatio: 16 / 9,
-  } as ViewStyle,
-  twoImages: {
-    flexDirection: "row",
-    gap: 2,
-    aspectRatio: 2,
-  } as ViewStyle,
-  threeImages: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 2,
-    aspectRatio: 1.5,
-  } as ViewStyle,
-  fourImages: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 2,
-    aspectRatio: 1,
-  } as ViewStyle,
-  imageWrapper: {
-    flex: 1,
-    minWidth: "48%",
-    position: "relative",
-  } as ViewStyle,
-  largeImage: {
-    minWidth: "66%",
-    minHeight: "100%",
-  } as ViewStyle,
-  postImage: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: "#e1e1e1",
-  } as ImageStyle,
-  altBadge: {
-    position: "absolute",
-    bottom: 8,
-    left: 8,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  } as ViewStyle,
-  altText: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#ffffff",
-  } as TextStyle,
-  quotedPost: {
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: "#e1e1e1",
-    borderRadius: 12,
-    overflow: "hidden",
-  } as ViewStyle,
-  quotedPostHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: "#f7f9fa",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e1e1e1",
-  } as ViewStyle,
-  quotedPostIcon: {
-    fontSize: 12,
-    marginRight: 6,
-  } as TextStyle,
-  quotedPostLabel: {
-    fontSize: 12,
-    color: "#687684",
-  } as TextStyle,
-  quotedPostContent: {
-    padding: 12,
-  } as ViewStyle,
-  quotedAuthor: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 4,
-  } as ViewStyle,
-  quotedAvatar: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    marginRight: 8,
-    backgroundColor: "#e1e1e1",
-  } as ImageStyle,
-  quotedAuthorName: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#0f1419",
-  } as TextStyle,
-  quotedText: {
-    fontSize: 14,
-    lineHeight: 18,
-    color: "#0f1419",
-  } as TextStyle,
-  quotedPostDeleted: {
-    marginTop: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#e1e1e1",
-    borderRadius: 12,
-    backgroundColor: "#f7f9fa",
-  } as ViewStyle,
-  quotedPostDeletedText: {
-    fontSize: 14,
-    color: "#687684",
-    fontStyle: "italic",
-  } as TextStyle,
-  externalEmbed: {
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: "#e1e1e1",
-    borderRadius: 12,
-    overflow: "hidden",
-  } as ViewStyle,
-  externalImage: {
-    width: "100%",
-    height: 150,
-    backgroundColor: "#e1e1e1",
-  } as ImageStyle,
-  externalContent: {
-    padding: 12,
-  } as ViewStyle,
-  externalTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#0f1419",
-    marginBottom: 4,
-  } as TextStyle,
-  externalDescription: {
-    fontSize: 13,
-    color: "#687684",
-    lineHeight: 18,
-  } as TextStyle,
-  contentWarningOverlay: {
-    marginTop: 12,
-    padding: 24,
-    backgroundColor: "#f7f9fa",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e1e1e1",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 150,
-  } as ViewStyle,
-  contentWarningContent: {
-    alignItems: "center",
-    justifyContent: "center",
-  } as ViewStyle,
-  contentWarningIcon: {
-    fontSize: 32,
-    marginBottom: 8,
-  } as TextStyle,
-  contentWarningTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#0f1419",
-    marginBottom: 4,
-    textAlign: "center",
-  } as TextStyle,
-  contentWarningDescription: {
-    fontSize: 14,
-    color: "#687684",
-    marginBottom: 16,
-    textAlign: "center",
-  } as TextStyle,
-  contentWarningButton: {
-    backgroundColor: "#0085ff",
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 20,
-    minWidth: 100,
-    alignItems: "center",
-    minHeight: 44,
-    justifyContent: "center",
-  } as ViewStyle,
-  contentWarningButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#ffffff",
-  } as TextStyle,
-  blurredImage: {
-    opacity: 0.5,
-  } as ImageStyle,
-  blurOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
-    alignItems: "center",
-    justifyContent: "center",
-  } as ViewStyle,
-  blurOverlayText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#ffffff",
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  } as TextStyle,
-});

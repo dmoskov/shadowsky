@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   createContext,
   ReactNode,
@@ -21,14 +20,15 @@ import {
   removeAccount as removeAccountFromStorage,
   getCurrentSession,
 } from "../services/auth/auth-service";
+import { saveSessionTokens } from "../services/auth/secure-token-storage";
 import * as OAuthService from "../services/auth/oauth";
+import { mutationQueue } from "../services/mutation-queue";
 import { addBreadcrumb, setUser, clearUser } from "../utils/error-reporting";
 
 
 import { createLogger } from '../utils/logger';
 
-const logger = createLogger('Authcontextx');
-const AUTH_STORAGE_KEY = "@shadowsky/auth_session";
+const logger = createLogger('AuthContext');
 const SESSION_REFRESH_INTERVAL = 50 * 60 * 1000;
 const SESSION_CHECK_INTERVAL = 5 * 60 * 1000;
 const MAX_CONSECUTIVE_FAILURES = 3;
@@ -38,8 +38,8 @@ interface AuthContextType {
   isLoading: boolean;
   session: StoredSession | null;
   account: AuthAccount | null;
-  signIn: (identifier: string, password: string) => Promise<void>;
-  signInWithOAuth: () => Promise<void>;
+  signIn: (identifier: string, password: string, pdsUrl?: string) => Promise<void>;
+  signInWithOAuth: (handle: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
   accounts: AuthAccount[];
@@ -86,6 +86,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       addBreadcrumb("auth", "User signed out");
       clearTimers();
+      mutationQueue.destroy();
       await authSignOut();
       setSession(null);
       clearUser();
@@ -130,10 +131,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
           updatedSession.accessJwt !== session.accessJwt ||
           updatedSession.refreshJwt !== session.refreshJwt
         ) {
-          await AsyncStorage.setItem(
-            AUTH_STORAGE_KEY,
-            JSON.stringify(updatedSession),
-          );
+          await saveSessionTokens(updatedSession.did, {
+            did: updatedSession.did,
+            handle: updatedSession.handle,
+            accessJwt: updatedSession.accessJwt,
+            refreshJwt: updatedSession.refreshJwt,
+            email: updatedSession.email,
+            emailConfirmed: updatedSession.emailConfirmed,
+            active: updatedSession.active,
+          });
           setSession(updatedSession);
         }
       }
@@ -254,8 +260,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const restoredSession = await resumeSession();
       if (restoredSession) {
         setSession(restoredSession);
-        // Set user context for error tracking
-        await setUser(restoredSession.did);
+        // Set user context for error tracking (fire-and-forget — don't
+        // block the loading gate on a non-critical side-effect)
+        setUser(restoredSession.did).catch(() => {});
         addBreadcrumb("auth", "Session restored on app start");
       }
     } catch {
@@ -274,10 +281,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signIn = async (identifier: string, password: string) => {
+  const signIn = async (identifier: string, password: string, pdsUrl?: string) => {
     try {
       setIsLoading(true);
-      const newSession = await signInWithPassword(identifier, password);
+      const newSession = await signInWithPassword(identifier, password, pdsUrl);
       setSession(newSession);
       await loadAccounts();
 
@@ -291,10 +298,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signInWithOAuth = async () => {
+  const signInWithOAuth = async (handle: string) => {
     try {
       setIsLoading(true);
-      await OAuthService.startOAuthFlow();
+      const result = await OAuthService.startOAuthFlow(handle);
+
+      if (!result) {
+        // User cancelled the auth session
+        return;
+      }
+
+      // Parse callback URL and exchange code for tokens
+      const params = OAuthService.parseCallbackUrl(result.callbackUrl);
+      if (!params) {
+        throw new Error("Invalid OAuth callback");
+      }
+
+      const sessionData = await OAuthService.handleOAuthCallback(params);
+
+      // Use auth-service to complete sign-in (sets up agent, stores session)
+      const { signInWithOAuth: authServiceSignIn } = await import("../services/auth/auth-service");
+      const newSession = await authServiceSignIn(sessionData);
+      setSession(newSession);
+      await loadAccounts();
+
+      await setUser(newSession.did);
       addBreadcrumb("auth", "User signed in with OAuth");
     } catch (error) {
       throw error;

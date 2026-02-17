@@ -102,6 +102,7 @@ export function useNotificationsByType(
       // Continue pagination if we have a cursor
       return lastPage.cursor;
     },
+    maxPages: 10,
     enabled: !!session && !!agent && enabled,
     staleTime: 30 * 60 * 1000, // 30 minutes - conversations don't change that often
     refetchInterval: isVisible ? 60 * 1000 : false, // Refetch every 60 seconds, paused when tab hidden

@@ -97,6 +97,7 @@ export function useNotifications(priority: boolean = false) {
       // Continue pagination if we have a cursor
       return lastPage.cursor;
     },
+    maxPages: 10,
     enabled: !!session && !!agent,
     staleTime: 30 * 1000, // Data is considered fresh for 30 seconds
     refetchInterval: isVisible ? 30 * 1000 : false, // Refetch every 30 seconds, paused when tab hidden

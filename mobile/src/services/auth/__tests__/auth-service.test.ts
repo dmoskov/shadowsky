@@ -1,6 +1,9 @@
 /**
  * Tests for auth-service.ts
  * Comprehensive unit tests for authentication service functions
+ *
+ * After the SecureStore migration, tokens are stored in expo-secure-store
+ * while account metadata stays in AsyncStorage.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,12 +22,15 @@ import {
   StoredSession,
 } from '../auth-service';
 import * as clientModule from '../../atproto/client';
+import * as secureTokenStorage from '../secure-token-storage';
 
 // Mock modules
 jest.mock('@react-native-async-storage/async-storage');
 jest.mock('../../atproto/client');
+jest.mock('../secure-token-storage');
 
 const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
+const mockSecureStorage = secureTokenStorage as jest.Mocked<typeof secureTokenStorage>;
 
 describe('auth-service', () => {
   // Mock data
@@ -65,10 +71,19 @@ describe('auth-service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Reset AsyncStorage mock
+    // Reset AsyncStorage mock (only used for accounts metadata now)
     mockAsyncStorage.getItem.mockResolvedValue(null);
     mockAsyncStorage.setItem.mockResolvedValue();
     mockAsyncStorage.removeItem.mockResolvedValue();
+
+    // Reset SecureStore mocks
+    mockSecureStorage.saveSessionTokens.mockResolvedValue();
+    mockSecureStorage.getSessionTokens.mockResolvedValue(null);
+    mockSecureStorage.deleteSessionTokens.mockResolvedValue();
+    mockSecureStorage.setActiveSessionDid.mockResolvedValue();
+    mockSecureStorage.getActiveSessionDid.mockResolvedValue(null);
+    mockSecureStorage.clearActiveSessionDid.mockResolvedValue();
+    mockSecureStorage.migrateTokensToSecureStore.mockResolvedValue();
 
     // Setup mock client and agent
     mockAgent = {
@@ -91,7 +106,7 @@ describe('auth-service', () => {
   });
 
   describe('signInWithPassword', () => {
-    it('should successfully login and store session and account', async () => {
+    it('should successfully login and store tokens in SecureStore', async () => {
       const result = await signInWithPassword('testuser.bsky.social', 'password123');
 
       // Verify client methods were called
@@ -100,14 +115,23 @@ describe('auth-service', () => {
       expect(mockClient.login).toHaveBeenCalledWith('testuser.bsky.social', 'password123');
       expect(mockAgent.getProfile).toHaveBeenCalledWith({actor: mockSessionData.did});
 
-      // Verify storage was updated
-      expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-        '@shadowsky/auth_session',
-        expect.stringContaining(mockSessionData.did)
+      // Verify tokens stored in SecureStore
+      expect(mockSecureStorage.saveSessionTokens).toHaveBeenCalledWith(
+        mockSessionData.did,
+        expect.objectContaining({
+          did: mockSessionData.did,
+          accessJwt: mockSessionData.accessJwt,
+          refreshJwt: mockSessionData.refreshJwt,
+        })
       );
-      expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-        '@shadowsky/active_account',
+      expect(mockSecureStorage.setActiveSessionDid).toHaveBeenCalledWith(
         mockSessionData.did
+      );
+
+      // Verify account metadata stored in AsyncStorage
+      expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
+        '@shadowsky/accounts',
+        expect.stringContaining(mockSessionData.did)
       );
 
       // Verify return value
@@ -128,11 +152,8 @@ describe('auth-service', () => {
         signInWithPassword('testuser.bsky.social', 'wrongpassword')
       ).rejects.toThrow('Login failed: no session data returned');
 
-      // Verify storage was not updated
-      expect(mockAsyncStorage.setItem).not.toHaveBeenCalledWith(
-        '@shadowsky/auth_session',
-        expect.anything()
-      );
+      // Verify SecureStore was not updated
+      expect(mockSecureStorage.saveSessionTokens).not.toHaveBeenCalled();
     });
 
     it('should throw error when login throws', async () => {
@@ -142,26 +163,27 @@ describe('auth-service', () => {
         signInWithPassword('testuser.bsky.social', 'wrongpassword')
       ).rejects.toThrow('Invalid credentials');
 
-      // Verify storage was not updated
-      expect(mockAsyncStorage.setItem).not.toHaveBeenCalledWith(
-        '@shadowsky/auth_session',
-        expect.anything()
-      );
+      // Verify SecureStore was not updated
+      expect(mockSecureStorage.saveSessionTokens).not.toHaveBeenCalled();
     });
   });
 
   describe('signInWithOAuth', () => {
-    it('should successfully sign in with OAuth session data', async () => {
+    it('should successfully sign in with OAuth and store tokens in SecureStore', async () => {
       const result = await signInWithOAuth(mockSessionData);
 
       expect(clientModule.resetAtProtoClient).toHaveBeenCalled();
       expect(mockClient.initialize).toHaveBeenCalledWith(mockSessionData);
       expect(mockAgent.getProfile).toHaveBeenCalledWith({actor: mockSessionData.did});
 
-      // Verify storage was updated
-      expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-        '@shadowsky/auth_session',
-        expect.stringContaining(mockSessionData.did)
+      // Verify tokens stored in SecureStore
+      expect(mockSecureStorage.saveSessionTokens).toHaveBeenCalledWith(
+        mockSessionData.did,
+        expect.objectContaining({
+          did: mockSessionData.did,
+          accessJwt: mockSessionData.accessJwt,
+          refreshJwt: mockSessionData.refreshJwt,
+        })
       );
 
       expect(result).toMatchObject({
@@ -174,94 +196,157 @@ describe('auth-service', () => {
   });
 
   describe('resumeSession', () => {
-    it('should restore valid session from AsyncStorage', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockStoredSession));
+    it('should run migration and restore session from SecureStore', async () => {
+      mockSecureStorage.getActiveSessionDid.mockResolvedValue(mockSessionData.did);
+      mockSecureStorage.getSessionTokens.mockResolvedValue({
+        did: mockSessionData.did,
+        handle: mockSessionData.handle,
+        accessJwt: mockSessionData.accessJwt,
+        refreshJwt: mockSessionData.refreshJwt,
+        email: mockSessionData.email,
+        active: true,
+      });
+      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify([mockAccount]));
 
       const result = await resumeSession();
 
-      expect(mockAsyncStorage.getItem).toHaveBeenCalledWith('@shadowsky/auth_session');
-      expect(mockClient.resumeSession).toHaveBeenCalledWith(mockStoredSession);
+      // Verify migration was run
+      expect(mockSecureStorage.migrateTokensToSecureStore).toHaveBeenCalled();
+
+      expect(mockSecureStorage.getActiveSessionDid).toHaveBeenCalled();
+      expect(mockSecureStorage.getSessionTokens).toHaveBeenCalledWith(mockSessionData.did);
+      expect(mockClient.resumeSession).toHaveBeenCalled();
       expect(result).toMatchObject({
         did: mockSessionData.did,
         handle: mockSessionData.handle,
       });
     });
 
-    it('should return null when no stored session exists', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue(null);
+    it('should return null when no active session DID exists', async () => {
+      mockSecureStorage.getActiveSessionDid.mockResolvedValue(null);
 
       const result = await resumeSession();
 
-      expect(mockAsyncStorage.getItem).toHaveBeenCalledWith('@shadowsky/auth_session');
       expect(result).toBeNull();
     });
 
-    it('should handle expired session by refreshing', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockStoredSession));
+    it('should return null when no tokens found for active DID', async () => {
+      mockSecureStorage.getActiveSessionDid.mockResolvedValue(mockSessionData.did);
+      mockSecureStorage.getSessionTokens.mockResolvedValue(null);
+
+      const result = await resumeSession();
+
+      expect(result).toBeNull();
+    });
+
+    it('should return session immediately and refresh profile in background', async () => {
+      mockSecureStorage.getActiveSessionDid.mockResolvedValue(mockSessionData.did);
+      mockSecureStorage.getSessionTokens.mockResolvedValue({
+        did: mockSessionData.did,
+        handle: mockSessionData.handle,
+        accessJwt: mockSessionData.accessJwt,
+        refreshJwt: mockSessionData.refreshJwt,
+        email: mockSessionData.email,
+        active: true,
+      });
+      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify([mockAccount]));
       mockAgent.getProfile.mockRejectedValueOnce(new Error('Unauthorized'));
 
       const result = await resumeSession();
 
-      expect(mockClient.refreshSession).toHaveBeenCalled();
-      expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-        '@shadowsky/auth_session',
-        expect.stringContaining('new-access-jwt')
-      );
       expect(result).toBeTruthy();
+      expect(result?.did).toBe(mockSessionData.did);
+
+      // Allow background refreshProfileInBackground to settle
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      // Background refresh should have attempted token refresh
+      expect(mockClient.refreshSession).toHaveBeenCalled();
     });
 
-    it('should sign out if session refresh fails', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockStoredSession));
+    it('should sign out in background if session refresh fails', async () => {
+      mockSecureStorage.getActiveSessionDid.mockResolvedValue(mockSessionData.did);
+      mockSecureStorage.getSessionTokens.mockResolvedValue({
+        did: mockSessionData.did,
+        handle: mockSessionData.handle,
+        accessJwt: mockSessionData.accessJwt,
+        refreshJwt: mockSessionData.refreshJwt,
+        email: mockSessionData.email,
+        active: true,
+      });
+      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify([mockAccount]));
       mockAgent.getProfile.mockRejectedValue(new Error('Unauthorized'));
       mockClient.refreshSession.mockRejectedValue(new Error('Refresh failed'));
 
       const result = await resumeSession();
 
-      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith('@shadowsky/auth_session');
-      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith('@shadowsky/active_account');
+      expect(result).toBeTruthy();
+
+      // Allow background refreshProfileInBackground to settle
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      // Sign out should delete tokens from SecureStore
+      expect(mockSecureStorage.clearActiveSessionDid).toHaveBeenCalled();
       expect(clientModule.resetAtProtoClient).toHaveBeenCalled();
-      expect(result).toBeNull();
-    });
-
-    it('should return null on invalid JSON in storage', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue('invalid-json');
-
-      const result = await resumeSession();
-
-      expect(result).toBeNull();
     });
   });
 
   describe('signOut', () => {
-    it('should clear session from AsyncStorage and reset client', async () => {
+    it('should clear tokens from SecureStore and reset client', async () => {
+      mockSecureStorage.getActiveSessionDid.mockResolvedValue(mockSessionData.did);
+
       await signOut();
 
-      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith('@shadowsky/auth_session');
-      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith('@shadowsky/active_account');
+      expect(mockSecureStorage.deleteSessionTokens).toHaveBeenCalledWith(mockSessionData.did);
+      expect(mockSecureStorage.clearActiveSessionDid).toHaveBeenCalled();
+      expect(clientModule.resetAtProtoClient).toHaveBeenCalled();
+    });
+
+    it('should handle sign out when no active session', async () => {
+      mockSecureStorage.getActiveSessionDid.mockResolvedValue(null);
+
+      await signOut();
+
+      expect(mockSecureStorage.deleteSessionTokens).not.toHaveBeenCalled();
+      expect(mockSecureStorage.clearActiveSessionDid).toHaveBeenCalled();
       expect(clientModule.resetAtProtoClient).toHaveBeenCalled();
     });
   });
 
   describe('getCurrentSession', () => {
-    it('should return current session from storage', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockStoredSession));
+    it('should return current session from SecureStore', async () => {
+      mockSecureStorage.getActiveSessionDid.mockResolvedValue(mockSessionData.did);
+      mockSecureStorage.getSessionTokens.mockResolvedValue({
+        did: mockSessionData.did,
+        handle: mockSessionData.handle,
+        accessJwt: mockSessionData.accessJwt,
+        refreshJwt: mockSessionData.refreshJwt,
+        email: mockSessionData.email,
+        active: true,
+      });
+      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify([mockAccount]));
 
       const result = await getCurrentSession();
 
-      expect(mockAsyncStorage.getItem).toHaveBeenCalledWith('@shadowsky/auth_session');
-      expect(result).toEqual(mockStoredSession);
+      expect(mockSecureStorage.getActiveSessionDid).toHaveBeenCalled();
+      expect(result).toMatchObject({
+        did: mockSessionData.did,
+        accessJwt: mockSessionData.accessJwt,
+        refreshJwt: mockSessionData.refreshJwt,
+      });
     });
 
-    it('should return null when no session exists', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue(null);
+    it('should return null when no active session DID', async () => {
+      mockSecureStorage.getActiveSessionDid.mockResolvedValue(null);
 
       const result = await getCurrentSession();
 
       expect(result).toBeNull();
     });
 
-    it('should return null on parse error', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue('invalid-json');
+    it('should return null when no tokens found', async () => {
+      mockSecureStorage.getActiveSessionDid.mockResolvedValue(mockSessionData.did);
+      mockSecureStorage.getSessionTokens.mockResolvedValue(null);
 
       const result = await getCurrentSession();
 
@@ -270,7 +355,7 @@ describe('auth-service', () => {
   });
 
   describe('getAccounts', () => {
-    it('should return stored accounts list', async () => {
+    it('should return stored accounts list from AsyncStorage', async () => {
       const accounts = [mockAccount];
       mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(accounts));
 
@@ -303,41 +388,34 @@ describe('auth-service', () => {
       handle: 'seconduser.bsky.social',
     };
 
-    it('should remove specific account by DID', async () => {
+    it('should remove account metadata and delete session tokens', async () => {
       const accounts = [mockAccount, secondAccount];
-      mockAsyncStorage.getItem
-        .mockResolvedValueOnce(JSON.stringify(accounts)) // getAccounts call
-        .mockResolvedValueOnce(JSON.stringify([mockStoredSession])) // getSessions call
-        .mockResolvedValueOnce('did:plc:other'); // active account check
+      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(accounts));
+      mockSecureStorage.getActiveSessionDid.mockResolvedValue('did:plc:other');
 
       await removeAccount('did:plc:test123');
 
-      // Verify account was removed
+      // Verify account metadata was removed from AsyncStorage
       expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
         '@shadowsky/accounts',
         JSON.stringify([secondAccount])
       );
 
-      // Verify session was removed
-      expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-        '@shadowsky/sessions',
-        JSON.stringify([])
-      );
+      // Verify session tokens deleted from SecureStore
+      expect(mockSecureStorage.deleteSessionTokens).toHaveBeenCalledWith('did:plc:test123');
 
-      // Active account was different, so shouldn't clear auth
-      expect(mockAsyncStorage.removeItem).not.toHaveBeenCalledWith('@shadowsky/auth_session');
+      // Active account was different, so shouldn't clear active session
+      expect(mockSecureStorage.clearActiveSessionDid).not.toHaveBeenCalled();
     });
 
-    it('should clear auth session if removing active account', async () => {
-      mockAsyncStorage.getItem
-        .mockResolvedValueOnce(JSON.stringify([mockAccount])) // getAccounts call
-        .mockResolvedValueOnce(JSON.stringify([mockStoredSession])) // getSessions call
-        .mockResolvedValueOnce(mockAccount.did); // active account check
+    it('should clear active session if removing active account', async () => {
+      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify([mockAccount]));
+      mockSecureStorage.getActiveSessionDid.mockResolvedValue(mockAccount.did);
 
       await removeAccount(mockAccount.did);
 
-      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith('@shadowsky/auth_session');
-      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith('@shadowsky/active_account');
+      expect(mockSecureStorage.deleteSessionTokens).toHaveBeenCalledWith(mockAccount.did);
+      expect(mockSecureStorage.clearActiveSessionDid).toHaveBeenCalled();
       expect(clientModule.resetAtProtoClient).toHaveBeenCalled();
     });
 
@@ -350,18 +428,39 @@ describe('auth-service', () => {
   });
 
   describe('getSessions', () => {
-    it('should return all stored sessions', async () => {
-      const sessions = [mockStoredSession];
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(sessions));
+    it('should reconstruct sessions from SecureStore tokens and AsyncStorage accounts', async () => {
+      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify([mockAccount]));
+      mockSecureStorage.getSessionTokens.mockResolvedValue({
+        did: mockSessionData.did,
+        handle: mockSessionData.handle,
+        accessJwt: mockSessionData.accessJwt,
+        refreshJwt: mockSessionData.refreshJwt,
+        email: mockSessionData.email,
+        active: true,
+      });
 
       const result = await getSessions();
 
-      expect(mockAsyncStorage.getItem).toHaveBeenCalledWith('@shadowsky/sessions');
-      expect(result).toEqual(sessions);
+      expect(mockSecureStorage.getSessionTokens).toHaveBeenCalledWith(mockAccount.did);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        did: mockSessionData.did,
+        accessJwt: mockSessionData.accessJwt,
+        account: mockAccount,
+      });
     });
 
-    it('should return empty array when no sessions exist', async () => {
+    it('should return empty array when no accounts exist', async () => {
       mockAsyncStorage.getItem.mockResolvedValue(null);
+
+      const result = await getSessions();
+
+      expect(result).toEqual([]);
+    });
+
+    it('should skip accounts with no SecureStore tokens', async () => {
+      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify([mockAccount]));
+      mockSecureStorage.getSessionTokens.mockResolvedValue(null);
 
       const result = await getSessions();
 
@@ -370,28 +469,38 @@ describe('auth-service', () => {
   });
 
   describe('switchToAccount', () => {
-    it('should switch to a different account session', async () => {
-      const sessions = [mockStoredSession];
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(sessions));
+    it('should switch to a different account using SecureStore tokens', async () => {
+      mockSecureStorage.getSessionTokens.mockResolvedValue({
+        did: mockSessionData.did,
+        handle: mockSessionData.handle,
+        accessJwt: mockSessionData.accessJwt,
+        refreshJwt: mockSessionData.refreshJwt,
+        email: mockSessionData.email,
+        active: true,
+      });
+      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify([mockAccount]));
 
       const result = await switchToAccount(mockAccount.did);
 
-      expect(mockClient.resumeSession).toHaveBeenCalledWith(mockStoredSession);
-      expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-        '@shadowsky/auth_session',
-        expect.stringContaining(mockAccount.did)
+      expect(mockSecureStorage.getSessionTokens).toHaveBeenCalledWith(mockAccount.did);
+      expect(mockClient.resumeSession).toHaveBeenCalled();
+      expect(mockSecureStorage.saveSessionTokens).toHaveBeenCalledWith(
+        mockSessionData.did,
+        expect.objectContaining({
+          did: mockSessionData.did,
+          accessJwt: mockSessionData.accessJwt,
+        })
       );
-      expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-        '@shadowsky/active_account',
-        mockAccount.did
+      expect(mockSecureStorage.setActiveSessionDid).toHaveBeenCalledWith(
+        mockSessionData.did
       );
       expect(result).toMatchObject({
         did: mockAccount.did,
       });
     });
 
-    it('should throw error if session not found', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify([]));
+    it('should throw error if no tokens found for account', async () => {
+      mockSecureStorage.getSessionTokens.mockResolvedValue(null);
 
       await expect(switchToAccount('did:plc:nonexistent')).rejects.toThrow(
         'Session not found for account'
@@ -399,8 +508,15 @@ describe('auth-service', () => {
     });
 
     it('should handle expired session during switch', async () => {
-      const sessions = [mockStoredSession];
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(sessions));
+      mockSecureStorage.getSessionTokens.mockResolvedValue({
+        did: mockSessionData.did,
+        handle: mockSessionData.handle,
+        accessJwt: mockSessionData.accessJwt,
+        refreshJwt: mockSessionData.refreshJwt,
+        email: mockSessionData.email,
+        active: true,
+      });
+      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify([mockAccount]));
       mockAgent.getProfile.mockRejectedValue(new Error('Unauthorized'));
 
       const result = await switchToAccount(mockAccount.did);
@@ -410,14 +526,24 @@ describe('auth-service', () => {
     });
 
     it('should throw error if session refresh fails during switch', async () => {
-      const sessions = [mockStoredSession];
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(sessions));
+      mockSecureStorage.getSessionTokens.mockResolvedValue({
+        did: mockSessionData.did,
+        handle: mockSessionData.handle,
+        accessJwt: mockSessionData.accessJwt,
+        refreshJwt: mockSessionData.refreshJwt,
+        email: mockSessionData.email,
+        active: true,
+      });
+      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify([mockAccount]));
       mockAgent.getProfile.mockRejectedValue(new Error('Unauthorized'));
       mockClient.refreshSession.mockRejectedValue(new Error('Refresh failed'));
 
       await expect(switchToAccount(mockAccount.did)).rejects.toThrow(
         'Session expired. Please sign in again.'
       );
+
+      // Should delete tokens on failed refresh
+      expect(mockSecureStorage.deleteSessionTokens).toHaveBeenCalledWith(mockAccount.did);
     });
   });
 });

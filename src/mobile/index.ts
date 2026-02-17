@@ -34,6 +34,8 @@
 export {
   FeedList,
   FeedView,
+  MobileAIToolbar,
+  MobileComposeScreen,
   MobileOnboardingFlow,
   MobileThreadSummary,
   PostCard,
@@ -43,6 +45,12 @@ export {
 
 // Onboarding types
 export type { MobileOnboardingFlowProps } from "./components";
+
+// Composer types
+export type {
+  MobileAIToolbarProps,
+  MobileComposeScreenProps,
+} from "./components";
 
 // Types
 export { FEED_CONSTANTS } from "./types";
@@ -60,5 +68,9 @@ export type {
 } from "./types";
 
 // Hooks
-export { useFeedActions } from "./hooks";
-export type { FeedActionHandlers, UseFeedActionsOptions } from "./hooks";
+export { useFeedActions, useMobileComposerAI } from "./hooks";
+export type {
+  FeedActionHandlers,
+  UseFeedActionsOptions,
+  UseMobileComposerAIReturn,
+} from "./hooks";

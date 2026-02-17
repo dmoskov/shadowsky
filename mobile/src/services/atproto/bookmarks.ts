@@ -13,6 +13,53 @@ import {
 
 const BOOKMARKS_STORAGE_KEY = '@shadowsky/bookmarks';
 
+/** Maximum number of post URIs per getPosts() call (AT Protocol limit) */
+const BATCH_SIZE = 25;
+
+/**
+ * Fetch posts in batches using getPosts() API instead of individual getPostThread() calls.
+ * Chunks URIs into groups of 25 (API limit) and fetches batches concurrently.
+ * Returns a Map of URI -> PostView for quick lookup.
+ */
+async function fetchPostsBatched(
+  uris: string[]
+): Promise<Map<string, AppBskyFeedDefs.PostView>> {
+  if (uris.length === 0) return new Map();
+
+  const client = getAtProtoClient();
+  const agent = client.getAgent();
+  const postMap = new Map<string, AppBskyFeedDefs.PostView>();
+
+  // Chunk URIs into batches of BATCH_SIZE
+  const batches: string[][] = [];
+  for (let i = 0; i < uris.length; i += BATCH_SIZE) {
+    batches.push(uris.slice(i, i + BATCH_SIZE));
+  }
+
+  // Fetch all batches concurrently
+  const results = await Promise.all(
+    batches.map((batch) =>
+      rateLimited(
+        async () => agent.getPosts({ uris: batch }),
+        ATProtoEndpointType.FEED
+      ).catch((error) => {
+        logger.error('Failed to fetch batch of posts:', error);
+        return null;
+      })
+    )
+  );
+
+  for (const result of results) {
+    if (result?.data?.posts) {
+      for (const post of result.data.posts) {
+        postMap.set(post.uri, post);
+      }
+    }
+  }
+
+  return postMap;
+}
+
 export interface Bookmark {
   postUri: string;
   createdAt: string;
@@ -133,35 +180,12 @@ async function getBookmarksFromStorage(): Promise<BookmarkPost[]> {
   }
 
   const bookmarks: Bookmark[] = JSON.parse(stored);
-  const client = getAtProtoClient();
-  const agent = client.getAgent();
+  const postMap = await fetchPostsBatched(bookmarks.map((b) => b.postUri));
 
-  // Fetch post data for each bookmark
-  const bookmarkPosts: BookmarkPost[] = [];
-  for (const bookmark of bookmarks) {
-    try {
-      const response = await rateLimited(
-        async () => agent.getPostThread({
-          uri: bookmark.postUri,
-        }),
-        ATProtoEndpointType.FEED
-      );
-
-      if (response.data.thread && 'post' in response.data.thread) {
-        bookmarkPosts.push({
-          ...bookmark,
-          post: response.data.thread.post as AppBskyFeedDefs.PostView,
-        });
-      } else {
-        bookmarkPosts.push(bookmark);
-      }
-    } catch (error) {
-      logger.error('Failed to fetch bookmarked post:', error);
-      bookmarkPosts.push(bookmark);
-    }
-  }
-
-  return bookmarkPosts;
+  return bookmarks.map((bookmark) => ({
+    ...bookmark,
+    post: postMap.get(bookmark.postUri),
+  }));
 }
 
 /**
@@ -376,30 +400,15 @@ export async function getBookmarkCollections(postUri: string): Promise<string[]>
  */
 export async function getBookmarksInCollection(collectionId: string): Promise<BookmarkPost[]> {
   const bookmarkUris = await bookmarkCollectionStorage.getCollectionBookmarks(collectionId);
-  const client = getAtProtoClient();
-  const agent = client.getAgent();
+  const postMap = await fetchPostsBatched(bookmarkUris);
 
-  const bookmarkPosts: BookmarkPost[] = [];
-  for (const uri of bookmarkUris) {
-    try {
-      const response = await rateLimited(
-        async () => agent.getPostThread({ uri }),
-        ATProtoEndpointType.FEED
-      );
-
-      if (response.data.thread && 'post' in response.data.thread) {
-        bookmarkPosts.push({
-          postUri: uri,
-          createdAt: new Date().toISOString(),
-          post: response.data.thread.post as AppBskyFeedDefs.PostView,
-        });
-      }
-    } catch (error) {
-      logger.error('Failed to fetch bookmarked post:', error);
-    }
-  }
-
-  return bookmarkPosts;
+  return bookmarkUris
+    .filter((uri) => postMap.has(uri))
+    .map((uri) => ({
+      postUri: uri,
+      createdAt: new Date().toISOString(),
+      post: postMap.get(uri),
+    }));
 }
 
 /**
