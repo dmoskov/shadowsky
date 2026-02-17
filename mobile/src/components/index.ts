@@ -1,6 +1,7 @@
 export * from './Avatar';
 export * from './Button';
 export * from './PostCard';
+export * from './SwipeablePostCard';
 export * from './FeedList';
 export * from './LoadingState';
 export * from './ErrorState';

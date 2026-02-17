@@ -462,6 +462,20 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
             thumbColor={themeColors.text}
           />
         </SettingRow>
+
+        <SettingRow
+          label="Swipe Actions"
+          description="Swipe posts to reply, like, bookmark, or repost"
+        >
+          <Switch
+            value={preferences.swipeActionsEnabled}
+            onValueChange={(value) =>
+              updatePreference("swipeActionsEnabled", value)
+            }
+            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
+            thumbColor={themeColors.text}
+          />
+        </SettingRow>
       </View>
 
       {/* Security Section */}

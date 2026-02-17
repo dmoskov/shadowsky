@@ -9,8 +9,8 @@ import {
   ViewToken,
 } from 'react-native';
 import {AppBskyFeedDefs, AppBskyEmbedVideo, AppBskyEmbedRecordWithMedia} from '@atproto/api';
-import {PostCard} from './PostCard';
 import {PostCardSkeleton} from './PostCardSkeleton';
+import {SwipeablePostCard} from './SwipeablePostCard';
 import {ErrorState} from './ErrorState';
 import { EmptyState } from './EmptyState';
 import {useNetwork} from '../contexts/NetworkContext';
@@ -150,7 +150,7 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   };
 
   const renderItem: ListRenderItem<AppBskyFeedDefs.FeedViewPost> = useCallback(({item}) => (
-    <PostCard
+    <SwipeablePostCard
       post={item}
       isVisible={visiblePostUris.has(item.post.uri)}
       onPress={() => onPostPress?.(item)}

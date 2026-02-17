@@ -31,6 +31,7 @@ export interface AppPreferences {
 
   // Interaction
   hapticsEnabled: boolean;
+  swipeActionsEnabled: boolean;
 
   // Data
   autoPlayVideos: "always" | "wifi" | "never";
@@ -75,6 +76,7 @@ const DEFAULT_PREFERENCES: AppPreferences = {
 
   // Interaction
   hapticsEnabled: true,
+  swipeActionsEnabled: true,
 
   // Data
   autoPlayVideos: "wifi",
