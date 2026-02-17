@@ -1,0 +1,18 @@
+{
+  "@context": "https://www.w3.org/ns/solid/oidc-context.jsonld",
+  "client_id": "https://shadowsky.io/client-metadata-mobile.json",
+  "client_name": "Asphodel Mobile",
+  "client_uri": "https://shadowsky.io",
+  "logo_uri": "https://shadowsky.io/butterfly-icon.svg",
+  "tos_uri": "https://shadowsky.io/terms",
+  "policy_uri": "https://shadowsky.io/privacy",
+  "redirect_uris": [
+    "shadowsky://oauth-callback"
+  ],
+  "scope": "atproto transition:generic",
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "token_endpoint_auth_method": "none",
+  "application_type": "native",
+  "dpop_bound_access_tokens": false
+}
