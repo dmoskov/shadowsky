@@ -24,10 +24,51 @@ interface ThreadNode {
   [key: string]: unknown;
 }
 
+interface CacheSnapshot {
+  timeline: [readonly unknown[], TimelineData | undefined][];
+  columnFeed: [readonly unknown[], TimelineData | undefined][];
+  thread: [readonly unknown[], ThreadNode | undefined][];
+  authorFeed: [readonly unknown[], TimelineData | undefined][];
+}
+
 export function useOptimisticPosts() {
   const { agent } = useAuth();
   const queryClient = useQueryClient();
   const actionSync = useActionSyncOptional();
+
+  // Snapshot all feed caches before applying optimistic updates
+  const snapshotCaches = (): CacheSnapshot => {
+    return {
+      timeline: queryClient
+        .getQueriesData<TimelineData>({ queryKey: ["timeline"] })
+        .map(([key, data]) => [key, data]),
+      columnFeed: queryClient
+        .getQueriesData<TimelineData>({ queryKey: ["columnFeed"] })
+        .map(([key, data]) => [key, data]),
+      thread: queryClient
+        .getQueriesData<ThreadNode>({ queryKey: ["thread"] })
+        .map(([key, data]) => [key, data]),
+      authorFeed: queryClient
+        .getQueriesData<TimelineData>({ queryKey: ["authorFeed"] })
+        .map(([key, data]) => [key, data]),
+    };
+  };
+
+  // Restore all feed caches from a snapshot
+  const restoreCacheSnapshot = (snapshot: CacheSnapshot) => {
+    for (const [key, data] of snapshot.timeline) {
+      queryClient.setQueryData(key, data);
+    }
+    for (const [key, data] of snapshot.columnFeed) {
+      queryClient.setQueryData(key, data);
+    }
+    for (const [key, data] of snapshot.thread) {
+      queryClient.setQueryData(key, data);
+    }
+    for (const [key, data] of snapshot.authorFeed) {
+      queryClient.setQueryData(key, data);
+    }
+  };
 
   // Helper to update post data optimistically in all feed caches
   const updatePostInCaches = (
@@ -68,23 +109,12 @@ export function useOptimisticPosts() {
           ...oldData,
           pages: oldData.pages.map((page) => ({
             ...page,
-            posts: (
-              page as unknown as {
-                posts: Array<
-                  AppBskyFeedDefs.PostView | { post: AppBskyFeedDefs.PostView }
-                >;
-              }
-            ).posts.map((item) => {
-              const post =
-                "post" in item ? item.post : (item as AppBskyFeedDefs.PostView);
-              if (post.uri === postUri) {
-                if ("post" in item) {
-                  return {
-                    ...item,
-                    post: updater(post),
-                  };
-                }
-                return updater(post);
+            feed: page.feed.map((item) => {
+              if (item.post?.uri === postUri) {
+                return {
+                  ...item,
+                  post: updater(item.post),
+                };
               }
               return item;
             }),
@@ -203,6 +233,9 @@ export function useOptimisticPosts() {
       await queryClient.cancelQueries({ queryKey: ["columnFeed"] });
       await queryClient.cancelQueries({ queryKey: ["authorFeed"] });
 
+      // Snapshot caches before optimistic update
+      const snapshot = snapshotCaches();
+
       // Optimistically update the post
       updatePostInCaches(uri, (post) => ({
         ...post,
@@ -212,6 +245,8 @@ export function useOptimisticPosts() {
           like: "optimistic-like", // Temporary value
         },
       }));
+
+      return { snapshot };
     },
     onSuccess: (data, { uri }) => {
       // Set synced state for sync badge
@@ -226,7 +261,7 @@ export function useOptimisticPosts() {
         },
       }));
     },
-    onError: (error, { uri, cid }) => {
+    onError: (error, { uri, cid }, context) => {
       // If it's a network error, queue for retry and keep optimistic update
       if (isNetworkError(error)) {
         queueMutation("like", { uri, cid });
@@ -242,15 +277,10 @@ export function useOptimisticPosts() {
         likeMutation.mutate({ uri, cid });
       });
 
-      // Revert optimistic update on non-network error
-      updatePostInCaches(uri, (post) => ({
-        ...post,
-        likeCount: Math.max(0, (post.likeCount || 0) - 1),
-        viewer: {
-          ...post.viewer,
-          like: undefined,
-        },
-      }));
+      // Restore cache snapshot on non-network error
+      if (context?.snapshot) {
+        restoreCacheSnapshot(context.snapshot);
+      }
     },
   });
 
@@ -267,6 +297,9 @@ export function useOptimisticPosts() {
       await queryClient.cancelQueries({ queryKey: ["columnFeed"] });
       await queryClient.cancelQueries({ queryKey: ["authorFeed"] });
 
+      // Snapshot caches before optimistic update
+      const snapshot = snapshotCaches();
+
       updatePostInCaches(postUri, (post) => ({
         ...post,
         likeCount: Math.max(0, (post.likeCount || 0) - 1),
@@ -275,12 +308,14 @@ export function useOptimisticPosts() {
           like: undefined,
         },
       }));
+
+      return { snapshot };
     },
     onSuccess: (_data, { postUri }) => {
       // Set synced state for sync badge
       actionSync?.setActionSynced("like", postUri);
     },
-    onError: (error, { likeUri, postUri }) => {
+    onError: (error, { likeUri, postUri }, context) => {
       // If it's a network error, queue for retry
       if (isNetworkError(error)) {
         queueMutation("unlike", { likeUri });
@@ -292,15 +327,10 @@ export function useOptimisticPosts() {
           unlikeMutation.mutate({ likeUri, postUri });
         });
 
-        // Revert optimistic update on non-network error
-        updatePostInCaches(postUri, (post) => ({
-          ...post,
-          likeCount: (post.likeCount || 0) + 1,
-          viewer: {
-            ...post.viewer,
-            like: likeUri,
-          },
-        }));
+        // Restore cache snapshot on non-network error
+        if (context?.snapshot) {
+          restoreCacheSnapshot(context.snapshot);
+        }
       }
     },
   });
@@ -316,6 +346,10 @@ export function useOptimisticPosts() {
 
       await queryClient.cancelQueries({ queryKey: ["timeline"] });
       await queryClient.cancelQueries({ queryKey: ["columnFeed"] });
+      await queryClient.cancelQueries({ queryKey: ["authorFeed"] });
+
+      // Snapshot caches before optimistic update
+      const snapshot = snapshotCaches();
 
       updatePostInCaches(uri, (post) => ({
         ...post,
@@ -325,6 +359,8 @@ export function useOptimisticPosts() {
           repost: "optimistic-repost",
         },
       }));
+
+      return { snapshot };
     },
     onSuccess: (data, { uri }) => {
       // Set synced state for sync badge
@@ -338,7 +374,7 @@ export function useOptimisticPosts() {
         },
       }));
     },
-    onError: (error, { uri, cid }) => {
+    onError: (error, { uri, cid }, context) => {
       // If it's a network error, queue for retry and keep optimistic update
       if (isNetworkError(error)) {
         queueMutation("repost", { uri, cid });
@@ -353,15 +389,10 @@ export function useOptimisticPosts() {
         repostMutation.mutate({ uri, cid });
       });
 
-      // Revert optimistic update on non-network error
-      updatePostInCaches(uri, (post) => ({
-        ...post,
-        repostCount: Math.max(0, (post.repostCount || 0) - 1),
-        viewer: {
-          ...post.viewer,
-          repost: undefined,
-        },
-      }));
+      // Restore cache snapshot on non-network error
+      if (context?.snapshot) {
+        restoreCacheSnapshot(context.snapshot);
+      }
     },
   });
 
@@ -383,6 +414,9 @@ export function useOptimisticPosts() {
       await queryClient.cancelQueries({ queryKey: ["columnFeed"] });
       await queryClient.cancelQueries({ queryKey: ["authorFeed"] });
 
+      // Snapshot caches before optimistic update
+      const snapshot = snapshotCaches();
+
       updatePostInCaches(postUri, (post) => ({
         ...post,
         repostCount: Math.max(0, (post.repostCount || 0) - 1),
@@ -391,12 +425,14 @@ export function useOptimisticPosts() {
           repost: undefined,
         },
       }));
+
+      return { snapshot };
     },
     onSuccess: (_data, { postUri }) => {
       // Set synced state for sync badge
       actionSync?.setActionSynced("repost", postUri);
     },
-    onError: (error, { repostUri, postUri }) => {
+    onError: (error, { repostUri, postUri }, context) => {
       // If it's a network error, queue for retry
       if (isNetworkError(error)) {
         queueMutation("unrepost", { repostUri });
@@ -408,15 +444,10 @@ export function useOptimisticPosts() {
           unrepostMutation.mutate({ repostUri, postUri });
         });
 
-        // Revert optimistic update on non-network error
-        updatePostInCaches(postUri, (post) => ({
-          ...post,
-          repostCount: (post.repostCount || 0) + 1,
-          viewer: {
-            ...post.viewer,
-            repost: repostUri,
-          },
-        }));
+        // Restore cache snapshot on non-network error
+        if (context?.snapshot) {
+          restoreCacheSnapshot(context.snapshot);
+        }
       }
     },
   });
