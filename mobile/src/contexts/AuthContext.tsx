@@ -24,6 +24,8 @@ import {
 import { saveSessionTokens } from "../services/auth/secure-token-storage";
 import * as OAuthService from "../services/auth/oauth";
 import { mutationQueue } from "../services/mutation-queue";
+import { clearQueryCache } from "../shared/query-client";
+import { preferencesService } from "../services/preferences";
 import { addBreadcrumb, setUser, clearUser } from "../utils/error-reporting";
 
 
@@ -88,6 +90,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       addBreadcrumb("auth", "User signed out");
       clearTimers();
       mutationQueue.destroy();
+      clearQueryCache();
+      preferencesService.clearCache();
       await authSignOut();
       setSession(null);
       clearUser();
@@ -339,6 +343,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (!targetAccount) {
         throw new Error("Account not found");
       }
+
+      // Clear previous account's cached data to prevent cross-account leakage
+      clearQueryCache();
+      preferencesService.clearCache();
 
       const newSession = await switchToAccount(did);
       setSession(newSession);
