@@ -7,6 +7,41 @@
 
 import SwiftUI
 
+// MARK: - Static Date Formatters
+
+private enum ThreadDateFormatting {
+    static let iso8601WithFractional: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    static let iso8601Standard: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    static func relativeTimeString(from isoString: String) -> String {
+        guard let date = iso8601WithFractional.date(from: isoString)
+                ?? iso8601Standard.date(from: isoString) else {
+            return ""
+        }
+
+        let interval = Date().timeIntervalSince(date)
+
+        if interval < 60 {
+            return "\(Int(interval))s"
+        } else if interval < 3600 {
+            return "\(Int(interval / 60))m"
+        } else if interval < 86400 {
+            return "\(Int(interval / 3600))h"
+        } else {
+            return "\(Int(interval / 86400))d"
+        }
+    }
+}
+
 // MARK: - Thread Post Card
 
 /// Card view for a single post in a thread
@@ -72,7 +107,7 @@ struct ThreadPostCard: View {
                 Spacer()
 
                 // Timestamp
-                Text(formatTimestamp(node.post.record.createdAt))
+                Text(ThreadDateFormatting.relativeTimeString(from: node.post.record.createdAt))
                     .font(.system(size: 14))
                     .foregroundColor(.secondary)
             }
@@ -135,27 +170,6 @@ struct ThreadPostCard: View {
         }
     }
 
-    private func formatTimestamp(_ timestamp: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-        guard let date = formatter.date(from: timestamp) ?? ISO8601DateFormatter().date(from: timestamp) else {
-            return ""
-        }
-
-        let now = Date()
-        let interval = now.timeIntervalSince(date)
-
-        if interval < 60 {
-            return "\(Int(interval))s"
-        } else if interval < 3600 {
-            return "\(Int(interval / 60))m"
-        } else if interval < 86400 {
-            return "\(Int(interval / 3600))h"
-        } else {
-            return "\(Int(interval / 86400))d"
-        }
-    }
 }
 
 // MARK: - Action Button
