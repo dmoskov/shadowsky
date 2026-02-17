@@ -2,6 +2,7 @@ import {Tabs} from 'expo-router';
 import {Text, View} from 'react-native';
 import {HomeIcon, SearchIcon, BellIcon, PersonIcon} from '../../../src/components/icons';
 import {useUnreadCount} from '../../../src/hooks/api/useNotifications';
+import {useIPadLayout} from '../../../src/contexts/IPadLayoutContext';
 
 function NotificationsBadge() {
   const {data: unreadCount} = useUnreadCount();
@@ -55,15 +56,19 @@ function NotificationsIcon({
 }
 
 export default function TabsLayout() {
+  const {isMultiColumn} = useIPadLayout();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#0a0a0f',
-          borderTopColor: '#1f2937',
-          borderTopWidth: 1,
-        },
+        tabBarStyle: isMultiColumn
+          ? {display: 'none'}
+          : {
+              backgroundColor: '#0a0a0f',
+              borderTopColor: '#1f2937',
+              borderTopWidth: 1,
+            },
         tabBarActiveTintColor: '#3b82f6',
         tabBarInactiveTintColor: '#6b7280',
       }}>

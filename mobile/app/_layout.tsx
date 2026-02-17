@@ -26,6 +26,7 @@ import { ToastProvider } from "../src/contexts/ToastContext";
 import { ModerationProvider } from "../src/contexts/ModerationContext";
 import { LightboxProvider } from "../src/contexts/LightboxContext";
 import { VideoAutoplayProvider } from "../src/contexts/VideoAutoplayContext";
+import { IPadLayoutProvider } from "../src/contexts/IPadLayoutContext";
 import { LightboxOverlay } from "../src/components/LightboxOverlay";
 import {
   queryClient,
@@ -178,11 +179,13 @@ function RootLayout() {
                       <ModerationProvider>
                         <ToastProvider>
                           <LightboxProvider>
-                            <QueryErrorHandler>
-                              <DynamicStatusBar />
-                              <AuthGate />
-                            </QueryErrorHandler>
-                            <LightboxOverlay />
+                            <IPadLayoutProvider>
+                              <QueryErrorHandler>
+                                <DynamicStatusBar />
+                                <AuthGate />
+                              </QueryErrorHandler>
+                              <LightboxOverlay />
+                            </IPadLayoutProvider>
                           </LightboxProvider>
                         </ToastProvider>
                       </ModerationProvider>
