@@ -50,6 +50,8 @@ export function ExternalLinkEmbed({external, onPress}: ExternalLinkEmbedProps) {
           source={{uri: external.thumb}}
           style={styles.thumbnail}
           contentFit="cover"
+          cachePolicy="memory-disk"
+          recyclingKey={external.thumb}
         />
       )}
       <View style={styles.textContainer}>

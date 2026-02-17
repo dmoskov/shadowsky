@@ -231,6 +231,7 @@ export function ImageCarouselItem({
           placeholderContentFit="contain"
           style={styles.image}
           contentFit="contain"
+          cachePolicy="memory-disk"
           transition={300}
           accessibilityLabel={alt}
         />

@@ -126,9 +126,9 @@ export function ImageEmbed({images, onImagePress, blurImages = false}: ImageEmbe
           source={{uri: getOptimizedUrl(img.thumb)}}
           style={[styles.image, blurImages && styles.blurredImage]}
           contentFit="cover"
-          placeholder={{uri: img.thumb}}
-          placeholderContentFit="cover"
-          transition={300}
+          cachePolicy="memory-disk"
+          recyclingKey={img.thumb}
+          transition={200}
           blurRadius={blurImages ? 20 : 0}
         />
         {img.alt && (
@@ -155,9 +155,9 @@ export function ImageEmbed({images, onImagePress, blurImages = false}: ImageEmbe
         source={{uri: getOptimizedUrl(img.thumb)}}
         style={[styles.image, blurImages && styles.blurredImage]}
         contentFit="cover"
-        placeholder={{uri: img.thumb}}
-        placeholderContentFit="cover"
-        transition={300}
+        cachePolicy="memory-disk"
+        recyclingKey={img.thumb}
+        transition={200}
         blurRadius={blurImages ? 20 : 0}
       />
       {img.alt && (

@@ -42,6 +42,7 @@ import {
 import { appLockService } from "../src/services/app-lock";
 import { setupOfflineStorageCleanup } from "../src/hooks/useOfflineFeed";
 import { useGlobalKeyboardShortcuts } from "../src/hooks/useKeyboardShortcuts";
+import { useImageMemoryManagement } from "../src/hooks/useImageMemoryManagement";
 import "../src/i18n";
 
 // Initialize Sentry as early as possible
@@ -131,6 +132,9 @@ function AuthGate() {
 function RootLayout() {
   // Enable global keyboard shortcuts (cmd+N, cmd+K, cmd+1-4)
   useGlobalKeyboardShortcuts();
+
+  // Clear decoded image bitmaps on background/memory-warning to prevent OOM
+  useImageMemoryManagement();
 
   useEffect(() => {
     // Set device and app tags for Sentry
