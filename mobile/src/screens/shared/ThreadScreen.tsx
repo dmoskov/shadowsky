@@ -94,6 +94,7 @@ function extractReplies(node: any): AppBskyFeedDefs.FeedViewPost[] {
 
 export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const [postUri, setPostUri] = useState<string | null>(null);
   const [isResolvingUri, setIsResolvingUri] = useState(false);
@@ -393,8 +394,6 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
       animated: true,
     });
   };
-
-  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={styles.container}>
