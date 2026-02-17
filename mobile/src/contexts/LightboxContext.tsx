@@ -1,4 +1,10 @@
-import React, {createContext, useContext, useState, useCallback} from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+} from 'react';
 
 export interface LightboxImage {
   thumb: string;
@@ -64,8 +70,13 @@ export function LightboxProvider({children}: {children: React.ReactNode}) {
     setState(prev => ({...prev, visible: false}));
   }, []);
 
+  const value = useMemo(
+    () => ({state, openLightbox, closeLightbox}),
+    [state, openLightbox, closeLightbox],
+  );
+
   return (
-    <LightboxContext.Provider value={{state, openLightbox, closeLightbox}}>
+    <LightboxContext.Provider value={value}>
       {children}
     </LightboxContext.Provider>
   );
