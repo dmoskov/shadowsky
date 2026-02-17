@@ -34,11 +34,15 @@
 export {
   FeedList,
   FeedView,
+  MobileOnboardingFlow,
   MobileThreadSummary,
   PostCard,
   PostDetailView,
   ProfileView,
 } from "./components";
+
+// Onboarding types
+export type { MobileOnboardingFlowProps } from "./components";
 
 // Types
 export { FEED_CONSTANTS } from "./types";

@@ -17,3 +17,6 @@ export { ProfileView } from "./ProfileView";
 
 // Batch operation components
 export * from "./batch";
+
+// Onboarding components
+export * from "./onboarding";
