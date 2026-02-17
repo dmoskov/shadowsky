@@ -23,7 +23,7 @@ import { EmptyState } from '../../components/EmptyState';
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {AppBskyNotificationListNotifications} from '@atproto/api';
 import {usePreferences} from '../../contexts/PreferencesContext';
-import {clearBadgeCount} from '../../services/notification-poller';
+import {clearBadgeCount} from '../../utils/badge';
 import {useTheme} from '../../contexts/ThemeContext';
 import {filterMutedNotifications} from '../../utils/content-filter';
 import {
