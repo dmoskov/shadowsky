@@ -18,11 +18,14 @@ export function useAppNavigation() {
   );
 
   const navigateToThread = useCallback(
-    (handle: string, postId: string) => {
+    (handle: string, postId: string, did?: string) => {
       if (isMultiColumn) {
         showThread(handle, postId);
       } else {
-        router.push(`/(app)/(tabs)/(home)/thread/${postId}?handle=${handle}`);
+        const params = did
+          ? `handle=${handle}&did=${encodeURIComponent(did)}`
+          : `handle=${handle}`;
+        router.push(`/(app)/(tabs)/(home)/thread/${postId}?${params}`);
       }
     },
     [router, isMultiColumn, showThread],

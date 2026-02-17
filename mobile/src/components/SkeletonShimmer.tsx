@@ -1,5 +1,14 @@
-import React, {useEffect, useRef, useMemo} from 'react';
-import {StyleSheet, Animated} from 'react-native';
+import React, {useCallback, useEffect, useState} from 'react';
+import {View} from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  withDelay,
+  Easing,
+} from 'react-native-reanimated';
 import {useTheme} from '../contexts/ThemeContext';
 
 interface SkeletonShimmerProps {
@@ -15,55 +24,78 @@ export function SkeletonShimmer({
   borderRadius = 4,
   style,
 }: SkeletonShimmerProps) {
-  const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-  const shimmerAnimation = useRef(new Animated.Value(0)).current;
+  const {colors, isDark} = useTheme();
+  const [layoutWidth, setLayoutWidth] = useState(0);
+  const translateX = useSharedValue(0);
+
+  const onLayout = useCallback(
+    (e: {nativeEvent: {layout: {width: number}}}) => {
+      setLayoutWidth(e.nativeEvent.layout.width);
+    },
+    [],
+  );
 
   useEffect(() => {
-    const animation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(shimmerAnimation, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
+    if (layoutWidth === 0) return;
+
+    const highlightWidth = layoutWidth * 0.6;
+    const startX = -highlightWidth;
+    const endX = layoutWidth;
+
+    translateX.value = startX;
+    translateX.value = withRepeat(
+      withSequence(
+        withTiming(endX, {
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
         }),
-        Animated.timing(shimmerAnimation, {
-          toValue: 0,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ])
+        withDelay(
+          300,
+          withTiming(startX, {duration: 0}),
+        ),
+      ),
+      -1,
     );
-    animation.start();
+  }, [translateX, layoutWidth]);
 
-    return () => animation.stop();
-  }, [shimmerAnimation]);
+  const highlightStyle = useAnimatedStyle(() => ({
+    transform: [{translateX: translateX.value}],
+  }));
 
-  const opacity = shimmerAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 0.7],
-  });
+  const highlightColor = isDark
+    ? 'rgba(255, 255, 255, 0.07)'
+    : 'rgba(255, 255, 255, 0.55)';
+
+  const highlightWidth = Math.max(layoutWidth * 0.6, 1);
 
   return (
-    <Animated.View
+    <View
       style={[
-        styles.skeleton,
         {
           width,
           height,
           borderRadius,
-          opacity,
+          backgroundColor: colors.surface,
+          overflow: 'hidden',
         },
         style,
       ]}
-    />
+      onLayout={onLayout}>
+      {layoutWidth > 0 && (
+        <Animated.View
+          style={[
+            {
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              width: highlightWidth,
+              backgroundColor: highlightColor,
+              borderRadius,
+            },
+            highlightStyle,
+          ]}
+        />
+      )}
+    </View>
   );
-}
-
-function createStyles(colors: any) {
-  return StyleSheet.create({
-    skeleton: {
-      backgroundColor: colors.surface,
-    },
-  });
 }

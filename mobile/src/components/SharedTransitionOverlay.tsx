@@ -15,7 +15,7 @@ import {useSharedTransition} from '../contexts/SharedTransitionContext';
 import {useTheme} from '../contexts/ThemeContext';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
-const TRANSITION_DURATION = 280;
+const TRANSITION_DURATION = 150;
 const TIMING_CONFIG = {
   duration: TRANSITION_DURATION,
   easing: Easing.out(Easing.cubic),

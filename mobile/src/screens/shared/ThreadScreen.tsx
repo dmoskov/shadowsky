@@ -38,6 +38,7 @@ const logger = createLogger('ThreadScreen');
 interface ThreadScreenProps {
   handle: string;
   postId: string;
+  did?: string;
 }
 
 const MAX_REPLY_LENGTH = 300;
@@ -216,7 +217,7 @@ function flattenThreadTree(
 
 // --- Main Component ---
 
-export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
+export function ThreadScreen({ handle, postId, did }: ThreadScreenProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
@@ -248,8 +249,18 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
     };
   }, [activateTransition, cancelTransition]);
 
-  // Resolve handle to URI on mount
+  // Resolve handle to URI on mount — skip network call if DID is provided
   React.useEffect(() => {
+    if (!handle && !did) return;
+    if (!postId) return;
+
+    if (did) {
+      // Fast path: construct URI directly from DID (no network call)
+      setPostUri(`at://${did}/app.bsky.feed.post/${postId}`);
+      return;
+    }
+
+    // Slow path: resolve handle to DID via network
     async function resolveUri() {
       setIsResolvingUri(true);
       setResolveError(null);
@@ -264,10 +275,8 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
       }
     }
 
-    if (handle && postId) {
-      resolveUri();
-    }
-  }, [handle, postId, resolveRetry]);
+    resolveUri();
+  }, [handle, postId, did, resolveRetry]);
 
   // Fetch thread data
   const { data: thread, isLoading, error, refetch } = usePostThread(postUri || "");

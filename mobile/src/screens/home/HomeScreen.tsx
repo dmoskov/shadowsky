@@ -21,6 +21,15 @@ function getPostIdFromUri(uri: string): string {
   return parts[parts.length - 1];
 }
 
+/**
+ * Extract DID from AT Protocol URI
+ * URI format: at://did:plc:xxx/collection/rkey
+ */
+function getDidFromUri(uri: string): string {
+  const parts = uri.split("/");
+  return parts[2] || "";
+}
+
 export function HomeScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -78,7 +87,8 @@ export function HomeScreen() {
   const handlePostPress = (event: { nativeEvent: { uri: string; handle: string } }) => {
     const { uri, handle } = event.nativeEvent;
     const postId = getPostIdFromUri(uri);
-    navigateToThread(handle, postId);
+    const did = getDidFromUri(uri);
+    navigateToThread(handle, postId, did || undefined);
   };
 
   const handleProfilePress = (event: { nativeEvent: { handle: string } }) => {

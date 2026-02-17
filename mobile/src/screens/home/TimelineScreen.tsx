@@ -114,7 +114,7 @@ export function TimelineScreen() {
   const handlePostPress = (post: AppBskyFeedDefs.FeedViewPost) => {
     const postId = getPostIdFromUri(post.post.uri);
     const handle = post.post.author.handle;
-    navigateToThread(handle, postId);
+    navigateToThread(handle, postId, post.post.author.did);
   };
 
   const handleRefresh = () => {

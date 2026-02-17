@@ -1,5 +1,12 @@
 import React, {useState, useCallback, useMemo, useRef} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Modal, Alert, ActivityIndicator} from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withTiming,
+  SharedValue,
+} from 'react-native-reanimated';
 import {AppBskyFeedDefs, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
@@ -72,6 +79,30 @@ function PostCardComponent({
   const { showToast } = useToast();
   const {prepareTransition} = useSharedTransition();
   const cardRef = useRef<React.ElementRef<typeof TouchableOpacity>>(null);
+
+  // Micro-animation shared values for engagement buttons
+  const likeScale = useSharedValue(1);
+  const repostScale = useSharedValue(1);
+  const bookmarkScale = useSharedValue(1);
+
+  const likeAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: likeScale.value }],
+  }));
+  const repostAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: repostScale.value }],
+  }));
+  const bookmarkAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: bookmarkScale.value }],
+  }));
+
+  function triggerBounce(scale: SharedValue<number>) {
+    scale.value = withSequence(
+      withTiming(0.7, { duration: 50 }),
+      withTiming(1.15, { duration: 120 }),
+      withTiming(1, { duration: 80 }),
+    );
+  }
+
   const postView = post.post;
   const author = postView.author;
   const [showMenu, setShowMenu] = useState(false);
@@ -182,16 +213,19 @@ function PostCardComponent({
 
   const handleLikePress = useCallback(() => {
     triggerHaptic('light');
+    triggerBounce(likeScale);
     onLike?.();
   }, [onLike]);
 
   const handleRepostPress = useCallback(() => {
     triggerHaptic('medium');
+    triggerBounce(repostScale);
     onRepost?.();
   }, [onRepost]);
 
   const handleBookmarkPress = useCallback(() => {
     triggerHaptic('light');
+    triggerBounce(bookmarkScale);
     onBookmark?.();
   }, [onBookmark]);
 
@@ -424,7 +458,9 @@ function PostCardComponent({
               accessibilityLabel={`Repost. ${postView.repostCount || 0} reposts`}
               accessibilityHint="Double tap to repost this post"
               accessibilityState={{disabled: !isOnline}}>
-              <RepostIcon size={18} color={isOnline ? colors.textSecondary : colors.borderLight} />
+              <Animated.View style={repostAnimStyle}>
+                <RepostIcon size={18} color={isOnline ? colors.textSecondary : colors.borderLight} />
+              </Animated.View>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={onPressRepostCount}
@@ -446,7 +482,9 @@ function PostCardComponent({
               accessibilityLabel={`${isLiked ? 'Unlike' : 'Like'}. ${postView.likeCount || 0} likes`}
               accessibilityHint={`Double tap to ${isLiked ? 'remove like from' : 'like'} this post`}
               accessibilityState={{disabled: !isOnline, selected: isLiked}}>
-              <HeartIcon size={18} color={isOnline ? (isLiked ? colors.danger : colors.textSecondary) : colors.borderLight} filled={isLiked} />
+              <Animated.View style={likeAnimStyle}>
+                <HeartIcon size={18} color={isOnline ? (isLiked ? colors.danger : colors.textSecondary) : colors.borderLight} filled={isLiked} />
+              </Animated.View>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={onPressLikeCount}
@@ -469,7 +507,9 @@ function PostCardComponent({
             accessibilityLabel={isBookmarked ? 'Remove bookmark' : 'Bookmark post'}
             accessibilityHint={`Double tap to ${isBookmarked ? 'remove' : 'add'} bookmark. Long press to save to collection.`}
             accessibilityState={{disabled: !isOnline, selected: isBookmarked}}>
-            <BookmarkIcon size={18} color={isOnline ? (isBookmarked ? colors.primary : colors.textSecondary) : colors.borderLight} filled={isBookmarked} />
+            <Animated.View style={bookmarkAnimStyle}>
+              <BookmarkIcon size={18} color={isOnline ? (isBookmarked ? colors.primary : colors.textSecondary) : colors.borderLight} filled={isBookmarked} />
+            </Animated.View>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -514,6 +554,9 @@ function PostCardComponent({
     isBookmarked,
     handleShare,
     colors,
+    likeAnimStyle,
+    repostAnimStyle,
+    bookmarkAnimStyle,
   ]);
 
   return (

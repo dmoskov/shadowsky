@@ -185,15 +185,15 @@ export function NotificationsScreen() {
       // For like/repost, navigate to the target post (reasonSubject)
       if ((reason === 'like' || reason === 'repost') && notification.reasonSubject) {
         const postId = getPostIdFromUri(notification.reasonSubject);
-        const handle = getHandleFromUri(notification.reasonSubject);
-        navigateToThread(handle, postId);
+        const did = getHandleFromUri(notification.reasonSubject);
+        navigateToThread(notification.author.handle, postId, did || undefined);
         return;
       }
 
       // For reply/mention/quote, navigate to the notification post itself
       if (reason === 'reply' || reason === 'mention' || reason === 'quote') {
         const postId = getPostIdFromUri(notification.uri);
-        navigateToThread(notification.author.handle, postId);
+        navigateToThread(notification.author.handle, postId, notification.author.did);
         return;
       }
 
