@@ -18,7 +18,7 @@ export interface VideoAsset {
 }
 
 const MAX_VIDEO_DURATION = 60; // 60 seconds
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+const ABSOLUTE_MAX_SIZE = 500 * 1024 * 1024; // 500MB absolute limit
 
 export function useVideoPicker() {
   const [selectedVideo, setSelectedVideo] = useState<VideoAsset | null>(null);
@@ -47,12 +47,12 @@ export function useVideoPicker() {
       };
     }
 
-    // Check file size
-    if (asset.fileSize && asset.fileSize > MAX_VIDEO_SIZE) {
+    // Check file size - allow up to 100MB (compression will reduce), reject over 500MB
+    if (asset.fileSize && asset.fileSize > ABSOLUTE_MAX_SIZE) {
       const sizeMB = Math.round(asset.fileSize / (1024 * 1024));
       return {
         valid: false,
-        error: `Video must be 50MB or less. Your video is ${sizeMB}MB.`,
+        error: `Video is too large (${sizeMB}MB). Maximum size is 500MB.`,
       };
     }
 
@@ -183,6 +183,18 @@ export function useVideoPicker() {
     }
   };
 
+  const updateVideoUri = (newUri: string, newFileSize?: number) => {
+    setSelectedVideo((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        uri: newUri,
+        mimeType: 'video/mp4', // compressed output is always mp4
+        fileSize: newFileSize ?? prev.fileSize,
+      };
+    });
+  };
+
   const removeVideo = () => {
     setSelectedVideo(null);
     setIsUploading(false);
@@ -205,6 +217,7 @@ export function useVideoPicker() {
     pickFromLibrary,
     recordVideo,
     selectedVideo,
+    updateVideoUri,
     removeVideo,
     clearVideo,
     isUploading,

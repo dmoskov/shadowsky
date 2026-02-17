@@ -3,8 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator
 import { Image } from "expo-image";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { VideoIcon } from "../../../components/icons";
+import { VideoCompressionProgress } from "../../../components/VideoCompressionProgress";
 import type { ImageAsset } from "../../../hooks/useImagePicker";
 import type { VideoAsset } from "../../../hooks/useVideoPicker";
+import type { VideoCompressionState } from "../../../hooks/useVideoCompression";
 import type { SelectedGif } from "../../../hooks/useGifPicker";
 
 export interface ComposeMediaPreviewProps {
@@ -20,6 +22,11 @@ export interface ComposeMediaPreviewProps {
   formatVideoDuration: (duration: number) => string;
   isVideoUploading: boolean;
 
+  // Video compression
+  compressionState?: VideoCompressionState;
+  compressionStatusMessage?: string;
+  onCancelCompression?: () => void;
+
   // GIF preview
   selectedGif: SelectedGif | null;
   onRemoveGif: () => void;
@@ -34,11 +41,16 @@ export function ComposeMediaPreview({
   onRemoveVideo,
   formatVideoDuration,
   isVideoUploading,
+  compressionState,
+  compressionStatusMessage,
+  onCancelCompression,
   selectedGif,
   onRemoveGif,
 }: ComposeMediaPreviewProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const isCompressing = compressionState?.status === "compressing" || compressionState?.status === "analyzing";
 
   // Image Previews
   if (selectedImages.length > 0) {
@@ -98,7 +110,7 @@ export function ComposeMediaPreview({
               <VideoIcon size={48} color={colors.textTertiary} />
             </View>
           )}
-          {isVideoUploading && (
+          {(isVideoUploading || isCompressing) && (
             <View style={styles.uploadingOverlay}>
               <ActivityIndicator color={colors.text} size="small" />
             </View>
@@ -111,7 +123,7 @@ export function ComposeMediaPreview({
           <TouchableOpacity
             style={styles.removeButton}
             onPress={onRemoveVideo}
-            disabled={isVideoUploading}
+            disabled={isVideoUploading || isCompressing}
           >
             <Text style={styles.removeText}>×</Text>
           </TouchableOpacity>
@@ -119,9 +131,16 @@ export function ComposeMediaPreview({
             <View style={styles.playIconTriangle} />
           </View>
         </View>
-        {isVideoUploading && (
+        {compressionState && (
+          <VideoCompressionProgress
+            state={compressionState}
+            statusMessage={compressionStatusMessage || ""}
+            onCancel={onCancelCompression}
+          />
+        )}
+        {isVideoUploading && !isCompressing && (
           <Text style={styles.uploadingText}>
-            Uploading video... This may take a while.
+            Uploading video...
           </Text>
         )}
       </View>

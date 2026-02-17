@@ -10,6 +10,7 @@ import { draftToComposerState, ComposerState } from "../../services/drafts";
 import { Avatar } from "../../components/Avatar";
 import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
 import { useVideoPicker } from "../../hooks/useVideoPicker";
+import { useVideoCompression } from "../../hooks/useVideoCompression";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useSearchActors } from "../../hooks/api/useProfile";
 import { MentionSuggestions } from "../../components/MentionSuggestions";
@@ -79,6 +80,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
   const createPost = useCreatePost();
   const imagePicker = useImagePicker();
   const videoPicker = useVideoPicker();
+  const videoCompression = useVideoCompression();
   const saveDraft = useSaveDraft();
   const deleteDraft = useDeleteDraft();
   const { data: draftsData } = useDrafts();
@@ -276,6 +278,31 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
     imagePicker.addImages(imageAssets);
   }, [sharedImages]);
 
+  // Auto-compress video when selected
+  // Track URIs we've already processed to avoid re-compressing after updateVideoUri
+  const processedVideoUrisRef = React.useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const video = videoPicker.selectedVideo;
+    if (!video) return;
+    if (processedVideoUrisRef.current.has(video.uri)) return;
+    processedVideoUrisRef.current.add(video.uri);
+
+    // Only compress if the file is large enough to benefit
+    if (video.fileSize && videoCompression.shouldCompress(video.fileSize)) {
+      videoCompression.compress(video.uri, video.fileSize).then((result) => {
+        if (result.wasCompressed && result.uri) {
+          // Mark compressed URI as processed so we don't re-compress it
+          processedVideoUrisRef.current.add(result.uri);
+          videoPicker.updateVideoUri(result.uri, result.compressedSize);
+          triggerHaptic('success');
+        }
+      }).catch((error) => {
+        logger.error('Auto-compression failed:', error);
+        // Video picker still has original - user can try to post without compression
+      });
+    }
+  }, [videoPicker.selectedVideo?.uri]);
+
   // Mark as dirty when content changes
   useEffect(() => {
     if (loadedDraftId || text || imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo) {
@@ -445,7 +472,16 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
       "Are you sure you want to remove this video?",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Remove", style: "destructive", onPress: () => videoPicker.removeVideo() },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => {
+            videoCompression.cancel();
+            videoCompression.reset();
+            processedVideoUrisRef.current.clear();
+            videoPicker.removeVideo();
+          },
+        },
       ]
     );
   };
@@ -849,7 +885,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
       imagePicker.isUploading || videoPicker.isUploading
     : (!text.trim() && imagePicker.selectedImages.length === 0 && !videoPicker.selectedVideo && !gifPicker.selectedGif) ||
       text.length > MAX_POST_LENGTH ||
-      imagePicker.isUploading || videoPicker.isUploading;
+      imagePicker.isUploading || videoPicker.isUploading || videoCompression.isCompressing;
 
   // Enable cmd+Enter keyboard shortcut to submit post
   useKeyboardShortcuts({
@@ -895,7 +931,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
           onPress={handlePost}
           disabled={isPostDisabled || createPost.isPending}
         >
-          {createPost.isPending || imagePicker.isUploading || videoPicker.isUploading ? (
+          {createPost.isPending || imagePicker.isUploading || videoPicker.isUploading || videoCompression.isCompressing ? (
             <ActivityIndicator color={colors.text} size="small" />
           ) : (
             <Text style={styles.postButtonText}>Post</Text>
@@ -972,6 +1008,9 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
             isVideoUploading={videoPicker.isUploading}
             selectedGif={gifPicker.selectedGif}
             onRemoveGif={handleRemoveGif}
+            compressionState={videoCompression.state}
+            compressionStatusMessage={videoCompression.getStatusMessage()}
+            onCancelCompression={videoCompression.cancel}
           />
 
           {/* Quote Preview */}
