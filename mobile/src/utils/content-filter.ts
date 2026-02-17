@@ -30,34 +30,77 @@ export function calculateExpirationTime(duration: MutedWord["duration"]): number
 }
 
 /**
+ * Pre-compiled muted word matcher.
+ * Compiles regex patterns once and caches them, keyed by the muted word value.
+ * Avoids creating new RegExp objects on every post×word check during scroll
+ * (see ISSUE-CPU-1 in profiling report).
+ */
+interface CompiledMutedWord {
+  type: "hashtag" | "phrase" | "word";
+  pattern?: RegExp;
+  lowerValue: string;
+}
+
+const compiledCache = new Map<string, CompiledMutedWord>();
+
+function getCompiledMutedWord(mutedWord: MutedWord): CompiledMutedWord {
+  const cacheKey = mutedWord.value;
+  const cached = compiledCache.get(cacheKey);
+  if (cached) return cached;
+
+  const searchValue = mutedWord.value.toLowerCase().trim();
+  let compiled: CompiledMutedWord;
+
+  if (searchValue.startsWith("#")) {
+    const tag = searchValue.slice(1);
+    compiled = {
+      type: "hashtag",
+      pattern: new RegExp(`#${tag}(?![\\w])`, "i"),
+      lowerValue: searchValue,
+    };
+  } else if (searchValue.includes(" ")) {
+    compiled = {
+      type: "phrase",
+      lowerValue: searchValue,
+    };
+  } else {
+    compiled = {
+      type: "word",
+      pattern: new RegExp(`\\b${searchValue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i"),
+      lowerValue: searchValue,
+    };
+  }
+
+  compiledCache.set(cacheKey, compiled);
+  return compiled;
+}
+
+/**
  * Check if text contains a muted word/phrase
- * Case-insensitive matching with support for phrases and hashtags
+ * Case-insensitive matching with support for phrases and hashtags.
+ * Uses pre-compiled regex patterns for performance.
  */
 function containsMutedWord(text: string, mutedWord: MutedWord): boolean {
   if (isMutedWordExpired(mutedWord)) {
     return false;
   }
 
-  const searchValue = mutedWord.value.toLowerCase().trim();
-  const searchText = text.toLowerCase();
+  const compiled = getCompiledMutedWord(mutedWord);
 
-  // Handle hashtag matching
-  if (searchValue.startsWith("#")) {
-    // Match hashtag exactly with word boundaries
-    const tag = searchValue.slice(1);
-    const hashtagPattern = new RegExp(`#${tag}(?![\\w])`, "i");
-    return hashtagPattern.test(text);
+  if (compiled.type === "hashtag" && compiled.pattern) {
+    return compiled.pattern.test(text);
   }
 
-  // For phrases (multi-word), check if the entire phrase exists
-  if (searchValue.includes(" ")) {
-    return searchText.includes(searchValue);
+  if (compiled.type === "phrase") {
+    return text.toLowerCase().includes(compiled.lowerValue);
   }
 
-  // For single words, match with word boundaries to avoid partial matches
-  // e.g., "cat" should not match "category"
-  const wordPattern = new RegExp(`\\b${searchValue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
-  return wordPattern.test(text);
+  // Single word with word boundary regex
+  if (compiled.pattern) {
+    return compiled.pattern.test(text);
+  }
+
+  return false;
 }
 
 /**

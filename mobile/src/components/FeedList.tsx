@@ -1,4 +1,4 @@
-import React, { forwardRef, useMemo, useRef, useState, useCallback } from 'react';
+import React, { forwardRef, useMemo, useRef, useCallback } from 'react';
 import {
   FlatList,
   ActivityIndicator,
@@ -80,8 +80,10 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   const { setActiveVideoUri, isAutoplayEnabled } = useVideoAutoplay();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  // Track which post URIs are currently visible
-  const [visiblePostUris, setVisiblePostUris] = useState<Set<string>>(new Set());
+  // Track which post URIs are currently visible.
+  // Uses a ref instead of state to avoid triggering full FlatList re-renders
+  // on every scroll viewability change (see ISSUE-JS-1 in profiling report).
+  const visiblePostUrisRef = useRef<Set<string>>(new Set());
 
   // Filter posts based on muted words
   const filteredPosts = useMemo(() => {
@@ -129,7 +131,7 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
         }
       }
 
-      setVisiblePostUris(visibleUris);
+      visiblePostUrisRef.current = visibleUris;
 
       if (isAutoplayEnabledRef.current) {
         setActiveVideoUriRef.current(bestVideoUri);
@@ -152,7 +154,7 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   const renderItem: ListRenderItem<AppBskyFeedDefs.FeedViewPost> = useCallback(({item}) => (
     <SwipeablePostCard
       post={item}
-      isVisible={visiblePostUris.has(item.post.uri)}
+      isVisible={visiblePostUrisRef.current.has(item.post.uri)}
       onPress={() => onPostPress?.(item)}
       onPressProfile={onProfilePress}
       onLike={() => onLike?.(item)}
@@ -163,7 +165,7 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
       onMentionPress={onMentionPress}
       onHashtagPress={onHashtagPress}
     />
-  ), [visiblePostUris, onPostPress, onProfilePress, onLike, onRepost, onReply, onBookmark, isBookmarked, onMentionPress, onHashtagPress]);
+  ), [onPostPress, onProfilePress, onLike, onRepost, onReply, onBookmark, isBookmarked, onMentionPress, onHashtagPress]);
 
   const renderFooter = () => {
     if (!isLoadingMore) return null;
