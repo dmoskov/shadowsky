@@ -5,6 +5,7 @@ import {
 } from '../hooks/useNotificationPermissions';
 import {useNotificationHandler} from '../hooks/useNotificationHandler';
 import {initializePushNotifications} from '../services/push-notification-service';
+import {registerNotificationCategories} from '../services/notification-categories';
 import {useAuth} from '../contexts/AuthContext';
 import {getAgent} from '../services/atproto/client';
 
@@ -24,9 +25,10 @@ export function NotificationSetup() {
   // Set up notification handler for foreground/background
   useNotificationHandler();
 
-  // Configure notification handler on mount
+  // Configure notification handler and register action categories on mount
   useEffect(() => {
     configureNotificationHandler();
+    registerNotificationCategories();
   }, []);
 
   // Request permission on first app launch (after login)

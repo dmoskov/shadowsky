@@ -2,6 +2,7 @@ import {useEffect, useRef} from 'react';
 import * as Notifications from 'expo-notifications';
 import {useRouter} from 'expo-router';
 import {clearBadgeCount} from '../utils/badge';
+import {handleNotificationAction} from '../services/notification-categories';
 
 /**
  * Handle notification tap and navigate to appropriate screen
@@ -52,7 +53,7 @@ function handleNotificationNavigation(
 }
 
 /**
- * Hook to handle notification interactions (tap, receive, etc.)
+ * Hook to handle notification interactions (tap, receive, action buttons)
  */
 export function useNotificationHandler() {
   const router = useRouter();
@@ -66,14 +67,18 @@ export function useNotificationHandler() {
       // will determine if it shows as a banner
     });
 
-    // Listen for user tapping on notification
-    responseListener.current = Notifications.addNotificationResponseReceivedListener((response: Notifications.NotificationResponse) => {
-      const data = response.notification.request.content.data;
+    // Listen for user interaction with notification (tap or action button)
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(async (response: Notifications.NotificationResponse) => {
+      // Try to handle as an action button press (reply/like from banner)
+      const handled = await handleNotificationAction(response);
 
-      // Navigate based on notification data
-      handleNotificationNavigation(router, data);
+      if (!handled) {
+        // Default tap — navigate into the app
+        const data = response.notification.request.content.data;
+        handleNotificationNavigation(router, data);
+      }
 
-      // Clear badge count when user opens from notification
+      // Clear badge count on any interaction
       clearBadgeCount();
     });
 
