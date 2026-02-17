@@ -8,6 +8,8 @@ import {
   Flag,
   Link,
   List,
+  Pin,
+  PinOff,
   Share,
   Trash2,
   UserX,
@@ -21,6 +23,7 @@ interface PostMenuItemsProps {
   isThread: boolean;
   isThreadMuted: boolean;
   isWebShareSupported: boolean;
+  isPinned?: boolean;
   onNativeShare: () => void;
   onCopyLink: () => void;
   onCopyDeepLink: () => void;
@@ -35,6 +38,8 @@ interface PostMenuItemsProps {
   onBlock: () => void;
   onOpenReportModal: () => void;
   onDelete: () => void;
+  onPinToProfile?: () => void;
+  onUnpinFromProfile?: () => void;
 }
 
 /**
@@ -47,6 +52,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
   isThread,
   isThreadMuted,
   isWebShareSupported,
+  isPinned,
   onNativeShare,
   onCopyLink,
   onCopyDeepLink,
@@ -61,6 +67,8 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
   onBlock,
   onOpenReportModal,
   onDelete,
+  onPinToProfile,
+  onUnpinFromProfile,
 }) => {
   return (
     <div className="overflow-hidden py-1">
@@ -217,14 +225,35 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
 
       {/* Options for own posts */}
       {isOwnPost && (
-        <button
-          role="menuitem"
-          onClick={onDelete}
-          className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-red-600 transition-colors hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none dark:text-red-400 dark:hover:bg-red-900/20 dark:focus-visible:bg-red-900/20"
-        >
-          <Trash2 className="h-4 w-4" aria-hidden="true" />
-          Delete post
-        </button>
+        <>
+          {isPinned ? (
+            <button
+              role="menuitem"
+              onClick={onUnpinFromProfile}
+              className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+            >
+              <PinOff className="h-4 w-4" aria-hidden="true" />
+              Unpin from profile
+            </button>
+          ) : (
+            <button
+              role="menuitem"
+              onClick={onPinToProfile}
+              className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+            >
+              <Pin className="h-4 w-4" aria-hidden="true" />
+              Pin to profile
+            </button>
+          )}
+          <button
+            role="menuitem"
+            onClick={onDelete}
+            className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-red-600 transition-colors hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none dark:text-red-400 dark:hover:bg-red-900/20 dark:focus-visible:bg-red-900/20"
+          >
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+            Delete post
+          </button>
+        </>
       )}
     </div>
   );

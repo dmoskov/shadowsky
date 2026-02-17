@@ -13,7 +13,7 @@ import {
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useProfile, useFollowUser, useUnfollowUser, useBlockUser, useUnblockUser, useMuteUser, useUnmuteUser } from "../../hooks/api/useProfile";
-import { useAuthorFeed, useActorLikes } from "../../hooks/api/useFeed";
+import { useAuthorFeed, useActorLikes, usePostThread } from "../../hooks/api/useFeed";
 import { useActorStarterPacks } from "../../hooks/api/useStarterPacks";
 import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
@@ -95,6 +95,11 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
 
   // Fetch starter packs for this actor
   const { data: starterPacksData } = useActorStarterPacks(handle);
+
+  // Fetch pinned post if the profile has one
+  const pinnedPostUri = profile?.pinnedPost?.uri;
+  const { data: pinnedPostThread } = usePostThread(pinnedPostUri ?? "");
+  const pinnedPost = pinnedPostThread && "post" in pinnedPostThread ? pinnedPostThread.post as AppBskyFeedDefs.PostView : null;
 
   const isOwnProfile = account?.handle === handle;
 
@@ -526,6 +531,20 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           <>
             {renderHeader()}
             {renderTabBar()}
+            {pinnedPost && activeTab === "posts" && (
+              <View style={styles.pinnedPostContainer}>
+                <View style={styles.pinnedPostLabel}>
+                  <Text style={styles.pinnedPostLabelText}>Pinned</Text>
+                </View>
+                <PostCard
+                  post={{ post: pinnedPost, reply: undefined } as AppBskyFeedDefs.FeedViewPost}
+                  onPress={() => onNavigateToPost?.(pinnedPost.uri)}
+                  onPressProfile={(profileHandle) => onNavigateToProfile?.(profileHandle)}
+                  onMentionPress={handleMentionPress}
+                  onHashtagPress={handleHashtagPress}
+                />
+              </View>
+            )}
           </>
         }
         ListFooterComponent={renderFooter}
@@ -883,6 +902,22 @@ function createStyles(colors: any) {
     fontSize: 24,
     fontWeight: "300",
     marginLeft: 8,
+  },
+  pinnedPostContainer: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+  },
+  pinnedPostLabel: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 6,
+  },
+  pinnedPostLabelText: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    fontWeight: "600",
   },
   });
 }

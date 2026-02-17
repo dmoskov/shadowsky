@@ -1,4 +1,6 @@
 import { AppBskyFeedDefs } from "@atproto/api";
+import { queryClient } from "@bsky/shared";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModal } from "../contexts/ModalContext";
@@ -51,6 +53,20 @@ export function usePostMenuActions({
   const isThread = postRecord?.reply !== undefined;
   const rootUri = getThreadRootUri(post);
   const isThreadCurrentlyMuted = isThreadMuted(rootUri);
+
+  // Fetch the current user's pinned post URI (cached, only enabled for own posts)
+  const { data: ownPinnedPostUri } = useQuery({
+    queryKey: ["own-pinned-post", session?.did],
+    queryFn: async () => {
+      if (!agent || !session?.did) return null;
+      const { data } = await agent.getProfile({ actor: session.did });
+      return data.pinnedPost?.uri || null;
+    },
+    staleTime: 60 * 1000,
+    enabled: isOwnPost && !!agent && !!session?.did,
+  });
+
+  const isCurrentlyPinned = isOwnPost && ownPinnedPostUri === post.uri;
 
   const handleMute = async () => {
     onClose();
@@ -330,6 +346,53 @@ export function usePostMenuActions({
     });
   };
 
+  const handlePinToProfile = async () => {
+    onClose();
+    try {
+      if (!agent) return;
+      await agent.upsertProfile((existing) => ({
+        ...existing,
+        pinnedPost: {
+          uri: post.uri,
+          cid: post.cid,
+        },
+      }));
+      // Invalidate profile and pinned post queries so UI refreshes
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["pinned-post"] });
+      queryClient.invalidateQueries({ queryKey: ["own-pinned-post"] });
+      showToast("Post pinned to profile", {
+        type: "success",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Failed to pin post:", error);
+      showToast("Failed to pin post", { type: "error" });
+    }
+  };
+
+  const handleUnpinFromProfile = async () => {
+    onClose();
+    try {
+      if (!agent) return;
+      await agent.upsertProfile((existing) => {
+        const updated = { ...existing };
+        delete updated.pinnedPost;
+        return updated;
+      });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["pinned-post"] });
+      queryClient.invalidateQueries({ queryKey: ["own-pinned-post"] });
+      showToast("Post unpinned from profile", {
+        type: "success",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Failed to unpin post:", error);
+      showToast("Failed to unpin post", { type: "error" });
+    }
+  };
+
   return {
     // Action handlers
     handleMute,
@@ -344,11 +407,14 @@ export function usePostMenuActions({
     handleMuteThread,
     handleUnmuteThread,
     handleHidePost,
+    handlePinToProfile,
+    handleUnpinFromProfile,
     // Helper functions
     isWebShareSupported,
     // Derived state
     isOwnPost,
     isThread,
     isThreadCurrentlyMuted,
+    isCurrentlyPinned,
   };
 }
