@@ -39,6 +39,7 @@ import {
 } from "../../contexts/BatchSelectionContext";
 import { executeBatchOperation } from "../../services/batch-operation-executor";
 import { estimateBatchOperation } from "../../services/batch-rate-limit-estimator";
+import { useDynamicType, type ScaledFontFn } from "../hooks/useDynamicType";
 import {
   MobileBatchActionsToolbar,
   MobileBatchProgressIndicator,
@@ -58,6 +59,86 @@ interface ListManagementViewProps {
   onClose?: () => void;
 }
 
+function createStyles(scaledFont: ScaledFontFn) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "#ffffff",
+    } as ViewStyle,
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: "#e1e1e1",
+      backgroundColor: "#ffffff",
+    } as ViewStyle,
+    backButton: {
+      minWidth: 44,
+      minHeight: 44,
+      justifyContent: "center",
+      alignItems: "center",
+    } as ViewStyle,
+    backIcon: {
+      fontSize: scaledFont(24),
+      color: "#0f1419",
+    } as TextStyle,
+    headerTitle: {
+      flex: 1,
+      fontSize: scaledFont(18),
+      fontWeight: "700",
+      color: "#0f1419",
+      textAlign: "center",
+      marginHorizontal: 8,
+    } as TextStyle,
+    selectButton: {
+      minWidth: 44,
+      minHeight: 44,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: 12,
+    } as ViewStyle,
+    selectButtonText: {
+      fontSize: scaledFont(15),
+      fontWeight: "600",
+      color: "#1d9bf0",
+    } as TextStyle,
+    list: {
+      flex: 1,
+    } as ViewStyle,
+    listContent: {
+      flexGrow: 1,
+    } as ViewStyle,
+    loadingFooter: {
+      paddingVertical: 20,
+      alignItems: "center",
+    } as ViewStyle,
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 32,
+      minHeight: 300,
+    } as ViewStyle,
+    emptyText: {
+      fontSize: scaledFont(16),
+      color: "#687684",
+    } as TextStyle,
+    loadingOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(255, 255, 255, 0.9)",
+      justifyContent: "center",
+      alignItems: "center",
+    } as ViewStyle,
+  });
+}
+
 /**
  * Inner component that uses batch selection context
  */
@@ -68,6 +149,9 @@ function ListManagementViewInner({
   onUserPress,
   onClose,
 }: ListManagementViewProps) {
+  const { scaledFont } = useDynamicType();
+  const styles = useMemo(() => createStyles(scaledFont), [scaledFont]);
+
   const [members, setMembers] = useState<AppBskyActorDefs.ProfileView[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -268,7 +352,7 @@ function ListManagementViewInner({
         <ActivityIndicator size="small" color="#1d9bf0" />
       </View>
     );
-  }, [loadingMore]);
+  }, [loadingMore, styles]);
 
   // Empty component
   const EmptyComponent = useMemo(() => {
@@ -278,7 +362,7 @@ function ListManagementViewInner({
         <Text style={styles.emptyText}>No members in this list</Text>
       </View>
     );
-  }, [loading]);
+  }, [loading, styles]);
 
   // Show progress indicator when operation is active
   const showProgress =
@@ -369,81 +453,3 @@ export const ListManagementView: React.FC<ListManagementViewProps> = (
     </BatchSelectionProvider>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  } as ViewStyle,
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e1e1e1",
-    backgroundColor: "#ffffff",
-  } as ViewStyle,
-  backButton: {
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: "center",
-    alignItems: "center",
-  } as ViewStyle,
-  backIcon: {
-    fontSize: 24,
-    color: "#0f1419",
-  } as TextStyle,
-  headerTitle: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#0f1419",
-    textAlign: "center",
-    marginHorizontal: 8,
-  } as TextStyle,
-  selectButton: {
-    minWidth: 44,
-    minHeight: 44,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 12,
-  } as ViewStyle,
-  selectButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#1d9bf0",
-  } as TextStyle,
-  list: {
-    flex: 1,
-  } as ViewStyle,
-  listContent: {
-    flexGrow: 1,
-  } as ViewStyle,
-  loadingFooter: {
-    paddingVertical: 20,
-    alignItems: "center",
-  } as ViewStyle,
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
-    minHeight: 300,
-  } as ViewStyle,
-  emptyText: {
-    fontSize: 16,
-    color: "#687684",
-  } as TextStyle,
-  loadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-  } as ViewStyle,
-});

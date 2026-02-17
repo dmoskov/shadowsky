@@ -29,6 +29,7 @@ import {
   type ViewStyle,
   type ViewToken,
 } from "react-native";
+import { useDynamicType, type ScaledFontFn } from "../hooks/useDynamicType";
 import {
   FEED_CONSTANTS,
   type FeedListProps,
@@ -104,9 +105,56 @@ function createGetItemLayout(items: MobilePostData[]) {
 }
 
 /**
+ * Create styles with Dynamic Type font scaling
+ */
+function createStyles(scaledFont: ScaledFontFn) {
+  return StyleSheet.create({
+    list: {
+      flex: 1,
+      backgroundColor: "#ffffff",
+    } as ViewStyle,
+    contentContainer: {
+      flexGrow: 1,
+    } as ViewStyle,
+    separator: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: "#e1e1e1",
+    } as ViewStyle,
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 32,
+      minHeight: 300,
+    } as ViewStyle,
+    emptyText: {
+      fontSize: scaledFont(18),
+      fontWeight: "600",
+      color: "#0f1419",
+      marginBottom: 8,
+    },
+    emptySubtext: {
+      fontSize: scaledFont(14),
+      color: "#687684",
+      textAlign: "center",
+    },
+    loadingFooter: {
+      paddingVertical: 20,
+      alignItems: "center",
+    } as ViewStyle,
+  });
+}
+
+type Styles = ReturnType<typeof createStyles>;
+
+/**
  * Empty state component
  */
-const DefaultEmptyComponent = memo(function DefaultEmptyComponent() {
+const DefaultEmptyComponent = memo(function DefaultEmptyComponent({
+  styles,
+}: {
+  styles: Styles;
+}) {
   return (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyText}>No posts to display</Text>
@@ -122,8 +170,10 @@ const DefaultEmptyComponent = memo(function DefaultEmptyComponent() {
  */
 const LoadingFooter = memo(function LoadingFooter({
   isLoading,
+  styles,
 }: {
   isLoading: boolean;
+  styles: Styles;
 }) {
   if (!isLoading) return null;
 
@@ -137,7 +187,11 @@ const LoadingFooter = memo(function LoadingFooter({
 /**
  * Item separator component
  */
-const ItemSeparator = memo(function ItemSeparator() {
+const ItemSeparator = memo(function ItemSeparator({
+  styles,
+}: {
+  styles: Styles;
+}) {
   return <View style={styles.separator} />;
 });
 
@@ -163,6 +217,9 @@ function FeedListComponent({
   ListHeaderComponent,
   ListFooterComponent,
 }: FeedListProps) {
+  const { scaledFont } = useDynamicType();
+  const styles = useMemo(() => createStyles(scaledFont), [scaledFont]);
+
   const flatListRef = useRef(null);
   const [visibleItems, setVisibleItems] = useState<Set<string>>(new Set());
 
@@ -335,14 +392,16 @@ function FeedListComponent({
   // Footer component with loading state
   const ListFooter = useMemo(
     () =>
-      ListFooterComponent || <LoadingFooter isLoading={isLoading && hasMore} />,
-    [ListFooterComponent, isLoading, hasMore],
+      ListFooterComponent || (
+        <LoadingFooter isLoading={isLoading && hasMore} styles={styles} />
+      ),
+    [ListFooterComponent, isLoading, hasMore, styles],
   );
 
   // Empty component
   const EmptyComponent = useMemo(
-    () => ListEmptyComponent || <DefaultEmptyComponent />,
-    [ListEmptyComponent],
+    () => ListEmptyComponent || <DefaultEmptyComponent styles={styles} />,
+    [ListEmptyComponent, styles],
   );
 
   return (
@@ -367,7 +426,7 @@ function FeedListComponent({
       onViewableItemsChanged={onViewableItemsChanged}
       viewabilityConfig={viewabilityConfig}
       // Components
-      ItemSeparatorComponent={ItemSeparator}
+      ItemSeparatorComponent={() => <ItemSeparator styles={styles} />}
       ListEmptyComponent={!isLoading ? EmptyComponent : null}
       ListHeaderComponent={ListHeaderComponent}
       ListFooterComponent={ListFooter}
@@ -411,39 +470,3 @@ function arePropsEqual(
  * Memoized FeedList export
  */
 export const FeedList = memo(FeedListComponent, arePropsEqual);
-
-const styles = StyleSheet.create({
-  list: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  } as ViewStyle,
-  contentContainer: {
-    flexGrow: 1,
-  } as ViewStyle,
-  separator: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: "#e1e1e1",
-  } as ViewStyle,
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32,
-    minHeight: 300,
-  } as ViewStyle,
-  emptyText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#0f1419",
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: "#687684",
-    textAlign: "center",
-  },
-  loadingFooter: {
-    paddingVertical: 20,
-    alignItems: "center",
-  } as ViewStyle,
-});

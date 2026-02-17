@@ -5,7 +5,7 @@
  * Provides quick access to batch actions with selection count.
  */
 
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import type { BatchActionType } from "../../../contexts/BatchSelectionContext";
 import { useBatchSelection } from "../../../contexts/BatchSelectionContext";
+import { useDynamicType, type ScaledFontFn } from "../../hooks/useDynamicType";
 
 interface MobileBatchActionsToolbarProps {
   /** Available actions for this context */
@@ -82,6 +83,129 @@ const actionConfigs: Record<BatchActionType, ActionConfig> = {
   },
 };
 
+function createStyles(scaledFont: ScaledFontFn) {
+  return StyleSheet.create({
+    container: {
+      position: "absolute",
+      bottom: 16,
+      left: 8,
+      right: 8,
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "rgba(255, 255, 255, 0.98)",
+      borderRadius: 16,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+      flexWrap: "wrap",
+      gap: 8,
+    } as ViewStyle,
+    selectionInfo: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingRight: 8,
+      borderRightWidth: 1,
+      borderRightColor: "#e1e1e1",
+      gap: 4,
+    } as ViewStyle,
+    selectionIcon: {
+      fontSize: scaledFont(16),
+    } as TextStyle,
+    selectionCount: {
+      fontSize: scaledFont(14),
+      fontWeight: "600",
+      color: "#0f1419",
+    } as TextStyle,
+    selectAllButton: {
+      paddingHorizontal: 8,
+      paddingVertical: 6,
+      borderRadius: 8,
+      backgroundColor: "#f0f0f0",
+    } as ViewStyle,
+    selectAllText: {
+      fontSize: scaledFont(13),
+      fontWeight: "600",
+      color: "#0f1419",
+    } as TextStyle,
+    actionsContainer: {
+      flexDirection: "row",
+      flex: 1,
+      gap: 6,
+      justifyContent: "center",
+    } as ViewStyle,
+    actionButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 8,
+      backgroundColor: "#f0f0f0",
+      gap: 4,
+    } as ViewStyle,
+    dangerButton: {
+      backgroundColor: "#fee",
+    } as ViewStyle,
+    warningButton: {
+      backgroundColor: "#fef3cd",
+    } as ViewStyle,
+    actionIcon: {
+      fontSize: scaledFont(14),
+    } as TextStyle,
+    actionLabel: {
+      fontSize: scaledFont(12),
+      fontWeight: "600",
+      color: "#0f1419",
+    } as TextStyle,
+    dangerLabel: {
+      color: "#dc2626",
+    } as TextStyle,
+    warningLabel: {
+      color: "#d97706",
+    } as TextStyle,
+    undoButton: {
+      paddingHorizontal: 8,
+      paddingVertical: 6,
+      borderRadius: 8,
+      backgroundColor: "#dbeafe",
+    } as ViewStyle,
+    undoText: {
+      fontSize: scaledFont(13),
+      fontWeight: "600",
+      color: "#1d9bf0",
+    } as TextStyle,
+    controlButtons: {
+      flexDirection: "row",
+      gap: 6,
+    } as ViewStyle,
+    clearButton: {
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 8,
+      backgroundColor: "#f0f0f0",
+    } as ViewStyle,
+    clearText: {
+      fontSize: scaledFont(13),
+      fontWeight: "600",
+      color: "#687684",
+    } as TextStyle,
+    doneButton: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 8,
+      backgroundColor: "#0f1419",
+    } as ViewStyle,
+    doneText: {
+      fontSize: scaledFont(13),
+      fontWeight: "700",
+      color: "#ffffff",
+    } as TextStyle,
+  });
+}
+
 export const MobileBatchActionsToolbar: React.FC<
   MobileBatchActionsToolbarProps
 > = ({ availableActions, onAction, onSelectAll, isUndoing, onUndo }) => {
@@ -93,6 +217,9 @@ export const MobileBatchActionsToolbar: React.FC<
     canUndo,
     operation,
   } = useBatchSelection();
+
+  const { scaledFont } = useDynamicType();
+  const styles = useMemo(() => createStyles(scaledFont), [scaledFont]);
 
   const handleAction = useCallback(
     (actionType: BatchActionType) => {
@@ -188,124 +315,3 @@ export const MobileBatchActionsToolbar: React.FC<
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    bottom: 16,
-    left: 8,
-    right: 8,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.98)",
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    flexWrap: "wrap",
-    gap: 8,
-  } as ViewStyle,
-  selectionInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingRight: 8,
-    borderRightWidth: 1,
-    borderRightColor: "#e1e1e1",
-    gap: 4,
-  } as ViewStyle,
-  selectionIcon: {
-    fontSize: 16,
-  } as TextStyle,
-  selectionCount: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#0f1419",
-  } as TextStyle,
-  selectAllButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#f0f0f0",
-  } as ViewStyle,
-  selectAllText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#0f1419",
-  } as TextStyle,
-  actionsContainer: {
-    flexDirection: "row",
-    flex: 1,
-    gap: 6,
-    justifyContent: "center",
-  } as ViewStyle,
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#f0f0f0",
-    gap: 4,
-  } as ViewStyle,
-  dangerButton: {
-    backgroundColor: "#fee",
-  } as ViewStyle,
-  warningButton: {
-    backgroundColor: "#fef3cd",
-  } as ViewStyle,
-  actionIcon: {
-    fontSize: 14,
-  } as TextStyle,
-  actionLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#0f1419",
-  } as TextStyle,
-  dangerLabel: {
-    color: "#dc2626",
-  } as TextStyle,
-  warningLabel: {
-    color: "#d97706",
-  } as TextStyle,
-  undoButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#dbeafe",
-  } as ViewStyle,
-  undoText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#1d9bf0",
-  } as TextStyle,
-  controlButtons: {
-    flexDirection: "row",
-    gap: 6,
-  } as ViewStyle,
-  clearButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#f0f0f0",
-  } as ViewStyle,
-  clearText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#687684",
-  } as TextStyle,
-  doneButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: "#0f1419",
-  } as ViewStyle,
-  doneText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#ffffff",
-  } as TextStyle,
-});

@@ -9,3 +9,10 @@ export {
   type FeedActionHandlers,
   type UseFeedActionsOptions,
 } from "./useFeedActions";
+
+export {
+  getCurrentFontScale,
+  scaledLineHeight,
+  useDynamicType,
+  type ScaledFontFn,
+} from "./useDynamicType";

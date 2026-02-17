@@ -30,6 +30,11 @@ import {
   type CachedThreadSummary,
 } from "../../services/thread-summary-cache";
 import { createLogger } from "../../utils/logger";
+import {
+  scaledLineHeight,
+  useDynamicType,
+  type ScaledFontFn,
+} from "../hooks/useDynamicType";
 
 const logger = createLogger("MobileThreadSummary");
 
@@ -83,9 +88,161 @@ const DEPTH_CONFIG: Record<
 };
 
 /**
+ * Creates styles with Dynamic Type-scaled font sizes.
+ * ViewStyle properties remain unchanged;
+ * only fontSize and associated lineHeight values are scaled.
+ */
+function createStyles(scaledFont: ScaledFontFn) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: "#f7f9fa",
+      borderRadius: 8,
+      marginTop: 12,
+      overflow: "hidden",
+    } as ViewStyle,
+    loadingRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    } as ViewStyle,
+    loadingText: {
+      fontSize: scaledFont(13),
+      color: "#687684",
+    } as TextStyle,
+    errorIcon: {
+      fontSize: scaledFont(14),
+      color: "#687684",
+    } as TextStyle,
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      gap: 8,
+    } as ViewStyle,
+    sparkleIcon: {
+      fontSize: scaledFont(14),
+    } as TextStyle,
+    headerTextContainer: {
+      flex: 1,
+    } as ViewStyle,
+    headerLabel: {
+      fontSize: scaledFont(12),
+      fontWeight: "500",
+      color: "#687684",
+    } as TextStyle,
+    headerMeta: {
+      fontSize: scaledFont(12),
+      color: "#687684",
+      opacity: 0.6,
+    } as TextStyle,
+    chevron: {
+      fontSize: scaledFont(10),
+      color: "#687684",
+    } as TextStyle,
+    content: {
+      paddingHorizontal: 12,
+      paddingBottom: 12,
+    } as ViewStyle,
+    highlightsSection: {
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: "#e1e1e1",
+    } as ViewStyle,
+    highlightsLabel: {
+      fontSize: scaledFont(11),
+      fontWeight: "500",
+      color: "#687684",
+      marginBottom: 8,
+    } as TextStyle,
+    highlightsRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    } as ViewStyle,
+    highlightChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "#ffffff",
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 4,
+    } as ViewStyle,
+    highlightHandle: {
+      fontSize: scaledFont(12),
+      color: "#1d9bf0",
+    } as TextStyle,
+    highlightEngagement: {
+      fontSize: scaledFont(12),
+      color: "#687684",
+    } as TextStyle,
+    engagementText: {
+      marginTop: 8,
+      fontSize: scaledFont(11),
+      color: "#687684",
+    } as TextStyle,
+  });
+}
+
+/**
+ * Creates summary-specific styles with Dynamic Type-scaled font sizes.
+ * Used by renderSummaryText and renderMarkdownContent helpers.
+ */
+function createSummaryStyles(scaledFont: ScaledFontFn) {
+  return StyleSheet.create({
+    paragraph: {
+      fontSize: scaledFont(14),
+      lineHeight: scaledLineHeight(scaledFont, 14, 20),
+      color: "#536471",
+      marginBottom: 8,
+    } as TextStyle,
+    bold: {
+      fontWeight: "700",
+    } as TextStyle,
+    italic: {
+      fontStyle: "italic",
+    } as TextStyle,
+    headerText: {
+      fontSize: scaledFont(14),
+      fontWeight: "600",
+      color: "#536471",
+      marginBottom: 4,
+      marginTop: 8,
+    } as TextStyle,
+    listItem: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      marginBottom: 4,
+      paddingLeft: 4,
+    } as ViewStyle,
+    bullet: {
+      fontSize: scaledFont(14),
+      color: "#536471",
+      marginRight: 8,
+      lineHeight: scaledLineHeight(scaledFont, 14, 20),
+    } as TextStyle,
+    listItemText: {
+      flex: 1,
+      fontSize: scaledFont(14),
+      lineHeight: scaledLineHeight(scaledFont, 14, 20),
+      color: "#536471",
+    } as TextStyle,
+  });
+}
+
+type SummaryStyles = ReturnType<typeof createSummaryStyles>;
+
+/**
  * Render summary text with basic markdown support (**bold** and *italic*)
  */
-function renderSummaryText(text: string): React.ReactNode {
+function renderSummaryText(
+  text: string,
+  summaryStyles: SummaryStyles,
+): React.ReactNode {
   const parts: React.ReactNode[] = [];
   let remaining = text;
   let key = 0;
@@ -143,7 +300,10 @@ function renderSummaryText(text: string): React.ReactNode {
 /**
  * Parse markdown text into paragraphs and list items for rendering
  */
-function renderMarkdownContent(text: string): React.ReactNode[] {
+function renderMarkdownContent(
+  text: string,
+  summaryStyles: SummaryStyles,
+): React.ReactNode[] {
   const blocks = text.split(/\n\n+/);
   const elements: React.ReactNode[] = [];
 
@@ -153,7 +313,7 @@ function renderMarkdownContent(text: string): React.ReactNode[] {
     if (headerMatch) {
       elements.push(
         <Text key={`h${bIndex}`} style={summaryStyles.headerText}>
-          {renderSummaryText(headerMatch[2])}
+          {renderSummaryText(headerMatch[2], summaryStyles)}
         </Text>,
       );
       return;
@@ -172,7 +332,10 @@ function renderMarkdownContent(text: string): React.ReactNode[] {
             <View key={`li${bIndex}-${lIndex}`} style={summaryStyles.listItem}>
               <Text style={summaryStyles.bullet}>•</Text>
               <Text style={summaryStyles.listItemText}>
-                {renderSummaryText(line.trim().replace(/^[-*•]\s/, ""))}
+                {renderSummaryText(
+                  line.trim().replace(/^[-*•]\s/, ""),
+                  summaryStyles,
+                )}
               </Text>
             </View>,
           );
@@ -183,7 +346,7 @@ function renderMarkdownContent(text: string): React.ReactNode[] {
     // Regular paragraph
     elements.push(
       <Text key={`p${bIndex}`} style={summaryStyles.paragraph}>
-        {renderSummaryText(block)}
+        {renderSummaryText(block, summaryStyles)}
       </Text>,
     );
   });
@@ -198,6 +361,12 @@ function MobileThreadSummaryContent({
   summaryDepth,
 }: MobileThreadSummaryProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const { scaledFont } = useDynamicType();
+  const styles = useMemo(() => createStyles(scaledFont), [scaledFont]);
+  const summaryStyles = useMemo(
+    () => createSummaryStyles(scaledFont),
+    [scaledFont],
+  );
 
   const config = DEPTH_CONFIG[summaryDepth];
   const shouldFetch =
@@ -333,7 +502,7 @@ function MobileThreadSummaryContent({
       {/* Summary content */}
       {isExpanded && (
         <View style={styles.content}>
-          {renderMarkdownContent(summary.summary)}
+          {renderMarkdownContent(summary.summary, summaryStyles)}
 
           {/* Highlighted sub-threads for comprehensive summaries */}
           {isComprehensive && highlights && highlights.length > 0 && (
@@ -370,137 +539,3 @@ function MobileThreadSummaryContent({
 
 export const MobileThreadSummary = memo(MobileThreadSummaryContent);
 export default MobileThreadSummary;
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#f7f9fa",
-    borderRadius: 8,
-    marginTop: 12,
-    overflow: "hidden",
-  } as ViewStyle,
-  loadingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  } as ViewStyle,
-  loadingText: {
-    fontSize: 13,
-    color: "#687684",
-  } as TextStyle,
-  errorIcon: {
-    fontSize: 14,
-    color: "#687684",
-  } as TextStyle,
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
-  } as ViewStyle,
-  sparkleIcon: {
-    fontSize: 14,
-  } as TextStyle,
-  headerTextContainer: {
-    flex: 1,
-  } as ViewStyle,
-  headerLabel: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#687684",
-  } as TextStyle,
-  headerMeta: {
-    fontSize: 12,
-    color: "#687684",
-    opacity: 0.6,
-  } as TextStyle,
-  chevron: {
-    fontSize: 10,
-    color: "#687684",
-  } as TextStyle,
-  content: {
-    paddingHorizontal: 12,
-    paddingBottom: 12,
-  } as ViewStyle,
-  highlightsSection: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#e1e1e1",
-  } as ViewStyle,
-  highlightsLabel: {
-    fontSize: 11,
-    fontWeight: "500",
-    color: "#687684",
-    marginBottom: 8,
-  } as TextStyle,
-  highlightsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  } as ViewStyle,
-  highlightChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  } as ViewStyle,
-  highlightHandle: {
-    fontSize: 12,
-    color: "#1d9bf0",
-  } as TextStyle,
-  highlightEngagement: {
-    fontSize: 12,
-    color: "#687684",
-  } as TextStyle,
-  engagementText: {
-    marginTop: 8,
-    fontSize: 11,
-    color: "#687684",
-  } as TextStyle,
-});
-
-const summaryStyles = StyleSheet.create({
-  paragraph: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: "#536471",
-    marginBottom: 8,
-  } as TextStyle,
-  bold: {
-    fontWeight: "700",
-  } as TextStyle,
-  italic: {
-    fontStyle: "italic",
-  } as TextStyle,
-  headerText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#536471",
-    marginBottom: 4,
-    marginTop: 8,
-  } as TextStyle,
-  listItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 4,
-    paddingLeft: 4,
-  } as ViewStyle,
-  bullet: {
-    fontSize: 14,
-    color: "#536471",
-    marginRight: 8,
-    lineHeight: 20,
-  } as TextStyle,
-  listItemText: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
-    color: "#536471",
-  } as TextStyle,
-});
