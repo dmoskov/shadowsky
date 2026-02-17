@@ -747,6 +747,7 @@ export const Home: React.FC<HomeProps> = React.memo(
       },
       initialPageParam: undefined as string | undefined,
       getNextPageParam: (lastPage) => lastPage.cursor,
+      maxPages: 10,
       enabled: !!agent,
       staleTime: MOBILE_CONFIG.STALE_TIME,
       gcTime: MOBILE_CONFIG.GC_TIME,

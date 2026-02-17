@@ -372,6 +372,7 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
     },
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
+    maxPages: 10,
     enabled: enabled && !!fullSearchQuery.trim(),
     staleTime: 30000,
     gcTime: 5 * 60 * 1000,
