@@ -1,21 +1,31 @@
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
+import { useIPadLayout } from "../contexts/IPadLayoutContext";
 
 export function useAppNavigation() {
   const router = useRouter();
+  const { isMultiColumn, showThread, showProfile } = useIPadLayout();
 
   const navigateToProfile = useCallback(
     (handle: string) => {
-      router.push(`/(app)/(tabs)/(home)/profile/${handle}`);
+      if (isMultiColumn) {
+        showProfile(handle);
+      } else {
+        router.push(`/(app)/(tabs)/(home)/profile/${handle}`);
+      }
     },
-    [router],
+    [router, isMultiColumn, showProfile],
   );
 
   const navigateToThread = useCallback(
     (handle: string, postId: string) => {
-      router.push(`/(app)/(tabs)/(home)/thread/${postId}?handle=${handle}`);
+      if (isMultiColumn) {
+        showThread(handle, postId);
+      } else {
+        router.push(`/(app)/(tabs)/(home)/thread/${postId}?handle=${handle}`);
+      }
     },
-    [router],
+    [router, isMultiColumn, showThread],
   );
 
   const navigateToSearch = useCallback(

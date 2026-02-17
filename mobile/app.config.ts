@@ -5,7 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "Asphodel",
   slug: "shadowsky",
   version: "0.7.0",
-  orientation: "portrait",
+  orientation: "default",
   icon: "./assets/icon.png",
   scheme: ["shadowsky", "bsky"],
   userInterfaceStyle: "automatic",
