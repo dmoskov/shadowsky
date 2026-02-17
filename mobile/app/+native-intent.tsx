@@ -26,8 +26,8 @@ export default function NativeIntent() {
       const parsed = Linking.parse(url);
       const { hostname, path, queryParams } = parsed;
 
-      // Handle OAuth callback (shadowsky:// scheme)
-      if (hostname === "oauth" && path === "callback") {
+      // Handle OAuth callback (shadowsky://oauth-callback?...)
+      if (hostname === "oauth-callback" || (hostname === "oauth" && path === "callback")) {
         const params = new URLSearchParams();
         if (queryParams?.code) params.append("code", queryParams.code as string);
         if (queryParams?.state) params.append("state", queryParams.state as string);

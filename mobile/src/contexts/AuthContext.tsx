@@ -39,7 +39,7 @@ interface AuthContextType {
   session: StoredSession | null;
   account: AuthAccount | null;
   signIn: (identifier: string, password: string, pdsUrl?: string) => Promise<void>;
-  signInWithOAuth: () => Promise<void>;
+  signInWithOAuth: (handle: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
   accounts: AuthAccount[];
@@ -291,10 +291,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signInWithOAuth = async () => {
+  const signInWithOAuth = async (handle: string) => {
     try {
       setIsLoading(true);
-      await OAuthService.startOAuthFlow();
+      const result = await OAuthService.startOAuthFlow(handle);
+
+      if (!result) {
+        // User cancelled the auth session
+        return;
+      }
+
+      // Parse callback URL and exchange code for tokens
+      const params = OAuthService.parseCallbackUrl(result.callbackUrl);
+      if (!params) {
+        throw new Error("Invalid OAuth callback");
+      }
+
+      const sessionData = await OAuthService.handleOAuthCallback(params);
+
+      // Use auth-service to complete sign-in (sets up agent, stores session)
+      const { signInWithOAuth: authServiceSignIn } = await import("../services/auth/auth-service");
+      const newSession = await authServiceSignIn(sessionData);
+      setSession(newSession);
+      await loadAccounts();
+
+      await setUser(newSession.did);
       addBreadcrumb("auth", "User signed in with OAuth");
     } catch (error) {
       throw error;

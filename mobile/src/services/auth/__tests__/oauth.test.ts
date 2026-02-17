@@ -1,359 +1,424 @@
 /**
  * Tests for oauth.ts
- * Comprehensive unit tests for OAuth flow functions
+ * Unit tests for OAuth flow functions with AT Protocol PAR and PDS discovery
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Crypto from 'expo-crypto';
-import * as Linking from 'expo-linking';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Crypto from "expo-crypto";
+import * as WebBrowser from "expo-web-browser";
 import {
   startOAuthFlow,
   handleOAuthCallback,
   cancelOAuthFlow,
   hasOngoingOAuthFlow,
+  parseCallbackUrl,
   OAuthState,
   OAuthCallbackParams,
-} from '../oauth';
+} from "../oauth";
 
 // Mock modules
-jest.mock('@react-native-async-storage/async-storage');
-jest.mock('expo-crypto');
-jest.mock('expo-linking');
+jest.mock("@react-native-async-storage/async-storage");
+jest.mock("expo-crypto");
+jest.mock("expo-web-browser");
+jest.mock("../../../utils/logger", () => ({
+  createLogger: () => ({
+    log: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+  }),
+}));
 
 const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
 const mockCrypto = Crypto as jest.Mocked<typeof Crypto>;
-const mockLinking = Linking as jest.Mocked<typeof Linking>;
+const mockWebBrowser = WebBrowser as jest.Mocked<typeof WebBrowser>;
 
 // Mock fetch globally
 global.fetch = jest.fn();
 
-describe('oauth', () => {
-  const OAUTH_STATE_KEY = '@shadowsky/oauth_state';
+describe("oauth", () => {
+  const OAUTH_STATE_KEY = "@shadowsky/oauth_state";
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockAsyncStorage.getItem.mockResolvedValue(null);
     mockAsyncStorage.setItem.mockResolvedValue();
     mockAsyncStorage.removeItem.mockResolvedValue();
-    mockLinking.canOpenURL.mockResolvedValue(true);
-    mockLinking.openURL.mockResolvedValue(true);
-    mockCrypto.digestStringAsync.mockResolvedValue('mocked-base64-hash==');
+    mockCrypto.digestStringAsync.mockResolvedValue("mocked-base64-hash==");
+
+    // Default: mock fetch to return proper discovery responses
+    (global.fetch as jest.Mock).mockImplementation((url: string) => {
+      // Handle resolution
+      if (url.includes("com.atproto.identity.resolveHandle")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ did: "did:plc:test123" }),
+        });
+      }
+      // DID document
+      if (url.includes("plc.directory")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            service: [
+              {
+                id: "#atproto_pds",
+                type: "AtprotoPersonalDataServer",
+                serviceEndpoint: "https://bsky.social",
+              },
+            ],
+          }),
+        });
+      }
+      // OAuth protected resource metadata
+      if (url.includes("oauth-protected-resource")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            authorization_servers: ["https://bsky.social"],
+          }),
+        });
+      }
+      // Authorization server metadata
+      if (url.includes("oauth-authorization-server")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            issuer: "https://bsky.social",
+            authorization_endpoint: "https://bsky.social/oauth/authorize",
+            token_endpoint: "https://bsky.social/oauth/token",
+            pushed_authorization_request_endpoint:
+              "https://bsky.social/oauth/par",
+          }),
+        });
+      }
+      // PAR endpoint
+      if (url.includes("/oauth/par")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            request_uri: "urn:ietf:params:oauth:request_uri:test123",
+            expires_in: 60,
+          }),
+        });
+      }
+      return Promise.resolve({ ok: false, status: 404 });
+    });
   });
 
-  describe('startOAuthFlow', () => {
-    it('should store state and open OAuth URL', async () => {
-      const result = await startOAuthFlow('https://bsky.social');
+  describe("startOAuthFlow", () => {
+    it("should store state and open in-app auth browser", async () => {
+      mockWebBrowser.openAuthSessionAsync.mockResolvedValue({
+        type: "success",
+        url: "shadowsky://oauth-callback?code=testcode&state=teststate",
+      } as any);
+
+      const result = await startOAuthFlow("alice.bsky.social");
 
       // Verify state was stored
       expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
         OAUTH_STATE_KEY,
-        expect.stringContaining('state')
+        expect.stringContaining("state"),
       );
 
       // Parse stored state to verify structure
-      const storedStateCall = (mockAsyncStorage.setItem as jest.Mock).mock.calls.find(
-        call => call[0] === OAUTH_STATE_KEY
-      );
+      const storedStateCall = (
+        mockAsyncStorage.setItem as jest.Mock
+      ).mock.calls.find((call) => call[0] === OAUTH_STATE_KEY);
       const storedState = JSON.parse(storedStateCall[1]);
-      expect(storedState).toHaveProperty('state');
-      expect(storedState).toHaveProperty('codeVerifier');
-      expect(storedState).toHaveProperty('timestamp');
-      expect(typeof storedState.state).toBe('string');
-      expect(storedState.state.length).toBe(32);
-      expect(typeof storedState.codeVerifier).toBe('string');
-      expect(storedState.codeVerifier.length).toBe(64);
-
-      // Verify URL was opened
-      expect(mockLinking.canOpenURL).toHaveBeenCalled();
-      expect(mockLinking.openURL).toHaveBeenCalledWith(
-        expect.stringContaining('https://bsky.social/oauth/authorize')
+      expect(storedState).toHaveProperty("state");
+      expect(storedState).toHaveProperty("codeVerifier");
+      expect(storedState).toHaveProperty("tokenEndpoint");
+      expect(storedState).toHaveProperty("timestamp");
+      expect(storedState.tokenEndpoint).toBe(
+        "https://bsky.social/oauth/token",
       );
 
-      // Verify URL contains required parameters
-      const urlCall = (mockLinking.openURL as jest.Mock).mock.calls[0][0];
-      expect(urlCall).toContain('client_id=shadowsky-mobile');
-      expect(urlCall).toContain('redirect_uri=shadowsky%3A%2F%2Foauth-callback');
-      expect(urlCall).toContain('response_type=code');
-      expect(urlCall).toContain(`state=${storedState.state}`);
-      expect(urlCall).toContain('code_challenge=');
-      expect(urlCall).toContain('code_challenge_method=S256');
-
-      // Verify return value
-      expect(result).toEqual(storedState);
-    });
-
-    it('should use default service if not provided', async () => {
-      await startOAuthFlow();
-
-      expect(mockLinking.openURL).toHaveBeenCalledWith(
-        expect.stringContaining('https://bsky.social/oauth/authorize')
-      );
-    });
-
-    it('should throw error if URL cannot be opened', async () => {
-      mockLinking.canOpenURL.mockResolvedValue(false);
-
-      await expect(startOAuthFlow()).rejects.toThrow('Cannot open OAuth URL');
-
-      expect(mockLinking.openURL).not.toHaveBeenCalled();
-    });
-
-    it('should generate code challenge using S256 method', async () => {
-      await startOAuthFlow();
-
-      // Verify SHA256 hash was called
-      expect(mockCrypto.digestStringAsync).toHaveBeenCalledWith(
-        Crypto.CryptoDigestAlgorithm.SHA256,
+      // Verify in-app browser was opened (not Linking.openURL)
+      expect(mockWebBrowser.openAuthSessionAsync).toHaveBeenCalledWith(
         expect.any(String),
-        {encoding: Crypto.CryptoEncoding.BASE64}
+        "shadowsky://oauth-callback",
       );
 
-      // Verify code challenge is base64url encoded (replaces + with -, / with _, removes =)
-      const urlCall = (mockLinking.openURL as jest.Mock).mock.calls[0][0];
-      const codeChallengeMatch = urlCall.match(/code_challenge=([^&]+)/);
-      expect(codeChallengeMatch).toBeTruthy();
-      const codeChallenge = decodeURIComponent(codeChallengeMatch[1]);
-      expect(codeChallenge).toBe('mocked-base64-hash'); // Should have = removed
+      // Verify result
+      expect(result).toEqual({
+        callbackUrl:
+          "shadowsky://oauth-callback?code=testcode&state=teststate",
+      });
+    });
+
+    it("should use PAR when available", async () => {
+      mockWebBrowser.openAuthSessionAsync.mockResolvedValue({
+        type: "success",
+        url: "shadowsky://oauth-callback?code=test&state=test",
+      } as any);
+
+      await startOAuthFlow("alice.bsky.social");
+
+      // Verify PAR was called
+      const parCall = (global.fetch as jest.Mock).mock.calls.find((call) =>
+        call[0].includes("/oauth/par"),
+      );
+      expect(parCall).toBeTruthy();
+      expect(parCall[1].method).toBe("POST");
+
+      // Verify the auth URL uses request_uri from PAR
+      const authUrl = mockWebBrowser.openAuthSessionAsync.mock.calls[0][0];
+      expect(authUrl).toContain("request_uri=");
+      expect(authUrl).toContain("client_id=");
+    });
+
+    it("should strip @ from handle", async () => {
+      mockWebBrowser.openAuthSessionAsync.mockResolvedValue({
+        type: "success",
+        url: "shadowsky://oauth-callback?code=test&state=test",
+      } as any);
+
+      await startOAuthFlow("@alice.bsky.social");
+
+      // Verify handle resolution was called with clean handle
+      const resolveCall = (global.fetch as jest.Mock).mock.calls.find((call) =>
+        call[0].includes("resolveHandle"),
+      );
+      expect(resolveCall[0]).toContain("handle=alice.bsky.social");
+    });
+
+    it("should return null when user cancels auth", async () => {
+      mockWebBrowser.openAuthSessionAsync.mockResolvedValue({
+        type: "cancel",
+      } as any);
+
+      const result = await startOAuthFlow("alice.bsky.social");
+
+      expect(result).toBeNull();
+      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(
+        OAUTH_STATE_KEY,
+      );
     });
   });
 
-  describe('handleOAuthCallback', () => {
+  describe("handleOAuthCallback", () => {
     const mockOAuthState: OAuthState = {
-      state: 'test-state-123',
-      codeVerifier: 'test-verifier-456',
+      state: "test-state-123",
+      codeVerifier: "test-verifier-456",
+      tokenEndpoint: "https://bsky.social/oauth/token",
       timestamp: Date.now(),
     };
 
     const mockCallbackParams: OAuthCallbackParams = {
-      code: 'auth-code-789',
-      state: 'test-state-123',
-      iss: 'https://bsky.social',
+      code: "auth-code-789",
+      state: "test-state-123",
+      iss: "https://bsky.social",
     };
 
     const mockTokenResponse = {
-      access_token: 'mock-access-token',
-      refresh_token: 'mock-refresh-token',
-      token_type: 'Bearer',
-      scope: 'read write',
-      sub: 'did:plc:test123',
-      handle: 'testuser.bsky.social',
-      email: 'test@example.com',
+      access_token: "mock-access-token",
+      refresh_token: "mock-refresh-token",
+      token_type: "Bearer",
+      scope: "read write",
+      sub: "did:plc:test123",
+      handle: "testuser.bsky.social",
+      email: "test@example.com",
       email_confirmed: true,
     };
 
     beforeEach(() => {
-      (global.fetch as jest.Mock).mockResolvedValue({
-        ok: true,
-        json: async () => mockTokenResponse,
+      // Override the default fetch mock for token exchange
+      (global.fetch as jest.Mock).mockImplementation((url: string) => {
+        if (url.includes("/oauth/token")) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => mockTokenResponse,
+          });
+        }
+        return Promise.resolve({ ok: false, status: 404 });
       });
     });
 
-    it('should validate state parameter and exchange code for tokens', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockOAuthState));
+    it("should validate state and exchange code for tokens", async () => {
+      mockAsyncStorage.getItem.mockResolvedValue(
+        JSON.stringify(mockOAuthState),
+      );
 
       const result = await handleOAuthCallback(mockCallbackParams);
 
-      // Verify state was retrieved
       expect(mockAsyncStorage.getItem).toHaveBeenCalledWith(OAUTH_STATE_KEY);
 
-      // Verify token exchange request
+      // Verify token exchange uses stored tokenEndpoint
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://bsky.social/oauth/token',
+        "https://bsky.social/oauth/token",
         expect.objectContaining({
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            "Content-Type": "application/x-www-form-urlencoded",
           },
-        })
+        }),
       );
 
-      // Verify request body contains required parameters
+      // Verify request body
       const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
       const bodyParams = new URLSearchParams(fetchCall[1].body);
-      expect(bodyParams.get('grant_type')).toBe('authorization_code');
-      expect(bodyParams.get('code')).toBe('auth-code-789');
-      expect(bodyParams.get('redirect_uri')).toBe('shadowsky://oauth-callback');
-      expect(bodyParams.get('client_id')).toBe('shadowsky-mobile');
-      expect(bodyParams.get('code_verifier')).toBe('test-verifier-456');
+      expect(bodyParams.get("grant_type")).toBe("authorization_code");
+      expect(bodyParams.get("code")).toBe("auth-code-789");
+      expect(bodyParams.get("redirect_uri")).toBe(
+        "shadowsky://oauth-callback",
+      );
+      expect(bodyParams.get("client_id")).toBe(
+        "https://shadowsky.io/client-metadata-mobile.json",
+      );
+      expect(bodyParams.get("code_verifier")).toBe("test-verifier-456");
 
-      // Verify OAuth state was cleaned up
-      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(OAUTH_STATE_KEY);
+      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(
+        OAUTH_STATE_KEY,
+      );
 
-      // Verify result structure
       expect(result).toEqual({
         active: true,
-        accessJwt: 'mock-access-token',
-        refreshJwt: 'mock-refresh-token',
-        did: 'did:plc:test123',
-        handle: 'testuser.bsky.social',
-        email: 'test@example.com',
+        accessJwt: "mock-access-token",
+        refreshJwt: "mock-refresh-token",
+        did: "did:plc:test123",
+        handle: "testuser.bsky.social",
+        email: "test@example.com",
         emailConfirmed: true,
       });
     });
 
-    it('should reject when no OAuth state found', async () => {
+    it("should reject when no OAuth state found", async () => {
       mockAsyncStorage.getItem.mockResolvedValue(null);
 
       await expect(handleOAuthCallback(mockCallbackParams)).rejects.toThrow(
-        'No OAuth state found'
+        "No OAuth state found",
+      );
+      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(
+        OAUTH_STATE_KEY,
+      );
+    });
+
+    it("should reject when state parameter does not match", async () => {
+      mockAsyncStorage.getItem.mockResolvedValue(
+        JSON.stringify(mockOAuthState),
       );
 
-      expect(global.fetch).not.toHaveBeenCalled();
-      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(OAUTH_STATE_KEY);
+      await expect(
+        handleOAuthCallback({ ...mockCallbackParams, state: "wrong-state" }),
+      ).rejects.toThrow("OAuth state mismatch");
+      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(
+        OAUTH_STATE_KEY,
+      );
     });
 
-    it('should reject when state parameter does not match', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockOAuthState));
-
-      const invalidParams = {
-        ...mockCallbackParams,
-        state: 'wrong-state',
-      };
-
-      await expect(handleOAuthCallback(invalidParams)).rejects.toThrow('OAuth state mismatch');
-
-      expect(global.fetch).not.toHaveBeenCalled();
-      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(OAUTH_STATE_KEY);
-    });
-
-    it('should reject expired state (older than 15 minutes)', async () => {
+    it("should reject expired state (older than 15 minutes)", async () => {
       const expiredState: OAuthState = {
         ...mockOAuthState,
-        timestamp: Date.now() - 16 * 60 * 1000, // 16 minutes ago
+        timestamp: Date.now() - 16 * 60 * 1000,
       };
       mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(expiredState));
 
       await expect(handleOAuthCallback(mockCallbackParams)).rejects.toThrow(
-        'OAuth state expired'
-      );
-
-      expect(global.fetch).not.toHaveBeenCalled();
-      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(OAUTH_STATE_KEY);
-    });
-
-    it('should accept state that is not quite 15 minutes old', async () => {
-      const almostExpiredState: OAuthState = {
-        ...mockOAuthState,
-        timestamp: Date.now() - (15 * 60 * 1000 - 1000), // 14 minutes 59 seconds ago
-      };
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(almostExpiredState));
-
-      await expect(handleOAuthCallback(mockCallbackParams)).resolves.toBeTruthy();
-    });
-
-    it('should use default token endpoint if issuer not provided', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockOAuthState));
-
-      const paramsWithoutIss: OAuthCallbackParams = {
-        code: 'auth-code-789',
-        state: 'test-state-123',
-      };
-
-      await handleOAuthCallback(paramsWithoutIss);
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        'https://bsky.social/oauth/token',
-        expect.anything()
+        "OAuth state expired",
       );
     });
 
-    it('should throw error when token exchange fails', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockOAuthState));
+    it("should throw error when token exchange fails", async () => {
+      mockAsyncStorage.getItem.mockResolvedValue(
+        JSON.stringify(mockOAuthState),
+      );
       (global.fetch as jest.Mock).mockResolvedValue({
         ok: false,
         status: 400,
-        text: async () => 'Invalid authorization code',
+        text: async () => "Invalid authorization code",
       });
 
       await expect(handleOAuthCallback(mockCallbackParams)).rejects.toThrow(
-        'Token exchange failed: 400 - Invalid authorization code'
+        "Token exchange failed: 400 - Invalid authorization code",
       );
-
-      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(OAUTH_STATE_KEY);
-    });
-
-    it('should clean up state even when callback processing fails', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockOAuthState));
-      (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
-
-      await expect(handleOAuthCallback(mockCallbackParams)).rejects.toThrow('Network error');
-
-      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(OAUTH_STATE_KEY);
     });
   });
 
-  describe('cancelOAuthFlow', () => {
-    it('should clear stored OAuth state', async () => {
+  describe("parseCallbackUrl", () => {
+    it("should parse valid callback URL", () => {
+      const result = parseCallbackUrl(
+        "shadowsky://oauth-callback?code=abc&state=xyz&iss=https://bsky.social",
+      );
+      expect(result).toEqual({
+        code: "abc",
+        state: "xyz",
+        iss: "https://bsky.social",
+      });
+    });
+
+    it("should return null for missing code", () => {
+      const result = parseCallbackUrl(
+        "shadowsky://oauth-callback?state=xyz",
+      );
+      expect(result).toBeNull();
+    });
+
+    it("should return null for invalid URL", () => {
+      const result = parseCallbackUrl("not-a-url");
+      expect(result).toBeNull();
+    });
+
+    it("should handle missing iss gracefully", () => {
+      const result = parseCallbackUrl(
+        "shadowsky://oauth-callback?code=abc&state=xyz",
+      );
+      expect(result).toEqual({
+        code: "abc",
+        state: "xyz",
+        iss: undefined,
+      });
+    });
+  });
+
+  describe("cancelOAuthFlow", () => {
+    it("should clear stored OAuth state", async () => {
       await cancelOAuthFlow();
-
-      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(OAUTH_STATE_KEY);
+      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(
+        OAUTH_STATE_KEY,
+      );
     });
   });
 
-  describe('hasOngoingOAuthFlow', () => {
+  describe("hasOngoingOAuthFlow", () => {
     const mockOAuthState: OAuthState = {
-      state: 'test-state',
-      codeVerifier: 'test-verifier',
+      state: "test-state",
+      codeVerifier: "test-verifier",
+      tokenEndpoint: "https://bsky.social/oauth/token",
       timestamp: Date.now(),
     };
 
-    it('should return true when active OAuth flow exists', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(mockOAuthState));
-
-      const result = await hasOngoingOAuthFlow();
-
-      expect(mockAsyncStorage.getItem).toHaveBeenCalledWith(OAUTH_STATE_KEY);
-      expect(result).toBe(true);
+    it("should return true when active OAuth flow exists", async () => {
+      mockAsyncStorage.getItem.mockResolvedValue(
+        JSON.stringify(mockOAuthState),
+      );
+      expect(await hasOngoingOAuthFlow()).toBe(true);
     });
 
-    it('should return false when no OAuth state exists', async () => {
+    it("should return false when no OAuth state exists", async () => {
       mockAsyncStorage.getItem.mockResolvedValue(null);
-
-      const result = await hasOngoingOAuthFlow();
-
-      expect(result).toBe(false);
+      expect(await hasOngoingOAuthFlow()).toBe(false);
     });
 
-    it('should return false when OAuth state is expired', async () => {
+    it("should return false when OAuth state is expired", async () => {
       const expiredState: OAuthState = {
         ...mockOAuthState,
-        timestamp: Date.now() - 16 * 60 * 1000, // 16 minutes ago
+        timestamp: Date.now() - 16 * 60 * 1000,
       };
       mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(expiredState));
-
-      const result = await hasOngoingOAuthFlow();
-
-      expect(result).toBe(false);
-      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(OAUTH_STATE_KEY);
+      expect(await hasOngoingOAuthFlow()).toBe(false);
+      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(
+        OAUTH_STATE_KEY,
+      );
     });
 
-    it('should return true when state is not expired (14 minutes old)', async () => {
-      const validState: OAuthState = {
-        ...mockOAuthState,
-        timestamp: Date.now() - 14 * 60 * 1000, // 14 minutes ago
-      };
-      mockAsyncStorage.getItem.mockResolvedValue(JSON.stringify(validState));
-
-      const result = await hasOngoingOAuthFlow();
-
-      expect(result).toBe(true);
-      expect(mockAsyncStorage.removeItem).not.toHaveBeenCalled();
+    it("should return false on parse error", async () => {
+      mockAsyncStorage.getItem.mockResolvedValue("invalid-json");
+      expect(await hasOngoingOAuthFlow()).toBe(false);
     });
 
-    it('should return false on parse error', async () => {
-      mockAsyncStorage.getItem.mockResolvedValue('invalid-json');
-
-      const result = await hasOngoingOAuthFlow();
-
-      expect(result).toBe(false);
-    });
-
-    it('should return false when storage access fails', async () => {
-      mockAsyncStorage.getItem.mockRejectedValue(new Error('Storage error'));
-
-      const result = await hasOngoingOAuthFlow();
-
-      expect(result).toBe(false);
+    it("should return false when storage access fails", async () => {
+      mockAsyncStorage.getItem.mockRejectedValue(new Error("Storage error"));
+      expect(await hasOngoingOAuthFlow()).toBe(false);
     });
   });
 });

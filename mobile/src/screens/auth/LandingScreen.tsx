@@ -40,7 +40,7 @@ export function LandingScreen() {
 
     try {
       setIsLoading(true);
-      await signInWithOAuth();
+      await signInWithOAuth(handle.trim());
     } catch {
       Alert.alert(
         t("auth.sign_in_failed_title"),
