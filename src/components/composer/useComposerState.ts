@@ -128,6 +128,10 @@ export interface UseComposerStateReturn {
   replyPermission: ReplyPermission;
   setReplyPermission: (permission: ReplyPermission) => void;
 
+  // Quote controls (postgate)
+  quotingDisabled: boolean;
+  setQuotingDisabled: (disabled: boolean) => void;
+
   // Link preview
   linkPreviewEnabled: boolean;
   setLinkPreviewEnabled: (enabled: boolean) => void;
@@ -279,6 +283,9 @@ export function useComposerState(): UseComposerStateReturn {
   // Reply controls
   const [replyPermission, setReplyPermission] =
     useState<ReplyPermission>("everyone");
+
+  // Quote controls (postgate)
+  const [quotingDisabled, setQuotingDisabled] = useState(false);
 
   // UI state
   const [showGiphySearch, setShowGiphySearch] = useState(false);
@@ -491,6 +498,7 @@ export function useComposerState(): UseComposerStateReturn {
     setPendingPost(null);
     setCountdown(null);
     setReplyPermission("everyone");
+    setQuotingDisabled(false);
     videoUploadManager.resetUpload();
     setLinkPreviewEnabled(true);
     linkPreview.clearPreview();
@@ -575,6 +583,10 @@ export function useComposerState(): UseComposerStateReturn {
     // Reply controls
     replyPermission,
     setReplyPermission,
+
+    // Quote controls (postgate)
+    quotingDisabled,
+    setQuotingDisabled,
 
     // Link preview
     linkPreviewEnabled,

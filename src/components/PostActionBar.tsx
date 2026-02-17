@@ -1,5 +1,5 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
-import { Share } from "lucide-react";
+import { Lock, Share } from "lucide-react";
 import React, { memo, useCallback, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useActionSyncOptional } from "../contexts/ActionSyncContext";
@@ -52,6 +52,16 @@ function arePostActionBarPropsEqual(
   if (prevProps.post.viewer?.like !== nextProps.post.viewer?.like) return false;
   if (prevProps.post.viewer?.repost !== nextProps.post.viewer?.repost)
     return false;
+  if (
+    prevProps.post.viewer?.replyDisabled !==
+    nextProps.post.viewer?.replyDisabled
+  )
+    return false;
+  if (
+    prevProps.post.viewer?.embeddingDisabled !==
+    nextProps.post.viewer?.embeddingDisabled
+  )
+    return false;
 
   // Compare UI props
   if (prevProps.showCounts !== nextProps.showCounts) return false;
@@ -90,6 +100,8 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
   const isLiked = !!post.viewer?.like;
   const isReposted = !!post.viewer?.repost;
   const bookmarked = isBookmarked(post.uri);
+  const replyDisabled = !!post.viewer?.replyDisabled;
+  const embeddingDisabled = !!post.viewer?.embeddingDisabled;
 
   // Get sync statuses for each action
   const likeStatus = actionSync?.getActionStatus("like", post.uri) ?? "idle";
@@ -138,14 +150,33 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
     >
       {/* Reply */}
       <button
-        className={`touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-asph-text-secondary spring-icon hover:text-blue-600 ${
-          isReplying ? "text-blue-500" : ""
-        }`}
-        onClick={(e) => handleAction(e, onReply)}
-        aria-label={`Reply to post${post.replyCount ? `, ${post.replyCount} replies` : ""}`}
+        className={`touch-target-sm flex items-center gap-1.5 rounded-md border-none bg-transparent p-2 spring-icon ${
+          replyDisabled
+            ? "cursor-not-allowed opacity-40"
+            : "cursor-pointer text-asph-text-secondary hover:text-blue-600"
+        } ${isReplying ? "text-blue-500" : ""}`}
+        onClick={(e) => {
+          if (replyDisabled) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+          handleAction(e, onReply);
+        }}
+        aria-label={
+          replyDisabled
+            ? "Replies are restricted on this post"
+            : `Reply to post${post.replyCount ? `, ${post.replyCount} replies` : ""}`
+        }
         aria-pressed={isReplying}
+        aria-disabled={replyDisabled}
+        title={replyDisabled ? "Replies are restricted" : undefined}
       >
-        <ReplyIcon size={iconSize} filled={isReplying} aria-hidden="true" />
+        {replyDisabled ? (
+          <Lock size={iconSize} aria-hidden="true" />
+        ) : (
+          <ReplyIcon size={iconSize} filled={isReplying} aria-hidden="true" />
+        )}
         {showCounts && (
           <span
             className="min-w-[1rem] text-left text-xs font-medium"
@@ -166,6 +197,13 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            // If embedding is disabled, just do repost directly (no quote option)
+            if (embeddingDisabled) {
+              setRepostAnimating(true);
+              setTimeout(() => setRepostAnimating(false), 400);
+              onRepost?.();
+              return;
+            }
             if (!showRepostMenu && repostButtonRef.current) {
               const rect = repostButtonRef.current.getBoundingClientRect();
               setMenuPosition({
@@ -175,9 +213,13 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
             }
             setShowRepostMenu(!showRepostMenu);
           }}
-          aria-label={`Repost or quote post${post.repostCount ? `, ${post.repostCount} reposts` : ""}`}
-          aria-expanded={showRepostMenu}
-          aria-haspopup="menu"
+          aria-label={
+            embeddingDisabled
+              ? `Repost${post.repostCount ? `, ${post.repostCount} reposts` : ""} (quoting disabled)`
+              : `Repost or quote post${post.repostCount ? `, ${post.repostCount} reposts` : ""}`
+          }
+          aria-expanded={embeddingDisabled ? undefined : showRepostMenu}
+          aria-haspopup={embeddingDisabled ? undefined : "menu"}
         >
           <span className="relative">
             <RepostIcon
@@ -201,8 +243,9 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
           )}
         </button>
 
-        {/* Repost menu dropdown */}
+        {/* Repost menu dropdown - only show quote option when embedding is allowed */}
         {showRepostMenu &&
+          !embeddingDisabled &&
           menuPosition &&
           ReactDOM.createPortal(
             <>

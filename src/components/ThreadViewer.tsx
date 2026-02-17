@@ -36,6 +36,7 @@ import { countNodeDescendants } from "../utils/thread-helpers";
 import { EmbedRenderer } from "./EmbedRenderer";
 import { ImageGallery } from "./ImageGallery";
 import { PostActionBar } from "./PostActionBar";
+import { GateIndicator } from "./ReplyControls";
 import { EmptyState } from "./ui/EmptyState";
 import { LabelBadge } from "./ui/LabelBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
@@ -1140,6 +1141,14 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             {/* Embeds */}
             {rootPostObject.embed &&
               renderEmbed(rootPostObject.embed, rootPostObject.uri)}
+
+            {/* Gate indicators */}
+            <GateIndicator
+              replyDisabled={rootPostObject.viewer?.replyDisabled}
+              embeddingDisabled={rootPostObject.viewer?.embeddingDisabled}
+              threadgate={rootPostObject.threadgate}
+              className="mt-3"
+            />
 
             {/* Action bar */}
             <div className="mt-4">

@@ -2,7 +2,9 @@ import {
   CheckCircle2,
   ChevronDown,
   Globe,
+  Lock,
   MessageSquare,
+  Quote,
   Shield,
   UserCheck,
 } from "lucide-react";
@@ -218,6 +220,132 @@ export function ReplyRestrictionsDisplay({
     >
       {option.icon}
       <span>{option.label} can reply</span>
+    </div>
+  );
+}
+
+// Toggle for disabling quoting/embedding on a post
+interface QuoteControlProps {
+  disabled?: boolean;
+  quotingDisabled: boolean;
+  onChange: (disabled: boolean) => void;
+}
+
+export function QuoteControl({
+  disabled,
+  quotingDisabled,
+  onChange,
+}: QuoteControlProps) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!quotingDisabled)}
+      disabled={disabled}
+      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-gray-800 ${
+        quotingDisabled ? "bg-amber-50 dark:bg-amber-900/20" : ""
+      }`}
+      style={{
+        borderColor: quotingDisabled
+          ? "var(--asph-warning, #f59e0b)"
+          : "var(--asph-border-primary)",
+        backgroundColor: quotingDisabled
+          ? undefined
+          : "var(--asph-bg-secondary)",
+        color: "var(--asph-text-primary)",
+      }}
+      title={
+        quotingDisabled
+          ? "Quoting is disabled for this post"
+          : "Allow others to quote this post"
+      }
+    >
+      <Quote
+        size={18}
+        style={{
+          color: quotingDisabled
+            ? "var(--asph-warning, #f59e0b)"
+            : "var(--asph-text-secondary)",
+        }}
+      />
+      <span>{quotingDisabled ? "Quoting off" : "Quoting on"}</span>
+    </button>
+  );
+}
+
+// Visual indicator for gated posts shown in feed/thread views
+interface GateIndicatorProps {
+  replyDisabled?: boolean;
+  embeddingDisabled?: boolean;
+  threadgate?: { uri?: string; record?: Record<string, unknown> };
+  className?: string;
+}
+
+export function GateIndicator({
+  replyDisabled,
+  embeddingDisabled,
+  threadgate,
+  className = "",
+}: GateIndicatorProps) {
+  const hasReplyGate = replyDisabled || !!threadgate;
+  const hasEmbedGate = embeddingDisabled;
+
+  if (!hasReplyGate && !hasEmbedGate) return null;
+
+  // Parse threadgate record for display
+  let replyLabel = "Replies restricted";
+  if (threadgate?.record) {
+    const record = threadgate.record as {
+      allow?: Array<{ $type: string }>;
+    };
+    if (!record.allow || record.allow.length === 0) {
+      replyLabel = "Replies disabled";
+    } else {
+      const rules = record.allow
+        .map((r) => {
+          if (r.$type === "app.bsky.feed.threadgate#followingRule")
+            return "following";
+          if (r.$type === "app.bsky.feed.threadgate#mentionRule")
+            return "mentioned";
+          if (r.$type === "app.bsky.feed.threadgate#listRule") return "list";
+          return null;
+        })
+        .filter(Boolean);
+      if (rules.length > 0) {
+        replyLabel = `Replies: ${rules.join(", ")} only`;
+      }
+    }
+  }
+
+  return (
+    <div className={`flex flex-wrap items-center gap-2 ${className}`}>
+      {hasReplyGate && (
+        <span
+          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
+          style={{
+            backgroundColor: "var(--asph-bg-secondary)",
+            color: "var(--asph-text-secondary)",
+            border: "1px solid var(--asph-border-primary)",
+          }}
+          title={replyLabel}
+        >
+          <Lock size={10} />
+          <span>{replyLabel}</span>
+        </span>
+      )}
+      {hasEmbedGate && (
+        <span
+          className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
+          style={{
+            backgroundColor: "var(--asph-bg-secondary)",
+            color: "var(--asph-text-secondary)",
+            border: "1px solid var(--asph-border-primary)",
+          }}
+          title="Quoting disabled"
+        >
+          <Quote size={10} />
+          <span>Quoting disabled</span>
+        </span>
+      )}
     </div>
   );
 }

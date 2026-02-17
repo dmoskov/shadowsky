@@ -41,6 +41,16 @@ function arePostCardPropsEqual(
   if (prevProps.post.viewer?.like !== nextProps.post.viewer?.like) return false;
   if (prevProps.post.viewer?.repost !== nextProps.post.viewer?.repost)
     return false;
+  if (
+    prevProps.post.viewer?.replyDisabled !==
+    nextProps.post.viewer?.replyDisabled
+  )
+    return false;
+  if (
+    prevProps.post.viewer?.embeddingDisabled !==
+    nextProps.post.viewer?.embeddingDisabled
+  )
+    return false;
 
   // Compare UI props
   if (prevProps.showBorder !== nextProps.showBorder) return false;
