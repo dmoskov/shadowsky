@@ -35,5 +35,6 @@ export function useSearchPosts(query: string, filters: SearchFilters = {}) {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     enabled: query.length > 0,
+    maxPages: 10,
   });
 }

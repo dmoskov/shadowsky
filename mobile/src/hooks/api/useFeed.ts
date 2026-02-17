@@ -10,6 +10,7 @@ export function useTimeline() {
     queryFn: ({pageParam}) => getTimeline({cursor: pageParam}),
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
+    maxPages: 10,
   });
 }
 
@@ -23,6 +24,7 @@ export function useCustomFeed(feedUri: string) {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     enabled: !!feedUri,
+    maxPages: 10,
   });
 }
 
@@ -36,6 +38,7 @@ export function useAuthorFeed(actor: string, filter?: AuthorFeedFilter) {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     enabled: !!actor,
+    maxPages: 10,
   });
 }
 
@@ -49,6 +52,7 @@ export function useActorLikes(actor: string) {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     enabled: !!actor,
+    maxPages: 10,
   });
 }
 

@@ -23,6 +23,7 @@ export function usePopularFeedGenerators() {
     queryFn: ({pageParam}) => getPopularFeedGenerators({cursor: pageParam}),
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
+    maxPages: 10,
   });
 }
 
@@ -35,6 +36,7 @@ export function useSuggestedFeeds() {
     queryFn: ({pageParam}) => getSuggestedFeeds({cursor: pageParam}),
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
+    maxPages: 10,
   });
 }
 
@@ -48,6 +50,7 @@ export function useSearchFeedGenerators(query: string) {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     enabled: !!query,
+    maxPages: 10,
   });
 }
 

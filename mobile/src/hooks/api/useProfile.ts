@@ -112,6 +112,7 @@ export function useFollowers(actor: string) {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     enabled: !!actor,
+    maxPages: 10,
   });
 }
 
@@ -125,6 +126,7 @@ export function useFollows(actor: string) {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     enabled: !!actor,
+    maxPages: 10,
   });
 }
 
@@ -244,6 +246,7 @@ export function useMutedAccounts() {
     queryFn: ({pageParam}) => getMutes(pageParam),
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
+    maxPages: 10,
   });
 }
 
@@ -259,6 +262,7 @@ export function useBlockedAccounts() {
     queryFn: ({pageParam}) => getBlocks(pageParam),
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
+    maxPages: 10,
   });
 }
 

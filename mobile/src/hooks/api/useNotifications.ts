@@ -12,6 +12,7 @@ export function useNotifications() {
     initialPageParam: undefined as string | undefined,
     refetchInterval: 30000, // Refetch every 30 seconds
     refetchIntervalInBackground: false, // Don't poll when tab is not focused
+    maxPages: 10,
   });
 }
 
