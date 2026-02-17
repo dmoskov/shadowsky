@@ -29,6 +29,8 @@ import { VideoAutoplayProvider } from "../src/contexts/VideoAutoplayContext";
 import { IPadLayoutProvider } from "../src/contexts/IPadLayoutContext";
 import { JetstreamProvider } from "../src/contexts/JetstreamContext";
 import { LightboxOverlay } from "../src/components/LightboxOverlay";
+import { SharedTransitionProvider } from "../src/contexts/SharedTransitionContext";
+import { SharedTransitionOverlay } from "../src/components/SharedTransitionOverlay";
 import {
   queryClient,
   setupAppStateListener,
@@ -208,13 +210,16 @@ function RootLayout() {
                         <ModerationProvider>
                           <ToastProvider>
                             <LightboxProvider>
-                              <IPadLayoutProvider>
-                                <QueryErrorHandler>
-                                  <DynamicStatusBar />
-                                  <AuthGate />
-                                </QueryErrorHandler>
-                                <LightboxOverlay />
-                              </IPadLayoutProvider>
+                              <SharedTransitionProvider>
+                                <IPadLayoutProvider>
+                                  <QueryErrorHandler>
+                                    <DynamicStatusBar />
+                                    <AuthGate />
+                                  </QueryErrorHandler>
+                                  <LightboxOverlay />
+                                  <SharedTransitionOverlay />
+                                </IPadLayoutProvider>
+                              </SharedTransitionProvider>
                             </LightboxProvider>
                           </ToastProvider>
                         </ModerationProvider>

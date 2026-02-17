@@ -14,7 +14,14 @@ export default function NotificationsLayout() {
         name="analytics"
         options={{ title: "Notification Analytics" }}
       />
-      <Stack.Screen name="thread/[postId]" options={{ title: "Thread" }} />
+      <Stack.Screen
+        name="thread/[postId]"
+        options={{
+          title: "Thread",
+          animation: "fade",
+          animationDuration: 280,
+        }}
+      />
       <Stack.Screen name="profile/[handle]" options={{ title: "Profile" }} />
     </Stack>
   );

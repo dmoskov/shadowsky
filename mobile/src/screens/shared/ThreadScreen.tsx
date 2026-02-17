@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef } from "react";
+import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -29,6 +29,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { sharePost } from "../../utils/share";
 import { triggerHaptic } from "../../utils/haptics";
 import { useSpotlightPost } from "../../hooks/useSpotlightIndex";
+import { useSharedTransition } from "../../contexts/SharedTransitionContext";
 
 import { createLogger } from '../../utils/logger';
 
@@ -235,6 +236,16 @@ export function ThreadScreen({ handle, postId }: ThreadScreenProps) {
   const deleteRepost = useDeleteRepost();
   const createPost = useCreatePost();
   const { isBookmarked, toggleBookmark } = useBookmarks();
+  const { activateTransition, cancelTransition } = useSharedTransition();
+
+  // Activate shared element transition overlay on mount
+  useEffect(() => {
+    activateTransition();
+    return () => {
+      // Cancel any in-progress transition on unmount (e.g. swipe back)
+      cancelTransition();
+    };
+  }, [activateTransition, cancelTransition]);
 
   // Resolve handle to URI on mount
   React.useEffect(() => {
