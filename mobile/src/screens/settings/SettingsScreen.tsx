@@ -372,6 +372,13 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
         <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
 
         <SettingRow
+          label="Notification Preferences"
+          description="Choose which notifications to receive"
+          onPress={() => router.push("/(app)/settings/notification-preferences")}
+          showChevron
+        />
+
+        <SettingRow
           label="Enable Notifications"
           description="Master toggle for all notifications"
         >
@@ -443,6 +450,25 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
             </SettingRow>
           </>
         )}
+      </View>
+
+      {/* Privacy & Accessibility Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>PRIVACY & ACCESSIBILITY</Text>
+
+        <SettingRow
+          label="Privacy & Safety"
+          description="Control who can interact with you"
+          onPress={() => router.push("/(app)/settings/privacy")}
+          showChevron
+        />
+
+        <SettingRow
+          label="Accessibility"
+          description="Display, motion, and screen reader settings"
+          onPress={() => router.push("/(app)/settings/accessibility")}
+          showChevron
+        />
       </View>
 
       {/* Interaction Section */}
@@ -537,6 +563,20 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
         />
 
         <SettingRow
+          label="Labelers"
+          description="Manage content labeling services"
+          onPress={() => router.push("/(app)/settings/labelers")}
+          showChevron
+        />
+
+        <SettingRow
+          label="Moderation History"
+          description="View your block, mute, and report actions"
+          onPress={() => router.push("/(app)/settings/moderation-history")}
+          showChevron
+        />
+
+        <SettingRow
           label="Blocked Accounts"
           description="Manage accounts you've blocked"
           onPress={() => router.push("/(app)/settings/blocked")}
@@ -558,9 +598,42 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
         />
       </View>
 
+      {/* Composer Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>COMPOSER</Text>
+
+        <SettingRow
+          label="Composer Defaults"
+          description="Thread numbering, post delay, and AI features"
+          onPress={() => router.push("/(app)/settings/composer-defaults")}
+          showChevron
+        />
+      </View>
+
       {/* Data & Storage Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>DATA & STORAGE</Text>
+
+        <SettingRow
+          label="Data Export & Import"
+          description="Export your data or import from a backup"
+          onPress={() => router.push("/(app)/settings/data-export")}
+          showChevron
+        />
+
+        <SettingRow
+          label="Media Cache"
+          description="Manage cached media files"
+          onPress={() => router.push("/(app)/settings/media-cache")}
+          showChevron
+        />
+
+        <SettingRow
+          label="Performance"
+          description="Optimize data usage and app performance"
+          onPress={() => router.push("/(app)/settings/performance")}
+          showChevron
+        />
 
         <SettingRow
           label="Background Fetch"

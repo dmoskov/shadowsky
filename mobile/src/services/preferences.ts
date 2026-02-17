@@ -51,6 +51,26 @@ export interface AppPreferences {
   // AI Features
   autoGenerateAltText: boolean;
   enableThreadSummaryPreGen: boolean;
+
+  // Privacy
+  profileVisibility: "public" | "followers" | "private";
+  allowMessages: "everyone" | "followers" | "none";
+  allowMentions: "everyone" | "followers" | "none";
+  hideFromSearch: boolean;
+  filterContent: boolean;
+
+  // Accessibility
+  highContrast: boolean;
+  reduceMotion: "system" | "off" | "on";
+  largeText: boolean;
+  screenReaderOptimized: boolean;
+
+  // Composer Defaults
+  defaultPostLanguage: string;
+  threadNumberingFormat: "none" | "simple" | "brackets" | "thread" | "dots";
+  threadNumberingPosition: "beginning" | "end";
+  postDelaySeconds: number;
+  enableHashtagSuggestions: boolean;
 }
 
 const PREFERENCES_KEY = "shadowsky_preferences";
@@ -96,6 +116,26 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   // AI Features
   autoGenerateAltText: false,
   enableThreadSummaryPreGen: true,
+
+  // Privacy
+  profileVisibility: "public",
+  allowMessages: "everyone",
+  allowMentions: "everyone",
+  hideFromSearch: false,
+  filterContent: true,
+
+  // Accessibility
+  highContrast: false,
+  reduceMotion: "system",
+  largeText: false,
+  screenReaderOptimized: false,
+
+  // Composer Defaults
+  defaultPostLanguage: "en",
+  threadNumberingFormat: "none",
+  threadNumberingPosition: "beginning",
+  postDelaySeconds: 0,
+  enableHashtagSuggestions: false,
 };
 
 /**
