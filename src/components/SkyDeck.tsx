@@ -12,7 +12,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
 import { useColumnSwipe } from "../hooks/useColumnSwipe";
@@ -92,6 +92,7 @@ export default function SkyDeck() {
   const [isLoadingCustomFeed, setIsLoadingCustomFeed] = useState(false);
   const [columnWidth, setColumnWidth] = useState(320); // Default width
   const columnsContainerRef = useRef<HTMLDivElement>(null);
+  const columnSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch user's saved/pinned feeds
   const { data: userPrefs } = useQuery({
@@ -233,26 +234,28 @@ export default function SkyDeck() {
         data: topic,
       };
 
-      setColumns((prev) => [...prev, newColumn]);
+      setColumns((prev) => {
+        // Focus the newly added column (index = prev.length, which is the last position)
+        setTimeout(() => {
+          setFocusedColumnIndex(prev.length);
 
-      // Focus and scroll to the new column
-      setTimeout(() => {
-        setFocusedColumnIndex(columns.length);
-
-        if (columnsContainerRef.current) {
-          const container = columnsContainerRef.current;
-          const newColumnElement = container.querySelector(
-            ".column-wrapper:last-of-type",
-          ) as HTMLElement;
-          if (newColumnElement) {
-            newColumnElement.scrollIntoView({
-              behavior: "smooth",
-              inline: "end",
-              block: "nearest",
-            });
+          if (columnsContainerRef.current) {
+            const container = columnsContainerRef.current;
+            const newColumnElement = container.querySelector(
+              ".column-wrapper:last-of-type",
+            ) as HTMLElement;
+            if (newColumnElement) {
+              newColumnElement.scrollIntoView({
+                behavior: "smooth",
+                inline: "end",
+                block: "nearest",
+              });
+            }
           }
-        }
-      }, 100);
+        }, 100);
+
+        return [...prev, newColumn];
+      });
     };
 
     window.addEventListener("searchTopic", handleSearchTopic as EventListener);
@@ -262,7 +265,7 @@ export default function SkyDeck() {
         handleSearchTopic as EventListener,
       );
     };
-  }, [columns.length]);
+  }, []);
 
   useEffect(() => {
     const homeColumn: Column = {
@@ -312,93 +315,111 @@ export default function SkyDeck() {
     loadColumns();
   }, [agent]);
 
-  // Save columns using column service - only after initial load
+  // Save columns using column service - only after initial load, debounced
   useEffect(() => {
     if (columns.length > 0 && agent && columnsLoaded) {
-      columnService.importColumns(columns).catch((error) => {
-        console.error("Failed to save columns:", error);
-      });
+      if (columnSaveTimerRef.current) {
+        clearTimeout(columnSaveTimerRef.current);
+      }
+      columnSaveTimerRef.current = setTimeout(() => {
+        columnService.importColumns(columns).catch((error) => {
+          logger.error("Failed to save columns:", error);
+        });
+      }, 500);
     }
+    return () => {
+      if (columnSaveTimerRef.current) {
+        clearTimeout(columnSaveTimerRef.current);
+      }
+    };
   }, [columns, agent, columnsLoaded]);
 
-  const handleAddColumn = (
-    type: ColumnType,
-    feedUri?: string,
-    feedTitle?: string,
-  ) => {
-    const newColumn: Column = {
-      id: Date.now().toString(),
-      type: type,
-      title:
-        feedTitle ||
-        (type === "feed"
-          ? "Feed"
-          : columnOptions.find((opt) => opt.type === type)?.label || type),
-      data: feedUri || (type === "feed" ? "following" : undefined),
-    };
+  const handleAddColumn = useCallback(
+    (type: ColumnType, feedUri?: string, feedTitle?: string) => {
+      const newColumn: Column = {
+        id: Date.now().toString(),
+        type: type,
+        title:
+          feedTitle ||
+          (type === "feed"
+            ? "Feed"
+            : columnOptions.find((opt) => opt.type === type)?.label || type),
+        data: feedUri || (type === "feed" ? "following" : undefined),
+      };
 
-    setColumns([...columns, newColumn]);
-    setIsAddingColumn(false);
+      setColumns((prev) => {
+        // Focus the newly added column (index = prev.length, which is the last position)
+        setTimeout(() => {
+          setFocusedColumnIndex(prev.length);
 
-    // Focus and scroll to the new column
-    setTimeout(() => {
-      setFocusedColumnIndex(columns.length);
+          // Scroll to show the new column
+          if (columnsContainerRef.current) {
+            const container = columnsContainerRef.current;
+            const newColumnElement = container.querySelector(
+              ".column-wrapper:last-of-type",
+            ) as HTMLElement;
+            if (newColumnElement) {
+              newColumnElement.scrollIntoView({
+                behavior: "smooth",
+                inline: "end",
+                block: "nearest",
+              });
+            }
+          }
+        }, 100);
 
-      // Scroll to show the new column
-      if (columnsContainerRef.current) {
-        const container = columnsContainerRef.current;
-        const newColumnElement = container.querySelector(
-          ".column-wrapper:last-of-type",
-        ) as HTMLElement;
-        if (newColumnElement) {
-          newColumnElement.scrollIntoView({
-            behavior: "smooth",
-            inline: "end",
-            block: "nearest",
-          });
-        }
-      }
-    }, 100);
-  };
+        return [...prev, newColumn];
+      });
+      setIsAddingColumn(false);
+    },
+    [],
+  );
 
-  const handleRemoveColumn = (id: string) => {
+  const handleRemoveColumn = useCallback((id: string) => {
     // Don't allow removing the home column
     if (id === "home") return;
 
-    const columnToRemove = columns.find((col) => col.id === id);
-    setColumns(columns.filter((col) => col.id !== id));
+    setColumns((prev) => {
+      const columnToRemove = prev.find((col) => col.id === id);
+      // Delete the column from the service
+      if (columnToRemove) {
+        columnService.deleteColumn(columnToRemove.id).catch((error) => {
+          logger.error("Failed to delete column:", error);
+        });
+      }
+      return prev.filter((col) => col.id !== id);
+    });
+  }, []);
 
-    // Delete the column from the service
-    if (columnToRemove) {
-      columnService.deleteColumn(columnToRemove.id).catch((error) => {
-        logger.error("Failed to delete column:", error);
-      });
-    }
-  };
+  const handleMoveLeft = useCallback((columnId: string) => {
+    setColumns((prev) => {
+      const currentIndex = prev.findIndex((col) => col.id === columnId);
+      if (currentIndex > 0) {
+        const newColumns = [...prev];
+        [newColumns[currentIndex - 1], newColumns[currentIndex]] = [
+          newColumns[currentIndex],
+          newColumns[currentIndex - 1],
+        ];
+        return newColumns;
+      }
+      return prev;
+    });
+  }, []);
 
-  const handleMoveLeft = (columnId: string) => {
-    const currentIndex = columns.findIndex((col) => col.id === columnId);
-    if (currentIndex > 0) {
-      const newColumns = [...columns];
-      [newColumns[currentIndex - 1], newColumns[currentIndex]] = [
-        newColumns[currentIndex],
-        newColumns[currentIndex - 1],
-      ];
-      setColumns(newColumns);
-    }
-  };
-
-  const handleMoveRight = (columnId: string) => {
-    const currentIndex = columns.findIndex((col) => col.id === columnId);
-    if (currentIndex < columns.length - 1) {
-      const newColumns = [...columns];
-      [newColumns[currentIndex], newColumns[currentIndex + 1]] = [
-        newColumns[currentIndex + 1],
-        newColumns[currentIndex],
-      ];
-      setColumns(newColumns);
-    }
-  };
+  const handleMoveRight = useCallback((columnId: string) => {
+    setColumns((prev) => {
+      const currentIndex = prev.findIndex((col) => col.id === columnId);
+      if (currentIndex < prev.length - 1) {
+        const newColumns = [...prev];
+        [newColumns[currentIndex], newColumns[currentIndex + 1]] = [
+          newColumns[currentIndex + 1],
+          newColumns[currentIndex],
+        ];
+        return newColumns;
+      }
+      return prev;
+    });
+  }, []);
 
   // Mobile swipe handlers
   const mobileContainerRef = useRef<HTMLDivElement>(null);
