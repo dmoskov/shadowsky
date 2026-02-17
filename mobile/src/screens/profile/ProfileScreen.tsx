@@ -27,6 +27,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { AuthorFeedFilter } from "../../services/atproto/feeds";
 import { dmService } from "../../services/dm-service";
+import { useSpotlightProfile } from "../../hooks/useSpotlightIndex";
 
 
 import { createLogger } from '../../utils/logger';
@@ -48,6 +49,15 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
   const [isStartingConversation, setIsStartingConversation] = useState(false);
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  // Index profile in Spotlight when viewed
+  useSpotlightProfile(profile ? {
+    handle: profile.handle,
+    displayName: profile.displayName,
+    description: profile.description,
+    avatar: profile.avatar,
+    did: profile.did,
+  } : null);
 
   // Get the appropriate filter based on the active tab
   const getFilter = (): AuthorFeedFilter | undefined => {
