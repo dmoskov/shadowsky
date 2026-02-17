@@ -154,6 +154,7 @@ export class OfflineStorageDB {
 
       request.onerror = () => {
         debug.error("Failed to open OfflineStorageDB:", request.error);
+        this.initPromise = null; // Allow retry on next call
         reject(request.error);
       };
 
@@ -649,7 +650,7 @@ export class OfflineStorageDB {
     threadUri: string,
   ): Promise<OfflineThreadSummary | null> {
     const db = this.ensureDb();
-    const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readwrite");
+    const transaction = db.transaction([STORES.THREAD_SUMMARIES], "readonly");
     const store = transaction.objectStore(STORES.THREAD_SUMMARIES);
 
     return new Promise((resolve, reject) => {
@@ -657,14 +658,7 @@ export class OfflineStorageDB {
 
       request.onsuccess = () => {
         const summary = request.result as OfflineThreadSummary | undefined;
-        if (summary) {
-          // Update last accessed time
-          summary._lastAccessedAt = Date.now();
-          store.put(summary);
-          resolve(summary);
-        } else {
-          resolve(null);
-        }
+        resolve(summary ?? null);
       };
 
       request.onerror = () => reject(request.error);
