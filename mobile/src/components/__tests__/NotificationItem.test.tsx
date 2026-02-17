@@ -293,4 +293,100 @@ describe('NotificationItem', () => {
       'Double tap to view notification details',
     );
   });
+
+  it('includes post preview in accessibility label for replies', () => {
+    const notification = makeReplyNotification();
+    const {getAllByRole} = render(
+      <NotificationItem notification={notification as any} />,
+    );
+
+    const buttons = getAllByRole('button');
+    expect(buttons[0].props.accessibilityLabel).toContain(
+      'Post: Great post! I agree with this.',
+    );
+  });
+
+  it('marks read status in accessibility label for read notifications', () => {
+    const notification = makeNotification({isRead: true});
+    const {getAllByRole} = render(
+      <NotificationItem notification={notification as any} />,
+    );
+
+    const buttons = getAllByRole('button');
+    expect(buttons[0].props.accessibilityLabel).toContain('Read notification');
+    expect(buttons[0].props.accessibilityLabel).not.toContain(
+      'Unread notification',
+    );
+  });
+
+  // ─── Edge cases ──────────────────────────────────────────
+
+  it('renders without crash when no onPress or onProfilePress provided', () => {
+    const notification = makeNotification();
+    expect(() =>
+      render(<NotificationItem notification={notification as any} />),
+    ).not.toThrow();
+  });
+
+  it('renders author @handle below display name', () => {
+    const notification = makeNotification({
+      author: {handle: 'alice.bsky.social', displayName: 'Alice'},
+    });
+    const {getByText} = render(
+      <NotificationItem notification={notification as any} />,
+    );
+
+    expect(getByText('@alice.bsky.social')).toBeTruthy();
+  });
+
+  it('does not show post preview or tap hint for follows', () => {
+    const notification = makeFollowNotification();
+    const {queryByText, queryByTestId} = render(
+      <NotificationItem notification={notification as any} />,
+    );
+
+    expect(queryByText('Tap to view post')).toBeNull();
+    expect(queryByTestId('rich-text')).toBeNull();
+  });
+
+  it('renders avatar with correct accessibility label', () => {
+    const notification = makeNotification();
+    const {getByLabelText} = render(
+      <NotificationItem notification={notification as any} />,
+    );
+
+    expect(getByLabelText("Alice's avatar")).toBeTruthy();
+  });
+
+  it('does not call onProfilePress when avatar pressed without handler', () => {
+    const notification = makeNotification();
+    const {getByLabelText} = render(
+      <NotificationItem notification={notification as any} />,
+    );
+
+    // Should not throw when pressed without handler
+    const profileButton = getByLabelText(/View profile of Alice/);
+    expect(() => fireEvent.press(profileButton)).not.toThrow();
+  });
+
+  it('applies unread background style for unread notifications', () => {
+    const notification = makeNotification({isRead: false});
+    const {getAllByRole} = render(
+      <NotificationItem notification={notification as any} />,
+    );
+
+    const outerButton = getAllByRole('button')[0];
+    // accessibilityState.selected = true for unread
+    expect(outerButton.props.accessibilityState).toEqual({selected: true});
+  });
+
+  it('does not apply selected state for read notifications', () => {
+    const notification = makeNotification({isRead: true});
+    const {getAllByRole} = render(
+      <NotificationItem notification={notification as any} />,
+    );
+
+    const outerButton = getAllByRole('button')[0];
+    expect(outerButton.props.accessibilityState).toEqual({selected: false});
+  });
 });
