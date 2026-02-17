@@ -10,8 +10,26 @@ jest.mock('../../services/auth/oauth');
 jest.mock('../../services/atproto/client');
 jest.mock('../../utils/error-reporting', () => ({
   addBreadcrumb: jest.fn(),
-  setUser: jest.fn(),
+  setUser: jest.fn().mockResolvedValue(undefined),
   clearUser: jest.fn(),
+}));
+
+jest.mock('../../services/mutation-queue', () => ({
+  mutationQueue: {
+    destroy: jest.fn(),
+  },
+}));
+
+const mockClearQueryCache = jest.fn();
+jest.mock('../../shared/query-client', () => ({
+  clearQueryCache: (...args: unknown[]) => mockClearQueryCache(...args),
+}));
+
+const mockClearPreferencesCache = jest.fn();
+jest.mock('../../services/preferences', () => ({
+  preferencesService: {
+    clearCache: (...args: unknown[]) => mockClearPreferencesCache(...args),
+  },
 }));
 
 const mockAuthService = authService as jest.Mocked<typeof authService>;
@@ -106,6 +124,84 @@ describe('AuthContext', () => {
       });
 
       expect(result.current.isAuthenticated).toBe(false);
+    });
+  });
+
+  describe('Sign out', () => {
+    it('clears query cache and preferences cache on sign out', async () => {
+      const mockSession = {
+        did: 'did:plc:test123',
+        handle: 'test.bsky.social',
+        email: 'test@example.com',
+        accessJwt: 'access-token',
+        refreshJwt: 'refresh-token',
+        account: {
+          did: 'did:plc:test123',
+          handle: 'test.bsky.social',
+          email: 'test@example.com',
+        },
+      };
+
+      mockAuthService.resumeSession.mockResolvedValue(mockSession);
+      mockAuthService.getAccounts.mockResolvedValue([mockSession.account]);
+      (mockAuthService as any).signOut.mockResolvedValue(undefined);
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isAuthenticated).toBe(true);
+      });
+
+      await act(async () => {
+        await result.current.signOut();
+      });
+
+      expect(mockClearQueryCache).toHaveBeenCalled();
+      expect(mockClearPreferencesCache).toHaveBeenCalled();
+    });
+  });
+
+  describe('Switch account', () => {
+    it('clears query cache and preferences cache on account switch', async () => {
+      const account1 = {
+        did: 'did:plc:user1',
+        handle: 'user1.bsky.social',
+        email: 'user1@example.com',
+      };
+      const account2 = {
+        did: 'did:plc:user2',
+        handle: 'user2.bsky.social',
+        email: 'user2@example.com',
+      };
+      const session1 = {
+        ...account1,
+        accessJwt: 'access-1',
+        refreshJwt: 'refresh-1',
+        account: account1,
+      };
+      const session2 = {
+        ...account2,
+        accessJwt: 'access-2',
+        refreshJwt: 'refresh-2',
+        account: account2,
+      };
+
+      mockAuthService.resumeSession.mockResolvedValue(session1);
+      mockAuthService.getAccounts.mockResolvedValue([account1, account2]);
+      mockAuthService.switchToAccount.mockResolvedValue(session2);
+
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.switchAccount('did:plc:user2');
+      });
+
+      expect(mockClearQueryCache).toHaveBeenCalled();
+      expect(mockClearPreferencesCache).toHaveBeenCalled();
     });
   });
 

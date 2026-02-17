@@ -310,6 +310,15 @@ export function setupAppStateListener() {
 }
 
 /**
+ * Clear all cached query data (in-memory and persisted).
+ * Call this on sign-out and account switch to prevent cross-account data leakage.
+ */
+export function clearQueryCache() {
+  queryClient.clear();
+  mmkvStorageAdapter.removeItem('REACT_QUERY_OFFLINE_CACHE');
+}
+
+/**
  * Cleanup function to remove AppState listener
  */
 export function cleanupAppStateListener() {
