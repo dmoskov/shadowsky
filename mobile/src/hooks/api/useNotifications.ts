@@ -14,6 +14,7 @@ export function useNotifications() {
   const refetchInterval = useAdaptivePolling({
     activeInterval: POLL_ACTIVE,
     activeRealtimeInterval: POLL_ACTIVE_REALTIME,
+    pauseWhenScrolling: true,
   });
 
   return useInfiniteQuery({
@@ -35,6 +36,7 @@ export function useUnreadCount() {
   const refetchInterval = useAdaptivePolling({
     activeInterval: POLL_ACTIVE,
     activeRealtimeInterval: POLL_ACTIVE_REALTIME,
+    pauseWhenScrolling: true,
   });
 
   return useQuery({

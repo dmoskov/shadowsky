@@ -20,6 +20,7 @@ import {useVideoAutoplay} from '../contexts/VideoAutoplayContext';
 import {triggerHaptic} from '../utils/haptics';
 import {filterMutedPosts} from '../utils/content-filter';
 import {useImagePrefetch} from '../hooks/useImagePrefetch';
+import {useScrollReporter} from '../hooks/useScrollState';
 
 interface FeedListProps {
   posts: AppBskyFeedDefs.FeedViewPost[];
@@ -78,6 +79,7 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   const { isOnline } = useNetwork();
   const { preferences } = usePreferences();
   const { setActiveVideoUri, isAutoplayEnabled } = useVideoAutoplay();
+  const {onScrollBeginDrag, onMomentumScrollEnd, onScrollEndDrag} = useScrollReporter();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Track which post URIs are currently visible.
@@ -220,6 +222,9 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
           />
         ) : undefined
       }
+      onScrollBeginDrag={onScrollBeginDrag}
+      onMomentumScrollEnd={onMomentumScrollEnd}
+      onScrollEndDrag={onScrollEndDrag}
       onViewableItemsChanged={onViewableItemsChangedRef.current}
       viewabilityConfig={viewabilityConfigRef.current}
       removeClippedSubviews={true}
