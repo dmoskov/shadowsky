@@ -78,6 +78,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.cursor,
+    maxPages: 10,
     enabled: enablePolling && !!agent, // Enable polling after initial load
     staleTime: 30 * 60 * 1000, // 30 minutes
     refetchInterval: enablePolling && isVisible ? 60 * 1000 : false, // Poll every 60 seconds when enabled and tab visible
