@@ -482,7 +482,7 @@ export function ImageEditor({ images, onSave, onCancel, visible }: ImageEditorPr
           {/* Image thumbnails for multiple images */}
           {images.length > 1 && (
             <View style={styles.thumbnailsContainer}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbnailsScroll}>
                 {images.map((img, index) => {
                   const isEdited = editedImages.has(index);
                   const displayUri = editedImages.get(index)?.editedAsset.uri || img.uri;
@@ -622,6 +622,8 @@ function createStyles(colors: any) {
       fontSize: 11,
     },
     aspectRatioScroll: {
+      flexGrow: 0,
+      flexShrink: 0,
       marginBottom: 12,
     },
     aspectRatioButton: {
@@ -680,6 +682,10 @@ function createStyles(colors: any) {
       borderTopColor: colors.border,
       paddingVertical: 8,
       paddingHorizontal: 12,
+    },
+    thumbnailsScroll: {
+      flexGrow: 0,
+      flexShrink: 0,
     },
     thumbnail: {
       width: 60,

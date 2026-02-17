@@ -185,6 +185,8 @@ function createStyles(colors: any) {
     paddingBottom: 12,
   },
   imageScrollView: {
+    flexGrow: 0,
+    flexShrink: 0,
     flexDirection: "row",
   },
   imagePreviewWrapper: {

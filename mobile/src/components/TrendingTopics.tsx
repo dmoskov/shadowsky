@@ -140,6 +140,8 @@ function createStyles(colors: any) {
       alignItems: "center",
     },
     scrollView: {
+      flexGrow: 0,
+      flexShrink: 0,
       paddingHorizontal: 16,
     },
     scrollContent: {

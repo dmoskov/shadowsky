@@ -287,6 +287,8 @@ export function NotificationsScreen() {
         initialNumToRender={10}
         updateCellsBatchingPeriod={50}
         style={styles.list}
+        contentInsetAdjustmentBehavior="never"
+        automaticallyAdjustContentInsets={false}
       />
     </View>
   );

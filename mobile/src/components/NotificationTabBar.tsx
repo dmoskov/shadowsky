@@ -32,7 +32,9 @@ export function NotificationTabBar({
       horizontal
       showsHorizontalScrollIndicator={false}
       style={styles.container}
-      contentContainerStyle={styles.contentContainer}>
+      contentContainerStyle={styles.contentContainer}
+      contentInsetAdjustmentBehavior="never"
+      automaticallyAdjustContentInsets={false}>
       {tabs.map(tab => (
         <TouchableOpacity
           key={tab.key}
@@ -56,6 +58,8 @@ export function NotificationTabBar({
 function createStyles(colors: any) {
   return StyleSheet.create({
     container: {
+      flexGrow: 0,
+      flexShrink: 0,
       borderBottomWidth: 1,
       borderBottomColor: colors.surfaceElevated,
       backgroundColor: colors.background,

@@ -93,7 +93,7 @@ export function ThreadPostItem({
       {/* Image Previews */}
       {post.images.length > 0 && (
         <View style={styles.imagePreviewContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScrollView}>
             {post.images.map((image, imageIndex) => (
               <View key={imageIndex} style={styles.imagePreviewWrapper}>
                 <Image source={{ uri: image.uri }} style={styles.imagePreview} contentFit="cover" cachePolicy="memory-disk" />
@@ -174,6 +174,10 @@ function createStyles(colors: any) {
     },
     imagePreviewContainer: {
       marginBottom: 8,
+    },
+    imageScrollView: {
+      flexGrow: 0,
+      flexShrink: 0,
     },
     imagePreviewWrapper: {
       position: "relative",

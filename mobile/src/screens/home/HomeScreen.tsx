@@ -300,6 +300,8 @@ function createStyles(colors: any) {
     backgroundColor: colors.background,
   },
   feedPickerContainer: {
+    flexGrow: 0,
+    flexShrink: 0,
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.surface,
