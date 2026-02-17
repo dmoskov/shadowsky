@@ -6,12 +6,20 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { MMKV } from "react-native-mmkv";
 
 
 import { createLogger } from '../utils/logger';
 
-const logger = createLogger('Moderationcontextx');
+const logger = createLogger('ModerationContext');
+
+/**
+ * MMKV instance for moderation preferences.
+ * Replaces AsyncStorage for synchronous reads on cold start.
+ */
+const mmkvModeration = new MMKV({ id: 'shadowsky-moderation' });
+const CONTENT_FILTER_KEY = "content_filter_preferences";
+
 /**
  * Content label types from AT Protocol
  */
@@ -81,35 +89,53 @@ const ModerationContext = createContext<ModerationContextType | undefined>(
   undefined,
 );
 
-const CONTENT_FILTER_KEY = "@shadowsky_content_filter_preferences";
+/**
+ * Load content filter preferences synchronously from MMKV.
+ */
+function loadPreferencesSync(): ContentFilterPreferences {
+  try {
+    const stored = mmkvModeration.getString(CONTENT_FILTER_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as ContentFilterPreferences;
+      return {
+        ...DEFAULT_CONTENT_FILTER_PREFERENCES,
+        ...parsed,
+      };
+    }
+  } catch (error) {
+    logger.error('Failed to load content filter preferences:', error);
+  }
+  return DEFAULT_CONTENT_FILTER_PREFERENCES;
+}
 
 export function ModerationProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Initialize synchronously from MMKV — no async gap on cold start
   const [contentFilterPreferences, setContentFilterPreferences] =
-    useState<ContentFilterPreferences>(DEFAULT_CONTENT_FILTER_PREFERENCES);
+    useState<ContentFilterPreferences>(() => loadPreferencesSync());
 
-  // Load preferences on mount
+  // One-time migration from AsyncStorage to MMKV
   useEffect(() => {
-    loadPreferences();
-  }, []);
-
-  const loadPreferences = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(CONTENT_FILTER_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as ContentFilterPreferences;
-        setContentFilterPreferences({
-          ...DEFAULT_CONTENT_FILTER_PREFERENCES,
-          ...parsed,
-        });
-      }
-    } catch (error) {
-      logger.error('Failed to load content filter preferences:', error);
+    if (mmkvModeration.getString(CONTENT_FILTER_KEY)) {
+      return; // Already migrated
     }
-  };
+    (async () => {
+      try {
+        const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+        const stored = await AsyncStorage.getItem('@shadowsky_content_filter_preferences');
+        if (stored) {
+          mmkvModeration.set(CONTENT_FILTER_KEY, stored);
+          setContentFilterPreferences(loadPreferencesSync());
+          await AsyncStorage.removeItem('@shadowsky_content_filter_preferences');
+        }
+      } catch (error) {
+        logger.error('Failed to migrate moderation preferences:', error);
+      }
+    })();
+  }, []);
 
   const setContentFilterPreference = useCallback(
     async (labelType: LabelType, preference: LabelPreference) => {
@@ -118,7 +144,7 @@ export function ModerationProvider({
           ...contentFilterPreferences,
           [labelType]: preference,
         };
-        await AsyncStorage.setItem(CONTENT_FILTER_KEY, JSON.stringify(updated));
+        mmkvModeration.set(CONTENT_FILTER_KEY, JSON.stringify(updated));
         setContentFilterPreferences(updated);
       } catch (error) {
         logger.error('Failed to save content filter preference:', error);
@@ -130,7 +156,7 @@ export function ModerationProvider({
 
   const resetContentFilterPreferences = useCallback(async () => {
     try {
-      await AsyncStorage.removeItem(CONTENT_FILTER_KEY);
+      mmkvModeration.delete(CONTENT_FILTER_KEY);
       setContentFilterPreferences(DEFAULT_CONTENT_FILTER_PREFERENCES);
     } catch (error) {
       logger.error('Failed to reset content filter preferences:', error);

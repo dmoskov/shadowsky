@@ -35,33 +35,30 @@ export function PreferencesProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [preferences, setPreferences] = useState<AppPreferences | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Initialize synchronously from MMKV — no async gap on cold start.
+  // preferencesService.getSync() reads from the MMKV C++ store, which is
+  // already loaded in memory by the time JS executes.
+  const [preferences, setPreferences] = useState<AppPreferences | null>(
+    () => preferencesService.getSync(),
+  );
+  const [loading, setLoading] = useState(false);
 
-  // Load preferences on mount
+  // Run one-time AsyncStorage → MMKV migration in the background.
+  // This is a no-op if MMKV already has data (every launch after the first).
   useEffect(() => {
-    loadPreferences();
+    preferencesService.migrateFromAsyncStorage().then(() => {
+      // Refresh state in case migration brought in new data
+      setPreferences(preferencesService.getSync());
+    }).catch((error) => {
+      logger.error('Migration failed:', error);
+    });
   }, []);
-
-  const loadPreferences = async () => {
-    try {
-      setLoading(true);
-      const prefs = await preferencesService.get();
-      setPreferences(prefs);
-    } catch (error) {
-      logger.error('Failed to load preferences:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const updatePreference = useCallback(
     async (key: keyof AppPreferences, value: unknown) => {
       try {
         await preferencesService.set(key, value);
-        // Reload preferences to ensure consistency
-        const updated = await preferencesService.get();
-        setPreferences(updated);
+        setPreferences(preferencesService.getSync());
       } catch (error) {
         logger.error('Failed to update preference:', error);
         throw error;
@@ -74,9 +71,7 @@ export function PreferencesProvider({
     async (updates: Partial<AppPreferences>) => {
       try {
         await preferencesService.setMultiple(updates);
-        // Reload preferences to ensure consistency
-        const updated = await preferencesService.get();
-        setPreferences(updated);
+        setPreferences(preferencesService.getSync());
       } catch (error) {
         logger.error('Failed to update preferences:', error);
         throw error;
@@ -88,8 +83,7 @@ export function PreferencesProvider({
   const resetPreferences = useCallback(async () => {
     try {
       await preferencesService.reset();
-      const prefs = await preferencesService.get();
-      setPreferences(prefs);
+      setPreferences(preferencesService.getSync());
     } catch (error) {
       logger.error('Failed to reset preferences:', error);
       throw error;
@@ -97,7 +91,15 @@ export function PreferencesProvider({
   }, []);
 
   const refreshPreferences = useCallback(async () => {
-    await loadPreferences();
+    try {
+      setLoading(true);
+      const prefs = await preferencesService.get();
+      setPreferences(prefs);
+    } catch (error) {
+      logger.error('Failed to refresh preferences:', error);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const value = useMemo(
