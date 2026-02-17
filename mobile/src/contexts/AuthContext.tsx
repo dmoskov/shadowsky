@@ -22,6 +22,7 @@ import {
   getCurrentSession,
 } from "../services/auth/auth-service";
 import * as OAuthService from "../services/auth/oauth";
+import { mutationQueue } from "../services/mutation-queue";
 import { addBreadcrumb, setUser, clearUser } from "../utils/error-reporting";
 
 
@@ -86,6 +87,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       addBreadcrumb("auth", "User signed out");
       clearTimers();
+      mutationQueue.destroy();
       await authSignOut();
       setSession(null);
       clearUser();
