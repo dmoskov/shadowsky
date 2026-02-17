@@ -9,6 +9,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 import { AppState } from "react-native";
 import { useJetstreamOptional } from "../contexts/JetstreamContext";
+import { useIsScrolling } from "./useScrollState";
 
 /**
  * Subscribe to AppState and return current state via useSyncExternalStore.
@@ -31,6 +32,8 @@ export interface AdaptivePollingConfig {
   activeInterval: number;
   /** Interval when app is active and Jetstream provides real-time updates */
   activeRealtimeInterval: number;
+  /** When true, pause polling while the user is actively scrolling a feed */
+  pauseWhenScrolling?: boolean;
 }
 
 /**
@@ -45,8 +48,16 @@ export interface AdaptivePollingConfig {
 export function useAdaptivePolling(config: AdaptivePollingConfig): number | false {
   const isAppActive = useAppStateActive();
   const jetstream = useJetstreamOptional();
+  const isScrolling = useIsScrolling();
 
   if (!isAppActive) {
+    return false;
+  }
+
+  // Pause polling during active feed scrolling to avoid wasting
+  // API calls and rate limiter tokens (see ISSUE-NET-1).
+  // Polling resumes automatically after scroll settles (5s debounce).
+  if (config.pauseWhenScrolling && isScrolling) {
     return false;
   }
 
