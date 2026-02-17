@@ -1,6 +1,5 @@
 import {getAtProtoClient} from './client';
 import {AppBskyActorDefs} from '@atproto/api';
-import {withRetry} from '../../utils/with-retry';
 import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
 
 /**
@@ -8,14 +7,13 @@ import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
  */
 export async function getProfile(actor: string): Promise<AppBskyActorDefs.ProfileViewDetailed> {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const response = await agent.getProfile({actor});
-        return response.data;
-      }),
+      const response = await agent.getProfile({actor});
+      return response.data;
+    },
     ATProtoEndpointType.FEED
   );
 }
@@ -25,14 +23,13 @@ export async function getProfile(actor: string): Promise<AppBskyActorDefs.Profil
  */
 export async function getProfiles(actors: string[]): Promise<AppBskyActorDefs.ProfileViewDetailed[]> {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const response = await agent.getProfiles({actors});
-        return response.data.profiles;
-      }),
+      const response = await agent.getProfiles({actors});
+      return response.data.profiles;
+    },
     ATProtoEndpointType.FEED
   );
 }
@@ -42,18 +39,17 @@ export async function getProfiles(actors: string[]): Promise<AppBskyActorDefs.Pr
  */
 export async function searchActors(query: string, limit: number = 25) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const response = await agent.searchActors({
-          q: query,
-          limit,
-        });
+      const response = await agent.searchActors({
+        q: query,
+        limit,
+      });
 
-        return response.data.actors;
-      }),
+      return response.data.actors;
+    },
     ATProtoEndpointType.FEED
   );
 }
@@ -63,14 +59,13 @@ export async function searchActors(query: string, limit: number = 25) {
  */
 export async function followUser(did: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const response = await agent.follow(did);
-        return response;
-      }),
+      const response = await agent.follow(did);
+      return response;
+    },
     ATProtoEndpointType.RECORD
   );
 }
@@ -80,13 +75,12 @@ export async function followUser(did: string) {
  */
 export async function unfollowUser(followUri: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        await agent.deleteFollow(followUri);
-      }),
+      await agent.deleteFollow(followUri);
+    },
     ATProtoEndpointType.RECORD
   );
 }
@@ -96,22 +90,21 @@ export async function unfollowUser(followUri: string) {
  */
 export async function getFollowers(actor: string, cursor?: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const response = await agent.getFollowers({
-          actor,
-          limit: 50,
-          cursor,
-        });
+      const response = await agent.getFollowers({
+        actor,
+        limit: 50,
+        cursor,
+      });
 
-        return {
-          followers: response.data.followers,
-          cursor: response.data.cursor,
-        };
-      }),
+      return {
+        followers: response.data.followers,
+        cursor: response.data.cursor,
+      };
+    },
     ATProtoEndpointType.FEED
   );
 }
@@ -121,22 +114,21 @@ export async function getFollowers(actor: string, cursor?: string) {
  */
 export async function getFollows(actor: string, cursor?: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const response = await agent.getFollows({
-          actor,
-          limit: 50,
-          cursor,
-        });
+      const response = await agent.getFollows({
+        actor,
+        limit: 50,
+        cursor,
+      });
 
-        return {
-          follows: response.data.follows,
-          cursor: response.data.cursor,
-        };
-      }),
+      return {
+        follows: response.data.follows,
+        cursor: response.data.cursor,
+      };
+    },
     ATProtoEndpointType.FEED
   );
 }
@@ -146,13 +138,12 @@ export async function getFollows(actor: string, cursor?: string) {
  */
 export async function muteUser(did: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        await agent.mute(did);
-      }),
+      await agent.mute(did);
+    },
     ATProtoEndpointType.RECORD
   );
 }
@@ -162,13 +153,12 @@ export async function muteUser(did: string) {
  */
 export async function unmuteUser(did: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        await agent.unmute(did);
-      }),
+      await agent.unmute(did);
+    },
     ATProtoEndpointType.RECORD
   );
 }
@@ -178,21 +168,20 @@ export async function unmuteUser(did: string) {
  */
 export async function blockUser(did: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const response = await agent.app.bsky.graph.block.create(
-          {repo: agent.session?.did || ''},
-          {
-            subject: did,
-            createdAt: new Date().toISOString(),
-          }
-        );
+      const response = await agent.app.bsky.graph.block.create(
+        {repo: agent.session?.did || ''},
+        {
+          subject: did,
+          createdAt: new Date().toISOString(),
+        }
+      );
 
-        return response;
-      }),
+      return response;
+    },
     ATProtoEndpointType.RECORD
   );
 }
@@ -202,21 +191,20 @@ export async function blockUser(did: string) {
  */
 export async function unblockUser(blockUri: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const session = agent.session;
-        if (!session) {
-          throw new Error('No active session');
-        }
+      const session = agent.session;
+      if (!session) {
+        throw new Error('No active session');
+      }
 
-        await agent.app.bsky.graph.block.delete({
-          repo: session.did,
-          rkey: blockUri.split('/').pop() || '',
-        });
-      }),
+      await agent.app.bsky.graph.block.delete({
+        repo: session.did,
+        rkey: blockUri.split('/').pop() || '',
+      });
+    },
     ATProtoEndpointType.RECORD
   );
 }
@@ -226,21 +214,20 @@ export async function unblockUser(blockUri: string) {
  */
 export async function getMutes(cursor?: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const response = await agent.app.bsky.graph.getMutes({
-          limit: 50,
-          cursor,
-        });
+      const response = await agent.app.bsky.graph.getMutes({
+        limit: 50,
+        cursor,
+      });
 
-        return {
-          mutes: response.data.mutes,
-          cursor: response.data.cursor,
-        };
-      }),
+      return {
+        mutes: response.data.mutes,
+        cursor: response.data.cursor,
+      };
+    },
     ATProtoEndpointType.FEED
   );
 }
@@ -250,21 +237,20 @@ export async function getMutes(cursor?: string) {
  */
 export async function getBlocks(cursor?: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const response = await agent.app.bsky.graph.getBlocks({
-          limit: 50,
-          cursor,
-        });
+      const response = await agent.app.bsky.graph.getBlocks({
+        limit: 50,
+        cursor,
+      });
 
-        return {
-          blocks: response.data.blocks,
-          cursor: response.data.cursor,
-        };
-      }),
+      return {
+        blocks: response.data.blocks,
+        cursor: response.data.cursor,
+      };
+    },
     ATProtoEndpointType.FEED
   );
 }
@@ -280,46 +266,45 @@ export interface UpdateProfileParams {
  */
 export async function updateProfile(params: UpdateProfileParams) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        // Upload avatar if provided
-        let avatarBlob: any;
-        if (params.avatar) {
-          const response = await fetch(params.avatar);
-          const blob = await response.blob();
-          const arrayBuffer = await blob.arrayBuffer();
-          const uint8Array = new Uint8Array(arrayBuffer);
+      // Upload avatar if provided
+      let avatarBlob: any;
+      if (params.avatar) {
+        const response = await fetch(params.avatar);
+        const blob = await response.blob();
+        const arrayBuffer = await blob.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
 
-          const uploadResponse = await agent.uploadBlob(uint8Array, {
-            encoding: blob.type,
-          });
-          avatarBlob = uploadResponse.data.blob;
+        const uploadResponse = await agent.uploadBlob(uint8Array, {
+          encoding: blob.type,
+        });
+        avatarBlob = uploadResponse.data.blob;
+      }
+
+      // Use upsertProfile to update the profile
+      const result = await agent.upsertProfile((existing) => {
+        const updated: Record<string, any> = {
+          ...existing,
+        };
+
+        if (params.displayName !== undefined) {
+          updated.displayName = params.displayName;
+        }
+        if (params.description !== undefined) {
+          updated.description = params.description;
+        }
+        if (avatarBlob) {
+          updated.avatar = avatarBlob;
         }
 
-        // Use upsertProfile to update the profile
-        const result = await agent.upsertProfile((existing) => {
-          const updated: Record<string, any> = {
-            ...existing,
-          };
+        return updated;
+      });
 
-          if (params.displayName !== undefined) {
-            updated.displayName = params.displayName;
-          }
-          if (params.description !== undefined) {
-            updated.description = params.description;
-          }
-          if (avatarBlob) {
-            updated.avatar = avatarBlob;
-          }
-
-          return updated;
-        });
-
-        return result;
-      }),
+      return result;
+    },
     ATProtoEndpointType.RECORD
   );
 }
