@@ -1,4 +1,5 @@
 import {useQuery, useInfiniteQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {useAuth} from '../../contexts/AuthContext';
 import {
   getUserLists,
   getList,
@@ -15,9 +16,11 @@ import {
  * Hook to fetch the user's lists
  */
 export function useLists() {
+  const {session} = useAuth();
   return useQuery({
     queryKey: ['lists'],
     queryFn: getUserLists,
+    enabled: !!session,
   });
 }
 
