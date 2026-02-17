@@ -12,6 +12,7 @@ import { debug } from "@bsky/shared";
 const DB_NAME = "BskyMutationQueue";
 const DB_VERSION = 1;
 const STORE_NAME = "mutations";
+const MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours - mutations older than this are discarded
 
 // Mutation types supported
 export type MutationType =
@@ -71,7 +72,11 @@ class MutationQueueDB {
         this.db = request.result;
         debug.log("MutationQueueDB initialized");
         this.setupOnlineListener();
-        resolve();
+        // Clean up expired mutations on startup
+        this.removeExpired().then(
+          () => resolve(),
+          () => resolve(),
+        );
       };
 
       request.onupgradeneeded = (event) => {
@@ -278,6 +283,40 @@ class MutationQueueDB {
     });
   }
 
+  // Remove mutations older than MAX_AGE_MS
+  async removeExpired(): Promise<void> {
+    const db = this.ensureDb();
+    const cutoff = Date.now() - MAX_AGE_MS;
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], "readwrite");
+      const store = transaction.objectStore(STORE_NAME);
+      const index = store.index("createdAt");
+      const range = IDBKeyRange.upperBound(cutoff, true);
+      const request = index.openCursor(range);
+      let removed = 0;
+
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest).result;
+        if (cursor) {
+          cursor.delete();
+          removed++;
+          cursor.continue();
+        }
+      };
+
+      transaction.oncomplete = () => {
+        if (removed > 0) {
+          debug.log(`Removed ${removed} expired mutations (older than 24h)`);
+          this.notifyListeners();
+        }
+        resolve();
+      };
+
+      transaction.onerror = () => reject(transaction.error);
+    });
+  }
+
   // Process queue - called when online
   private processingResolver: (() => void) | null = null;
 
@@ -302,6 +341,9 @@ class MutationQueueDB {
     this.notifyListeners();
 
     try {
+      // Discard expired mutations before processing
+      await this.removeExpired();
+
       const mutations = await this.getPendingMutations();
 
       if (mutations.length === 0) {
