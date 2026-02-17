@@ -693,36 +693,47 @@ export function ComposerRefactored() {
       return;
     }
 
-    const mediaData = await Promise.all(
-      state.media.map(async (m) => {
-        if (m.preview.startsWith("data:")) {
-          return {
-            file: m.preview,
-            alt: m.alt,
-            type: m.type,
-            postIndex: m.postIndex,
-          };
-        }
-
-        return new Promise<{
-          file: string;
-          alt: string;
-          type: "image" | "video";
-          postIndex?: number;
-        }>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            resolve({
-              file: reader.result as string,
+    let mediaData;
+    try {
+      mediaData = await Promise.all(
+        state.media.map(async (m) => {
+          if (m.preview.startsWith("data:")) {
+            return {
+              file: m.preview,
               alt: m.alt,
               type: m.type,
               postIndex: m.postIndex,
-            });
-          };
-          reader.readAsDataURL(m.file);
-        });
-      }),
-    );
+            };
+          }
+
+          return new Promise<{
+            file: string;
+            alt: string;
+            type: "image" | "video";
+            postIndex?: number;
+          }>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              resolve({
+                file: reader.result as string,
+                alt: m.alt,
+                type: m.type,
+                postIndex: m.postIndex,
+              });
+            };
+            reader.onerror = () =>
+              reject(new Error("Failed to read media file for draft"));
+            reader.readAsDataURL(m.file);
+          });
+        }),
+      );
+    } catch {
+      state.setPostStatus({
+        type: "error",
+        message: "Failed to save draft: could not read media files",
+      });
+      return;
+    }
 
     const draft: ThreadDraft = {
       id: state.currentDraftId || generateDraftId(),
@@ -768,34 +779,41 @@ export function ComposerRefactored() {
         })) ||
         [];
 
-      const loadedMedia = await Promise.all(
+      const loadedMediaResults = await Promise.all(
         mediaToLoad.map(async (m) => {
-          let file: File;
-          let preview: string;
-
-          if (m.file.startsWith("data:")) {
-            const response = await fetch(m.file);
-            const blob = await response.blob();
-            const filename = `draft-media-${Date.now()}.${m.type === "video" ? "mp4" : "jpg"}`;
-            file = new File([blob], filename, { type: blob.type });
-            preview = m.file;
-          } else {
-            preview = m.file;
-            file = new File([], "unknown", {
-              type: m.type === "video" ? "video/mp4" : "image/jpeg",
-            });
+          if (!m.file.startsWith("data:")) {
+            // Non-data-URL strings (e.g. stale blob: URLs) cannot be recovered
+            return null;
           }
+
+          const response = await fetch(m.file);
+          const blob = await response.blob();
+          const filename = `draft-media-${Date.now()}.${m.type === "video" ? "mp4" : "jpg"}`;
+          const file = new File([blob], filename, { type: blob.type });
 
           return {
             id: generateMediaId(),
             file,
-            preview,
+            preview: m.file,
             alt: m.alt,
             type: m.type,
             postIndex: m.postIndex,
           };
         }),
       );
+
+      const loadedMedia = loadedMediaResults.filter(
+        (m): m is NonNullable<typeof m> => m !== null,
+      );
+
+      if (loadedMedia.length < mediaToLoad.length) {
+        state.setPostStatus({
+          type: "error",
+          message:
+            "Some media could not be restored from draft and was removed",
+        });
+        setTimeout(() => state.setPostStatus({ type: "idle" }), 3000);
+      }
 
       state.media.forEach((m) => {
         if (m.preview && !m.preview.startsWith("data:")) {
