@@ -11,7 +11,14 @@ export default function HomeLayout() {
     >
       <Stack.Screen name="index" options={{ headerShown: false, headerBackTitle: "Back" }} />
       <Stack.Screen name="timeline" options={{ title: "Timeline" }} />
-      <Stack.Screen name="thread/[postId]" options={{ title: "Thread" }} />
+      <Stack.Screen
+        name="thread/[postId]"
+        options={{
+          title: "Thread",
+          animation: "fade",
+          animationDuration: 280,
+        }}
+      />
       <Stack.Screen name="profile/[handle]" options={{ title: "Profile" }} />
       <Stack.Screen name="list/[listId]" options={{ title: "List" }} />
     </Stack>
