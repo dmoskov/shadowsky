@@ -278,6 +278,27 @@ When running Xcode Instruments on-device, use these specific tests:
 
 ---
 
+## Fixes Applied
+
+The following critical fixes have been implemented:
+
+| Priority | Fix | File | Status |
+|----------|-----|------|--------|
+| **P0** | Decoupled `visiblePostUris` from render cycle (useRef instead of useState) | `src/components/FeedList.tsx:86` | ✅ Applied |
+| **P1** | Pre-compiled muted word regexes with Map cache | `src/utils/content-filter.ts:44-76` | ✅ Applied |
+| **P2** | SDWebImage memory cache capped at 100MB/256 images | `modules/expo-swiftui-feed/ios/.../CachedAsyncImage.swift:18-23` | ✅ Applied |
+| **P6** | Consolidated incremental update struct copies | `modules/feed-bridge/ios/FeedBridgeModule.swift:57-72` | ✅ Applied |
+
+## On-Device Validation
+
+To validate these fixes on a physical device, see:
+- **Test Plan**: `mobile/docs/ON_DEVICE_VALIDATION_PLAN.md`
+- **Automation Script**: `mobile/scripts/instruments-validate.sh`
+- **XCTest Benchmarks**: `mobile/ios/AsphodelPerformanceTests/`
+- **JS Performance Tests**: `mobile/src/__tests__/performance/`
+
+---
+
 ## Conclusion
 
 The most impactful finding is **ISSUE-JS-1**: the `visiblePostUris` state update causing
