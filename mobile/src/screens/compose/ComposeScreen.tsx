@@ -66,9 +66,10 @@ export interface ComposeScreenProps {
   sharedUrl?: string;
   sharedText?: string;
   initialText?: string;
+  sharedImages?: string[];
 }
 
-export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText, initialText }: ComposeScreenProps = {}) {
+export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText, initialText, sharedImages }: ComposeScreenProps = {}) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -260,6 +261,20 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
       setText(composedText);
     }
   }, [sharedUrl, sharedText, initialText]);
+
+  // Load shared images from Share Extension into the image picker
+  useEffect(() => {
+    if (!sharedImages || sharedImages.length === 0) return;
+
+    const imageAssets: ImageAsset[] = sharedImages.map((uri) => ({
+      uri,
+      width: 0,
+      height: 0,
+      mimeType: 'image/jpeg',
+      altText: '',
+    }));
+    imagePicker.addImages(imageAssets);
+  }, [sharedImages]);
 
   // Mark as dirty when content changes
   useEffect(() => {

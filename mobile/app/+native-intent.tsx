@@ -42,6 +42,7 @@ export default function NativeIntent() {
         const params = new URLSearchParams();
         if (queryParams?.url) params.append("url", queryParams.url as string);
         if (queryParams?.text) params.append("text", queryParams.text as string);
+        if (queryParams?.hasImages) params.append("hasImages", "true");
         setRedirect(`/(app)/compose?${params.toString()}`);
         return;
       }
