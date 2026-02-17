@@ -321,9 +321,42 @@ class FeedState: ObservableObject {
 
     // MARK: - Pre-computation
 
+    /// Builds a lightweight fingerprint for a serialized post to detect changes
+    /// without performing a full conversion. Compares fields that affect rendering.
+    private static func postFingerprint(_ post: SerializedFeedViewPost) -> String {
+        let p = post.post
+        let viewerLike = p.viewer?.like ?? ""
+        let viewerRepost = p.viewer?.repost ?? ""
+        let bookmarked = post.isBookmarked ?? false
+        return "\(p.cid)|\(p.likeCount ?? 0)|\(p.repostCount ?? 0)|\(p.replyCount ?? 0)|\(viewerLike)|\(viewerRepost)|\(bookmarked)"
+    }
+
     private func updatePosts(_ newPosts: [SerializedFeedViewPost]) {
+        // Build a lookup of existing converted posts by URI for O(1) access
+        let existingByURI: [String: ConvertedFeedPost] = Dictionary(
+            uniqueKeysWithValues: convertedPosts.map { ($0.id, $0) }
+        )
+
+        // Build fingerprint lookup for existing posts to detect changes
+        let existingFingerprints: [String: String] = Dictionary(
+            uniqueKeysWithValues: posts.map { ($0.post.uri, Self.postFingerprint($0)) }
+        )
+
+        // Map new posts, reusing existing conversions where possible
+        let newConverted = newPosts.map { newPost -> ConvertedFeedPost in
+            let uri = newPost.post.uri
+            if let existing = existingByURI[uri],
+               let oldFingerprint = existingFingerprints[uri],
+               oldFingerprint == Self.postFingerprint(newPost) {
+                // Post unchanged — reuse existing conversion
+                return existing
+            }
+            // New or changed post — convert it
+            return Self.convertPost(newPost)
+        }
+
         posts = newPosts
-        convertedPosts = newPosts.map { Self.convertPost($0) }
+        convertedPosts = newConverted
     }
 
     /// Convert a single SerializedFeedViewPost to ConvertedFeedPost.
