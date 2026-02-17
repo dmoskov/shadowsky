@@ -8,6 +8,23 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
 
+// Mock react-native-mmkv
+jest.mock('react-native-mmkv', () => {
+  const store = new Map();
+  return {
+    MMKV: jest.fn().mockImplementation(() => ({
+      set: jest.fn((key, value) => store.set(key, value)),
+      getString: jest.fn((key) => store.get(key)),
+      getNumber: jest.fn((key) => store.get(key)),
+      getBoolean: jest.fn((key) => store.get(key)),
+      delete: jest.fn((key) => store.delete(key)),
+      contains: jest.fn((key) => store.has(key)),
+      getAllKeys: jest.fn(() => [...store.keys()]),
+      clearAll: jest.fn(() => store.clear()),
+    })),
+  };
+});
+
 // Mock Expo native modules
 jest.mock('expo-constants', () => ({
   ...jest.requireActual('expo-constants'),

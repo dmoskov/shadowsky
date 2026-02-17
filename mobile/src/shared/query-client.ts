@@ -6,12 +6,11 @@
 
 import { QueryClient, QueryCache, MutationCache, onlineManager } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
+import { MMKV } from 'react-native-mmkv';
 import { AppState, AppStateStatus } from 'react-native';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { loadPrefetchData, isPrefetchDataStale } from '../services/background-fetch';
-
 
 import { createLogger } from '../utils/logger';
 
@@ -344,14 +343,79 @@ export function setupNetworkListener() {
 }
 
 /**
- * AsyncStorage-based persister for React Query cache
- * Enables offline content viewing by persisting query results to device storage
+ * MMKV storage instance for query cache persistence.
+ * MMKV is a synchronous C++ key-value store (~30x faster than AsyncStorage)
+ * which avoids the JS bridge overhead and JSON serialization thread-blocking
+ * that occurs with AsyncStorage on large caches.
  */
-export const asyncStoragePersister = createAsyncStoragePersister({
-  storage: AsyncStorage,
+const mmkvStorage = new MMKV({ id: 'react-query-cache' });
+
+const mmkvStorageAdapter = {
+  getItem: (key: string): string | null => {
+    const value = mmkvStorage.getString(key);
+    return value === undefined ? null : value;
+  },
+  setItem: (key: string, value: string): void => {
+    mmkvStorage.set(key, value);
+  },
+  removeItem: (key: string): void => {
+    mmkvStorage.delete(key);
+  },
+};
+
+/**
+ * MMKV-backed persister for React Query cache.
+ * Replaces the previous AsyncStorage persister to eliminate:
+ * - JSON serialization blocking the JS thread (AsyncStorage goes through the bridge)
+ * - 1s throttle being too aggressive for caches that can reach 1-3MB
+ * - Lack of cache size bounds causing unbounded persistence growth
+ */
+export const mmkvPersister = createSyncStoragePersister({
+  storage: mmkvStorageAdapter,
   key: 'REACT_QUERY_OFFLINE_CACHE',
-  throttleTime: 1000, // Throttle writes to reduce storage pressure
+  throttleTime: 2000, // 2s throttle — cache can reach 1-3MB during active sessions
 });
+
+/**
+ * Query keys that are worth persisting for offline access.
+ * Ephemeral queries (search results, likes modals, reposts modals, etc.)
+ * are excluded to reduce serialized cache size.
+ */
+const PERSISTABLE_QUERY_PREFIXES = [
+  'timeline',
+  'feed',
+  'authorFeed',
+  'notifications',
+  'profile',
+  'unreadCount',
+  'bookmarks',
+  'drafts',
+  'savedFeeds',
+  'pinnedFeeds',
+  'lists',
+  'list',
+  'dm-conversations',
+  'dm-conversation',
+  'offline-feed',
+  'offline-thread',
+];
+
+/**
+ * Persist options for PersistQueryClientProvider.
+ * - maxAge: 24 hours — prevents restoring very stale data after long offline periods
+ * - shouldDehydrateQuery: only persist core content queries, not ephemeral ones
+ */
+export const persistOptions = {
+  persister: mmkvPersister,
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  dehydrateOptions: {
+    shouldDehydrateQuery: (query: { queryKey: readonly unknown[] }) => {
+      const firstKey = query.queryKey[0];
+      if (typeof firstKey !== 'string') return false;
+      return PERSISTABLE_QUERY_PREFIXES.includes(firstKey);
+    },
+  },
+};
 
 /**
  * Export PersistQueryClientProvider for app wrapper

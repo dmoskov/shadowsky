@@ -31,7 +31,7 @@ import {
   setupAppStateListener,
   setupNetworkListener,
   PersistQueryClientProvider,
-  asyncStoragePersister,
+  persistOptions,
 } from "../src/shared/query-client";
 import { registerBackgroundFetch } from "../src/services/background-fetch";
 import {
@@ -163,7 +163,7 @@ function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
           <PersistQueryClientProvider
             client={queryClient}
-            persistOptions={{ persister: asyncStoragePersister }}
+            persistOptions={persistOptions}
           >
             <AuthProvider>
               <PreferencesProvider>
