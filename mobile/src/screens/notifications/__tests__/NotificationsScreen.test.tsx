@@ -94,11 +94,13 @@ jest.mock('../../../utils/content-filter', () => ({
   filterMutedNotifications: (notifs: any[]) => notifs,
 }));
 
+let mockFilterFn = (notifs: any[]) => notifs;
+
 jest.mock('../../../utils/notification-aggregator', () => ({
   aggregateNotifications: (notifs: any[]) =>
     notifs.map((n: any) => ({type: 'single', notification: n})),
-  filterNotificationsByType: (notifs: any[]) => notifs,
-  countNotificationsByType: () => ({all: 0, likes: 0, reposts: 0, follows: 0, mentions: 0, replies: 0, quotes: 0}),
+  filterNotificationsByType: (notifs: any[], _filter: string) => mockFilterFn(notifs),
+  countNotificationsByType: () => ({all: 3, likes: 1, reposts: 0, follows: 1, mentions: 1, replies: 0, quotes: 0}),
 }));
 
 jest.mock('expo-image', () => {
@@ -134,6 +136,12 @@ jest.mock('../../../components/NotificationTabBar', () => ({
       <View testID="notification-tab-bar">
         <TouchableOpacity testID="filter-all" onPress={() => onFilterChange('all')}>
           <Text>All</Text>
+        </TouchableOpacity>
+        <TouchableOpacity testID="filter-likes" onPress={() => onFilterChange('likes')}>
+          <Text>Likes</Text>
+        </TouchableOpacity>
+        <TouchableOpacity testID="filter-follows" onPress={() => onFilterChange('follows')}>
+          <Text>Follows</Text>
         </TouchableOpacity>
       </View>
     );
@@ -198,6 +206,7 @@ describe('NotificationsScreen', () => {
     mockError = null;
     mockHasNextPage = false;
     mockIsFetchingNextPage = false;
+    mockFilterFn = (notifs: any[]) => notifs;
     jest.clearAllMocks();
   });
 
@@ -313,5 +322,149 @@ describe('NotificationsScreen', () => {
     mockError = new Error('');
     const {getByText} = render(<NotificationsScreen />);
     expect(getByText('Failed to load notifications')).toBeTruthy();
+  });
+
+  // ─── Tab filtering ────────────────────────────────────────
+
+  it('switches filter when tab is pressed', () => {
+    mockNotificationsData = {
+      pages: [{notifications: [makeNotification()]}],
+    };
+    const {getByTestId} = render(<NotificationsScreen />);
+
+    // Press the likes filter tab
+    fireEvent.press(getByTestId('filter-likes'));
+
+    // The component should not crash when filter changes
+    expect(getByTestId('notification-tab-bar')).toBeTruthy();
+  });
+
+  it('switches back to all filter', () => {
+    mockNotificationsData = {
+      pages: [{notifications: [makeNotification()]}],
+    };
+    const {getByTestId} = render(<NotificationsScreen />);
+
+    // Switch to likes then back to all
+    fireEvent.press(getByTestId('filter-likes'));
+    fireEvent.press(getByTestId('filter-all'));
+    expect(getByTestId('notification-tab-bar')).toBeTruthy();
+  });
+
+  // ─── Multiple pages ───────────────────────────────────────
+
+  it('flattens multiple pages of notifications', () => {
+    mockNotificationsData = {
+      pages: [
+        {
+          notifications: [
+            makeNotification({
+              author: {displayName: 'Alice', handle: 'alice.bsky.social'},
+            }),
+          ],
+        },
+        {
+          notifications: [
+            makeNotification({
+              author: {displayName: 'Bob', handle: 'bob.bsky.social'},
+            }),
+          ],
+        },
+      ],
+    };
+    const {getByText} = render(<NotificationsScreen />);
+    expect(getByText('Alice')).toBeTruthy();
+    expect(getByText('Bob')).toBeTruthy();
+  });
+
+  // ─── Badge clearing ───────────────────────────────────────
+
+  it('clears badge count on focus', () => {
+    const {clearBadgeCount} = require('../../../utils/badge');
+    mockNotificationsData = {
+      pages: [{notifications: [makeNotification()]}],
+    };
+    render(<NotificationsScreen />);
+    expect(clearBadgeCount).toHaveBeenCalled();
+  });
+
+  // ─── Navigation ───────────────────────────────────────────
+
+  it('renders reply notifications that navigate to thread', () => {
+    const replyNotif = makeNotification({
+      reason: 'reply',
+      reasonSubject: undefined,
+      record: {
+        $type: 'app.bsky.feed.post',
+        text: 'Nice post!',
+        createdAt: '2025-01-01T12:00:00.000Z',
+      },
+      author: {handle: 'carol.bsky.social', displayName: 'Carol'},
+    });
+    mockNotificationsData = {
+      pages: [{notifications: [replyNotif]}],
+    };
+    const {getByText} = render(<NotificationsScreen />);
+    expect(getByText('Carol')).toBeTruthy();
+  });
+
+  it('renders mention notifications', () => {
+    const mentionNotif = makeNotification({
+      reason: 'mention',
+      reasonSubject: undefined,
+      record: {
+        $type: 'app.bsky.feed.post',
+        text: 'Hey @user check this out',
+        createdAt: '2025-01-01T12:00:00.000Z',
+      },
+      author: {handle: 'dave.bsky.social', displayName: 'Dave'},
+    });
+    mockNotificationsData = {
+      pages: [{notifications: [mentionNotif]}],
+    };
+    const {getByText} = render(<NotificationsScreen />);
+    expect(getByText('Dave')).toBeTruthy();
+  });
+
+  it('renders mix of notification types', () => {
+    mockNotificationsData = {
+      pages: [
+        {
+          notifications: [
+            makeNotification({
+              reason: 'like',
+              author: {displayName: 'Alice', handle: 'alice.bsky.social'},
+            }),
+            makeNotification({
+              reason: 'follow',
+              author: {displayName: 'Bob', handle: 'bob.bsky.social'},
+            }),
+            makeNotification({
+              reason: 'reply',
+              record: {$type: 'app.bsky.feed.post', text: 'Reply!', createdAt: '2025-01-01T12:00:00.000Z'},
+              author: {displayName: 'Carol', handle: 'carol.bsky.social'},
+            }),
+          ],
+        },
+      ],
+    };
+    const {getByText} = render(<NotificationsScreen />);
+    expect(getByText('Alice')).toBeTruthy();
+    expect(getByText('Bob')).toBeTruthy();
+    expect(getByText('Carol')).toBeTruthy();
+  });
+
+  // ─── Does not mark seen when empty ────────────────────────
+
+  it('does not mark notifications as seen when no data', () => {
+    mockNotificationsData = null;
+    render(<NotificationsScreen />);
+    expect(mockMarkSeenMutate).not.toHaveBeenCalled();
+  });
+
+  it('does not mark notifications as seen when empty pages', () => {
+    mockNotificationsData = {pages: [{notifications: []}]};
+    render(<NotificationsScreen />);
+    expect(mockMarkSeenMutate).not.toHaveBeenCalled();
   });
 });
