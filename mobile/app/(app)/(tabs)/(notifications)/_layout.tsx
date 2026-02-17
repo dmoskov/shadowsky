@@ -9,7 +9,7 @@ export default function NotificationsLayout() {
         contentStyle: { backgroundColor: "#0a0a0f" },
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="index" options={{ headerShown: false, headerBackTitle: "Back" }} />
       <Stack.Screen
         name="analytics"
         options={{ title: "Notification Analytics" }}

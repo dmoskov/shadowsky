@@ -9,7 +9,7 @@ export default function SearchLayout() {
         contentStyle: { backgroundColor: "#0a0a0f" },
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="index" options={{ headerShown: false, headerBackTitle: "Back" }} />
       <Stack.Screen name="thread/[postId]" options={{ title: "Thread" }} />
       <Stack.Screen name="profile/[handle]" options={{ title: "Profile" }} />
     </Stack>
