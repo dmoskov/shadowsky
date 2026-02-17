@@ -8,14 +8,14 @@ on:
     branches: [main]
     paths:
       # Only trigger on CI/infra changes, not every commit
-      - '.github/workflows/**'
-      - 'requirements*.txt'
-      - 'package*.json'
-      - 'Dockerfile*'
-      - 'conftest.py'
-      - 'setup.cfg'
-      - 'pyproject.toml'
-      - 'schema_ci.sql'
+      - ".github/workflows/**"
+      - "requirements*.txt"
+      - "package*.json"
+      - "Dockerfile*"
+      - "conftest.py"
+      - "setup.cfg"
+      - "pyproject.toml"
+      - "schema_ci.sql"
   workflow_dispatch: {}
 
 jobs:
