@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   createContext,
   ReactNode,
@@ -21,6 +20,7 @@ import {
   removeAccount as removeAccountFromStorage,
   getCurrentSession,
 } from "../services/auth/auth-service";
+import { saveSessionTokens } from "../services/auth/secure-token-storage";
 import * as OAuthService from "../services/auth/oauth";
 import { mutationQueue } from "../services/mutation-queue";
 import { addBreadcrumb, setUser, clearUser } from "../utils/error-reporting";
@@ -29,7 +29,6 @@ import { addBreadcrumb, setUser, clearUser } from "../utils/error-reporting";
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('AuthContext');
-const AUTH_STORAGE_KEY = "@shadowsky/auth_session";
 const SESSION_REFRESH_INTERVAL = 50 * 60 * 1000;
 const SESSION_CHECK_INTERVAL = 5 * 60 * 1000;
 const MAX_CONSECUTIVE_FAILURES = 3;
@@ -132,10 +131,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
           updatedSession.accessJwt !== session.accessJwt ||
           updatedSession.refreshJwt !== session.refreshJwt
         ) {
-          await AsyncStorage.setItem(
-            AUTH_STORAGE_KEY,
-            JSON.stringify(updatedSession),
-          );
+          await saveSessionTokens(updatedSession.did, {
+            did: updatedSession.did,
+            handle: updatedSession.handle,
+            accessJwt: updatedSession.accessJwt,
+            refreshJwt: updatedSession.refreshJwt,
+            email: updatedSession.email,
+            emailConfirmed: updatedSession.emailConfirmed,
+            active: updatedSession.active,
+          });
           setSession(updatedSession);
         }
       }
