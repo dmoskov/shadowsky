@@ -125,6 +125,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     "./plugins/withPrivacyManifest",
     "./plugins/withShareExtension",
+    "./plugins/withWidgetExtension",
   ],
   experiments: {
     typedRoutes: true,

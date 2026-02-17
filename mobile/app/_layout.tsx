@@ -47,6 +47,7 @@ import { appLockService } from "../src/services/app-lock";
 import { setupOfflineStorageCleanup } from "../src/hooks/useOfflineFeed";
 import { useGlobalKeyboardShortcuts } from "../src/hooks/useKeyboardShortcuts";
 import { useImageMemoryManagement } from "../src/hooks/useImageMemoryManagement";
+import { useWidgetSync } from "../src/hooks/useWidgetSync";
 import "../src/i18n";
 
 // Initialize Sentry as early as possible
@@ -107,6 +108,11 @@ function AppLockGate({ children }: { children: React.ReactNode }) {
 function DynamicStatusBar() {
   const { isDark } = useTheme();
   return <StatusBar style={isDark ? "light" : "dark"} />;
+}
+
+function WidgetSyncManager() {
+  useWidgetSync();
+  return null;
 }
 
 function AuthGate() {
@@ -194,6 +200,7 @@ function RootLayout() {
           >
             <AuthProvider>
               <JetstreamProvider>
+                <WidgetSyncManager />
                 <PreferencesProvider>
                   <ThemeProvider>
                     <NetworkProvider>

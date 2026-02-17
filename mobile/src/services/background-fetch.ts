@@ -12,8 +12,10 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getTimeline } from './atproto/feeds';
-import { getUnreadCount } from './atproto/notifications';
+import { getNotifications, getUnreadCount } from './atproto/notifications';
 import { preferencesService } from './preferences';
+import { syncNotificationWidget, syncTrendingWidget } from './widget-data-service';
+import { getTrendingTopics } from './trending-service';
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('BackgroundFetch');
@@ -121,7 +123,7 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
       logger.error('Error fetching timeline:', error);
     }
 
-    // Fetch unread notification count
+    // Fetch unread notification count and sync to widget
     try {
       const unreadCount = await getUnreadCount();
       prefetchData.unreadCount = unreadCount;
@@ -129,8 +131,29 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
       // Update badge count
       await updateBadgeCount(unreadCount);
       logger.log(`Unread count: ${unreadCount}`);
+
+      // Fetch latest notifications for widget preview
+      try {
+        const notifResult = await getNotifications({ limit: 5 });
+        syncNotificationWidget(unreadCount, notifResult.notifications);
+      } catch (notifError) {
+        // Still update widget with count even if notification details fail
+        syncNotificationWidget(unreadCount);
+      }
     } catch (error) {
       logger.error('Error fetching unread count:', error);
+    }
+
+    // Fetch trending topics for widget
+    try {
+      const trendingResult = await getTrendingTopics(5);
+      const topics = [
+        ...trendingResult.topics.map(t => ({ topic: t.topic, status: 'stable' })),
+        ...trendingResult.suggested.map(t => ({ topic: t.topic, status: 'rising' })),
+      ];
+      syncTrendingWidget(topics);
+    } catch (error) {
+      logger.error('Error fetching trending for widget:', error);
     }
 
     // Save prefetched data to AsyncStorage
