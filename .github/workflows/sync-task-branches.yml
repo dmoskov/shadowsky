@@ -36,6 +36,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Sync task branches
+        shell: bash {0}
         run: |
           echo "=== Syncing task/* branches with main ==="
           git fetch --all --prune
@@ -58,26 +59,23 @@ jobs:
             echo "  Behind main by $BEHIND commits"
 
             # Checkout the task branch
-            git checkout -B "$branch" "origin/$branch" 2>/dev/null
-            if [ $? -ne 0 ]; then
-              echo "  Failed to checkout"
+            if ! git checkout -B "$branch" "origin/$branch" 2>/dev/null; then
+              echo "  SKIP: Failed to checkout"
               FAILED=$((FAILED + 1))
               continue
             fi
 
             # Try to merge main (not rebase - safer with concurrent executors)
-            git merge origin/main --no-edit 2>/dev/null
-            if [ $? -ne 0 ]; then
-              echo "  Merge conflict - skipping (executor will handle)"
-              git merge --abort 2>/dev/null
+            if ! git merge origin/main --no-edit 2>&1; then
+              echo "  SKIP: Merge conflict (executor will handle)"
+              git merge --abort 2>/dev/null || true
               FAILED=$((FAILED + 1))
               continue
             fi
 
             # Push the merged branch
-            git push origin "$branch" 2>/dev/null
-            if [ $? -ne 0 ]; then
-              echo "  Push failed"
+            if ! git push origin "$branch" 2>&1; then
+              echo "  SKIP: Push failed"
               FAILED=$((FAILED + 1))
               continue
             fi
@@ -91,6 +89,3 @@ jobs:
           echo "  Synced: $SYNCED"
           echo "  Up to date: $SKIPPED"
           echo "  Failed/conflict: $FAILED"
-
-          # Always succeed - individual branch failures are expected
-          exit 0
