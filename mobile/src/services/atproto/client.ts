@@ -133,9 +133,9 @@ let clientInstance: AtProtoClient | null = null;
 /**
  * Get or create the global AT Protocol client instance
  */
-export function getAtProtoClient(): AtProtoClient {
+export function getAtProtoClient(service?: string): AtProtoClient {
   if (!clientInstance) {
-    clientInstance = new AtProtoClient();
+    clientInstance = new AtProtoClient(service);
   }
   return clientInstance;
 }

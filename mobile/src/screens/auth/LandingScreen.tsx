@@ -17,16 +17,41 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useTranslation } from "../../hooks/useTranslation";
 
+type LoginMode = "oauth" | "app-password";
+
 export function LandingScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { signIn } = useAuth();
+  const { signIn, signInWithOAuth } = useAuth();
   const { t } = useTranslation();
+  const [loginMode, setLoginMode] = useState<LoginMode>("oauth");
+  const [handle, setHandle] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [pdsUrl, setPdsUrl] = useState("https://bsky.social");
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const handleOAuthLogin = async () => {
+    if (!handle.trim()) {
+      Alert.alert(t("auth.error_title"), t("auth.error_missing_handle"));
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await signInWithOAuth();
+    } catch {
+      Alert.alert(
+        t("auth.sign_in_failed_title"),
+        t("auth.sign_in_failed_oauth"),
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAppPasswordLogin = async () => {
     if (!identifier.trim() || !password.trim()) {
       Alert.alert(t("auth.error_title"), t("auth.error_missing_credentials"));
       return;
@@ -34,7 +59,8 @@ export function LandingScreen() {
 
     try {
       setIsLoading(true);
-      await signIn(identifier.trim(), password);
+      const effectivePdsUrl = pdsUrl.trim() || "https://bsky.social";
+      await signIn(identifier.trim(), password, effectivePdsUrl);
     } catch {
       Alert.alert(
         t("auth.sign_in_failed_title"),
@@ -48,7 +74,7 @@ export function LandingScreen() {
   const handleSignUp = async () => {
     try {
       await Linking.openURL("https://bsky.app/signup");
-    } catch (error) {
+    } catch {
       Alert.alert(
         t("auth.error_title"),
         "Failed to open sign-up page. Please visit bsky.app/signup in your browser.",
@@ -75,62 +101,180 @@ export function LandingScreen() {
         </View>
 
         <View style={styles.formContainer}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>{t("auth.handle_or_email_label")}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder={t("auth.handle_placeholder")}
-              placeholderTextColor={colors.textTertiary}
-              value={identifier}
-              onChangeText={setIdentifier}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              editable={!isLoading}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>{t("auth.app_password_label")}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder={t("auth.app_password_placeholder")}
-              placeholderTextColor={colors.textTertiary}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isLoading}
-            />
-            <Text style={styles.helpText}>
-              {t("auth.app_password_help")}
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.loginButton,
-              isLoading && styles.loginButtonDisabled,
-            ]}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color={colors.text} />
-            ) : (
-              <Text style={styles.loginButtonText}>{t("auth.sign_in_button")}</Text>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.infoContainer}>
-            <Text style={styles.infoText}>
-              {t("auth.no_app_password_info")}{" "}
-              <Text style={styles.linkText}>
-                {t("auth.create_app_password_link")}
+          {/* Login Mode Toggle */}
+          <View style={styles.toggleContainer}>
+            <TouchableOpacity
+              style={[
+                styles.toggleButton,
+                loginMode === "oauth" && styles.toggleButtonActive,
+              ]}
+              onPress={() => setLoginMode("oauth")}
+              disabled={isLoading}
+            >
+              <Text
+                style={[
+                  styles.toggleButtonText,
+                  loginMode === "oauth" && styles.toggleButtonTextActive,
+                ]}
+              >
+                {t("auth.oauth_tab")}
               </Text>
-            </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.toggleButton,
+                loginMode === "app-password" && styles.toggleButtonActive,
+              ]}
+              onPress={() => setLoginMode("app-password")}
+              disabled={isLoading}
+            >
+              <Text
+                style={[
+                  styles.toggleButtonText,
+                  loginMode === "app-password" && styles.toggleButtonTextActive,
+                ]}
+              >
+                {t("auth.app_password_tab")}
+              </Text>
+            </TouchableOpacity>
           </View>
+
+          {/* OAuth Login Form */}
+          {loginMode === "oauth" && (
+            <>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>{t("auth.handle_label")}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={t("auth.handle_placeholder")}
+                  placeholderTextColor={colors.textTertiary}
+                  value={handle}
+                  onChangeText={setHandle}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  editable={!isLoading}
+                />
+                <Text style={styles.helpText}>
+                  {t("auth.oauth_redirect_help")}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.loginButton,
+                  isLoading && styles.loginButtonDisabled,
+                ]}
+                onPress={handleOAuthLogin}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color={colors.text} />
+                ) : (
+                  <Text style={styles.loginButtonText}>
+                    {t("auth.sign_in_oauth_button")}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </>
+          )}
+
+          {/* App Password Login Form */}
+          {loginMode === "app-password" && (
+            <>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>{t("auth.handle_or_email_label")}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={t("auth.handle_placeholder")}
+                  placeholderTextColor={colors.textTertiary}
+                  value={identifier}
+                  onChangeText={setIdentifier}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  editable={!isLoading}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>{t("auth.app_password_label")}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={t("auth.app_password_placeholder")}
+                  placeholderTextColor={colors.textTertiary}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!isLoading}
+                />
+                <Text style={styles.helpText}>
+                  {t("auth.app_password_help")}
+                </Text>
+              </View>
+
+              {/* Advanced: Custom PDS URL */}
+              <TouchableOpacity
+                style={styles.advancedToggle}
+                onPress={() => setShowAdvanced(!showAdvanced)}
+                disabled={isLoading}
+              >
+                <Text style={styles.advancedToggleText}>
+                  {showAdvanced ? "\u25BC" : "\u25B6"}{" "}
+                  {t("auth.advanced_pds_toggle")}
+                </Text>
+              </TouchableOpacity>
+
+              {showAdvanced && (
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>{t("auth.pds_url_label")}</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="https://bsky.social"
+                    placeholderTextColor={colors.textTertiary}
+                    value={pdsUrl}
+                    onChangeText={setPdsUrl}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="url"
+                    editable={!isLoading}
+                  />
+                  <Text style={styles.helpText}>
+                    {t("auth.pds_url_help")}
+                  </Text>
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={[
+                  styles.loginButton,
+                  isLoading && styles.loginButtonDisabled,
+                ]}
+                onPress={handleAppPasswordLogin}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color={colors.text} />
+                ) : (
+                  <Text style={styles.loginButtonText}>{t("auth.sign_in_button")}</Text>
+                )}
+              </TouchableOpacity>
+
+              <View style={styles.infoContainer}>
+                <Text style={styles.infoText}>
+                  {t("auth.no_app_password_info")}{" "}
+                  <Text
+                    style={styles.linkText}
+                    onPress={() => Linking.openURL("https://bsky.app/settings/app-passwords")}
+                  >
+                    {t("auth.create_app_password_link")}
+                  </Text>
+                </Text>
+              </View>
+            </>
+          )}
 
           <View style={styles.dividerContainer}>
             <View style={styles.divider} />
@@ -194,25 +338,29 @@ function createStyles(colors: any) {
   formContainer: {
     width: "100%",
   },
-  oauthButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    width: "100%",
-    alignItems: "center",
+  toggleContainer: {
+    flexDirection: "row",
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    padding: 4,
     marginBottom: 24,
   },
-  oauthButtonDisabled: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    opacity: 0.6,
+  toggleButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: 8,
   },
-  oauthButtonText: {
-    color: colors.text,
-    fontSize: 18,
+  toggleButtonActive: {
+    backgroundColor: colors.primary,
+  },
+  toggleButtonText: {
+    fontSize: 14,
     fontWeight: "600",
+    color: colors.textTertiary,
+  },
+  toggleButtonTextActive: {
+    color: colors.text,
   },
   signUpButton: {
     backgroundColor: colors.surface,
@@ -268,6 +416,13 @@ function createStyles(colors: any) {
     color: colors.textTertiary,
     fontSize: 12,
     marginTop: 6,
+  },
+  advancedToggle: {
+    marginBottom: 16,
+  },
+  advancedToggleText: {
+    color: colors.textSecondary,
+    fontSize: 14,
   },
   loginButton: {
     backgroundColor: colors.primary,

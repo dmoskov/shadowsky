@@ -30,10 +30,11 @@ export interface StoredSession extends AtpSessionData {
 export async function signInWithPassword(
   identifier: string,
   password: string,
+  pdsUrl?: string,
 ): Promise<StoredSession> {
   resetAtProtoClient();
 
-  const client = getAtProtoClient();
+  const client = getAtProtoClient(pdsUrl);
   const sessionData = await client.login(identifier, password);
 
   if (!sessionData) {
