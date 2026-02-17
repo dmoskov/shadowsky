@@ -8,7 +8,8 @@
  * - Per-endpoint-type limits (AUTH, FEED, RECORD, UPLOAD, NOTIFICATION)
  * - Request queuing when rate limited
  * - Rate limit header parsing from API responses
- * - Adaptive throttling on repeated 429 errors
+ * - Adaptive throttling on repeated 429 errors with circuit breaker
+ * - Circuit breaker probes for early recovery from adaptive mode
  * - Comprehensive metrics tracking
  */
 
@@ -218,13 +219,31 @@ class TokenBucket {
 }
 
 /**
- * Adaptive rate limiting state
+ * Circuit breaker states for adaptive rate limiting
+ */
+export enum CircuitBreakerState {
+  CLOSED = 'closed',
+  OPEN = 'open',
+  HALF_OPEN = 'half_open',
+}
+
+const CIRCUIT_BREAKER_INITIAL_PROBE_MS = 30_000;
+const CIRCUIT_BREAKER_MAX_PROBE_MS = 5 * 60 * 1000;
+const CIRCUIT_BREAKER_BACKOFF_MULTIPLIER = 2;
+
+/**
+ * Adaptive rate limiting state with circuit breaker
  */
 interface AdaptiveState {
   recent429Count: number;
   last429Timestamp: number;
   adaptiveModeUntil: number;
   originalConfigs: Map<ATProtoEndpointType, RateLimiterConfig>;
+  circuitState: CircuitBreakerState;
+  probeScheduledAt: number;
+  currentProbeIntervalMs: number;
+  probeTimer: ReturnType<typeof setTimeout> | null;
+  consecutiveProbeFailures: number;
 }
 
 /**
@@ -294,6 +313,11 @@ export class ATProtoRateLimiter {
       last429Timestamp: 0,
       adaptiveModeUntil: 0,
       originalConfigs: new Map(),
+      circuitState: CircuitBreakerState.CLOSED,
+      probeScheduledAt: 0,
+      currentProbeIntervalMs: CIRCUIT_BREAKER_INITIAL_PROBE_MS,
+      probeTimer: null,
+      consecutiveProbeFailures: 0,
     };
   }
 
@@ -305,17 +329,17 @@ export class ATProtoRateLimiter {
   }
 
   /**
-   * Enable adaptive mode: reduce all limits by 50% for 5 minutes
+   * Enable adaptive mode: reduce all limits by 50% and schedule circuit breaker probe
    */
   private enableAdaptiveMode(): void {
     if (this.isInAdaptiveMode()) {
-      // Already in adaptive mode, extend it
-      this.adaptiveState.adaptiveModeUntil = Date.now() + 5 * 60 * 1000;
+      // Already in adaptive mode — if a probe just failed, don't reset the timer
+      // just extend the outer deadline
+      this.adaptiveState.adaptiveModeUntil = Date.now() + CIRCUIT_BREAKER_MAX_PROBE_MS;
       return;
     }
 
-    logger.log('Enabling adaptive mode: reducing all limits by 50% for 5 minutes'
-    );
+    logger.log('Enabling adaptive mode with circuit breaker: reducing all limits by 50%');
 
     // Save original configs
     this.adaptiveState.originalConfigs.clear();
@@ -332,16 +356,29 @@ export class ATProtoRateLimiter {
       bucket.updateCapacity(reducedCapacity);
     });
 
-    this.adaptiveState.adaptiveModeUntil = Date.now() + 5 * 60 * 1000;
+    this.adaptiveState.adaptiveModeUntil = Date.now() + CIRCUIT_BREAKER_MAX_PROBE_MS;
+    this.adaptiveState.circuitState = CircuitBreakerState.OPEN;
+    this.adaptiveState.currentProbeIntervalMs = CIRCUIT_BREAKER_INITIAL_PROBE_MS;
+    this.adaptiveState.consecutiveProbeFailures = 0;
+
+    this.scheduleProbe();
   }
 
   /**
-   * Disable adaptive mode: restore original limits
+   * Disable adaptive mode: restore original limits and reset circuit breaker
    */
   private disableAdaptiveMode(): void {
-    if (!this.isInAdaptiveMode()) return;
+    if (!this.isInAdaptiveMode() && this.adaptiveState.circuitState === CircuitBreakerState.CLOSED) {
+      return;
+    }
 
     logger.log('Disabling adaptive mode: restoring original limits');
+
+    // Clear any pending probe timer
+    if (this.adaptiveState.probeTimer !== null) {
+      clearTimeout(this.adaptiveState.probeTimer);
+      this.adaptiveState.probeTimer = null;
+    }
 
     // Restore original capacities
     Array.from(this.adaptiveState.originalConfigs.entries()).forEach(([type, originalConfig]) => {
@@ -352,14 +389,91 @@ export class ATProtoRateLimiter {
     });
 
     this.adaptiveState.adaptiveModeUntil = 0;
+    this.adaptiveState.circuitState = CircuitBreakerState.CLOSED;
+    this.adaptiveState.probeScheduledAt = 0;
+    this.adaptiveState.consecutiveProbeFailures = 0;
     this.adaptiveState.originalConfigs.clear();
   }
 
   /**
-   * Track a 429 error and potentially enable adaptive mode
+   * Schedule a circuit breaker probe to test if the server has recovered
+   */
+  private scheduleProbe(): void {
+    // Clear any existing probe timer
+    if (this.adaptiveState.probeTimer !== null) {
+      clearTimeout(this.adaptiveState.probeTimer);
+    }
+
+    const interval = this.adaptiveState.currentProbeIntervalMs;
+    this.adaptiveState.probeScheduledAt = Date.now() + interval;
+
+    logger.log(`Circuit breaker: scheduling probe in ${interval}ms`);
+
+    this.adaptiveState.probeTimer = setTimeout(() => {
+      this.transitionToHalfOpen();
+    }, interval);
+  }
+
+  /**
+   * Transition circuit breaker to half-open state for probing
+   */
+  private transitionToHalfOpen(): void {
+    if (!this.isInAdaptiveMode()) return;
+
+    logger.log('Circuit breaker: transitioning to HALF_OPEN for probe');
+    this.adaptiveState.circuitState = CircuitBreakerState.HALF_OPEN;
+    this.adaptiveState.probeTimer = null;
+  }
+
+  /**
+   * Report a successful request to the circuit breaker.
+   * If in half-open state, this triggers recovery.
+   */
+  public trackSuccess(): void {
+    if (this.adaptiveState.circuitState === CircuitBreakerState.HALF_OPEN) {
+      logger.log('Circuit breaker: probe succeeded, restoring normal limits');
+      this.adaptiveState.recent429Count = 0;
+      this.disableAdaptiveMode();
+    }
+  }
+
+  /**
+   * Handle a probe failure: stay open and schedule next probe with backoff
+   */
+  private handleProbeFailure(): void {
+    this.adaptiveState.consecutiveProbeFailures++;
+    this.adaptiveState.circuitState = CircuitBreakerState.OPEN;
+
+    // Exponential backoff for next probe, capped at max
+    this.adaptiveState.currentProbeIntervalMs = Math.min(
+      this.adaptiveState.currentProbeIntervalMs * CIRCUIT_BREAKER_BACKOFF_MULTIPLIER,
+      CIRCUIT_BREAKER_MAX_PROBE_MS,
+    );
+
+    logger.log(
+      `Circuit breaker: probe failed (${this.adaptiveState.consecutiveProbeFailures} consecutive). ` +
+      `Next probe in ${this.adaptiveState.currentProbeIntervalMs}ms`
+    );
+
+    // Extend the adaptive mode deadline
+    this.adaptiveState.adaptiveModeUntil = Date.now() + CIRCUIT_BREAKER_MAX_PROBE_MS;
+
+    this.scheduleProbe();
+  }
+
+  /**
+   * Track a 429 error and potentially enable adaptive mode.
+   * If the circuit breaker is in half-open state, this counts as a probe failure.
    */
   public track429Error(endpointType: ATProtoEndpointType): void {
     const now = Date.now();
+
+    // If we're probing (half-open), treat this as a probe failure
+    if (this.adaptiveState.circuitState === CircuitBreakerState.HALF_OPEN) {
+      this.adaptiveState.last429Timestamp = now;
+      this.handleProbeFailure();
+      return;
+    }
 
     // Reset counter if last 429 was more than 60 seconds ago
     if (now - this.adaptiveState.last429Timestamp > 60000) {
@@ -369,8 +483,7 @@ export class ATProtoRateLimiter {
     this.adaptiveState.recent429Count++;
     this.adaptiveState.last429Timestamp = now;
 
-    logger.log(`429 error for ${endpointType}. Recent count: ${this.adaptiveState.recent429Count}`
-    );
+    logger.log(`429 error for ${endpointType}. Recent count: ${this.adaptiveState.recent429Count}`);
 
     // Enable adaptive mode if 3+ 429s in 60 seconds
     if (this.adaptiveState.recent429Count >= 3) {
@@ -495,20 +608,29 @@ export class ATProtoRateLimiter {
   }
 
   /**
-   * Get adaptive mode status
+   * Get adaptive mode status including circuit breaker state
    */
   public getAdaptiveStatus(): {
     isActive: boolean;
     recent429Count: number;
     remainingTimeMs: number;
+    circuitState: CircuitBreakerState;
+    nextProbeMs: number;
+    consecutiveProbeFailures: number;
   } {
     const isActive = this.isInAdaptiveMode();
+    const now = Date.now();
     return {
       isActive,
       recent429Count: this.adaptiveState.recent429Count,
       remainingTimeMs: isActive
-        ? Math.max(0, this.adaptiveState.adaptiveModeUntil - Date.now())
+        ? Math.max(0, this.adaptiveState.adaptiveModeUntil - now)
         : 0,
+      circuitState: this.adaptiveState.circuitState,
+      nextProbeMs: this.adaptiveState.probeScheduledAt > now
+        ? this.adaptiveState.probeScheduledAt - now
+        : 0,
+      consecutiveProbeFailures: this.adaptiveState.consecutiveProbeFailures,
     };
   }
 
@@ -528,6 +650,11 @@ export class ATProtoRateLimiter {
    * Reset all rate limiters
    */
   public resetAll(): void {
+    // Clear probe timer before resetting state
+    if (this.adaptiveState.probeTimer !== null) {
+      clearTimeout(this.adaptiveState.probeTimer);
+    }
+
     Array.from(this.buckets.entries()).forEach(([type, bucket]) => {
       bucket.reset();
       this.headerMetrics.delete(type);
@@ -539,6 +666,11 @@ export class ATProtoRateLimiter {
       last429Timestamp: 0,
       adaptiveModeUntil: 0,
       originalConfigs: new Map(),
+      circuitState: CircuitBreakerState.CLOSED,
+      probeScheduledAt: 0,
+      currentProbeIntervalMs: CIRCUIT_BREAKER_INITIAL_PROBE_MS,
+      probeTimer: null,
+      consecutiveProbeFailures: 0,
     };
 
     logger.log('Reset all rate limiters');
@@ -571,7 +703,8 @@ export function resetGlobalRateLimiter(): void {
 }
 
 /**
- * Wrapper function to rate limit any async function
+ * Wrapper function to rate limit any async function.
+ * Reports both successes and 429 failures to the circuit breaker.
  */
 export async function rateLimited<T>(
   fn: () => Promise<T>,
@@ -583,6 +716,8 @@ export async function rateLimited<T>(
   try {
     await limiter.waitForAllowance(endpointType, timeoutMs);
     const result = await fn();
+    // Report success to circuit breaker for half-open probe recovery
+    limiter.trackSuccess();
     return result;
   } catch (error: any) {
     // Track 429 errors
