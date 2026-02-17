@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import ExpoSwiftUIFeed
 
 // MARK: - Thread Post Card
 
@@ -34,7 +35,7 @@ struct ThreadPostCard: View {
             HStack(spacing: 12) {
                 // Avatar
                 if let avatarUrl = node.post.author.avatar {
-                    AsyncImage(url: URL(string: avatarUrl)) { image in
+                    CachedAsyncImage(url: URL(string: avatarUrl)) { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)

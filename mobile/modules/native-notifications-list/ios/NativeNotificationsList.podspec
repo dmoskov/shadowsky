@@ -11,6 +11,7 @@ Pod::Spec.new do |s|
 
   s.dependency 'ExpoModulesCore'
   s.dependency 'NotificationBridge'
+  s.dependency 'ExpoSwiftUIFeed'
 
   # Swift/Objective-C compatibility
   s.pod_target_xcconfig = {

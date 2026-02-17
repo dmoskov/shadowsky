@@ -29,7 +29,7 @@ struct ExternalLinkEmbed: View {
             VStack(spacing: 0) {
                 // Thumbnail
                 if let thumbURL = external.thumb, let url = URL(string: thumbURL) {
-                    AsyncImage(url: url) { phase in
+                    CachedAsyncImage(url: url) { phase in
                         switch phase {
                         case .empty:
                             Color.gray.opacity(0.2)
