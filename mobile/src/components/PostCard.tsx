@@ -18,6 +18,7 @@ import {SaveToCollectionModal} from './SaveToCollectionModal';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
+  isVisible?: boolean;
   onPress?: () => void;
   onPressProfile?: (handle: string) => void;
   onLike?: () => void;
@@ -41,6 +42,7 @@ interface PostCardProps {
 
 function PostCardComponent({
   post,
+  isVisible = false,
   onPress,
   onPressProfile,
   onLike,
@@ -284,6 +286,8 @@ function PostCardComponent({
         {/* Embeds (Images, Links, Quotes, Videos) */}
         <PostEmbed
           embed={postView.embed}
+          postUri={postView.uri}
+          isVisible={isVisible}
           onImagePress={onImagePress}
           onLinkPress={onLinkPress}
           onQuotePress={onQuotePress}
@@ -389,6 +393,8 @@ function PostCardComponent({
     onMentionPress,
     onHashtagPress,
     postView.embed,
+    postView.uri,
+    isVisible,
     onImagePress,
     onLinkPress,
     onQuotePress,
@@ -519,6 +525,11 @@ function arePropsEqual(prevProps: PostCardProps, nextProps: PostCardProps): bool
     prevProps.post.post.viewer?.like !== nextProps.post.post.viewer?.like ||
     prevProps.post.post.viewer?.repost !== nextProps.post.post.viewer?.repost
   ) {
+    return false;
+  }
+
+  // Compare visibility (for video autoplay)
+  if (prevProps.isVisible !== nextProps.isVisible) {
     return false;
   }
 

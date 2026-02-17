@@ -25,6 +25,7 @@ import { ThemeProvider, useTheme } from "../src/contexts/ThemeContext";
 import { ToastProvider } from "../src/contexts/ToastContext";
 import { ModerationProvider } from "../src/contexts/ModerationContext";
 import { LightboxProvider } from "../src/contexts/LightboxContext";
+import { VideoAutoplayProvider } from "../src/contexts/VideoAutoplayContext";
 import { LightboxOverlay } from "../src/components/LightboxOverlay";
 import {
   queryClient,
@@ -169,17 +170,19 @@ function RootLayout() {
               <PreferencesProvider>
                 <ThemeProvider>
                   <NetworkProvider>
-                    <ModerationProvider>
-                      <ToastProvider>
-                        <LightboxProvider>
-                          <QueryErrorHandler>
-                            <DynamicStatusBar />
-                            <AuthGate />
-                          </QueryErrorHandler>
-                          <LightboxOverlay />
-                        </LightboxProvider>
-                      </ToastProvider>
-                    </ModerationProvider>
+                    <VideoAutoplayProvider>
+                      <ModerationProvider>
+                        <ToastProvider>
+                          <LightboxProvider>
+                            <QueryErrorHandler>
+                              <DynamicStatusBar />
+                              <AuthGate />
+                            </QueryErrorHandler>
+                            <LightboxOverlay />
+                          </LightboxProvider>
+                        </ToastProvider>
+                      </ModerationProvider>
+                    </VideoAutoplayProvider>
                   </NetworkProvider>
                 </ThemeProvider>
               </PreferencesProvider>

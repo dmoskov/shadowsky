@@ -1,4 +1,4 @@
-import React, { forwardRef, useMemo, useRef } from 'react';
+import React, { forwardRef, useMemo, useRef, useState, useCallback } from 'react';
 import {
   FlatList,
   ActivityIndicator,
@@ -8,7 +8,7 @@ import {
   ListRenderItem,
   ViewToken,
 } from 'react-native';
-import {AppBskyFeedDefs} from '@atproto/api';
+import {AppBskyFeedDefs, AppBskyEmbedVideo, AppBskyEmbedRecordWithMedia} from '@atproto/api';
 import {PostCard} from './PostCard';
 import {PostCardSkeleton} from './PostCardSkeleton';
 import {ErrorState} from './ErrorState';
@@ -16,6 +16,7 @@ import { EmptyState } from './EmptyState';
 import {useNetwork} from '../contexts/NetworkContext';
 import {usePreferences} from '../contexts/PreferencesContext';
 import { useTheme } from "../contexts/ThemeContext";
+import {useVideoAutoplay} from '../contexts/VideoAutoplayContext';
 import {triggerHaptic} from '../utils/haptics';
 import {filterMutedPosts} from '../utils/content-filter';
 import {useImagePrefetch} from '../hooks/useImagePrefetch';
@@ -41,6 +42,18 @@ interface FeedListProps {
   feedType?: "home" | "other";
 }
 
+/** Check if a feed post contains a video embed */
+function hasVideoEmbed(post: AppBskyFeedDefs.FeedViewPost): boolean {
+  const embed = post.post.embed;
+  if (!embed) return false;
+  if (AppBskyEmbedVideo.isView(embed)) return true;
+  if (AppBskyEmbedRecordWithMedia.isView(embed)) {
+    const media = embed.media;
+    if (media && AppBskyEmbedVideo.isView(media)) return true;
+  }
+  return false;
+}
+
 export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   posts,
   isLoading,
@@ -64,7 +77,11 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   const { colors } = useTheme();
   const { isOnline } = useNetwork();
   const { preferences } = usePreferences();
+  const { setActiveVideoUri, isAutoplayEnabled } = useVideoAutoplay();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  // Track which post URIs are currently visible
+  const [visiblePostUris, setVisiblePostUris] = useState<Set<string>>(new Set());
 
   // Filter posts based on muted words
   const filteredPosts = useMemo(() => {
@@ -78,18 +95,53 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   const prefetchRef = useRef(prefetchVisibleWindow);
   prefetchRef.current = prefetchVisibleWindow;
 
+  // Ref to hold the latest setActiveVideoUri so we can call it from the static callback
+  const setActiveVideoUriRef = useRef(setActiveVideoUri);
+  setActiveVideoUriRef.current = setActiveVideoUri;
+
+  const isAutoplayEnabledRef = useRef(isAutoplayEnabled);
+  isAutoplayEnabledRef.current = isAutoplayEnabled;
+
+  const filteredPostsRef = useRef(filteredPosts);
+  filteredPostsRef.current = filteredPosts;
+
   const onViewableItemsChangedRef = useRef(
     ({viewableItems}: {viewableItems: ViewToken[]}) => {
+      // Image prefetching
       if (viewableItems.length > 0) {
         const firstIndex = viewableItems[0].index ?? 0;
         prefetchRef.current(firstIndex);
+      }
+
+      // Video autoplay tracking
+      const visibleUris = new Set<string>();
+      let bestVideoUri: string | null = null;
+
+      for (const token of viewableItems) {
+        if (token.item && token.isViewable) {
+          const post = token.item as AppBskyFeedDefs.FeedViewPost;
+          visibleUris.add(post.post.uri);
+
+          // Find the first visible post with a video (topmost = most visible)
+          if (!bestVideoUri && hasVideoEmbed(post)) {
+            bestVideoUri = post.post.uri;
+          }
+        }
+      }
+
+      setVisiblePostUris(visibleUris);
+
+      if (isAutoplayEnabledRef.current) {
+        setActiveVideoUriRef.current(bestVideoUri);
+      } else {
+        setActiveVideoUriRef.current(null);
       }
     },
   );
 
   const viewabilityConfigRef = useRef({
-    itemVisiblePercentThreshold: 30,
-    minimumViewTime: 100,
+    itemVisiblePercentThreshold: 50,
+    minimumViewTime: 300,
   });
 
   const handleRefresh = () => {
@@ -97,9 +149,10 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
     onRefresh?.();
   };
 
-  const renderItem: ListRenderItem<AppBskyFeedDefs.FeedViewPost> = ({item}) => (
+  const renderItem: ListRenderItem<AppBskyFeedDefs.FeedViewPost> = useCallback(({item}) => (
     <PostCard
       post={item}
+      isVisible={visiblePostUris.has(item.post.uri)}
       onPress={() => onPostPress?.(item)}
       onPressProfile={onProfilePress}
       onLike={() => onLike?.(item)}
@@ -110,7 +163,7 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
       onMentionPress={onMentionPress}
       onHashtagPress={onHashtagPress}
     />
-  );
+  ), [visiblePostUris, onPostPress, onProfilePress, onLike, onRepost, onReply, onBookmark, isBookmarked, onMentionPress, onHashtagPress]);
 
   const renderFooter = () => {
     if (!isLoadingMore) return null;
