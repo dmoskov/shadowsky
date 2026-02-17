@@ -1,7 +1,7 @@
 import {useEffect, useRef} from 'react';
 import * as Notifications from 'expo-notifications';
 import {useRouter} from 'expo-router';
-import {clearBadgeCount} from '../services/notification-poller';
+import {clearBadgeCount} from '../utils/badge';
 
 /**
  * Handle notification tap and navigate to appropriate screen

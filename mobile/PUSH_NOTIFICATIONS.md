@@ -66,7 +66,7 @@ When users tap a notification, the app navigates to the appropriate screen based
 
 ### Fallback Mechanism
 
-If push registration fails (e.g., on simulator, permission denied, network issues), the app automatically falls back to the existing polling mechanism (`notification-poller.ts`).
+If push registration fails (e.g., on simulator, permission denied, network issues), notification data is still refreshed via React Query's `refetchInterval` when the user visits the Notifications tab.
 
 ## Backend Implementation
 

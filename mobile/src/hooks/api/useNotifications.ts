@@ -11,6 +11,7 @@ export function useNotifications() {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     refetchInterval: 30000, // Refetch every 30 seconds
+    refetchIntervalInBackground: false, // Don't poll when tab is not focused
   });
 }
 
@@ -22,6 +23,7 @@ export function useUnreadCount() {
     queryKey: ['unreadCount'],
     queryFn: getUnreadCount,
     refetchInterval: 30000, // Refetch every 30 seconds
+    refetchIntervalInBackground: false, // Don't poll when tab is not focused
   });
 }
 
