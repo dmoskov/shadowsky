@@ -1,6 +1,9 @@
-import { View } from "react-native";
+import { useEffect } from "react";
+import { Platform, View } from "react-native";
 import { Drawer } from "expo-router/drawer";
 import { Slot } from "expo-router";
+import * as QuickActions from "expo-quick-actions";
+import { useQuickActionRouting } from "expo-quick-actions/router";
 import { CustomDrawerContent } from "../../src/components/CustomDrawerContent";
 import { NotificationSetup } from "../../src/components/NotificationSetup";
 import { IPadSidebar } from "../../src/components/IPadSidebar";
@@ -87,6 +90,41 @@ function PhoneAppLayout() {
 
 export default function AppLayout() {
   const { isMultiColumn } = useIPadLayout();
+
+  // Handle quick action routing (navigates to params.href when a shortcut is tapped)
+  useQuickActionRouting();
+
+  // Register dynamic quick actions on mount (supplements static Info.plist shortcuts)
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+
+    QuickActions.setItems([
+      {
+        id: "compose",
+        title: "New Post",
+        icon: "compose",
+        params: { href: "/(app)/compose" },
+      },
+      {
+        id: "search",
+        title: "Search",
+        icon: "search",
+        params: { href: "/(app)/(tabs)/(search)" },
+      },
+      {
+        id: "notifications",
+        title: "Notifications",
+        icon: "symbol:bell.fill",
+        params: { href: "/(app)/(tabs)/(notifications)" },
+      },
+      {
+        id: "messages",
+        title: "Messages",
+        icon: "message",
+        params: { href: "/(app)/(tabs)/(profile)/messages" },
+      },
+    ]);
+  }, []);
 
   return (
     <>
