@@ -128,6 +128,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
                 isThread={actions.isThread}
                 isThreadMuted={actions.isThreadCurrentlyMuted}
                 isWebShareSupported={actions.isWebShareSupported()}
+                isPinned={actions.isCurrentlyPinned}
                 onNativeShare={actions.handleNativeShare}
                 onCopyLink={actions.handleCopyLink}
                 onCopyDeepLink={actions.handleCopyDeepLink}
@@ -142,6 +143,8 @@ export const PostMenu: React.FC<PostMenuProps> = ({
                 onBlock={actions.handleBlock}
                 onOpenReportModal={handleOpenReportModal}
                 onDelete={actions.handleDelete}
+                onPinToProfile={actions.handlePinToProfile}
+                onUnpinFromProfile={actions.handleUnpinFromProfile}
               />
             </div>,
             document.body,
