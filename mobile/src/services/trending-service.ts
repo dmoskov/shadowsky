@@ -3,7 +3,6 @@
  */
 
 import { getAtProtoClient } from "./atproto/client";
-import { withRetry } from "../utils/with-retry";
 import { rateLimited, ATProtoEndpointType } from "./rate-limiter";
 
 
@@ -42,27 +41,26 @@ export async function getTrendingTopics(
   viewer?: string
 ): Promise<TrendingTopicsResponse> {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        try {
-          const response = await agent.app.bsky.unspecced.getTrendingTopics({
-            limit,
-            viewer,
-          });
+      try {
+        const response = await agent.app.bsky.unspecced.getTrendingTopics({
+          limit,
+          viewer,
+        });
 
-          return {
-            topics: response.data.topics || [],
-            suggested: response.data.suggested || [],
-          };
-        } catch (error) {
-          // If trending topics API is not available, return empty arrays
-          logger.warn('Failed to fetch trending topics:', error);
-          return { topics: [], suggested: [] };
-        }
-      }),
+        return {
+          topics: response.data.topics || [],
+          suggested: response.data.suggested || [],
+        };
+      } catch (error) {
+        // If trending topics API is not available, return empty arrays
+        logger.warn('Failed to fetch trending topics:', error);
+        return { topics: [], suggested: [] };
+      }
+    },
     ATProtoEndpointType.FEED
   );
 }
@@ -73,26 +71,25 @@ export async function getTrendingTopics(
  */
 export async function getTrends(limit: number = 10): Promise<TrendsResponse> {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const topicsData = await getTrendingTopics(limit);
+    async () => {
+      const topicsData = await getTrendingTopics(limit);
 
-        // Transform topics into trends format
-        const trends: Trend[] = [
-          ...topicsData.topics.map((t) => ({
-            topic: t.topic,
-            displayName: t.topic,
-            status: "stable" as const,
-          })),
-          ...topicsData.suggested.map((t) => ({
-            topic: t.topic,
-            displayName: t.topic,
-            status: "rising" as const,
-          })),
-        ];
+      // Transform topics into trends format
+      const trends: Trend[] = [
+        ...topicsData.topics.map((t) => ({
+          topic: t.topic,
+          displayName: t.topic,
+          status: "stable" as const,
+        })),
+        ...topicsData.suggested.map((t) => ({
+          topic: t.topic,
+          displayName: t.topic,
+          status: "rising" as const,
+        })),
+      ];
 
-        return { trends };
-      }),
+      return { trends };
+    },
     ATProtoEndpointType.FEED
   );
 }

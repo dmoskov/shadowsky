@@ -1,5 +1,4 @@
 import {getAtProtoClient} from './client';
-import {withRetry} from '../../utils/with-retry';
 import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
 
 export interface NotificationsOptions {
@@ -13,8 +12,7 @@ export interface NotificationsOptions {
  */
 export async function getNotifications(options: NotificationsOptions = {}) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
+    async () => {
         const client = getAtProtoClient();
         const agent = client.getAgent();
 
@@ -29,7 +27,7 @@ export async function getNotifications(options: NotificationsOptions = {}) {
           cursor: response.data.cursor,
           seenAt: response.data.seenAt,
         };
-      }),
+      },
     ATProtoEndpointType.NOTIFICATION
   );
 }
@@ -39,14 +37,13 @@ export async function getNotifications(options: NotificationsOptions = {}) {
  */
 export async function getUnreadCount() {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
+    async () => {
         const client = getAtProtoClient();
         const agent = client.getAgent();
 
         const response = await agent.countUnreadNotifications();
         return response.data.count;
-      }),
+      },
     ATProtoEndpointType.NOTIFICATION
   );
 }
@@ -56,13 +53,12 @@ export async function getUnreadCount() {
  */
 export async function updateSeenNotifications(seenAt?: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
+    async () => {
         const client = getAtProtoClient();
         const agent = client.getAgent();
 
         await agent.updateSeenNotifications(seenAt as any);
-      }),
+      },
     ATProtoEndpointType.NOTIFICATION
   );
 }

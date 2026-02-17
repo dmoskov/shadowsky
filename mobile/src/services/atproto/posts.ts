@@ -1,6 +1,5 @@
 import {getAtProtoClient} from './client';
 import {RichText, AppBskyFeedPost} from '@atproto/api';
-import {withRetry} from '../../utils/with-retry';
 import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
 
 export interface CreatePostOptions {
@@ -31,121 +30,120 @@ export interface CreatePostOptions {
  */
 export async function createPost(options: CreatePostOptions) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-    const client = getAtProtoClient();
-    const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-    // Process rich text (mentions, links, etc.)
-    const rt = new RichText({text: options.text});
-    await rt.detectFacets(agent);
+      // Process rich text (mentions, links, etc.)
+      const rt = new RichText({text: options.text});
+      await rt.detectFacets(agent);
 
-    const record: Partial<AppBskyFeedPost.Record> = {
-      text: rt.text,
-      facets: rt.facets,
-      createdAt: new Date().toISOString(),
-    };
+      const record: Partial<AppBskyFeedPost.Record> = {
+        text: rt.text,
+        facets: rt.facets,
+        createdAt: new Date().toISOString(),
+      };
 
-    // Add reply reference if this is a reply
-    if (options.reply) {
-      record.reply = options.reply;
-    }
+      // Add reply reference if this is a reply
+      if (options.reply) {
+        record.reply = options.reply;
+      }
 
-    // Handle embeds (images, video, external, quote, or combinations)
-    const hasImages = options.images && options.images.length > 0;
-    const hasVideo = !!options.video;
-    const hasExternal = !!options.external;
-    const hasQuote = !!options.quote;
+      // Handle embeds (images, video, external, quote, or combinations)
+      const hasImages = options.images && options.images.length > 0;
+      const hasVideo = !!options.video;
+      const hasExternal = !!options.external;
+      const hasQuote = !!options.quote;
 
-    if (hasVideo && hasQuote && options.video && options.quote) {
-      // Combined quote + video: use recordWithMedia
-      const videoBlob = await uploadVideo(options.video.uri);
+      if (hasVideo && hasQuote && options.video && options.quote) {
+        // Combined quote + video: use recordWithMedia
+        const videoBlob = await uploadVideo(options.video.uri);
 
-      record.embed = {
-        $type: 'app.bsky.embed.recordWithMedia',
-        record: {
+        record.embed = {
+          $type: 'app.bsky.embed.recordWithMedia',
+          record: {
+            record: options.quote,
+          },
+          media: {
+            $type: 'app.bsky.embed.video',
+            video: videoBlob,
+            alt: options.video.alt || '',
+          },
+        };
+      } else if (hasImages && hasQuote && options.quote) {
+        // Combined quote + images: use recordWithMedia
+        const imageBlobs = await Promise.all(
+          options.images!.map(async img => {
+            const blob = await uploadImage(img.uri);
+            return {
+              alt: img.alt || '',
+              image: blob,
+            };
+          }),
+        );
+
+        record.embed = {
+          $type: 'app.bsky.embed.recordWithMedia',
+          record: {
+            record: options.quote,
+          },
+          media: {
+            $type: 'app.bsky.embed.images',
+            images: imageBlobs,
+          },
+        };
+      } else if (hasQuote) {
+        // Quote only
+        record.embed = {
+          $type: 'app.bsky.embed.record',
           record: options.quote,
-        },
-        media: {
+        };
+      } else if (hasVideo && options.video) {
+        // Video only
+        const videoBlob = await uploadVideo(options.video.uri);
+
+        record.embed = {
           $type: 'app.bsky.embed.video',
           video: videoBlob,
           alt: options.video.alt || '',
-        },
-      };
-    } else if (hasImages && hasQuote && options.quote) {
-      // Combined quote + images: use recordWithMedia
-      const imageBlobs = await Promise.all(
-        options.images!.map(async (img) => {
-          const blob = await uploadImage(img.uri);
-          return {
-            alt: img.alt || '',
-            image: blob,
-          };
-        })
-      );
+        };
+      } else if (hasImages) {
+        // Images only
+        const imageBlobs = await Promise.all(
+          options.images!.map(async img => {
+            const blob = await uploadImage(img.uri);
+            return {
+              alt: img.alt || '',
+              image: blob,
+            };
+          }),
+        );
 
-      record.embed = {
-        $type: 'app.bsky.embed.recordWithMedia',
-        record: {
-          record: options.quote,
-        },
-        media: {
+        record.embed = {
           $type: 'app.bsky.embed.images',
           images: imageBlobs,
-        },
-      };
-    } else if (hasQuote) {
-      // Quote only
-      record.embed = {
-        $type: 'app.bsky.embed.record',
-        record: options.quote,
-      };
-    } else if (hasVideo && options.video) {
-      // Video only
-      const videoBlob = await uploadVideo(options.video.uri);
+        };
+      } else if (hasExternal && options.external) {
+        // External embed only (e.g., GIFs from Tenor)
+        record.embed = {
+          $type: 'app.bsky.embed.external',
+          external: {
+            uri: options.external.uri,
+            title: options.external.title,
+            description: options.external.description,
+          },
+        };
+      }
 
-      record.embed = {
-        $type: 'app.bsky.embed.video',
-        video: videoBlob,
-        alt: options.video.alt || '',
-      };
-    } else if (hasImages) {
-      // Images only
-      const imageBlobs = await Promise.all(
-        options.images!.map(async (img) => {
-          const blob = await uploadImage(img.uri);
-          return {
-            alt: img.alt || '',
-            image: blob,
-          };
-        })
-      );
+      // Add languages
+      if (options.langs) {
+        record.langs = options.langs;
+      }
 
-      record.embed = {
-        $type: 'app.bsky.embed.images',
-        images: imageBlobs,
-      };
-    } else if (hasExternal && options.external) {
-      // External embed only (e.g., GIFs from Tenor)
-      record.embed = {
-        $type: 'app.bsky.embed.external',
-        external: {
-          uri: options.external.uri,
-          title: options.external.title,
-          description: options.external.description,
-        },
-      };
-    }
-
-    // Add languages
-    if (options.langs) {
-      record.langs = options.langs;
-    }
-
-    const response = await agent.post(record);
-    return response;
-      }),
-    ATProtoEndpointType.RECORD
+      const response = await agent.post(record);
+      return response;
+    },
+    ATProtoEndpointType.RECORD,
   );
 }
 
@@ -154,14 +152,13 @@ export async function createPost(options: CreatePostOptions) {
  */
 export async function deletePost(uri: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        await agent.deletePost(uri);
-      }),
-    ATProtoEndpointType.RECORD
+      await agent.deletePost(uri);
+    },
+    ATProtoEndpointType.RECORD,
   );
 }
 
@@ -170,15 +167,14 @@ export async function deletePost(uri: string) {
  */
 export async function likePost(uri: string, cid: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const response = await agent.like(uri, cid);
-        return response;
-      }),
-    ATProtoEndpointType.RECORD
+      const response = await agent.like(uri, cid);
+      return response;
+    },
+    ATProtoEndpointType.RECORD,
   );
 }
 
@@ -187,14 +183,13 @@ export async function likePost(uri: string, cid: string) {
  */
 export async function unlikePost(likeUri: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        await agent.deleteLike(likeUri);
-      }),
-    ATProtoEndpointType.RECORD
+      await agent.deleteLike(likeUri);
+    },
+    ATProtoEndpointType.RECORD,
   );
 }
 
@@ -203,15 +198,14 @@ export async function unlikePost(likeUri: string) {
  */
 export async function repost(uri: string, cid: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const response = await agent.repost(uri, cid);
-        return response;
-      }),
-    ATProtoEndpointType.RECORD
+      const response = await agent.repost(uri, cid);
+      return response;
+    },
+    ATProtoEndpointType.RECORD,
   );
 }
 
@@ -220,14 +214,13 @@ export async function repost(uri: string, cid: string) {
  */
 export async function deleteRepost(repostUri: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        await agent.deleteRepost(repostUri);
-      }),
-    ATProtoEndpointType.RECORD
+      await agent.deleteRepost(repostUri);
+    },
+    ATProtoEndpointType.RECORD,
   );
 }
 
@@ -345,23 +338,22 @@ export async function createThread(
  */
 export async function getLikes(uri: string, cursor?: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const response = await agent.getLikes({
-          uri,
-          limit: 50,
-          cursor,
-        });
+      const response = await agent.getLikes({
+        uri,
+        limit: 50,
+        cursor,
+      });
 
-        return {
-          likes: response.data.likes,
-          cursor: response.data.cursor,
-        };
-      }),
-    ATProtoEndpointType.FEED
+      return {
+        likes: response.data.likes,
+        cursor: response.data.cursor,
+      };
+    },
+    ATProtoEndpointType.FEED,
   );
 }
 
@@ -370,23 +362,22 @@ export async function getLikes(uri: string, cursor?: string) {
  */
 export async function getRepostsByPost(uri: string, cursor?: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const response = await agent.getRepostedBy({
-          uri,
-          limit: 50,
-          cursor,
-        });
+      const response = await agent.getRepostedBy({
+        uri,
+        limit: 50,
+        cursor,
+      });
 
-        return {
-          repostedBy: response.data.repostedBy,
-          cursor: response.data.cursor,
-        };
-      }),
-    ATProtoEndpointType.FEED
+      return {
+        repostedBy: response.data.repostedBy,
+        cursor: response.data.cursor,
+      };
+    },
+    ATProtoEndpointType.FEED,
   );
 }
 
@@ -395,23 +386,22 @@ export async function getRepostsByPost(uri: string, cursor?: string) {
  */
 export async function getQuotesByPost(uri: string, cursor?: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        const response = await agent.app.bsky.feed.getQuotes({
-          uri,
-          limit: 50,
-          cursor,
-        });
+      const response = await agent.app.bsky.feed.getQuotes({
+        uri,
+        limit: 50,
+        cursor,
+      });
 
-        return {
-          posts: response.data.posts,
-          cursor: response.data.cursor,
-        };
-      }),
-    ATProtoEndpointType.FEED
+      return {
+        posts: response.data.posts,
+        cursor: response.data.cursor,
+      };
+    },
+    ATProtoEndpointType.FEED,
   );
 }
 
@@ -421,26 +411,25 @@ export async function getQuotesByPost(uri: string, cursor?: string) {
  */
 async function uploadImage(uri: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        // For React Native, we need to fetch the image as a blob
-        const response = await fetch(uri);
-        const blob = await response.blob();
+      // For React Native, we need to fetch the image as a blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
 
-        // Convert blob to Uint8Array for upload
-        const arrayBuffer = await blob.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
+      // Convert blob to Uint8Array for upload
+      const arrayBuffer = await blob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
 
-        const uploadResponse = await agent.uploadBlob(uint8Array, {
-          encoding: blob.type,
-        });
+      const uploadResponse = await agent.uploadBlob(uint8Array, {
+        encoding: blob.type,
+      });
 
-        return uploadResponse.data.blob;
-      }),
-    ATProtoEndpointType.UPLOAD
+      return uploadResponse.data.blob;
+    },
+    ATProtoEndpointType.UPLOAD,
   );
 }
 
@@ -450,26 +439,25 @@ async function uploadImage(uri: string) {
  */
 async function uploadVideo(uri: string) {
   return rateLimited(
-    async () =>
-      withRetry(async () => {
-        const client = getAtProtoClient();
-        const agent = client.getAgent();
+    async () => {
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-        // For React Native, we need to fetch the video as a blob
-        const response = await fetch(uri);
-        const blob = await response.blob();
+      // For React Native, we need to fetch the video as a blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
 
-        // Convert blob to Uint8Array for upload
-        const arrayBuffer = await blob.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
+      // Convert blob to Uint8Array for upload
+      const arrayBuffer = await blob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
 
-        // Upload video blob with appropriate MIME type
-        const uploadResponse = await agent.uploadBlob(uint8Array, {
-          encoding: blob.type || 'video/mp4',
-        });
+      // Upload video blob with appropriate MIME type
+      const uploadResponse = await agent.uploadBlob(uint8Array, {
+        encoding: blob.type || 'video/mp4',
+      });
 
-        return uploadResponse.data.blob;
-      }),
-    ATProtoEndpointType.UPLOAD
+      return uploadResponse.data.blob;
+    },
+    ATProtoEndpointType.UPLOAD,
   );
 }
