@@ -25,6 +25,22 @@ jest.mock('react-native-mmkv', () => {
   };
 });
 
+// Mock expo-secure-store
+jest.mock('expo-secure-store', () => ({
+  setItemAsync: jest.fn(() => Promise.resolve()),
+  getItemAsync: jest.fn(() => Promise.resolve(null)),
+  deleteItemAsync: jest.fn(() => Promise.resolve()),
+  setItem: jest.fn(),
+  getItem: jest.fn(() => null),
+  isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+  canUseBiometricAuthentication: jest.fn(() => false),
+  AFTER_FIRST_UNLOCK: 0,
+  AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY: 1,
+  WHEN_UNLOCKED: 2,
+  WHEN_UNLOCKED_THIS_DEVICE_ONLY: 3,
+  WHEN_PASSCODE_SET_THIS_DEVICE_ONLY: 4,
+}));
+
 // Mock Expo native modules
 jest.mock('expo-constants', () => ({
   ...jest.requireActual('expo-constants'),

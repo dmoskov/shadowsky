@@ -1,16 +1,25 @@
 /**
  * Authentication Service for Mobile
  * Handles AT Protocol authentication using app passwords
+ *
+ * Sensitive tokens (accessJwt, refreshJwt) are stored in expo-secure-store.
+ * Non-sensitive account metadata is stored in AsyncStorage.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {AtpSessionData} from '@atproto/api';
 import {getAtProtoClient, resetAtProtoClient} from '../atproto/client';
+import {
+  saveSessionTokens,
+  getSessionTokens,
+  deleteSessionTokens,
+  setActiveSessionDid,
+  getActiveSessionDid,
+  clearActiveSessionDid,
+  migrateTokensToSecureStore,
+} from './secure-token-storage';
 
-const AUTH_STORAGE_KEY = '@shadowsky/auth_session';
 const ACCOUNTS_STORAGE_KEY = '@shadowsky/accounts';
-const SESSIONS_STORAGE_KEY = '@shadowsky/sessions';
-const ACTIVE_ACCOUNT_KEY = '@shadowsky/active_account';
 
 export interface AuthAccount {
   did: string;
@@ -57,10 +66,20 @@ export async function signInWithPassword(
     account,
   } as StoredSession;
 
-  await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-  await addSession(session);
+  // Store tokens securely
+  await saveSessionTokens(session.did, {
+    did: session.did,
+    handle: session.handle,
+    accessJwt: session.accessJwt,
+    refreshJwt: session.refreshJwt,
+    email: session.email,
+    emailConfirmed: session.emailConfirmed,
+    active: session.active,
+  });
+  await setActiveSessionDid(session.did);
+
+  // Store non-sensitive account metadata in AsyncStorage
   await addAccount(account);
-  await AsyncStorage.setItem(ACTIVE_ACCOUNT_KEY, session.did);
 
   return session;
 }
@@ -92,10 +111,20 @@ export async function signInWithOAuth(
     account,
   } as StoredSession;
 
-  await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-  await addSession(session);
+  // Store tokens securely
+  await saveSessionTokens(session.did, {
+    did: session.did,
+    handle: session.handle,
+    accessJwt: session.accessJwt,
+    refreshJwt: session.refreshJwt,
+    email: session.email,
+    emailConfirmed: session.emailConfirmed,
+    active: session.active,
+  });
+  await setActiveSessionDid(session.did);
+
+  // Store non-sensitive account metadata in AsyncStorage
   await addAccount(account);
-  await AsyncStorage.setItem(ACTIVE_ACCOUNT_KEY, session.did);
 
   return session;
 }
@@ -103,20 +132,49 @@ export async function signInWithOAuth(
 /**
  * Resume existing session from storage.
  *
+ * Runs a one-time migration from AsyncStorage to SecureStore on first launch
+ * after the update. Then loads tokens from SecureStore and account metadata
+ * from AsyncStorage.
+ *
  * Returns the cached session immediately after restoring credentials so the
  * app can render the authenticated UI without waiting for a network round-trip.
  * Profile data (avatar, displayName) is refreshed in the background via
- * `refreshProfileInBackground` and the returned callback, keeping the cold
- * start path off the critical rendering chain.
+ * `refreshProfileInBackground`, keeping the cold start path off the critical
+ * rendering chain.
  */
 export async function resumeSession(): Promise<StoredSession | null> {
   try {
-    const storedSession = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
-    if (!storedSession) {
+    // Migrate tokens from AsyncStorage to SecureStore (idempotent)
+    await migrateTokensToSecureStore();
+
+    const activeDid = await getActiveSessionDid();
+    if (!activeDid) {
       return null;
     }
 
-    const session: StoredSession = JSON.parse(storedSession);
+    const tokenData = await getSessionTokens(activeDid);
+    if (!tokenData) {
+      return null;
+    }
+
+    // Load account metadata from the accounts list
+    const accounts = await getAccounts();
+    const account = accounts.find(a => a.did === activeDid);
+
+    const session: StoredSession = {
+      did: tokenData.did,
+      handle: tokenData.handle,
+      accessJwt: tokenData.accessJwt,
+      refreshJwt: tokenData.refreshJwt,
+      email: tokenData.email,
+      emailConfirmed: tokenData.emailConfirmed,
+      active: tokenData.active,
+      account: account || {
+        did: tokenData.did,
+        handle: tokenData.handle,
+        email: tokenData.email,
+      },
+    } as StoredSession;
 
     const client = getAtProtoClient();
     await client.resumeSession(session);
@@ -149,8 +207,8 @@ async function refreshProfileInBackground(session: StoredSession): Promise<void>
       avatar: profile.data.avatar,
     };
 
-    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
-    await addSession(session);
+    // Update account metadata in AsyncStorage
+    await addAccount(session.account);
   } catch {
     // Profile fetch failed — session tokens may be stale. Attempt a refresh.
     try {
@@ -158,7 +216,16 @@ async function refreshProfileInBackground(session: StoredSession): Promise<void>
       const refreshedSession = await client.refreshSession();
       session.accessJwt = refreshedSession.accessJwt;
       session.refreshJwt = refreshedSession.refreshJwt;
-      await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+      // Persist refreshed tokens to SecureStore
+      await saveSessionTokens(session.did, {
+        did: session.did,
+        handle: session.handle,
+        accessJwt: session.accessJwt,
+        refreshJwt: session.refreshJwt,
+        email: session.email,
+        emailConfirmed: session.emailConfirmed,
+        active: session.active,
+      });
     } catch {
       // Token refresh also failed — sign the user out so they can re-auth.
       await signOut();
@@ -170,8 +237,11 @@ async function refreshProfileInBackground(session: StoredSession): Promise<void>
  * Sign out and clear current session
  */
 export async function signOut(): Promise<void> {
-  await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-  await AsyncStorage.removeItem(ACTIVE_ACCOUNT_KEY);
+  const activeDid = await getActiveSessionDid();
+  if (activeDid) {
+    await deleteSessionTokens(activeDid);
+  }
+  await clearActiveSessionDid();
   resetAtProtoClient();
 }
 
@@ -180,11 +250,33 @@ export async function signOut(): Promise<void> {
  */
 export async function getCurrentSession(): Promise<StoredSession | null> {
   try {
-    const storedSession = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
-    if (!storedSession) {
+    const activeDid = await getActiveSessionDid();
+    if (!activeDid) {
       return null;
     }
-    return JSON.parse(storedSession);
+
+    const tokenData = await getSessionTokens(activeDid);
+    if (!tokenData) {
+      return null;
+    }
+
+    const accounts = await getAccounts();
+    const account = accounts.find(a => a.did === activeDid);
+
+    return {
+      did: tokenData.did,
+      handle: tokenData.handle,
+      accessJwt: tokenData.accessJwt,
+      refreshJwt: tokenData.refreshJwt,
+      email: tokenData.email,
+      emailConfirmed: tokenData.emailConfirmed,
+      active: tokenData.active,
+      account: account || {
+        did: tokenData.did,
+        handle: tokenData.handle,
+        email: tokenData.email,
+      },
+    } as StoredSession;
   } catch {
     return null;
   }
@@ -234,12 +326,12 @@ export async function removeAccount(did: string): Promise<void> {
     const filtered = accounts.filter(a => a.did !== did);
     await AsyncStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(filtered));
 
-    await removeSession(did);
+    // Remove session tokens from SecureStore
+    await deleteSessionTokens(did);
 
-    const activeAccount = await AsyncStorage.getItem(ACTIVE_ACCOUNT_KEY);
-    if (activeAccount === did) {
-      await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
-      await AsyncStorage.removeItem(ACTIVE_ACCOUNT_KEY);
+    const activeDid = await getActiveSessionDid();
+    if (activeDid === did) {
+      await clearActiveSessionDid();
       resetAtProtoClient();
     }
   } catch {
@@ -248,50 +340,33 @@ export async function removeAccount(did: string): Promise<void> {
 }
 
 /**
- * Multi-account support: Store session for an account
- */
-async function addSession(session: StoredSession): Promise<void> {
-  try {
-    const storedSessions = await AsyncStorage.getItem(SESSIONS_STORAGE_KEY);
-    const sessions: StoredSession[] = storedSessions
-      ? JSON.parse(storedSessions)
-      : [];
-
-    const existingIndex = sessions.findIndex(s => s.did === session.did);
-    if (existingIndex >= 0) {
-      sessions[existingIndex] = session;
-    } else {
-      sessions.push(session);
-    }
-
-    await AsyncStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
-  } catch {
-    // Storage write failed — non-critical
-  }
-}
-
-/**
- * Multi-account support: Get all stored sessions
+ * Multi-account support: Get all stored sessions.
+ * Reconstructs StoredSession objects from SecureStore tokens + AsyncStorage metadata.
  */
 export async function getSessions(): Promise<StoredSession[]> {
   try {
-    const storedSessions = await AsyncStorage.getItem(SESSIONS_STORAGE_KEY);
-    return storedSessions ? JSON.parse(storedSessions) : [];
+    const accounts = await getAccounts();
+    const sessions: StoredSession[] = [];
+
+    for (const account of accounts) {
+      const tokenData = await getSessionTokens(account.did);
+      if (tokenData) {
+        sessions.push({
+          did: tokenData.did,
+          handle: tokenData.handle,
+          accessJwt: tokenData.accessJwt,
+          refreshJwt: tokenData.refreshJwt,
+          email: tokenData.email,
+          emailConfirmed: tokenData.emailConfirmed,
+          active: tokenData.active,
+          account,
+        } as StoredSession);
+      }
+    }
+
+    return sessions;
   } catch {
     return [];
-  }
-}
-
-/**
- * Multi-account support: Remove session for an account
- */
-async function removeSession(did: string): Promise<void> {
-  try {
-    const sessions = await getSessions();
-    const filtered = sessions.filter(s => s.did !== did);
-    await AsyncStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(filtered));
-  } catch {
-    // Storage write failed — non-critical
   }
 }
 
@@ -299,12 +374,24 @@ async function removeSession(did: string): Promise<void> {
  * Multi-account support: Switch to a different account
  */
 export async function switchToAccount(did: string): Promise<StoredSession> {
-  const sessions = await getSessions();
-  const targetSession = sessions.find(s => s.did === did);
-
-  if (!targetSession) {
+  const tokenData = await getSessionTokens(did);
+  if (!tokenData) {
     throw new Error('Session not found for account');
   }
+
+  const accounts = await getAccounts();
+  const account = accounts.find(a => a.did === did);
+
+  const targetSession: StoredSession = {
+    did: tokenData.did,
+    handle: tokenData.handle,
+    accessJwt: tokenData.accessJwt,
+    refreshJwt: tokenData.refreshJwt,
+    email: tokenData.email,
+    emailConfirmed: tokenData.emailConfirmed,
+    active: tokenData.active,
+    account: account || {did: tokenData.did, handle: tokenData.handle, email: tokenData.email},
+  } as StoredSession;
 
   resetAtProtoClient();
 
@@ -322,22 +409,39 @@ export async function switchToAccount(did: string): Promise<StoredSession> {
       avatar: profile.data.avatar,
     };
 
-    await addSession(targetSession);
+    await addAccount(targetSession.account);
   } catch {
     // Session might be expired, try to refresh
     try {
       const refreshedSession = await client.refreshSession();
       targetSession.accessJwt = refreshedSession.accessJwt;
       targetSession.refreshJwt = refreshedSession.refreshJwt;
-      await addSession(targetSession);
+      // Persist refreshed tokens
+      await saveSessionTokens(targetSession.did, {
+        did: targetSession.did,
+        handle: targetSession.handle,
+        accessJwt: targetSession.accessJwt,
+        refreshJwt: targetSession.refreshJwt,
+        email: targetSession.email,
+        emailConfirmed: targetSession.emailConfirmed,
+        active: targetSession.active,
+      });
     } catch {
-      await removeSession(did);
+      await deleteSessionTokens(did);
       throw new Error('Session expired. Please sign in again.');
     }
   }
 
-  await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(targetSession));
-  await AsyncStorage.setItem(ACTIVE_ACCOUNT_KEY, targetSession.did);
+  await saveSessionTokens(targetSession.did, {
+    did: targetSession.did,
+    handle: targetSession.handle,
+    accessJwt: targetSession.accessJwt,
+    refreshJwt: targetSession.refreshJwt,
+    email: targetSession.email,
+    emailConfirmed: targetSession.emailConfirmed,
+    active: targetSession.active,
+  });
+  await setActiveSessionDid(targetSession.did);
 
   return targetSession;
 }
