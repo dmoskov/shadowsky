@@ -8,6 +8,15 @@ jest.mock('../../contexts/ThemeContext', () => ({
   useTheme: () => mockTheme,
 }));
 
+jest.mock('../../contexts/ToastContext', () => ({
+  useToast: () => ({
+    showToast: jest.fn(),
+    dismissToast: jest.fn(),
+    dismissAllToasts: jest.fn(),
+    showUndoToast: jest.fn(),
+  }),
+}));
+
 let mockPreferences: Record<string, unknown> = {swipeActionsEnabled: true};
 jest.mock('../../contexts/PreferencesContext', () => ({
   usePreferences: () => ({preferences: mockPreferences}),

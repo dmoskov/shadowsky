@@ -137,6 +137,7 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
       </View>
       <FlatList
         data={accounts}
+        keyboardDismissMode="on-drag"
         renderItem={renderAccount}
         keyExtractor={(item) => item.did}
         ListFooterComponent={renderFooter}

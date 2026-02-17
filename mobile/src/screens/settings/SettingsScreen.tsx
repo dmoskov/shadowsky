@@ -257,7 +257,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} keyboardDismissMode="on-drag">
       <Text style={styles.header}>{t("settings.header")}</Text>
 
       {/* Account Section */}

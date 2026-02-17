@@ -12,6 +12,7 @@ import {AppBskyActorDefs} from '@atproto/api';
 import {usePostReposts} from '../../hooks/api/usePosts';
 import {Avatar} from '../../components/Avatar';
 import {FollowButton} from '../../components/FollowButton';
+import {UserListSkeleton} from '../../components/UserListSkeleton';
 import {useTheme} from '../../contexts/ThemeContext';
 import {useAuth} from '../../contexts/AuthContext';
 
@@ -85,11 +86,7 @@ export function RepostsScreen({postUri, onNavigateToProfile}: RepostsScreenProps
 
   const renderEmpty = () => {
     if (isLoading) {
-      return (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      );
+      return <UserListSkeleton />;
     }
 
     if (error) {
@@ -111,6 +108,7 @@ export function RepostsScreen({postUri, onNavigateToProfile}: RepostsScreenProps
     <View style={styles.container}>
       <FlatList
         data={reposts}
+        keyboardDismissMode="on-drag"
         renderItem={renderRepost}
         keyExtractor={(item, index) => item.did || `repost-${index}`}
         ListFooterComponent={renderFooter}

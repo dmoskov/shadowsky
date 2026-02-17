@@ -554,6 +554,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
       />
       <FlatList
         data={posts}
+        keyboardDismissMode="on-drag"
         renderItem={renderPost}
         keyExtractor={(item, index) => item.post.uri || `post-${index}`}
         ListHeaderComponent={

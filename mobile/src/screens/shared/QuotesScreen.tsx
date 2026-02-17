@@ -10,6 +10,7 @@ import {
 import {AppBskyFeedDefs} from '@atproto/api';
 import {usePostQuotes} from '../../hooks/api/usePosts';
 import {PostCard} from '../../components/PostCard';
+import {PostCardSkeleton} from '../../components/PostCardSkeleton';
 import {useTheme} from '../../contexts/ThemeContext';
 
 interface QuotesScreenProps {
@@ -99,8 +100,10 @@ export function QuotesScreen({
   const renderEmpty = () => {
     if (isLoading) {
       return (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+        <View style={{flex: 1, backgroundColor: colors.background}}>
+          <PostCardSkeleton />
+          <PostCardSkeleton />
+          <PostCardSkeleton />
         </View>
       );
     }
@@ -124,6 +127,7 @@ export function QuotesScreen({
     <View style={styles.container}>
       <FlatList
         data={quotes}
+        keyboardDismissMode="on-drag"
         renderItem={renderQuote}
         keyExtractor={(item, index) => item.uri || `quote-${index}`}
         ListFooterComponent={renderFooter}

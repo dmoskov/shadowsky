@@ -86,7 +86,7 @@ export function SaveToCollectionModal({
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.content}>
+          <ScrollView style={styles.content} keyboardDismissMode="on-drag">
             {collections.length === 0 && !showNewCollectionForm && (
               <Text style={styles.emptyText}>No collections yet</Text>
             )}

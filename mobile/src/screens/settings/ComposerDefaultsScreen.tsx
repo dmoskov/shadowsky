@@ -48,7 +48,11 @@ export function ComposerDefaultsScreen({
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardDismissMode="on-drag"
+      >
         <Text style={styles.description}>
           Configure your default posting experience
         </Text>

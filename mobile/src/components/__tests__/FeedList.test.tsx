@@ -8,6 +8,15 @@ jest.mock('../../contexts/ThemeContext', () => ({
   useTheme: () => mockTheme,
 }));
 
+jest.mock('../../contexts/ToastContext', () => ({
+  useToast: () => ({
+    showToast: jest.fn(),
+    dismissToast: jest.fn(),
+    dismissAllToasts: jest.fn(),
+    showUndoToast: jest.fn(),
+  }),
+}));
+
 let mockIsOnline = true;
 jest.mock('../../contexts/NetworkContext', () => ({
   useNetwork: () => ({isOnline: mockIsOnline}),

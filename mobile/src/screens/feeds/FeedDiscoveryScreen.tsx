@@ -324,6 +324,7 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
       ) : (
         <FlatList
           data={feeds}
+          keyboardDismissMode="on-drag"
           renderItem={renderFeedCard}
           keyExtractor={(item) => item.uri}
           contentContainerStyle={styles.listContent}

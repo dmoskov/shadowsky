@@ -12,6 +12,7 @@ import {AppBskyActorDefs} from '@atproto/api';
 import {useFollows} from '../../hooks/api/useProfile';
 import {Avatar} from '../../components/Avatar';
 import {FollowButton} from '../../components/FollowButton';
+import {UserListSkeleton} from '../../components/UserListSkeleton';
 import {useTheme} from '../../contexts/ThemeContext';
 import {useAuth} from '../../contexts/AuthContext';
 
@@ -85,11 +86,7 @@ export function FollowingScreen({actor, onNavigateToProfile}: FollowingScreenPro
 
   const renderEmpty = () => {
     if (isLoading) {
-      return (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      );
+      return <UserListSkeleton />;
     }
 
     if (error) {
@@ -111,6 +108,7 @@ export function FollowingScreen({actor, onNavigateToProfile}: FollowingScreenPro
     <View style={styles.container}>
       <FlatList
         data={following}
+        keyboardDismissMode="on-drag"
         renderItem={renderFollowing}
         keyExtractor={(item, index) => item.did || `following-${index}`}
         ListFooterComponent={renderFooter}

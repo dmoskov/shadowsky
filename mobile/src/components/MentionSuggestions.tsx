@@ -44,6 +44,7 @@ export function MentionSuggestions({
     <View style={styles.container}>
       <FlatList
         data={suggestions.slice(0, 5)} // Max 5 suggestions
+        keyboardDismissMode="on-drag"
         keyExtractor={(item) => item.did}
         renderItem={({ item }) => (
           <TouchableOpacity

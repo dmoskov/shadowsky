@@ -10,6 +10,7 @@ import { useAppNavigation } from "../../hooks/useNavigation";
 import { NativeFeedList } from "../../../modules/native-feed-list";
 import { useRouter } from "expo-router";
 import { triggerHaptic } from "../../utils/haptics";
+import { useToast } from "../../contexts/ToastContext";
 
 /**
  * Extract post ID (rkey) from AT Protocol URI
@@ -31,6 +32,7 @@ export function HomeScreen() {
   const repost = useRepost();
   const deleteRepost = useDeleteRepost();
   const { toggleBookmark, bookmarks } = useBookmarks();
+  const { showToast } = useToast();
   const scrollRef = useRef<any>(null);
 
   // Compute bookmarked post URIs for the native feed list
@@ -64,10 +66,12 @@ export function HomeScreen() {
 
   // Handle feed selection
   const handleFeedSelect = (feedUri: string | null) => {
+    triggerHaptic("light");
     setSelectedFeedUri(feedUri);
   };
 
   const handleDiscoverFeeds = () => {
+    triggerHaptic("light");
     router.push('/(app)/feeds/discover');
   };
 
@@ -221,8 +225,14 @@ export function HomeScreen() {
     const postData = postsByUri.get(uri);
 
     if (postData) {
+      const isCurrentlyBookmarked = bookmarkedPostUris.has(uri);
       triggerHaptic("light");
       toggleBookmark(postData.post);
+      if (isCurrentlyBookmarked) {
+        showToast("Post removed from saved", { type: "info" });
+      } else {
+        showToast("Post saved", { type: "success" });
+      }
     }
   };
 

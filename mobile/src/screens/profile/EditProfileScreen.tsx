@@ -146,7 +146,7 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardDismissMode="on-drag">
         {/* Avatar Section */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Avatar</Text>

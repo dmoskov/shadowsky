@@ -290,6 +290,7 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
     <View style={styles.container}>
       <FlatList
         data={members}
+        keyboardDismissMode="on-drag"
         renderItem={({item}) => (
           <MemberItem
             member={item}

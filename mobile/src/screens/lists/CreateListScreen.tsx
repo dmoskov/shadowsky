@@ -61,7 +61,7 @@ export function CreateListScreen({onSuccess}: CreateListScreenProps) {
   };
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
       <View style={styles.content}>
         <View style={styles.section}>
           <Text style={styles.label}>List Name *</Text>

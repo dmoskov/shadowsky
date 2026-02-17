@@ -3,6 +3,7 @@ import {Text, Alert, TextStyle} from 'react-native';
 import {RichText as AtpRichText, AppBskyRichtextFacet} from '@atproto/api';
 import {useTheme} from '../contexts/ThemeContext';
 import {openLink} from './browser';
+import {triggerHaptic} from './haptics';
 
 interface RichTextProps {
   text: string;
@@ -62,6 +63,7 @@ export function RichText({
             openLink(segment.link!.uri);
           }}
           onLongPress={() => {
+            triggerHaptic("medium");
             // Show action sheet on long press
             Alert.alert(
               segment.link!.uri,

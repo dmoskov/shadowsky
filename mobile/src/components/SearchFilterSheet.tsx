@@ -229,6 +229,7 @@ export function SearchFilterSheet({
             <ScrollView
               style={styles.content}
               showsVerticalScrollIndicator={false}
+              keyboardDismissMode="on-drag"
             >
               {/* Active Filter Chips */}
               {activeChips.length > 0 && (

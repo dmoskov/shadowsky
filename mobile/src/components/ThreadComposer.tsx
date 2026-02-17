@@ -48,7 +48,7 @@ export function ThreadComposer({
         </View>
       </View>
 
-      <ScrollView style={styles.postsContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.postsContainer} showsVerticalScrollIndicator={false} keyboardDismissMode="on-drag">
         {posts.map((post, index) => (
           <ThreadPostItem
             key={index}

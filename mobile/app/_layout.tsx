@@ -13,6 +13,8 @@ LogBox.ignoreLogs([
   "Intl.Segmenter is not available",
   // Reanimated reduced motion (simulator setting, dev-only)
   "Reduced motion setting is enabled",
+  // React Query persistence: dehydrated-as-pending warning (dev-only, expected)
+  "A query that was dehydrated as pending",
 ]);
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ErrorBoundary from "../src/components/ErrorBoundary";

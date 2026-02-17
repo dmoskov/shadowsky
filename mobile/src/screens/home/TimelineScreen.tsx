@@ -166,7 +166,8 @@ export function TimelineScreen() {
     return (
       <View style={styles.container}>
         <EmptyState
-          message="No media posts yet — posts with images will appear here"
+          message="No media posts yet"
+          description="Posts with images and videos will appear here"
         />
       </View>
     );
@@ -182,6 +183,7 @@ export function TimelineScreen() {
       />
       <FlatList
         data={postsWithMedia}
+        keyboardDismissMode="on-drag"
         renderItem={renderItem}
         keyExtractor={(item) => item.post.uri}
         numColumns={GRID_COLUMNS}

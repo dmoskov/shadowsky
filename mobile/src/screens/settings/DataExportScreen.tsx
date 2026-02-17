@@ -54,7 +54,11 @@ export function DataExportScreen({ navigation }: DataExportScreenProps) {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardDismissMode="on-drag"
+      >
         <Text style={styles.description}>
           Export your data or import from a backup
         </Text>

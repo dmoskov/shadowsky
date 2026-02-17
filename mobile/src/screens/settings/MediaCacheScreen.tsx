@@ -182,7 +182,11 @@ export function MediaCacheScreen({ navigation }: MediaCacheScreenProps) {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardDismissMode="on-drag"
+      >
         <Text style={styles.description}>
           Manage cached media files to free up storage space
         </Text>

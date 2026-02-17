@@ -107,6 +107,7 @@ export function AddToListModal({
         </View>
         <FlatList
           data={lists}
+          keyboardDismissMode="on-drag"
           renderItem={renderListItem}
           keyExtractor={(item) => item.uri}
           ListEmptyComponent={renderEmpty}

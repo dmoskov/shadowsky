@@ -95,6 +95,7 @@ export function ScheduledPostsScreen() {
     <View style={styles.container}>
       <FlatList
         data={posts}
+        keyboardDismissMode="on-drag"
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ScheduledPostItem post={item} onEdit={handleEdit} onDelete={handleDelete} />
@@ -113,7 +114,7 @@ export function ScheduledPostsScreen() {
         initialNumToRender={8}
         updateCellsBatchingPeriod={50}
         ListEmptyComponent={
-          <EmptyState message="No scheduled posts yet. Your queued posts will appear here." />
+          <EmptyState message="No scheduled posts" description="Posts you schedule will appear here" />
         }
         contentContainerStyle={posts.length === 0 ? styles.emptyContainer : undefined}
       />

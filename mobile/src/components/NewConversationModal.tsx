@@ -182,6 +182,7 @@ export function NewConversationModal({
         ) : (
           <FlatList
             data={searchResults}
+            keyboardDismissMode="on-drag"
             renderItem={renderUserItem}
             keyExtractor={(item) => item.did}
             style={styles.resultsList}

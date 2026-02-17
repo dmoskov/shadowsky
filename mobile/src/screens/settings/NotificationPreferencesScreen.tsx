@@ -76,7 +76,11 @@ export function NotificationPreferencesScreen({
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardDismissMode="on-drag"
+      >
         <Text style={styles.description}>
           Choose which notifications you want to receive and how
         </Text>

@@ -9,6 +9,15 @@ jest.mock('../../../contexts/ThemeContext', () => ({
   useTheme: () => mockTheme,
 }));
 
+jest.mock('../../../contexts/ToastContext', () => ({
+  useToast: () => ({
+    showToast: jest.fn(),
+    dismissToast: jest.fn(),
+    dismissAllToasts: jest.fn(),
+    showUndoToast: jest.fn(),
+  }),
+}));
+
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 44, bottom: 34, left: 0, right: 0 }),
 }));

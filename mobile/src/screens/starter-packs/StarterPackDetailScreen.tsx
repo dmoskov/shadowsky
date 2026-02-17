@@ -169,6 +169,7 @@ export function StarterPackDetailScreen({
   return (
     <ScrollView
       style={styles.container}
+      keyboardDismissMode="on-drag"
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}

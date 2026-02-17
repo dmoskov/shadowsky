@@ -155,6 +155,7 @@ export function LanguagePicker({
         {/* Language list */}
         <FlatList
           data={[]}
+          keyboardDismissMode="on-drag"
           renderItem={null}
           ListHeaderComponent={
             <>

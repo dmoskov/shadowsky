@@ -143,7 +143,7 @@ export function NotificationsScreen() {
         />
       );
     }
-    return <EmptyState message="No notifications yet" />;
+    return <EmptyState message="No notifications yet" description="When people interact with your posts, you'll see it here" />;
   }, [isLoading, isError, error?.message, refetch]);
 
   const handleLoadMore = useCallback(() => {

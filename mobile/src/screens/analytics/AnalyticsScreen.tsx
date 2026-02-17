@@ -198,6 +198,7 @@ export function AnalyticsScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
+      keyboardDismissMode="on-drag"
       refreshControl={
         <RefreshControl
           refreshing={isRefetching}

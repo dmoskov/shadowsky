@@ -33,6 +33,7 @@ import { usePreferences } from "../../contexts/PreferencesContext";
 import { useLinkPreview } from "../../hooks/useLinkPreview";
 import { LinkPreviewCard } from "../../components/LinkPreviewCard";
 
+import { useToast } from "../../contexts/ToastContext";
 import { createLogger } from '../../utils/logger';
 
 const logger = createLogger('ComposeScreen');
@@ -76,6 +77,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
   const router = useRouter();
   const { t } = useTranslation();
   const { preferences } = usePreferences();
+  const { showToast } = useToast();
   const [text, setText] = useState("");
   const createPost = useCreatePost();
   const imagePicker = useImagePicker();
@@ -333,7 +335,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
       });
 
       triggerHaptic('success');
-      Alert.alert('Success', 'Draft saved!');
+      showToast("Draft saved", { type: "success" });
       router.back();
     } catch (error) {
       triggerHaptic('error');
@@ -803,8 +805,8 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
       router.back();
       // Show success feedback with haptic
       triggerHaptic("success");
-      const successMessage = replyTo ? "Reply posted!" : quoteTo ? "Quote posted!" : "Your post has been published!";
-      Alert.alert("Success", successMessage);
+      const successMessage = replyTo ? "Reply posted!" : quoteTo ? "Quote posted!" : "Post published!";
+      showToast(successMessage, { type: "success" });
     } catch (error) {
       // Show error feedback with haptic
       triggerHaptic("error");
@@ -861,12 +863,9 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
       const result = await createThread(threadOptions);
 
       if (result.failureCount > 0) {
-        Alert.alert(
-          "Partial Success",
-          `Posted ${result.successCount} of ${validPosts.length} posts. Some posts failed to publish.`
-        );
+        showToast(`Posted ${result.successCount} of ${validPosts.length} posts. Some posts failed.`, { type: "warning" });
       } else {
-        Alert.alert("Success", `Thread with ${result.successCount} posts published!`);
+        showToast("Thread published!", { type: "success" });
       }
 
       router.back();

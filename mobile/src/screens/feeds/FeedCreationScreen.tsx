@@ -93,7 +93,8 @@ export function FeedCreationScreen() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag">
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Create Custom Feed</Text>
           <Text style={styles.headerSubtitle}>

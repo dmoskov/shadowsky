@@ -102,6 +102,7 @@ export function ListsScreen() {
       </View>
       <FlatList
         data={lists}
+        keyboardDismissMode="on-drag"
         renderItem={({item}) => (
           <ListItem list={item} onPress={() => handleListPress(item)} colors={colors} />
         )}

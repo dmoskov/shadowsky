@@ -14,6 +14,7 @@ import { useDrafts, useDeleteDraft } from '../../hooks/api';
 import { EnrichedDraft } from '../../services/drafts';
 import { useTheme } from '../../contexts/ThemeContext';
 import { CloseIcon } from '../../components/icons';
+import { triggerHaptic } from '../../utils/haptics';
 
 /**
  * DraftsScreen - List and manage all saved drafts
@@ -69,7 +70,7 @@ export function DraftsScreen() {
       <TouchableOpacity
         style={styles.draftItem}
         onPress={() => handleDraftPress(item)}
-        onLongPress={() => handleDeleteDraft(item)}
+        onLongPress={() => { triggerHaptic("medium"); handleDeleteDraft(item); }}
       >
         <View style={styles.draftContent}>
           <Text style={styles.draftPreview} numberOfLines={2}>
@@ -171,6 +172,7 @@ export function DraftsScreen() {
       ) : (
         <FlatList
           data={drafts}
+          keyboardDismissMode="on-drag"
           renderItem={renderDraftItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}

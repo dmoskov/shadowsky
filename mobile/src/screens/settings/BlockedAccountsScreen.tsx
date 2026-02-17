@@ -140,6 +140,7 @@ export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsSc
       </View>
       <FlatList
         data={accounts}
+        keyboardDismissMode="on-drag"
         renderItem={renderAccount}
         keyExtractor={(item) => item.did}
         ListFooterComponent={renderFooter}

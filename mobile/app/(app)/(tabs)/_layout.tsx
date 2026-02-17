@@ -4,6 +4,7 @@ import {HomeIcon, SearchIcon, BellIcon, PersonIcon} from '../../../src/component
 import {useUnreadCount} from '../../../src/hooks/api/useNotifications';
 import {useIPadLayout} from '../../../src/contexts/IPadLayoutContext';
 import {useTheme} from '../../../src/contexts/ThemeContext';
+import {triggerHaptic} from '../../../src/utils/haptics';
 
 function NotificationsBadge() {
   const {data: unreadCount} = useUnreadCount();
@@ -73,6 +74,11 @@ export default function TabsLayout() {
             },
         tabBarActiveTintColor: colors.info,
         tabBarInactiveTintColor: colors.textTertiary,
+      }}
+      screenListeners={{
+        tabPress: () => {
+          triggerHaptic('light');
+        },
       }}>
       <Tabs.Screen
         name="(home)"

@@ -12,6 +12,7 @@ import {AppBskyFeedGetLikes} from '@atproto/api';
 import {usePostLikes} from '../../hooks/api/usePosts';
 import {Avatar} from '../../components/Avatar';
 import {FollowButton} from '../../components/FollowButton';
+import {UserListSkeleton} from '../../components/UserListSkeleton';
 import {useTheme} from '../../contexts/ThemeContext';
 import {useAuth} from '../../contexts/AuthContext';
 
@@ -85,11 +86,7 @@ export function LikesScreen({postUri, onNavigateToProfile}: LikesScreenProps) {
 
   const renderEmpty = () => {
     if (isLoading) {
-      return (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      );
+      return <UserListSkeleton />;
     }
 
     if (error) {
@@ -111,6 +108,7 @@ export function LikesScreen({postUri, onNavigateToProfile}: LikesScreenProps) {
     <View style={styles.container}>
       <FlatList
         data={likes}
+        keyboardDismissMode="on-drag"
         renderItem={renderLike}
         keyExtractor={(item, index) => item.actor.did || `like-${index}`}
         ListFooterComponent={renderFooter}

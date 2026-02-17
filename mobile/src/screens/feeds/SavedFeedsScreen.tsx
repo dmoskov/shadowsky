@@ -227,6 +227,7 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
         ) : (
           <FlatList
             data={localFeeds}
+            keyboardDismissMode="on-drag"
             renderItem={({item}) =>
               renderFeedCard({
                 item,

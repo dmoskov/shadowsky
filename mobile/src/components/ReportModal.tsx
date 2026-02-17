@@ -216,7 +216,7 @@ export function ReportModal({
                 </TouchableOpacity>
               </View>
 
-              <ScrollView style={styles.content}>
+              <ScrollView style={styles.content} keyboardDismissMode="on-drag">
                 <Text style={styles.successText}>
                   Thank you for helping keep our community safe. We'll review
                   this report and take appropriate action.
@@ -274,7 +274,7 @@ export function ReportModal({
                 </TouchableOpacity>
               </View>
 
-              <ScrollView style={styles.content}>
+              <ScrollView style={styles.content} keyboardDismissMode="on-drag">
                 <Text style={styles.description}>
                   {reportType === 'post'
                     ? "Help us understand what's wrong with this post"

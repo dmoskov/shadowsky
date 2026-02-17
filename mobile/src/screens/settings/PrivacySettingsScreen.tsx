@@ -48,7 +48,11 @@ export function PrivacySettingsScreen({
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardDismissMode="on-drag"
+      >
         <Text style={styles.description}>
           Control who can interact with you and your content
         </Text>

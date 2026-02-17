@@ -1,7 +1,6 @@
 import React, { forwardRef, useMemo, useRef, useCallback } from 'react';
 import {
   FlatList,
-  ActivityIndicator,
   View,
   StyleSheet,
   RefreshControl,
@@ -13,6 +12,7 @@ import {PostCardSkeleton} from './PostCardSkeleton';
 import {SwipeablePostCard} from './SwipeablePostCard';
 import {ErrorState} from './ErrorState';
 import { EmptyState } from './EmptyState';
+import {FadeInView} from './FadeInView';
 import {useNetwork} from '../contexts/NetworkContext';
 import {usePreferences} from '../contexts/PreferencesContext';
 import { useTheme } from "../contexts/ThemeContext";
@@ -154,28 +154,26 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   };
 
   const renderItem: ListRenderItem<AppBskyFeedDefs.FeedViewPost> = useCallback(({item}) => (
-    <SwipeablePostCard
-      post={item}
-      isVisible={visiblePostUrisRef.current.has(item.post.uri)}
-      onPress={() => onPostPress?.(item)}
-      onPressProfile={onProfilePress}
-      onLike={() => onLike?.(item)}
-      onRepost={() => onRepost?.(item)}
-      onReply={() => onReply?.(item)}
-      onBookmark={() => onBookmark?.(item)}
-      isBookmarked={isBookmarked?.(item.post.uri)}
-      onMentionPress={onMentionPress}
-      onHashtagPress={onHashtagPress}
-    />
+    <FadeInView>
+      <SwipeablePostCard
+        post={item}
+        isVisible={visiblePostUrisRef.current.has(item.post.uri)}
+        onPress={() => onPostPress?.(item)}
+        onPressProfile={onProfilePress}
+        onLike={() => onLike?.(item)}
+        onRepost={() => onRepost?.(item)}
+        onReply={() => onReply?.(item)}
+        onBookmark={() => onBookmark?.(item)}
+        isBookmarked={isBookmarked?.(item.post.uri)}
+        onMentionPress={onMentionPress}
+        onHashtagPress={onHashtagPress}
+      />
+    </FadeInView>
   ), [onPostPress, onProfilePress, onLike, onRepost, onReply, onBookmark, isBookmarked, onMentionPress, onHashtagPress]);
 
   const renderFooter = () => {
     if (!isLoadingMore) return null;
-    return (
-      <View style={styles.footer}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
+    return <PostCardSkeleton />;
   };
 
   const renderEmpty = () => {
@@ -205,6 +203,7 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
     <FlatList
       ref={ref}
       data={filteredPosts}
+      keyboardDismissMode="on-drag"
       renderItem={renderItem}
       keyExtractor={(item) => item.post.uri}
       ListEmptyComponent={renderEmpty}

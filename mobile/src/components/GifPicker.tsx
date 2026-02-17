@@ -221,6 +221,7 @@ export function GifPicker({
         {/* GIF grid */}
         <FlatList
           data={gifs}
+          keyboardDismissMode="on-drag"
           renderItem={renderGifItem}
           keyExtractor={(item) => item.id}
           numColumns={2}

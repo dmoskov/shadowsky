@@ -143,7 +143,7 @@ export function CollectionManager({
       </View>
 
       {/* Collection List */}
-      <ScrollView style={styles.listContainer}>
+      <ScrollView style={styles.listContainer} keyboardDismissMode="on-drag">
         {/* All Bookmarks option */}
         <TouchableOpacity
           onPress={() => onSelectCollection(null)}

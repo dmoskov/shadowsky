@@ -185,6 +185,7 @@ export function MutedWordsScreen() {
 
       <FlatList
         data={mutedWords}
+        keyboardDismissMode="on-drag"
         renderItem={renderMutedWord}
         keyExtractor={(item) => item.id}
         ListEmptyComponent={renderEmpty}

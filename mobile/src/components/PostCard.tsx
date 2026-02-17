@@ -17,6 +17,7 @@ import {ReportModal} from './ReportModal';
 import {SaveToCollectionModal} from './SaveToCollectionModal';
 import {usePostTranslation} from '../hooks/usePostTranslation';
 import {useSharedTransition} from '../contexts/SharedTransitionContext';
+import {useToast} from '../contexts/ToastContext';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -68,6 +69,7 @@ function PostCardComponent({
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { isOnline } = useNetwork();
+  const { showToast } = useToast();
   const {prepareTransition} = useSharedTransition();
   const cardRef = useRef<React.ElementRef<typeof TouchableOpacity>>(null);
   const postView = post.post;
@@ -110,7 +112,7 @@ function PostCardComponent({
           onPress: async () => {
             try {
               await muteMutation.mutateAsync(author.did);
-              Alert.alert('Success', `@${author.handle} has been muted.`);
+              showToast("User muted", { type: "success" });
             } catch (error) {
               Alert.alert('Error', 'Failed to mute user. Please try again.');
             }
@@ -118,7 +120,7 @@ function PostCardComponent({
         },
       ]
     );
-  }, [author.handle, author.did, muteMutation]);
+  }, [author.handle, author.did, muteMutation, showToast]);
 
   const handleBlockUser = useCallback(() => {
     setShowMenu(false);
@@ -133,7 +135,7 @@ function PostCardComponent({
           onPress: async () => {
             try {
               await blockMutation.mutateAsync(author.did);
-              Alert.alert('Success', `@${author.handle} has been blocked.`);
+              showToast("User blocked", { type: "success" });
             } catch (error) {
               Alert.alert('Error', 'Failed to block user. Please try again.');
             }
@@ -141,7 +143,7 @@ function PostCardComponent({
         },
       ]
     );
-  }, [author.handle, author.did, blockMutation]);
+  }, [author.handle, author.did, blockMutation, showToast]);
 
   const handleReport = useCallback(() => {
     setShowMenu(false);
@@ -151,20 +153,20 @@ function PostCardComponent({
   const handleBlockAfterReport = useCallback(async (did: string) => {
     try {
       await blockMutation.mutateAsync(did);
-      Alert.alert('Success', `@${author.handle} has been blocked.`);
+      showToast("User blocked", { type: "success" });
     } catch (error) {
       Alert.alert('Error', 'Failed to block user. Please try again.');
     }
-  }, [blockMutation, author.handle]);
+  }, [blockMutation, author.handle, showToast]);
 
   const handleMuteAfterReport = useCallback(async (did: string) => {
     try {
       await muteMutation.mutateAsync(did);
-      Alert.alert('Success', `@${author.handle} has been muted.`);
+      showToast("User muted", { type: "success" });
     } catch (error) {
       Alert.alert('Error', 'Failed to mute user. Please try again.');
     }
-  }, [muteMutation, author.handle]);
+  }, [muteMutation, author.handle, showToast]);
 
   const handleShare = useCallback(() => {
     sharePost(post);

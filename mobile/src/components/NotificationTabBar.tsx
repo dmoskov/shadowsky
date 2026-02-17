@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import {Text, StyleSheet, TouchableOpacity, ScrollView} from 'react-native';
 import { useTheme } from "../contexts/ThemeContext";
+import { triggerHaptic } from "../utils/haptics";
 
 export type NotificationFilter = 'all' | 'likes' | 'replies' | 'follows' | 'mentions' | 'quotes';
 
@@ -39,7 +40,7 @@ export function NotificationTabBar({
         <TouchableOpacity
           key={tab.key}
           style={[styles.tab, activeFilter === tab.key && styles.activeTab]}
-          onPress={() => onFilterChange(tab.key)}
+          onPress={() => { triggerHaptic("light"); onFilterChange(tab.key); }}
           activeOpacity={0.7}>
           <Text
             style={[

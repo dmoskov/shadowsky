@@ -217,13 +217,13 @@ export function NotificationsAnalyticsScreen() {
   }
 
   if (notifications.length === 0) {
-    return <EmptyState message="No notification data available yet" />;
+    return <EmptyState message="No notification data available yet" description="Analytics will appear once you start receiving notifications" />;
   }
 
   const maxDailyCount = Math.max(...dailyTrends.map(d => d.count), 1);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} keyboardDismissMode="on-drag">
       {/* Time Range Selector */}
       <View style={styles.section}>
         <View style={styles.timeRangeSelector}>
