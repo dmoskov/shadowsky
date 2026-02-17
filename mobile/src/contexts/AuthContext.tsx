@@ -4,6 +4,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -227,35 +228,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     [session],
   );
 
-  useEffect(() => {
-    loadSession();
-    loadAccounts();
-
-    const subscription = AppState.addEventListener(
-      "change",
-      handleAppStateChange,
-    );
-
-    return () => {
-      subscription.remove();
-      clearTimers();
-    };
-  }, [handleAppStateChange, clearTimers]);
-
-  useEffect(() => {
-    if (session && !isLoading) {
-      // Use ref to call setupSessionRefresh to avoid dependency on the callback itself
-      setupSessionRefreshRef.current?.();
-    } else {
-      clearTimers();
-    }
-
-    return () => {
-      clearTimers();
-    };
-  }, [session, isLoading, clearTimers]);
-
-  const loadSession = async () => {
+  const loadSession = useCallback(async () => {
     try {
       const restoredSession = await resumeSession();
       if (restoredSession) {
@@ -270,18 +243,46 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const loadAccounts = async () => {
+  const loadAccounts = useCallback(async () => {
     try {
       const loadedAccounts = await getAccounts();
       setAccounts(loadedAccounts);
     } catch {
       // Accounts load failed
     }
-  };
+  }, []);
 
-  const signIn = async (identifier: string, password: string, pdsUrl?: string) => {
+  useEffect(() => {
+    loadSession();
+    loadAccounts();
+
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange,
+    );
+
+    return () => {
+      subscription.remove();
+      clearTimers();
+    };
+  }, [handleAppStateChange, clearTimers, loadSession, loadAccounts]);
+
+  useEffect(() => {
+    if (session && !isLoading) {
+      // Use ref to call setupSessionRefresh to avoid dependency on the callback itself
+      setupSessionRefreshRef.current?.();
+    } else {
+      clearTimers();
+    }
+
+    return () => {
+      clearTimers();
+    };
+  }, [session, isLoading, clearTimers]);
+
+  const signIn = useCallback(async (identifier: string, password: string, pdsUrl?: string) => {
     try {
       setIsLoading(true);
       const newSession = await signInWithPassword(identifier, password, pdsUrl);
@@ -296,9 +297,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [loadAccounts]);
 
-  const signInWithOAuth = async (handle: string) => {
+  const signInWithOAuth = useCallback(async (handle: string) => {
     try {
       setIsLoading(true);
       const result = await OAuthService.startOAuthFlow(handle);
@@ -329,9 +330,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [loadAccounts]);
 
-  const switchAccount = async (did: string) => {
+  const switchAccount = useCallback(async (did: string) => {
     try {
       setIsLoading(true);
       const targetAccount = accounts.find((acc) => acc.did === did);
@@ -350,9 +351,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [accounts]);
 
-  const removeAccount = async (did: string) => {
+  const removeAccount = useCallback(async (did: string) => {
     try {
       await removeAccountFromStorage(did);
       await loadAccounts();
@@ -364,21 +365,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       throw error;
     }
-  };
+  }, [loadAccounts]);
 
-  const value: AuthContextType = {
-    isAuthenticated: session !== null,
-    isLoading,
-    session,
-    account: session?.account ?? null,
-    signIn,
-    signInWithOAuth,
-    signOut,
-    refreshSession,
-    accounts,
-    switchAccount,
-    removeAccount,
-  };
+  const value: AuthContextType = useMemo(
+    () => ({
+      isAuthenticated: session !== null,
+      isLoading,
+      session,
+      account: session?.account ?? null,
+      signIn,
+      signInWithOAuth,
+      signOut,
+      refreshSession,
+      accounts,
+      switchAccount,
+      removeAccount,
+    }),
+    [
+      session,
+      isLoading,
+      accounts,
+      signIn,
+      signInWithOAuth,
+      signOut,
+      refreshSession,
+      switchAccount,
+      removeAccount,
+    ],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
