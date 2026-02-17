@@ -1,4 +1,4 @@
-import {useRef, useCallback} from 'react';
+import {useRef, useCallback, useEffect} from 'react';
 import {Image} from 'expo-image';
 import {AppBskyFeedDefs, AppBskyEmbedImages} from '@atproto/api';
 import {getOptimizedUrl} from '../utils/image-cdn';
@@ -71,6 +71,13 @@ export function useImagePrefetch(posts: AppBskyFeedDefs.FeedViewPost[]) {
    */
   const resetPrefetchCache = useCallback(() => {
     prefetchedUrls.current.clear();
+  }, []);
+
+  // Clear the prefetch set on unmount to release memory
+  useEffect(() => {
+    return () => {
+      prefetchedUrls.current.clear();
+    };
   }, []);
 
   return {prefetchVisibleWindow, resetPrefetchCache};

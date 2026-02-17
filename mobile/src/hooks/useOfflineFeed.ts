@@ -401,17 +401,20 @@ export function useOfflineThreadEnhancer<T extends {thread?: {posts?: unknown[]}
 }
 
 /**
- * Setup periodic cleanup of old cached data
- * Call this once during app initialization
+ * Setup periodic cleanup of old cached data.
+ * Call this once during app initialization.
+ * Returns a teardown function that clears the periodic timer.
  */
-export async function setupOfflineStorageCleanup() {
+export async function setupOfflineStorageCleanup(): Promise<() => void> {
+  let timerId: ReturnType<typeof setInterval> | undefined;
+
   try {
     await offlineStorage.init();
     await offlineStorage.enforceStorageLimits();
     logger.log('Initial cleanup complete');
 
     // Schedule periodic cleanup (every 24 hours)
-    setInterval(async () => {
+    timerId = setInterval(async () => {
       try {
         await offlineStorage.enforceStorageLimits();
         logger.log('Periodic cleanup complete');
@@ -422,4 +425,10 @@ export async function setupOfflineStorageCleanup() {
   } catch (error) {
     logger.error('Setup failed:', error);
   }
+
+  return () => {
+    if (timerId !== undefined) {
+      clearInterval(timerId);
+    }
+  };
 }

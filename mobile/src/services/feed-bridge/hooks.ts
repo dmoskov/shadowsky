@@ -135,10 +135,12 @@ export function useFeedIncrementalUpdates(
     if (posts.length === 0) return;
 
     const updates: PostUpdate[] = [];
+    const currentUris = new Set<string>();
 
     // Compare current posts with previous state
     posts.forEach(feedPost => {
       const post = feedPost.post;
+      currentUris.add(post.uri);
       const prevPost = prevPostsRef.current.get(post.uri);
 
       if (!prevPost) {
@@ -174,6 +176,13 @@ export function useFeedIncrementalUpdates(
         prevPostsRef.current.set(post.uri, post);
       }
     });
+
+    // Prune entries for posts no longer in the current pages
+    for (const uri of prevPostsRef.current.keys()) {
+      if (!currentUris.has(uri)) {
+        prevPostsRef.current.delete(uri);
+      }
+    }
 
     // Send updates if any
     if (updates.length > 0 && onUpdate) {

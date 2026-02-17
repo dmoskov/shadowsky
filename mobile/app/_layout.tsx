@@ -157,9 +157,15 @@ function RootLayout() {
     registerBackgroundFetch();
 
     // Setup offline storage cleanup (periodic eviction of old cached data)
-    setupOfflineStorageCleanup();
+    let offlineCleanup: (() => void) | undefined;
+    setupOfflineStorageCleanup().then(teardown => {
+      offlineCleanup = teardown;
+    });
 
-    return cleanup;
+    return () => {
+      cleanup();
+      offlineCleanup?.();
+    };
   }, []);
 
   return (
