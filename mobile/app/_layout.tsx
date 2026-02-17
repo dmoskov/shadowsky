@@ -27,6 +27,7 @@ import { ModerationProvider } from "../src/contexts/ModerationContext";
 import { LightboxProvider } from "../src/contexts/LightboxContext";
 import { VideoAutoplayProvider } from "../src/contexts/VideoAutoplayContext";
 import { IPadLayoutProvider } from "../src/contexts/IPadLayoutContext";
+import { JetstreamProvider } from "../src/contexts/JetstreamContext";
 import { LightboxOverlay } from "../src/components/LightboxOverlay";
 import {
   queryClient,
@@ -192,27 +193,29 @@ function RootLayout() {
             }}
           >
             <AuthProvider>
-              <PreferencesProvider>
-                <ThemeProvider>
-                  <NetworkProvider>
-                    <VideoAutoplayProvider>
-                      <ModerationProvider>
-                        <ToastProvider>
-                          <LightboxProvider>
-                            <IPadLayoutProvider>
-                              <QueryErrorHandler>
-                                <DynamicStatusBar />
-                                <AuthGate />
-                              </QueryErrorHandler>
-                              <LightboxOverlay />
-                            </IPadLayoutProvider>
-                          </LightboxProvider>
-                        </ToastProvider>
-                      </ModerationProvider>
-                    </VideoAutoplayProvider>
-                  </NetworkProvider>
-                </ThemeProvider>
-              </PreferencesProvider>
+              <JetstreamProvider>
+                <PreferencesProvider>
+                  <ThemeProvider>
+                    <NetworkProvider>
+                      <VideoAutoplayProvider>
+                        <ModerationProvider>
+                          <ToastProvider>
+                            <LightboxProvider>
+                              <IPadLayoutProvider>
+                                <QueryErrorHandler>
+                                  <DynamicStatusBar />
+                                  <AuthGate />
+                                </QueryErrorHandler>
+                                <LightboxOverlay />
+                              </IPadLayoutProvider>
+                            </LightboxProvider>
+                          </ToastProvider>
+                        </ModerationProvider>
+                      </VideoAutoplayProvider>
+                    </NetworkProvider>
+                  </ThemeProvider>
+                </PreferencesProvider>
+              </JetstreamProvider>
             </AuthProvider>
           </PersistQueryClientProvider>
         </GestureHandlerRootView>
