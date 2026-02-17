@@ -166,6 +166,8 @@ declare module "react-native" {
     testID?: string;
     accessibilityRole?: string;
     accessibilityLabel?: string;
+    allowFontScaling?: boolean;
+    maxFontSizeMultiplier?: number;
   }
 
   export const Text: ComponentType<TextProps>;
@@ -436,4 +438,36 @@ declare module "react-native" {
   }
 
   export const Dimensions: DimensionsStatic;
+
+  // PixelRatio
+  export interface PixelRatioStatic {
+    get(): number;
+    getFontScale(): number;
+    getPixelSizeForLayoutSize(layoutSize: number): number;
+    roundToNearestPixel(layoutSize: number): number;
+  }
+
+  export const PixelRatio: PixelRatioStatic;
+
+  // TextInput Component
+  export interface TextInputProps {
+    style?: TextStyle | (TextStyle | false | undefined | null)[];
+    value?: string;
+    onChangeText?: (text: string) => void;
+    placeholder?: string;
+    placeholderTextColor?: string;
+    multiline?: boolean;
+    numberOfLines?: number;
+    maxLength?: number;
+    autoFocus?: boolean;
+    editable?: boolean;
+    keyboardType?: string;
+    returnKeyType?: string;
+    secureTextEntry?: boolean;
+    testID?: string;
+    accessibilityLabel?: string;
+    allowFontScaling?: boolean;
+  }
+
+  export const TextInput: ComponentType<TextInputProps>;
 }

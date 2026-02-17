@@ -5,7 +5,7 @@
  * Fetches suggestions from AT Protocol and lets users follow accounts.
  */
 
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -19,6 +19,11 @@ import {
   type TextStyle,
   type ViewStyle,
 } from "react-native";
+import {
+  scaledLineHeight,
+  useDynamicType,
+  type ScaledFontFn,
+} from "../../hooks/useDynamicType";
 
 interface SuggestedUser {
   did: string;
@@ -43,16 +48,194 @@ export interface MobileFollowsScreenProps {
 const DEFAULT_AVATAR_URI =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23333344'/%3E%3Ccircle cx='50' cy='40' r='18' fill='%23555566'/%3E%3Cellipse cx='50' cy='80' rx='30' ry='22' fill='%23555566'/%3E%3C/svg%3E";
 
+function createStyles(scaledFont: ScaledFontFn) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "#000000",
+    } as ViewStyle,
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 60,
+      paddingBottom: 16,
+      alignItems: "center",
+    } as ViewStyle,
+    headerIcon: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: "rgba(99, 102, 241, 0.15)",
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 16,
+    } as ViewStyle,
+    headerIconText: {
+      fontSize: scaledFont(28),
+    } as TextStyle,
+    title: {
+      fontSize: scaledFont(26),
+      fontWeight: "700",
+      color: "#ffffff",
+      textAlign: "center",
+      marginBottom: 8,
+    } as TextStyle,
+    subtitle: {
+      fontSize: scaledFont(15),
+      color: "#8a8a9a",
+      textAlign: "center",
+      marginBottom: 8,
+    } as TextStyle,
+    counter: {
+      fontSize: scaledFont(13),
+      color: "#555566",
+    } as TextStyle,
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    } as ViewStyle,
+    loadingText: {
+      fontSize: scaledFont(14),
+      color: "#8a8a9a",
+      marginTop: 12,
+    } as TextStyle,
+    listContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 16,
+    } as ViewStyle,
+    userCard: {
+      backgroundColor: "#111122",
+      borderRadius: 12,
+      padding: 14,
+    } as ViewStyle,
+    userInfo: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginBottom: 8,
+    } as ViewStyle,
+    avatar: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+    } as ImageStyle,
+    userTextContainer: {
+      flex: 1,
+    } as ViewStyle,
+    displayName: {
+      fontSize: scaledFont(15),
+      fontWeight: "600",
+      color: "#ffffff",
+    } as TextStyle,
+    handle: {
+      fontSize: scaledFont(13),
+      color: "#555566",
+    } as TextStyle,
+    description: {
+      fontSize: scaledFont(13),
+      color: "#8a8a9a",
+      marginBottom: 10,
+      lineHeight: scaledLineHeight(scaledFont, 13, 18),
+    } as TextStyle,
+    followButton: {
+      backgroundColor: "#6366f1",
+      borderRadius: 8,
+      paddingVertical: 8,
+      alignItems: "center",
+    } as ViewStyle,
+    followButtonFollowed: {
+      backgroundColor: "#1a1a2e",
+    } as ViewStyle,
+    followButtonDisabled: {
+      opacity: 0.5,
+    } as ViewStyle,
+    followButtonText: {
+      fontSize: scaledFont(14),
+      fontWeight: "600",
+      color: "#ffffff",
+    } as TextStyle,
+    followButtonTextFollowed: {
+      color: "#8a8a9a",
+    } as TextStyle,
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: 32,
+    } as ViewStyle,
+    emptyText: {
+      fontSize: scaledFont(15),
+      color: "#8a8a9a",
+      textAlign: "center",
+    } as TextStyle,
+    separator: {
+      height: 10,
+    } as ViewStyle,
+    navigation: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      borderTopWidth: 1,
+      borderTopColor: "#1a1a2e",
+    } as ViewStyle,
+    backButton: {
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: "#333344",
+    } as ViewStyle,
+    backButtonText: {
+      fontSize: scaledFont(15),
+      fontWeight: "500",
+      color: "#8a8a9a",
+    } as TextStyle,
+    rightButtons: {
+      flexDirection: "row",
+      gap: 10,
+    } as ViewStyle,
+    skipButton: {
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: "#333344",
+    } as ViewStyle,
+    skipButtonText: {
+      fontSize: scaledFont(15),
+      fontWeight: "500",
+      color: "#8a8a9a",
+    } as TextStyle,
+    continueButton: {
+      backgroundColor: "#6366f1",
+      paddingVertical: 12,
+      paddingHorizontal: 24,
+      borderRadius: 10,
+    } as ViewStyle,
+    continueButtonText: {
+      fontSize: scaledFont(15),
+      fontWeight: "600",
+      color: "#ffffff",
+    } as TextStyle,
+  });
+}
+
+type Styles = ReturnType<typeof createStyles>;
+
 const UserCard = memo(function UserCard({
   user,
   isFollowed,
   isInProgress,
   onToggle,
+  styles,
 }: {
   user: SuggestedUser;
   isFollowed: boolean;
   isInProgress: boolean;
   onToggle: (user: SuggestedUser) => void;
+  styles: Styles;
 }) {
   return (
     <View style={styles.userCard}>
@@ -117,6 +300,9 @@ export const MobileFollowsScreen = memo(function MobileFollowsScreen({
   onBack,
   onSkip,
 }: MobileFollowsScreenProps) {
+  const { scaledFont } = useDynamicType();
+  const styles = useMemo(() => createStyles(scaledFont), [scaledFont]);
+
   const [followedUsers, setFollowedUsers] = useState<Set<string>>(new Set());
   const [followingInProgress, setFollowingInProgress] = useState<Set<string>>(
     new Set(),
@@ -162,12 +348,21 @@ export const MobileFollowsScreen = memo(function MobileFollowsScreen({
         isFollowed={followedUsers.has(item.did)}
         isInProgress={followingInProgress.has(item.did)}
         onToggle={handleFollowToggle}
+        styles={styles}
       />
     ),
-    [followedUsers, followingInProgress, handleFollowToggle],
+    [followedUsers, followingInProgress, handleFollowToggle, styles],
   );
 
   const keyExtractor = useCallback((item: SuggestedUser) => item.did, []);
+
+  const listSeparator = useMemo(
+    () =>
+      memo(function ListSeparator() {
+        return <View style={styles.separator} />;
+      }),
+    [styles],
+  );
 
   return (
     <View style={styles.container}>
@@ -199,7 +394,7 @@ export const MobileFollowsScreen = memo(function MobileFollowsScreen({
           renderItem={renderUser}
           keyExtractor={keyExtractor}
           contentContainerStyle={styles.listContent}
-          ItemSeparatorComponent={ListSeparator}
+          ItemSeparatorComponent={listSeparator}
         />
       ) : (
         <View style={styles.emptyContainer}>
@@ -243,180 +438,4 @@ export const MobileFollowsScreen = memo(function MobileFollowsScreen({
       </View>
     </View>
   );
-});
-
-const ListSeparator = memo(function ListSeparator() {
-  return <View style={styles.separator} />;
-});
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000000",
-  } as ViewStyle,
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 16,
-    alignItems: "center",
-  } as ViewStyle,
-  headerIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "rgba(99, 102, 241, 0.15)",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-  } as ViewStyle,
-  headerIconText: {
-    fontSize: 28,
-  } as TextStyle,
-  title: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#ffffff",
-    textAlign: "center",
-    marginBottom: 8,
-  } as TextStyle,
-  subtitle: {
-    fontSize: 15,
-    color: "#8a8a9a",
-    textAlign: "center",
-    marginBottom: 8,
-  } as TextStyle,
-  counter: {
-    fontSize: 13,
-    color: "#555566",
-  } as TextStyle,
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  } as ViewStyle,
-  loadingText: {
-    fontSize: 14,
-    color: "#8a8a9a",
-    marginTop: 12,
-  } as TextStyle,
-  listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  } as ViewStyle,
-  userCard: {
-    backgroundColor: "#111122",
-    borderRadius: 12,
-    padding: 14,
-  } as ViewStyle,
-  userInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 8,
-  } as ViewStyle,
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-  } as ImageStyle,
-  userTextContainer: {
-    flex: 1,
-  } as ViewStyle,
-  displayName: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#ffffff",
-  } as TextStyle,
-  handle: {
-    fontSize: 13,
-    color: "#555566",
-  } as TextStyle,
-  description: {
-    fontSize: 13,
-    color: "#8a8a9a",
-    marginBottom: 10,
-    lineHeight: 18,
-  } as TextStyle,
-  followButton: {
-    backgroundColor: "#6366f1",
-    borderRadius: 8,
-    paddingVertical: 8,
-    alignItems: "center",
-  } as ViewStyle,
-  followButtonFollowed: {
-    backgroundColor: "#1a1a2e",
-  } as ViewStyle,
-  followButtonDisabled: {
-    opacity: 0.5,
-  } as ViewStyle,
-  followButtonText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#ffffff",
-  } as TextStyle,
-  followButtonTextFollowed: {
-    color: "#8a8a9a",
-  } as TextStyle,
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  } as ViewStyle,
-  emptyText: {
-    fontSize: 15,
-    color: "#8a8a9a",
-    textAlign: "center",
-  } as TextStyle,
-  separator: {
-    height: 10,
-  } as ViewStyle,
-  navigation: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#1a1a2e",
-  } as ViewStyle,
-  backButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#333344",
-  } as ViewStyle,
-  backButtonText: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#8a8a9a",
-  } as TextStyle,
-  rightButtons: {
-    flexDirection: "row",
-    gap: 10,
-  } as ViewStyle,
-  skipButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#333344",
-  } as ViewStyle,
-  skipButtonText: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#8a8a9a",
-  } as TextStyle,
-  continueButton: {
-    backgroundColor: "#6366f1",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 10,
-  } as ViewStyle,
-  continueButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#ffffff",
-  } as TextStyle,
 });

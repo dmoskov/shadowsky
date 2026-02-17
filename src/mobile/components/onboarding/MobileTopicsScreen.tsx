@@ -5,7 +5,7 @@
  * Users select topic categories to personalize their feed.
  */
 
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -19,6 +19,145 @@ import {
   TOPIC_CATEGORIES,
   type TopicCategory,
 } from "../../../services/onboarding-service";
+import { useDynamicType, type ScaledFontFn } from "../../hooks/useDynamicType";
+
+function createStyles(scaledFont: ScaledFontFn) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "#000000",
+    } as ViewStyle,
+    header: {
+      paddingHorizontal: 20,
+      paddingTop: 60,
+      paddingBottom: 16,
+      alignItems: "center",
+    } as ViewStyle,
+    title: {
+      fontSize: scaledFont(26),
+      fontWeight: "700",
+      color: "#ffffff",
+      textAlign: "center",
+      marginBottom: 8,
+    } as TextStyle,
+    subtitle: {
+      fontSize: scaledFont(15),
+      color: "#8a8a9a",
+      textAlign: "center",
+      marginBottom: 8,
+    } as TextStyle,
+    counter: {
+      fontSize: scaledFont(13),
+      color: "#555566",
+    } as TextStyle,
+    scrollView: {
+      flex: 1,
+    } as ViewStyle,
+    scrollContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 16,
+      gap: 10,
+    } as ViewStyle,
+    topicCard: {
+      backgroundColor: "#111122",
+      borderRadius: 12,
+      padding: 14,
+      borderWidth: 2,
+      borderColor: "transparent",
+    } as ViewStyle,
+    topicCardSelected: {
+      borderColor: "#6366f1",
+      backgroundColor: "rgba(99, 102, 241, 0.1)",
+    } as ViewStyle,
+    topicCardContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    } as ViewStyle,
+    topicIcon: {
+      fontSize: scaledFont(28),
+    } as TextStyle,
+    topicTextContainer: {
+      flex: 1,
+    } as ViewStyle,
+    topicName: {
+      fontSize: scaledFont(16),
+      fontWeight: "600",
+      color: "#ffffff",
+      marginBottom: 2,
+    } as TextStyle,
+    topicDescription: {
+      fontSize: scaledFont(13),
+      color: "#8a8a9a",
+    } as TextStyle,
+    checkBadge: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: "#6366f1",
+      justifyContent: "center",
+      alignItems: "center",
+    } as ViewStyle,
+    checkText: {
+      fontSize: scaledFont(14),
+      color: "#ffffff",
+      fontWeight: "700",
+    } as TextStyle,
+    navigation: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      borderTopWidth: 1,
+      borderTopColor: "#1a1a2e",
+    } as ViewStyle,
+    backButton: {
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: "#333344",
+    } as ViewStyle,
+    backButtonText: {
+      fontSize: scaledFont(15),
+      fontWeight: "500",
+      color: "#8a8a9a",
+    } as TextStyle,
+    rightButtons: {
+      flexDirection: "row",
+      gap: 10,
+    } as ViewStyle,
+    skipButton: {
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: "#333344",
+    } as ViewStyle,
+    skipButtonText: {
+      fontSize: scaledFont(15),
+      fontWeight: "500",
+      color: "#8a8a9a",
+    } as TextStyle,
+    continueButton: {
+      backgroundColor: "#6366f1",
+      paddingVertical: 12,
+      paddingHorizontal: 24,
+      borderRadius: 10,
+    } as ViewStyle,
+    continueButtonDisabled: {
+      opacity: 0.5,
+    } as ViewStyle,
+    continueButtonText: {
+      fontSize: scaledFont(15),
+      fontWeight: "600",
+      color: "#ffffff",
+    } as TextStyle,
+  });
+}
+
+type Styles = ReturnType<typeof createStyles>;
 
 export interface MobileTopicsScreenProps {
   initialSelected?: string[];
@@ -31,10 +170,12 @@ const TopicCard = memo(function TopicCard({
   topic,
   isSelected,
   onToggle,
+  styles,
 }: {
   topic: TopicCategory;
   isSelected: boolean;
   onToggle: (id: string) => void;
+  styles: Styles;
 }) {
   return (
     <Pressable
@@ -66,6 +207,9 @@ export const MobileTopicsScreen = memo(function MobileTopicsScreen({
   onBack,
   onSkip,
 }: MobileTopicsScreenProps) {
+  const { scaledFont } = useDynamicType();
+  const styles = useMemo(() => createStyles(scaledFont), [scaledFont]);
+
   const [selectedTopics, setSelectedTopics] =
     useState<string[]>(initialSelected);
 
@@ -108,6 +252,7 @@ export const MobileTopicsScreen = memo(function MobileTopicsScreen({
             topic={topic}
             isSelected={selectedTopics.includes(topic.id)}
             onToggle={toggleTopic}
+            styles={styles}
           />
         ))}
       </ScrollView>
@@ -150,138 +295,4 @@ export const MobileTopicsScreen = memo(function MobileTopicsScreen({
       </View>
     </View>
   );
-});
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000000",
-  } as ViewStyle,
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 16,
-    alignItems: "center",
-  } as ViewStyle,
-  title: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#ffffff",
-    textAlign: "center",
-    marginBottom: 8,
-  } as TextStyle,
-  subtitle: {
-    fontSize: 15,
-    color: "#8a8a9a",
-    textAlign: "center",
-    marginBottom: 8,
-  } as TextStyle,
-  counter: {
-    fontSize: 13,
-    color: "#555566",
-  } as TextStyle,
-  scrollView: {
-    flex: 1,
-  } as ViewStyle,
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    gap: 10,
-  } as ViewStyle,
-  topicCard: {
-    backgroundColor: "#111122",
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 2,
-    borderColor: "transparent",
-  } as ViewStyle,
-  topicCardSelected: {
-    borderColor: "#6366f1",
-    backgroundColor: "rgba(99, 102, 241, 0.1)",
-  } as ViewStyle,
-  topicCardContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  } as ViewStyle,
-  topicIcon: {
-    fontSize: 28,
-  } as TextStyle,
-  topicTextContainer: {
-    flex: 1,
-  } as ViewStyle,
-  topicName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#ffffff",
-    marginBottom: 2,
-  } as TextStyle,
-  topicDescription: {
-    fontSize: 13,
-    color: "#8a8a9a",
-  } as TextStyle,
-  checkBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#6366f1",
-    justifyContent: "center",
-    alignItems: "center",
-  } as ViewStyle,
-  checkText: {
-    fontSize: 14,
-    color: "#ffffff",
-    fontWeight: "700",
-  } as TextStyle,
-  navigation: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#1a1a2e",
-  } as ViewStyle,
-  backButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#333344",
-  } as ViewStyle,
-  backButtonText: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#8a8a9a",
-  } as TextStyle,
-  rightButtons: {
-    flexDirection: "row",
-    gap: 10,
-  } as ViewStyle,
-  skipButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#333344",
-  } as ViewStyle,
-  skipButtonText: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#8a8a9a",
-  } as TextStyle,
-  continueButton: {
-    backgroundColor: "#6366f1",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 10,
-  } as ViewStyle,
-  continueButtonDisabled: {
-    opacity: 0.5,
-  } as ViewStyle,
-  continueButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#ffffff",
-  } as TextStyle,
 });

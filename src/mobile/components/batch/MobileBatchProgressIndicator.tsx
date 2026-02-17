@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { useBatchSelection } from "../../../contexts/BatchSelectionContext";
 import { getActionDescription } from "../../../services/batch-operation-executor";
+import { useDynamicType, type ScaledFontFn } from "../../hooks/useDynamicType";
 
 interface MobileBatchProgressIndicatorProps {
   /** Callback when pause is clicked */
@@ -32,10 +33,153 @@ interface MobileBatchProgressIndicatorProps {
   onClose?: () => void;
 }
 
+function createStyles(scaledFont: ScaledFontFn) {
+  return StyleSheet.create({
+    container: {
+      position: "absolute",
+      bottom: 16,
+      left: 8,
+      right: 8,
+      backgroundColor: "#ffffff",
+      borderRadius: 16,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+      overflow: "hidden",
+    } as ViewStyle,
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: "#e1e1e1",
+    } as ViewStyle,
+    titleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      flex: 1,
+    } as ViewStyle,
+    titleContent: {
+      flex: 1,
+    } as ViewStyle,
+    statusIcon: {
+      fontSize: scaledFont(20),
+    } as TextStyle,
+    title: {
+      fontSize: scaledFont(16),
+      fontWeight: "600",
+      color: "#0f1419",
+      marginBottom: 2,
+    } as TextStyle,
+    subtitle: {
+      fontSize: scaledFont(12),
+      color: "#687684",
+    } as TextStyle,
+    controls: {
+      flexDirection: "row",
+      gap: 8,
+    } as ViewStyle,
+    controlButton: {
+      width: 36,
+      height: 36,
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: 18,
+      backgroundColor: "#f0f0f0",
+    } as ViewStyle,
+    controlIcon: {
+      fontSize: scaledFont(16),
+    } as TextStyle,
+    cancelButton: {
+      width: 36,
+      height: 36,
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: 18,
+      backgroundColor: "#fee",
+    } as ViewStyle,
+    cancelIcon: {
+      fontSize: scaledFont(16),
+      color: "#dc2626",
+    } as TextStyle,
+    progressSection: {
+      padding: 16,
+    } as ViewStyle,
+    progressTrack: {
+      height: 8,
+      backgroundColor: "#e5e7eb",
+      borderRadius: 4,
+      overflow: "hidden",
+      marginBottom: 12,
+    } as ViewStyle,
+    progressBar: {
+      height: "100%",
+      borderRadius: 4,
+    } as ViewStyle,
+    stats: {
+      gap: 8,
+    } as ViewStyle,
+    statRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    } as ViewStyle,
+    successStat: {
+      fontSize: scaledFont(12),
+      color: "#10b981",
+      fontWeight: "600",
+    } as TextStyle,
+    failedStat: {
+      fontSize: scaledFont(12),
+      color: "#ef4444",
+      fontWeight: "600",
+    } as TextStyle,
+    timeText: {
+      fontSize: scaledFont(12),
+      color: "#687684",
+    } as TextStyle,
+    percentText: {
+      fontSize: scaledFont(14),
+      fontWeight: "700",
+      color: "#0f1419",
+    } as TextStyle,
+    errorSection: {
+      padding: 16,
+      borderTopWidth: 1,
+      borderTopColor: "#e1e1e1",
+      backgroundColor: "#fef2f2",
+    } as ViewStyle,
+    errorTitle: {
+      fontSize: scaledFont(13),
+      fontWeight: "600",
+      color: "#dc2626",
+      marginBottom: 8,
+    } as TextStyle,
+    errorList: {
+      gap: 4,
+    } as ViewStyle,
+    errorItem: {
+      fontSize: scaledFont(11),
+      color: "#991b1b",
+    } as TextStyle,
+    errorMore: {
+      fontSize: scaledFont(11),
+      color: "#991b1b",
+      fontStyle: "italic",
+    } as TextStyle,
+  });
+}
+
 export const MobileBatchProgressIndicator: React.FC<
   MobileBatchProgressIndicatorProps
 > = ({ onPause, onResume, onCancel, onClose }) => {
   const { operation } = useBatchSelection();
+  const { scaledFont } = useDynamicType();
+  const styles = useMemo(() => createStyles(scaledFont), [scaledFont]);
   const [elapsedTime, setElapsedTime] = useState(0);
 
   // Update elapsed time every second while running
@@ -253,142 +397,3 @@ export const MobileBatchProgressIndicator: React.FC<
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    position: "absolute",
-    bottom: 16,
-    left: 8,
-    right: 8,
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    overflow: "hidden",
-  } as ViewStyle,
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e1e1e1",
-  } as ViewStyle,
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    flex: 1,
-  } as ViewStyle,
-  titleContent: {
-    flex: 1,
-  } as ViewStyle,
-  statusIcon: {
-    fontSize: 20,
-  } as TextStyle,
-  title: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#0f1419",
-    marginBottom: 2,
-  } as TextStyle,
-  subtitle: {
-    fontSize: 12,
-    color: "#687684",
-  } as TextStyle,
-  controls: {
-    flexDirection: "row",
-    gap: 8,
-  } as ViewStyle,
-  controlButton: {
-    width: 36,
-    height: 36,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 18,
-    backgroundColor: "#f0f0f0",
-  } as ViewStyle,
-  controlIcon: {
-    fontSize: 16,
-  } as TextStyle,
-  cancelButton: {
-    width: 36,
-    height: 36,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 18,
-    backgroundColor: "#fee",
-  } as ViewStyle,
-  cancelIcon: {
-    fontSize: 16,
-    color: "#dc2626",
-  } as TextStyle,
-  progressSection: {
-    padding: 16,
-  } as ViewStyle,
-  progressTrack: {
-    height: 8,
-    backgroundColor: "#e5e7eb",
-    borderRadius: 4,
-    overflow: "hidden",
-    marginBottom: 12,
-  } as ViewStyle,
-  progressBar: {
-    height: "100%",
-    borderRadius: 4,
-  } as ViewStyle,
-  stats: {
-    gap: 8,
-  } as ViewStyle,
-  statRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  } as ViewStyle,
-  successStat: {
-    fontSize: 12,
-    color: "#10b981",
-    fontWeight: "600",
-  } as TextStyle,
-  failedStat: {
-    fontSize: 12,
-    color: "#ef4444",
-    fontWeight: "600",
-  } as TextStyle,
-  timeText: {
-    fontSize: 12,
-    color: "#687684",
-  } as TextStyle,
-  percentText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#0f1419",
-  } as TextStyle,
-  errorSection: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#e1e1e1",
-    backgroundColor: "#fef2f2",
-  } as ViewStyle,
-  errorTitle: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#dc2626",
-    marginBottom: 8,
-  } as TextStyle,
-  errorList: {
-    gap: 4,
-  } as ViewStyle,
-  errorItem: {
-    fontSize: 11,
-    color: "#991b1b",
-  } as TextStyle,
-  errorMore: {
-    fontSize: 11,
-    color: "#991b1b",
-    fontStyle: "italic",
-  } as TextStyle,
-});
