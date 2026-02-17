@@ -52,63 +52,27 @@ public class FeedBridgeModule: Module {
                     for update in batchUpdate.updates {
                         // Find and update the post
                         if let index = feedData.posts.firstIndex(where: { $0.post.uri == update.uri }) {
-                            var post = feedData.posts[index].post
+                            let existing = feedData.posts[index].post
 
-                            // Update counts
-                            if let likeCount = update.likeCount {
-                                post = SerializedPost(
-                                    uri: post.uri,
-                                    cid: post.cid,
-                                    author: post.author,
-                                    record: post.record,
-                                    embed: post.embed,
-                                    replyCount: post.replyCount,
-                                    repostCount: post.repostCount,
-                                    likeCount: likeCount,
-                                    quoteCount: post.quoteCount,
-                                    viewer: update.viewer ?? post.viewer,
-                                    labels: post.labels,
-                                    indexedAt: post.indexedAt
-                                )
-                            }
+                            // Consolidate all count updates into a single struct creation
+                            // (avoids creating up to 3 intermediate copies per update)
+                            let updatedPost = SerializedPost(
+                                uri: existing.uri,
+                                cid: existing.cid,
+                                author: existing.author,
+                                record: existing.record,
+                                embed: existing.embed,
+                                replyCount: update.replyCount ?? existing.replyCount,
+                                repostCount: update.repostCount ?? existing.repostCount,
+                                likeCount: update.likeCount ?? existing.likeCount,
+                                quoteCount: existing.quoteCount,
+                                viewer: update.viewer ?? existing.viewer,
+                                labels: existing.labels,
+                                indexedAt: existing.indexedAt
+                            )
 
-                            if let repostCount = update.repostCount {
-                                post = SerializedPost(
-                                    uri: post.uri,
-                                    cid: post.cid,
-                                    author: post.author,
-                                    record: post.record,
-                                    embed: post.embed,
-                                    replyCount: post.replyCount,
-                                    repostCount: repostCount,
-                                    likeCount: post.likeCount,
-                                    quoteCount: post.quoteCount,
-                                    viewer: update.viewer ?? post.viewer,
-                                    labels: post.labels,
-                                    indexedAt: post.indexedAt
-                                )
-                            }
-
-                            if let replyCount = update.replyCount {
-                                post = SerializedPost(
-                                    uri: post.uri,
-                                    cid: post.cid,
-                                    author: post.author,
-                                    record: post.record,
-                                    embed: post.embed,
-                                    replyCount: replyCount,
-                                    repostCount: post.repostCount,
-                                    likeCount: post.likeCount,
-                                    quoteCount: post.quoteCount,
-                                    viewer: update.viewer ?? post.viewer,
-                                    labels: post.labels,
-                                    indexedAt: post.indexedAt
-                                )
-                            }
-
-                            // Update the post in feed data
                             feedData.posts[index] = SerializedFeedViewPost(
-                                post: post,
+                                post: updatedPost,
                                 reply: feedData.posts[index].reply,
                                 reason: feedData.posts[index].reason,
                                 feedContext: feedData.posts[index].feedContext
