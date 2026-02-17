@@ -23,6 +23,8 @@ import { AppBskyActorDefs, AppBskyFeedDefs } from "@atproto/api";
 import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useTrendingData } from "../../hooks/useTrending";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useOfflineFeedEnhancer, useOfflineFeedStatus } from "../../hooks/useOfflineFeed";
+import StaleContentIndicator from "../../components/StaleContentIndicator";
 
 import { createLogger } from '../../utils/logger';
 
@@ -162,6 +164,11 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
     return rest;
   }, [filters]);
 
+  const searchPostsQuery = useSearchPosts(
+    activeTab === "posts" || activeTab === "hashtags" ? effectiveQuery : "",
+    apiFilters
+  );
+  const enhancedSearchQuery = useOfflineFeedEnhancer(searchPostsQuery, 'search', ['searchPosts', effectiveQuery, apiFilters]);
   const {
     data: postsData,
     isLoading: isLoadingPosts,
@@ -170,10 +177,9 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
     hasNextPage,
     isFetchingNextPage,
     refetch: refetchPosts,
-  } = useSearchPosts(
-    activeTab === "posts" || activeTab === "hashtags" ? effectiveQuery : "",
-    apiFilters
-  );
+  } = enhancedSearchQuery;
+  const { isServingCached: isSearchServingCached, isStale: isSearchStale, isOnline: isSearchOnline } = enhancedSearchQuery;
+  const searchOfflineStatus = useOfflineFeedStatus();
 
   const posts = useMemo(() => {
     let allPosts = postsData?.pages.flatMap((page) => page.feed) || [];
@@ -453,6 +459,16 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
                 </Text>
               </TouchableOpacity>
             </View>
+          )}
+
+          {/* Offline indicator for search results */}
+          {(activeTab === "posts" || activeTab === "hashtags") && (
+            <StaleContentIndicator
+              isStale={isSearchServingCached || isSearchStale}
+              lastCachedAt={searchOfflineStatus.lastCachedAt}
+              onRetry={isSearchOnline ? refetchPosts : undefined}
+              isOnline={isSearchOnline}
+            />
           )}
 
           {/* Content */}

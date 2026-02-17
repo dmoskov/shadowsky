@@ -25,6 +25,8 @@ import {AppBskyNotificationListNotifications} from '@atproto/api';
 import {usePreferences} from '../../contexts/PreferencesContext';
 import {clearBadgeCount} from '../../utils/badge';
 import {useTheme} from '../../contexts/ThemeContext';
+import {useOfflineNotificationsEnhancer, useOfflineFeedStatus} from '../../hooks/useOfflineFeed';
+import StaleContentIndicator from '../../components/StaleContentIndicator';
 import {filterMutedNotifications} from '../../utils/content-filter';
 import {
   aggregateNotifications,
@@ -50,6 +52,8 @@ export function NotificationsScreen() {
   const {preferences} = usePreferences();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const notificationsQuery = useNotifications();
+  const enhancedNotificationsQuery = useOfflineNotificationsEnhancer(notificationsQuery, ['notifications']);
   const {
     data,
     isLoading,
@@ -59,7 +63,9 @@ export function NotificationsScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useNotifications();
+  } = enhancedNotificationsQuery;
+  const { isServingCached: isNotifServingCached, isStale: isNotifStale, isOnline: isNotifOnline } = enhancedNotificationsQuery;
+  const notifOfflineStatus = useOfflineFeedStatus();
 
   const markNotificationsSeen = useMarkNotificationsSeen();
   const {navigateToProfile, navigateToThread} = useAppNavigation();
@@ -251,6 +257,12 @@ export function NotificationsScreen() {
         activeFilter={activeFilter}
         onFilterChange={handleFilterChange}
         counts={notificationCounts as any}
+      />
+      <StaleContentIndicator
+        isStale={isNotifServingCached || isNotifStale}
+        lastCachedAt={notifOfflineStatus.lastCachedAt}
+        onRetry={isNotifOnline ? () => refetch() : undefined}
+        isOnline={isNotifOnline}
       />
       <FlatList
         ref={scrollRef}

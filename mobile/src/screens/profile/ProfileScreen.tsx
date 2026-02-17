@@ -28,6 +28,8 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { AuthorFeedFilter } from "../../services/atproto/feeds";
 import { dmService } from "../../services/dm-service";
 import { useSpotlightProfile } from "../../hooks/useSpotlightIndex";
+import { useOfflineFeedEnhancer, useOfflineFeedStatus } from "../../hooks/useOfflineFeed";
+import StaleContentIndicator from "../../components/StaleContentIndicator";
 
 
 import { createLogger } from '../../utils/logger';
@@ -73,6 +75,8 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
     }
   };
 
+  const authorFeedQuery = useAuthorFeed(handle, getFilter());
+  const enhancedFeedQuery = useOfflineFeedEnhancer(authorFeedQuery, 'author', ['authorFeed', handle, getFilter()]);
   const {
     data: feedData,
     isLoading: isLoadingFeed,
@@ -80,7 +84,9 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
     hasNextPage: hasNextFeedPage,
     isFetchingNextPage: isFetchingNextFeedPage,
     refetch: refetchFeed,
-  } = useAuthorFeed(handle, getFilter());
+  } = enhancedFeedQuery;
+  const { isServingCached: isFeedServingCached, isStale: isFeedStale, isOnline: isFeedOnline } = enhancedFeedQuery;
+  const feedOfflineStatus = useOfflineFeedStatus();
 
   const {
     data: likesData,
@@ -540,6 +546,12 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
 
   return (
     <View style={styles.container}>
+      <StaleContentIndicator
+        isStale={isFeedServingCached || isFeedStale}
+        lastCachedAt={feedOfflineStatus.lastCachedAt}
+        onRetry={isFeedOnline ? refetchFeed : undefined}
+        isOnline={isFeedOnline}
+      />
       <FlatList
         data={posts}
         renderItem={renderPost}
