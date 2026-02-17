@@ -4,6 +4,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { subDays } from "date-fns";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { usePageVisibility } from "../hooks/usePageVisibility";
 import { getNotificationService } from "../services/atproto/notifications";
 import { NotificationCacheService } from "../services/notification-cache-service";
 import { ExtendedFetchCache } from "../utils/extendedFetchCache";
@@ -23,6 +24,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
 
   const { session, agent } = useAuth();
   const queryClient = useQueryClient();
+  const isVisible = usePageVisibility();
   const [cacheService] = useState(() => NotificationCacheService.getInstance());
   const [isIndexedDBReady, setIsIndexedDBReady] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
@@ -78,7 +80,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
     getNextPageParam: (lastPage) => lastPage.cursor,
     enabled: enablePolling && !!agent, // Enable polling after initial load
     staleTime: 30 * 60 * 1000, // 30 minutes
-    refetchInterval: enablePolling ? 60 * 1000 : false, // Poll every 60 seconds when enabled - reduced from 10s
+    refetchInterval: enablePolling && isVisible ? 60 * 1000 : false, // Poll every 60 seconds when enabled and tab visible
   });
 
   // Initialize IndexedDB

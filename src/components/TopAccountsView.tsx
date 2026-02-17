@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Database, Settings, TrendingUp, Users } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { usePageVisibility } from "../hooks/usePageVisibility";
 import type { CachedProfile } from "../services/follower-cache-db";
 import { getProfileCacheService } from "../services/profile-cache-service";
 import { proxifyBskyImage } from "../utils/image-proxy";
@@ -44,6 +45,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
   onConfigClick,
 }) => {
   const { agent } = useAuth();
+  const isVisible = usePageVisibility();
   const [loadingProfiles, setLoadingProfiles] = useState(true);
 
   // Aggregate notifications by author
@@ -157,7 +159,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
       return await cacheService.getCacheStats();
     },
     enabled: !!agent,
-    refetchInterval: 10 * 1000, // Refresh every 10 seconds
+    refetchInterval: isVisible ? 30 * 1000 : false, // Refresh every 30 seconds, paused when tab hidden
   });
 
   // Enrich account stats with follower counts and filter

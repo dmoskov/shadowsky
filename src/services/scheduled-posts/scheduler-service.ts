@@ -35,6 +35,7 @@ class SchedulerService {
   private timeSyncInterval: ReturnType<typeof setInterval> | null = null;
   private userDid: string | null = null;
   private initialized = false;
+  private boundVisibilityHandler: (() => void) | null = null;
 
   private constructor() {}
 
@@ -68,6 +69,9 @@ class SchedulerService {
 
     // Set up periodic time sync (every 5 minutes)
     this.startTimeSyncInterval();
+
+    // Pause/resume sync when tab visibility changes
+    this.setupVisibilityListener();
 
     this.initialized = true;
     debug.log("SchedulerService initialized for user:", userDid);
@@ -415,9 +419,52 @@ class SchedulerService {
   }
 
   /**
-   * Stop all background processes
+   * Set up visibility change listener to pause/resume sync when tab is hidden/visible.
+   * Prevents unnecessary network requests when the app is backgrounded.
    */
-  stop(): void {
+  private setupVisibilityListener(): void {
+    if (
+      typeof document === "undefined" ||
+      this.boundVisibilityHandler !== null
+    ) {
+      return;
+    }
+
+    this.boundVisibilityHandler = () => {
+      if (document.hidden) {
+        debug.log("SchedulerService: Tab hidden, pausing sync intervals");
+        this.stopIntervals();
+      } else {
+        debug.log("SchedulerService: Tab visible, resuming sync intervals");
+        this.startPeriodicSync();
+        this.startTimeSyncInterval();
+        // Sync immediately on becoming visible to catch up
+        this.syncFromServer();
+      }
+    };
+
+    document.addEventListener("visibilitychange", this.boundVisibilityHandler);
+  }
+
+  /**
+   * Remove visibility change listener
+   */
+  private removeVisibilityListener(): void {
+    if (typeof document === "undefined" || !this.boundVisibilityHandler) {
+      return;
+    }
+
+    document.removeEventListener(
+      "visibilitychange",
+      this.boundVisibilityHandler,
+    );
+    this.boundVisibilityHandler = null;
+  }
+
+  /**
+   * Stop interval timers without removing the visibility listener
+   */
+  private stopIntervals(): void {
     if (this.syncInterval) {
       clearInterval(this.syncInterval);
       this.syncInterval = null;
@@ -427,6 +474,14 @@ class SchedulerService {
       clearInterval(this.timeSyncInterval);
       this.timeSyncInterval = null;
     }
+  }
+
+  /**
+   * Stop all background processes
+   */
+  stop(): void {
+    this.stopIntervals();
+    this.removeVisibilityListener();
   }
 
   /**

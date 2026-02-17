@@ -18,6 +18,7 @@ import {
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useExtendedNotifications } from "../hooks/useExtendedNotifications";
+import { usePageVisibility } from "../hooks/usePageVisibility";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { BackgroundNotificationLoader } from "./BackgroundNotificationLoader";
 
@@ -63,6 +64,7 @@ interface ExtendedNotificationPage {
 export const NotificationsAnalytics: React.FC = React.memo(
   function NotificationsAnalytics() {
     const { agent, session } = useAuth();
+    const isVisible = usePageVisibility();
     const [timeRange, setTimeRange] = React.useState<TimeRange>("7d");
     const [activityView, setActivityView] = React.useState<"received" | "sent">(
       "received",
@@ -440,7 +442,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
         });
         return response.data;
       },
-      refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
+      refetchInterval: isVisible ? 60 * 1000 : false, // Refetch every 60 seconds, paused when tab hidden
       enabled: !hasExtendedData, // Don't fetch if we have extended data
       refetchOnWindowFocus: false,
     });
@@ -520,7 +522,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
       enabled: !!agent,
       staleTime: hasExtendedData ? 5 * 60 * 1000 : 2 * 60 * 1000, // Longer stale time if using cached data
       gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
-      refetchInterval: 60 * 1000, // Refetch every 60 seconds - reduced from 10s
+      refetchInterval: isVisible ? 60 * 1000 : false, // Refetch every 60 seconds, paused when tab hidden
       refetchOnMount: false, // Don't refetch on mount - use stale time instead
       refetchOnWindowFocus: false, // Don't refetch on window focus
     });

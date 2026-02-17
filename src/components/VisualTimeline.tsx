@@ -13,6 +13,7 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useScrollContainerGPU } from "../hooks/useGPUAcceleration";
 import { useNotificationPosts } from "../hooks/useNotificationPosts";
+import { usePageVisibility } from "../hooks/usePageVisibility";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { throttle, TIMING } from "../utils/timing";
 import { ThreadModal } from "./ThreadModal";
@@ -36,6 +37,7 @@ import {
 export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
   ({ hideTimeLabels = false, isInSkyDeck = false, isFocused = true }) => {
     const { agent } = useAuth();
+    const isVisible = usePageVisibility();
     const navigate = useNavigate();
     const containerRef = React.useRef<HTMLDivElement>(null);
     const scrollableRef = React.useRef<HTMLDivElement>(null);
@@ -77,7 +79,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
       refetchOnMount: false, // Don't refetch on mount - use stale time instead
-      refetchInterval: 60 * 1000, // Poll every 60 seconds after initial load
+      refetchInterval: isVisible ? 60 * 1000 : false, // Poll every 60 seconds, paused when tab hidden
       enabled: !!agent, // Only run when agent is available
     });
 
