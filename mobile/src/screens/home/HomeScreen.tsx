@@ -49,6 +49,16 @@ export function HomeScreen() {
   const { data } =
     selectedFeedUri ? customFeedQuery : timelineQuery;
 
+  // Build a URI → post index map for O(1) lookups in action handlers
+  const postsByUri = useMemo(() => {
+    const posts = data?.pages.flatMap((page) => page.feed) ?? [];
+    const map = new Map<string, typeof posts[number]>();
+    for (const p of posts) {
+      map.set(p.post.uri, p);
+    }
+    return map;
+  }, [data?.pages]);
+
   // Enable scroll-to-top on tab press
   useScrollToTop(scrollRef);
 
@@ -97,8 +107,7 @@ export function HomeScreen() {
     }
 
     // Get post data for quote option
-    const posts = data?.pages.flatMap((page) => page.feed) ?? [];
-    const postData = posts.find(p => p.post.uri === uri);
+    const postData = postsByUri.get(uri);
 
     // Show menu: Repost or Quote
     if (Platform.OS === 'ios') {
@@ -174,8 +183,7 @@ export function HomeScreen() {
     const { uri } = event.nativeEvent;
 
     // Get post data for reply
-    const posts = data?.pages.flatMap((page) => page.feed) ?? [];
-    const postData = posts.find(p => p.post.uri === uri);
+    const postData = postsByUri.get(uri);
 
     if (postData) {
       const record = postData.post.record as any;
@@ -210,8 +218,7 @@ export function HomeScreen() {
     const { uri } = event.nativeEvent;
 
     // Get post data
-    const posts = data?.pages.flatMap((page) => page.feed) ?? [];
-    const postData = posts.find(p => p.post.uri === uri);
+    const postData = postsByUri.get(uri);
 
     if (postData) {
       triggerHaptic("light");

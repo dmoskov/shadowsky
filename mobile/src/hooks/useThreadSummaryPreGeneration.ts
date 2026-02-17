@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { InteractionManager } from "react-native";
 import { useBookmarks } from "./api";
 import { hasCachedSummary, cacheSummary } from "../services/thread-summary-cache";
 import { generateThreadSummary } from "../services/ai-service";
@@ -9,6 +10,13 @@ const logger = createLogger("ThreadSummaryPreGen");
 
 const MAX_PER_SESSION = 10;
 const INITIAL_DELAY_MS = 5000;
+
+/** Returns a promise that resolves after current interactions complete. */
+function waitForIdle(): Promise<void> {
+  return new Promise(resolve => {
+    InteractionManager.runAfterInteractions(() => resolve());
+  });
+}
 
 interface UseThreadSummaryPreGenerationOptions {
   enabled?: boolean;
@@ -25,7 +33,13 @@ export function useThreadSummaryPreGeneration({ enabled = true }: UseThreadSumma
     if (!enabled || !bookmarks || bookmarks.length === 0 || hasStartedRef.current) return;
     hasStartedRef.current = true;
 
+    let cancelled = false;
+
     const timer = setTimeout(async () => {
+      // Wait until scroll/animations settle before starting work
+      await waitForIdle();
+      if (cancelled) return;
+
       // Find bookmarks with threads (5+ replies)
       const threadCandidates = bookmarks.filter(
         (b) => b.post && (b.post.replyCount || 0) >= 5,
@@ -37,7 +51,11 @@ export function useThreadSummaryPreGeneration({ enabled = true }: UseThreadSumma
       setIsPreGenerating(true);
 
       for (const bookmark of threadCandidates) {
-        if (generatedCountRef.current >= MAX_PER_SESSION) break;
+        if (cancelled || generatedCountRef.current >= MAX_PER_SESSION) break;
+
+        // Yield to the UI between each generation so we don't block scrolling
+        await waitForIdle();
+        if (cancelled) break;
 
         const post = bookmark.post!;
         const cacheKeyUri = `${post.uri}:tldr`;
@@ -72,10 +90,15 @@ export function useThreadSummaryPreGeneration({ enabled = true }: UseThreadSumma
         }
       }
 
-      setIsPreGenerating(false);
+      if (!cancelled) {
+        setIsPreGenerating(false);
+      }
     }, INITIAL_DELAY_MS);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [enabled, bookmarks]);
 
   return { isPreGenerating, queueSize };
