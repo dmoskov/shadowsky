@@ -59,7 +59,6 @@ export function NotificationsScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isRefetching,
   } = useNotifications();
 
   const markNotificationsSeen = useMarkNotificationsSeen();

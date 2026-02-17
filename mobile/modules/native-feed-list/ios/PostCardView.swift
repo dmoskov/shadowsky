@@ -33,112 +33,113 @@ struct PostCardView: View {
     let onQuotePress: ((String, String) -> Void)?
 
     var body: some View {
-        Button(action: { onPress?() }) {
-            VStack(alignment: .leading, spacing: 8) {
-                // Author row
-                HStack(spacing: 8) {
-                    // Avatar
-                    if let avatarUrl = post.post.author.avatar,
-                       let url = URL(string: avatarUrl) {
-                        AsyncImage(url: url) { image in
-                            image.resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Circle().fill(Color.gray.opacity(0.3))
-                        }
-                        .frame(width: 40, height: 40)
-                        .clipShape(Circle())
-                    } else {
-                        Circle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 40, height: 40)
+        VStack(alignment: .leading, spacing: 8) {
+            // Author row
+            HStack(spacing: 8) {
+                // Avatar
+                if let avatarUrl = post.post.author.avatar,
+                   let url = URL(string: avatarUrl) {
+                    AsyncImage(url: url) { image in
+                        image.resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } placeholder: {
+                        Circle().fill(Color.gray.opacity(0.3))
                     }
+                    .frame(width: 40, height: 40)
+                    .clipShape(Circle())
+                } else {
+                    Circle()
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 40, height: 40)
+                }
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        if let displayName = post.post.author.displayName, !displayName.isEmpty {
-                            Text(displayName)
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.primary)
-                                .lineLimit(1)
-                        }
-                        Text("@\(post.post.author.handle)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    if let displayName = post.post.author.displayName, !displayName.isEmpty {
+                        Text(displayName)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
                             .lineLimit(1)
                     }
+                    Text("@\(post.post.author.handle)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
 
-                    Spacer()
+                Spacer()
 
-                    // Timestamp
-                    Text(relativeTime(post.post.record.createdAt))
+                // Timestamp
+                Text(relativeTime(post.post.record.createdAt))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .onTapGesture {
+                onPressProfile?(post.post.author.handle)
+            }
+
+            // Post text
+            if !post.post.record.text.isEmpty {
+                renderPostText()
+            }
+
+            // Embed (images, video, links, quotes)
+            if let embed = post.post.record.embed {
+                PostEmbed(
+                    embed: embed,
+                    onImagePress: onImagePress,
+                    onLinkPress: onLinkPress,
+                    onQuotePress: onQuotePress,
+                    blurImages: false
+                )
+            }
+
+            // Action bar
+            HStack(spacing: 24) {
+                // Reply
+                actionButton(
+                    icon: "bubble.left",
+                    count: post.post.replyCount,
+                    isActive: false,
+                    activeColor: .blue,
+                    action: { onReply?() }
+                )
+
+                // Repost
+                actionButton(
+                    icon: "arrow.2.squarepath",
+                    count: post.post.repostCount,
+                    isActive: post.post.viewer?.repost != nil,
+                    activeColor: .green,
+                    action: { onRepost?() }
+                )
+
+                // Like
+                actionButton(
+                    icon: post.post.viewer?.like != nil ? "heart.fill" : "heart",
+                    count: post.post.likeCount,
+                    isActive: post.post.viewer?.like != nil,
+                    activeColor: .red,
+                    action: { onLike?() }
+                )
+
+                Spacer()
+
+                // Share
+                Button(action: { onShare?() }) {
+                    Image(systemName: "square.and.arrow.up")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                .onTapGesture {
-                    onPressProfile?(post.post.author.handle)
-                }
-
-                // Post text
-                if !post.post.record.text.isEmpty {
-                    renderPostText()
-                }
-
-                // Embed (images, video, links, quotes)
-                if let embed = post.post.record.embed {
-                    PostEmbed(
-                        embed: embed,
-                        onImagePress: onImagePress,
-                        onLinkPress: onLinkPress,
-                        onQuotePress: onQuotePress,
-                        blurImages: false
-                    )
-                }
-
-                // Action bar
-                HStack(spacing: 24) {
-                    // Reply
-                    actionButton(
-                        icon: "bubble.left",
-                        count: post.post.replyCount,
-                        isActive: false,
-                        activeColor: .blue,
-                        action: { onReply?() }
-                    )
-
-                    // Repost
-                    actionButton(
-                        icon: "arrow.2.squarepath",
-                        count: post.post.repostCount,
-                        isActive: post.post.viewer?.repost != nil,
-                        activeColor: .green,
-                        action: { onRepost?() }
-                    )
-
-                    // Like
-                    actionButton(
-                        icon: post.post.viewer?.like != nil ? "heart.fill" : "heart",
-                        count: post.post.likeCount,
-                        isActive: post.post.viewer?.like != nil,
-                        activeColor: .red,
-                        action: { onLike?() }
-                    )
-
-                    Spacer()
-
-                    // Share
-                    Button(action: { onShare?() }) {
-                        Image(systemName: "square.and.arrow.up")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding(.top, 4)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.top, 4)
         }
-        .buttonStyle(PlainButtonStyle())
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onPress?()
+        }
 
         Divider()
             .padding(.leading, 64)

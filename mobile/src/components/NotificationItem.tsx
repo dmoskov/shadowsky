@@ -150,6 +150,12 @@ export function NotificationItem({
               />
             </View>
           )}
+          {/* For likes/reposts, show tap hint since we don't have the post text */}
+          {!postText && notification.reasonSubject && (
+            <View style={styles.postPreview}>
+              <Text style={styles.tapHint}>Tap to view post</Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -227,9 +233,14 @@ function createStyles(colors: any) {
       marginTop: 8,
     },
     postText: {
-      color: colors.borderLight,
+      color: colors.textSecondary,
       fontSize: 14,
       lineHeight: 18,
+    },
+    tapHint: {
+      color: colors.textTertiary,
+      fontSize: 13,
+      fontStyle: 'italic',
     },
     unreadIndicator: {
       position: 'absolute',
