@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,8 +8,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Modal,
-  ScrollView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -20,11 +18,11 @@ import { useSearchPosts } from "../../hooks/api/useSearchPosts";
 import { Avatar } from "../../components/Avatar";
 import { FeedList } from "../../components/FeedList";
 import { TrendingTopics } from "../../components/TrendingTopics";
+import { SearchFilterSheet, type SearchFilterValues } from "../../components/SearchFilterSheet";
 import { AppBskyActorDefs, AppBskyFeedDefs } from "@atproto/api";
 import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useTrendingData } from "../../hooks/useTrending";
 import { useTheme } from "../../contexts/ThemeContext";
-
 
 import { createLogger } from '../../utils/logger';
 
@@ -45,6 +43,7 @@ interface SearchFilters {
   until?: string;
   lang?: string;
   author?: string;
+  domain?: string;
   mediaFilter?: MediaFilter;
 }
 
@@ -255,10 +254,19 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
     toggleBookmark(post.post);
   };
 
-  const applyFilters = (newFilters: Partial<SearchFilters>) => {
-    setFilters({ ...filters, ...newFilters });
-    setShowFilters(false);
-  };
+  const handleApplyFilters = useCallback((newFilters: SearchFilterValues) => {
+    setFilters(newFilters);
+  }, []);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.sort !== "top") count++;
+    if (filters.mediaFilter && filters.mediaFilter !== "all") count++;
+    if (filters.since) count++;
+    if (filters.lang) count++;
+    if (filters.domain) count++;
+    return count;
+  }, [filters]);
 
   const renderSearchResult = ({
     item,
@@ -423,12 +431,20 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
           {(activeTab === "posts" || activeTab === "hashtags") && debouncedQuery && (
             <View style={styles.filterBar}>
               <TouchableOpacity
-                style={styles.filterButton}
+                style={[
+                  styles.filterButton,
+                  activeFilterCount > 0 && styles.filterButtonActive,
+                ]}
                 onPress={() => setShowFilters(true)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.filterButtonText}>
-                  Filters ({filters.sort}, {filters.mediaFilter})
+                <Text
+                  style={[
+                    styles.filterButtonText,
+                    activeFilterCount > 0 && styles.filterButtonTextActive,
+                  ]}
+                >
+                  Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -476,161 +492,13 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
         </>
       )}
 
-      {/* Filters Modal */}
-      <Modal
+      {/* Advanced Search Filters Sheet */}
+      <SearchFilterSheet
         visible={showFilters}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowFilters(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Search Filters</Text>
-              <TouchableOpacity onPress={() => setShowFilters(false)}>
-                <Text style={styles.modalClose}>Done</Text>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.filterOptions}>
-              <Text style={styles.filterLabel}>Sort By</Text>
-              <View style={styles.filterGroup}>
-                <TouchableOpacity
-                  style={[
-                    styles.filterOption,
-                    filters.sort === "top" && styles.filterOptionActive,
-                  ]}
-                  onPress={() => applyFilters({ sort: "top" })}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    style={[
-                      styles.filterOptionText,
-                      filters.sort === "top" && styles.filterOptionTextActive,
-                    ]}
-                  >
-                    Top
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.filterOption,
-                    filters.sort === "latest" && styles.filterOptionActive,
-                  ]}
-                  onPress={() => applyFilters({ sort: "latest" })}
-                  activeOpacity={0.7}
-                >
-                  <Text
-                    style={[
-                      styles.filterOptionText,
-                      filters.sort === "latest" &&
-                        styles.filterOptionTextActive,
-                    ]}
-                  >
-                    Latest
-                  </Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={styles.filterLabel}>Media Type</Text>
-              <View style={styles.filterGroup}>
-                {(["all", "images", "videos", "links"] as MediaFilter[]).map((type) => (
-                  <TouchableOpacity
-                    key={type}
-                    style={[
-                      styles.filterOption,
-                      filters.mediaFilter === type && styles.filterOptionActive,
-                    ]}
-                    onPress={() => applyFilters({ mediaFilter: type })}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.filterOptionText,
-                        filters.mediaFilter === type && styles.filterOptionTextActive,
-                      ]}
-                    >
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Text style={styles.filterLabel}>Date Range</Text>
-              <View style={styles.filterGroup}>
-                <TouchableOpacity
-                  style={styles.filterOption}
-                  onPress={() =>
-                    applyFilters({
-                      since: new Date(
-                        Date.now() - 24 * 60 * 60 * 1000
-                      ).toISOString(),
-                      until: undefined,
-                    })
-                  }
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.filterOptionText}>Last 24 hours</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.filterOption}
-                  onPress={() =>
-                    applyFilters({
-                      since: new Date(
-                        Date.now() - 7 * 24 * 60 * 60 * 1000
-                      ).toISOString(),
-                      until: undefined,
-                    })
-                  }
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.filterOptionText}>Last 7 days</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.filterOption}
-                  onPress={() =>
-                    applyFilters({
-                      since: new Date(
-                        Date.now() - 30 * 24 * 60 * 60 * 1000
-                      ).toISOString(),
-                      until: undefined,
-                    })
-                  }
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.filterOptionText}>Last 30 days</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.filterOption}
-                  onPress={() =>
-                    applyFilters({ since: undefined, until: undefined })
-                  }
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.filterOptionText}>All time</Text>
-                </TouchableOpacity>
-              </View>
-
-              <TouchableOpacity
-                style={styles.resetButton}
-                onPress={() =>
-                  applyFilters({
-                    sort: "top",
-                    since: undefined,
-                    until: undefined,
-                    lang: undefined,
-                    author: undefined,
-                    mediaFilter: "all",
-                  })
-                }
-                activeOpacity={0.7}
-              >
-                <Text style={styles.resetButtonText}>Reset All Filters</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowFilters(false)}
+        filters={filters}
+        onApplyFilters={handleApplyFilters}
+      />
     </View>
   );
 }
@@ -786,80 +654,13 @@ function createStyles(colors: any) {
     color: colors.textSecondary,
     fontSize: 16,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: "80%",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceElevated,
-  },
-  modalTitle: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  modalClose: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  filterOptions: {
-    padding: 16,
-  },
-  filterLabel: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: "600",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  filterGroup: {
-    gap: 8,
-  },
-  filterOption: {
-    backgroundColor: colors.surfaceElevated,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+  filterButtonActive: {
     borderWidth: 1,
-    borderColor: "transparent",
-  },
-  filterOptionActive: {
     borderColor: colors.primary,
     backgroundColor: colors.surface,
   },
-  filterOptionText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-  },
-  filterOptionTextActive: {
+  filterButtonTextActive: {
     color: colors.primary,
-    fontWeight: "600",
-  },
-  resetButton: {
-    backgroundColor: colors.surfaceElevated,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginTop: 24,
-    alignItems: "center",
-  },
-  resetButtonText: {
-    color: colors.danger,
-    fontSize: 16,
-    fontWeight: "600",
   },
   });
 }
