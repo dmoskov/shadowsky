@@ -8,6 +8,7 @@
 
 import SwiftUI
 import NotificationBridge
+import ExpoSwiftUIFeed
 
 // MARK: - Static Date Formatters
 
@@ -76,7 +77,7 @@ struct NotificationCellView: View {
                             onProfilePress?(notification.author.handle)
                         }) {
                             if let avatarUrl = notification.author.avatar {
-                                AsyncImage(url: URL(string: avatarUrl)) { image in
+                                CachedAsyncImage(url: URL(string: avatarUrl)) { image in
                                     image
                                         .resizable()
                                         .aspectRatio(contentMode: .fill)
@@ -255,7 +256,7 @@ struct AggregatedNotificationCellView: View {
                                 onProfilePress?(user.handle)
                             }) {
                                 if let avatarUrl = user.avatar {
-                                    AsyncImage(url: URL(string: avatarUrl)) { image in
+                                    CachedAsyncImage(url: URL(string: avatarUrl)) { image in
                                         image
                                             .resizable()
                                             .aspectRatio(contentMode: .fill)

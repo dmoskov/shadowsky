@@ -58,7 +58,7 @@ struct VideoEmbed: View {
             ZStack {
                 // Thumbnail image
                 if let thumbnailURL = video.thumbnail, let url = URL(string: thumbnailURL) {
-                    AsyncImage(url: url) { phase in
+                    CachedAsyncImage(url: url) { phase in
                         switch phase {
                         case .empty:
                             Color.gray.opacity(0.3)

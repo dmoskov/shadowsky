@@ -166,7 +166,7 @@ struct ImageTile: View {
     var body: some View {
         Button(action: { onPress(index) }) {
             ZStack(alignment: .bottomLeading) {
-                AsyncImage(url: URL(string: imageData.thumb)) { phase in
+                CachedAsyncImage(url: URL(string: imageData.thumb)) { phase in
                     switch phase {
                     case .empty:
                         Color.gray.opacity(0.3)

@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import ExpoSwiftUIFeed
 
 // MARK: - ProfileHeaderView
 
@@ -36,7 +37,7 @@ struct ProfileHeaderView: View {
             // Banner
             ZStack(alignment: .topTrailing) {
                 if let bannerURL = profile.banner.flatMap({ URL(string: $0) }) {
-                    AsyncImage(url: bannerURL) { image in
+                    CachedAsyncImage(url: bannerURL) { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
@@ -76,7 +77,7 @@ struct ProfileHeaderView: View {
                     // Avatar with background ring
                     Group {
                         if let avatarURL = profile.avatar.flatMap({ URL(string: $0) }) {
-                            AsyncImage(url: avatarURL) { image in
+                            CachedAsyncImage(url: avatarURL) { image in
                                 image
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)

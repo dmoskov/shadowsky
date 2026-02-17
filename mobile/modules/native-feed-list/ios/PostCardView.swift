@@ -78,7 +78,7 @@ struct PostCardView: View {
                 // Avatar
                 if let avatarUrl = post.post.author.avatar,
                    let url = URL(string: avatarUrl) {
-                    AsyncImage(url: url) { image in
+                    CachedAsyncImage(url: url) { image in
                         image.resizable()
                             .aspectRatio(contentMode: .fill)
                     } placeholder: {

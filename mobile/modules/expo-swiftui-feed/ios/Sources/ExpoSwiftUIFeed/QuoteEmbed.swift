@@ -53,7 +53,7 @@ struct QuoteEmbed: View {
                 HStack(spacing: 8) {
                     // Avatar
                     if let avatarURL = record.author.avatar, let url = URL(string: avatarURL) {
-                        AsyncImage(url: url) { phase in
+                        CachedAsyncImage(url: url) { phase in
                             switch phase {
                             case .empty:
                                 Circle()
