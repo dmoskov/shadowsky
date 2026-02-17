@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -133,13 +133,13 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   const hasNextPage = activeTab === "likes" ? hasNextLikesPage : hasNextFeedPage;
   const isFetchingNextPage = activeTab === "likes" ? isFetchingNextLikesPage : isFetchingNextFeedPage;
 
-  const handleMentionPress = (handle: string, _did: string) => {
-    onNavigateToProfile?.(handle);
-  };
+  const handleMentionPress = useCallback((mentionHandle: string, _did: string) => {
+    onNavigateToProfile?.(mentionHandle);
+  }, [onNavigateToProfile]);
 
-  const handleHashtagPress = (tag: string) => {
+  const handleHashtagPress = useCallback((tag: string) => {
     router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } } as any);
-  };
+  }, [router]);
 
   const handleBlock = () => {
     if (!profile) return;
@@ -298,15 +298,21 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
     }
   };
 
-  const renderPost = ({ item }: { item: AppBskyFeedDefs.FeedViewPost }) => (
+  const renderPost = useCallback(({ item }: { item: AppBskyFeedDefs.FeedViewPost }) => (
     <PostCard
       post={item}
       onPress={() => onNavigateToPost?.(item.post.uri)}
-      onPressProfile={(handle) => onNavigateToProfile?.(handle)}
+      onPressProfile={(profileHandle) => onNavigateToProfile?.(profileHandle)}
       onMentionPress={handleMentionPress}
       onHashtagPress={handleHashtagPress}
     />
-  );
+  ), [onNavigateToPost, onNavigateToProfile, handleMentionPress, handleHashtagPress]);
+
+  const handleEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const renderHeader = () => {
     if (isLoadingProfile) {
@@ -560,11 +566,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
         }
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
-        onEndReached={() => {
-          if (hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
-          }
-        }}
+        onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl
@@ -575,8 +577,13 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           />
         }
         contentContainerStyle={posts.length === 0 ? styles.emptyList : undefined}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={7}
+        initialNumToRender={10}
+        updateCellsBatchingPeriod={50}
       />
-      {profile && (
+      {profile && showAddToList && (
         <AddToListModal
           visible={showAddToList}
           onClose={() => setShowAddToList(false)}
@@ -586,7 +593,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
       )}
 
       {/* Menu Modal */}
-      {profile && !isOwnProfile && (
+      {profile && !isOwnProfile && showMenu && (
         <Modal
           visible={showMenu}
           transparent={true}
@@ -631,7 +638,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
       )}
 
       {/* Report Modal */}
-      {profile && (
+      {profile && showReportModal && (
         <ReportModal
           visible={showReportModal}
           onClose={() => setShowReportModal(false)}
