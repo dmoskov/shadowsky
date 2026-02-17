@@ -4,6 +4,9 @@ import { Bookmark, BookmarkStorageBackend } from "./bookmark-backends/types";
 
 const logger = createLogger("OfficialBookmarksBackend");
 
+/** Maximum number of pages to fetch when paginating bookmark API results */
+const MAX_PAGES = 50;
+
 /**
  * API error structure for bookmark operations
  */
@@ -54,6 +57,7 @@ export class OfficialBookmarksBackend implements BookmarkStorageBackend {
       // Use the official bookmark API
       let cursor: string | undefined;
       const allBookmarks: BookmarkView[] = [];
+      let pageCount = 0;
 
       do {
         const response = await this.agent.app.bsky.bookmark.getBookmarks({
@@ -68,6 +72,14 @@ export class OfficialBookmarksBackend implements BookmarkStorageBackend {
         } else {
           // Stop if no bookmarks were returned
           cursor = undefined;
+        }
+
+        pageCount++;
+        if (pageCount >= MAX_PAGES) {
+          logger.error(
+            `Bookmark pagination hit MAX_PAGES limit (${MAX_PAGES}), stopping`,
+          );
+          break;
         }
       } while (cursor);
 
