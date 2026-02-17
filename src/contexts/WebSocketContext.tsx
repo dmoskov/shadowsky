@@ -89,6 +89,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     null,
   );
 
+  // Ref for pending reconnect connect() timeout
+  const reconnectConnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
   // Handler refs for cleanup - using refs to avoid effect re-runs
   type EventHandler = (event: WebSocketMessage) => void;
   const handlersRef = useRef<{
@@ -146,10 +151,26 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       `📬 [WebSocket] Flushing ${notifications.length} batched notifications`,
     );
 
-    // Update notification count
-    queryClient.setQueryData(["notificationCount"], (oldCount: number) => {
-      return (oldCount || 0) + notifications.length;
-    });
+    // Update notification count atomically:
+    // If there's a pending absolute count from the server, use it (it's authoritative).
+    // Otherwise, increment the existing count by the number of new notifications.
+    const pendingAbsoluteCount = pendingCountRef.current;
+    if (pendingAbsoluteCount !== null) {
+      debug.log(
+        `📬 [WebSocket] Using server count ${pendingAbsoluteCount} (overrides increment by ${notifications.length})`,
+      );
+      queryClient.setQueryData(["notificationCount"], pendingAbsoluteCount);
+      pendingCountRef.current = null;
+      // Cancel pending count flush since we just applied it
+      if (countDebounceTimerRef.current) {
+        clearTimeout(countDebounceTimerRef.current);
+        countDebounceTimerRef.current = null;
+      }
+    } else {
+      queryClient.setQueryData(["notificationCount"], (oldCount: number) => {
+        return (oldCount || 0) + notifications.length;
+      });
+    }
 
     // Update notifications list
     queryClient.setQueriesData(
@@ -185,8 +206,64 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     if (count === null) return;
 
     debug.log(`🔢 [WebSocket] Flushing notification count: ${count}`);
+
+    // Server count is authoritative — discard any pending notification increments
+    // since the server count already reflects the true state.
+    if (pendingNotificationsRef.current.length > 0) {
+      debug.log(
+        `🔢 [WebSocket] Discarding ${pendingNotificationsRef.current.length} pending notification increments (server count is authoritative)`,
+      );
+    }
+
     queryClient.setQueryData(["notificationCount"], count);
     pendingCountRef.current = null;
+
+    // Note: We do NOT clear pendingNotificationsRef here — those notifications
+    // still need to be flushed into the notifications list for display, even though
+    // their count contribution is superseded by the server's absolute count.
+    // However, we need to prevent the notification flush from incrementing the count
+    // again. We mark that the count was already set by clearing the pending count
+    // (done above), so the next flushPendingNotifications call will see
+    // pendingCountRef.current === null and will do a relative increment.
+    // To handle this correctly, flush pending notifications now with count already set.
+    if (pendingNotificationsRef.current.length > 0) {
+      const notifications = pendingNotificationsRef.current;
+      debug.log(
+        `🔢 [WebSocket] Flushing ${notifications.length} pending notifications (count already set)`,
+      );
+
+      // Update notifications list only (count is already set above)
+      queryClient.setQueriesData(
+        { queryKey: ["notifications"] },
+        (oldData: unknown) => {
+          const data = oldData as
+            | { pages?: Array<{ notifications: Notification[] }> }
+            | undefined;
+          if (!data?.pages) return oldData;
+
+          const newPages = [...data.pages];
+          if (newPages[0]) {
+            newPages[0] = {
+              ...newPages[0],
+              notifications: [...notifications, ...newPages[0].notifications],
+            };
+          }
+
+          return {
+            ...data,
+            pages: newPages,
+          };
+        },
+      );
+
+      pendingNotificationsRef.current = [];
+
+      // Cancel the pending notification debounce timer since we just flushed
+      if (notificationDebounceTimerRef.current) {
+        clearTimeout(notificationDebounceTimerRef.current);
+        notificationDebounceTimerRef.current = null;
+      }
+    }
   }, [queryClient]);
 
   const handleNewNotification = useCallback(
@@ -260,7 +337,14 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       reconnectAttemptTimer.current = null;
     }
 
-    // Clear debounce timers
+    // Cancel pending reconnect connect() if any
+    if (reconnectConnectTimerRef.current) {
+      clearTimeout(reconnectConnectTimerRef.current);
+      reconnectConnectTimerRef.current = null;
+    }
+
+    // Flush any debounced notifications/counts before clearing,
+    // so data received before disconnect is not silently dropped.
     if (notificationDebounceTimerRef.current) {
       clearTimeout(notificationDebounceTimerRef.current);
       notificationDebounceTimerRef.current = null;
@@ -269,15 +353,23 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       clearTimeout(countDebounceTimerRef.current);
       countDebounceTimerRef.current = null;
     }
-
-    // Reset pending data buffers
-    pendingNotificationsRef.current = [];
-    pendingCountRef.current = null;
+    // Flush pending count first (authoritative), then notifications
+    if (pendingCountRef.current !== null) {
+      flushPendingCount();
+    }
+    if (pendingNotificationsRef.current.length > 0) {
+      flushPendingNotifications();
+    }
 
     updateStats();
     // Switch to shorter polling interval to monitor reconnection status
     updatePollingInterval(false);
-  }, [updateStats, updatePollingInterval]);
+  }, [
+    updateStats,
+    updatePollingInterval,
+    flushPendingCount,
+    flushPendingNotifications,
+  ]);
 
   const handleReconnect = useCallback(() => {
     debug.log("🔄 [WebSocket] Reconnecting...");
@@ -311,8 +403,17 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     const service = getWebSocketService();
     if (service) {
       debug.log("🔄 [WebSocket] Manual reconnection triggered");
+
+      // Cancel any pending connect() from a previous reconnect call
+      if (reconnectConnectTimerRef.current) {
+        debug.log("🔄 [WebSocket] Cancelling previous pending connect attempt");
+        clearTimeout(reconnectConnectTimerRef.current);
+        reconnectConnectTimerRef.current = null;
+      }
+
       service.disconnect();
-      setTimeout(() => {
+      reconnectConnectTimerRef.current = setTimeout(() => {
+        reconnectConnectTimerRef.current = null;
         service.connect();
       }, WS_CONFIG.MANUAL_RECONNECT_DELAY_MS);
     }
@@ -334,6 +435,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
           if (reconnectAttemptTimer.current) {
             clearTimeout(reconnectAttemptTimer.current);
             reconnectAttemptTimer.current = null;
+          }
+
+          // Cancel pending reconnect connect()
+          if (reconnectConnectTimerRef.current) {
+            clearTimeout(reconnectConnectTimerRef.current);
+            reconnectConnectTimerRef.current = null;
           }
 
           // Clear debounce timers
@@ -471,6 +578,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       if (reconnectAttemptTimer.current) {
         clearTimeout(reconnectAttemptTimer.current);
         reconnectAttemptTimer.current = null;
+      }
+
+      // Cancel pending reconnect connect()
+      if (reconnectConnectTimerRef.current) {
+        clearTimeout(reconnectConnectTimerRef.current);
+        reconnectConnectTimerRef.current = null;
       }
 
       // Clear debounce timers
