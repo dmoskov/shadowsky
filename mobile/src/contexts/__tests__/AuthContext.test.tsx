@@ -142,7 +142,8 @@ describe('AuthContext', () => {
       expect(result.current.session).toEqual(mockSession);
       expect(mockAuthService.signInWithPassword).toHaveBeenCalledWith(
         'test.bsky.social',
-        'password123'
+        'password123',
+        undefined
       );
     });
 

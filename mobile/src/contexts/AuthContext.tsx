@@ -38,7 +38,7 @@ interface AuthContextType {
   isLoading: boolean;
   session: StoredSession | null;
   account: AuthAccount | null;
-  signIn: (identifier: string, password: string) => Promise<void>;
+  signIn: (identifier: string, password: string, pdsUrl?: string) => Promise<void>;
   signInWithOAuth: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -274,10 +274,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signIn = async (identifier: string, password: string) => {
+  const signIn = async (identifier: string, password: string, pdsUrl?: string) => {
     try {
       setIsLoading(true);
-      const newSession = await signInWithPassword(identifier, password);
+      const newSession = await signInWithPassword(identifier, password, pdsUrl);
       setSession(newSession);
       await loadAccounts();
 
