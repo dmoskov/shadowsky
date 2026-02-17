@@ -10,12 +10,12 @@ import {UseInfiniteQueryResult, InfiniteData} from '@tanstack/react-query';
 import {AppBskyFeedDefs} from '@atproto/api';
 import {
   extractPostsFromPages,
-  serializeFeedData,
+  serializeFeedPosts,
   serializeToJSON,
   createBatchUpdate,
   createPostUpdate,
 } from './serializer';
-import {SerializedFeedData, PostUpdate, FeedBatchUpdate, FeedUpdateMetadata} from './types';
+import {SerializedFeedData, SerializedFeedViewPost, PostUpdate, FeedBatchUpdate} from './types';
 
 /**
  * Options for feed serialization
@@ -55,10 +55,9 @@ export function useFeedSerializer(
 ): UseFeedSerializerResult {
   const {isOnline = true, isFromCache = false, bookmarkedPostUris} = options;
 
-  // Extract all posts from paginated data
-  const posts = useMemo(() => {
-    return extractPostsFromPages(query.data?.pages);
-  }, [query.data?.pages]);
+  // Cache serialized pages to avoid re-serializing unchanged pages
+  const serializedPagesCache = useRef<Map<number, SerializedFeedViewPost[]>>(new Map());
+  const prevPageCountRef = useRef(0);
 
   // Get cursor from last page
   const cursor = useMemo(() => {
@@ -67,30 +66,62 @@ export function useFeedSerializer(
     return pages[pages.length - 1].cursor;
   }, [query.data?.pages]);
 
-  // Create metadata
-  const metadata: FeedUpdateMetadata = useMemo(
-    () => ({
-      timestamp: Date.now(),
-      isOnline,
-      isFromCache,
-    }),
-    [isOnline, isFromCache]
-  );
-
-  // Serialize feed data
+  // Incrementally serialize feed data — only serialize new/changed pages
   const serializedData = useMemo(() => {
-    if (posts.length === 0) return null;
+    const pages = query.data?.pages;
+    if (!pages || pages.length === 0) {
+      serializedPagesCache.current.clear();
+      prevPageCountRef.current = 0;
+      return null;
+    }
 
-    // Enhance posts with bookmark state if provided
-    const enhancedPosts = bookmarkedPostUris
-      ? posts.map(post => ({
-          ...post,
-          _isBookmarked: bookmarkedPostUris.has(post.post.uri),
-        }))
-      : posts;
+    // If page count decreased (e.g., maxPages eviction), rebuild cache
+    if (pages.length < prevPageCountRef.current) {
+      serializedPagesCache.current.clear();
+    }
 
-    return serializeFeedData(enhancedPosts as any, metadata, cursor);
-  }, [posts, metadata, cursor, bookmarkedPostUris]);
+    // Serialize only pages that aren't cached
+    const allSerializedPosts: SerializedFeedViewPost[] = [];
+    for (let i = 0; i < pages.length; i++) {
+      let serializedPage = serializedPagesCache.current.get(i);
+
+      // Re-serialize if this is a new page or the last page (which may have been updated)
+      if (!serializedPage || i === pages.length - 1 || i >= prevPageCountRef.current) {
+        const pagePosts = pages[i].feed || [];
+        const enhancedPosts = bookmarkedPostUris
+          ? pagePosts.map(post => ({
+              ...post,
+              _isBookmarked: bookmarkedPostUris.has(post.post.uri),
+            }))
+          : pagePosts;
+        serializedPage = serializeFeedPosts(enhancedPosts as any);
+        serializedPagesCache.current.set(i, serializedPage);
+      }
+
+      allSerializedPosts.push(...serializedPage);
+    }
+
+    // Prune cache entries beyond current page count
+    for (const key of serializedPagesCache.current.keys()) {
+      if (key >= pages.length) {
+        serializedPagesCache.current.delete(key);
+      }
+    }
+
+    prevPageCountRef.current = pages.length;
+
+    if (allSerializedPosts.length === 0) return null;
+
+    return {
+      posts: allSerializedPosts,
+      metadata: {
+        timestamp: Date.now(),
+        isOnline,
+        isFromCache,
+      },
+      cursor,
+    } as SerializedFeedData;
+  }, [query.data?.pages, isOnline, isFromCache, cursor, bookmarkedPostUris]);
 
   // Serialize to JSON
   const serializedJSON = useMemo(() => {

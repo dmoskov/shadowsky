@@ -24,6 +24,7 @@ export function useDrafts() {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     staleTime: 30000, // 30 seconds
+    maxPages: 10,
   });
 }
 

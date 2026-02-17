@@ -434,6 +434,7 @@ export function usePostLikes(uri: string) {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     enabled: !!uri,
+    maxPages: 10,
   });
 }
 
@@ -447,6 +448,7 @@ export function usePostReposts(uri: string) {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     enabled: !!uri,
+    maxPages: 10,
   });
 }
 
@@ -460,5 +462,6 @@ export function usePostQuotes(uri: string) {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     enabled: !!uri,
+    maxPages: 10,
   });
 }

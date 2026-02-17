@@ -42,6 +42,7 @@ export function useListFeed(listUri: string) {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     enabled: !!listUri,
+    maxPages: 10,
   });
 }
 
@@ -93,6 +94,7 @@ export function useListMembers(listUri: string) {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     enabled: !!listUri,
+    maxPages: 10,
   });
 }
 
