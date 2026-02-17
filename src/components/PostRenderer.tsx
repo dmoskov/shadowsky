@@ -3,6 +3,7 @@ import { formatDistanceToNow } from "date-fns";
 import {
   BellOff,
   Bookmark,
+  Globe,
   Heart,
   List,
   Loader,
@@ -19,6 +20,7 @@ import React, { memo } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useModeration } from "../contexts/ModerationContext";
+import { usePostTranslation } from "../hooks/usePostTranslation";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { fetchLinkMetadata, type LinkMetadata } from "../services/anthropic";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
@@ -427,6 +429,21 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
   // Get prefetch handlers for this post's author and thread
   const authorPrefetchHandlers = getProfilePrefetchHandlers(post.author.handle);
   const threadPrefetchHandlers = getThreadPrefetchHandlers(post.uri);
+
+  // Translation support
+  const {
+    showTranslateButton,
+    isTranslating,
+    translatedText,
+    isShowingTranslation,
+    translationError,
+    sourceLanguageName,
+    handleTranslate,
+  } = usePostTranslation({
+    postUri: post.uri,
+    postText: record?.text || "",
+    postLangs: record?.langs as string[] | undefined,
+  });
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1356,6 +1373,65 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               >
                 <RichText text={record?.text || ""} facets={record?.facets} />
               </p>
+              {/* Inline Translation */}
+              {isShowingTranslation && translatedText && (
+                <div
+                  className="mt-2 rounded-lg border-l-2 pl-3"
+                  style={{
+                    borderColor: "var(--asph-primary)",
+                  }}
+                >
+                  <p
+                    className="whitespace-pre-wrap break-words text-sm"
+                    style={{ color: "var(--asph-text-primary)" }}
+                  >
+                    {translatedText}
+                  </p>
+                  <span
+                    className="mt-1 block text-xs"
+                    style={{ color: "var(--asph-text-tertiary)" }}
+                  >
+                    Translated from {sourceLanguageName}
+                  </span>
+                </div>
+              )}
+              {translationError && (
+                <div
+                  className="mt-1 text-xs"
+                  style={{ color: "var(--asph-danger, #ef4444)" }}
+                >
+                  Translation failed. Try again.
+                </div>
+              )}
+              {showTranslateButton && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTranslate();
+                  }}
+                  className="mt-1 flex items-center gap-1 text-xs transition-colors hover:opacity-80"
+                  style={{ color: "var(--asph-primary)" }}
+                  disabled={isTranslating}
+                  aria-label={
+                    isShowingTranslation
+                      ? "Show original"
+                      : `Translate from ${sourceLanguageName}`
+                  }
+                >
+                  {isTranslating ? (
+                    <Loader size={12} className="animate-spin" />
+                  ) : (
+                    <Globe size={12} aria-hidden="true" />
+                  )}
+                  <span>
+                    {isTranslating
+                      ? "Translating..."
+                      : isShowingTranslation
+                        ? "Show original"
+                        : `Translate from ${sourceLanguageName}`}
+                  </span>
+                </button>
+              )}
               {post.embed && renderEmbed(post.embed)}
               {/* If no embed but text contains URLs, try to render them */}
               {!post.embed && record?.text && (

@@ -54,3 +54,6 @@ export {MoreVerticalIcon} from './MoreVerticalIcon';
 export {MoreIcon} from './MoreIcon';
 export {TrashIcon} from './TrashIcon';
 export {BellSlashIcon} from './BellSlashIcon';
+
+// Translation
+export {TranslateIcon} from './TranslateIcon';

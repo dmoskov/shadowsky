@@ -1,9 +1,9 @@
 import React, {useState, useCallback, useMemo} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Modal, Alert} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity, Modal, Alert, ActivityIndicator} from 'react-native';
 import {AppBskyFeedDefs, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
-import {ReplyIcon, RepostIcon, HeartIcon, BookmarkIcon, MoreIcon, SendIcon} from './icons';
+import {ReplyIcon, RepostIcon, HeartIcon, BookmarkIcon, MoreIcon, SendIcon, TranslateIcon} from './icons';
 import {RichText} from '../utils/rich-text';
 import {useNetwork} from '../contexts/NetworkContext';
 import {sharePost} from '../utils/share';
@@ -15,6 +15,7 @@ import {useModeration} from '../contexts/ModerationContext';
 import {ContentLabelWarning} from './ContentLabelWarning';
 import {ReportModal} from './ReportModal';
 import {SaveToCollectionModal} from './SaveToCollectionModal';
+import {usePostTranslation} from '../hooks/usePostTranslation';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -213,6 +214,25 @@ function PostCardComponent({
     [record]
   );
 
+  // Translation support
+  const postLangs = useMemo(
+    () => (record && Array.isArray(record.langs) ? record.langs as string[] : undefined),
+    [record]
+  );
+  const {
+    showTranslateButton,
+    isTranslating,
+    translatedText,
+    isShowingTranslation,
+    translationError,
+    sourceLanguageName,
+    handleTranslate,
+  } = usePostTranslation({
+    postUri: postView.uri,
+    postText,
+    postLangs,
+  });
+
   const postPreview = useMemo(
     () => (postText ? `${postText.substring(0, 100)}${postText.length > 100 ? '...' : ''}` : 'No text content'),
     [postText]
@@ -281,6 +301,45 @@ function PostCardComponent({
             onHashtagPress={onHashtagPress}
             style={styles.text}
           />
+        )}
+
+        {/* Inline Translation */}
+        {isShowingTranslation && translatedText && (
+          <View style={styles.translationContainer}>
+            <Text style={styles.translatedText}>{translatedText}</Text>
+            <Text style={styles.translationAttribution}>
+              Translated from {sourceLanguageName}
+            </Text>
+          </View>
+        )}
+        {translationError && (
+          <Text style={styles.translationError}>Translation failed. Try again.</Text>
+        )}
+        {showTranslateButton && (
+          <TouchableOpacity
+            style={styles.translateButton}
+            onPress={handleTranslate}
+            disabled={isTranslating}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={
+              isShowingTranslation
+                ? 'Show original'
+                : `Translate from ${sourceLanguageName}`
+            }>
+            {isTranslating ? (
+              <ActivityIndicator size="small" color={colors.primary} style={{marginRight: 4}} />
+            ) : (
+              <TranslateIcon size={14} color={colors.primary} />
+            )}
+            <Text style={[styles.translateButtonText, {color: colors.primary}]}>
+              {isTranslating
+                ? 'Translating...'
+                : isShowingTranslation
+                  ? 'Show original'
+                  : `Translate from ${sourceLanguageName}`}
+            </Text>
+          </TouchableOpacity>
         )}
 
         {/* Embeds (Images, Links, Quotes, Videos) */}
@@ -677,6 +736,40 @@ function createStyles(colors: any) {
   },
   menuItemDanger: {
     color: colors.danger,
+  },
+  translationContainer: {
+    borderLeftWidth: 2,
+    borderLeftColor: colors.primary,
+    paddingLeft: 12,
+    marginBottom: 12,
+    marginTop: 4,
+  },
+  translatedText: {
+    color: colors.text,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  translationAttribution: {
+    color: colors.textTertiary,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  translationError: {
+    color: colors.danger,
+    fontSize: 12,
+    marginTop: 2,
+    marginBottom: 4,
+  },
+  translateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+    marginBottom: 8,
+  },
+  translateButtonText: {
+    fontSize: 13,
+    fontWeight: '500',
   },
   });
 }

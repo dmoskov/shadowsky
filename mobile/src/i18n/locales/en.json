@@ -206,6 +206,13 @@
     "hours_ago": "{{count}}h ago",
     "days_ago": "{{count}}d ago"
   },
+  "translation": {
+    "translate_from": "Translate from {{language}}",
+    "translating": "Translating...",
+    "show_original": "Show original",
+    "translated_from": "Translated from {{language}}",
+    "translation_failed": "Translation failed. Try again."
+  },
   "errors": {
     "network_error": "Network error. Please check your connection.",
     "unknown_error": "An unknown error occurred",
