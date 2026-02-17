@@ -16,3 +16,8 @@ export {
   useDynamicType,
   type ScaledFontFn,
 } from "./useDynamicType";
+
+export {
+  useMobileComposerAI,
+  type UseMobileComposerAIReturn,
+} from "./useMobileComposerAI";

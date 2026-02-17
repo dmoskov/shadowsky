@@ -15,6 +15,12 @@ export { PostCard } from "./PostCard";
 export { PostDetailView } from "./PostDetailView";
 export { ProfileView } from "./ProfileView";
 
+// Composer components
+export { MobileAIToolbar } from "./MobileAIToolbar";
+export type { MobileAIToolbarProps } from "./MobileAIToolbar";
+export { MobileComposeScreen } from "./MobileComposeScreen";
+export type { MobileComposeScreenProps } from "./MobileComposeScreen";
+
 // Batch operation components
 export * from "./batch";
 
