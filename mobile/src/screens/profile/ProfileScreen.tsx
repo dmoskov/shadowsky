@@ -580,11 +580,6 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
         ListEmptyComponent={renderEmpty}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
-        removeClippedSubviews={true}
-        windowSize={7}
-        maxToRenderPerBatch={5}
-        initialNumToRender={8}
-        updateCellsBatchingPeriod={50}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
