@@ -70,6 +70,24 @@ const NotificationItemInner = React.memo(function NotificationItem({
           message: 'quoted your post',
           color: colors.quote,
         };
+      case 'like-via-repost':
+        return {
+          icon: <HeartIcon size={16} color={colors.like} filled />,
+          message: 'liked your repost',
+          color: colors.like,
+        };
+      case 'repost-via-repost':
+        return {
+          icon: <RepostIcon size={16} color={colors.repost} />,
+          message: 'reposted your repost',
+          color: colors.repost,
+        };
+      case 'starterpack-joined':
+        return {
+          icon: <FollowIcon size={16} color={colors.primary} />,
+          message: 'joined from your starter pack',
+          color: colors.primary,
+        };
       default:
         return {
           icon: <BellIcon size={16} color={colors.textSecondary} />,

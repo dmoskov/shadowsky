@@ -48,6 +48,10 @@ const AggregatedNotificationItemInner = React.memo(function AggregatedNotificati
 
   const count = notifications.length;
   const latestNotification = notifications[0];
+
+  // Guard against empty notifications array
+  if (!latestNotification) return null;
+
   const hasUnread = notifications.some(n => !n.isRead);
 
   // Get icon and color based on reason
@@ -72,6 +76,21 @@ const AggregatedNotificationItemInner = React.memo(function AggregatedNotificati
         return {
           icon: <QuoteIcon size={18} color={colors.quote} />,
           color: colors.quote,
+        };
+      case 'like-via-repost':
+        return {
+          icon: <HeartIcon size={18} color={colors.danger} filled />,
+          color: colors.danger,
+        };
+      case 'repost-via-repost':
+        return {
+          icon: <RepostIcon size={18} color={colors.success} />,
+          color: colors.success,
+        };
+      case 'starterpack-joined':
+        return {
+          icon: <FollowIcon size={18} color={colors.primary} />,
+          color: colors.primary,
         };
       default:
         return {
@@ -107,6 +126,12 @@ const AggregatedNotificationItemInner = React.memo(function AggregatedNotificati
         return 'followed you';
       case 'quote':
         return 'quoted your post';
+      case 'like-via-repost':
+        return 'liked your repost';
+      case 'repost-via-repost':
+        return 'reposted your repost';
+      case 'starterpack-joined':
+        return 'joined from your starter pack';
       default:
         return 'interacted with your post';
     }

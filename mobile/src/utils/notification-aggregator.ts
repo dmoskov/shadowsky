@@ -44,17 +44,19 @@ export function aggregateNotifications(
   notifications.forEach(notification => {
     // Only aggregate certain types
     if (
-      ['like', 'repost', 'follow', 'quote', 'starterpack-joined'].includes(
+      ['like', 'repost', 'follow', 'quote', 'starterpack-joined', 'like-via-repost', 'repost-via-repost'].includes(
         notification.reason,
       )
     ) {
       // For follows and starterpack-joined, group all together
-      // For likes/reposts, group by reasonSubject (the post being liked/reposted)
+      // For likes/reposts (including via-repost), group by reasonSubject
       // For quotes, group by uri (the quoting post)
       let key: string;
       if (['follow', 'starterpack-joined'].includes(notification.reason)) {
         key = `${notification.reason}-all`;
-      } else if (['like', 'repost'].includes(notification.reason)) {
+      } else if (
+        ['like', 'repost', 'like-via-repost', 'repost-via-repost'].includes(notification.reason)
+      ) {
         // Use reasonSubject for likes/reposts - this is the post being acted upon
         key = `${notification.reason}-${notification.reasonSubject || notification.uri || 'no-uri'}`;
       } else {
@@ -130,7 +132,7 @@ export function aggregateNotifications(
 
         // Get the target post URI for likes/reposts
         const firstNotification = cluster[0];
-        const targetPostUri = ['like', 'repost'].includes(reason)
+        const targetPostUri = ['like', 'repost', 'like-via-repost', 'repost-via-repost'].includes(reason)
           ? firstNotification.reasonSubject || firstNotification.uri
           : firstNotification.uri;
 
@@ -187,9 +189,9 @@ export function filterNotificationsByType(
   }
 
   const reasonMap: Record<string, string[]> = {
-    likes: ['like'],
+    likes: ['like', 'like-via-repost'],
     replies: ['reply'],
-    follows: ['follow'],
+    follows: ['follow', 'starterpack-joined'],
     mentions: ['mention'],
     quotes: ['quote'],
   };
@@ -211,9 +213,9 @@ export function filterProcessedNotifications(
   }
 
   const reasonMap: Record<string, string[]> = {
-    likes: ['like'],
+    likes: ['like', 'like-via-repost'],
     replies: ['reply'],
-    follows: ['follow'],
+    follows: ['follow', 'starterpack-joined'],
     mentions: ['mention'],
     quotes: ['quote'],
   };
@@ -245,12 +247,17 @@ export function countNotificationsByType(
   notifications.forEach(notification => {
     switch (notification.reason) {
       case 'like':
+      case 'like-via-repost':
         counts.likes++;
+        break;
+      case 'repost':
+      case 'repost-via-repost':
         break;
       case 'reply':
         counts.replies++;
         break;
       case 'follow':
+      case 'starterpack-joined':
         counts.follows++;
         break;
       case 'mention':

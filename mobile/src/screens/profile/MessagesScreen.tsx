@@ -363,8 +363,12 @@ export function MessagesScreen() {
     // If message exists on server, it's delivered
     const deliveryStatus = isOwnMessage ? (item.id ? "delivered" : "sent") : null;
 
-    // Check if message has media attachments
-    const hasImages = item.embed?.$type === "chat.bsky.convo.defs#messageEmbed" && item.embed.images && item.embed.images.length > 0;
+    // Check if message has media attachments — guard deeply to prevent render crashes
+    const embedImages = item.embed?.images;
+    const hasImages =
+      item.embed?.$type === "chat.bsky.convo.defs#messageEmbed" &&
+      Array.isArray(embedImages) &&
+      embedImages.length > 0;
 
     return (
       <View
@@ -380,10 +384,12 @@ export function MessagesScreen() {
           ]}
         >
           {/* Display images if present */}
-          {hasImages && item.embed?.images && (
+          {hasImages && embedImages && (
             <View style={styles.messageImagesContainer}>
-              {item.embed.images.map((img, imgIndex) => {
-                const imageUrl = `https://cdn.bsky.app/img/feed_thumbnail/plain/${session?.did}/${img.image.ref.$link}@jpeg`;
+              {embedImages.map((img, imgIndex) => {
+                const link = img?.image?.ref?.$link;
+                if (!link) return null;
+                const imageUrl = `https://cdn.bsky.app/img/feed_thumbnail/plain/${session?.did}/${link}@jpeg`;
                 return (
                   <Image
                     key={imgIndex}

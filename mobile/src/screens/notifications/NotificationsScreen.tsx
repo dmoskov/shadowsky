@@ -182,11 +182,20 @@ export function NotificationsScreen() {
         return;
       }
 
-      // For like/repost, navigate to the target post (reasonSubject)
-      if ((reason === 'like' || reason === 'repost') && notification.reasonSubject) {
+      // For like/repost (including via-repost variants), navigate to the target post
+      if (
+        (reason === 'like' || reason === 'repost' || reason === 'like-via-repost' || reason === 'repost-via-repost') &&
+        notification.reasonSubject
+      ) {
         const postId = getPostIdFromUri(notification.reasonSubject);
         const did = getHandleFromUri(notification.reasonSubject);
         navigateToThread(notification.author.handle, postId, did || undefined);
+        return;
+      }
+
+      // For starterpack-joined, navigate to the author's profile
+      if (reason === 'starterpack-joined') {
+        navigateToProfile(notification.author.handle);
         return;
       }
 
