@@ -39,7 +39,7 @@ app.use(
 
       // Allow any subdomain of shadowsky.io
       if (
-        origin.match(/^https?:\/\/.*\.shadowsky\.io$/) ||
+        origin.match(/^https:\/\/.*\.shadowsky\.io$/) ||
         allowedOrigins.includes(origin)
       ) {
         callback(null, true);
