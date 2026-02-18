@@ -146,7 +146,13 @@ const DEFAULT_PREFERENCES: AppPreferences = {
  * avoids the JS bridge overhead, making preference loading non-blocking and
  * eliminating an async gap before the first frame.
  */
-const mmkvPreferences = new MMKV({ id: 'shadowsky-preferences' });
+let _mmkvPreferences: InstanceType<typeof MMKV> | null = null;
+function getMMKVPreferences() {
+  if (!_mmkvPreferences) {
+    _mmkvPreferences = new MMKV({ id: 'shadowsky-preferences' });
+  }
+  return _mmkvPreferences;
+}
 
 class PreferencesService {
   private cache: AppPreferences | null = null;
@@ -163,7 +169,7 @@ class PreferencesService {
    */
   private _loadFromMMKV(): void {
     try {
-      const stored = mmkvPreferences.getString(PREFERENCES_KEY);
+      const stored = getMMKVPreferences().getString(PREFERENCES_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as AppPreferences;
         this.cache = { ...DEFAULT_PREFERENCES, ...parsed };
@@ -182,7 +188,7 @@ class PreferencesService {
    */
   async migrateFromAsyncStorage(): Promise<void> {
     // Only migrate if MMKV is empty (first launch after upgrade)
-    if (mmkvPreferences.getString(PREFERENCES_KEY)) {
+    if (getMMKVPreferences().getString(PREFERENCES_KEY)) {
       return;
     }
 
@@ -190,7 +196,7 @@ class PreferencesService {
       const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
       const stored = await AsyncStorage.getItem('@shadowsky_preferences');
       if (stored) {
-        mmkvPreferences.set(PREFERENCES_KEY, stored);
+        getMMKVPreferences().set(PREFERENCES_KEY, stored);
         this._loadFromMMKV();
         // Clean up old key after successful migration
         await AsyncStorage.removeItem('@shadowsky_preferences');
@@ -231,7 +237,7 @@ class PreferencesService {
     try {
       const current = this.getSync();
       const updated = { ...current, [key]: value };
-      mmkvPreferences.set(PREFERENCES_KEY, JSON.stringify(updated));
+      getMMKVPreferences().set(PREFERENCES_KEY, JSON.stringify(updated));
       this.cache = updated;
     } catch (error) {
       logger.error('Failed to save preference:', error);
@@ -246,7 +252,7 @@ class PreferencesService {
     try {
       const current = this.getSync();
       const updated = { ...current, ...updates };
-      mmkvPreferences.set(PREFERENCES_KEY, JSON.stringify(updated));
+      getMMKVPreferences().set(PREFERENCES_KEY, JSON.stringify(updated));
       this.cache = updated;
     } catch (error) {
       logger.error('Failed to save preferences:', error);
@@ -259,7 +265,7 @@ class PreferencesService {
    */
   async reset(): Promise<void> {
     try {
-      mmkvPreferences.delete(PREFERENCES_KEY);
+      getMMKVPreferences().delete(PREFERENCES_KEY);
       this.cache = DEFAULT_PREFERENCES;
     } catch (error) {
       logger.error('Failed to reset preferences:', error);

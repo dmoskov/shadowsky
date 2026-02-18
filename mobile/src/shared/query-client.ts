@@ -382,18 +382,24 @@ export function setupNetworkListener() {
  * which avoids the JS bridge overhead and JSON serialization thread-blocking
  * that occurs with AsyncStorage on large caches.
  */
-const mmkvStorage = new MMKV({ id: 'react-query-cache' });
+let _mmkvStorage: InstanceType<typeof MMKV> | null = null;
+function getMMKVStorage() {
+  if (!_mmkvStorage) {
+    _mmkvStorage = new MMKV({ id: 'react-query-cache' });
+  }
+  return _mmkvStorage;
+}
 
 const mmkvStorageAdapter = {
   getItem: (key: string): string | null => {
-    const value = mmkvStorage.getString(key);
+    const value = getMMKVStorage().getString(key);
     return value === undefined ? null : value;
   },
   setItem: (key: string, value: string): void => {
-    mmkvStorage.set(key, value);
+    getMMKVStorage().set(key, value);
   },
   removeItem: (key: string): void => {
-    mmkvStorage.delete(key);
+    getMMKVStorage().delete(key);
   },
 };
 

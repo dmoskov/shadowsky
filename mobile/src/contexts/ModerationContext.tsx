@@ -17,7 +17,13 @@ const logger = createLogger('ModerationContext');
  * MMKV instance for moderation preferences.
  * Replaces AsyncStorage for synchronous reads on cold start.
  */
-const mmkvModeration = new MMKV({ id: 'shadowsky-moderation' });
+let _mmkvModeration: InstanceType<typeof MMKV> | null = null;
+function getMMKVModeration() {
+  if (!_mmkvModeration) {
+    _mmkvModeration = new MMKV({ id: 'shadowsky-moderation' });
+  }
+  return _mmkvModeration;
+}
 const CONTENT_FILTER_KEY = "content_filter_preferences";
 
 /**
@@ -94,7 +100,7 @@ const ModerationContext = createContext<ModerationContextType | undefined>(
  */
 function loadPreferencesSync(): ContentFilterPreferences {
   try {
-    const stored = mmkvModeration.getString(CONTENT_FILTER_KEY);
+    const stored = getMMKVModeration().getString(CONTENT_FILTER_KEY);
     if (stored) {
       const parsed = JSON.parse(stored) as ContentFilterPreferences;
       return {
@@ -119,7 +125,7 @@ export function ModerationProvider({
 
   // One-time migration from AsyncStorage to MMKV
   useEffect(() => {
-    if (mmkvModeration.getString(CONTENT_FILTER_KEY)) {
+    if (getMMKVModeration().getString(CONTENT_FILTER_KEY)) {
       return; // Already migrated
     }
     (async () => {
@@ -127,7 +133,7 @@ export function ModerationProvider({
         const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
         const stored = await AsyncStorage.getItem('@shadowsky_content_filter_preferences');
         if (stored) {
-          mmkvModeration.set(CONTENT_FILTER_KEY, stored);
+          getMMKVModeration().set(CONTENT_FILTER_KEY, stored);
           setContentFilterPreferences(loadPreferencesSync());
           await AsyncStorage.removeItem('@shadowsky_content_filter_preferences');
         }
@@ -144,7 +150,7 @@ export function ModerationProvider({
           ...contentFilterPreferences,
           [labelType]: preference,
         };
-        mmkvModeration.set(CONTENT_FILTER_KEY, JSON.stringify(updated));
+        getMMKVModeration().set(CONTENT_FILTER_KEY, JSON.stringify(updated));
         setContentFilterPreferences(updated);
       } catch (error) {
         logger.error('Failed to save content filter preference:', error);
@@ -156,7 +162,7 @@ export function ModerationProvider({
 
   const resetContentFilterPreferences = useCallback(async () => {
     try {
-      mmkvModeration.delete(CONTENT_FILTER_KEY);
+      getMMKVModeration().delete(CONTENT_FILTER_KEY);
       setContentFilterPreferences(DEFAULT_CONTENT_FILTER_PREFERENCES);
     } catch (error) {
       logger.error('Failed to reset content filter preferences:', error);

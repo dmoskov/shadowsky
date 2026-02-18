@@ -23,7 +23,7 @@
     "preview": {
       "distribution": "internal",
       "ios": {
-        "resourceClass": "m-medium",
+        "resourceClass": "m-large",
         "simulator": false
       },
       "android": {
@@ -31,7 +31,8 @@
       },
       "channel": "preview",
       "env": {
-        "SENTRY_UPLOAD_SOURCE_MAPS": "true"
+        "SENTRY_UPLOAD_SOURCE_MAPS": "false",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
       }
     },
     "production": {
