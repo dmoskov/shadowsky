@@ -28,9 +28,20 @@ public class ProfileViewModule: Module {
                 view.isRefreshing = isRefreshing
             }
 
+            Prop("isFollowPending") { (view: ProfileViewWrapper, isFollowPending: Bool) in
+                view.isFollowPending = isFollowPending
+            }
+
+            Prop("isMessagePending") { (view: ProfileViewWrapper, isMessagePending: Bool) in
+                view.isMessagePending = isMessagePending
+            }
 
             Prop("error") { (view: ProfileViewWrapper, error: String?) in
                 view.error = error
+            }
+
+            Prop("errorType") { (view: ProfileViewWrapper, errorType: String?) in
+                view.errorType = errorType
             }
 
             // Events
@@ -42,7 +53,12 @@ public class ProfileViewModule: Module {
                 "onMenuPress",
                 "onFollowersPress",
                 "onFollowingPress",
-                "onEditProfile"
+                "onEditProfile",
+                "onAddToList",
+                "onPinnedPostPress",
+                "onStarterPackPress",
+                "onSignOut",
+                "onKnownFollowerPress"
             )
         }
     }
@@ -65,7 +81,19 @@ class ProfileViewWrapper: ExpoView {
         didSet { updateView() }
     }
 
+    var isFollowPending: Bool = false {
+        didSet { updateView() }
+    }
+
+    var isMessagePending: Bool = false {
+        didSet { updateView() }
+    }
+
     var error: String? = nil {
+        didSet { updateView() }
+    }
+
+    var errorType: String? = nil {
         didSet { updateView() }
     }
 
@@ -78,6 +106,11 @@ class ProfileViewWrapper: ExpoView {
     private let onFollowersPress = EventDispatcher()
     private let onFollowingPress = EventDispatcher()
     private let onEditProfile = EventDispatcher()
+    private let onAddToList = EventDispatcher()
+    private let onPinnedPostPress = EventDispatcher()
+    private let onStarterPackPress = EventDispatcher()
+    private let onSignOut = EventDispatcher()
+    private let onKnownFollowerPress = EventDispatcher()
 
     // SwiftUI hosting controller
     private var hostingController: UIHostingController<ProfileView>?
@@ -116,7 +149,10 @@ class ProfileViewWrapper: ExpoView {
             isOwnProfile: isOwnProfile,
             isLoadingProfile: isLoadingProfile,
             isRefreshing: isRefreshing,
+            isFollowPending: isFollowPending,
+            isMessagePending: isMessagePending,
             error: error,
+            errorType: errorType,
             onRefresh: { [weak self] in
                 self?.onRefresh([:])
             },
@@ -140,6 +176,21 @@ class ProfileViewWrapper: ExpoView {
             },
             onEditProfile: { [weak self] in
                 self?.onEditProfile([:])
+            },
+            onAddToList: { [weak self] in
+                self?.onAddToList([:])
+            },
+            onPinnedPostPress: { [weak self] uri in
+                self?.onPinnedPostPress(["uri": uri])
+            },
+            onStarterPackPress: { [weak self] uri in
+                self?.onStarterPackPress(["uri": uri])
+            },
+            onSignOut: { [weak self] in
+                self?.onSignOut([:])
+            },
+            onKnownFollowerPress: { [weak self] handle in
+                self?.onKnownFollowerPress(["handle": handle])
             }
         )
     }
