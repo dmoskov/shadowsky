@@ -100,6 +100,7 @@ jest.mock('../../../utils/notification-aggregator', () => ({
   aggregateNotifications: (notifs: any[]) =>
     notifs.map((n: any) => ({type: 'single', notification: n})),
   filterNotificationsByType: (notifs: any[], _filter: string) => mockFilterFn(notifs),
+  filterProcessedNotifications: (processed: any[], _filter: string) => processed,
   countNotificationsByType: () => ({all: 3, likes: 1, reposts: 0, follows: 1, mentions: 1, replies: 0, quotes: 0}),
 }));
 

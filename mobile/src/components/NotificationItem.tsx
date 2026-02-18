@@ -15,7 +15,7 @@ interface NotificationItemProps {
   onHashtagPress?: (tag: string) => void;
 }
 
-export function NotificationItem({
+const NotificationItemInner = React.memo(function NotificationItem({
   notification,
   onPress,
   onProfilePress,
@@ -69,6 +69,24 @@ export function NotificationItem({
           icon: <QuoteIcon size={16} color={colors.quote} />,
           message: 'quoted your post',
           color: colors.quote,
+        };
+      case 'like-via-repost':
+        return {
+          icon: <HeartIcon size={16} color={colors.like} filled />,
+          message: 'liked your repost',
+          color: colors.like,
+        };
+      case 'repost-via-repost':
+        return {
+          icon: <RepostIcon size={16} color={colors.repost} />,
+          message: 'reposted your repost',
+          color: colors.repost,
+        };
+      case 'starterpack-joined':
+        return {
+          icon: <FollowIcon size={16} color={colors.primary} />,
+          message: 'joined from your starter pack',
+          color: colors.primary,
         };
       default:
         return {
@@ -163,7 +181,9 @@ export function NotificationItem({
       {!notification.isRead && <View style={styles.unreadIndicator} />}
     </TouchableOpacity>
   );
-}
+});
+
+export { NotificationItemInner as NotificationItem };
 
 function createStyles(colors: any) {
   return StyleSheet.create({

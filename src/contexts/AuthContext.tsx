@@ -115,6 +115,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const initAttempts = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const maxRetries = 3;
+  // Guard against concurrent initializeAuth calls (React strict mode, fast refresh)
+  const initInProgressRef = useRef(false);
+  // Keep a ref to session so logout always reads the current value, not a stale closure
+  const sessionRef = useRef<Session | null>(null);
+
+  // Keep sessionRef in sync with session state
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
 
   const logout = useCallback(
     async (logoutAllAccounts = false) => {
@@ -149,15 +158,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (logoutAllAccounts) {
         AccountManager.clearAllAccounts();
         multiClientManager.clearAll();
-      } else if (session?.did) {
-        // Just remove the current account's client
-        multiClientManager.removeClient(session.did);
+      } else {
+        // Read session.did at call time via ref, not the stale closure value
+        const did = sessionRef.current?.did;
+        if (did) {
+          multiClientManager.removeClient(did);
+        }
       }
 
       // Force a page reload to ensure all state is cleared
       window.location.href = "/";
     },
-    [authMethod, session],
+    [authMethod],
   );
 
   const refreshSession = useCallback(async (): Promise<boolean> => {
@@ -210,7 +222,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
     }, 10000);
 
+    // AbortController lets us cancel in-flight async work on cleanup
+    // (unmount, strict-mode re-run, or fast refresh)
+    const abortController = new AbortController();
+    const { signal } = abortController;
+
+    /** Throw if the effect has been cleaned up so we bail out of initializeAuth. */
+    const throwIfAborted = () => {
+      if (signal.aborted) {
+        throw new DOMException("Auth init aborted", "AbortError");
+      }
+    };
+
     const initializeAuth = async () => {
+      // Prevent concurrent init calls (React strict mode, fast refresh, retry overlap)
+      if (initInProgressRef.current) {
+        return;
+      }
+      initInProgressRef.current = true;
+
       try {
         // Start prefetching the home route chunk in parallel with auth
         // This loads SkyDeck.js while we're checking session status
@@ -219,11 +249,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // First, do a lightweight check for existing OAuth session
         // This avoids loading the ~328KB OAuth client for users who don't use OAuth
         const mayHaveOAuthSession = await hasExistingOAuthSession();
+        throwIfAborted();
 
         if (mayHaveOAuthSession) {
           // Only load the full OAuth client if we might have a session to restore
           debug.log("Checking for OAuth session...");
           const oauthState = await oauthService.init();
+          throwIfAborted();
 
           // Check if OAuth is available (client metadata loaded)
           setIsOAuthAvailable(oauthService.isAvailable());
@@ -246,12 +278,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               const { data: profile } = await agent.getProfile({
                 actor: oauthState.did,
               });
+              throwIfAborted();
               handle = profile.handle;
               profileData = {
                 displayName: profile.displayName,
                 avatar: profile.avatar,
               };
             } catch (err) {
+              // Re-throw AbortError so the outer catch handles cleanup
+              if (err instanceof DOMException && err.name === "AbortError") {
+                throw err;
+              }
               // Check if this is an auth error (401/400) indicating expired session
               // AT Protocol errors can have status in different locations
               const error = err as Error & {
@@ -286,6 +323,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 } catch {
                   // Ignore signOut errors
                 }
+                throwIfAborted();
                 // Fall through to check for app-password session
               } else {
                 // Non-auth error (network, etc.) - try to continue with cached handle
@@ -320,6 +358,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 initializeBookmarkService(agent),
                 initializeDataServices(agent),
               ]);
+              throwIfAborted();
 
               setIsAuthenticated(true);
               setAuthMethod("oauth");
@@ -354,16 +393,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const savedSession = ATProtoClient.loadSavedSession(
           atProtoClient.getSessionPrefix(),
         );
-        if (savedSession) {
+        // Also check AccountManager as fallback — multiClientManager login
+        // stores sessions there but may not write to the legacy session key
+        const activeAccount = AccountManager.getActiveAccount();
+        if (
+          savedSession ||
+          (activeAccount && activeAccount.authMethod !== "oauth")
+        ) {
           initAttempts.current++;
 
           try {
-            // Get the active account from AccountManager or create one from saved session
-            const activeAccount = AccountManager.getActiveAccount();
             const accountToResume = activeAccount || {
-              did: savedSession.did,
-              handle: savedSession.handle,
-              session: savedSession,
+              did: savedSession!.did,
+              handle: savedSession!.handle,
+              session: savedSession!,
               authMethod: "app-password" as const,
               isActive: true,
               lastUsed: Date.now(),
@@ -372,6 +415,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Use multiClientManager to resume session - creates dedicated agent
             const managedClient =
               await multiClientManager.resumeSession(accountToResume);
+            throwIfAborted();
 
             const resumedSession: Session = {
               did: managedClient.did,
@@ -393,12 +437,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               initializeBookmarkService(managedClient.agent),
               initializeDataServices(managedClient.agent),
             ]);
+            throwIfAborted();
 
             // Store account in AccountManager for multi-account support
             try {
               const { data: profile } = await managedClient.agent.getProfile({
                 actor: resumedSession.did,
               });
+              throwIfAborted();
               AccountManager.addOrUpdateAccount(
                 resumedSession,
                 {
@@ -407,7 +453,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 },
                 "app-password",
               );
-            } catch {
+            } catch (err) {
+              // Re-throw AbortError so we don't swallow cancellation
+              if (err instanceof DOMException && err.name === "AbortError") {
+                throw err;
+              }
               // Still add account even if profile fetch fails
               AccountManager.addOrUpdateAccount(
                 resumedSession,
@@ -416,6 +466,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               );
             }
           } catch (error) {
+            // Re-throw AbortError — cleanup is handled in the outer catch
+            if (error instanceof DOMException && error.name === "AbortError") {
+              throw error;
+            }
+
             const status = (error as Error & { status?: number })?.status;
 
             // 400 errors are expected when session is invalid/expired - don't log as error
@@ -445,7 +500,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               // For network errors, keep the session and retry
               debug.log("Network error during session resume, will retry...");
 
-              if (initAttempts.current < maxRetries && navigator.onLine) {
+              if (
+                initAttempts.current < maxRetries &&
+                navigator.onLine &&
+                !signal.aborted
+              ) {
+                // Reset in-progress flag before scheduling retry
+                initInProgressRef.current = false;
                 retryTimerRef.current = setTimeout(() => {
                   retryTimerRef.current = null;
                   initializeAuth(); // Retry
@@ -464,16 +525,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
       } catch (error) {
+        // Silently swallow AbortError — expected when effect is cleaned up
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
         // Error during auth initialization
         debug.error("Failed to initialize auth:", error);
       } finally {
-        setIsLoading(false);
+        initInProgressRef.current = false;
+        if (!signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
     initializeAuth();
 
     return () => {
+      abortController.abort();
+      initInProgressRef.current = false;
       clearTimeout(safetyTimeout);
       if (retryTimerRef.current) {
         clearTimeout(retryTimerRef.current);
@@ -558,6 +628,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             "app-password",
           );
         }
+
+        // Persist session to legacy key so initializeAuth can restore on refresh
+        AccountManager.switchAccount(newSession.did);
 
         return true;
       } catch (error) {

@@ -30,7 +30,7 @@ import StaleContentIndicator from '../../components/StaleContentIndicator';
 import {filterMutedNotifications} from '../../utils/content-filter';
 import {
   aggregateNotifications,
-  filterNotificationsByType,
+  filterProcessedNotifications,
   countNotificationsByType,
   ProcessedNotification,
 } from '../../utils/notification-aggregator';
@@ -103,15 +103,15 @@ export function NotificationsScreen() {
     return countNotificationsByType(notifications);
   }, [notifications]);
 
-  // Filter notifications based on active filter
-  const filteredNotifications = useMemo(() => {
-    return filterNotificationsByType(notifications, activeFilter);
-  }, [notifications, activeFilter]);
+  // Aggregate all notifications once (expensive operation)
+  const allProcessedNotifications = useMemo(() => {
+    return aggregateNotifications(notifications);
+  }, [notifications]);
 
-  // Aggregate notifications
+  // Filter processed notifications by active filter (cheap operation)
   const processedNotifications = useMemo(() => {
-    return aggregateNotifications(filteredNotifications);
-  }, [filteredNotifications]);
+    return filterProcessedNotifications(allProcessedNotifications, activeFilter);
+  }, [allProcessedNotifications, activeFilter]);
 
   const renderFooter = useCallback(() => {
     if (!isFetchingNextPage) return null;
@@ -182,11 +182,20 @@ export function NotificationsScreen() {
         return;
       }
 
-      // For like/repost, navigate to the target post (reasonSubject)
-      if ((reason === 'like' || reason === 'repost') && notification.reasonSubject) {
+      // For like/repost (including via-repost variants), navigate to the target post
+      if (
+        (reason === 'like' || reason === 'repost' || reason === 'like-via-repost' || reason === 'repost-via-repost') &&
+        notification.reasonSubject
+      ) {
         const postId = getPostIdFromUri(notification.reasonSubject);
         const did = getHandleFromUri(notification.reasonSubject);
         navigateToThread(notification.author.handle, postId, did || undefined);
+        return;
+      }
+
+      // For starterpack-joined, navigate to the author's profile
+      if (reason === 'starterpack-joined') {
+        navigateToProfile(notification.author.handle);
         return;
       }
 

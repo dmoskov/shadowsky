@@ -18,6 +18,72 @@ import butterflyIcon from "/butterfly-icon.svg";
 
 type LoginMode = "oauth" | "app-password";
 
+const AuthExplainer: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="mb-6">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center gap-2 text-sm transition-opacity hover:opacity-80"
+        style={{ color: "var(--asph-text-secondary)" }}
+        aria-expanded={isOpen}
+      >
+        <span className={`transition-transform ${isOpen ? "rotate-90" : ""}`}>
+          ▶
+        </span>
+        Which sign-in method should I use?
+      </button>
+
+      {isOpen && (
+        <div
+          className="mt-3 space-y-3 rounded-lg p-4 text-sm"
+          style={{ backgroundColor: "var(--asph-bg-secondary)" }}
+        >
+          <div>
+            <p
+              className="mb-1 font-semibold"
+              style={{ color: "var(--asph-text-primary)" }}
+            >
+              OAuth (Recommended)
+            </p>
+            <p style={{ color: "var(--asph-text-secondary)" }}>
+              Redirects you to Bluesky to authorize access. More secure because
+              you never share your password. However, OAuth does not currently
+              support direct messages &mdash; granular permission scopes are
+              still being developed by the AT Protocol team.
+            </p>
+          </div>
+          <div>
+            <p
+              className="mb-1 font-semibold"
+              style={{ color: "var(--asph-text-primary)" }}
+            >
+              App Password (Required for DMs)
+            </p>
+            <p style={{ color: "var(--asph-text-secondary)" }}>
+              Use an{" "}
+              <a
+                href="https://bsky.app/settings/app-passwords"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:no-underline"
+                style={{ color: "var(--asph-primary)" }}
+              >
+                app password
+              </a>{" "}
+              if you need access to direct messages. App passwords provide full
+              account access but are separate from your main password, so you
+              can revoke them anytime.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const LandingPage: React.FC = () => {
   const { login, loginWithOAuth, isOAuthAvailable } = useAuth();
   // Default to app-password if OAuth isn't available yet
@@ -481,6 +547,9 @@ export const LandingPage: React.FC = () => {
                 </form>
               )}
             </div>
+
+            {/* Auth Explainer */}
+            <AuthExplainer />
 
             {/* Security Info */}
             <aside className="space-y-3" aria-label="Security information">

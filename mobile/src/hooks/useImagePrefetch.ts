@@ -3,7 +3,7 @@ import {Image} from 'expo-image';
 import {AppBskyFeedDefs, AppBskyEmbedImages} from '@atproto/api';
 import {getOptimizedUrl} from '../utils/image-cdn';
 
-const PREFETCH_WINDOW = 5; // prefetch thumbs for posts 3-8 ahead
+const PREFETCH_WINDOW = 10; // prefetch thumbs for posts 3-13 ahead
 const MAX_PREFETCH_SET_SIZE = 200; // cap to prevent unbounded memory growth
 
 function extractImageUrls(post: AppBskyFeedDefs.FeedViewPost): string[] {

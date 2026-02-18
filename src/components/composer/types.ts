@@ -145,6 +145,13 @@ export interface PendingPost {
   media: UploadedMedia[];
 }
 
+// Thread posting progress - tracks which posts have been published
+export interface ThreadProgress {
+  rootPost: { uri: string; cid: string };
+  lastPost: { uri: string; cid: string };
+  publishedCount: number; // number of posts successfully published
+}
+
 // Composer settings from localStorage
 export interface ComposerSettings {
   numberingFormat: NumberingFormatType;

@@ -502,7 +502,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
           ) : (
             <FeedList
               posts={posts}
-              isLoading={false}
+              isLoading={isLoadingPosts && !!debouncedQuery}
               isRefreshing={isRefreshing}
               isLoadingMore={isFetchingNextPage}
               error={isError ? new Error("Failed to load posts") : null}

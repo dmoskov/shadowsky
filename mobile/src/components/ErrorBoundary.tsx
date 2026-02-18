@@ -1,13 +1,13 @@
-import { useRouter } from "expo-router";
 import React, { Component, ReactNode } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import * as Updates from "expo-updates";
 import { captureException } from "../utils/error-reporting";
 import { colors } from "../constants/theme";
 
+import { createLogger } from "../utils/logger";
 
-import { createLogger } from '../utils/logger';
+const logger = createLogger("ErrorBoundary");
 
-const logger = createLogger('Errorboundaryx');
 interface Props {
   children: ReactNode;
 }
@@ -18,14 +18,10 @@ interface State {
   errorId: string;
 }
 
-/**
- * Generate a short error ID for reference in bug reports
- */
 function generateErrorId(): string {
   return `err-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
 }
 
-// Error boundary requires class component
 class ErrorBoundaryClass extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -33,18 +29,16 @@ class ErrorBoundaryClass extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): State {
-    // Update state so the next render will show the fallback UI
     return { hasError: true, error, errorId: generateErrorId() };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    // Log the error for debugging with error ID
-    logger.error(`Error ID: ${this.state.errorId}`,
+    logger.error(
+      `Error ID: ${this.state.errorId}`,
       error,
       errorInfo.componentStack,
     );
 
-    // Report to Sentry
     captureException(error, {
       extra: {
         errorId: this.state.errorId,
@@ -53,8 +47,13 @@ class ErrorBoundaryClass extends Component<Props, State> {
     });
   }
 
-  handleReset = (): void => {
-    this.setState({ hasError: false, error: null, errorId: "" });
+  handleReload = async (): Promise<void> => {
+    try {
+      await Updates.reloadAsync();
+    } catch {
+      // reloadAsync fails in dev builds — fall back to resetting state
+      this.setState({ hasError: false, error: null, errorId: "" });
+    }
   };
 
   render() {
@@ -63,7 +62,7 @@ class ErrorBoundaryClass extends Component<Props, State> {
         <ErrorFallback
           error={this.state.error}
           errorId={this.state.errorId}
-          onReset={this.handleReset}
+          onReload={this.handleReload}
         />
       );
     }
@@ -72,37 +71,23 @@ class ErrorBoundaryClass extends Component<Props, State> {
   }
 }
 
-// Functional component for the fallback UI that can use hooks
 function ErrorFallback({
   error,
   errorId,
-  onReset,
+  onReload,
 }: {
   error: Error | null;
   errorId: string;
-  onReset: () => void;
+  onReload: () => void;
 }) {
-  const router = useRouter();
-
-  const handleGoHome = () => {
-    onReset();
-    router.replace("/(app)/(tabs)/(home)");
-  };
-
-  // Check if we're in development mode
-  const globalAny = global as unknown as { __DEV__?: boolean };
-  const isDevelopment =
-    typeof globalAny !== "undefined" && globalAny.__DEV__ !== undefined
-      ? globalAny.__DEV__
-      : false;
+  const isDevelopment = __DEV__;
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Something went wrong</Text>
         <Text style={styles.message}>
-          We encountered an unexpected error. You can try again or return to the
-          home screen.
+          We encountered an unexpected error. Tap below to restart the app.
         </Text>
 
         {errorId && <Text style={styles.errorId}>Error ID: {errorId}</Text>}
@@ -122,16 +107,9 @@ function ErrorFallback({
         <View style={styles.buttons}>
           <TouchableOpacity
             style={[styles.button, styles.primaryButton]}
-            onPress={onReset}
+            onPress={onReload}
           >
-            <Text style={styles.primaryButtonText}>Try Again</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.button, styles.secondaryButton]}
-            onPress={handleGoHome}
-          >
-            <Text style={styles.secondaryButtonText}>Go Home</Text>
+            <Text style={styles.primaryButtonText}>Restart App</Text>
           </TouchableOpacity>
         </View>
       </View>

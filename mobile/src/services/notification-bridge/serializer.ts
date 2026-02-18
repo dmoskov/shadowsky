@@ -126,31 +126,33 @@ function serializeNotificationAuthor(author: any): SerializedNotificationAuthor 
 function serializeNotificationFacets(facets: unknown[] | undefined): SerializedNotificationFacet[] | undefined {
   if (!facets || facets.length === 0) return undefined;
 
-  return facets.map((facet: any) => ({
-    index: {
-      byteStart: facet.index.byteStart,
-      byteEnd: facet.index.byteEnd,
-    },
-    features: facet.features.map((feature: any) => {
-      if (feature.$type === 'app.bsky.richtext.facet#mention') {
-        return {
-          $type: 'app.bsky.richtext.facet#mention',
-          did: feature.did,
-        };
-      } else if (feature.$type === 'app.bsky.richtext.facet#link') {
-        return {
-          $type: 'app.bsky.richtext.facet#link',
-          uri: feature.uri,
-        };
-      } else if (feature.$type === 'app.bsky.richtext.facet#tag') {
-        return {
-          $type: 'app.bsky.richtext.facet#tag',
-          tag: feature.tag,
-        };
-      }
-      return feature;
-    }),
-  }));
+  return facets
+    .filter((facet: any) => facet?.index && Array.isArray(facet?.features))
+    .map((facet: any) => ({
+      index: {
+        byteStart: facet.index.byteStart,
+        byteEnd: facet.index.byteEnd,
+      },
+      features: facet.features.map((feature: any) => {
+        if (feature.$type === 'app.bsky.richtext.facet#mention') {
+          return {
+            $type: 'app.bsky.richtext.facet#mention',
+            did: feature.did,
+          };
+        } else if (feature.$type === 'app.bsky.richtext.facet#link') {
+          return {
+            $type: 'app.bsky.richtext.facet#link',
+            uri: feature.uri,
+          };
+        } else if (feature.$type === 'app.bsky.richtext.facet#tag') {
+          return {
+            $type: 'app.bsky.richtext.facet#tag',
+            tag: feature.tag,
+          };
+        }
+        return feature;
+      }),
+    }));
 }
 
 /**

@@ -147,29 +147,34 @@ class DmService {
 
           const data = (await response.json()) as ApiListConvosResponse;
 
-          return data.convos.map((convo: ApiConvo) => ({
-            id: convo.id,
-            rev: convo.rev,
-            members: convo.members.map((member: ApiConvoMember) => ({
-              did: member.did,
-              handle: member.handle,
-              displayName: member.displayName,
-              avatar: member.avatar,
-            })),
-            muted: convo.muted || false,
-            unreadCount: convo.unreadCount || 0,
-            lastMessage: convo.lastMessage
-              ? {
-                  id: convo.lastMessage.id,
-                  rev: convo.lastMessage.rev,
-                  text: convo.lastMessage.text,
-                  sentAt: convo.lastMessage.sentAt,
-                  sender: {
-                    did: convo.lastMessage.sender.did,
-                  },
-                }
-              : undefined,
-          }));
+          return data.convos.map((convo: ApiConvo) => {
+            // lastMessage can be a deleted message view which lacks text/sender
+            const lm = convo.lastMessage;
+            const lastMessage =
+              lm && lm.sender
+                ? {
+                    id: lm.id,
+                    rev: lm.rev,
+                    text: lm.text || "",
+                    sentAt: lm.sentAt,
+                    sender: { did: lm.sender.did },
+                  }
+                : undefined;
+
+            return {
+              id: convo.id,
+              rev: convo.rev,
+              members: convo.members.map((member: ApiConvoMember) => ({
+                did: member.did,
+                handle: member.handle,
+                displayName: member.displayName,
+                avatar: member.avatar,
+              })),
+              muted: convo.muted || false,
+              unreadCount: convo.unreadCount || 0,
+              lastMessage,
+            };
+          });
         } catch (error: unknown) {
           const apiErr = error as ApiError;
           if (apiErr.status === 401 || apiErr.statusCode === 401) {
@@ -237,10 +242,11 @@ class DmService {
           const convo = convoData.convo;
 
           const messages = messagesData.messages
+            .filter((msg: any) => msg.$type !== "chat.bsky.convo.defs#deletedMessageView")
             .map((msg: ApiMessage) => ({
               id: msg.id,
               rev: msg.rev,
-              text: msg.text,
+              text: msg.text || "",
               sentAt: msg.sentAt,
               sender: {
                 did: msg.sender.did,
@@ -248,6 +254,19 @@ class DmService {
               embed: msg.embed,
             }))
             .reverse(); // Reverse to show oldest first
+
+          // lastMessage can be a deleted message view which lacks text/sender
+          const clm = convo.lastMessage;
+          const convoLastMessage =
+            clm && clm.sender
+              ? {
+                  id: clm.id,
+                  rev: clm.rev,
+                  text: clm.text || "",
+                  sentAt: clm.sentAt,
+                  sender: { did: clm.sender.did },
+                }
+              : undefined;
 
           return {
             conversation: {
@@ -261,17 +280,7 @@ class DmService {
               })),
               muted: convo.muted || false,
               unreadCount: convo.unreadCount || 0,
-              lastMessage: convo.lastMessage
-                ? {
-                    id: convo.lastMessage.id,
-                    rev: convo.lastMessage.rev,
-                    text: convo.lastMessage.text,
-                    sentAt: convo.lastMessage.sentAt,
-                    sender: {
-                      did: convo.lastMessage.sender.did,
-                    },
-                  }
-                : undefined,
+              lastMessage: convoLastMessage,
             },
             messages,
           };
@@ -463,6 +472,18 @@ class DmService {
           const data = (await response.json()) as ApiGetConvoResponse;
           const convo = data.convo;
 
+          const flm = convo.lastMessage;
+          const forMembersLastMessage =
+            flm && flm.sender
+              ? {
+                  id: flm.id,
+                  rev: flm.rev,
+                  text: flm.text || "",
+                  sentAt: flm.sentAt,
+                  sender: { did: flm.sender.did },
+                }
+              : undefined;
+
           return {
             id: convo.id,
             rev: convo.rev,
@@ -474,17 +495,7 @@ class DmService {
             })),
             muted: convo.muted || false,
             unreadCount: convo.unreadCount || 0,
-            lastMessage: convo.lastMessage
-              ? {
-                  id: convo.lastMessage.id,
-                  rev: convo.lastMessage.rev,
-                  text: convo.lastMessage.text,
-                  sentAt: convo.lastMessage.sentAt,
-                  sender: {
-                    did: convo.lastMessage.sender.did,
-                  },
-                }
-              : undefined,
+            lastMessage: forMembersLastMessage,
           };
         } catch (error: unknown) {
           logger.error('Failed to get conversation for members:', error);

@@ -39,25 +39,30 @@ function MemberItem({member, onRemove, onProfilePress, isOwner, colors}: MemberI
   const subject = member.subject;
   const styles = useMemo(() => createStyles(colors), [colors]);
 
+  // Guard against deleted/deactivated accounts with missing data
+  const handle = subject.handle || 'unknown';
+  const displayName = subject.displayName || handle;
+  const initial = (displayName[0] || '?').toUpperCase();
+
   return (
     <View style={styles.memberItem}>
       <TouchableOpacity
         style={styles.memberContent}
-        onPress={() => onProfilePress(subject.handle)}>
+        onPress={() => onProfilePress(handle)}>
         {subject.avatar ? (
           <Image source={{uri: subject.avatar}} style={styles.avatar} />
         ) : (
           <View style={[styles.avatar, styles.avatarPlaceholder]}>
             <Text style={styles.avatarText}>
-              {subject.displayName?.[0] || subject.handle[0].toUpperCase()}
+              {initial}
             </Text>
           </View>
         )}
         <View style={styles.memberInfo}>
           <Text style={styles.displayName}>
-            {subject.displayName || subject.handle}
+            {displayName}
           </Text>
-          <Text style={styles.handle}>@{subject.handle}</Text>
+          <Text style={styles.handle}>@{handle}</Text>
         </View>
       </TouchableOpacity>
       {isOwner && (

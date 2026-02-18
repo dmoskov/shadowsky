@@ -413,7 +413,7 @@ const mmkvStorageAdapter = {
 export const mmkvPersister = createSyncStoragePersister({
   storage: mmkvStorageAdapter,
   key: 'REACT_QUERY_OFFLINE_CACHE',
-  throttleTime: 2000, // 2s throttle — cache can reach 1-3MB during active sessions
+  throttleTime: 5000, // 5s throttle — cache can reach 1-3MB during active sessions
 });
 
 /**

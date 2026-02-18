@@ -174,7 +174,7 @@ router.post("/fetch-link-metadata", moderateLimiter, async (req, res) => {
     }
 
     res.status(500).json({
-      error: error.message || "Failed to fetch link metadata",
+      error: "Failed to fetch link metadata",
     });
   }
 });

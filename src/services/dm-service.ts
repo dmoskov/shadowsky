@@ -136,29 +136,34 @@ class DmService {
 
       const response = (await apiResponse.json()) as ApiListConvosResponse;
 
-      return response.convos.map((convo: ApiConvo) => ({
-        id: convo.id,
-        rev: convo.rev,
-        members: convo.members.map((member: ApiConvoMember) => ({
-          did: member.did,
-          handle: member.handle,
-          displayName: member.displayName,
-          avatar: member.avatar,
-        })),
-        muted: convo.muted || false,
-        unreadCount: convo.unreadCount || 0,
-        lastMessage: convo.lastMessage
-          ? {
-              id: convo.lastMessage.id,
-              rev: convo.lastMessage.rev,
-              text: convo.lastMessage.text,
-              sentAt: convo.lastMessage.sentAt,
-              sender: {
-                did: convo.lastMessage.sender.did,
-              },
-            }
-          : undefined,
-      }));
+      return response.convos.map((convo: ApiConvo) => {
+        // lastMessage can be a deleted message view which lacks text/sender
+        const lm = convo.lastMessage;
+        const lastMessage =
+          lm && lm.sender
+            ? {
+                id: lm.id,
+                rev: lm.rev,
+                text: lm.text || "",
+                sentAt: lm.sentAt,
+                sender: { did: lm.sender.did },
+              }
+            : undefined;
+
+        return {
+          id: convo.id,
+          rev: convo.rev,
+          members: convo.members.map((member: ApiConvoMember) => ({
+            did: member.did,
+            handle: member.handle,
+            displayName: member.displayName,
+            avatar: member.avatar,
+          })),
+          muted: convo.muted || false,
+          unreadCount: convo.unreadCount || 0,
+          lastMessage,
+        };
+      });
     } catch (error: unknown) {
       const apiErr = error as ApiError;
       if (apiErr.status === 401 || apiErr.statusCode === 401) {
@@ -208,10 +213,13 @@ class DmService {
       const convo = convoData.convo;
 
       const messages = messagesData.messages
+        .filter(
+          (msg: any) => msg.$type !== "chat.bsky.convo.defs#deletedMessageView",
+        )
         .map((msg: ApiMessage) => ({
           id: msg.id,
           rev: msg.rev,
-          text: msg.text,
+          text: msg.text || "",
           sentAt: msg.sentAt,
           sender: {
             did: msg.sender.did,
@@ -231,6 +239,19 @@ class DmService {
         }))
         .reverse(); // Reverse to show oldest first
 
+      // lastMessage can be a deleted message view which lacks text/sender
+      const clm = convo.lastMessage;
+      const convoLastMessage =
+        clm && clm.sender
+          ? {
+              id: clm.id,
+              rev: clm.rev,
+              text: clm.text || "",
+              sentAt: clm.sentAt,
+              sender: { did: clm.sender.did },
+            }
+          : undefined;
+
       return {
         conversation: {
           id: convo.id,
@@ -243,17 +264,7 @@ class DmService {
           })),
           muted: convo.muted || false,
           unreadCount: convo.unreadCount || 0,
-          lastMessage: convo.lastMessage
-            ? {
-                id: convo.lastMessage.id,
-                rev: convo.lastMessage.rev,
-                text: convo.lastMessage.text,
-                sentAt: convo.lastMessage.sentAt,
-                sender: {
-                  did: convo.lastMessage.sender.did,
-                },
-              }
-            : undefined,
+          lastMessage: convoLastMessage,
         },
         messages,
       };

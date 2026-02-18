@@ -157,24 +157,25 @@ export class PostStorageDB {
     const transaction = db.transaction([POST_STORE], "readonly");
     const store = transaction.objectStore(POST_STORE);
 
-    const posts: Post[] = [];
+    // Issue all get requests synchronously to keep the transaction alive.
+    // Awaiting between requests would yield to the microtask queue, allowing
+    // the IDB transaction to auto-commit and causing TransactionInactiveError.
+    const requests = uris.map((uri) => store.get(uri));
 
-    for (const uri of uris) {
-      const request = store.get(uri);
-      await new Promise<void>((resolve, reject) => {
-        request.onsuccess = () => {
+    return new Promise((resolve, reject) => {
+      transaction.oncomplete = () => {
+        const posts: Post[] = [];
+        for (const request of requests) {
           const result = request.result;
           if (result) {
             delete result._cachedAt;
             posts.push(result);
           }
-          resolve();
-        };
-        request.onerror = () => reject(request.error);
-      });
-    }
-
-    return posts;
+        }
+        resolve(posts);
+      };
+      transaction.onerror = () => reject(transaction.error);
+    });
   }
 
   // Get all posts with pagination
@@ -310,8 +311,7 @@ export class PostStorageDB {
           } else {
             // Fallback: manual filtering
             const post = cursor.value;
-            const cachedAt =
-              post._cachedAt || new Date(post.indexedAt).getTime();
+            const cachedAt = post._cachedAt || Date.now();
 
             if (cachedAt < cutoffTime) {
               cursor.delete();

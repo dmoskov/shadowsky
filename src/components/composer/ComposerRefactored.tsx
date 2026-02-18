@@ -923,13 +923,20 @@ export function ComposerRefactored() {
         postMediaMap.get(reorderedIndex)!.push(mediaData);
       }
 
-      let rootPost: { uri: string; cid: string } | undefined;
-      let lastPost: { uri: string; cid: string } | undefined;
+      // Resume from previous progress if retrying a partially-failed thread
+      let rootPost: { uri: string; cid: string } | undefined =
+        state.threadProgress?.rootPost;
+      let lastPost: { uri: string; cid: string } | undefined =
+        state.threadProgress?.lastPost;
+      const startIndex = state.threadProgress?.publishedCount ?? 0;
 
-      for (let i = 0; i < numberedPosts.length; i++) {
+      for (let i = startIndex; i < numberedPosts.length; i++) {
         state.setPostStatus({
           type: "posting",
-          message: `Posting ${i + 1}/${numberedPosts.length}...`,
+          message:
+            startIndex > 0
+              ? `Resuming: posting ${i + 1}/${numberedPosts.length}...`
+              : `Posting ${i + 1}/${numberedPosts.length}...`,
         });
 
         const postMedia = postMediaMap.get(i) || [];
@@ -1073,11 +1080,18 @@ export function ComposerRefactored() {
         const result = await state.agent.post(postData);
         const currentPost = { uri: result.uri, cid: result.cid };
 
-        // First post becomes the root for all subsequent posts
-        if (i === 0) {
+        // First post in thread becomes the root for all subsequent posts
+        if (!rootPost) {
           rootPost = currentPost;
         }
         lastPost = currentPost;
+
+        // Track progress so retries resume from here
+        state.setThreadProgress({
+          rootPost,
+          lastPost,
+          publishedCount: i + 1,
+        });
 
         // Create threadgate for first post
         if (i === 0 && state.replyPermission !== "everyone") {
@@ -1123,10 +1137,17 @@ export function ComposerRefactored() {
       }, 3000);
     } catch (error) {
       logger.error("Error posting thread:", error);
+      const published = state.threadProgress?.publishedCount ?? 0;
+      const total = numberedPosts.length;
+      const baseMessage =
+        error instanceof Error ? error.message : "Failed to post thread";
+      const progressMessage =
+        published > 0
+          ? `${baseMessage} (${published}/${total} posts published — retry will resume from post ${published + 1})`
+          : baseMessage;
       state.setPostStatus({
         type: "error",
-        message:
-          error instanceof Error ? error.message : "Failed to post thread",
+        message: progressMessage,
       });
     } finally {
       state.setIsPosting(false);
