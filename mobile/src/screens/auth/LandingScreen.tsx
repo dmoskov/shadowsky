@@ -19,6 +19,72 @@ import { useTranslation } from "../../hooks/useTranslation";
 
 type LoginMode = "oauth" | "app-password";
 
+function AuthExplainer({ colors }: { colors: any }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <View style={{ marginBottom: 20 }}>
+      <TouchableOpacity
+        onPress={() => setIsOpen(!isOpen)}
+        style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+      >
+        <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+          {isOpen ? "\u25BC" : "\u25B6"} Which sign-in method should I use?
+        </Text>
+      </TouchableOpacity>
+
+      {isOpen && (
+        <View
+          style={{
+            marginTop: 12,
+            backgroundColor: colors.surface,
+            borderRadius: 10,
+            padding: 14,
+            gap: 12,
+          }}
+        >
+          <View>
+            <Text
+              style={{
+                color: colors.text,
+                fontSize: 13,
+                fontWeight: "600",
+                marginBottom: 4,
+              }}
+            >
+              OAuth (Recommended)
+            </Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 12, lineHeight: 18 }}>
+              Redirects you to Bluesky to authorize access. More secure because
+              you never share your password. However, OAuth does not currently
+              support direct messages — granular permission scopes are still
+              being developed by the AT Protocol team.
+            </Text>
+          </View>
+          <View>
+            <Text
+              style={{
+                color: colors.text,
+                fontSize: 13,
+                fontWeight: "600",
+                marginBottom: 4,
+              }}
+            >
+              App Password (Required for DMs)
+            </Text>
+            <Text style={{ color: colors.textSecondary, fontSize: 12, lineHeight: 18 }}>
+              Use an app password if you need access to direct messages. App
+              passwords provide full account access but are separate from your
+              main password, so you can revoke them anytime. Create one at
+              bsky.app/settings/app-passwords.
+            </Text>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
+
 export function LandingScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -138,6 +204,9 @@ export function LandingScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* Auth Method Explainer */}
+          <AuthExplainer colors={colors} />
 
           {/* OAuth Login Form */}
           {loginMode === "oauth" && (
