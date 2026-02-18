@@ -310,8 +310,7 @@ export class PostStorageDB {
           } else {
             // Fallback: manual filtering
             const post = cursor.value;
-            const cachedAt =
-              post._cachedAt || new Date(post.indexedAt).getTime();
+            const cachedAt = post._cachedAt || Date.now();
 
             if (cachedAt < cutoffTime) {
               cursor.delete();
