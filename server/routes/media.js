@@ -94,7 +94,6 @@ router.get("/proxy-image", moderateLimiter, async (req, res) => {
     console.error("Image proxy error:", error);
     res.status(500).json({
       error: "Failed to proxy image",
-      details: error.message,
     });
   }
 });
@@ -222,7 +221,6 @@ router.post("/convert-gif", moderateLimiter, async (req, res) => {
 
     res.status(500).json({
       error: "Failed to convert GIF",
-      details: error.message,
     });
   }
 });
