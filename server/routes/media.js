@@ -13,7 +13,7 @@ const path = require("path");
 const crypto = require("crypto");
 const os = require("os");
 const { moderateLimiter } = require("../middleware/rate-limit");
-const { validateUrlForSSRF } = require("../ip-validator");
+const { validateUrlForSSRF, ssrfSafeFetch } = require("../ip-validator");
 
 /**
  * GET /api/proxy-image
@@ -41,7 +41,7 @@ router.get("/proxy-image", moderateLimiter, async (req, res) => {
   try {
     console.log("Proxying image from:", url);
 
-    const response = await fetch(url, {
+    const response = await ssrfSafeFetch(url, {
       headers: {
         "User-Agent": "shadowsky-image-proxy/1.0",
         Referer: "https://bsky.app",
@@ -110,7 +110,7 @@ router.post("/convert-gif", moderateLimiter, async (req, res) => {
       }
 
       console.log("Fetching GIF from:", gifUrl);
-      const response = await fetch(gifUrl);
+      const response = await ssrfSafeFetch(gifUrl);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch GIF: ${response.statusText}`);
