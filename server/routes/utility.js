@@ -9,7 +9,7 @@ const router = express.Router();
 const fetch = require("node-fetch");
 const crypto = require("crypto");
 const { moderateLimiter } = require("../middleware/rate-limit");
-const { validateUrlForSSRF } = require("../ip-validator");
+const { validateUrlForSSRF, ssrfSafeFetch } = require("../ip-validator");
 const { decodeHtmlEntities, getClientIp } = require("../utils/helpers");
 
 /**
@@ -51,7 +51,7 @@ router.post("/fetch-link-metadata", moderateLimiter, async (req, res) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(url, {
+    const response = await ssrfSafeFetch(url, {
       method: "GET",
       headers: {
         "User-Agent":
@@ -61,7 +61,6 @@ router.post("/fetch-link-metadata", moderateLimiter, async (req, res) => {
         "Accept-Language": "en-US,en;q=0.5",
       },
       signal: controller.signal,
-      redirect: "follow",
     });
 
     clearTimeout(timeoutId);

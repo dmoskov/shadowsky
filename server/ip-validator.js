@@ -6,6 +6,7 @@
  */
 
 const dns = require("dns").promises;
+const fetch = require("node-fetch");
 
 /**
  * Parse an IPv4 address string to a numeric value for range comparison
@@ -233,8 +234,61 @@ async function validateUrlForSSRF(urlString) {
   }
 }
 
+/**
+ * Perform a fetch that validates each redirect target against the SSRF blocklist.
+ * Uses redirect: "manual" and follows redirects manually, validating each hop.
+ *
+ * @param {string} url - The URL to fetch (must already be SSRF-validated)
+ * @param {object} [options={}] - Standard fetch options (redirect will be overridden)
+ * @param {number} [maxRedirects=10] - Maximum number of redirects to follow
+ * @returns {Promise<import('node-fetch').Response>} The final response
+ */
+async function ssrfSafeFetch(url, options = {}, maxRedirects = 10) {
+  let currentUrl = url;
+
+  for (let i = 0; i <= maxRedirects; i++) {
+    const response = await fetch(currentUrl, {
+      ...options,
+      redirect: "manual",
+    });
+
+    // If not a redirect, return the response
+    const status = response.status;
+    if (status < 300 || status >= 400) {
+      return response;
+    }
+
+    // Handle redirect
+    const location = response.headers.get("location");
+    if (!location) {
+      return response;
+    }
+
+    // Resolve relative redirect URLs against the current URL
+    let redirectUrl;
+    try {
+      redirectUrl = new URL(location, currentUrl).href;
+    } catch {
+      throw new Error(`Invalid redirect URL: ${location}`);
+    }
+
+    // Validate the redirect target against the SSRF blocklist
+    const ssrfCheck = await validateUrlForSSRF(redirectUrl);
+    if (!ssrfCheck.valid) {
+      throw new Error(
+        `Redirect to blocked URL: ${ssrfCheck.error} (redirect from ${currentUrl} to ${redirectUrl})`,
+      );
+    }
+
+    currentUrl = redirectUrl;
+  }
+
+  throw new Error(`Too many redirects (max ${maxRedirects})`);
+}
+
 module.exports = {
   validateUrlForSSRF,
   isIPBlocked,
   isIPAddress,
+  ssrfSafeFetch,
 };
