@@ -33,8 +33,9 @@ jobs:
 
       - name: Test image can start
         run: |
-          docker run --rm -d --name shadowsky-test -p 3000:3000 shadowsky-api-server:test
+          docker run --rm -d --name shadowsky-test -p 3002:3002 -p 3001:3001 shadowsky-api-server:test
           sleep 5
-          docker logs shadowsky-test || true
+          docker logs shadowsky-test
+          curl -sf http://localhost:3002/health || (docker logs shadowsky-test && exit 1)
           docker stop shadowsky-test
           echo "✅ Server image starts successfully"
