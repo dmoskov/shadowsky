@@ -325,7 +325,13 @@ export function ThreadScreen({ handle, postId, did }: ThreadScreenProps) {
     return map;
   }, [thread]);
 
-  // Build flattened list items for FlatList
+  // Build tree structure once (only recomputes when thread data changes)
+  const threadTree = useMemo(() => {
+    if (!rootPost || replies.length === 0) return null;
+    return buildThreadTree(rootPost, replies);
+  }, [rootPost, replies]);
+
+  // Build flattened list items for FlatList (recomputes on collapse toggle)
   const listData = useMemo(() => {
     if (!rootPost) return [];
 
@@ -346,18 +352,15 @@ export function ThreadScreen({ handle, postId, did }: ThreadScreenProps) {
     }
 
     // 3. Divider + reply nodes OR no-replies
-    if (replies.length > 0) {
+    if (threadTree) {
       items.push({ type: "divider", key: "divider" });
-
-      // Build tree and flatten
-      const tree = buildThreadTree(rootPost, replies);
-      flattenThreadTree(tree, collapsedBranches, items);
+      flattenThreadTree(threadTree, collapsedBranches, items);
     } else {
       items.push({ type: "no-replies", key: "no-replies" });
     }
 
     return items;
-  }, [rootPost, replies, parentUris, collapsedBranches]);
+  }, [rootPost, replies, parentUris, threadTree, collapsedBranches]);
 
   // --- Handlers ---
 

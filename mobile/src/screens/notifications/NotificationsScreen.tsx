@@ -30,7 +30,7 @@ import StaleContentIndicator from '../../components/StaleContentIndicator';
 import {filterMutedNotifications} from '../../utils/content-filter';
 import {
   aggregateNotifications,
-  filterNotificationsByType,
+  filterProcessedNotifications,
   countNotificationsByType,
   ProcessedNotification,
 } from '../../utils/notification-aggregator';
@@ -103,15 +103,15 @@ export function NotificationsScreen() {
     return countNotificationsByType(notifications);
   }, [notifications]);
 
-  // Filter notifications based on active filter
-  const filteredNotifications = useMemo(() => {
-    return filterNotificationsByType(notifications, activeFilter);
-  }, [notifications, activeFilter]);
+  // Aggregate all notifications once (expensive operation)
+  const allProcessedNotifications = useMemo(() => {
+    return aggregateNotifications(notifications);
+  }, [notifications]);
 
-  // Aggregate notifications
+  // Filter processed notifications by active filter (cheap operation)
   const processedNotifications = useMemo(() => {
-    return aggregateNotifications(filteredNotifications);
-  }, [filteredNotifications]);
+    return filterProcessedNotifications(allProcessedNotifications, activeFilter);
+  }, [allProcessedNotifications, activeFilter]);
 
   const renderFooter = useCallback(() => {
     if (!isFetchingNextPage) return null;

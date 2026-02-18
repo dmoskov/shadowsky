@@ -15,7 +15,7 @@ interface NotificationItemProps {
   onHashtagPress?: (tag: string) => void;
 }
 
-export function NotificationItem({
+const NotificationItemInner = React.memo(function NotificationItem({
   notification,
   onPress,
   onProfilePress,
@@ -163,7 +163,9 @@ export function NotificationItem({
       {!notification.isRead && <View style={styles.unreadIndicator} />}
     </TouchableOpacity>
   );
-}
+});
+
+export { NotificationItemInner as NotificationItem };
 
 function createStyles(colors: any) {
   return StyleSheet.create({

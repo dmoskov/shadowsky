@@ -199,6 +199,35 @@ export function filterNotificationsByType(
 }
 
 /**
+ * Filter already-processed (aggregated) notifications by type.
+ * This avoids re-running the expensive aggregation when only the filter changes.
+ */
+export function filterProcessedNotifications(
+  processed: ProcessedNotification[],
+  filter: 'all' | 'likes' | 'replies' | 'follows' | 'mentions' | 'quotes',
+): ProcessedNotification[] {
+  if (filter === 'all') {
+    return processed;
+  }
+
+  const reasonMap: Record<string, string[]> = {
+    likes: ['like'],
+    replies: ['reply'],
+    follows: ['follow'],
+    mentions: ['mention'],
+    quotes: ['quote'],
+  };
+
+  const reasons = reasonMap[filter] || [];
+  return processed.filter(item => {
+    if (item.type === 'aggregated') {
+      return reasons.includes(item.reason);
+    }
+    return reasons.includes(item.notification.reason);
+  });
+}
+
+/**
  * Count notifications by type
  */
 export function countNotificationsByType(

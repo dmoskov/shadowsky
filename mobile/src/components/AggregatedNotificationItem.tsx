@@ -23,7 +23,7 @@ interface AggregatedNotificationItemProps {
   onHashtagPress?: (tag: string) => void;
 }
 
-export function AggregatedNotificationItem({
+const AggregatedNotificationItemInner = React.memo(function AggregatedNotificationItem({
   notifications,
   reason,
   onPress,
@@ -196,7 +196,9 @@ export function AggregatedNotificationItem({
       )}
     </View>
   );
-}
+});
+
+export { AggregatedNotificationItemInner as AggregatedNotificationItem };
 
 function createStyles(colors: any) {
   return StyleSheet.create({
