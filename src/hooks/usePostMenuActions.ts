@@ -70,8 +70,6 @@ export function usePostMenuActions({
 
   const handleMute = async () => {
     onClose();
-    // Add to local muted users immediately for instant UI update
-    muteUser(post.author.did);
 
     if (onMute) {
       onMute();
@@ -80,6 +78,9 @@ export function usePostMenuActions({
       try {
         if (agent) {
           await agent.mute(post.author.did);
+
+          // Only update local state after successful API call
+          muteUser(post.author.did);
 
           // Record mute to history
           try {
@@ -126,9 +127,6 @@ export function usePostMenuActions({
           },
           async () => {
             try {
-              // Add to local blocked users immediately for instant UI update
-              blockUser(post.author.did);
-
               if (!agent.session?.did) {
                 throw new Error("No session available");
               }
@@ -139,6 +137,9 @@ export function usePostMenuActions({
                   createdAt: new Date().toISOString(),
                 },
               );
+
+              // Only update local state after successful API call
+              blockUser(post.author.did);
 
               // Record block to history
               try {
