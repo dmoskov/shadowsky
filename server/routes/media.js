@@ -15,6 +15,8 @@ const os = require("os");
 const { moderateLimiter } = require("../middleware/rate-limit");
 const { validateUrlForSSRF } = require("../ip-validator");
 
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
+
 /**
  * GET /api/proxy-image
  * Proxy images from Bluesky CDN to avoid CORS issues
@@ -52,7 +54,32 @@ router.get("/proxy-image", moderateLimiter, async (req, res) => {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
 
-    const buffer = await response.buffer();
+    // Reject early if Content-Length header declares a response larger than the limit
+    const contentLength = response.headers.get("content-length");
+    if (contentLength && parseInt(contentLength, 10) > MAX_IMAGE_SIZE) {
+      // Destroy the response body so the connection is not left hanging
+      if (response.body && typeof response.body.destroy === "function") {
+        response.body.destroy();
+      }
+      return res.status(413).json({ error: "Image too large" });
+    }
+
+    // Stream the body with a hard size cap (Content-Length can be absent or wrong)
+    const chunks = [];
+    let totalBytes = 0;
+
+    for await (const chunk of response.body) {
+      totalBytes += chunk.length;
+      if (totalBytes > MAX_IMAGE_SIZE) {
+        if (typeof response.body.destroy === "function") {
+          response.body.destroy();
+        }
+        return res.status(413).json({ error: "Image too large" });
+      }
+      chunks.push(chunk);
+    }
+
+    const buffer = Buffer.concat(chunks, totalBytes);
     const contentType = response.headers.get("content-type") || "image/jpeg";
 
     res.set({
@@ -116,7 +143,31 @@ router.post("/convert-gif", moderateLimiter, async (req, res) => {
         throw new Error(`Failed to fetch GIF: ${response.statusText}`);
       }
 
-      buffer = await response.buffer();
+      // Reject early if Content-Length exceeds limit
+      const contentLength = response.headers.get("content-length");
+      if (contentLength && parseInt(contentLength, 10) > MAX_IMAGE_SIZE) {
+        if (response.body && typeof response.body.destroy === "function") {
+          response.body.destroy();
+        }
+        return res.status(413).json({ error: "GIF too large" });
+      }
+
+      // Stream with size cap
+      const chunks = [];
+      let totalBytes = 0;
+
+      for await (const chunk of response.body) {
+        totalBytes += chunk.length;
+        if (totalBytes > MAX_IMAGE_SIZE) {
+          if (typeof response.body.destroy === "function") {
+            response.body.destroy();
+          }
+          return res.status(413).json({ error: "GIF too large" });
+        }
+        chunks.push(chunk);
+      }
+
+      buffer = Buffer.concat(chunks, totalBytes);
     }
 
     await fs.writeFile(inputPath, buffer);
