@@ -3,79 +3,118 @@
  * React Native wrapper for the native SwiftUI profile view
  */
 
-import React, { useEffect, forwardRef } from 'react';
-import { requireNativeViewManager, NativeModulesProxy } from 'expo-modules-core';
-import { Platform } from 'react-native';
-import { NativeProfileViewProps, ProfileData } from './NativeProfileViewTypes';
+import {
+  NativeModulesProxy,
+  requireNativeViewManager,
+} from "expo-modules-core";
+import { forwardRef, useEffect } from "react";
+import { Platform } from "react-native";
+import {
+  NativeProfileViewProps,
+  PinnedPostData,
+  ProfileData,
+  StarterPackData,
+} from "./NativeProfileViewTypes";
 
 // Get the native modules
 const ProfileBridge = NativeModulesProxy.ProfileBridge;
 
 // Native view manager
-const NativeProfileViewNative = Platform.OS === 'ios' ? requireNativeViewManager('NativeProfileView') : null;
+const NativeProfileViewNative =
+  Platform.OS === "ios" ? requireNativeViewManager("NativeProfileView") : null;
 
 /**
  * Low-level Native Profile View component
  * Renders the native SwiftUI view with provided props
  */
-export const NativeProfileView = forwardRef<any, NativeProfileViewProps>((props, _ref) => {
-  const {
-    isOwnProfile = false,
-    isLoadingProfile = false,
-    isRefreshing = false,
-    error = null,
-    onRefresh,
-    onTabChange,
-    onFollowToggle,
-    onMessagePress,
-    onMenuPress,
-    onFollowersPress,
-    onFollowingPress,
-    onEditProfile,
-    ...viewProps
-  } = props;
+export const NativeProfileView = forwardRef<any, NativeProfileViewProps>(
+  (props, _ref) => {
+    const {
+      isOwnProfile = false,
+      isLoadingProfile = false,
+      isRefreshing = false,
+      isFollowPending = false,
+      isMessagePending = false,
+      error = null,
+      errorType = null,
+      onRefresh,
+      onTabChange,
+      onFollowToggle,
+      onMessagePress,
+      onMenuPress,
+      onFollowersPress,
+      onFollowingPress,
+      onEditProfile,
+      onAddToList,
+      onPinnedPostPress,
+      onStarterPackPress,
+      onSignOut,
+      onKnownFollowerPress,
+      ...viewProps
+    } = props;
 
-  // iOS only - on Android, this would render a fallback
-  if (Platform.OS !== 'ios' || !NativeProfileViewNative) {
-    return null;
-  }
+    // iOS only - on Android, this would render a fallback
+    if (Platform.OS !== "ios" || !NativeProfileViewNative) {
+      return null;
+    }
 
-  return (
-    <NativeProfileViewNative
-      {...viewProps}
-      isOwnProfile={isOwnProfile}
-      isLoadingProfile={isLoadingProfile}
-      isRefreshing={isRefreshing}
-      error={error}
-      onRefresh={onRefresh}
-      onTabChange={onTabChange}
-      onFollowToggle={onFollowToggle}
-      onMessagePress={onMessagePress}
-      onMenuPress={onMenuPress}
-      onFollowersPress={onFollowersPress}
-      onFollowingPress={onFollowingPress}
-      onEditProfile={onEditProfile}
-    />
-  );
-});
+    return (
+      <NativeProfileViewNative
+        {...viewProps}
+        isOwnProfile={isOwnProfile}
+        isLoadingProfile={isLoadingProfile}
+        isRefreshing={isRefreshing}
+        isFollowPending={isFollowPending}
+        isMessagePending={isMessagePending}
+        error={error}
+        errorType={errorType}
+        onRefresh={onRefresh}
+        onTabChange={onTabChange}
+        onFollowToggle={onFollowToggle}
+        onMessagePress={onMessagePress}
+        onMenuPress={onMenuPress}
+        onFollowersPress={onFollowersPress}
+        onFollowingPress={onFollowingPress}
+        onEditProfile={onEditProfile}
+        onAddToList={onAddToList}
+        onPinnedPostPress={onPinnedPostPress}
+        onStarterPackPress={onStarterPackPress}
+        onSignOut={onSignOut}
+        onKnownFollowerPress={onKnownFollowerPress}
+      />
+    );
+  },
+);
 
-NativeProfileView.displayName = 'NativeProfileView';
+NativeProfileView.displayName = "NativeProfileView";
 
 /**
  * High-level Native Profile View component with automatic data bridge
  * Automatically serializes profile data and passes it to Swift via ProfileBridge
  */
-export interface NativeProfileViewWithDataProps extends Omit<NativeProfileViewProps, 'isLoadingProfile' | 'isRefreshing' | 'error'> {
+export interface NativeProfileViewWithDataProps extends Omit<
+  NativeProfileViewProps,
+  "isLoadingProfile" | "isRefreshing" | "error" | "errorType"
+> {
   profile: ProfileData | null;
   isLoading?: boolean;
   error?: Error | null;
+  errorType?: "deleted" | "suspended" | "blocked" | null;
+  starterPacks?: StarterPackData[];
+  pinnedPost?: PinnedPostData | null;
 }
 
-export const NativeProfileViewWithData = forwardRef<any, NativeProfileViewWithDataProps>((props, ref) => {
+export const NativeProfileViewWithData = forwardRef<
+  any,
+  NativeProfileViewWithDataProps
+>((props, ref) => {
   const {
     profile,
     isLoading = false,
     error = null,
+    errorType = null,
+    starterPacks,
+    pinnedPost,
     ...rest
   } = props;
 
@@ -93,17 +132,34 @@ export const NativeProfileViewWithData = forwardRef<any, NativeProfileViewWithDa
     };
   }, [profile]);
 
+  // Serialize and send starter packs data to Swift
+  useEffect(() => {
+    if (starterPacks && starterPacks.length > 0 && ProfileBridge) {
+      const serialized = JSON.stringify(starterPacks);
+      ProfileBridge.updateStarterPacks(serialized);
+    }
+  }, [starterPacks]);
+
+  // Serialize and send pinned post data to Swift
+  useEffect(() => {
+    if (pinnedPost && ProfileBridge) {
+      const serialized = JSON.stringify(pinnedPost);
+      ProfileBridge.updatePinnedPost(serialized);
+    }
+  }, [pinnedPost]);
+
   return (
     <NativeProfileView
       {...rest}
       ref={ref}
       isLoadingProfile={isLoading}
       error={error?.message || null}
+      errorType={errorType}
       style={{ flex: 1 }}
     />
   );
 });
 
-NativeProfileViewWithData.displayName = 'NativeProfileViewWithData';
+NativeProfileViewWithData.displayName = "NativeProfileViewWithData";
 
 export default NativeProfileView;

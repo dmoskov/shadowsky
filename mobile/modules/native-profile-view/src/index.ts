@@ -6,18 +6,28 @@
 export {
   NativeProfileView,
   NativeProfileViewWithData,
-  default
-} from './NativeProfileView';
+  default,
+} from "./NativeProfileView";
 
 export type {
-  NativeProfileViewProps,
-  ProfileData,
-  ProfileViewer,
-  ProfileTab,
-  ProfileTabChangeEvent,
+  KnownFollower,
+  KnownFollowerPressEvent,
+  KnownFollowers,
   Label,
   ListViewBasic,
   ListViewerState,
-} from './NativeProfileViewTypes';
+  NativeProfileViewProps,
+  PinnedPostData,
+  PinnedPostPressEvent,
+  PinnedPostRef,
+  ProfileAssociated,
+  ProfileAssociatedChat,
+  ProfileData,
+  ProfileTab,
+  ProfileTabChangeEvent,
+  ProfileViewer,
+  StarterPackData,
+  StarterPackPressEvent,
+} from "./NativeProfileViewTypes";
 
-export type { NativeProfileViewWithDataProps } from './NativeProfileView';
+export type { NativeProfileViewWithDataProps } from "./NativeProfileView";

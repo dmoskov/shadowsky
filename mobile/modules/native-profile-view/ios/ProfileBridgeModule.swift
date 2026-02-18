@@ -10,13 +10,17 @@ import ExpoModulesCore
 import Foundation
 
 public class ProfileBridgeModule: Module {
-    // Shared profile data store
+    // Shared data stores
     private var currentProfileData: SerializedProfile?
+    private var currentStarterPacks: [SerializedStarterPack]?
+    private var currentPinnedPost: SerializedPinnedPost?
     private var profileDataLock = NSLock()
 
-    // Notification names for profile updates
+    // Notification names for data updates
     public static let profileDataUpdatedNotification = Notification.Name("ProfileBridgeDataUpdated")
     public static let profileDataClearedNotification = Notification.Name("ProfileBridgeDataCleared")
+    public static let starterPacksUpdatedNotification = Notification.Name("ProfileBridgeStarterPacksUpdated")
+    public static let pinnedPostUpdatedNotification = Notification.Name("ProfileBridgePinnedPostUpdated")
 
     public func definition() -> ModuleDefinition {
         Name("ProfileBridge")
@@ -42,10 +46,52 @@ public class ProfileBridgeModule: Module {
             }
         }
 
-        // Clear profile data
+        // Update starter packs data
+        Function("updateStarterPacks") { (jsonData: String) in
+            do {
+                let packs = try SerializedStarterPack.decodeArray(from: jsonData)
+
+                self.profileDataLock.lock()
+                self.currentStarterPacks = packs
+                self.profileDataLock.unlock()
+
+                NotificationCenter.default.post(
+                    name: ProfileBridgeModule.starterPacksUpdatedNotification,
+                    object: nil,
+                    userInfo: ["starterPacks": packs]
+                )
+            } catch {
+                print("[ProfileBridge] Failed to decode starter packs: \(error)")
+                throw error
+            }
+        }
+
+        // Update pinned post data
+        Function("updatePinnedPost") { (jsonData: String) in
+            do {
+                let pinnedPost = try SerializedPinnedPost.decode(from: jsonData)
+
+                self.profileDataLock.lock()
+                self.currentPinnedPost = pinnedPost
+                self.profileDataLock.unlock()
+
+                NotificationCenter.default.post(
+                    name: ProfileBridgeModule.pinnedPostUpdatedNotification,
+                    object: nil,
+                    userInfo: ["pinnedPost": pinnedPost]
+                )
+            } catch {
+                print("[ProfileBridge] Failed to decode pinned post: \(error)")
+                throw error
+            }
+        }
+
+        // Clear all profile data
         Function("clearProfileData") {
             self.profileDataLock.lock()
             self.currentProfileData = nil
+            self.currentStarterPacks = nil
+            self.currentPinnedPost = nil
             self.profileDataLock.unlock()
 
             NotificationCenter.default.post(
@@ -55,10 +101,22 @@ public class ProfileBridgeModule: Module {
         }
     }
 
-    // Public accessor for current profile data (thread-safe)
+    // Public accessors (thread-safe)
     public func getCurrentProfileData() -> SerializedProfile? {
         profileDataLock.lock()
         defer { profileDataLock.unlock() }
         return currentProfileData
+    }
+
+    public func getCurrentStarterPacks() -> [SerializedStarterPack]? {
+        profileDataLock.lock()
+        defer { profileDataLock.unlock() }
+        return currentStarterPacks
+    }
+
+    public func getCurrentPinnedPost() -> SerializedPinnedPost? {
+        profileDataLock.lock()
+        defer { profileDataLock.unlock() }
+        return currentPinnedPost
     }
 }
