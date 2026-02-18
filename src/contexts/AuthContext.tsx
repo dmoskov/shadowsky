@@ -354,16 +354,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const savedSession = ATProtoClient.loadSavedSession(
           atProtoClient.getSessionPrefix(),
         );
-        if (savedSession) {
+        // Also check AccountManager as fallback — multiClientManager login
+        // stores sessions there but may not write to the legacy session key
+        const activeAccount = AccountManager.getActiveAccount();
+        if (
+          savedSession ||
+          (activeAccount && activeAccount.authMethod !== "oauth")
+        ) {
           initAttempts.current++;
 
           try {
-            // Get the active account from AccountManager or create one from saved session
-            const activeAccount = AccountManager.getActiveAccount();
             const accountToResume = activeAccount || {
-              did: savedSession.did,
-              handle: savedSession.handle,
-              session: savedSession,
+              did: savedSession!.did,
+              handle: savedSession!.handle,
+              session: savedSession!,
               authMethod: "app-password" as const,
               isActive: true,
               lastUsed: Date.now(),
@@ -558,6 +562,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             "app-password",
           );
         }
+
+        // Persist session to legacy key so initializeAuth can restore on refresh
+        AccountManager.switchAccount(newSession.did);
 
         return true;
       } catch (error) {

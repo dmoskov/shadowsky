@@ -182,6 +182,12 @@ function AppContent() {
     };
   }, [navigate, session?.handle]);
 
+  // Handle OAuth callback route BEFORE loading check — the callback must
+  // process immediately so initializeAuth doesn't discard the pending session.
+  if (location.pathname === "/oauth/callback") {
+    return <OAuthCallback />;
+  }
+
   if (isLoading) {
     return (
       <div
@@ -199,11 +205,6 @@ function AppContent() {
         </div>
       </div>
     );
-  }
-
-  // Handle OAuth callback route - this should work regardless of auth state
-  if (location.pathname === "/oauth/callback") {
-    return <OAuthCallback />;
   }
 
   if (!isAuthenticated) {
