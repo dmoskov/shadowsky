@@ -19,6 +19,9 @@ const DB_NAME = "BskyOfflinePostQueue";
 const DB_VERSION = 1;
 const STORE_NAME = "posts";
 
+// Items stuck in "processing" longer than this are assumed to be from a crash and reset to "pending"
+const DEFAULT_STUCK_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+
 // Post types supported
 export type PostType = "post" | "reply" | "dm" | "quote";
 
@@ -133,7 +136,11 @@ class OfflinePostQueueDB {
         this.db = request.result;
         debug.log("OfflinePostQueueDB initialized");
         this.setupOnlineListener();
-        resolve();
+        // Recover items stuck in "processing" from a previous crash/tab close
+        this.recoverStuckItems().then(
+          () => resolve(),
+          () => resolve(),
+        );
       };
 
       request.onupgradeneeded = (event) => {
@@ -614,6 +621,52 @@ class OfflinePostQueueDB {
   // Check if queue is currently processing
   isQueueProcessing(): boolean {
     return this.isProcessing;
+  }
+
+  // Recover items stuck in "processing" state from a crash or tab close.
+  // Resets them to "pending" so they will be retried on next processQueue().
+  async recoverStuckItems(
+    thresholdMs: number = DEFAULT_STUCK_THRESHOLD_MS,
+  ): Promise<number> {
+    const db = this.ensureDb();
+    const staleThreshold = Date.now() - thresholdMs;
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], "readwrite");
+      const store = transaction.objectStore(STORE_NAME);
+      const index = store.index("status");
+      const request = index.openCursor(IDBKeyRange.only("processing"));
+      let recovered = 0;
+
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest).result;
+        if (cursor) {
+          const post = cursor.value as QueuedPost;
+          if (post.createdAt <= staleThreshold) {
+            const updated: QueuedPost = {
+              ...post,
+              status: "pending",
+              lastError: "Recovered from stuck processing state",
+            };
+            cursor.update(updated);
+            recovered++;
+          }
+          cursor.continue();
+        }
+      };
+
+      transaction.oncomplete = () => {
+        if (recovered > 0) {
+          debug.log(
+            `Recovered ${recovered} stuck post(s) from processing state`,
+          );
+          this.notifyListeners();
+        }
+        resolve(recovered);
+      };
+
+      transaction.onerror = () => reject(transaction.error);
+    });
   }
 
   // Cleanup on destroy

@@ -14,6 +14,9 @@ const DB_VERSION = 1;
 const STORE_NAME = "mutations";
 const MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours - mutations older than this are discarded
 
+// Items stuck in "processing" longer than this are assumed to be from a crash and reset to "pending"
+const DEFAULT_STUCK_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+
 // Mutation types supported
 export type MutationType =
   | "like"
@@ -72,11 +75,13 @@ class MutationQueueDB {
         this.db = request.result;
         debug.log("MutationQueueDB initialized");
         this.setupOnlineListener();
-        // Clean up expired mutations on startup
-        this.removeExpired().then(
-          () => resolve(),
-          () => resolve(),
-        );
+        // Clean up expired mutations and recover stuck items on startup
+        this.removeExpired()
+          .then(() => this.recoverStuckItems())
+          .then(
+            () => resolve(),
+            () => resolve(),
+          );
       };
 
       request.onupgradeneeded = (event) => {
@@ -461,6 +466,52 @@ class MutationQueueDB {
   // Check if queue is currently processing
   isQueueProcessing(): boolean {
     return this.isProcessing;
+  }
+
+  // Recover items stuck in "processing" state from a crash or tab close.
+  // Resets them to "pending" so they will be retried on next processQueue().
+  async recoverStuckItems(
+    thresholdMs: number = DEFAULT_STUCK_THRESHOLD_MS,
+  ): Promise<number> {
+    const db = this.ensureDb();
+    const staleThreshold = Date.now() - thresholdMs;
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], "readwrite");
+      const store = transaction.objectStore(STORE_NAME);
+      const index = store.index("status");
+      const request = index.openCursor(IDBKeyRange.only("processing"));
+      let recovered = 0;
+
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest).result;
+        if (cursor) {
+          const mutation = cursor.value as QueuedMutation;
+          if (mutation.createdAt <= staleThreshold) {
+            const updated: QueuedMutation = {
+              ...mutation,
+              status: "pending",
+              lastError: "Recovered from stuck processing state",
+            };
+            cursor.update(updated);
+            recovered++;
+          }
+          cursor.continue();
+        }
+      };
+
+      transaction.oncomplete = () => {
+        if (recovered > 0) {
+          debug.log(
+            `Recovered ${recovered} stuck mutation(s) from processing state`,
+          );
+          this.notifyListeners();
+        }
+        resolve(recovered);
+      };
+
+      transaction.onerror = () => reject(transaction.error);
+    });
   }
 
   // Cleanup on destroy
