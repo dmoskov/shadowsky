@@ -115,6 +115,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const initAttempts = useRef(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const maxRetries = 3;
+  // Guard against concurrent initializeAuth calls (React strict mode, fast refresh)
+  const initInProgressRef = useRef(false);
+  // Keep a ref to session so logout always reads the current value, not a stale closure
+  const sessionRef = useRef<Session | null>(null);
+
+  // Keep sessionRef in sync with session state
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
 
   const logout = useCallback(
     async (logoutAllAccounts = false) => {
@@ -149,15 +158,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (logoutAllAccounts) {
         AccountManager.clearAllAccounts();
         multiClientManager.clearAll();
-      } else if (session?.did) {
-        // Just remove the current account's client
-        multiClientManager.removeClient(session.did);
+      } else {
+        // Read session.did at call time via ref, not the stale closure value
+        const did = sessionRef.current?.did;
+        if (did) {
+          multiClientManager.removeClient(did);
+        }
       }
 
       // Force a page reload to ensure all state is cleared
       window.location.href = "/";
     },
-    [authMethod, session],
+    [authMethod],
   );
 
   const refreshSession = useCallback(async (): Promise<boolean> => {
@@ -210,7 +222,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
     }, 10000);
 
+    // Track whether this effect has been cleaned up (unmount or strict-mode re-run)
+    let cancelled = false;
+
     const initializeAuth = async () => {
+      // Prevent concurrent init calls (React strict mode, fast refresh, retry overlap)
+      if (initInProgressRef.current) {
+        return;
+      }
+      initInProgressRef.current = true;
+
       try {
         // Start prefetching the home route chunk in parallel with auth
         // This loads SkyDeck.js while we're checking session status
@@ -321,6 +342,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 initializeDataServices(agent),
               ]);
 
+              // Bail if this effect was cleaned up while awaiting
+              if (cancelled) return;
+
               setIsAuthenticated(true);
               setAuthMethod("oauth");
               setOauthAgent(agent);
@@ -384,6 +408,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               refreshJwt: managedClient.agent.session?.refreshJwt || "",
               active: true,
             };
+
+            // Bail if this effect was cleaned up while awaiting
+            if (cancelled) return;
 
             setIsAuthenticated(true);
             setAuthMethod("app-password");
@@ -449,7 +476,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               // For network errors, keep the session and retry
               debug.log("Network error during session resume, will retry...");
 
-              if (initAttempts.current < maxRetries && navigator.onLine) {
+              if (
+                initAttempts.current < maxRetries &&
+                navigator.onLine &&
+                !cancelled
+              ) {
+                // Reset in-progress flag before scheduling retry
+                initInProgressRef.current = false;
                 retryTimerRef.current = setTimeout(() => {
                   retryTimerRef.current = null;
                   initializeAuth(); // Retry
@@ -471,13 +504,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Error during auth initialization
         debug.error("Failed to initialize auth:", error);
       } finally {
-        setIsLoading(false);
+        initInProgressRef.current = false;
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     initializeAuth();
 
     return () => {
+      cancelled = true;
+      initInProgressRef.current = false;
       clearTimeout(safetyTimeout);
       if (retryTimerRef.current) {
         clearTimeout(retryTimerRef.current);
