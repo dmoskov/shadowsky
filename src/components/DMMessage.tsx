@@ -13,8 +13,9 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import type { DMStatus } from "../services/dm-queue";
+import type { DmMessageEmbed } from "../services/dm-service";
 import { MessageReactions } from "./MessageReactions";
 
 interface DMMessageProps {
@@ -25,6 +26,7 @@ interface DMMessageProps {
   isHighlighted?: boolean;
   conversationId: string;
   reactions?: Record<string, { count: number; users: string[] }>;
+  embed?: DmMessageEmbed;
   // Optimistic message props
   localId?: string;
   status?: DMStatus;
@@ -44,6 +46,7 @@ export const DMMessage = forwardRef<HTMLDivElement, DMMessageProps>(
       isHighlighted,
       conversationId,
       reactions,
+      embed,
       localId,
       status,
       lastError,
@@ -104,9 +107,13 @@ export const DMMessage = forwardRef<HTMLDivElement, DMMessageProps>(
       }
     };
 
+    const [expandedImage, setExpandedImage] = useState<string | null>(null);
+
     const isFailed = status === "failed";
     const isRetrying = status === "retrying";
     const isSending = status === "sending";
+
+    const embedImages = embed?.images;
 
     return (
       <div
@@ -133,7 +140,44 @@ export const DMMessage = forwardRef<HTMLDivElement, DMMessageProps>(
                 : "bg-asph-bg-secondary text-asph-text-primary"
             } ${isSending ? "opacity-80" : ""}`}
           >
-            <div className="break-words">{text}</div>
+            {text && <div className="break-words">{text}</div>}
+            {embedImages && embedImages.length > 0 && (
+              <div className={`${text ? "mt-2" : ""} flex flex-wrap gap-1`}>
+                {embedImages.map((img, idx) => {
+                  const cdnUrl = `https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:unknown/${img.image.ref.$link}@jpeg`;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      className="block cursor-pointer overflow-hidden rounded border-0 bg-transparent p-0"
+                      onClick={() =>
+                        setExpandedImage(
+                          expandedImage === cdnUrl ? null : cdnUrl,
+                        )
+                      }
+                      title={img.alt || "Image attachment"}
+                    >
+                      <img
+                        src={cdnUrl}
+                        alt={img.alt || "Image attachment"}
+                        className="max-h-48 max-w-full rounded object-cover"
+                        loading="lazy"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {expandedImage && (
+              <div className="mt-2">
+                <img
+                  src={expandedImage.replace("feed_thumbnail", "feed_fullsize")}
+                  alt="Full size"
+                  className="max-w-full rounded"
+                  loading="lazy"
+                />
+              </div>
+            )}
             <div className="mt-1 flex items-center justify-end gap-2 text-xs opacity-70">
               <span>
                 {formatDistanceToNow(new Date(sentAt), {

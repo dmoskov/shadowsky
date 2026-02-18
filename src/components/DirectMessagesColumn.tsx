@@ -619,6 +619,7 @@ export const DirectMessagesColumn: React.FC = () => {
                   isHighlighted={isHighlighted}
                   conversationId={selectedConversation}
                   reactions={message.reactions}
+                  embed={message.embed}
                   localId={message._localId}
                   status={message._status}
                   retryCount={message._retryCount}
