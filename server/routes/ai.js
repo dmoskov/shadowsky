@@ -164,11 +164,8 @@ router.post(
       res.json({ altText });
     } catch (error) {
       console.error("Error generating alt text:", error);
-      console.error("Stack trace:", error.stack);
       res.status(500).json({
-        error: error.message,
-        details:
-          process.env.NODE_ENV === "development" ? error.stack : undefined,
+        error: "Failed to generate alt text",
       });
     }
   },
@@ -256,7 +253,7 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
     } catch (error) {
       console.error("Error getting writing feedback:", error);
       res.status(500).json({
-        error: error.message,
+        error: "Failed to get writing feedback",
       });
     }
   },
@@ -355,7 +352,7 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
     } catch (error) {
       console.error("Error analyzing writing style:", error);
       res.status(500).json({
-        error: error.message,
+        error: "Failed to analyze writing style",
       });
     }
   },
@@ -421,7 +418,7 @@ Respond with ONLY the rewritten text, no explanations or quotes.`,
     } catch (error) {
       console.error("Error adjusting tone:", error);
       res.status(500).json({
-        error: error.message,
+        error: "Failed to adjust tone",
       });
     }
   },
@@ -490,7 +487,7 @@ Start directly with { and end with }`,
     } catch (error) {
       console.error("Error optimizing thread:", error);
       res.status(500).json({
-        error: error.message,
+        error: "Failed to optimize thread",
       });
     }
   },
@@ -557,7 +554,7 @@ Start directly with { and end with }`,
     } catch (error) {
       console.error("Error suggesting hashtags:", error);
       res.status(500).json({
-        error: error.message,
+        error: "Failed to suggest hashtags",
       });
     }
   },
@@ -699,7 +696,7 @@ Provide specific evidence and quotes to support your analysis. Start directly wi
     } catch (error) {
       console.error("Error analyzing posts:", error);
       res.status(500).json({
-        error: error.message,
+        error: "Failed to analyze posts",
       });
     }
   },
@@ -1085,7 +1082,7 @@ ${formatPrompt}
     } catch (error) {
       console.error("Error generating thread summary:", error);
       res.status(500).json({
-        error: error.message,
+        error: "Failed to generate thread summary",
       });
     }
   },
