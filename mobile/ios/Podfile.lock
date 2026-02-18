@@ -363,10 +363,6 @@ PODS:
     - ExpoSwiftUIFeed
     - FeedBridge
     - RichTextView
-  - NativeNotificationsList (1.0.0):
-    - ExpoModulesCore
-    - ExpoSwiftUIFeed
-    - NotificationBridge
   - NativeProfileView (1.0.0):
     - ExpoModulesCore
     - ExpoSwiftUIFeed
@@ -2464,7 +2460,6 @@ DEPENDENCIES:
   - FeedNative (from `../modules/feed-native/ios`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - NativeFeedList (from `../modules/native-feed-list/ios`)
-  - NativeNotificationsList (from `../modules/native-notifications-list/ios`)
   - NativeProfileView (from `../modules/native-profile-view/ios`)
   - NativeThreadView (from `../modules/native-thread-view/ios`)
   - NotificationBridge (from `../modules/notification-bridge/ios`)
@@ -2664,8 +2659,6 @@ EXTERNAL SOURCES:
     :tag: hermes-2025-07-07-RNv0.81.0-e0fc67142ec0763c6b6153ca2bf96df815539782
   NativeFeedList:
     :path: "../modules/native-feed-list/ios"
-  NativeNotificationsList:
-    :path: "../modules/native-notifications-list/ios"
   NativeProfileView:
     :path: "../modules/native-profile-view/ios"
   NativeThreadView:
@@ -2888,7 +2881,6 @@ SPEC CHECKSUMS:
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   NativeFeedList: d7adafc2ce4df71e7ac29b4b0a5b915dfbab9439
-  NativeNotificationsList: d50471731bf6044e2abb6a57cbb58501545c9b0f
   NativeProfileView: 4e07251f0f92ae1c51a75aaef0ba06c47faba4af
   NativeThreadView: 1505715976a66524197ea822abeb526cac267d85
   NotificationBridge: 5d0197e2b98521a8ada3f585c6150621b7d48489
