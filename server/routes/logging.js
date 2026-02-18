@@ -71,6 +71,45 @@ async function ensureLogStream() {
 // Store sequence token in memory
 let sequenceToken = null;
 
+// Mutex to serialize CloudWatch PutLogEvents calls and prevent sequenceToken races
+let cloudWatchMutex = Promise.resolve();
+
+async function putLogEventsSerialized(logEvent) {
+  const MAX_RETRIES = 2;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    if (sequenceToken === null) {
+      sequenceToken = await ensureLogStream();
+    }
+
+    const putCommand = new PutLogEventsCommand({
+      logGroupName: LOG_GROUP_NAME,
+      logStreamName: LOG_STREAM_NAME,
+      logEvents: [logEvent],
+      sequenceToken: sequenceToken || undefined,
+    });
+
+    try {
+      const response = await cloudWatchClient.send(putCommand);
+      sequenceToken = response.nextSequenceToken;
+      return true;
+    } catch (error) {
+      if (
+        error.name === "InvalidSequenceTokenException" &&
+        attempt < MAX_RETRIES
+      ) {
+        // Extract the correct token from the error and retry
+        const expectedToken = error.expectedSequenceToken || null;
+        sequenceToken = expectedToken;
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  return false;
+}
+
 /**
  * POST /api/log-error
  * Log client-side errors to CloudWatch
@@ -106,35 +145,26 @@ router.post("/log-error", moderateLimiter, async (req, res) => {
 
   if (cloudWatchClient) {
     try {
-      if (sequenceToken === null) {
-        sequenceToken = await ensureLogStream();
-      }
-
       const logEvent = {
         message: JSON.stringify(errorLog),
         timestamp: new Date(errorLog.timestamp).getTime(),
       };
 
-      const putCommand = new PutLogEventsCommand({
-        logGroupName: LOG_GROUP_NAME,
-        logStreamName: LOG_STREAM_NAME,
-        logEvents: [logEvent],
-        sequenceToken: sequenceToken || undefined,
+      // Chain onto the mutex so only one PutLogEvents runs at a time
+      const result = await new Promise((resolve, reject) => {
+        cloudWatchMutex = cloudWatchMutex
+          .then(() => putLogEventsSerialized(logEvent))
+          .then(resolve, reject);
       });
 
-      const response = await cloudWatchClient.send(putCommand);
-      sequenceToken = response.nextSequenceToken;
-
-      return res.status(200).json({
-        success: true,
-        logged: "cloudwatch",
-      });
+      if (result) {
+        return res.status(200).json({
+          success: true,
+          logged: "cloudwatch",
+        });
+      }
     } catch (error) {
       console.error("Failed to log to CloudWatch:", error.message);
-
-      if (error.name === "InvalidSequenceTokenException") {
-        sequenceToken = null;
-      }
     }
   }
 
