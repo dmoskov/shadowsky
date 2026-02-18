@@ -847,6 +847,11 @@ export class WebSocketService {
       `Scheduling reconnection attempt ${attemptsDisplay} in ${delay}ms`,
     );
 
+    // Clear any existing reconnect timer to prevent double scheduling
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+    }
+
     this.reconnectTimer = setTimeout(() => {
       this.log(`Reconnection attempt ${this.stats.reconnectAttempts}`);
       this.emit({
@@ -877,6 +882,12 @@ export class WebSocketService {
       type: WebSocketEventType.PING,
       timestamp: new Date().toISOString(),
     });
+
+    // Clear any previous PONG timeout before starting a new one to prevent
+    // leaked timers that can cause spurious disconnects
+    if (this.pongTimeoutTimer) {
+      clearTimeout(this.pongTimeoutTimer);
+    }
 
     // Start PONG timeout - if no response within PONG_TIMEOUT, connection is zombie
     this.pongTimeoutTimer = setTimeout(() => {
@@ -1354,10 +1365,13 @@ export class WebSocketService {
     this.log("[DEBUG] Forcing reconnection cycle", "warn");
     if (this.ws) {
       this.isIntentionallyClosed = false;
+      // ws.close() triggers onclose handler which calls scheduleReconnect()
+      // Don't call scheduleReconnect() here to avoid double reconnect timers
       this.ws.close(1000, "Debug forced reconnect");
+    } else {
+      // No active connection - schedule reconnect directly
+      this.scheduleReconnect();
     }
-    // Immediately schedule reconnect
-    this.scheduleReconnect();
   }
 
   /**

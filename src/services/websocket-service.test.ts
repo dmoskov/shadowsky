@@ -1217,7 +1217,9 @@ describe("WebSocketService - State Machine", () => {
       });
 
       it("should transition to RECONNECTING on PONG timeout", () => {
-        service = createService({ heartbeatInterval: 100 });
+        // Use heartbeat interval longer than PONG_TIMEOUT (10000ms) so that
+        // only one ping is sent and the pong timeout actually fires
+        service = createService({ heartbeatInterval: 30000 });
         service.connect();
         mockWs = getLatestMockWs();
         mockWs.simulateOpen();
@@ -1226,7 +1228,7 @@ describe("WebSocketService - State Machine", () => {
         );
 
         // Trigger heartbeat
-        vi.advanceTimersByTime(100);
+        vi.advanceTimersByTime(30000);
 
         // Don't respond to PING, let PONG timeout (default 10000ms)
         vi.advanceTimersByTime(10001);
@@ -1692,7 +1694,8 @@ describe("WebSocketService - State Machine", () => {
 
     describe("Packet Loss Threshold (10%)", () => {
       it("should degrade when packet loss exceeds 10%", () => {
-        service = createService({ heartbeatInterval: 100 });
+        // Use heartbeat interval longer than PONG_TIMEOUT so timeouts fire correctly
+        service = createService({ heartbeatInterval: 30000 });
         service.connect();
         mockWs = getLatestMockWs();
         mockWs.simulateOpen();
@@ -1700,7 +1703,7 @@ describe("WebSocketService - State Machine", () => {
         // Simulate 11% packet loss: 11 timeouts out of 100 exchanges
         // First, send some successful exchanges with low latency
         for (let i = 0; i < 89; i++) {
-          vi.advanceTimersByTime(100);
+          vi.advanceTimersByTime(30000);
           vi.advanceTimersByTime(50);
           mockWs.simulateMessage({
             type: WebSocketEventType.PONG,
@@ -1710,7 +1713,7 @@ describe("WebSocketService - State Machine", () => {
 
         // Now trigger PONG timeouts
         for (let i = 0; i < 11; i++) {
-          vi.advanceTimersByTime(100); // Heartbeat
+          vi.advanceTimersByTime(30000); // Heartbeat
           vi.advanceTimersByTime(10001); // PONG timeout
           // The service will reconnect after timeout, need to restore connection
           const newWs = getLatestMockWs();
@@ -1874,7 +1877,8 @@ describe("WebSocketService - State Machine", () => {
     });
 
     it("should trigger reconnect on PONG timeout", () => {
-      service = createService({ heartbeatInterval: 1000 });
+      // Use heartbeat interval longer than PONG_TIMEOUT so only one ping fires
+      service = createService({ heartbeatInterval: 30000 });
       service.connect();
       mockWs = getLatestMockWs();
       mockWs.simulateOpen();
@@ -1883,7 +1887,7 @@ describe("WebSocketService - State Machine", () => {
       );
 
       // Trigger heartbeat
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(30000);
 
       // Wait for PONG timeout (10000ms)
       vi.advanceTimersByTime(10001);
@@ -1943,13 +1947,14 @@ describe("WebSocketService - State Machine", () => {
     });
 
     it("should track PONG timeout count for packet loss calculation", () => {
-      service = createService({ heartbeatInterval: 100 });
+      // Use heartbeat interval longer than PONG_TIMEOUT so only one ping fires
+      service = createService({ heartbeatInterval: 30000 });
       service.connect();
       mockWs = getLatestMockWs();
       mockWs.simulateOpen();
 
       // Trigger a PONG timeout
-      vi.advanceTimersByTime(100);
+      vi.advanceTimersByTime(30000);
       vi.advanceTimersByTime(10001);
 
       const metrics = service.getStats().metrics;
