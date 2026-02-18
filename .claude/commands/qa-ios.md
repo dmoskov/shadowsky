@@ -36,7 +36,6 @@ Review each native iOS module for issues. Read the key files and check for probl
 |--------|-----------|
 | Feed List | `mobile/modules/native-feed-list/ios/FeedListView.swift`, `PostCardView.swift`, `FeedListModule.swift` |
 | Thread View | `mobile/modules/native-thread-view/ios/ThreadView.swift`, `ThreadPostCard.swift` |
-| Notifications | `mobile/modules/native-notifications-list/ios/NotificationListView.swift`, `NotificationCellView.swift` |
 | Profile | `mobile/modules/native-profile-view/ios/ProfileView.swift`, `ProfileHeaderView.swift` |
 | Embeds | `mobile/modules/expo-swiftui-feed/ios/Sources/ExpoSwiftUIFeed/PostEmbed.swift`, `ImageEmbed.swift`, `VideoEmbed.swift`, `ExternalLinkEmbed.swift`, `QuoteEmbed.swift` |
 | Rich Text | `mobile/modules/rich-text-view/ios/RichTextView.swift` |
