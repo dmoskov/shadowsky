@@ -28,6 +28,7 @@ import {
   type NumberingPosition,
   type PendingPost,
   type PostStatus,
+  type ThreadProgress,
   type ToneOption,
   type UploadedMedia,
 } from "./types";
@@ -85,6 +86,8 @@ export interface UseComposerStateReturn {
   setCountdown: (count: number | null) => void;
   pendingPost: PendingPost | null;
   setPendingPost: (post: PendingPost | null) => void;
+  threadProgress: ThreadProgress | null;
+  setThreadProgress: (progress: ThreadProgress | null) => void;
 
   // AI features state
   autoGenerateAltText: boolean;
@@ -242,6 +245,9 @@ export function useComposerState(): UseComposerStateReturn {
   });
   const [countdown, setCountdown] = useState<number | null>(null);
   const [pendingPost, setPendingPost] = useState<PendingPost | null>(null);
+  const [threadProgress, setThreadProgress] = useState<ThreadProgress | null>(
+    null,
+  );
   const countdownInterval = useRef<NodeJS.Timeout | null>(null);
   const sendTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -315,9 +321,12 @@ export function useComposerState(): UseComposerStateReturn {
 
   const isDev = import.meta.env.DEV;
 
-  // setText wrapper that also updates posts
+  // setText wrapper that also updates posts and clears stale thread progress
   const setText = useCallback((newText: string) => {
     setTextInternal(newText);
+    // If user edits text after a partial thread failure, the progress
+    // may no longer match the new posts, so clear it
+    setThreadProgress(null);
   }, []);
 
   // Auto-split text into posts when it changes
@@ -496,6 +505,7 @@ export function useComposerState(): UseComposerStateReturn {
     setCurrentDraftId(null);
     setDraftTitle("");
     setPendingPost(null);
+    setThreadProgress(null);
     setCountdown(null);
     setReplyPermission("everyone");
     setQuotingDisabled(false);
@@ -547,6 +557,8 @@ export function useComposerState(): UseComposerStateReturn {
     setCountdown,
     pendingPost,
     setPendingPost,
+    threadProgress,
+    setThreadProgress,
 
     // AI features state
     autoGenerateAltText,
