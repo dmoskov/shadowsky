@@ -19,7 +19,8 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { sharePost } from "../../utils/share";
 import { triggerHaptic } from "../../utils/haptics";
 import { createLogger } from '../../utils/logger';
-import { NativeThreadView } from '../../../modules/native-thread-view';
+import { NativeThreadView, setTranslationResult, setTranslationError } from '../../../modules/native-thread-view';
+import { translatePost } from '../../services/translation-service';
 import {
   generateThreadSummary,
   type ThreadSummaryPost,
@@ -455,6 +456,17 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
     router.push(`/(app)/post/${encodedUri}/quotes` as any);
   };
 
+  const handleTranslate = useCallback(async (event: { nativeEvent: { uri: string; text: string; sourceLang: string } }) => {
+    const { uri, text, sourceLang } = event.nativeEvent;
+    try {
+      const result = await translatePost(text, sourceLang, uri);
+      setTranslationResult(uri, result.translatedText, result.detectedSourceLang);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Translation failed";
+      setTranslationError(uri, message);
+    }
+  }, []);
+
   if (isResolvingUri || !postUri) {
     return <ThreadSkeleton />;
   }
@@ -507,6 +519,7 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
         onPressRepostCount={handlePressRepostCount}
         onPressQuoteCount={handlePressQuoteCount}
         onSummaryModeChange={handleSummaryModeChange}
+        onTranslate={handleTranslate}
       />
     </View>
   );

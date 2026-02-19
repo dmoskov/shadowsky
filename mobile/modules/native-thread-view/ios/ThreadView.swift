@@ -47,6 +47,7 @@ struct ThreadView: View {
     let onPressRepostCount: ((String) -> Void)? // uri
     let onPressQuoteCount: ((String) -> Void)? // uri
     let onSummaryModeChange: ((String) -> Void)? // "quick" or "full"
+    let onTranslate: ((String, String, String) -> Void)? // (uri, text, sourceLang)
 
     // MARK: - Body
 
@@ -139,7 +140,8 @@ struct ThreadView: View {
                     },
                     onPressQuoteCount: {
                         onPressQuoteCount?(rootPost.post.uri)
-                    }
+                    },
+                    onTranslate: onTranslate
                 )
 
                 // AI Thread Summary (between root post and replies)
@@ -200,7 +202,8 @@ struct ThreadView: View {
                         },
                         onPressQuoteCount: { uri in
                             onPressQuoteCount?(uri)
-                        }
+                        },
+                        onTranslate: onTranslate
                     )
                 }
 
@@ -389,7 +392,8 @@ class ThreadState: ObservableObject {
             record: ThreadRecord(
                 text: recordData["text"] as? String ?? "",
                 facets: parseFacets(from: recordData["facets"] as? [[String: Any]]),
-                createdAt: recordData["createdAt"] as? String ?? ""
+                createdAt: recordData["createdAt"] as? String ?? "",
+                langs: recordData["langs"] as? [String]
             ),
             indexedAt: data["indexedAt"] as? String ?? "",
             likeCount: data["likeCount"] as? Int ?? 0,
@@ -510,7 +514,8 @@ struct ThreadView_Previews: PreviewProvider {
             onPressLikeCount: { uri in print("Press like count: \(uri)") },
             onPressRepostCount: { uri in print("Press repost count: \(uri)") },
             onPressQuoteCount: { uri in print("Press quote count: \(uri)") },
-            onSummaryModeChange: { mode in print("Summary mode: \(mode)") }
+            onSummaryModeChange: { mode in print("Summary mode: \(mode)") },
+            onTranslate: { uri, text, lang in print("Translate \(uri) from \(lang)") }
         )
     }
 }
