@@ -2,12 +2,13 @@
  * Bookmark Collection Storage
  *
  * IndexedDB-based storage for bookmark collections and their mappings.
- * Collections are stored locally and not synced to AT Protocol (as the official
- * bookmarks API doesn't support collections natively).
+ * Collections are synced to AT Protocol via com.shadowsky.bookmarkCollections
+ * singleton record so they persist across devices and survive device wipes.
  */
 
 import { createLogger } from "../../utils/logger";
 import { withIndexedDBRetry } from "../../utils/storage-retry";
+import { bookmarkCollectionSyncService } from "./collection-sync";
 import { BookmarkCollection, BookmarkCollectionMapping } from "./types";
 
 const logger = createLogger("CollectionStorage");
@@ -95,6 +96,66 @@ export class BookmarkCollectionStorage {
     return this.db;
   }
 
+  // ==================== AT Proto Sync ====================
+
+  /**
+   * Fire-and-forget push of current local state to the AT Proto server.
+   * Called after every mutating operation to keep the server in sync.
+   */
+  private syncToServer(): void {
+    this.exportData()
+      .then(({ collections, mappings }) => {
+        return bookmarkCollectionSyncService.pushToServer(
+          collections,
+          mappings,
+        );
+      })
+      .catch((error) => {
+        logger.error("Background sync to server failed:", error);
+      });
+  }
+
+  /**
+   * Merge server collections with local on startup.
+   * Fetches from AT Proto, merges with local data (union strategy),
+   * writes merged result to both local and server.
+   */
+  async syncFromServer(): Promise<void> {
+    const serverData = await bookmarkCollectionSyncService.fetchFromServer();
+    if (!serverData) return;
+
+    const localData = await this.exportData();
+
+    // If both are empty, nothing to do
+    if (
+      localData.collections.length === 0 &&
+      localData.mappings.length === 0 &&
+      serverData.collections.length === 0 &&
+      serverData.mappings.length === 0
+    ) {
+      return;
+    }
+
+    const merged = bookmarkCollectionSyncService.mergeData(
+      localData,
+      serverData,
+    );
+
+    // Write merged data to local storage
+    await this.importData(merged);
+
+    // Push merged result back to server
+    bookmarkCollectionSyncService
+      .pushToServer(merged.collections, merged.mappings)
+      .catch((error) => {
+        logger.error("Failed to push merged data to server:", error);
+      });
+
+    logger.log(
+      `Synced collections from server: ${merged.collections.length} collections, ${merged.mappings.length} mappings`,
+    );
+  }
+
   // ==================== Collection CRUD ====================
 
   async createCollection(
@@ -103,7 +164,7 @@ export class BookmarkCollectionStorage {
       "id" | "createdAt" | "updatedAt" | "bookmarkCount"
     >,
   ): Promise<BookmarkCollection> {
-    return withIndexedDBRetry(async () => {
+    const result = await withIndexedDBRetry(async () => {
       const db = this.ensureDb();
       const transaction = db.transaction([STORES.COLLECTIONS], "readwrite");
       const store = transaction.objectStore(STORES.COLLECTIONS);
@@ -126,6 +187,9 @@ export class BookmarkCollectionStorage {
         request.onerror = () => reject(request.error);
       });
     }, "createCollection");
+
+    this.syncToServer();
+    return result;
   }
 
   async getCollection(id: string): Promise<BookmarkCollection | null> {
@@ -159,7 +223,7 @@ export class BookmarkCollectionStorage {
       Omit<BookmarkCollection, "id" | "createdAt" | "bookmarkCount">
     >,
   ): Promise<BookmarkCollection | null> {
-    return withIndexedDBRetry(async () => {
+    const result = await withIndexedDBRetry(async () => {
       const existing = await this.getCollection(id);
       if (!existing) return null;
 
@@ -182,10 +246,15 @@ export class BookmarkCollectionStorage {
         request.onerror = () => reject(request.error);
       });
     }, "updateCollection");
+
+    if (result) {
+      this.syncToServer();
+    }
+    return result;
   }
 
   async deleteCollection(id: string): Promise<void> {
-    return withIndexedDBRetry(async () => {
+    await withIndexedDBRetry(async () => {
       const db = this.ensureDb();
       const transaction = db.transaction(
         [STORES.COLLECTIONS, STORES.MAPPINGS],
@@ -221,6 +290,8 @@ export class BookmarkCollectionStorage {
         request.onerror = () => reject(request.error);
       });
     }, "deleteCollection");
+
+    this.syncToServer();
   }
 
   // ==================== Bookmark-Collection Mappings ====================
@@ -229,7 +300,7 @@ export class BookmarkCollectionStorage {
     bookmarkUri: string,
     collectionId: string,
   ): Promise<void> {
-    return withIndexedDBRetry(async () => {
+    await withIndexedDBRetry(async () => {
       const db = this.ensureDb();
       const transaction = db.transaction(
         [STORES.MAPPINGS, STORES.COLLECTIONS],
@@ -273,13 +344,15 @@ export class BookmarkCollectionStorage {
 
       logger.log(`Added bookmark to collection: ${collectionId}`);
     }, "addBookmarkToCollection");
+
+    this.syncToServer();
   }
 
   async removeBookmarkFromCollection(
     bookmarkUri: string,
     collectionId: string,
   ): Promise<void> {
-    return withIndexedDBRetry(async () => {
+    await withIndexedDBRetry(async () => {
       const db = this.ensureDb();
       const transaction = db.transaction(
         [STORES.MAPPINGS, STORES.COLLECTIONS],
@@ -317,10 +390,12 @@ export class BookmarkCollectionStorage {
 
       logger.log(`Removed bookmark from collection: ${collectionId}`);
     }, "removeBookmarkFromCollection");
+
+    this.syncToServer();
   }
 
   async removeBookmarkFromAllCollections(bookmarkUri: string): Promise<void> {
-    return withIndexedDBRetry(async () => {
+    await withIndexedDBRetry(async () => {
       const db = this.ensureDb();
       const transaction = db.transaction([STORES.MAPPINGS], "readwrite");
       const store = transaction.objectStore(STORES.MAPPINGS);
@@ -343,6 +418,8 @@ export class BookmarkCollectionStorage {
         request.onerror = () => reject(request.error);
       });
     }, "removeBookmarkFromAllCollections");
+
+    this.syncToServer();
   }
 
   async getBookmarkCollections(bookmarkUri: string): Promise<string[]> {
@@ -420,7 +497,7 @@ export class BookmarkCollectionStorage {
   // ==================== Utility Methods ====================
 
   async clearAll(): Promise<void> {
-    return withIndexedDBRetry(async () => {
+    await withIndexedDBRetry(async () => {
       const db = this.ensureDb();
       const transaction = db.transaction(
         [STORES.COLLECTIONS, STORES.MAPPINGS],
@@ -438,6 +515,8 @@ export class BookmarkCollectionStorage {
         transaction.onerror = () => reject(transaction.error);
       });
     }, "clearAll");
+
+    this.syncToServer();
   }
 
   async exportData(): Promise<{
@@ -473,6 +552,10 @@ export class BookmarkCollectionStorage {
       );
       const collectionsStore = transaction.objectStore(STORES.COLLECTIONS);
       const mappingsStore = transaction.objectStore(STORES.MAPPINGS);
+
+      // Clear existing data before import to ensure clean state
+      collectionsStore.clear();
+      mappingsStore.clear();
 
       for (const collection of data.collections) {
         collectionsStore.put(collection);

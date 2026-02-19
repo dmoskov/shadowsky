@@ -34,6 +34,7 @@ export const AT_PROTO_COLLECTIONS = {
   COLUMNS: "com.shadowsky.columns",
   BOOKMARKS: "com.shadowsky.bookmarks", // Changed to plural for singleton
   DRAFTS: "com.shadowsky.drafts", // Changed to plural for singleton
+  BOOKMARK_COLLECTIONS: "com.shadowsky.bookmarkCollections", // Singleton: collection definitions + mappings
   LIST: "com.shadowsky.list", // Individual list records
   PIN: "com.shadowsky.pin", // Pinned posts on profile
 } as const;
@@ -44,6 +45,7 @@ export const AT_PROTO_RKEYS = {
   COLUMNS: "self",
   BOOKMARKS: "self",
   DRAFTS: "self",
+  BOOKMARK_COLLECTIONS: "self",
 } as const;
 
 // Storage type values

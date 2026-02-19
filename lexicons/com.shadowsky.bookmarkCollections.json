@@ -1,0 +1,88 @@
+{
+  "lexicon": 1,
+  "id": "com.shadowsky.bookmarkCollections",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Bookmark collections and mappings for ShadowSky",
+      "key": "literal:self",
+      "record": {
+        "type": "object",
+        "required": ["collections", "mappings", "version"],
+        "properties": {
+          "collections": {
+            "type": "array",
+            "description": "List of bookmark collections",
+            "items": {
+              "type": "object",
+              "required": ["id", "name", "createdAt", "updatedAt", "bookmarkCount"],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Unique identifier for the collection"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Display name for the collection"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Optional description of the collection"
+                },
+                "color": {
+                  "type": "string",
+                  "description": "Optional color identifier for visual distinction"
+                },
+                "icon": {
+                  "type": "string",
+                  "description": "Optional icon name"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "datetime",
+                  "description": "When the collection was created"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "datetime",
+                  "description": "When the collection was last updated"
+                },
+                "bookmarkCount": {
+                  "type": "integer",
+                  "description": "Number of bookmarks in this collection"
+                }
+              }
+            }
+          },
+          "mappings": {
+            "type": "array",
+            "description": "Bookmark-to-collection mappings",
+            "items": {
+              "type": "object",
+              "required": ["bookmarkUri", "collectionId", "addedAt"],
+              "properties": {
+                "bookmarkUri": {
+                  "type": "string",
+                  "description": "URI of the bookmarked post"
+                },
+                "collectionId": {
+                  "type": "string",
+                  "description": "ID of the collection this bookmark belongs to"
+                },
+                "addedAt": {
+                  "type": "string",
+                  "format": "datetime",
+                  "description": "When the bookmark was added to the collection"
+                }
+              }
+            }
+          },
+          "version": {
+            "type": "integer",
+            "description": "Schema version number"
+          }
+        }
+      }
+    }
+  }
+}
