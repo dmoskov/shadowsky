@@ -19,7 +19,6 @@ import { sharePost } from "../../utils/share";
 import { triggerHaptic } from "../../utils/haptics";
 import { createLogger } from '../../utils/logger';
 import { NativeThreadView } from '../../../modules/native-thread-view';
-import { ThreadBridge } from '../../../modules/thread-bridge';
 
 const logger = createLogger('ThreadScreenNative');
 
@@ -114,25 +113,6 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
   // Fetch thread data
   const { data: thread, isLoading, error, refetch } = usePostThread(postUri || "");
 
-  // Sync thread data to native module
-  useEffect(() => {
-    if (thread && AppBskyFeedDefs.isThreadViewPost(thread)) {
-      ThreadBridge.setThreadData(thread);
-    } else {
-      ThreadBridge.clearThreadData();
-    }
-
-    return () => {
-      // Clean up on unmount
-      ThreadBridge.clearThreadData();
-    };
-  }, [thread]);
-
-  // Update native module when like/repost changes
-  useEffect(() => {
-    // Listen for mutation success and update the bridge
-    // This ensures the native view stays in sync
-  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -155,21 +135,9 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
     if (likeUri) {
       triggerHaptic("light");
       unlikePost.mutate({ likeUri, postUri: uri });
-
-      // Update native view optimistically
-      ThreadBridge.updatePost(uri, {
-        likeCount: -1, // Decrement (native will handle relative update)
-        viewer: { like: undefined },
-      });
     } else {
       triggerHaptic("light");
       likePost.mutate({ uri, cid });
-
-      // Update native view optimistically
-      ThreadBridge.updatePost(uri, {
-        likeCount: 1, // Increment
-        viewer: { like: 'pending' },
-      });
     }
   };
 
@@ -200,11 +168,6 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
     if (repostUri) {
       triggerHaptic("medium");
       deleteRepost.mutate({ repostUri, postUri: uri });
-
-      ThreadBridge.updatePost(uri, {
-        repostCount: -1,
-        viewer: { repost: undefined },
-      });
       return;
     }
 
@@ -225,11 +188,6 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
             // Repost
             triggerHaptic("medium");
             repost.mutate({ uri, cid });
-
-            ThreadBridge.updatePost(uri, {
-              repostCount: 1,
-              viewer: { repost: 'pending' },
-            });
           } else if (buttonIndex === 2) {
             // Quote - navigate to compose
             navigateToCompose({
@@ -262,11 +220,6 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
             onPress: () => {
               triggerHaptic("medium");
               repost.mutate({ uri, cid });
-
-              ThreadBridge.updatePost(uri, {
-                repostCount: 1,
-                viewer: { repost: 'pending' },
-              });
             },
           },
           {
