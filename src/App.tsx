@@ -29,6 +29,7 @@ import { ToastProvider } from "./contexts/ToastContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { getInitialLoadingStrategy } from "./hooks/useNetworkAwareLoading";
+import { usePendingMutationsWarning } from "./hooks/usePendingMutationsWarning";
 import { useSidebarManagement } from "./hooks/useSidebarManagement";
 import { useStorageInitialization } from "./hooks/useStorageInitialization";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
@@ -128,6 +129,9 @@ function AppContent() {
     useSidebarManagement(isAuthenticated);
 
   useStorageInitialization();
+
+  // Warn before closing tab/window if there are unsynced offline mutations
+  usePendingMutationsWarning();
 
   // Check if user needs onboarding
   useEffect(() => {
