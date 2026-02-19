@@ -49,6 +49,9 @@ export { scheduledPostDB } from "./scheduled-post-db";
 // Service
 export { schedulerService } from "./scheduler-service";
 
+// AT Proto Sync
+export { ScheduledPostAtProtoSync } from "./atproto-sync";
+
 // Draft Integration
 export {
   draftToScheduledPost,

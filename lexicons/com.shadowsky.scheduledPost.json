@@ -1,0 +1,87 @@
+{
+  "lexicon": 1,
+  "id": "com.shadowsky.scheduledPost",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "A scheduled post stored for cross-platform visibility. The actual execution still runs on the device, but the schedule is visible across platforms.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": ["id", "scheduledFor", "status", "createdAt", "updatedAt"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the scheduled post"
+          },
+          "scheduledFor": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When the post should be published"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status: pending, processing, completed, failed, cancelled"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When the scheduled post was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When the scheduled post was last updated"
+          },
+          "text": {
+            "type": "string",
+            "description": "Post text content (for single posts)"
+          },
+          "threadPosts": {
+            "type": "array",
+            "description": "Thread post contents",
+            "items": {
+              "type": "object",
+              "required": ["text"],
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "description": "Text content of the thread post"
+                }
+              }
+            }
+          },
+          "replyToUri": {
+            "type": "string",
+            "description": "URI of the post being replied to"
+          },
+          "replyToCid": {
+            "type": "string",
+            "description": "CID of the post being replied to"
+          },
+          "quotedPostUri": {
+            "type": "string",
+            "description": "URI of the quoted post"
+          },
+          "quotedPostCid": {
+            "type": "string",
+            "description": "CID of the quoted post"
+          },
+          "draftId": {
+            "type": "string",
+            "description": "Reference to the original draft"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "datetime",
+            "description": "When the post was actually published"
+          },
+          "platform": {
+            "type": "string",
+            "description": "Platform that created this scheduled post (web, ios, android)"
+          }
+        }
+      }
+    }
+  }
+}
