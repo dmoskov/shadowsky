@@ -12,6 +12,7 @@ Pod::Spec.new do |s|
   s.dependency 'ExpoModulesCore'
   s.dependency 'FeedBridge'
   s.dependency 'ExpoSwiftUIFeed'
+  s.dependency 'RichTextView'
 
   s.frameworks = 'CoreSpotlight'
 

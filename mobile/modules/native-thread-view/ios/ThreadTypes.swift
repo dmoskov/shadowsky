@@ -7,6 +7,7 @@
 
 import Foundation
 import FeedBridge
+import ExpoSwiftUIFeed
 
 // MARK: - Thread Node (for nested structure)
 
@@ -33,6 +34,7 @@ struct ThreadPost {
     let cid: String
     let author: ThreadAuthor
     let record: ThreadRecord
+    let embed: PostEmbedData?
     let indexedAt: String
     let likeCount: Int
     let repostCount: Int

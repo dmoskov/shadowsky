@@ -8,6 +8,7 @@
 import SwiftUI
 import ExpoModulesCore
 import FeedBridge
+import ExpoSwiftUIFeed
 
 // MARK: - ThreadView
 
@@ -52,6 +53,9 @@ struct ThreadView: View {
     let onPressQuoteCount: ((String) -> Void)? // uri
     let onSummaryModeChange: ((String) -> Void)? // "quick" or "full"
     let onTranslate: ((String, String, String) -> Void)? // (uri, text, sourceLang)
+    let onLinkPress: ((String) -> Void)? // uri
+    let onImagePress: (([ImageEmbedData], Int) -> Void)? // (images, index)
+    let onQuotePress: ((String, String) -> Void)? // (uri, handle)
 
     // Composer event handlers (bridge to JS)
     let onSendReply: ((String, String?, String?) -> Void)?  // (text, replyToUri, replyToCid)
@@ -188,7 +192,16 @@ struct ThreadView: View {
                     onPressQuoteCount: {
                         onPressQuoteCount?(rootPost.post.uri)
                     },
-                    onTranslate: onTranslate
+                    onTranslate: onTranslate,
+                    onLinkPress: { uri in
+                        onLinkPress?(uri)
+                    },
+                    onImagePress: { images, index in
+                        onImagePress?(images, index)
+                    },
+                    onQuotePress: { uri, handle in
+                        onQuotePress?(uri, handle)
+                    }
                 )
 
                 // AI Thread Summary (between root post and replies)
@@ -254,7 +267,16 @@ struct ThreadView: View {
                         onPressQuoteCount: { uri in
                             onPressQuoteCount?(uri)
                         },
-                        onTranslate: onTranslate
+                        onTranslate: onTranslate,
+                        onLinkPress: { uri in
+                            onLinkPress?(uri)
+                        },
+                        onImagePress: { images, index in
+                            onImagePress?(images, index)
+                        },
+                        onQuotePress: { uri, handle in
+                            onQuotePress?(uri, handle)
+                        }
                     )
                 }
 
@@ -442,6 +464,9 @@ class ThreadState: ObservableObject {
         let recordData = data["record"] as? [String: Any] ?? [:]
         let viewerData = data["viewer"] as? [String: Any]
 
+        let embedData = data["embed"] as? [String: Any]
+        let embed = embedData.flatMap { PostEmbedData.from(dict: $0) }
+
         return ThreadPost(
             uri: data["uri"] as? String ?? "",
             cid: data["cid"] as? String ?? "",
@@ -457,6 +482,7 @@ class ThreadState: ObservableObject {
                 createdAt: recordData["createdAt"] as? String ?? "",
                 langs: recordData["langs"] as? [String]
             ),
+            embed: embed,
             indexedAt: data["indexedAt"] as? String ?? "",
             likeCount: data["likeCount"] as? Int ?? 0,
             repostCount: data["repostCount"] as? Int ?? 0,
@@ -529,6 +555,7 @@ class ThreadState: ObservableObject {
                 cid: node.post.cid,
                 author: node.post.author,
                 record: node.post.record,
+                embed: node.post.embed,
                 indexedAt: node.post.indexedAt,
                 likeCount: update["likeCount"] as? Int ?? node.post.likeCount,
                 repostCount: update["repostCount"] as? Int ?? node.post.repostCount,
@@ -579,6 +606,9 @@ struct ThreadView_Previews: PreviewProvider {
             onPressQuoteCount: { uri in print("Press quote count: \(uri)") },
             onSummaryModeChange: { mode in print("Summary mode: \(mode)") },
             onTranslate: { uri, text, lang in print("Translate \(uri) from \(lang)") },
+            onLinkPress: { uri in print("Link: \(uri)") },
+            onImagePress: { images, index in print("Image: \(index)") },
+            onQuotePress: { uri, handle in print("Quote: \(uri)") },
             onSendReply: { text, uri, cid in print("Send reply: \(text)") },
             onOpenImagePicker: { print("Image picker") },
             onOpenGifPicker: { print("GIF picker") },
