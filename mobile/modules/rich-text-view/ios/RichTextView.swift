@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import FeedBridge
 
 // MARK: - Rich Text Segment
@@ -263,8 +264,28 @@ private struct WrappingRichText: UIViewRepresentable {
         func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
             let urlString = URL.absoluteString
 
+            // Long-press on any link type shows an action sheet
+            if interaction == .presentActions {
+                let resolvedUri: String
+                if urlString.hasPrefix("mention://") {
+                    let components = urlString.replacingOccurrences(of: "mention://", with: "").split(separator: "|")
+                    if components.count == 2 {
+                        resolvedUri = "https://bsky.app/profile/\(components[1])"
+                    } else {
+                        return false
+                    }
+                } else if urlString.hasPrefix("hashtag://") {
+                    let tag = urlString.replacingOccurrences(of: "hashtag://", with: "")
+                    resolvedUri = "https://bsky.app/hashtag/\(tag)"
+                } else {
+                    resolvedUri = urlString
+                }
+                showLinkActionSheet(uri: resolvedUri, sourceView: textView)
+                return false
+            }
+
+            // Normal tap handling
             if urlString.hasPrefix("mention://") {
-                // Parse mention URL: mention://did|handle
                 let components = urlString.replacingOccurrences(of: "mention://", with: "").split(separator: "|")
                 if components.count == 2 {
                     let did = String(components[0])
@@ -273,16 +294,64 @@ private struct WrappingRichText: UIViewRepresentable {
                 }
                 return false
             } else if urlString.hasPrefix("hashtag://") {
-                // Parse hashtag URL: hashtag://tag
                 let tag = urlString.replacingOccurrences(of: "hashtag://", with: "")
                 onHashtagTap?(tag)
                 return false
             } else {
-                // Regular link
                 onLinkTap?(urlString)
                 return false
             }
         }
+
+        private func showLinkActionSheet(uri: String, sourceView: UIView) {
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
+
+            let alert = UIAlertController(title: uri, message: nil, preferredStyle: .actionSheet)
+
+            alert.addAction(UIAlertAction(title: "Open in Browser", style: .default) { _ in
+                if let url = Foundation.URL(string: uri) {
+                    UIApplication.shared.open(url)
+                }
+            })
+
+            alert.addAction(UIAlertAction(title: "Copy Link", style: .default) { _ in
+                UIPasteboard.general.string = uri
+            })
+
+            alert.addAction(UIAlertAction(title: "Share Link", style: .default) { _ in
+                let activityVC = UIActivityViewController(activityItems: [uri], applicationActivities: nil)
+                activityVC.popoverPresentationController?.sourceView = sourceView
+                activityVC.popoverPresentationController?.sourceRect = sourceView.bounds
+                if let viewController = sourceView.findViewController() {
+                    viewController.present(activityVC, animated: true)
+                }
+            })
+
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+            alert.popoverPresentationController?.sourceView = sourceView
+            alert.popoverPresentationController?.sourceRect = sourceView.bounds
+
+            if let viewController = sourceView.findViewController() {
+                viewController.present(alert, animated: true)
+            }
+        }
+    }
+}
+
+// MARK: - UIView Extension
+
+private extension UIView {
+    func findViewController() -> UIViewController? {
+        var responder: UIResponder? = self
+        while let next = responder?.next {
+            if let vc = next as? UIViewController {
+                return vc
+            }
+            responder = next
+        }
+        return nil
     }
 }
 
