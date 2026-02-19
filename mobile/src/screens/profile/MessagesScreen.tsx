@@ -27,7 +27,7 @@ import { ErrorState } from "../../components/ErrorState";
 import { EmptyState } from "../../components/EmptyState";
 import { NewConversationModal } from "../../components/NewConversationModal";
 import { LockIcon, ChatBubbleIcon, ArrowLeftIcon, SearchIcon, CloseIcon, PlusIcon, TrashIcon, BellIcon, BellSlashIcon } from "../../components/icons";
-import { useConversations, useConversation, useSendMessage, useMarkAsRead, useMuteConversation, useUnmuteConversation, useLeaveConversation } from "../../hooks/api";
+import { useConversations, useConversation, useSendMessage, useMarkAsRead, useMuteConversation, useUnmuteConversation, useLeaveConversation, useDeleteMessage } from "../../hooks/api";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useImagePicker } from "../../hooks/useImagePicker";
 import { ImageIcon } from "../../components/icons/ImageIcon";
@@ -95,6 +95,7 @@ export function MessagesScreen() {
   const muteConversationMutation = useMuteConversation();
   const unmuteConversationMutation = useUnmuteConversation();
   const leaveConversationMutation = useLeaveConversation();
+  const deleteMessageMutation = useDeleteMessage();
 
   // Mark conversation as read when opened
   useEffect(() => {
@@ -218,6 +219,36 @@ export function MessagesScreen() {
       logger.error('Failed to toggle mute:', error);
       Alert.alert("Error", "Failed to update conversation. Please try again.");
     }
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    if (!selectedConversation) return;
+
+    Alert.alert(
+      "Delete Message",
+      "Are you sure you want to delete this message? This cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteMessageMutation.mutateAsync({
+                conversationId: selectedConversation,
+                messageId,
+              });
+            } catch (error) {
+              logger.error('Failed to delete message:', error);
+              Alert.alert("Error", "Failed to delete message. Please try again.");
+            }
+          },
+        },
+      ]
+    );
   };
 
   // Filter conversations based on search text
@@ -370,6 +401,62 @@ export function MessagesScreen() {
       Array.isArray(embedImages) &&
       embedImages.length > 0;
 
+    const messageBubbleContent = (
+      <>
+        {/* Display images if present */}
+        {hasImages && embedImages && (
+          <View style={styles.messageImagesContainer}>
+            {embedImages.map((img, imgIndex) => {
+              const link = img?.image?.ref?.$link;
+              if (!link) return null;
+              const imageUrl = `https://cdn.bsky.app/img/feed_thumbnail/plain/${session?.did}/${link}@jpeg`;
+              return (
+                <Image
+                  key={imgIndex}
+                  source={{ uri: imageUrl }}
+                  style={styles.messageImage}
+                  resizeMode="cover"
+                />
+              );
+            })}
+          </View>
+        )}
+
+        {/* Display text if present */}
+        {item.text && (
+          <Text
+            style={[
+              styles.messageText,
+              isOwnMessage ? styles.ownMessageText : styles.otherMessageText,
+            ]}
+          >
+            {item.text}
+          </Text>
+        )}
+
+        <View style={styles.messageFooter}>
+          <Text
+            style={[
+              styles.messageTime,
+              isOwnMessage ? styles.ownMessageTime : styles.otherMessageTime,
+            ]}
+          >
+            {formatMessageTime(item.sentAt)}
+          </Text>
+          {isOwnMessage && deliveryStatus && (
+            <Text
+              style={[
+                styles.deliveryStatus,
+                isOwnMessage && styles.ownDeliveryStatus,
+              ]}
+            >
+              {deliveryStatus === "delivered" ? "✓✓" : "✓"}
+            </Text>
+          )}
+        </View>
+      </>
+    );
+
     return (
       <View
         style={[
@@ -377,64 +464,21 @@ export function MessagesScreen() {
           isOwnMessage ? styles.ownMessage : styles.otherMessage,
         ]}
       >
-        <View
-          style={[
-            styles.messageBubble,
-            isOwnMessage ? styles.ownMessageBubble : styles.otherMessageBubble,
-          ]}
-        >
-          {/* Display images if present */}
-          {hasImages && embedImages && (
-            <View style={styles.messageImagesContainer}>
-              {embedImages.map((img, imgIndex) => {
-                const link = img?.image?.ref?.$link;
-                if (!link) return null;
-                const imageUrl = `https://cdn.bsky.app/img/feed_thumbnail/plain/${session?.did}/${link}@jpeg`;
-                return (
-                  <Image
-                    key={imgIndex}
-                    source={{ uri: imageUrl }}
-                    style={styles.messageImage}
-                    resizeMode="cover"
-                  />
-                );
-              })}
-            </View>
-          )}
-
-          {/* Display text if present */}
-          {item.text && (
-            <Text
-              style={[
-                styles.messageText,
-                isOwnMessage ? styles.ownMessageText : styles.otherMessageText,
-              ]}
-            >
-              {item.text}
-            </Text>
-          )}
-
-          <View style={styles.messageFooter}>
-            <Text
-              style={[
-                styles.messageTime,
-                isOwnMessage ? styles.ownMessageTime : styles.otherMessageTime,
-              ]}
-            >
-              {formatMessageTime(item.sentAt)}
-            </Text>
-            {isOwnMessage && deliveryStatus && (
-              <Text
-                style={[
-                  styles.deliveryStatus,
-                  isOwnMessage && styles.ownDeliveryStatus,
-                ]}
-              >
-                {deliveryStatus === "delivered" ? "✓✓" : "✓"}
-              </Text>
-            )}
+        {isOwnMessage ? (
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onLongPress={() => handleDeleteMessage(item.id)}
+            style={[styles.messageBubble, styles.ownMessageBubble]}
+          >
+            {messageBubbleContent}
+          </TouchableOpacity>
+        ) : (
+          <View
+            style={[styles.messageBubble, styles.otherMessageBubble]}
+          >
+            {messageBubbleContent}
           </View>
-        </View>
+        )}
       </View>
     );
   };

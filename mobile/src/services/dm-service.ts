@@ -606,6 +606,55 @@ class DmService {
   }
 
   /**
+   * Delete a message from a conversation
+   */
+  async deleteMessage(
+    conversationId: string,
+    messageId: string
+  ): Promise<void> {
+    if (!this.agent) {
+      throw new Error("Not authenticated");
+    }
+
+    return rateLimited(
+      async () => withRetry(async () => {
+        try {
+          const headers = await this.getAuthHeaders();
+          headers["Content-Type"] = "application/json";
+
+          const response = await fetch(
+            "https://api.bsky.chat/xrpc/chat.bsky.convo.deleteMessage",
+            {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                convoId: conversationId,
+                messageId,
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            const error: any = new Error(
+              `HTTP ${response.status}: ${response.statusText}`
+            );
+            error.status = response.status;
+            throw error;
+          }
+        } catch (error: unknown) {
+          logger.error('Failed to delete message:', error);
+          const apiErr = error as ApiError;
+          if (apiErr.status === 401 || apiErr.statusCode === 401) {
+            throw new Error("Authentication required. Please sign in again.");
+          }
+          throw error;
+        }
+      }),
+      ATProtoEndpointType.CHAT
+    );
+  }
+
+  /**
    * Leave (delete) a conversation
    */
   async leaveConversation(conversationId: string): Promise<void> {
