@@ -1,3 +1,4 @@
+import CoreSpotlight
 import Expo
 import React
 import ReactAppDependencyProvider
@@ -41,12 +42,21 @@ public class AppDelegate: ExpoAppDelegate {
     return super.application(app, open: url, options: options) || RCTLinkingManager.application(app, open: url, options: options)
   }
 
-  // Universal Links
+  // Universal Links & Spotlight Continuation
   public override func application(
     _ application: UIApplication,
     continue userActivity: NSUserActivity,
     restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
   ) -> Bool {
+    // Handle Spotlight search result taps
+    if userActivity.activityType == CSSearchableItemActionType,
+       let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String {
+      if let deepLinkURL = SpotlightDeepLinkResolver.resolveURL(for: identifier) {
+        RCTLinkingManager.application(application, open: deepLinkURL, options: [:])
+        return true
+      }
+    }
+
     let result = RCTLinkingManager.application(application, continue: userActivity, restorationHandler: restorationHandler)
     return super.application(application, continue: userActivity, restorationHandler: restorationHandler) || result
   }
