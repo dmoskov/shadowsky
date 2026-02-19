@@ -19,12 +19,22 @@ export interface TrendingTopicsResponse {
   suggested: TrendingTopic[];
 }
 
+export interface TrendActor {
+  did: string;
+  handle: string;
+  displayName?: string;
+  avatar?: string;
+}
+
 export interface Trend {
   topic: string;
   displayName?: string;
-  status?: "hot" | "rising" | "stable";
+  link?: string;
+  startedAt?: string;
+  status?: "hot" | "rising" | "stable" | string;
   postCount?: number;
   category?: string;
+  actors?: TrendActor[];
 }
 
 export interface TrendsResponse {
@@ -66,29 +76,55 @@ export async function getTrendingTopics(
 }
 
 /**
- * Fetch detailed trends (if available in the future)
- * For now, this wraps getTrendingTopics and transforms the data
+ * Fetch detailed trends via app.bsky.unspecced.getTrends
+ * Includes post counts, status, category, and associated actors
  */
 export async function getTrends(limit: number = 10): Promise<TrendsResponse> {
   return rateLimited(
     async () => {
-      const topicsData = await getTrendingTopics(limit);
+      const client = getAtProtoClient();
+      const agent = client.getAgent();
 
-      // Transform topics into trends format
-      const trends: Trend[] = [
-        ...topicsData.topics.map((t) => ({
-          topic: t.topic,
-          displayName: t.topic,
-          status: "stable" as const,
-        })),
-        ...topicsData.suggested.map((t) => ({
-          topic: t.topic,
-          displayName: t.topic,
-          status: "rising" as const,
-        })),
-      ];
+      try {
+        const response = await agent.app.bsky.unspecced.getTrends({
+          limit,
+        });
 
-      return { trends };
+        const trends: Trend[] = (response.data.trends || []).map((t) => ({
+          topic: t.topic,
+          displayName: t.displayName,
+          link: t.link,
+          startedAt: t.startedAt,
+          status: t.status,
+          postCount: t.postCount,
+          category: t.category,
+          actors: t.actors?.map((a) => ({
+            did: a.did,
+            handle: a.handle,
+            displayName: a.displayName,
+            avatar: a.avatar,
+          })),
+        }));
+
+        return { trends };
+      } catch (error) {
+        logger.warn('Failed to fetch trends, falling back to topics:', error);
+        // Fallback: transform trending topics into trends format
+        const topicsData = await getTrendingTopics(limit);
+        const trends: Trend[] = [
+          ...topicsData.topics.map((t) => ({
+            topic: t.topic,
+            displayName: t.topic,
+            status: "stable" as const,
+          })),
+          ...topicsData.suggested.map((t) => ({
+            topic: t.topic,
+            displayName: t.topic,
+            status: "rising" as const,
+          })),
+        ];
+        return { trends };
+      }
     },
     ATProtoEndpointType.FEED
   );

@@ -8,19 +8,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
-
-export interface TrendingTopic {
-  topic: string;
-  link?: string;
-}
-
-export interface Trend {
-  topic: string;
-  displayName?: string;
-  status?: "hot" | "rising" | "stable";
-  postCount?: number;
-  category?: string;
-}
+import type {
+  TrendingTopic,
+  Trend,
+} from "../services/trending-service";
 
 interface TrendingTopicsProps {
   topics?: TrendingTopic[];
@@ -101,7 +92,7 @@ export function TrendingTopics({
             <Text style={styles.topicText} numberOfLines={1}>
               {item.topic}
             </Text>
-            {item.postCount && item.postCount > 1000 && (
+            {item.postCount != null && item.postCount > 0 && (
               <Text style={styles.postCount}>
                 {item.postCount >= 1000
                   ? `${(item.postCount / 1000).toFixed(1)}k`
