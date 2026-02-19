@@ -52,7 +52,7 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "%APPLE_ID%",
+        "appleId": "dustin.moskovitz@gmail.com",
         "ascAppId": "6738274061",
         "appleTeamId": "2Y3U7TMLHM"
       },
