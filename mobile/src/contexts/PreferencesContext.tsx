@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import {
   AppPreferences,
+  MutedWord,
   preferencesService,
 } from "../services/preferences";
 import { getAtProtoClient } from "../services/atproto/client";
@@ -41,6 +42,9 @@ interface PreferencesContextType {
   updatePreferences: (updates: Partial<AppPreferences>) => Promise<void>;
   resetPreferences: () => Promise<void>;
   refreshPreferences: () => Promise<void>;
+  addMutedWord: (word: MutedWord) => Promise<void>;
+  removeMutedWord: (wordId: string) => Promise<void>;
+  syncingMutedWords: boolean;
 }
 
 const PreferencesContext = createContext<PreferencesContextType | undefined>(
@@ -59,6 +63,7 @@ export function PreferencesProvider({
     () => preferencesService.getSync(),
   );
   const [loading, setLoading] = useState(false);
+  const [syncingMutedWords, setSyncingMutedWords] = useState(false);
   const hasSyncedFromServer = useRef(false);
 
   // Run one-time AsyncStorage → MMKV migration in the background.
@@ -74,6 +79,7 @@ export function PreferencesProvider({
 
   // On startup, merge server preferences with local (server wins for
   // cross-platform settings, local wins for device-specific).
+  // Also syncs muted words from the official AT Proto mutedWordsPref.
   useEffect(() => {
     if (hasSyncedFromServer.current) return;
 
@@ -81,12 +87,26 @@ export function PreferencesProvider({
     if (!agent) return;
 
     hasSyncedFromServer.current = true;
+
+    // Merge ShadowSky custom preferences
     preferencesService.mergeFromAtProto(agent).then((merged) => {
       if (merged) {
         setPreferences(merged);
       }
     }).catch((error) => {
       logger.error('Failed to merge server preferences on startup:', error);
+    });
+
+    // Sync muted words from official AT Proto preferences
+    setSyncingMutedWords(true);
+    preferencesService.syncMutedWordsFromServer(agent).then((mergedWords) => {
+      if (mergedWords) {
+        setPreferences(preferencesService.getSync());
+      }
+    }).catch((error) => {
+      logger.error('Failed to sync muted words on startup:', error);
+    }).finally(() => {
+      setSyncingMutedWords(false);
     });
   });
 
@@ -169,6 +189,18 @@ export function PreferencesProvider({
     }
   }, []);
 
+  const addMutedWord = useCallback(async (word: MutedWord) => {
+    const agent = getAgentOrNull();
+    await preferencesService.addMutedWordWithSync(word, agent);
+    setPreferences(preferencesService.getSync());
+  }, []);
+
+  const removeMutedWord = useCallback(async (wordId: string) => {
+    const agent = getAgentOrNull();
+    await preferencesService.removeMutedWordWithSync(wordId, agent);
+    setPreferences(preferencesService.getSync());
+  }, []);
+
   const value = useMemo(
     () => ({
       preferences,
@@ -177,6 +209,9 @@ export function PreferencesProvider({
       updatePreferences,
       resetPreferences,
       refreshPreferences,
+      addMutedWord,
+      removeMutedWord,
+      syncingMutedWords,
     }),
     [
       preferences,
@@ -185,6 +220,9 @@ export function PreferencesProvider({
       updatePreferences,
       resetPreferences,
       refreshPreferences,
+      addMutedWord,
+      removeMutedWord,
+      syncingMutedWords,
     ],
   );
 

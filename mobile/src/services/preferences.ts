@@ -1,5 +1,5 @@
 import { MMKV } from "react-native-mmkv";
-import { BskyAgent } from "@atproto/api";
+import { BskyAgent, AppBskyActorDefs } from "@atproto/api";
 
 import { createLogger } from '../utils/logger';
 
@@ -441,6 +441,168 @@ class PreferencesService {
    */
   isSyncableKey(key: keyof AppPreferences): boolean {
     return SYNCABLE_KEYS.has(key);
+  }
+
+  // ── Muted Words AT Proto Sync ──────────────────────────────────────
+
+  /**
+   * Convert a local MutedWord to the AT Proto format used by
+   * app.bsky.actor.defs#mutedWord.
+   */
+  private localToServerMutedWord(
+    word: MutedWord,
+  ): Pick<AppBskyActorDefs.MutedWord, 'value' | 'targets' | 'actorTarget' | 'expiresAt'> {
+    const targets: AppBskyActorDefs.MutedWordTarget[] =
+      word.appliesTo === 'home' ? ['content'] : ['content', 'tag'];
+
+    return {
+      value: word.value,
+      targets,
+      actorTarget: 'all',
+      expiresAt: word.expiresAt
+        ? new Date(word.expiresAt).toISOString()
+        : undefined,
+    };
+  }
+
+  /**
+   * Convert an AT Proto muted word to our local MutedWord format.
+   */
+  private serverToLocalMutedWord(item: AppBskyActorDefs.MutedWord): MutedWord {
+    const hasTag = (item.targets || []).includes('tag');
+    const appliesTo: MutedWord['appliesTo'] = hasTag ? 'all' : 'home';
+
+    let duration: MutedWord['duration'] = 'forever';
+    let expiresAt: number | undefined;
+
+    if (item.expiresAt) {
+      expiresAt = new Date(item.expiresAt).getTime();
+      // Derive approximate duration from remaining time
+      const remaining = expiresAt - Date.now();
+      if (remaining <= 0) {
+        // Already expired — keep the data but mark as expired
+        duration = 'forever';
+      } else if (remaining <= 25 * 60 * 60 * 1000) {
+        duration = '24h';
+      } else if (remaining <= 8 * 24 * 60 * 60 * 1000) {
+        duration = '7d';
+      } else {
+        duration = '30d';
+      }
+    }
+
+    return {
+      id: item.id || Date.now().toString(),
+      value: item.value,
+      duration,
+      expiresAt,
+      appliesTo,
+    };
+  }
+
+  /**
+   * Fetch muted words from the official AT Proto preferences
+   * (app.bsky.actor.defs#mutedWordsPref) and merge with local MMKV words.
+   *
+   * Server words are authoritative. Local-only words (not yet on server)
+   * are pushed up. Returns the merged list, or null if fetch failed.
+   */
+  async syncMutedWordsFromServer(agent: BskyAgent): Promise<MutedWord[] | null> {
+    try {
+      const response = await agent.app.bsky.actor.getPreferences();
+      const preferences = response.data.preferences;
+
+      const mutedWordsPref = preferences.find(
+        (p: unknown) =>
+          (p as { $type?: string }).$type === 'app.bsky.actor.defs#mutedWordsPref',
+      ) as AppBskyActorDefs.MutedWordsPref | undefined;
+
+      const serverWords: MutedWord[] = (mutedWordsPref?.items || []).map(
+        (item) => this.serverToLocalMutedWord(item),
+      );
+
+      // Get local-only words that aren't on the server yet
+      const localWords = this.getSync().mutedWords || [];
+      const serverValues = new Set(
+        serverWords.map((w) => w.value.toLowerCase()),
+      );
+      const localOnly = localWords.filter(
+        (w) => !serverValues.has(w.value.toLowerCase()),
+      );
+
+      // Push any local-only words to the server
+      for (const word of localOnly) {
+        try {
+          await agent.addMutedWord(this.localToServerMutedWord(word));
+        } catch (err) {
+          logger.error('Failed to push local muted word to server:', err);
+        }
+      }
+
+      // Merged list: server words + local-only words
+      const merged = [...serverWords, ...localOnly];
+
+      // Persist to MMKV
+      await this.set('mutedWords', merged);
+
+      return merged;
+    } catch (error) {
+      logger.error('Failed to sync muted words from server:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Add a muted word to both MMKV and the AT Proto server.
+   */
+  async addMutedWordWithSync(
+    word: MutedWord,
+    agent: BskyAgent | null,
+  ): Promise<void> {
+    // Save locally first (fast)
+    const current = this.getSync();
+    const updatedWords = [...(current.mutedWords || []), word];
+    await this.set('mutedWords', updatedWords);
+
+    // Push to server
+    if (agent) {
+      try {
+        await agent.addMutedWord(this.localToServerMutedWord(word));
+      } catch (error) {
+        logger.error('Failed to add muted word to server:', error);
+      }
+    }
+  }
+
+  /**
+   * Remove a muted word from both MMKV and the AT Proto server.
+   */
+  async removeMutedWordWithSync(
+    wordId: string,
+    agent: BskyAgent | null,
+  ): Promise<void> {
+    const current = this.getSync();
+    const wordToRemove = (current.mutedWords || []).find((w) => w.id === wordId);
+    const updatedWords = (current.mutedWords || []).filter((w) => w.id !== wordId);
+
+    // Remove locally first
+    await this.set('mutedWords', updatedWords);
+
+    // Remove from server
+    if (agent && wordToRemove) {
+      try {
+        const targets: AppBskyActorDefs.MutedWordTarget[] =
+          wordToRemove.appliesTo === 'home' ? ['content'] : ['content', 'tag'];
+
+        await agent.removeMutedWord({
+          value: wordToRemove.value,
+          targets,
+          actorTarget: 'all',
+        } as AppBskyActorDefs.MutedWord);
+      } catch (error) {
+        logger.error('Failed to remove muted word from server:', error);
+      }
+    }
   }
 }
 
