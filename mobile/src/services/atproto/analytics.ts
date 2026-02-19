@@ -90,20 +90,23 @@ export async function getUserAnalytics(
   let cursor: string | undefined;
   let allPosts: AppBskyFeedDefs.FeedViewPost[] = [];
   let hasMore = true;
-  // Adjust max pages based on time range (50 posts per page)
-  const maxPages = timeRange === "quarter" ? 6 : timeRange === "month" ? 2 : 1;
+  // Match web analytics data volume: 100 posts per page, up to 10 pages (1,000 posts max)
+  const maxPages = timeRange === "today" ? 5 : 10;
   let pageCount = 0;
 
   // Fetch posts until we reach the time range or max pages
   while (hasMore && pageCount < maxPages) {
-    const response = await getAuthorFeed(actor, { cursor, limit: 50 });
+    const response = await getAuthorFeed(actor, { cursor, limit: 100 });
     const posts = response.feed;
 
-    // Filter posts within time range
+    // Filter posts within time range, excluding reposts (matching web behavior)
     for (const post of posts) {
       const postDate = new Date(post.post.indexedAt);
+      const isRepost = post.reason?.$type === "app.bsky.feed.defs#reasonRepost";
       if (postDate >= startDate) {
-        allPosts.push(post);
+        if (!isRepost && postDate <= now) {
+          allPosts.push(post);
+        }
       } else {
         hasMore = false;
         break;
