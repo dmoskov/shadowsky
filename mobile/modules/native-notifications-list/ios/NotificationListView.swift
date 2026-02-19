@@ -124,6 +124,7 @@ struct NotificationListView: View {
     let onHashtagPress: ((String) -> Void)?
     let onLinkPress: ((String) -> Void)?
     let onAppear: (() -> Void)?
+    let onAnalyticsPress: (() -> Void)?
 
     // Filtered notifications
     private var filteredNotifications: [ProcessedNotificationUIModel] {
@@ -142,6 +143,21 @@ struct NotificationListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Header with analytics button
+            HStack {
+                Spacer()
+                Button(action: {
+                    onAnalyticsPress?()
+                }) {
+                    Image(systemName: "chart.bar.xaxis")
+                        .font(.system(size: 20))
+                        .foregroundColor(NotificationThemeColors.primary)
+                }
+                .accessibilityLabel("Notification Analytics")
+                .padding(.trailing, 16)
+                .padding(.vertical, 8)
+            }
+
             // Filter tab bar
             NotificationFilterBar(
                 activeFilter: $activeFilter,

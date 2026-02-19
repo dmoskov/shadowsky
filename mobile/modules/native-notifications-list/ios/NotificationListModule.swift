@@ -42,7 +42,8 @@ public class NotificationListModule: Module {
                 "onMentionPress",
                 "onHashtagPress",
                 "onLinkPress",
-                "onAppear"
+                "onAppear",
+                "onAnalyticsPress"
             )
         }
     }
@@ -61,6 +62,7 @@ class NotificationListViewWrapper: ExpoView {
     private let onHashtagPress = EventDispatcher()
     private let onLinkPress = EventDispatcher()
     private let onAppear = EventDispatcher()
+    private let onAnalyticsPress = EventDispatcher()
 
     private var hostingController: UIHostingController<NotificationListView>?
 
@@ -128,6 +130,9 @@ class NotificationListViewWrapper: ExpoView {
             },
             onAppear: { [weak self] in
                 self?.onAppear([:])
+            },
+            onAnalyticsPress: { [weak self] in
+                self?.onAnalyticsPress([:])
             }
         )
     }
