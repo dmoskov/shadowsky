@@ -36,6 +36,9 @@ export type ThreadViewProps = ViewProps & {
   onPressQuoteCount?: (event: { nativeEvent: { uri: string } }) => void;
   onSummaryModeChange?: (event: { nativeEvent: { mode: string } }) => void;
   onTranslate?: (event: { nativeEvent: { uri: string; text: string; sourceLang: string } }) => void;
+  onLinkPress?: (event: { nativeEvent: { uri: string } }) => void;
+  onImagePress?: (event: { nativeEvent: { images: string; index: number } }) => void;
+  onQuotePress?: (event: { nativeEvent: { uri: string; handle: string } }) => void;
 
   // Composer events (native -> JS)
   onSendReply?: (event: { nativeEvent: { text: string; replyToUri?: string; replyToCid?: string } }) => void;

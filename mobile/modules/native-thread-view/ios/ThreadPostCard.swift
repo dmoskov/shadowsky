@@ -7,6 +7,8 @@
 
 import SwiftUI
 import ExpoSwiftUIFeed
+import struct RichTextView.RichTextView
+import FeedBridge
 
 // MARK: - Static Date Formatters
 
@@ -64,6 +66,9 @@ struct ThreadPostCard: View {
     let onPressRepostCount: (() -> Void)?
     let onPressQuoteCount: (() -> Void)?
     let onTranslate: ((String, String, String) -> Void)? // (uri, text, sourceLang)
+    let onLinkPress: ((String) -> Void)?
+    let onImagePress: (([ImageEmbedData], Int) -> Void)?
+    let onQuotePress: ((String, String) -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -114,11 +119,21 @@ struct ThreadPostCard: View {
                     .foregroundColor(.secondary)
             }
 
-            // Post content
-            Text(node.post.record.text)
-                .font(.system(size: 16))
-                .foregroundColor(.primary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            // Post content (rich text with facets)
+            if !node.post.record.text.isEmpty {
+                renderPostText()
+            }
+
+            // Embed (images, video, links, quotes)
+            if let embed = node.post.embed {
+                PostEmbed(
+                    embed: embed,
+                    onImagePress: onImagePress,
+                    onLinkPress: onLinkPress,
+                    onQuotePress: onQuotePress,
+                    blurImages: false
+                )
+            }
 
             // Inline translation
             if LanguageUtils.needsTranslation(postLangs: node.post.record.langs) {
@@ -180,6 +195,29 @@ struct ThreadPostCard: View {
         .onTapGesture {
             onPress?()
         }
+    }
+
+    // MARK: - Rich Text Rendering
+
+    private func renderPostText() -> some View {
+        let facets: [Facet] = (node.post.record.facets ?? []).map { facet in
+            facet
+        }
+
+        return RichTextView(
+            text: node.post.record.text,
+            facets: facets,
+            onMentionTap: { handle, did in
+                onMentionPress?(handle, did)
+            },
+            onHashtagTap: { tag in
+                onHashtagPress?(tag)
+            },
+            onLinkTap: { uri in
+                onLinkPress?(uri)
+            }
+        )
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
 }
@@ -253,6 +291,9 @@ struct ThreadReplyView: View {
     let onPressRepostCount: ((String) -> Void)?
     let onPressQuoteCount: ((String) -> Void)?
     let onTranslate: ((String, String, String) -> Void)?
+    let onLinkPress: ((String) -> Void)?
+    let onImagePress: (([ImageEmbedData], Int) -> Void)?
+    let onQuotePress: ((String, String) -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -333,7 +374,16 @@ struct ThreadReplyView: View {
                         onPressQuoteCount: {
                             onPressQuoteCount?(node.post.uri)
                         },
-                        onTranslate: onTranslate
+                        onTranslate: onTranslate,
+                        onLinkPress: { uri in
+                            onLinkPress?(uri)
+                        },
+                        onImagePress: { images, index in
+                            onImagePress?(images, index)
+                        },
+                        onQuotePress: { uri, handle in
+                            onQuotePress?(uri, handle)
+                        }
                     )
                 }
             }
@@ -355,7 +405,10 @@ struct ThreadReplyView: View {
                         onPressLikeCount: onPressLikeCount,
                         onPressRepostCount: onPressRepostCount,
                         onPressQuoteCount: onPressQuoteCount,
-                        onTranslate: onTranslate
+                        onTranslate: onTranslate,
+                        onLinkPress: onLinkPress,
+                        onImagePress: onImagePress,
+                        onQuotePress: onQuotePress
                     )
                 }
             }

@@ -8,6 +8,7 @@
 
 import ExpoModulesCore
 import SwiftUI
+import ExpoSwiftUIFeed
 
 public class ThreadViewModule: Module {
     public func definition() -> ModuleDefinition {
@@ -65,6 +66,7 @@ public class ThreadViewModule: Module {
                    "onNavigateToParent", "onNavigateToRoot",
                    "onPressLikeCount", "onPressRepostCount", "onPressQuoteCount",
                    "onSummaryModeChange", "onTranslate",
+                   "onLinkPress", "onImagePress", "onQuotePress",
                    // Composer events
                    "onSendReply", "onOpenImagePicker", "onOpenGifPicker",
                    "onOpenEmojiPicker", "onMentionSearchQuery")
@@ -218,6 +220,9 @@ class ThreadViewWrapper: ExpoView {
     private let onPressQuoteCount = EventDispatcher()
     private let onSummaryModeChange = EventDispatcher()
     private let onTranslate = EventDispatcher()
+    private let onLinkPress = EventDispatcher()
+    private let onImagePress = EventDispatcher()
+    private let onQuotePress = EventDispatcher()
 
     // Composer event dispatchers
     private let onSendReply = EventDispatcher()
@@ -391,6 +396,35 @@ class ThreadViewWrapper: ExpoView {
                     "uri": uri,
                     "text": text,
                     "sourceLang": sourceLang,
+                ])
+            },
+            onLinkPress: { [weak self] uri in
+                self?.onLinkPress([
+                    "uri": uri
+                ])
+            },
+            onImagePress: { [weak self] images, index in
+                let imageData = images.map { img -> [String: Any] in
+                    var dict: [String: Any] = [
+                        "thumb": img.thumb,
+                        "fullsize": img.fullsize
+                    ]
+                    if let alt = img.alt { dict["alt"] = alt }
+                    if let aspectRatio = img.aspectRatio { dict["aspectRatio"] = aspectRatio }
+                    return dict
+                }
+                if let jsonData = try? JSONSerialization.data(withJSONObject: imageData),
+                   let jsonString = String(data: jsonData, encoding: .utf8) {
+                    self?.onImagePress([
+                        "images": jsonString,
+                        "index": index
+                    ])
+                }
+            },
+            onQuotePress: { [weak self] uri, handle in
+                self?.onQuotePress([
+                    "uri": uri,
+                    "handle": handle
                 ])
             },
             // Composer event handlers
