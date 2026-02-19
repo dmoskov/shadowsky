@@ -13,13 +13,15 @@ import {
 } from '../../services/atproto/lists';
 
 /**
- * Hook to fetch the user's lists
+ * Hook to fetch the user's lists with cursor-based pagination
  */
 export function useLists() {
   const {session} = useAuth();
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ['lists'],
-    queryFn: getUserLists,
+    queryFn: ({pageParam}) => getUserLists({cursor: pageParam}),
+    getNextPageParam: (lastPage) => lastPage.cursor,
+    initialPageParam: undefined as string | undefined,
     enabled: !!session,
   });
 }

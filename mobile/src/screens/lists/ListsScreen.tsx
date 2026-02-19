@@ -43,10 +43,15 @@ function ListItem({list, onPress, colors}: ListItemProps) {
 }
 
 export function ListsScreen() {
-  const {data, isLoading, error, refetch, isRefetching} = useLists();
+  const {data, isLoading, error, refetch, isRefetching, fetchNextPage, hasNextPage, isFetchingNextPage} = useLists();
   const {navigateToList, router} = useAppNavigation();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const lists = useMemo(
+    () => data?.pages.flatMap((page) => page.lists) || [],
+    [data],
+  );
 
   const handleListPress = (list: AppBskyGraphDefs.ListView) => {
     // Extract the list URI or use it directly
@@ -55,6 +60,12 @@ export function ListsScreen() {
 
   const handleCreateList = () => {
     router.push('/(app)/lists/create');
+  };
+
+  const handleEndReached = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
   };
 
   const renderEmpty = () => {
@@ -91,7 +102,14 @@ export function ListsScreen() {
     );
   };
 
-  const lists = data?.lists || [];
+  const renderFooter = () => {
+    if (!isFetchingNextPage) return null;
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator color={colors.primary} size="small" />
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -108,12 +126,15 @@ export function ListsScreen() {
         )}
         keyExtractor={(item) => item.uri}
         ListEmptyComponent={renderEmpty}
+        ListFooterComponent={renderFooter}
         contentContainerStyle={lists.length === 0 ? styles.emptyContainer : undefined}
         removeClippedSubviews={true}
         windowSize={10}
         maxToRenderPerBatch={10}
         initialNumToRender={10}
         updateCellsBatchingPeriod={50}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
@@ -232,6 +253,10 @@ function createStyles(colors: any) {
       color: colors.text,
       fontSize: 14,
       fontWeight: '600',
+    },
+    footerLoader: {
+      paddingVertical: 16,
+      alignItems: 'center',
     },
   });
 }

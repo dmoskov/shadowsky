@@ -134,16 +134,25 @@ export default function SkyDeck() {
     enabled: !!agent && !!userPrefs?.savedFeeds,
   });
 
-  // Fetch user's lists
+  // Fetch user's lists (paginate through all)
   const { data: userLists } = useQuery({
     queryKey: ["userLists", agent?.session?.did],
     queryFn: async () => {
       if (!agent || !agent.session?.did) throw new Error("Not authenticated");
-      const response = await agent.app.bsky.graph.getLists({
-        actor: agent.session.did,
-        limit: 50,
-      });
-      return response.data.lists;
+      const allLists: AppBskyGraphDefs.ListView[] = [];
+      let cursor: string | undefined;
+
+      do {
+        const response = await agent.app.bsky.graph.getLists({
+          actor: agent.session.did,
+          limit: 100,
+          cursor,
+        });
+        allLists.push(...response.data.lists);
+        cursor = response.data.cursor;
+      } while (cursor);
+
+      return allLists;
     },
     enabled: !!agent?.session?.did,
     staleTime: 30 * 60 * 1000, // 30 minutes

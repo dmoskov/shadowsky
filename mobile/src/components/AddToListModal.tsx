@@ -27,11 +27,20 @@ export function AddToListModal({
   userHandle,
 }: AddToListModalProps) {
   const { colors } = useTheme();
-  const {data, isLoading, error} = useLists();
+  const {data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage} = useLists();
   const {mutateAsync: addToList, isPending} = useAddToList();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const lists = data?.lists || [];
+  const lists = useMemo(
+    () => data?.pages.flatMap((page) => page.lists) || [],
+    [data],
+  );
+
+  const handleEndReached = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
 
   const handleAddToList = async (list: AppBskyGraphDefs.ListView) => {
     try {
@@ -112,6 +121,8 @@ export function AddToListModal({
           keyExtractor={(item) => item.uri}
           ListEmptyComponent={renderEmpty}
           contentContainerStyle={lists.length === 0 ? styles.emptyContainer : undefined}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.5}
         />
       </View>
     </Modal>

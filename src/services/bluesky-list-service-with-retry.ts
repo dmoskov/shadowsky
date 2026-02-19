@@ -101,21 +101,33 @@ class BlueskyListServiceWithRetry {
       const did = this.agent!.session?.did;
       if (!did) throw new Error("No session");
 
-      const response = await this.agent!.app.bsky.graph.getLists({
-        actor: did,
-        limit: 100,
-      });
+      const allLists: BlueskyList[] = [];
+      let cursor: string | undefined;
 
-      return response.data.lists.map((list) => ({
-        uri: list.uri,
-        cid: list.cid,
-        name: list.name,
-        description: list.description,
-        avatar: list.avatar,
-        listItemCount: list.listItemCount,
-        indexedAt: list.indexedAt,
-        viewer: list.viewer,
-      }));
+      do {
+        const response = await this.agent!.app.bsky.graph.getLists({
+          actor: did,
+          limit: 100,
+          cursor,
+        });
+
+        allLists.push(
+          ...response.data.lists.map((list) => ({
+            uri: list.uri,
+            cid: list.cid,
+            name: list.name,
+            description: list.description,
+            avatar: list.avatar,
+            listItemCount: list.listItemCount,
+            indexedAt: list.indexedAt,
+            viewer: list.viewer,
+          })),
+        );
+
+        cursor = response.data.cursor;
+      } while (cursor);
+
+      return allLists;
     });
   }
 
