@@ -1,0 +1,200 @@
+//
+//  AggregatedNotificationItemView.swift
+//  NativeNotificationsList
+//
+//  SwiftUI view for rendering aggregated notification groups.
+//  Matches the behavior of AggregatedNotificationItem.tsx
+//
+
+import SwiftUI
+import FeedBridge
+import NotificationBridge
+import ExpoSwiftUIFeed
+
+struct AggregatedNotificationItemView: View {
+    let model: AggregatedNotificationUIModel
+    let onPress: () -> Void
+    let onProfilePress: (String) -> Void
+    let onMentionPress: (String, String) -> Void
+    let onHashtagPress: (String) -> Void
+    let onLinkPress: (String) -> Void
+
+    @State private var isExpanded = false
+
+    private var themeColor: Color {
+        NotificationThemeColors.color(for: model.reason)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Main aggregated content
+            mainContent
+
+            // Expand/collapse button (when count > 1)
+            if model.count > 1 {
+                expandButton
+            }
+
+            // Expanded list
+            if isExpanded {
+                expandedList
+            }
+        }
+        .background(Color(UIColor.systemBackground))
+        .accessibilityElement(children: .contain)
+    }
+
+    // MARK: - Main Content
+
+    private var mainContent: some View {
+        Button(action: onPress) {
+            HStack(alignment: .center, spacing: 12) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(themeColor.opacity(0.12))
+                        .frame(width: 32, height: 32)
+
+                    Image(systemName: model.reason.sfSymbolName)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(themeColor)
+                }
+
+                // Avatar stack + text
+                HStack(spacing: 12) {
+                    avatarStack
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        summaryText
+                        Text(model.timestamp)
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(UIColor.tertiaryLabel))
+                    }
+                }
+            }
+            .padding(16)
+            .background(model.hasUnread
+                ? Color(UIColor.systemBackground).overlay(NotificationThemeColors.primary.opacity(0.04))
+                : Color(UIColor.systemBackground))
+        }
+        .buttonStyle(.plain)
+        .overlay(alignment: .leading) {
+            if model.hasUnread {
+                Circle()
+                    .fill(NotificationThemeColors.primary)
+                    .frame(width: 6, height: 6)
+                    .padding(.leading, 4)
+            }
+        }
+        .accessibilityLabel(accessibilityLabelText)
+        .accessibilityHint("Double tap to view details")
+        .accessibilityAddTraits(.isButton)
+    }
+
+    // MARK: - Avatar Stack
+
+    private var avatarStack: some View {
+        HStack(spacing: -12) {
+            ForEach(Array(model.users.prefix(3).enumerated()), id: \.element.did) { index, user in
+                avatarView(url: user.avatar, size: 32)
+                    .overlay(
+                        Circle()
+                            .stroke(Color(UIColor.systemBackground), lineWidth: 2)
+                    )
+                    .zIndex(Double(model.users.count - index))
+            }
+
+            if model.users.count > 3 {
+                ZStack {
+                    Circle()
+                        .fill(Color(UIColor.secondarySystemBackground))
+                        .frame(width: 32, height: 32)
+                        .overlay(
+                            Circle()
+                                .stroke(Color(UIColor.systemBackground), lineWidth: 2)
+                        )
+
+                    Text("+\(model.users.count - 3)")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(Color(UIColor.secondaryLabel))
+                }
+            }
+        }
+    }
+
+    // MARK: - Summary Text
+
+    private var summaryText: some View {
+        (Text(userSummary)
+            .font(.system(size: 15, weight: .semibold))
+            .foregroundColor(Color(UIColor.label))
+        + Text(" \(model.reason.actionText)")
+            .font(.system(size: 15))
+            .foregroundColor(Color(UIColor.secondaryLabel)))
+        .lineLimit(2)
+    }
+
+    private var userSummary: String {
+        if model.count == 1 {
+            return model.users.first?.displayName ?? "@\(model.users.first?.handle ?? "")"
+        }
+        if model.count == 2, model.users.count == 2 {
+            let name1 = model.users[0].displayName ?? "@\(model.users[0].handle)"
+            let name2 = model.users[1].displayName ?? "@\(model.users[1].handle)"
+            return "\(name1) and \(name2)"
+        }
+        let firstName = model.users.first?.displayName ?? "@\(model.users.first?.handle ?? "")"
+        let othersCount = model.count - 1
+        return "\(firstName) and \(othersCount) \(othersCount == 1 ? "other" : "others")"
+    }
+
+    // MARK: - Expand Button
+
+    private var expandButton: some View {
+        Button(action: { withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() } }) {
+            HStack(spacing: 6) {
+                Text(isExpanded ? "Collapse" : "Show all \(model.count) notifications")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(Color(UIColor.tertiaryLabel))
+
+                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(Color(UIColor.tertiaryLabel))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 16)
+        }
+        .buttonStyle(.plain)
+        .background(Color(UIColor.systemBackground))
+        .overlay(alignment: .top) {
+            Divider()
+        }
+        .accessibilityLabel(isExpanded ? "Collapse notifications" : "Show all \(model.count) notifications")
+    }
+
+    // MARK: - Expanded List
+
+    private var expandedList: some View {
+        VStack(spacing: 0) {
+            Divider()
+            ForEach(model.notifications) { notification in
+                NotificationItemView(
+                    notification: notification,
+                    onPress: onPress,
+                    onProfilePress: onProfilePress,
+                    onMentionPress: onMentionPress,
+                    onHashtagPress: onHashtagPress,
+                    onLinkPress: onLinkPress
+                )
+                Divider()
+            }
+        }
+    }
+
+    // MARK: - Accessibility
+
+    private var accessibilityLabelText: String {
+        "\(userSummary) \(model.reason.actionText). \(model.count) notifications. \(model.timestamp). \(model.hasUnread ? "Contains unread" : "All read")"
+    }
+}
