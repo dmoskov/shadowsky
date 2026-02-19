@@ -31,13 +31,29 @@ import { useConversations, useConversation, useSendMessage, useMarkAsRead, useMu
 import { useTheme } from "../../contexts/ThemeContext";
 import { useImagePicker } from "../../hooks/useImagePicker";
 import { ImageIcon } from "../../components/icons/ImageIcon";
-
+import { useAppNavigation } from "../../hooks/useNavigation";
 
 import { createLogger } from '../../utils/logger';
 
 const logger = createLogger('MessagesScreen');
+
+// Feature flag for native messages view on iOS
+const USE_NATIVE_MESSAGES = Platform.OS === 'ios';
+
+// Lazy-load native messages module to avoid crashes on Android
+let NativeMessagesComponent: React.ComponentType<any> | null = null;
+if (USE_NATIVE_MESSAGES) {
+  try {
+    const mod = require('../../../modules/native-messages');
+    NativeMessagesComponent = mod.NativeMessages;
+  } catch (e) {
+    // Native module not available, fall back to JS
+  }
+}
+
 export function MessagesScreen() {
   const { colors } = useTheme();
+  const { navigateToProfile } = useAppNavigation();
   const { session } = useAuth();
   const [selectedConversation, setSelectedConversation] = useState<
     string | null
@@ -59,7 +75,40 @@ export function MessagesScreen() {
     setIsUploading,
   } = useImagePicker();
 
+  const [showNewConversationModalNative, setShowNewConversationModalNative] = useState(false);
+
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  // On iOS, render the native SwiftUI messages view
+  if (USE_NATIVE_MESSAGES && NativeMessagesComponent) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <NativeMessagesComponent
+          style={{ flex: 1 }}
+          onNavigateToProfile={navigateToProfile}
+          onShowNewConversationModal={() => setShowNewConversationModalNative(true)}
+        />
+        <NewConversationModal
+          visible={showNewConversationModalNative}
+          onClose={() => setShowNewConversationModalNative(false)}
+          onSelectUser={async (userDid: string) => {
+            setShowNewConversationModalNative(false);
+            try {
+              const client = getAtProtoClient();
+              const agent = client.getAgent();
+              dmService.setAgent(agent);
+              await dmService.getConvoForMembers([userDid]);
+            } catch (error) {
+              logger.error('Failed to create conversation:', error);
+              const errorMsg =
+                error instanceof Error ? error.message : "Failed to start conversation";
+              Alert.alert("Error", errorMsg);
+            }
+          }}
+        />
+      </View>
+    );
+  }
 
   // Set up DM service with agent
   useEffect(() => {
