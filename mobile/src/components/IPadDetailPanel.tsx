@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../contexts/ThemeContext";
 import { useIPadLayout, DetailPanelContent } from "../contexts/IPadLayoutContext";
-import { ThreadScreen } from "../screens/shared/ThreadScreen";
+import { ThreadScreenNative } from "../screens/shared/ThreadScreenNative";
 import { ProfileScreen } from "../screens/profile/ProfileScreen";
 
 const DETAIL_PANEL_WIDTH = 380;
@@ -49,7 +49,7 @@ function DetailContent({ content }: { content: DetailPanelContent }) {
 
   if (content.type === "thread") {
     return (
-      <ThreadScreen
+      <ThreadScreenNative
         handle={content.handle}
         postId={content.postId}
       />

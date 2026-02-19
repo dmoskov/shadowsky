@@ -2,7 +2,7 @@ export { LandingScreen } from "./auth/LandingScreen";
 export { OAuthCallbackScreen } from "./auth/OAuthCallbackScreen";
 export { HomeScreen } from "./home/HomeScreen";
 export { TimelineScreen } from "./home/TimelineScreen";
-export { ThreadScreen } from "./shared/ThreadScreen";
+export { ThreadScreenNative } from "./shared/ThreadScreenNative";
 export { SearchScreen } from "./search/SearchScreen";
 export { ComposeScreen } from "./compose/ComposeScreen";
 export { NotificationsScreen } from "./notifications/NotificationsScreen";
