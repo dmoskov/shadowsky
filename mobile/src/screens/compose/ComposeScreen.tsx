@@ -27,8 +27,9 @@ import type { TenorGif } from "../../services/tenor";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { ImageEditor } from "../../components/ImageEditor";
 import { useTranslation } from "../../hooks/useTranslation";
-import { ComposeToolbar, ComposeMediaPreview, ComposeQuotePreview } from "./components";
-import { generateAltText } from "../../services/ai-service";
+import { ComposeToolbar, ComposeMediaPreview, ComposeQuotePreview, TonePickerModal } from "./components";
+import { generateAltText, adjustTone } from "../../services/ai-service";
+import type { ToneOption } from "../../services/ai-service";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { useLinkPreview } from "../../hooks/useLinkPreview";
 import { LinkPreviewCard } from "../../components/LinkPreviewCard";
@@ -92,6 +93,12 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
   const [altTextModalVisible, setAltTextModalVisible] = useState(false);
   const [tempAltText, setTempAltText] = useState("");
   const [isGeneratingAltText, setIsGeneratingAltText] = useState(false);
+
+  // AI tone adjustment state
+  const [tonePickerVisible, setTonePickerVisible] = useState(false);
+  const [isAdjustingTone, setIsAdjustingTone] = useState(false);
+  const [selectedTone, setSelectedTone] = useState<ToneOption | null>(null);
+  const [tonePreviewText, setTonePreviewText] = useState<string | null>(null);
 
   // Language selection state
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
@@ -601,6 +608,46 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
     triggerHaptic('selection');
   }, []);
 
+  // AI tone adjustment handlers
+  const handleTonePicker = () => {
+    if (!text.trim()) return;
+    setTonePickerVisible(true);
+  };
+
+  const handleSelectTone = async (tone: ToneOption) => {
+    setSelectedTone(tone);
+    setIsAdjustingTone(true);
+    try {
+      const result = await adjustTone(text, tone);
+      setTonePreviewText(result.adjustedText);
+    } catch (error) {
+      logger.error('Failed to adjust tone:', error);
+      Alert.alert(
+        'Tone Adjustment Failed',
+        error instanceof Error ? error.message : 'Failed to adjust tone. Please try again.',
+        [{ text: 'OK' }]
+      );
+      triggerHaptic('error');
+    } finally {
+      setIsAdjustingTone(false);
+    }
+  };
+
+  const handleApplyTone = () => {
+    if (tonePreviewText) {
+      setText(tonePreviewText);
+      triggerHaptic('success');
+    }
+    setTonePreviewText(null);
+    setSelectedTone(null);
+    setTonePickerVisible(false);
+  };
+
+  const handleCancelTonePreview = () => {
+    setTonePreviewText(null);
+    setSelectedTone(null);
+  };
+
   // Thread mode handlers
   const handleToggleThreadMode = () => {
     if (isThreadMode) {
@@ -1033,6 +1080,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
         onEmojiPicker={handleEmojiPicker}
         onToggleThreadMode={handleToggleThreadMode}
         onLanguagePickerOpen={() => setLanguagePickerVisible(true)}
+        onTonePicker={handleTonePicker}
         selectedImages={imagePicker.selectedImages}
         selectedVideo={videoPicker.selectedVideo}
         selectedGif={gifPicker.selectedGif}
@@ -1044,6 +1092,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
         charCount={charCount}
         maxLength={MAX_POST_LENGTH}
         selectedLanguages={selectedLanguages}
+        hasText={text.trim().length > 0}
         bottomInset={insets.bottom}
       />
 
@@ -1141,6 +1190,19 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
         images={imagesToEdit}
         onSave={handleSaveEditedImages}
         onCancel={handleCancelImageEditor}
+      />
+
+      {/* AI Tone Picker Modal */}
+      <TonePickerModal
+        visible={tonePickerVisible}
+        onClose={() => setTonePickerVisible(false)}
+        onSelectTone={handleSelectTone}
+        isAdjusting={isAdjustingTone}
+        selectedTone={selectedTone}
+        previewText={tonePreviewText}
+        originalText={text}
+        onApplyTone={handleApplyTone}
+        onCancelPreview={handleCancelTonePreview}
       />
     </View>
   );

@@ -57,3 +57,6 @@ export {BellSlashIcon} from './BellSlashIcon';
 
 // Translation
 export {TranslateIcon} from './TranslateIcon';
+
+// AI
+export {SparklesIcon} from './SparklesIcon';
