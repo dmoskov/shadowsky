@@ -51,7 +51,36 @@ public class ThreadViewModule: Module {
                    "onMentionPress", "onHashtagPress", "onShare",
                    "onNavigateToParent", "onNavigateToRoot",
                    "onPressLikeCount", "onPressRepostCount", "onPressQuoteCount",
-                   "onSummaryModeChange")
+                   "onSummaryModeChange", "onTranslate")
+        }
+
+        // Receive translation results from JS and forward to native views
+        Function("setTranslationResult") { (postUri: String, translatedText: String, sourceLang: String) in
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("ThreadTranslationResult"),
+                    object: nil,
+                    userInfo: [
+                        "postUri": postUri,
+                        "translatedText": translatedText,
+                        "sourceLang": sourceLang,
+                    ]
+                )
+            }
+        }
+
+        // Receive translation errors from JS
+        Function("setTranslationError") { (postUri: String, errorMessage: String) in
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("ThreadTranslationResult"),
+                    object: nil,
+                    userInfo: [
+                        "postUri": postUri,
+                        "error": errorMessage,
+                    ]
+                )
+            }
         }
     }
 }
@@ -113,6 +142,7 @@ class ThreadViewWrapper: ExpoView {
     private let onPressRepostCount = EventDispatcher()
     private let onPressQuoteCount = EventDispatcher()
     private let onSummaryModeChange = EventDispatcher()
+    private let onTranslate = EventDispatcher()
 
     // SwiftUI hosting controller
     private var hostingController: UIHostingController<ThreadView>?
@@ -249,6 +279,13 @@ class ThreadViewWrapper: ExpoView {
             onSummaryModeChange: { [weak self] mode in
                 self?.onSummaryModeChange([
                     "mode": mode
+                ])
+            },
+            onTranslate: { [weak self] uri, text, sourceLang in
+                self?.onTranslate([
+                    "uri": uri,
+                    "text": text,
+                    "sourceLang": sourceLang,
                 ])
             }
         )

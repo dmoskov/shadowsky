@@ -53,6 +53,7 @@ struct ThreadRecord {
     let text: String
     let facets: [Facet]?
     let createdAt: String
+    let langs: [String]?
 }
 
 struct ThreadViewer {

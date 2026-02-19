@@ -63,6 +63,7 @@ struct ThreadPostCard: View {
     let onPressLikeCount: (() -> Void)?
     let onPressRepostCount: (() -> Void)?
     let onPressQuoteCount: (() -> Void)?
+    let onTranslate: ((String, String, String) -> Void)? // (uri, text, sourceLang)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -118,6 +119,16 @@ struct ThreadPostCard: View {
                 .font(.system(size: 16))
                 .foregroundColor(.primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
+
+            // Inline translation
+            if LanguageUtils.needsTranslation(postLangs: node.post.record.langs) {
+                PostTranslationView(
+                    postUri: node.post.uri,
+                    postText: node.post.record.text,
+                    postLangs: node.post.record.langs,
+                    onTranslate: onTranslate
+                )
+            }
 
             // Action buttons
             HStack(spacing: 24) {
@@ -241,6 +252,7 @@ struct ThreadReplyView: View {
     let onPressLikeCount: ((String) -> Void)?
     let onPressRepostCount: ((String) -> Void)?
     let onPressQuoteCount: ((String) -> Void)?
+    let onTranslate: ((String, String, String) -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -320,7 +332,8 @@ struct ThreadReplyView: View {
                         },
                         onPressQuoteCount: {
                             onPressQuoteCount?(node.post.uri)
-                        }
+                        },
+                        onTranslate: onTranslate
                     )
                 }
             }
@@ -341,7 +354,8 @@ struct ThreadReplyView: View {
                         onShare: onShare,
                         onPressLikeCount: onPressLikeCount,
                         onPressRepostCount: onPressRepostCount,
-                        onPressQuoteCount: onPressQuoteCount
+                        onPressQuoteCount: onPressQuoteCount,
+                        onTranslate: onTranslate
                     )
                 }
             }

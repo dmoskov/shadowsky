@@ -30,6 +30,7 @@ export type ThreadViewProps = ViewProps & {
   onPressRepostCount?: (event: { nativeEvent: { uri: string } }) => void;
   onPressQuoteCount?: (event: { nativeEvent: { uri: string } }) => void;
   onSummaryModeChange?: (event: { nativeEvent: { mode: string } }) => void;
+  onTranslate?: (event: { nativeEvent: { uri: string; text: string; sourceLang: string } }) => void;
 };
 
 const NativeView: React.ComponentType<ThreadViewProps> =
