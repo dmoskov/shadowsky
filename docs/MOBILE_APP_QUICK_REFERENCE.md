@@ -89,7 +89,7 @@ npm start
 
 ### iOS
 
-- **Bundle ID**: `io.shadowsky.app`
+- **Bundle ID**: `io.asphodel.app`
 - **Minimum iOS**: 13.0
 - **Deep Linking**: Custom scheme `bsky://` + Universal Links
 - **Guide**: [docs/guides/APPLE_DEVELOPER_SETUP.md](./guides/APPLE_DEVELOPER_SETUP.md)

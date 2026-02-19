@@ -10,7 +10,7 @@ import ExpoModulesCore
 import WidgetKit
 
 public class WidgetDataBridgeModule: Module {
-    private let suiteName = "group.io.shadowsky.app"
+    private let suiteName = "group.io.asphodel.app"
 
     private var sharedDefaults: UserDefaults? {
         UserDefaults(suiteName: suiteName)

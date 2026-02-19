@@ -1075,7 +1075,7 @@ packages/
       // Native module plugins
     ],
     "ios": {
-      "bundleIdentifier": "io.shadowsky.app"
+      "bundleIdentifier": "io.asphodel.app"
     },
     "android": {
       "package": "io.shadowsky.app"
@@ -1627,7 +1627,7 @@ const discovery = {
 // Generate PKCE code verifier and challenge
 const useAuthConfig = () => {
   const redirectUri = AuthSession.makeRedirectUri({
-    scheme: "io.shadowsky.app",
+    scheme: "io.asphodel.app",
     path: "oauth/callback",
   });
 
@@ -1879,9 +1879,9 @@ Add to `app.json`:
 ```json
 {
   "expo": {
-    "scheme": "io.shadowsky.app",
+    "scheme": "io.asphodel.app",
     "ios": {
-      "bundleIdentifier": "io.shadowsky.app"
+      "bundleIdentifier": "io.asphodel.app"
     },
     "android": {
       "package": "io.shadowsky.app",

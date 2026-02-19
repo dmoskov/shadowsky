@@ -12,7 +12,7 @@ import MobileCoreServices
 
 class ShareViewController: UIViewController {
 
-    private let appGroupId = "group.io.shadowsky.app"
+    private let appGroupId = "group.io.asphodel.app"
     private let appScheme = "shadowsky"
 
     override func viewDidLoad() {

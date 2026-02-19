@@ -172,7 +172,7 @@ npm run lint
 ## 🎨 Platform-Specific Configuration
 
 ### iOS
-- **Bundle ID**: `io.shadowsky.app` (to be configured)
+- **Bundle ID**: `io.asphodel.app` (to be configured)
 - **Minimum iOS**: 13.0
 - **Info.plist**: URL schemes configured
 - **Entitlements**: Associated domains for Universal Links
@@ -331,7 +331,7 @@ Contains app configuration including:
 - `updates.url`: EAS Update endpoint
 - `runtimeVersion`: Version matching policy for updates
 - `extra.eas.projectId`: Your EAS project ID
-- Bundle identifiers: `io.shadowsky.app` (iOS and Android)
+- Bundle identifiers: `io.asphodel.app` (iOS) and `io.shadowsky.app` (Android)
 
 ### Code Signing
 

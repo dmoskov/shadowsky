@@ -137,7 +137,7 @@ For iOS push notifications:
 
 1. Go to [Apple Developer Portal](https://developer.apple.com/account/)
 2. Navigate to Certificates, Identifiers & Profiles
-3. Create an APNs certificate for `io.shadowsky.app`
+3. Create an APNs certificate for `io.asphodel.app`
 4. Upload certificate to Expo: `eas credentials`
 5. Select iOS → Push Notifications certificate
 

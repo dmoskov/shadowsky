@@ -64,12 +64,12 @@ Once enrolled:
 3. Fill in the details:
    - **Description**: ShadowSky (or your app name)
    - **Bundle ID**: Choose **Explicit**
-   - **Bundle Identifier**: `io.shadowsky.app` (recommended format)
+   - **Bundle Identifier**: `io.asphodel.app` (recommended format)
 
    > **Note**: The Bundle ID should follow reverse domain notation. For ShadowSky, options include:
    >
-   > - `io.shadowsky.app` (recommended if you own shadowsky.io)
-   > - `com.shadowsky.app` (alternative)
+   > - `io.asphodel.app` (recommended if you own asphodel.io)
+   > - `com.asphodel.app` (alternative)
 
 ### 3.3 Enable Capabilities
 
@@ -136,7 +136,7 @@ For EAS Build to use your certificate:
 1. Go to [developer.apple.com/account/resources/profiles](https://developer.apple.com/account/resources/profiles)
 2. Click **+** to create a new profile
 3. Select **iOS App Development** and click **Continue**
-4. Select your App ID (`io.shadowsky.app`) and click **Continue**
+4. Select your App ID (`io.asphodel.app`) and click **Continue**
 5. Select your distribution certificate and click **Continue**
 6. Select devices for testing (or select all)
 7. Name: `ShadowSky Development`
@@ -146,7 +146,7 @@ For EAS Build to use your certificate:
 
 1. Click **+** to create another profile
 2. Select **App Store Connect** and click **Continue**
-3. Select your App ID (`io.shadowsky.app`) and click **Continue**
+3. Select your App ID (`io.asphodel.app`) and click **Continue**
 4. Select your Apple Distribution certificate and click **Continue**
 5. Name: `ShadowSky Distribution`
 6. Click **Generate** and **Download**
@@ -257,7 +257,7 @@ For TestFlight distribution:
    - **Platform**: iOS
    - **Name**: ShadowSky
    - **Primary Language**: English (or your preference)
-   - **Bundle ID**: Select `io.shadowsky.app`
+   - **Bundle ID**: Select `io.asphodel.app`
    - **SKU**: `shadowsky-ios` (unique identifier)
 4. Click **Create**
 
@@ -297,11 +297,11 @@ eas secret:create --name APPLE_API_KEY_P8 --value "$(cat ./AuthKey_XXXXXXXXXX.p8
 
 After completing the above steps, you'll have:
 
-| Credential | Example Value                 | Your Value         |
-| ---------- | ----------------------------- | ------------------ |
-| Team ID    | `A1B2C3D4E5`                  | \***\*\_\_\_\*\*** |
-| Bundle ID  | `io.shadowsky.app`            | \***\*\_\_\_\*\*** |
-| App ID     | `A1B2C3D4E5.io.shadowsky.app` | \***\*\_\_\_\*\*** |
+| Credential | Example Value                | Your Value         |
+| ---------- | ---------------------------- | ------------------ |
+| Team ID    | `A1B2C3D4E5`                 | \***\*\_\_\_\*\*** |
+| Bundle ID  | `io.asphodel.app`            | \***\*\_\_\_\*\*** |
+| App ID     | `A1B2C3D4E5.io.asphodel.app` | \***\*\_\_\_\*\*** |
 
 ### 8.2 apple-app-site-association File
 
@@ -313,7 +313,7 @@ Create this file to be served at `https://shadowsky.io/.well-known/apple-app-sit
     "apps": [],
     "details": [
       {
-        "appID": "TEAM_ID.io.shadowsky.app",
+        "appID": "TEAM_ID.io.asphodel.app",
         "paths": [
           "/profile/*",
           "/post/*",
@@ -328,7 +328,7 @@ Create this file to be served at `https://shadowsky.io/.well-known/apple-app-sit
     ]
   },
   "webcredentials": {
-    "apps": ["TEAM_ID.io.shadowsky.app"]
+    "apps": ["TEAM_ID.io.asphodel.app"]
   }
 }
 ```
@@ -355,7 +355,7 @@ When building the iOS app:
 2. Select the target
 3. In **Signing & Capabilities**, set:
    - **Team**: Select your development team
-   - **Bundle Identifier**: `io.shadowsky.app`
+   - **Bundle Identifier**: `io.asphodel.app`
 
 ### 9.2 Add Associated Domains
 
@@ -370,7 +370,7 @@ For users with an existing Apple Developer account but no certificates (Option 2
 - [ ] Generate CSR from Keychain Access (Step 4.1)
 - [ ] Create Apple Distribution certificate (Step 4.2)
 - [ ] Install certificate in Keychain (Step 4.3)
-- [ ] Create App ID with bundle `io.shadowsky.app` (Step 3)
+- [ ] Create App ID with bundle `io.asphodel.app` (Step 3)
 - [ ] Create Distribution provisioning profile (Step 5.2)
 - [ ] Create app in App Store Connect (Step 7.1)
 - [ ] Run `eas credentials` to configure EAS Build (Step 6)
@@ -392,7 +392,7 @@ After completing this guide, you'll have:
 | Credential               | Location                            | Purpose                    |
 | ------------------------ | ----------------------------------- | -------------------------- |
 | Team ID                  | Apple Developer Portal > Membership | Identifies your team       |
-| Bundle ID                | `io.shadowsky.app`                  | App identifier             |
+| Bundle ID                | `io.asphodel.app`                   | App identifier             |
 | Distribution Certificate | Keychain / EAS                      | Signs app for distribution |
 | Provisioning Profile     | Apple Developer Portal / EAS        | Links certificate to app   |
 | App Store Connect App    | App Store Connect                   | TestFlight & App Store     |

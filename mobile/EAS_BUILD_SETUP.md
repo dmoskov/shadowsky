@@ -78,7 +78,7 @@ This command will:
 The bundle identifier is already set in `app.config.ts`:
 ```typescript
 ios: {
-  bundleIdentifier: "io.shadowsky.app"
+  bundleIdentifier: "io.asphodel.app"
 }
 ```
 
@@ -90,7 +90,7 @@ You need to register this identifier in Apple Developer Portal:
 4. Select "App" and click "Continue"
 5. Enter:
    - Description: "ShadowSky"
-   - Bundle ID: "io.shadowsky.app" (Explicit)
+   - Bundle ID: "io.asphodel.app" (Explicit)
 6. Select capabilities you need (Push Notifications, Associated Domains, etc.)
 7. Click "Continue" and then "Register"
 
