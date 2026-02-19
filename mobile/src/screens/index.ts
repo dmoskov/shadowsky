@@ -21,3 +21,4 @@ export { RepostsScreen } from "./shared/RepostsScreen";
 export { QuotesScreen } from "./shared/QuotesScreen";
 export { FeedCreationScreen } from "./feeds/FeedCreationScreen";
 export { StarterPackDetailScreen } from "./starter-packs/StarterPackDetailScreen";
+export { OnboardingScreen } from "./onboarding/OnboardingScreen";
