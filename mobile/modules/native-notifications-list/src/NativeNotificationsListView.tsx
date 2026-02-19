@@ -43,6 +43,7 @@ export interface NotificationListEvents {
   onHashtagPress?: (event: { nativeEvent: { tag: string } }) => void;
   onLinkPress?: (event: { nativeEvent: { uri: string } }) => void;
   onAppear?: () => void;
+  onAnalyticsPress?: () => void;
 }
 
 // MARK: - Props Types
@@ -73,6 +74,7 @@ export const NativeNotificationsListView = forwardRef<any, NativeNotificationsLi
       onHashtagPress,
       onLinkPress,
       onAppear,
+      onAnalyticsPress,
       ...viewProps
     } = props;
 
@@ -96,6 +98,7 @@ export const NativeNotificationsListView = forwardRef<any, NativeNotificationsLi
         onHashtagPress={onHashtagPress}
         onLinkPress={onLinkPress}
         onAppear={onAppear}
+        onAnalyticsPress={onAnalyticsPress}
       />
     );
   },
@@ -274,6 +277,11 @@ export const NativeNotificationsList = forwardRef<any, ViewProps>((props, ref) =
     [],
   );
 
+  // Handle analytics press - navigate to the JS analytics screen
+  const handleAnalyticsPress = useCallback(() => {
+    router.push('/(tabs)/(notifications)/analytics' as any);
+  }, [router]);
+
   // Expose scroll-to-top
   useImperativeHandle(ref, () => ({
     scrollToTop: () => {
@@ -297,6 +305,7 @@ export const NativeNotificationsList = forwardRef<any, ViewProps>((props, ref) =
       onHashtagPress={handleHashtagPress}
       onLinkPress={handleLinkPress}
       onAppear={handleAppear}
+      onAnalyticsPress={handleAnalyticsPress}
       style={{ flex: 1 }}
     />
   );
