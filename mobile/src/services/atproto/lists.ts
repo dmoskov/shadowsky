@@ -22,9 +22,9 @@ export interface ListFeedResponse {
 }
 
 /**
- * Fetch the user's lists
+ * Fetch the user's lists with cursor-based pagination
  */
-export async function getUserLists(): Promise<ListsResponse> {
+export async function getUserLists(options: {limit?: number; cursor?: string} = {}): Promise<ListsResponse> {
   return rateLimited(
     async () => {
         const client = getAtProtoClient();
@@ -37,7 +37,8 @@ export async function getUserLists(): Promise<ListsResponse> {
 
         const response = await agent.app.bsky.graph.getLists({
           actor: session.did,
-          limit: 100,
+          limit: options.limit || 50,
+          cursor: options.cursor,
         });
 
         return {
