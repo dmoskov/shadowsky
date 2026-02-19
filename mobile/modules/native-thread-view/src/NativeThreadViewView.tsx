@@ -8,6 +8,11 @@ export type ThreadViewProps = ViewProps & {
   error?: string;
   threadUri?: string;
 
+  // Summary props (JSON-serialized ThreadSummaryResult from JS)
+  summaryJson?: string;
+  isSummaryLoading?: boolean;
+  summaryMode?: 'quick' | 'full';
+
   // Event handlers
   onRefresh?: () => void;
   onPostPress?: (event: { nativeEvent: { uri: string; handle: string } }) => void;
@@ -24,6 +29,7 @@ export type ThreadViewProps = ViewProps & {
   onPressLikeCount?: (event: { nativeEvent: { uri: string } }) => void;
   onPressRepostCount?: (event: { nativeEvent: { uri: string } }) => void;
   onPressQuoteCount?: (event: { nativeEvent: { uri: string } }) => void;
+  onSummaryModeChange?: (event: { nativeEvent: { mode: string } }) => void;
 };
 
 const NativeView: React.ComponentType<ThreadViewProps> =

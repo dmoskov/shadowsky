@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useRouter } from "expo-router";
+import { useQuery } from "@tanstack/react-query";
 import { usePostThread } from "../../hooks/api/useFeed";
 import { useLikePost, useUnlikePost, useRepost, useDeleteRepost } from "../../hooks/api/usePosts";
 import { useAppNavigation } from "../../hooks/useNavigation";
@@ -19,8 +20,18 @@ import { sharePost } from "../../utils/share";
 import { triggerHaptic } from "../../utils/haptics";
 import { createLogger } from '../../utils/logger';
 import { NativeThreadView } from '../../../modules/native-thread-view';
+import {
+  generateThreadSummary,
+  type ThreadSummaryPost,
+  type ThreadSummaryFormat,
+  type ThreadSummaryResult,
+} from "../../services/ai-service";
+import { getCachedSummary, cacheSummary } from "../../services/thread-summary-cache";
 
 const logger = createLogger('ThreadScreenNative');
+
+const SUMMARY_STALE_TIME_MS = 10 * 60 * 1000; // 10 minutes
+const MIN_POSTS_FOR_SUMMARY = 5;
 
 interface ThreadScreenProps {
   handle: string;
@@ -74,6 +85,64 @@ async function navigateToThreadFromUri(uri: string, navigateToThread: (handle: s
   }
 }
 
+/**
+ * Recursively collect all PostView objects from a thread tree
+ */
+function collectAllPosts(node: AppBskyFeedDefs.ThreadViewPost): AppBskyFeedDefs.PostView[] {
+  const posts: AppBskyFeedDefs.PostView[] = [node.post];
+  if (node.replies) {
+    for (const reply of node.replies) {
+      if (AppBskyFeedDefs.isThreadViewPost(reply)) {
+        posts.push(...collectAllPosts(reply));
+      }
+    }
+  }
+  return posts;
+}
+
+/**
+ * Build a map of post URI -> parent URI from the thread tree
+ */
+function buildParentUriMap(node: AppBskyFeedDefs.ThreadViewPost): Map<string, string> {
+  const map = new Map<string, string>();
+  const traverse = (currentNode: AppBskyFeedDefs.ThreadViewPost) => {
+    if (!currentNode.replies || !Array.isArray(currentNode.replies)) return;
+    for (const replyNode of currentNode.replies) {
+      if (AppBskyFeedDefs.isThreadViewPost(replyNode)) {
+        map.set(replyNode.post.uri, currentNode.post.uri);
+        traverse(replyNode);
+      }
+    }
+  };
+  traverse(node);
+  return map;
+}
+
+/**
+ * Calculate depth of a post in the parent chain
+ */
+function getDepth(postUri: string, parentUris: Map<string, string>): number {
+  let depth = 0;
+  let currentUri = postUri;
+  while (parentUris.has(currentUri)) {
+    depth++;
+    currentUri = parentUris.get(currentUri)!;
+    if (depth > 100) break;
+  }
+  return depth;
+}
+
+/**
+ * Choose summary format based on thread size and engagement
+ */
+function getSummaryFormat(postCount: number, totalEngagement: number): ThreadSummaryFormat {
+  if (postCount >= 75) return "comprehensive";
+  if (postCount >= 30) return "detailed";
+  if (postCount >= 10) return "moderate";
+  if (totalEngagement > 100 || postCount > 20) return "moderate";
+  return "brief";
+}
+
 export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -82,6 +151,7 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
   const [isResolvingUri, setIsResolvingUri] = useState(false);
   const [resolveError, setResolveError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [summaryMode, setSummaryMode] = useState<"quick" | "full">("quick");
 
   const { navigateToProfile, navigateToThread, navigateToCompose } = useAppNavigation();
   const likePost = useLikePost();
@@ -113,6 +183,80 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
   // Fetch thread data
   const { data: thread, isLoading, error, refetch } = usePostThread(postUri || "");
 
+  // Extract posts and parent URIs for summary generation
+  const threadPostData = useMemo(() => {
+    if (!thread || !AppBskyFeedDefs.isThreadViewPost(thread)) {
+      return { posts: [] as AppBskyFeedDefs.PostView[], parentUris: new Map<string, string>() };
+    }
+    const posts = collectAllPosts(thread);
+    const parentUris = buildParentUriMap(thread);
+    return { posts, parentUris };
+  }, [thread]);
+
+  // Determine if we should show a summary (5+ posts, matching JS behavior)
+  const shouldFetchSummary = threadPostData.posts.length >= MIN_POSTS_FOR_SUMMARY;
+
+  // Calculate the active format
+  const activeFormat: ThreadSummaryFormat = useMemo(() => {
+    if (summaryMode === "quick") return "tldr";
+    const totalEngagement = threadPostData.posts.reduce(
+      (sum, p) => sum + (p.likeCount || 0) + (p.replyCount || 0) + (p.repostCount || 0),
+      0,
+    );
+    return getSummaryFormat(threadPostData.posts.length, totalEngagement);
+  }, [summaryMode, threadPostData.posts]);
+
+  // Build summary posts for the API call
+  const summaryPosts: ThreadSummaryPost[] = useMemo(() => {
+    return threadPostData.posts.map((post) => ({
+      text: (post.record as { text?: string })?.text || "",
+      author: post.author.displayName || post.author.handle,
+      authorHandle: post.author.handle,
+      likes: post.likeCount || 0,
+      replies: post.replyCount || 0,
+      reposts: post.repostCount || 0,
+      uri: post.uri,
+      parentUri: threadPostData.parentUris.get(post.uri),
+      depth: getDepth(post.uri, threadPostData.parentUris),
+    }));
+  }, [threadPostData]);
+
+  // Generate summary using the same API as the JS ThreadSummary component
+  const { data: summaryResult, isLoading: isSummaryLoading } = useQuery<ThreadSummaryResult>({
+    queryKey: ["thread-summary-native", postUri, activeFormat, summaryMode],
+    queryFn: async () => {
+      const cacheKeyUri = `${postUri}:${activeFormat}`;
+      const cached = await getCachedSummary(cacheKeyUri);
+      if (cached) return cached;
+
+      const result = await generateThreadSummary(summaryPosts, activeFormat);
+      await cacheSummary(cacheKeyUri, result);
+      return result;
+    },
+    enabled: shouldFetchSummary && !!postUri,
+    staleTime: SUMMARY_STALE_TIME_MS,
+    gcTime: SUMMARY_STALE_TIME_MS * 2,
+    retry: false,
+    refetchOnWindowFocus: false,
+    meta: { suppressErrors: true },
+  });
+
+  // Serialize summary result as JSON for the native bridge
+  const summaryJson = useMemo(() => {
+    if (!summaryResult) return undefined;
+    try {
+      return JSON.stringify(summaryResult);
+    } catch {
+      return undefined;
+    }
+  }, [summaryResult]);
+
+  const handleSummaryModeChange = useCallback((event: { nativeEvent: { mode: string } }) => {
+    const mode = event.nativeEvent.mode;
+    if (mode === "quick" || mode === "full") {
+      setSummaryMode(mode);
+    }
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -344,6 +488,9 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
         isRefreshing={isRefreshing}
         error={error ? (typeof error === 'object' && error !== null && 'message' in error ? (error as Error).message : "Failed to load thread") : undefined}
         threadUri={postUri}
+        summaryJson={summaryJson}
+        isSummaryLoading={shouldFetchSummary && isSummaryLoading}
+        summaryMode={summaryMode}
         onRefresh={handleRefresh}
         onPostPress={handlePostPress}
         onProfilePress={handleProfilePress}
@@ -359,6 +506,7 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
         onPressLikeCount={handlePressLikeCount}
         onPressRepostCount={handlePressRepostCount}
         onPressQuoteCount={handlePressQuoteCount}
+        onSummaryModeChange={handleSummaryModeChange}
       />
     </View>
   );

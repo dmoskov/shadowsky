@@ -25,6 +25,11 @@ struct ThreadView: View {
     let error: String?
     let threadUri: String?
 
+    // Summary data (passed from JS via bridge)
+    let summaryData: ThreadSummaryData?
+    let isSummaryLoading: Bool
+    let summaryMode: String // "quick" or "full"
+
     // Event handlers (sent back to React Native)
     let onRefresh: (() -> Void)?
     let onPostPress: ((String, String) -> Void)? // (uri, handle)
@@ -41,6 +46,7 @@ struct ThreadView: View {
     let onPressLikeCount: ((String) -> Void)? // uri
     let onPressRepostCount: ((String) -> Void)? // uri
     let onPressQuoteCount: ((String) -> Void)? // uri
+    let onSummaryModeChange: ((String) -> Void)? // "quick" or "full"
 
     // MARK: - Body
 
@@ -135,6 +141,19 @@ struct ThreadView: View {
                         onPressQuoteCount?(rootPost.post.uri)
                     }
                 )
+
+                // AI Thread Summary (between root post and replies)
+                if isSummaryLoading {
+                    ThreadSummaryLoadingView()
+                } else if let summary = summaryData {
+                    ThreadSummaryView(
+                        summaryData: summary,
+                        summaryMode: summaryMode,
+                        onToggleMode: { mode in
+                            onSummaryModeChange?(mode)
+                        }
+                    )
+                }
 
                 // Divider
                 if !rootPost.replies.isEmpty {
@@ -473,6 +492,9 @@ struct ThreadView_Previews: PreviewProvider {
             isRefreshing: false,
             error: nil,
             threadUri: "at://did:plc:test/app.bsky.feed.post/test",
+            summaryData: nil,
+            isSummaryLoading: false,
+            summaryMode: "quick",
             onRefresh: { print("Refresh") },
             onPostPress: { uri, handle in print("Post: \(uri)") },
             onProfilePress: { handle in print("Profile: \(handle)") },
@@ -487,7 +509,8 @@ struct ThreadView_Previews: PreviewProvider {
             onNavigateToRoot: { uri in print("Navigate to root: \(uri)") },
             onPressLikeCount: { uri in print("Press like count: \(uri)") },
             onPressRepostCount: { uri in print("Press repost count: \(uri)") },
-            onPressQuoteCount: { uri in print("Press quote count: \(uri)") }
+            onPressQuoteCount: { uri in print("Press quote count: \(uri)") },
+            onSummaryModeChange: { mode in print("Summary mode: \(mode)") }
         )
     }
 }
