@@ -17,7 +17,7 @@
 #   --device <UDID>          - Target device UDID (auto-detects if one device connected)
 #   --duration <seconds>     - Override test duration (default varies by test)
 #   --output <dir>           - Output directory for traces (default: ./instruments-traces)
-#   --app <bundle-id>        - App bundle ID (default: io.shadowsky.app)
+#   --app <bundle-id>        - App bundle ID (default: io.asphodel.app)
 #   --analyze                - Run post-capture analysis on existing traces
 #
 # Prerequisites:
@@ -34,7 +34,7 @@
 set -euo pipefail
 
 # Configuration
-BUNDLE_ID="${APP_BUNDLE_ID:-io.shadowsky.app}"
+BUNDLE_ID="${APP_BUNDLE_ID:-io.asphodel.app}"
 OUTPUT_DIR="./instruments-traces"
 DEVICE_UDID=""
 DURATION_OVERRIDE=""

@@ -4,8 +4,8 @@ import WidgetKit
 /// Shared constants and data access for all widgets.
 /// Data is written by the main app via App Groups UserDefaults.
 enum SharedData {
-    static let appGroupId = "group.io.shadowsky.app"
-    static let suiteName = "group.io.shadowsky.app"
+    static let appGroupId = "group.io.asphodel.app"
+    static let suiteName = "group.io.asphodel.app"
 
     // UserDefaults keys
     enum Keys {

@@ -729,7 +729,7 @@ mobile/
 
 1. **Apple Developer Account** ($99/year)
    - Team ID
-   - Bundle ID: `io.shadowsky.app`
+   - Bundle ID: `io.asphodel.app`
    - Distribution certificate
    - Provisioning profiles
    - App Store Connect access
