@@ -152,6 +152,30 @@ export function useUnmuteConversation() {
 }
 
 /**
+ * Hook to delete a message from a conversation
+ */
+export function useDeleteMessage() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      conversationId,
+      messageId,
+    }: {
+      conversationId: string;
+      messageId: string;
+    }) => dmService.deleteMessage(conversationId, messageId),
+    onSuccess: (_, variables) => {
+      // Invalidate conversation messages and conversations list
+      queryClient.invalidateQueries({
+        queryKey: ["dm-conversation", variables.conversationId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["dm-conversations"] });
+    },
+  });
+}
+
+/**
  * Hook to leave (delete) a conversation
  */
 export function useLeaveConversation() {
