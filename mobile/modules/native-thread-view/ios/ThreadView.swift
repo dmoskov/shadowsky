@@ -63,8 +63,10 @@ struct ThreadView: View {
         .background(Color(UIColor.systemBackground))
         .onAppear {
             threadState.startObserving()
+            threadState.startSpotlightTimer()
         }
         .onDisappear {
+            threadState.cancelSpotlightTimer()
             threadState.stopObserving()
         }
     }
@@ -256,6 +258,38 @@ class ThreadState: ObservableObject {
     private var incrementalUpdateObserver: NSObjectProtocol?
     private var clearDataObserver: NSObjectProtocol?
 
+    /// Timer for Spotlight indexing — only index after 2+ seconds of viewing
+    private var spotlightTimer: Timer?
+    private var hasIndexedCurrentThread = false
+    private var spotlightTimerElapsed = false
+
+    /// Call when the thread view appears to start the 2-second indexing timer.
+    func startSpotlightTimer() {
+        cancelSpotlightTimer()
+        hasIndexedCurrentThread = false
+        spotlightTimerElapsed = false
+        spotlightTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
+            self?.spotlightTimerElapsed = true
+            self?.indexCurrentThreadIfNeeded()
+        }
+    }
+
+    /// Cancel the Spotlight timer (e.g. when the view disappears before 2 seconds).
+    func cancelSpotlightTimer() {
+        spotlightTimer?.invalidate()
+        spotlightTimer = nil
+    }
+
+    /// Index the current thread if the 2-second timer has elapsed and data is available.
+    /// Called both when the timer fires and when thread data arrives.
+    private func indexCurrentThreadIfNeeded() {
+        guard !hasIndexedCurrentThread,
+              spotlightTimerElapsed,
+              let rootPost = rootPost else { return }
+        hasIndexedCurrentThread = true
+        ThreadSpotlightIndexer.shared.indexThread(rootPost: rootPost.post)
+    }
+
     func startObserving() {
         // Observe thread data updates
         threadDataObserver = NotificationCenter.default.addObserver(
@@ -265,6 +299,8 @@ class ThreadState: ObservableObject {
         ) { [weak self] notification in
             if let threadData = notification.userInfo?["threadData"] as? [String: Any] {
                 self?.rootPost = self?.parseThreadNode(from: threadData, depth: 0)
+                // Attempt Spotlight indexing (succeeds only if 2s timer has elapsed)
+                self?.indexCurrentThreadIfNeeded()
             }
         }
 
@@ -292,6 +328,7 @@ class ThreadState: ObservableObject {
     }
 
     func stopObserving() {
+        cancelSpotlightTimer()
         if let observer = threadDataObserver {
             NotificationCenter.default.removeObserver(observer)
         }

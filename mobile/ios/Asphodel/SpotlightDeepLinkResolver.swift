@@ -9,6 +9,7 @@
 //  Identifier formats:
 //    bsky-profile-{did}  -> shadowsky://profile/{handle} (requires lookup)
 //    bsky-post-{uri}     -> shadowsky://post/{handle}/{rkey}
+//    bsky-thread-{uri}   -> shadowsky://post/{did}/{rkey} (thread view)
 //    profile:{handle}    -> shadowsky://profile/{handle} (legacy format)
 //    post:{uri}          -> shadowsky://post/{handle}/{rkey} (legacy format)
 //
@@ -35,6 +36,12 @@ enum SpotlightDeepLinkResolver {
             let handle = String(identifier.dropFirst("profile:".count))
             guard !handle.isEmpty else { return nil }
             return URL(string: "shadowsky://profile/\(handle)")
+        }
+
+        // Format: bsky-thread-{uri} (from native thread view Spotlight indexing)
+        if identifier.hasPrefix("bsky-thread-") {
+            let uri = String(identifier.dropFirst("bsky-thread-".count))
+            return resolvePostURI(uri)
         }
 
         // Format: bsky-post-{uri} or post:{uri}
