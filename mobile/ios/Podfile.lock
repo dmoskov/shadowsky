@@ -366,10 +366,6 @@ PODS:
   - NativeProfileView (1.0.0):
     - ExpoModulesCore
     - ExpoSwiftUIFeed
-  - NativeThreadView (1.0.0):
-    - ExpoModulesCore
-    - ExpoSwiftUIFeed
-    - FeedBridge
   - RCTDeprecation (0.81.5)
   - RCTRequired (0.81.5)
   - RCTTypeSafety (0.81.5):
@@ -2458,7 +2454,6 @@ DEPENDENCIES:
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
   - NativeFeedList (from `../modules/native-feed-list/ios`)
   - NativeProfileView (from `../modules/native-profile-view/ios`)
-  - NativeThreadView (from `../modules/native-thread-view/ios`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../node_modules/react-native/Libraries/Required`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -2657,8 +2652,6 @@ EXTERNAL SOURCES:
     :path: "../modules/native-feed-list/ios"
   NativeProfileView:
     :path: "../modules/native-profile-view/ios"
-  NativeThreadView:
-    :path: "../modules/native-thread-view/ios"
   RCTDeprecation:
     :path: "../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation"
   RCTRequired:
@@ -2876,7 +2869,6 @@ SPEC CHECKSUMS:
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   NativeFeedList: d7adafc2ce4df71e7ac29b4b0a5b915dfbab9439
   NativeProfileView: 4e07251f0f92ae1c51a75aaef0ba06c47faba4af
-  NativeThreadView: 1505715976a66524197ea822abeb526cac267d85
   RCTDeprecation: 943572d4be82d480a48f4884f670135ae30bf990
   RCTRequired: 8f3cfc90cc25cf6e420ddb3e7caaaabc57df6043
   RCTTypeSafety: 16a4144ca3f959583ab019b57d5633df10b5e97c
