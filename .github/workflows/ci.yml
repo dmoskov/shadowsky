@@ -4,9 +4,21 @@ on:
     branches:
       - main
       - "task/*"
+    paths-ignore:
+      - "mobile/**"
+      - "server/**"
+      - ".github/workflows/mobile-tests.yml"
+      - ".github/workflows/build-server.yml"
+      - "**.md"
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - "mobile/**"
+      - "server/**"
+      - ".github/workflows/mobile-tests.yml"
+      - ".github/workflows/build-server.yml"
+      - "**.md"
 
 jobs:
   test:
