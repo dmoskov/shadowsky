@@ -8,6 +8,7 @@ import {
   Alert,
   TextInput,
   Modal,
+  ActivityIndicator,
 } from "react-native";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { MutedWord } from "../../services/preferences";
@@ -17,7 +18,13 @@ import { triggerHaptic } from "../../utils/haptics";
 
 export function MutedWordsScreen() {
   const { colors } = useTheme();
-  const { preferences, updatePreference } = usePreferences();
+  const {
+    preferences,
+    updatePreference,
+    addMutedWord,
+    removeMutedWord,
+    syncingMutedWords,
+  } = usePreferences();
   const [showAddModal, setShowAddModal] = useState(false);
   const [newWord, setNewWord] = useState("");
   const [selectedDuration, setSelectedDuration] = useState<MutedWord["duration"]>("forever");
@@ -36,7 +43,7 @@ export function MutedWordsScreen() {
 
   const mutedWords = preferences?.mutedWords || [];
 
-  const handleAddWord = () => {
+  const handleAddWord = async () => {
     const trimmedWord = newWord.trim();
 
     if (!trimmedWord) {
@@ -62,8 +69,7 @@ export function MutedWordsScreen() {
       appliesTo: selectedAppliesTo,
     };
 
-    const updatedWords = [...mutedWords, newMutedWord];
-    updatePreference("mutedWords", updatedWords);
+    await addMutedWord(newMutedWord);
 
     triggerHaptic("success");
     setNewWord("");
@@ -81,9 +87,8 @@ export function MutedWordsScreen() {
       {
         text: "Remove",
         style: "destructive",
-        onPress: () => {
-          const updatedWords = mutedWords.filter((w) => w.id !== wordId);
-          updatePreference("mutedWords", updatedWords);
+        onPress: async () => {
+          await removeMutedWord(wordId);
           triggerHaptic("success");
         },
       },
@@ -170,9 +175,15 @@ export function MutedWordsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Muted Words</Text>
+        <View style={styles.headerTitleRow}>
+          <Text style={styles.headerTitle}>Muted Words</Text>
+          {syncingMutedWords && (
+            <ActivityIndicator size="small" color={colors.primary} />
+          )}
+        </View>
         <Text style={styles.headerDescription}>
-          Posts containing these words will be hidden from your feeds
+          Posts containing these words will be hidden from your feeds.
+          Synced across all your Bluesky clients.
         </Text>
       </View>
 
@@ -298,11 +309,16 @@ function createStyles(colors: any) {
     borderBottomWidth: 1,
     borderBottomColor: colors.surfaceElevated,
   },
+  headerTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
   headerTitle: {
     color: colors.text,
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 4,
   },
   headerDescription: {
     color: colors.textSecondary,
