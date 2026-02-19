@@ -61,30 +61,30 @@ export interface ThreadSummaryResult {
 const API_VERSION = "v1";
 
 /**
- * Get the API base URL for mobile
- * For development, this should point to your local API server or staging
- * For production, this should point to your production API
+ * Amplify API Gateway production URL.
+ * Must match the endpoint in amplify_outputs.json → custom.API.shadowsky-api.endpoint.
+ * EAS builds can override via EXPO_PUBLIC_API_URL if needed.
+ */
+const AMPLIFY_API_URL = "https://api.shadowsky.io";
+
+/**
+ * Get the API base URL for mobile.
+ * In production, uses the Amplify API Gateway URL (same backend the web app uses).
+ * In development, points to the local API server for testing.
  */
 function getApiBaseUrl(): string {
-  // In development mode, you might use a different URL
-  // Update this based on your setup (e.g., local IP for testing on device)
-  let baseUrl: string;
   if (__DEV__) {
     // For iOS simulator, localhost works
     // For Android emulator, use 10.0.2.2
     // For physical device, use your computer's IP address
     if (Platform.OS === "android") {
-      baseUrl = "http://10.0.2.2:3002"; // Android emulator
-    } else {
-      baseUrl = "http://localhost:3002"; // iOS simulator
+      return "http://10.0.2.2:3002";
     }
-  } else {
-    // Production API URL - get from environment or config
-    // This should match your deployed Amplify API Gateway URL
-    baseUrl = process.env.EXPO_PUBLIC_API_URL || "";
+    return "http://localhost:3002";
   }
 
-  return baseUrl;
+  // Production: use Amplify API Gateway URL, allow env override
+  return process.env.EXPO_PUBLIC_API_URL || AMPLIFY_API_URL;
 }
 
 /**
@@ -418,4 +418,72 @@ export async function fetchLinkMetadata(url: string): Promise<LinkMetadata> {
     description: data.description || "",
     imageUrl: data.imageUrl,
   };
+}
+
+// Tone Adjustment Types
+export type ToneOption =
+  | "professional"
+  | "casual"
+  | "humorous"
+  | "informative"
+  | "inspirational";
+
+export interface ToneAdjustmentResult {
+  adjustedText: string;
+  originalText: string;
+  tone: ToneOption;
+}
+
+/**
+ * Adjust the tone of text using AI
+ */
+export async function adjustTone(
+  text: string,
+  tone: ToneOption,
+): Promise<ToneAdjustmentResult> {
+  try {
+    const apiUrl = getVersionedApiUrl();
+    const endpoint = `${apiUrl}/adjust-tone`;
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getApiAuthHeaders(),
+      },
+      body: JSON.stringify({ text, tone }),
+    });
+
+    if (!response.ok) {
+      const status = response.status;
+      if (status === 401) {
+        throw new Error("Tone adjustment failed: Invalid API key");
+      } else if (status === 429) {
+        throw new Error("Tone adjustment failed: Rate limit exceeded");
+      } else {
+        throw new Error(
+          `Tone adjustment failed: ${response.statusText || "Unknown error"}`,
+        );
+      }
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      throw new Error("Tone adjustment unavailable: API server not reachable");
+    }
+
+    if (error instanceof Error && error.message.includes("Tone adjustment")) {
+      throw error;
+    }
+
+    logger.error('Error adjusting tone:', error);
+    throw new Error(
+      `Tone adjustment failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
 }
