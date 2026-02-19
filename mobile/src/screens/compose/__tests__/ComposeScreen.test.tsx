@@ -190,6 +190,7 @@ jest.mock('../../../services/preferences', () => ({
 
 jest.mock('../../../services/ai-service', () => ({
   generateAltText: jest.fn(() => Promise.resolve('Generated alt text')),
+  adjustTone: jest.fn(() => Promise.resolve({ adjustedText: 'Adjusted text', originalText: 'Original text', tone: 'professional' })),
 }));
 
 // Mock compose sub-components
@@ -231,6 +232,7 @@ jest.mock('../components', () => {
         <Text>{props.quoteTo.text}</Text>
       </View>
     ),
+    TonePickerModal: () => <View testID="tone-picker-modal" />,
   };
 });
 

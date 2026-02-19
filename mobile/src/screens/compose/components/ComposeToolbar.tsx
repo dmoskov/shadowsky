@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { ImageIcon, VideoIcon, GifIcon, EmojiIcon, ThreadIcon, GlobeIcon } from "../../../components/icons";
+import { ImageIcon, VideoIcon, GifIcon, EmojiIcon, ThreadIcon, GlobeIcon, SparklesIcon } from "../../../components/icons";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { getLanguageShortName } from "../../../constants/languages";
 import type { ImageAsset } from "../../../hooks/useImagePicker";
@@ -17,6 +17,7 @@ export interface ComposeToolbarProps {
   onEmojiPicker: () => void;
   onToggleThreadMode: () => void;
   onLanguagePickerOpen: () => void;
+  onTonePicker: () => void;
 
   // State for toolbar buttons
   selectedImages: ImageAsset[];
@@ -35,6 +36,9 @@ export interface ComposeToolbarProps {
   // Language selection
   selectedLanguages: string[];
 
+  // AI tone state
+  hasText: boolean;
+
   // Bottom inset for safe area
   bottomInset: number;
 }
@@ -46,6 +50,7 @@ export function ComposeToolbar({
   onEmojiPicker,
   onToggleThreadMode,
   onLanguagePickerOpen,
+  onTonePicker,
   selectedImages,
   selectedVideo,
   selectedGif,
@@ -57,6 +62,7 @@ export function ComposeToolbar({
   charCount,
   maxLength = MAX_POST_LENGTH,
   selectedLanguages,
+  hasText,
   bottomInset,
 }: ComposeToolbarProps) {
   const { colors } = useTheme();
@@ -128,6 +134,17 @@ export function ComposeToolbar({
           disabled={replyTo !== undefined || quoteTo !== undefined}
         >
           <ThreadIcon size={22} color={isThreadMode ? colors.primary : colors.textTertiary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.toolbarButton}
+          activeOpacity={0.7}
+          onPress={onTonePicker}
+          disabled={!hasText}
+        >
+          <SparklesIcon
+            size={22}
+            color={hasText ? colors.primary : colors.borderLight}
+          />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.languageButton}

@@ -280,6 +280,74 @@ export async function generateAltText(imageUri: string): Promise<string> {
   }
 }
 
+// Tone adjustment types
+export type ToneOption =
+  | "professional"
+  | "casual"
+  | "humorous"
+  | "informative"
+  | "inspirational";
+
+export interface ToneAdjustmentResult {
+  adjustedText: string;
+  originalText: string;
+  tone: ToneOption;
+}
+
+/**
+ * Adjust the tone of text using AI
+ */
+export async function adjustTone(
+  text: string,
+  tone: ToneOption,
+): Promise<ToneAdjustmentResult> {
+  try {
+    const apiUrl = getVersionedApiUrl();
+    const endpoint = `${apiUrl}/adjust-tone`;
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getApiAuthHeaders(),
+      },
+      body: JSON.stringify({ text, tone }),
+    });
+
+    if (!response.ok) {
+      const status = response.status;
+      if (status === 401) {
+        throw new Error("Tone adjustment failed: Invalid API key");
+      } else if (status === 429) {
+        throw new Error("Tone adjustment failed: Rate limit exceeded");
+      } else {
+        throw new Error(
+          `Tone adjustment failed: ${response.statusText || "Unknown error"}`,
+        );
+      }
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      throw new Error("Tone adjustment unavailable: API server not reachable");
+    }
+
+    if (error instanceof Error && error.message.includes("Tone adjustment")) {
+      throw error;
+    }
+
+    logger.error('Error adjusting tone:', error);
+    throw new Error(
+      `Tone adjustment failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+}
+
 // Post Analysis Types (AI Analytics)
 export interface PostAnalysisPost {
   text: string;
