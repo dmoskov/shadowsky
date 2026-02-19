@@ -1,8 +1,53 @@
 import { MMKV } from "react-native-mmkv";
+import { BskyAgent } from "@atproto/api";
 
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('Preferences');
+
+const AT_PROTO_PREFERENCES_COLLECTION = "com.shadowsky.preferences";
+const AT_PROTO_PREFERENCES_RKEY = "self";
+
+/**
+ * Keys that sync across devices via AT Proto.
+ * These are platform-independent settings that should be consistent
+ * whether the user is on web, iOS, or Android.
+ */
+const SYNCABLE_KEYS: ReadonlySet<keyof AppPreferences> = new Set([
+  'theme',
+  'defaultFeed',
+  'showNSFW',
+  'contentLanguages',
+  'postLanguages',
+  'autoPlayVideos',
+  'imageQuality',
+  'autoGenerateAltText',
+  'enableThreadSummaryPreGen',
+  'profileVisibility',
+  'allowMessages',
+  'allowMentions',
+  'hideFromSearch',
+  'filterContent',
+  'defaultPostLanguage',
+  'threadNumberingFormat',
+  'threadNumberingPosition',
+]);
+
+// Device-specific keys that stay local (MMKV only) and are NOT in SYNCABLE_KEYS:
+// hapticsEnabled, swipeActionsEnabled, appLockEnabled, backgroundFetchEnabled,
+// highContrast, reduceMotion, largeText, screenReaderOptimized
+
+/**
+ * The record shape stored in com.shadowsky.preferences on AT Proto.
+ * Contains only the syncable subset of AppPreferences plus metadata.
+ */
+interface SyncablePreferencesRecord {
+  $type: "com.shadowsky.preferences";
+  version: number;
+  updatedAt: string;
+  // Syncable preference fields
+  mobilePreferences: Partial<AppPreferences>;
+}
 export interface MutedWord {
   id: string;
   value: string;
@@ -278,6 +323,124 @@ class PreferencesService {
    */
   clearCache(): void {
     this.cache = null;
+  }
+
+  /**
+   * Extract the syncable subset of preferences (cross-platform settings).
+   */
+  private extractSyncablePrefs(prefs: AppPreferences): Partial<AppPreferences> {
+    const syncable: Partial<AppPreferences> = {};
+    for (const key of SYNCABLE_KEYS) {
+      (syncable as Record<string, unknown>)[key] = prefs[key];
+    }
+    return syncable;
+  }
+
+  /**
+   * Push current syncable preferences to AT Proto.
+   * Called as a fire-and-forget after local writes.
+   */
+  async pushToAtProto(agent: BskyAgent): Promise<void> {
+    const did = agent.session?.did;
+    if (!did) return;
+
+    const current = this.getSync();
+    const syncable = this.extractSyncablePrefs(current);
+
+    const record: SyncablePreferencesRecord = {
+      $type: AT_PROTO_PREFERENCES_COLLECTION,
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      mobilePreferences: syncable,
+    };
+
+    try {
+      await agent.api.com.atproto.repo.putRecord({
+        repo: did,
+        collection: AT_PROTO_PREFERENCES_COLLECTION,
+        rkey: AT_PROTO_PREFERENCES_RKEY,
+        record: record as unknown as Record<string, unknown>,
+      });
+    } catch (error: unknown) {
+      const errObj = error as Record<string, unknown>;
+      if (errObj?.status === 400) {
+        // Record doesn't exist yet, create it
+        try {
+          await agent.api.com.atproto.repo.createRecord({
+            repo: did,
+            collection: AT_PROTO_PREFERENCES_COLLECTION,
+            rkey: AT_PROTO_PREFERENCES_RKEY,
+            record: record as unknown as Record<string, unknown>,
+          });
+        } catch (createError) {
+          logger.error('Failed to create preferences record on AT Proto:', createError);
+        }
+      } else {
+        logger.error('Failed to push preferences to AT Proto:', error);
+      }
+    }
+  }
+
+  /**
+   * Fetch preferences from AT Proto and merge with local.
+   * Server wins for cross-platform (syncable) settings.
+   * Local wins for device-specific settings.
+   *
+   * Returns the merged preferences, or null if no server data was available.
+   */
+  async mergeFromAtProto(agent: BskyAgent): Promise<AppPreferences | null> {
+    const did = agent.session?.did;
+    if (!did) return null;
+
+    let serverPrefs: Partial<AppPreferences> | null = null;
+
+    try {
+      const response = await agent.api.com.atproto.repo.getRecord({
+        repo: did,
+        collection: AT_PROTO_PREFERENCES_COLLECTION,
+        rkey: AT_PROTO_PREFERENCES_RKEY,
+      });
+
+      if (response.data.value) {
+        const record = response.data.value as unknown as SyncablePreferencesRecord;
+        if (record.mobilePreferences) {
+          serverPrefs = record.mobilePreferences;
+        }
+      }
+    } catch (error: unknown) {
+      const errObj = error as Record<string, unknown>;
+      // 400 = record doesn't exist yet, which is normal for new users
+      if (errObj?.status !== 400) {
+        logger.error('Failed to fetch preferences from AT Proto:', error);
+      }
+      return null;
+    }
+
+    if (!serverPrefs) return null;
+
+    // Merge: server wins for syncable keys, local stays for device-specific
+    const local = this.getSync();
+    const merged = { ...local };
+
+    for (const key of SYNCABLE_KEYS) {
+      if (key in serverPrefs) {
+        (merged as Record<string, unknown>)[key] =
+          (serverPrefs as Record<string, unknown>)[key];
+      }
+    }
+
+    // Persist merged result to MMKV
+    getMMKVPreferences().set(PREFERENCES_KEY, JSON.stringify(merged));
+    this.cache = merged;
+
+    return merged;
+  }
+
+  /**
+   * Check whether a preference key should be synced to AT Proto.
+   */
+  isSyncableKey(key: keyof AppPreferences): boolean {
+    return SYNCABLE_KEYS.has(key);
   }
 }
 
