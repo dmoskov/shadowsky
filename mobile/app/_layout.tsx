@@ -128,11 +128,20 @@ function AuthGate() {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === "(auth)";
+    const inOnboardingGroup = segments[0] === "(onboarding)";
 
     if (!isAuthenticated && !inAuthGroup) {
       router.replace("/(auth)");
     } else if (isAuthenticated && inAuthGroup) {
-      router.replace("/(app)/(tabs)/(home)");
+      // Check if user needs onboarding
+      const { onboardingService } = require("../src/services/onboarding/onboarding-service");
+      if (!onboardingService.isCompleted()) {
+        router.replace("/(onboarding)");
+      } else {
+        router.replace("/(app)/(tabs)/(home)");
+      }
+    } else if (!isAuthenticated && inOnboardingGroup) {
+      router.replace("/(auth)");
     }
   }, [isAuthenticated, isLoading, segments, router]);
 
