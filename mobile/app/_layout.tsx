@@ -51,6 +51,7 @@ import { appLockService } from "../src/services/app-lock";
 import { setupOfflineStorageCleanup } from "../src/hooks/useOfflineFeed";
 import { useGlobalKeyboardShortcuts } from "../src/hooks/useKeyboardShortcuts";
 import { useImageMemoryManagement } from "../src/hooks/useImageMemoryManagement";
+import { usePendingMutationsWarning } from "../src/hooks/usePendingMutationsWarning";
 import { useWidgetSync } from "../src/hooks/useWidgetSync";
 import "../src/i18n";
 
@@ -116,6 +117,11 @@ function DynamicStatusBar() {
 
 function WidgetSyncManager() {
   useWidgetSync();
+  return null;
+}
+
+function PendingMutationsWarningManager() {
+  usePendingMutationsWarning();
   return null;
 }
 
@@ -211,6 +217,7 @@ function RootLayout() {
                       <VideoAutoplayProvider>
                         <ModerationProvider>
                           <ToastProvider>
+                            <PendingMutationsWarningManager />
                             <LightboxProvider>
                               <SharedTransitionProvider>
                                 <IPadLayoutProvider>
