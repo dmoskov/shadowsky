@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -32,6 +33,20 @@ const logger = createLogger('SearchScreen');
 const SEARCH_HISTORY_KEY = "@search_history";
 const MAX_HISTORY_ITEMS = 20;
 
+// Feature flag for native search view on iOS
+const USE_NATIVE_SEARCH = Platform.OS === 'ios';
+
+// Lazy-load native search module to avoid crashes on Android
+let NativeSearchComponent: React.ComponentType<any> | null = null;
+if (USE_NATIVE_SEARCH) {
+  try {
+    const mod = require('../../../modules/native-search');
+    NativeSearchComponent = mod.NativeSearchView;
+  } catch (e) {
+    // Native module not available, fall back to JS
+  }
+}
+
 type TabType = "people" | "posts" | "hashtags";
 type MediaFilter = "all" | "images" | "videos" | "links";
 
@@ -53,6 +68,15 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+
+  // On iOS, render the native SwiftUI search view
+  if (USE_NATIVE_SEARCH && NativeSearchComponent) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
+        <NativeSearchComponent style={{ flex: 1 }} />
+      </View>
+    );
+  }
   const [activeTab, setActiveTab] = useState<TabType>("posts");
   const [searchQuery, setSearchQuery] = useState(initialQuery || "");
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery || "");
