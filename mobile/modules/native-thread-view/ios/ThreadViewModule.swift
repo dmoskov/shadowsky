@@ -32,12 +32,26 @@ public class ThreadViewModule: Module {
                 view.threadUri = threadUri
             }
 
+            // Summary props
+            Prop("summaryJson") { (view: ThreadViewWrapper, summaryJson: String?) in
+                view.summaryJson = summaryJson
+            }
+
+            Prop("isSummaryLoading") { (view: ThreadViewWrapper, isSummaryLoading: Bool) in
+                view.isSummaryLoading = isSummaryLoading
+            }
+
+            Prop("summaryMode") { (view: ThreadViewWrapper, summaryMode: String?) in
+                view.summaryMode = summaryMode ?? "quick"
+            }
+
             // Events
             Events("onRefresh", "onPostPress", "onProfilePress",
                    "onLike", "onRepost", "onReply", "onBookmark",
                    "onMentionPress", "onHashtagPress", "onShare",
                    "onNavigateToParent", "onNavigateToRoot",
-                   "onPressLikeCount", "onPressRepostCount", "onPressQuoteCount")
+                   "onPressLikeCount", "onPressRepostCount", "onPressQuoteCount",
+                   "onSummaryModeChange")
         }
     }
 }
@@ -63,6 +77,25 @@ class ThreadViewWrapper: ExpoView {
         didSet { updateView() }
     }
 
+    // Summary props
+    var summaryJson: String? = nil {
+        didSet {
+            parsedSummaryData = parseSummaryJson(summaryJson)
+            updateView()
+        }
+    }
+
+    var isSummaryLoading: Bool = false {
+        didSet { updateView() }
+    }
+
+    var summaryMode: String = "quick" {
+        didSet { updateView() }
+    }
+
+    // Parsed summary data (cached to avoid repeated parsing)
+    private var parsedSummaryData: ThreadSummaryData? = nil
+
     // Event handlers
     private let onRefresh = EventDispatcher()
     private let onPostPress = EventDispatcher()
@@ -79,6 +112,7 @@ class ThreadViewWrapper: ExpoView {
     private let onPressLikeCount = EventDispatcher()
     private let onPressRepostCount = EventDispatcher()
     private let onPressQuoteCount = EventDispatcher()
+    private let onSummaryModeChange = EventDispatcher()
 
     // SwiftUI hosting controller
     private var hostingController: UIHostingController<ThreadView>?
@@ -112,12 +146,25 @@ class ThreadViewWrapper: ExpoView {
         hostingController.rootView = createThreadView()
     }
 
+    /// Parse summary JSON string into ThreadSummaryData
+    private func parseSummaryJson(_ json: String?) -> ThreadSummaryData? {
+        guard let json = json,
+              let data = json.data(using: .utf8),
+              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        return ThreadSummaryData.parse(from: dict)
+    }
+
     private func createThreadView() -> ThreadView {
         ThreadView(
             isLoading: isLoading,
             isRefreshing: isRefreshing,
             error: error,
             threadUri: threadUri,
+            summaryData: parsedSummaryData,
+            isSummaryLoading: isSummaryLoading,
+            summaryMode: summaryMode,
             onRefresh: { [weak self] in
                 self?.onRefresh([:])
             },
@@ -197,6 +244,11 @@ class ThreadViewWrapper: ExpoView {
             onPressQuoteCount: { [weak self] uri in
                 self?.onPressQuoteCount([
                     "uri": uri
+                ])
+            },
+            onSummaryModeChange: { [weak self] mode in
+                self?.onSummaryModeChange([
+                    "mode": mode
                 ])
             }
         )
