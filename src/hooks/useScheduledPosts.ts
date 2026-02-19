@@ -32,17 +32,19 @@ const QUERY_KEYS = {
  * Hook to initialize the scheduler service
  */
 export function useSchedulerInit() {
-  const { session } = useAuth();
+  const { session, agent } = useAuth();
 
   useEffect(() => {
     if (session?.did) {
-      schedulerService.init(session.did).catch(console.error);
+      schedulerService
+        .init(session.did, agent ?? undefined)
+        .catch(console.error);
     }
 
     return () => {
       schedulerService.stop();
     };
-  }, [session?.did]);
+  }, [session?.did, agent]);
 }
 
 /**

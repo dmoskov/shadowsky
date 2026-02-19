@@ -5,7 +5,9 @@
  * Handles creating, updating, and monitoring scheduled posts.
  */
 
+import { AtpAgent } from "@atproto/api";
 import { debug } from "@bsky/shared";
+import { ScheduledPostAtProtoSync } from "./atproto-sync";
 import { scheduledPostDB } from "./scheduled-post-db";
 import {
   CreateScheduledPostInput,
@@ -36,8 +38,11 @@ class SchedulerService {
   private userDid: string | null = null;
   private initialized = false;
   private boundVisibilityHandler: (() => void) | null = null;
+  private atProtoSync: ScheduledPostAtProtoSync;
 
-  private constructor() {}
+  private constructor() {
+    this.atProtoSync = new ScheduledPostAtProtoSync("web");
+  }
 
   static getInstance(): SchedulerService {
     if (!SchedulerService.instance) {
@@ -48,8 +53,10 @@ class SchedulerService {
 
   /**
    * Initialize the scheduler service
+   * @param userDid - The user's DID
+   * @param agent - Optional AT Proto agent for cross-platform sync
    */
-  async init(userDid: string): Promise<void> {
+  async init(userDid: string, agent?: AtpAgent): Promise<void> {
     if (this.initialized && this.userDid === userDid) {
       return;
     }
@@ -58,11 +65,19 @@ class SchedulerService {
     await scheduledPostDB.init();
     scheduledPostDB.setCurrentUser(userDid);
 
+    // Initialize AT Proto sync if agent is provided
+    if (agent) {
+      this.atProtoSync.initialize(agent);
+    }
+
     // Sync time with server
     await this.syncServerTime();
 
     // Initial sync from server
     await this.syncFromServer();
+
+    // Initial AT Proto sync for cross-platform visibility
+    await this.syncFromAtProto();
 
     // Set up periodic sync (every 30 seconds)
     this.startPeriodicSync();
@@ -155,6 +170,9 @@ class SchedulerService {
 
     // Cache locally
     await scheduledPostDB.importFromServer([serverPost]);
+
+    // Sync to AT Proto for cross-platform visibility (fire-and-forget)
+    this.atProtoSync.upsert(serverPost).catch(() => {});
 
     this.emit({ type: "created", post: serverPost });
 
@@ -271,6 +289,9 @@ class SchedulerService {
       // Update local cache
       await scheduledPostDB.importFromServer([serverPost]);
 
+      // Sync to AT Proto for cross-platform visibility (fire-and-forget)
+      this.atProtoSync.upsert(serverPost).catch(() => {});
+
       this.emit({ type: "updated", post: serverPost });
     }
 
@@ -340,6 +361,9 @@ class SchedulerService {
       // Delete from local cache
       await scheduledPostDB.delete(id);
 
+      // Remove from AT Proto (fire-and-forget)
+      this.atProtoSync.remove(id).catch(() => {});
+
       if (post) {
         this.emit({ type: "deleted", post });
       }
@@ -361,6 +385,26 @@ class SchedulerService {
     }
 
     return response.ok;
+  }
+
+  /**
+   * Sync scheduled posts from AT Proto for cross-platform visibility.
+   * Merges remote posts (potentially from mobile) with local IndexedDB cache.
+   */
+  async syncFromAtProto(): Promise<void> {
+    if (!this.atProtoSync.isAvailable()) return;
+
+    try {
+      const localPosts = await scheduledPostDB.getAll();
+      const merged = await this.atProtoSync.sync(localPosts);
+
+      // Import the merged result into IndexedDB
+      await scheduledPostDB.importFromServer(merged);
+
+      debug.log("AT Proto scheduled posts sync complete");
+    } catch (error) {
+      debug.error("Failed to sync scheduled posts from AT Proto:", error);
+    }
   }
 
   /**
@@ -440,6 +484,7 @@ class SchedulerService {
         this.startTimeSyncInterval();
         // Sync immediately on becoming visible to catch up
         this.syncFromServer();
+        this.syncFromAtProto();
       }
     };
 
