@@ -31,6 +31,7 @@
       },
       "channel": "preview",
       "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.shadowsky.io",
         "SENTRY_UPLOAD_SOURCE_MAPS": "false",
         "NODE_OPTIONS": "--max-old-space-size=4096"
       }
@@ -45,6 +46,7 @@
       },
       "channel": "production",
       "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.shadowsky.io",
         "SENTRY_UPLOAD_SOURCE_MAPS": "true"
       }
     }
