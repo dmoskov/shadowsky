@@ -7,6 +7,7 @@
 //
 
 import ExpoModulesCore
+import CoreSpotlight
 import Foundation
 
 public class ProfileBridgeModule: Module {
@@ -40,6 +41,9 @@ public class ProfileBridgeModule: Module {
                     object: nil,
                     userInfo: ["profileData": profileData]
                 )
+
+                // Index viewed profile in CoreSpotlight
+                ProfileSpotlightIndexer.shared.indexProfile(profileData)
             } catch {
                 print("[ProfileBridge] Failed to decode profile data: \(error)")
                 throw error

@@ -12,6 +12,8 @@ Pod::Spec.new do |s|
   s.dependency 'ExpoModulesCore'
   s.dependency 'ExpoSwiftUIFeed'
 
+  s.frameworks = 'CoreSpotlight'
+
   # Swift/Objective-C compatibility
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
