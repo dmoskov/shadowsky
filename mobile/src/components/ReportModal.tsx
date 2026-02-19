@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {useTheme} from '../contexts/ThemeContext';
 import {getAtProtoClient} from '../services/atproto/client';
+import {recordReport} from '../services/moderation-history';
 
 export type ReportType = 'post' | 'account';
 
@@ -155,6 +156,15 @@ export function ReportModal({
           reason: reasonText,
         });
       }
+
+      recordReport({
+        subjectUri: subjectUri,
+        subjectType: reportType,
+        subjectDid: subjectDid,
+        subjectHandle: subjectHandle,
+        reason: category.label,
+        reasonText: additionalContext.trim() || undefined,
+      });
 
       setIsSubmitted(true);
 

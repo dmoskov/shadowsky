@@ -13,6 +13,7 @@ import { useMutedAccounts, useUnmuteUser } from '../../hooks/api/useProfile';
 import { Avatar } from '../../components/Avatar';
 import { AppBskyActorDefs } from '@atproto/api';
 import {useTheme} from '../../contexts/ThemeContext';
+import {recordUnmute} from '../../services/moderation-history';
 
 interface MutedAccountsScreenProps {
   onNavigateToProfile?: (handle: string) => void;
@@ -47,6 +48,7 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
           onPress: async () => {
             try {
               await unmuteMutation.mutateAsync(account.did);
+              recordUnmute(account.did);
               refetch();
             } catch (error) {
               Alert.alert('Error', 'Failed to unmute user. Please try again.');

@@ -13,6 +13,7 @@ import { useBlockedAccounts, useUnblockUser } from '../../hooks/api/useProfile';
 import { Avatar } from '../../components/Avatar';
 import { AppBskyActorDefs } from '@atproto/api';
 import {useTheme} from '../../contexts/ThemeContext';
+import {recordUnblock} from '../../services/moderation-history';
 
 interface BlockedAccountsScreenProps {
   onNavigateToProfile?: (handle: string) => void;
@@ -50,6 +51,7 @@ export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsSc
           onPress: async () => {
             try {
               await unblockMutation.mutateAsync(blockUri);
+              recordUnblock(account.did);
               refetch();
             } catch (error) {
               Alert.alert('Error', 'Failed to unblock user. Please try again.');
