@@ -27,6 +27,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { AuthorFeedFilter } from "../../services/atproto/feeds";
 import { dmService } from "../../services/dm-service";
+import { recordBlock, recordUnblock, recordMute, recordUnmute } from "../../services/moderation-history";
 import { useSpotlightProfile } from "../../hooks/useSpotlightIndex";
 import { useOfflineFeedEnhancer, useOfflineFeedStatus } from "../../hooks/useOfflineFeed";
 import StaleContentIndicator from "../../components/StaleContentIndicator";
@@ -161,6 +162,12 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           onPress: () => {
             blockMutation.mutate(profile.did, {
               onSuccess: () => {
+                recordBlock({
+                  id: `block_${profile.did}_${Date.now()}`,
+                  subjectDid: profile.did,
+                  subjectHandle: profile.handle,
+                  subjectDisplayName: profile.displayName,
+                });
                 refetchProfile();
               },
             });
@@ -184,6 +191,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           onPress: () => {
             unblockMutation.mutate(profile.viewer!.blocking!, {
               onSuccess: () => {
+                recordUnblock(profile.did);
                 refetchProfile();
               },
             });
@@ -207,6 +215,11 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           onPress: () => {
             muteMutation.mutate(profile.did, {
               onSuccess: () => {
+                recordMute({
+                  subjectDid: profile.did,
+                  subjectHandle: profile.handle,
+                  subjectDisplayName: profile.displayName,
+                });
                 refetchProfile();
               },
             });
@@ -230,6 +243,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           onPress: () => {
             unmuteMutation.mutate(profile.did, {
               onSuccess: () => {
+                recordUnmute(profile.did);
                 refetchProfile();
               },
             });
@@ -262,6 +276,12 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
     if (!profile) return;
     try {
       await blockMutation.mutateAsync(did);
+      recordBlock({
+        id: `block_${did}_${Date.now()}`,
+        subjectDid: did,
+        subjectHandle: profile.handle,
+        subjectDisplayName: profile.displayName,
+      });
       Alert.alert('Success', `@${profile.handle} has been blocked.`);
     } catch (error) {
       Alert.alert('Error', 'Failed to block user. Please try again.');
@@ -272,6 +292,11 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
     if (!profile) return;
     try {
       await muteMutation.mutateAsync(did);
+      recordMute({
+        subjectDid: did,
+        subjectHandle: profile.handle,
+        subjectDisplayName: profile.displayName,
+      });
       Alert.alert('Success', `@${profile.handle} has been muted.`);
     } catch (error) {
       Alert.alert('Error', 'Failed to mute user. Please try again.');
