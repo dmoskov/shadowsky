@@ -333,6 +333,25 @@ export async function getBookmarkCount(): Promise<number> {
   }
 }
 
+// ==================== Collection Sync ====================
+
+let _collectionSyncDone = false;
+
+/**
+ * Sync bookmark collections from the AT Proto server.
+ * Called once on startup; subsequent calls are no-ops.
+ */
+export async function syncCollectionsFromServer(): Promise<void> {
+  if (_collectionSyncDone) return;
+  _collectionSyncDone = true;
+
+  try {
+    await bookmarkCollectionStorage.syncFromServer();
+  } catch (error) {
+    logger.error('Failed to sync bookmark collections from server:', error);
+  }
+}
+
 // ==================== Collection Methods ====================
 
 /**
@@ -355,9 +374,11 @@ export async function getCollection(id: string): Promise<BookmarkCollection | nu
 }
 
 /**
- * Get all collections
+ * Get all collections. On first call, triggers a background sync from AT Proto.
  */
 export async function getAllCollections(): Promise<BookmarkCollection[]> {
+  // Fire-and-forget sync on first access
+  syncCollectionsFromServer();
   return bookmarkCollectionStorage.getAllCollections();
 }
 

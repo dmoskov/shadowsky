@@ -1,6 +1,10 @@
 import { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
 import { createLogger } from "../utils/logger";
 import { Bookmark } from "./bookmark-backends/types";
+import {
+  bookmarkCollectionStorage,
+  bookmarkCollectionSyncService,
+} from "./bookmark-collections";
 import { bookmarkServiceV2 } from "./bookmark-service-v2";
 
 const logger = createLogger("BookmarkServiceWrapper");
@@ -17,6 +21,14 @@ export async function initializeBookmarkService(agent: BskyAgent) {
 
     // Initialize the bookmark service with the agent
     await bookmarkServiceV2.init(agent);
+
+    // Set up bookmark collection sync and merge from server
+    bookmarkCollectionSyncService.setAgent(agent);
+    bookmarkCollectionStorage
+      .syncFromServer()
+      .catch((error) =>
+        logger.error("Failed to sync bookmark collections from server:", error),
+      );
 
     logger.log("Bookmark service successfully initialized");
 
@@ -65,6 +77,7 @@ export async function reinitializeBookmarkService() {
 export const bookmarkService = {
   setAgent(agent: BskyAgent | null) {
     bookmarkServiceV2.setAgent(agent);
+    bookmarkCollectionSyncService.setAgent(agent);
   },
 
   async toggleBookmark(post: AppBskyFeedDefs.PostView) {

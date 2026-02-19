@@ -2,13 +2,17 @@
  * Bookmark Collection Storage
  *
  * AsyncStorage-based storage for bookmark collections and their mappings.
- * Collections are stored locally and not synced to AT Protocol (as the official
- * bookmarks API doesn't support collections natively).
+ * Collections are synced to AT Protocol via com.shadowsky.bookmarkCollections
+ * singleton record so they persist across devices and survive device wipes.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BookmarkCollection, BookmarkCollectionMapping } from './types';
-
+import {
+  fetchCollectionsFromServer,
+  pushCollectionsToServer,
+  mergeCollectionData,
+} from './collection-sync';
 
 import { createLogger } from '../../utils/logger';
 
@@ -26,6 +30,60 @@ export class BookmarkCollectionStorage {
       BookmarkCollectionStorage.instance = new BookmarkCollectionStorage();
     }
     return BookmarkCollectionStorage.instance;
+  }
+
+  // ==================== AT Proto Sync ====================
+
+  /**
+   * Fire-and-forget push of current local state to the AT Proto server.
+   * Called after every mutating operation to keep the server in sync.
+   */
+  private syncToServer(): void {
+    this.exportData()
+      .then(({ collections, mappings }) => {
+        return pushCollectionsToServer(collections, mappings);
+      })
+      .catch((error) => {
+        logger.error('Background sync to server failed:', error);
+      });
+  }
+
+  /**
+   * Merge server collections with local on startup.
+   * Fetches from AT Proto, merges with local data (union strategy),
+   * writes merged result to both local and server.
+   */
+  async syncFromServer(): Promise<void> {
+    const serverData = await fetchCollectionsFromServer();
+    if (!serverData) return;
+
+    const localData = await this.exportData();
+
+    // If both are empty, nothing to do
+    if (
+      localData.collections.length === 0 &&
+      localData.mappings.length === 0 &&
+      serverData.collections.length === 0 &&
+      serverData.mappings.length === 0
+    ) {
+      return;
+    }
+
+    const merged = mergeCollectionData(localData, serverData);
+
+    // Write merged data to local storage
+    await this.importData(merged);
+
+    // Push merged result back to server
+    pushCollectionsToServer(merged.collections, merged.mappings).catch(
+      (error) => {
+        logger.error('Failed to push merged data to server:', error);
+      }
+    );
+
+    logger.log(
+      `Synced collections from server: ${merged.collections.length} collections, ${merged.mappings.length} mappings`
+    );
   }
 
   // ==================== Collection CRUD ====================
@@ -50,6 +108,7 @@ export class BookmarkCollectionStorage {
     await AsyncStorage.setItem(COLLECTIONS_KEY, JSON.stringify(collections));
 
     logger.log(`Created collection: ${newCollection.name}`);
+    this.syncToServer();
     return newCollection;
   }
 
@@ -92,6 +151,7 @@ export class BookmarkCollectionStorage {
     await AsyncStorage.setItem(COLLECTIONS_KEY, JSON.stringify(collections));
 
     logger.log(`Updated collection: ${updated.name}`);
+    this.syncToServer();
     return updated;
   }
 
@@ -106,6 +166,7 @@ export class BookmarkCollectionStorage {
     await AsyncStorage.setItem(MAPPINGS_KEY, JSON.stringify(filteredMappings));
 
     logger.log(`Deleted collection: ${id}`);
+    this.syncToServer();
   }
 
   // ==================== Bookmark-Collection Mappings ====================
@@ -148,6 +209,7 @@ export class BookmarkCollectionStorage {
     await this.updateCollectionCounts();
 
     logger.log(`Added bookmark to collection: ${collectionId}`);
+    this.syncToServer();
   }
 
   async removeBookmarkFromCollection(
@@ -164,6 +226,7 @@ export class BookmarkCollectionStorage {
     await this.updateCollectionCounts();
 
     logger.log(`Removed bookmark from collection: ${collectionId}`);
+    this.syncToServer();
   }
 
   async removeBookmarkFromAllCollections(bookmarkUri: string): Promise<void> {
@@ -175,6 +238,7 @@ export class BookmarkCollectionStorage {
     await this.updateCollectionCounts();
 
     logger.log(`Removed bookmark from all collections: ${bookmarkUri}`);
+    this.syncToServer();
   }
 
   async getBookmarkCollections(bookmarkUri: string): Promise<string[]> {
@@ -228,6 +292,7 @@ export class BookmarkCollectionStorage {
     await AsyncStorage.removeItem(COLLECTIONS_KEY);
     await AsyncStorage.removeItem(MAPPINGS_KEY);
     logger.log('Cleared all collection storage');
+    this.syncToServer();
   }
 
   async exportData(): Promise<{
