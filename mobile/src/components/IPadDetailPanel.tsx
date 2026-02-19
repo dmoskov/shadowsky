@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../contexts/ThemeContext";
 import { useIPadLayout, DetailPanelContent } from "../contexts/IPadLayoutContext";
 import { ThreadScreenNative } from "../screens/shared/ThreadScreenNative";
-import { ProfileScreen } from "../screens/profile/ProfileScreen";
+import { ProfileScreenNative } from "../screens/profile/ProfileScreenNative";
 
 const DETAIL_PANEL_WIDTH = 380;
 
@@ -58,7 +58,7 @@ function DetailContent({ content }: { content: DetailPanelContent }) {
 
   if (content.type === "profile") {
     return (
-      <ProfileScreen
+      <ProfileScreenNative
         handle={content.handle}
         onNavigateToPost={(uri: string) => {
           // Extract handle and postId from URI to show in detail panel

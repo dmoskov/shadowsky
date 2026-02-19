@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useRequiredParam } from "../../../../../src/hooks/useRequiredParam";
-import { ProfileScreen } from "../../../../../src/screens/profile/ProfileScreen";
+import { ProfileScreenNative } from "../../../../../src/screens/profile/ProfileScreenNative";
 import { ErrorState } from "../../../../../src/components/ErrorState";
 
 export default function ProfileRoute() {
@@ -24,7 +24,7 @@ export default function ProfileRoute() {
   };
 
   return (
-    <ProfileScreen
+    <ProfileScreenNative
       handle={handle}
       onNavigateToFollowers={handleNavigateToFollowers}
       onNavigateToFollowing={handleNavigateToFollowing}

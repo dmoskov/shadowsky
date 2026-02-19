@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { MyProfileScreen } from "../../../../src/screens/profile/MyProfileScreen";
+import { MyProfileScreenNative } from "../../../../src/screens/profile/MyProfileScreenNative";
 
 export default function MyProfileRoute() {
   const router = useRouter();
@@ -17,7 +17,7 @@ export default function MyProfileRoute() {
   };
 
   return (
-    <MyProfileScreen
+    <MyProfileScreenNative
       onNavigateToEditProfile={handleNavigateToEditProfile}
       onNavigateToFollowers={handleNavigateToFollowers}
       onNavigateToFollowing={handleNavigateToFollowing}
