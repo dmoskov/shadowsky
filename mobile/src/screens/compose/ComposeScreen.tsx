@@ -36,6 +36,7 @@ import { LinkPreviewCard } from "../../components/LinkPreviewCard";
 
 import { useToast } from "../../contexts/ToastContext";
 import { createLogger } from '../../utils/logger';
+import { useComposeAutoSave, consumeAutoSavedCompose, clearAutoSavedCompose } from "../../hooks/useComposeAutoSave";
 
 const logger = createLogger('ComposeScreen');
 const MAX_POST_LENGTH = 300;
@@ -99,6 +100,19 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
   const [isAdjustingTone, setIsAdjustingTone] = useState(false);
   const [selectedTone, setSelectedTone] = useState<ToneOption | null>(null);
   const [tonePreviewText, setTonePreviewText] = useState<string | null>(null);
+
+  // Auto-save compose text to MMKV when the app backgrounds
+  useComposeAutoSave(text);
+
+  // Restore auto-saved compose text on mount (if no other content is provided)
+  useEffect(() => {
+    if (draftId || sharedUrl || sharedText || initialText || replyTo || quoteTo) return;
+    const saved = consumeAutoSavedCompose();
+    if (saved) {
+      setText(saved);
+      showToast("Restored unsaved compose text", { type: "info" });
+    }
+  }, []);
 
   // Language selection state
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
@@ -341,6 +355,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
         state: composerState,
       });
 
+      clearAutoSavedCompose();
       triggerHaptic('success');
       showToast("Draft saved", { type: "success" });
       router.back();
@@ -361,7 +376,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
         t("compose.save_draft_title"),
         t("compose.save_draft_message"),
         [
-          { text: t("compose.discard_button"), style: "destructive", onPress: () => router.back() },
+          { text: t("compose.discard_button"), style: "destructive", onPress: () => { clearAutoSavedCompose(); router.back(); } },
           { text: t("compose.cancel_button"), style: "cancel" },
           { text: t("compose.save_draft_button"), onPress: handleSaveDraft },
         ]
@@ -373,10 +388,11 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
         t("compose.discard_thread_message"),
         [
           { text: t("compose.cancel_button"), style: "cancel" },
-          { text: t("compose.discard_button"), style: "destructive", onPress: () => router.back() },
+          { text: t("compose.discard_button"), style: "destructive", onPress: () => { clearAutoSavedCompose(); router.back(); } },
         ]
       );
     } else {
+      clearAutoSavedCompose();
       router.back();
     }
   };
@@ -847,6 +863,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
         }
       }
 
+      clearAutoSavedCompose();
       imagePicker.clearImages();
       videoPicker.clearVideo();
       router.back();
