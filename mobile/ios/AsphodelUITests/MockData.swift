@@ -147,3 +147,245 @@ enum MockMessages {
         ]
     }
 }
+
+// MARK: - Profile Mock Data
+
+enum MockProfile {
+
+    static func makeProfile(
+        did: String = "did:plc:alice123",
+        handle: String = "alice.bsky.social",
+        displayName: String? = "Alice Example",
+        description: String? = "Just a demo profile for testing.",
+        avatar: String? = nil,
+        banner: String? = nil,
+        followersCount: Int? = 1234,
+        followsCount: Int? = 567,
+        postsCount: Int? = 890,
+        indexedAt: String? = nil,
+        viewer: SerializedProfileViewer? = nil,
+        labels: [SerializedLabel]? = nil,
+        pinnedPost: SerializedPinnedPostRef? = nil,
+        associated: SerializedProfileAssociated? = nil,
+        knownFollowers: SerializedKnownFollowers? = nil
+    ) -> SerializedProfile {
+        SerializedProfile(
+            did: did,
+            handle: handle,
+            displayName: displayName,
+            description: description,
+            avatar: avatar,
+            banner: banner,
+            followersCount: followersCount,
+            followsCount: followsCount,
+            postsCount: postsCount,
+            indexedAt: indexedAt,
+            viewer: viewer,
+            labels: labels,
+            pinnedPost: pinnedPost,
+            associated: associated,
+            knownFollowers: knownFollowers
+        )
+    }
+
+    static func makeViewer(
+        muted: Bool? = false,
+        blockedBy: Bool? = false,
+        blocking: String? = nil,
+        blockingByList: SerializedListViewBasic? = nil,
+        following: String? = nil,
+        followedBy: String? = nil
+    ) -> SerializedProfileViewer {
+        SerializedProfileViewer(
+            muted: muted,
+            blockedBy: blockedBy,
+            blocking: blocking,
+            blockingByList: blockingByList,
+            following: following,
+            followedBy: followedBy
+        )
+    }
+
+    static func makePinnedPost(
+        uri: String = "at://did:plc:alice123/app.bsky.feed.post/abc",
+        authorHandle: String = "alice.bsky.social",
+        authorDisplayName: String? = "Alice Example",
+        authorAvatar: String? = nil,
+        text: String? = "This is my pinned post!",
+        indexedAt: String? = nil,
+        likeCount: Int? = 42,
+        repostCount: Int? = 7,
+        replyCount: Int? = 3
+    ) -> SerializedPinnedPost {
+        SerializedPinnedPost(
+            uri: uri,
+            authorHandle: authorHandle,
+            authorDisplayName: authorDisplayName,
+            authorAvatar: authorAvatar,
+            text: text,
+            indexedAt: indexedAt,
+            likeCount: likeCount,
+            repostCount: repostCount,
+            replyCount: replyCount
+        )
+    }
+
+    static func makeStarterPack(
+        uri: String = "at://did:plc:alice123/app.bsky.graph.starterpack/sp1",
+        cid: String? = nil,
+        name: String = "Cool People Pack",
+        listItemCount: Int? = 25,
+        joinedAllTimeCount: Int? = 100
+    ) -> SerializedStarterPack {
+        SerializedStarterPack(
+            uri: uri,
+            cid: cid,
+            name: name,
+            listItemCount: listItemCount,
+            joinedAllTimeCount: joinedAllTimeCount
+        )
+    }
+
+    /// Standard profile for a non-self user (other person's profile)
+    static var otherUserProfile: SerializedProfile {
+        makeProfile(
+            viewer: makeViewer(followedBy: "at://did:plc:alice123/app.bsky.graph.follow/xyz")
+        )
+    }
+
+    /// Profile for the current user (own profile)
+    static var ownProfile: SerializedProfile {
+        makeProfile(
+            did: "did:plc:me123",
+            handle: "me.bsky.social",
+            displayName: "My Name",
+            description: "My bio goes here.",
+            followersCount: 100,
+            followsCount: 50,
+            postsCount: 200
+        )
+    }
+}
+
+// MARK: - Search Mock Data
+
+enum MockSearch {
+
+    static func makeActorResult(
+        id: String = "did:plc:actor1",
+        handle: String = "alice.bsky.social",
+        displayName: String? = "Alice Johnson",
+        avatar: String? = nil,
+        description: String? = "Bluesky enthusiast"
+    ) -> SearchActorResult {
+        SearchActorResult(
+            id: id,
+            handle: handle,
+            displayName: displayName,
+            avatar: avatar,
+            description: description
+        )
+    }
+
+    static func makePostResult(
+        id: String = "at://did:plc:author1/app.bsky.feed.post/post1",
+        uri: String = "at://did:plc:author1/app.bsky.feed.post/post1",
+        authorHandle: String = "alice.bsky.social",
+        authorDisplayName: String? = "Alice Johnson",
+        authorAvatar: String? = nil,
+        text: String = "Hello world! This is a sample post.",
+        indexedAt: String = "2026-02-20T10:00:00.000Z",
+        likeCount: Int = 10,
+        repostCount: Int = 3,
+        replyCount: Int = 2
+    ) -> SearchPostResult {
+        SearchPostResult(
+            id: id,
+            uri: uri,
+            authorHandle: authorHandle,
+            authorDisplayName: authorDisplayName,
+            authorAvatar: authorAvatar,
+            text: text,
+            indexedAt: indexedAt,
+            likeCount: likeCount,
+            repostCount: repostCount,
+            replyCount: replyCount
+        )
+    }
+
+    static func makeTrendingTopic(
+        tag: String = "bluesky",
+        displayName: String? = nil
+    ) -> TrendingTopic {
+        TrendingTopic(
+            id: tag,
+            tag: tag,
+            displayName: displayName ?? "#\(tag)"
+        )
+    }
+
+    static func makeTrendItem(
+        topic: String = "SwiftUI",
+        displayName: String? = nil,
+        postCount: Int = 500
+    ) -> TrendItem {
+        TrendItem(
+            id: topic,
+            topic: topic,
+            displayName: displayName ?? topic,
+            postCount: postCount
+        )
+    }
+
+    /// Sample actor results for people search
+    static var sampleActors: [SearchActorResult] {
+        [
+            makeActorResult(id: "did:plc:actor1", handle: "alice.bsky.social", displayName: "Alice Johnson", description: "Bluesky enthusiast"),
+            makeActorResult(id: "did:plc:actor2", handle: "bob.bsky.social", displayName: "Bob Smith", description: "Developer"),
+            makeActorResult(id: "did:plc:actor3", handle: "carol.bsky.social", displayName: "Carol Davis", description: nil),
+        ]
+    }
+
+    /// Sample post results for posts search
+    static var samplePosts: [SearchPostResult] {
+        [
+            makePostResult(
+                id: "at://did:plc:a1/app.bsky.feed.post/p1",
+                uri: "at://did:plc:a1/app.bsky.feed.post/p1",
+                authorHandle: "alice.bsky.social",
+                authorDisplayName: "Alice Johnson",
+                text: "Loving the new features on Bluesky!",
+                likeCount: 42,
+                repostCount: 5,
+                replyCount: 8
+            ),
+            makePostResult(
+                id: "at://did:plc:a2/app.bsky.feed.post/p2",
+                uri: "at://did:plc:a2/app.bsky.feed.post/p2",
+                authorHandle: "bob.bsky.social",
+                authorDisplayName: "Bob Smith",
+                text: "SwiftUI is amazing for building native iOS apps.",
+                likeCount: 15,
+                repostCount: 2,
+                replyCount: 1
+            ),
+        ]
+    }
+
+    /// Sample trending topics
+    static var sampleTrendingTopics: [TrendingTopic] {
+        [
+            makeTrendingTopic(tag: "bluesky"),
+            makeTrendingTopic(tag: "swiftui"),
+            makeTrendingTopic(tag: "ios"),
+        ]
+    }
+
+    /// Sample trending items
+    static var sampleTrends: [TrendItem] {
+        [
+            makeTrendItem(topic: "SwiftUI", displayName: "SwiftUI", postCount: 1500),
+            makeTrendItem(topic: "Bluesky", displayName: "Bluesky", postCount: 3200),
+        ]
+    }
+}

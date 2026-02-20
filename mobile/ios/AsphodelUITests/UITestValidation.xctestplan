@@ -41,7 +41,12 @@
         "MessageComposerViewTests",
         "MessageComposerStateTests",
         "MessagesDataStateTests",
-        "MessageTimeFormatterTests"
+        "MessageTimeFormatterTests",
+        "ProfileHeaderViewTests",
+        "ProfileViewTests",
+        "ProfileTabTests",
+        "SearchViewTests",
+        "SearchStateTests"
       ]
     }
   ],
