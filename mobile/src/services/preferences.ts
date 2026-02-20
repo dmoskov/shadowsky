@@ -116,6 +116,9 @@ export interface AppPreferences {
   threadNumberingPosition: "beginning" | "end";
   postDelaySeconds: number;
   enableHashtagSuggestions: boolean;
+
+  // Tab Bar Customization (device-local)
+  tabBarItems: string[];
 }
 
 const PREFERENCES_KEY = "shadowsky_preferences";
@@ -181,6 +184,9 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   threadNumberingPosition: "beginning",
   postDelaySeconds: 0,
   enableHashtagSuggestions: false,
+
+  // Tab Bar Customization
+  tabBarItems: ['home', 'search', 'notifications', 'profile'],
 };
 
 /**
