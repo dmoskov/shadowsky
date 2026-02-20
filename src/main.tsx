@@ -27,6 +27,11 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./config/amplify"; // Configure Amplify
 import "./index.css";
+import { setupGlobalErrorHandlers } from "./utils/global-error-handlers";
+
+// Install global handlers for errors that escape React's error boundary tree
+// (e.g. errors in async callbacks, event handlers, setTimeout, third-party scripts)
+setupGlobalErrorHandlers();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
