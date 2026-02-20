@@ -42,7 +42,7 @@ struct NotificationFilterBar: View {
             VStack(spacing: 0) {
                 Spacer()
                 Text(filter.label + (count > 0 ? " (\(count))" : ""))
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundColor(isActive
                         ? NotificationThemeColors.primary
                         : Color(UIColor.tertiaryLabel))

@@ -96,11 +96,11 @@ struct ConversationListView: View {
         HStack(spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 16))
+                    .font(.body)
                     .foregroundColor(.secondary)
 
                 TextField("Search messages...", text: $localSearchText)
-                    .font(.system(size: 16))
+                    .font(.body)
                     .foregroundColor(Color(UIColor.label))
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
@@ -114,7 +114,7 @@ struct ConversationListView: View {
                         onSearchTextChange?("")
                     }) {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 16))
+                            .font(.body)
                             .foregroundColor(.secondary)
                     }
                 }
@@ -131,7 +131,7 @@ struct ConversationListView: View {
                     onSearchTextChange?("")
                     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 }
-                .font(.system(size: 16))
+                .font(.body)
                 .foregroundColor(MessagesThemeColors.primary)
             }
         }
@@ -156,7 +156,7 @@ struct ConversationListView: View {
                         ProgressView()
                             .scaleEffect(0.8)
                         Text("Searching messages...")
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundColor(.secondary)
                     }
                     .padding(.vertical, 8)
@@ -166,7 +166,7 @@ struct ConversationListView: View {
                 if hasSearchQuery && !filteredConversations.isEmpty {
                     HStack {
                         Text("Conversations")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.footnote.weight(.semibold))
                             .foregroundColor(.secondary)
                             .textCase(.uppercase)
                         Spacer()
@@ -197,7 +197,7 @@ struct ConversationListView: View {
                 if hasSearchQuery && !messageSearchResults.isEmpty {
                     HStack {
                         Text("Messages")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.footnote.weight(.semibold))
                             .foregroundColor(.secondary)
                             .textCase(.uppercase)
                         Spacer()
@@ -221,7 +221,7 @@ struct ConversationListView: View {
                 if hasSearchQuery && filteredConversations.isEmpty && messageSearchResults.isEmpty && !isSearching {
                     VStack(spacing: 12) {
                         Image(systemName: "magnifyingglass")
-                            .font(.system(size: 48))
+                            .font(.largeTitle)
                             .foregroundColor(.secondary)
                         Text("No results found")
                             .font(.subheadline)
@@ -259,7 +259,7 @@ struct ConversationListView: View {
     private var emptyView: some View {
         VStack(spacing: 12) {
             Image(systemName: "bubble.left.and.bubble.right")
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundColor(.secondary)
             Text("No conversations yet")
                 .font(.headline)
@@ -303,12 +303,12 @@ struct ConversationRowView: View {
                                 text: otherMember.displayName ?? otherMember.handle ?? "Unknown User",
                                 highlight: searchText
                             )
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.body.weight(.semibold))
                                 .lineLimit(1)
 
                             if conversation.muted {
                                 Image(systemName: "bell.slash.fill")
-                                    .font(.system(size: 14))
+                                    .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -317,7 +317,7 @@ struct ConversationRowView: View {
 
                         if conversation.unreadCount > 0 {
                             Text("\(conversation.unreadCount)")
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(.caption.weight(.semibold))
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 2)
@@ -332,7 +332,7 @@ struct ConversationRowView: View {
                             text: "@\(handle)",
                             highlight: searchText
                         )
-                            .font(.system(size: 14))
+                            .font(.subheadline)
                             .lineLimit(1)
                     }
 
@@ -343,13 +343,13 @@ struct ConversationRowView: View {
                                 text: lastMessage.text,
                                 highlight: searchText
                             )
-                                .font(.system(size: 14))
+                                .font(.subheadline)
                                 .lineLimit(1)
 
                             Spacer(minLength: 4)
 
                             Text(MessageTimeFormatter.formatRelativeTime(from: lastMessage.sentAt))
-                                .font(.system(size: 12))
+                                .font(.caption)
                                 .foregroundColor(Color(UIColor.tertiaryLabel))
                         }
                     }
@@ -405,7 +405,7 @@ struct ConversationRowView: View {
             .frame(width: 48, height: 48)
             .overlay(
                 Text(String((otherMember.displayName ?? otherMember.handle ?? "U").prefix(1)).uppercased())
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.title3.weight(.semibold))
                     .foregroundColor(Color(UIColor.label))
             )
     }
@@ -427,13 +427,13 @@ struct MessageSearchResultRow: View {
                 // Details
                 VStack(alignment: .leading, spacing: 2) {
                     Text(result.displayName)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundColor(Color(UIColor.label))
                         .lineLimit(1)
 
                     if !result.handle.isEmpty {
                         Text("@\(result.handle)")
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
                     }
@@ -444,14 +444,14 @@ struct MessageSearchResultRow: View {
                                 text: messageText,
                                 highlight: searchText
                             )
-                                .font(.system(size: 13))
+                                .font(.footnote)
                                 .lineLimit(2)
 
                             Spacer(minLength: 4)
 
                             if let sentAt = result.matchedMessageSentAt {
                                 Text(MessageTimeFormatter.formatRelativeTime(from: sentAt))
-                                    .font(.system(size: 11))
+                                    .font(.caption2)
                                     .foregroundColor(Color(UIColor.tertiaryLabel))
                             }
                         }
@@ -493,7 +493,7 @@ struct MessageSearchResultRow: View {
             .frame(width: 40, height: 40)
             .overlay(
                 Text(String(result.displayName.prefix(1)).uppercased())
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundColor(Color(UIColor.label))
             )
     }

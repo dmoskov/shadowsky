@@ -100,11 +100,11 @@ struct ThreadPostCard: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(node.post.author.displayName ?? node.post.author.handle)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundColor(.primary)
 
                     Text("@\(node.post.author.handle)")
-                        .font(.system(size: 14))
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
                 .onTapGesture {
@@ -115,7 +115,7 @@ struct ThreadPostCard: View {
 
                 // Timestamp
                 Text(ThreadDateFormatting.relativeTimeString(from: node.post.record.createdAt))
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
             }
 
@@ -183,7 +183,7 @@ struct ThreadPostCard: View {
                     onShare?()
                 }) {
                     Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 16))
+                        .font(.body)
                         .foregroundColor(.secondary)
                 }
             }
@@ -254,13 +254,13 @@ struct ActionButton: View {
                 action?()
             }) {
                 Image(systemName: iconName)
-                    .font(.system(size: 16))
+                    .font(.body)
                     .foregroundColor(isActive ? color : .secondary)
             }
 
             if count > 0 {
                 Text("\(count)")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundColor(isActive ? color : .secondary)
                     .onTapGesture {
                         onPressCount?()
@@ -320,10 +320,10 @@ struct ThreadReplyView: View {
                             }) {
                                 HStack(spacing: 4) {
                                     Image(systemName: isCollapsed ? "chevron.right" : "chevron.down")
-                                        .font(.system(size: 12))
+                                        .font(.caption)
                                         .foregroundColor(.secondary)
                                     Text("\(node.replies.count) \(node.replies.count == 1 ? "reply" : "replies")")
-                                        .font(.system(size: 12))
+                                        .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
                             }

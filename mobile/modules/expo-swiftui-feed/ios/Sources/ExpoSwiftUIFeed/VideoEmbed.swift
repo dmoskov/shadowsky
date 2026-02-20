@@ -98,7 +98,7 @@ struct VideoEmbed: View {
                             .overlay(
                                 // Play icon triangle
                                 Image(systemName: "play.fill")
-                                    .font(.system(size: 24))
+                                    .font(.title2)
                                     .foregroundColor(.white)
                                     .offset(x: 2) // Slight offset for visual centering
                             )
@@ -111,7 +111,7 @@ struct VideoEmbed: View {
                         Spacer()
                         HStack {
                             Text(alt)
-                                .font(.system(size: 12))
+                                .font(.caption)
                                 .foregroundColor(.white)
                                 .padding(8)
                                 .background(Color.black.opacity(0.7))

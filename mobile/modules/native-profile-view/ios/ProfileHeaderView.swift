@@ -119,7 +119,7 @@ struct ProfileHeaderView: View {
                     onMenuPress?()
                 }) {
                     Image(systemName: "ellipsis")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundColor(.white)
                         .frame(width: 36, height: 36)
                         .background(
@@ -147,13 +147,13 @@ struct ProfileHeaderView: View {
             // Display Name and Handle
             VStack(spacing: 4) {
                 Text(profile.displayName ?? profile.handle)
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.title2.weight(.bold))
                     .foregroundColor(.primary)
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityLabel("Display name: \(profile.displayName ?? profile.handle)")
 
                 Text("@\(profile.handle)")
-                    .font(.system(size: 16))
+                    .font(.body)
                     .foregroundColor(.secondary)
                     .accessibilityLabel("Handle: @\(profile.handle)")
             }
@@ -161,7 +161,7 @@ struct ProfileHeaderView: View {
             // Follows you badge
             if let followedBy = profile.viewer?.followedBy, !followedBy.isEmpty, !isOwnProfile {
                 Text("Follows you")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.caption.weight(.medium))
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
@@ -205,7 +205,7 @@ struct ProfileHeaderView: View {
                     .frame(width: 80, height: 80)
                     .overlay(
                         Image(systemName: "person.fill")
-                            .font(.system(size: 32))
+                            .font(.title)
                             .foregroundColor(.gray.opacity(0.6))
                     )
             }
@@ -230,7 +230,7 @@ struct ProfileHeaderView: View {
                 HStack(spacing: 8) {
                     ForEach(displayLabels, id: \.val) { label in
                         Text(formattedLabelText(label.val))
-                            .font(.system(size: 11, weight: .medium))
+                            .font(.caption2.weight(.medium))
                             .foregroundColor(.orange)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
@@ -253,7 +253,7 @@ struct ProfileHeaderView: View {
 
     private func bioSection(description: String) -> some View {
         Text(description)
-            .font(.system(size: 15))
+            .font(.subheadline)
             .foregroundColor(.primary)
             .multilineTextAlignment(.center)
             .lineLimit(nil)
@@ -300,7 +300,7 @@ struct ProfileHeaderView: View {
             let remaining = knownFollowers.count - names.count
 
             Text(knownFollowersText(names: Array(names), remaining: remaining))
-                .font(.system(size: 13))
+                .font(.footnote)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .accessibilityLabel("Followed by \(knownFollowers.count) people you follow")
@@ -373,7 +373,7 @@ struct ProfileHeaderView: View {
     private var starterPacksSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(isOwnProfile ? "My Starter Packs" : "Starter Packs")
-                .font(.system(size: 18, weight: .bold))
+                .font(.title3.weight(.bold))
                 .foregroundColor(.primary)
                 .accessibilityAddTraits(.isHeader)
 
@@ -384,18 +384,18 @@ struct ProfileHeaderView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(pack.name)
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.body.weight(.semibold))
                                 .foregroundColor(.primary)
 
                             HStack(spacing: 12) {
                                 if let memberCount = pack.listItemCount {
                                     Text("\(memberCount) members")
-                                        .font(.system(size: 14))
+                                        .font(.subheadline)
                                         .foregroundColor(.secondary)
                                 }
                                 if let joinedCount = pack.joinedAllTimeCount {
                                     Text("\(joinedCount) joined")
-                                        .font(.system(size: 14))
+                                        .font(.subheadline)
                                         .foregroundColor(.secondary)
                                 }
                             }
@@ -404,7 +404,7 @@ struct ProfileHeaderView: View {
                         Spacer()
 
                         Text("\u{203A}")
-                            .font(.system(size: 24, weight: .light))
+                            .font(.title2.weight(.light))
                             .foregroundColor(.blue)
                     }
                     .padding(16)
@@ -440,7 +440,7 @@ struct ProfileHeaderView: View {
                 onEditProfile?()
             }) {
                 Text("Edit Profile")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
@@ -456,7 +456,7 @@ struct ProfileHeaderView: View {
                 onSignOut?()
             }) {
                 Text("Sign Out")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
@@ -484,7 +484,7 @@ struct ProfileHeaderView: View {
                             ))
                     } else {
                         Text(isFollowing ? "Following" : "Follow")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.body.weight(.semibold))
                     }
                 }
                 .foregroundColor(isFollowing ? Color.blue : Color.white)
@@ -513,7 +513,7 @@ struct ProfileHeaderView: View {
                             .progressViewStyle(CircularProgressViewStyle(tint: .blue))
                     } else {
                         Image(systemName: "paperplane.fill")
-                            .font(.system(size: 20))
+                            .font(.title3)
                             .foregroundColor(.blue)
                     }
                 }
@@ -532,7 +532,7 @@ struct ProfileHeaderView: View {
                 onAddToList?()
             }) {
                 Text("Add to List")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundColor(.blue)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
@@ -555,16 +555,16 @@ struct ProfileHeaderView: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 6) {
                     Image(systemName: "pin.fill")
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundColor(.secondary)
                     Text("Pinned")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.caption.weight(.semibold))
                         .foregroundColor(.secondary)
                 }
 
                 if let text = pinnedPost.text, !text.isEmpty {
                     Text(text)
-                        .font(.system(size: 15))
+                        .font(.subheadline)
                         .foregroundColor(.primary)
                         .lineLimit(3)
                         .multilineTextAlignment(.leading)
@@ -573,17 +573,17 @@ struct ProfileHeaderView: View {
                 HStack(spacing: 16) {
                     if let replies = pinnedPost.replyCount, replies > 0 {
                         Label("\(replies)", systemImage: "bubble.right")
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundColor(.secondary)
                     }
                     if let reposts = pinnedPost.repostCount, reposts > 0 {
                         Label("\(reposts)", systemImage: "arrow.2.squarepath")
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundColor(.secondary)
                     }
                     if let likes = pinnedPost.likeCount, likes > 0 {
                         Label("\(likes)", systemImage: "heart")
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundColor(.secondary)
                     }
                 }
@@ -606,11 +606,11 @@ struct ProfileHeaderView: View {
     private func statView(value: Int, label: String) -> some View {
         VStack(spacing: 4) {
             Text(formattedCount(value))
-                .font(.system(size: 20, weight: .bold))
+                .font(.title3.weight(.bold))
                 .foregroundColor(.primary)
 
             Text(label)
-                .font(.system(size: 14))
+                .font(.subheadline)
                 .foregroundColor(.secondary)
         }
     }
@@ -628,7 +628,7 @@ struct ProfileHeaderView: View {
 
     private func statusBadge(text: String, color: Color) -> some View {
         Text(text)
-            .font(.system(size: 12, weight: .semibold))
+            .font(.caption.weight(.semibold))
             .foregroundColor(.white)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)

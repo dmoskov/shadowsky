@@ -117,6 +117,7 @@ struct ThreadReplyComposer: View {
     let onMentionSearch: ((String) -> Void)?
     let onDismissKeyboard: (() -> Void)?
 
+    @ScaledMetric(relativeTo: .body) private var sendButtonSize: CGFloat = 32
     @FocusState private var isTextFieldFocused: Bool
 
     var body: some View {
@@ -179,10 +180,10 @@ struct ThreadReplyComposer: View {
                     Button(action: handleSend) {
                         if state.isSending {
                             ProgressView()
-                                .frame(width: 32, height: 32)
+                                .frame(width: sendButtonSize, height: sendButtonSize)
                         } else {
                             Image(systemName: "arrow.up.circle.fill")
-                                .font(.system(size: 32))
+                                .font(.title)
                                 .foregroundColor(state.canSend ? .accentColor : Color(.systemGray3))
                         }
                     }

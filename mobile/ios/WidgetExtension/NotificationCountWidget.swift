@@ -48,10 +48,10 @@ struct NotificationCountWidgetView: View {
                 // Header row
                 HStack {
                     Image(systemName: "bell.fill")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundColor(brandGold)
                     Text("Notifications")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.caption.weight(.medium))
                         .foregroundColor(.white.opacity(0.7))
                     Spacer()
                 }
@@ -59,15 +59,15 @@ struct NotificationCountWidgetView: View {
                 // Unread count
                 if entry.isPlaceholder {
                     Text("--")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
                         .foregroundColor(.white)
                 } else if entry.data.unreadCount > 0 {
                     Text("\(entry.data.unreadCount)")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
                         .foregroundColor(brandGold)
                 } else {
                     Text("0")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
                         .foregroundColor(.white.opacity(0.4))
                 }
 
@@ -76,25 +76,25 @@ struct NotificationCountWidgetView: View {
                 // Last notification preview
                 if entry.isPlaceholder {
                     Text("Loading...")
-                        .font(.system(size: 11))
+                        .font(.caption2)
                         .foregroundColor(.white.opacity(0.5))
                         .lineLimit(2)
                 } else if !entry.data.lastNotificationText.isEmpty {
                     VStack(alignment: .leading, spacing: 2) {
                         if !entry.data.lastNotificationAuthor.isEmpty {
                             Text(entry.data.lastNotificationAuthor)
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(.caption2.weight(.semibold))
                                 .foregroundColor(.white.opacity(0.8))
                                 .lineLimit(1)
                         }
                         Text(entry.data.lastNotificationText)
-                            .font(.system(size: 11))
+                            .font(.caption2)
                             .foregroundColor(.white.opacity(0.5))
                             .lineLimit(2)
                     }
                 } else {
                     Text("No new notifications")
-                        .font(.system(size: 11))
+                        .font(.caption2)
                         .foregroundColor(.white.opacity(0.4))
                 }
             }

@@ -191,7 +191,7 @@ struct FeedListView: View {
     private func errorView(_ errorMessage: String) -> some View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundColor(.secondary)
 
             Text(errorMessage)
@@ -212,7 +212,7 @@ struct FeedListView: View {
     private var emptyView: some View {
         VStack(spacing: 16) {
             Image(systemName: "tray")
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundColor(.secondary)
 
             Text(props.emptyMessage)

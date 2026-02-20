@@ -53,9 +53,9 @@ struct MessageThreadView: View {
                 Button(action: { onBack?() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.body.weight(.semibold))
                         Text("Back")
-                            .font(.system(size: 16))
+                            .font(.body)
                     }
                     .foregroundColor(MessagesThemeColors.primary)
                 }
@@ -67,7 +67,7 @@ struct MessageThreadView: View {
                         onToggleMute?(convo.id, convo.muted)
                     }) {
                         Image(systemName: convo.muted ? "bell.slash.fill" : "bell.fill")
-                            .font(.system(size: 20))
+                            .font(.title3)
                             .foregroundColor(MessagesThemeColors.primary)
                     }
                 }
@@ -86,13 +86,13 @@ struct MessageThreadView: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(otherMember.displayName ?? otherMember.handle ?? "Unknown User")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.body.weight(.semibold))
                             .foregroundColor(Color(UIColor.label))
                             .lineLimit(1)
 
                         if let handle = otherMember.handle {
                             Text("@\(handle)")
-                                .font(.system(size: 14))
+                                .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -136,7 +136,7 @@ struct MessageThreadView: View {
             .frame(width: 40, height: 40)
             .overlay(
                 Text(String((otherMember.displayName ?? otherMember.handle ?? "U").prefix(1)).uppercased())
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.title3.weight(.semibold))
                     .foregroundColor(Color(UIColor.label))
             )
     }
@@ -208,7 +208,7 @@ struct MessageBubbleView: View {
                 // Text bubble
                 if !message.text.isEmpty {
                     Text(message.text)
-                        .font(.system(size: 16))
+                        .font(.body)
                         .foregroundColor(Color(UIColor.label))
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
@@ -224,12 +224,12 @@ struct MessageBubbleView: View {
                 // Time and delivery status
                 HStack(spacing: 4) {
                     Text(MessageTimeFormatter.formatMessageTime(from: message.sentAt))
-                        .font(.system(size: 11))
+                        .font(.caption2)
                         .foregroundColor(Color(UIColor.tertiaryLabel))
 
                     if isOwnMessage {
                         Text(message.id.isEmpty ? "\u{2713}" : "\u{2713}\u{2713}")
-                            .font(.system(size: 11))
+                            .font(.caption2)
                             .foregroundColor(Color(UIColor.tertiaryLabel))
                     }
                 }

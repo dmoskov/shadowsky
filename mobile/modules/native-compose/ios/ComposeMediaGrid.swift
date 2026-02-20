@@ -89,7 +89,7 @@ struct ComposeMediaGrid: View {
             // Remove button
             Button(action: { onRemove(index) }) {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 22))
+                    .font(.title2)
                     .foregroundColor(.white)
                     .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
             }
@@ -103,7 +103,7 @@ struct ComposeMediaGrid: View {
                     HStack {
                         Button(action: { onEditAltText(index) }) {
                             Text(attachment.altText.isEmpty ? "ALT" : "ALT")
-                                .font(.system(size: 10, weight: .bold))
+                                .font(.caption2.weight(.bold))
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)

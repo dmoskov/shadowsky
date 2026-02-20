@@ -65,10 +65,10 @@ struct SearchView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(Color(UIColor.secondaryLabel))
-                        .font(.system(size: 16))
+                        .font(.body)
 
                     TextField("Search posts, users, hashtags...", text: $searchText)
-                        .font(.system(size: 16))
+                        .font(.body)
                         .autocapitalization(.none)
                         .autocorrectionDisabled()
                         .focused($isSearchFocused)
@@ -87,7 +87,7 @@ struct SearchView: View {
                         }) {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundColor(Color(UIColor.tertiaryLabel))
-                                .font(.system(size: 16))
+                                .font(.body)
                         }
                     }
                 }
@@ -102,7 +102,7 @@ struct SearchView: View {
                         searchText = ""
                         onQueryChange("")
                     }
-                    .font(.system(size: 16))
+                    .font(.body)
                     .foregroundColor(.accentColor)
                     .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
@@ -135,7 +135,7 @@ struct SearchView: View {
         }) {
             VStack(spacing: 8) {
                 Text(tab.label)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundColor(state.activeTab == tab ? .accentColor : Color(UIColor.tertiaryLabel))
 
                 Rectangle()
@@ -157,12 +157,12 @@ struct SearchView: View {
                 }) {
                     HStack(spacing: 6) {
                         Image(systemName: "line.3.horizontal.decrease")
-                            .font(.system(size: 13))
+                            .font(.footnote)
 
                         Text(state.activeFilterCount > 0
                             ? "Filters (\(state.activeFilterCount))"
                             : "Filters")
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.subheadline.weight(.medium))
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
@@ -241,18 +241,18 @@ struct SearchView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(actor.displayName ?? actor.handle)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.body.weight(.semibold))
                         .foregroundColor(Color(UIColor.label))
                         .lineLimit(1)
 
                     Text("@\(actor.handle)")
-                        .font(.system(size: 14))
+                        .font(.subheadline)
                         .foregroundColor(Color(UIColor.secondaryLabel))
                         .lineLimit(1)
 
                     if let description = actor.description, !description.isEmpty {
                         Text(description)
-                            .font(.system(size: 14))
+                            .font(.subheadline)
                             .foregroundColor(Color(UIColor.tertiaryLabel))
                             .lineLimit(2)
                             .padding(.top, 2)
@@ -314,12 +314,12 @@ struct SearchView: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(post.authorDisplayName ?? post.authorHandle)
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundColor(Color(UIColor.label))
                             .lineLimit(1)
 
                         Text("@\(post.authorHandle)")
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundColor(Color(UIColor.secondaryLabel))
                             .lineLimit(1)
                     }
@@ -328,14 +328,14 @@ struct SearchView: View {
 
                     if !post.indexedAt.isEmpty {
                         Text(formatRelativeTime(post.indexedAt))
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundColor(Color(UIColor.tertiaryLabel))
                     }
                 }
 
                 // Post text
                 Text(post.text)
-                    .font(.system(size: 15))
+                    .font(.subheadline)
                     .foregroundColor(Color(UIColor.label))
                     .lineLimit(4)
                     .multilineTextAlignment(.leading)
@@ -357,10 +357,10 @@ struct SearchView: View {
     private func metricLabel(systemImage: String, count: Int) -> some View {
         HStack(spacing: 4) {
             Image(systemName: systemImage)
-                .font(.system(size: 14))
+                .font(.subheadline)
             if count > 0 {
                 Text(formatCount(count))
-                    .font(.system(size: 13))
+                    .font(.footnote)
             }
         }
         .foregroundColor(Color(UIColor.tertiaryLabel))
@@ -378,7 +378,7 @@ struct SearchView: View {
                     if !state.trendingTopics.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Trending Topics")
-                                .font(.system(size: 18, weight: .bold))
+                                .font(.title3.weight(.bold))
                                 .foregroundColor(Color(UIColor.label))
                                 .padding(.horizontal, 16)
 
@@ -389,7 +389,7 @@ struct SearchView: View {
                                             onTrendingTopicPress(topic.tag)
                                         }) {
                                             Text("#\(topic.tag)")
-                                                .font(.system(size: 14, weight: .medium))
+                                                .font(.subheadline.weight(.medium))
                                                 .foregroundColor(.accentColor)
                                                 .padding(.horizontal, 14)
                                                 .padding(.vertical, 8)
@@ -407,7 +407,7 @@ struct SearchView: View {
                     if !state.trends.isEmpty {
                         VStack(alignment: .leading, spacing: 0) {
                             Text("Trending")
-                                .font(.system(size: 18, weight: .bold))
+                                .font(.title3.weight(.bold))
                                 .foregroundColor(Color(UIColor.label))
                                 .padding(.horizontal, 16)
                                 .padding(.bottom, 8)
@@ -419,19 +419,19 @@ struct SearchView: View {
                                     HStack {
                                         VStack(alignment: .leading, spacing: 4) {
                                             Text(trend.displayName)
-                                                .font(.system(size: 15, weight: .semibold))
+                                                .font(.subheadline.weight(.semibold))
                                                 .foregroundColor(Color(UIColor.label))
 
                                             if trend.postCount > 0 {
                                                 Text("\(formatCount(trend.postCount)) posts")
-                                                    .font(.system(size: 13))
+                                                    .font(.footnote)
                                                     .foregroundColor(Color(UIColor.secondaryLabel))
                                             }
                                         }
                                         Spacer()
 
                                         Image(systemName: "chevron.right")
-                                            .font(.system(size: 14))
+                                            .font(.subheadline)
                                             .foregroundColor(Color(UIColor.tertiaryLabel))
                                     }
                                     .padding(.horizontal, 16)
@@ -496,11 +496,11 @@ struct SearchView: View {
     private var emptyTrendingView: some View {
         VStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundColor(Color(UIColor.tertiaryLabel))
 
             Text("Search for posts, people, and hashtags")
-                .font(.system(size: 16))
+                .font(.body)
                 .foregroundColor(Color(UIColor.secondaryLabel))
                 .multilineTextAlignment(.center)
         }
@@ -514,14 +514,14 @@ struct SearchView: View {
         VStack(spacing: 0) {
             HStack {
                 Text("Recent Searches")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundColor(Color(UIColor.label))
 
                 Spacer()
 
                 Button(action: onClearHistory) {
                     Text("Clear")
-                        .font(.system(size: 14))
+                        .font(.subheadline)
                         .foregroundColor(.accentColor)
                 }
             }
@@ -539,11 +539,11 @@ struct SearchView: View {
                         }) {
                             HStack(spacing: 12) {
                                 Image(systemName: "clock.arrow.circlepath")
-                                    .font(.system(size: 16))
+                                    .font(.body)
                                     .foregroundColor(Color(UIColor.tertiaryLabel))
 
                                 Text(item)
-                                    .font(.system(size: 16))
+                                    .font(.body)
                                     .foregroundColor(Color(UIColor.secondaryLabel))
                                     .lineLimit(1)
 
@@ -567,7 +567,7 @@ struct SearchView: View {
             ProgressView()
                 .scaleEffect(1.2)
             Text("Searching...")
-                .font(.system(size: 16))
+                .font(.body)
                 .foregroundColor(Color(UIColor.secondaryLabel))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -576,11 +576,11 @@ struct SearchView: View {
     private var emptyResultsView: some View {
         VStack(spacing: 8) {
             Text("No results found")
-                .font(.system(size: 18))
+                .font(.title3)
                 .foregroundColor(Color(UIColor.secondaryLabel))
 
             Text("Try a different search term")
-                .font(.system(size: 14))
+                .font(.subheadline)
                 .foregroundColor(Color(UIColor.tertiaryLabel))
         }
         .frame(maxWidth: .infinity)

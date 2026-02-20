@@ -50,7 +50,7 @@ struct ComposerToolbarView: View {
     ) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 20))
+                .font(.title3)
                 .foregroundColor(.secondary)
                 .frame(width: 36, height: 36)
                 .contentShape(Rectangle())
