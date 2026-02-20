@@ -88,10 +88,13 @@ class NativeComposeState: ObservableObject {
         var atPos = -1
         for i in stride(from: cursorPos - 1, through: 0, by: -1) {
             let char = nsText.character(at: i)
-            let scalar = Unicode.Scalar(char)
+            guard let scalar = Unicode.Scalar(char) else { break }
 
             if scalar == Unicode.Scalar("@") {
-                if i == 0 || CharacterSet.whitespacesAndNewlines.contains(Unicode.Scalar(nsText.character(at: i - 1))) {
+                if i == 0 {
+                    atPos = i
+                } else if let prevScalar = Unicode.Scalar(nsText.character(at: i - 1)),
+                          CharacterSet.whitespacesAndNewlines.contains(prevScalar) {
                     atPos = i
                 }
                 break
@@ -192,7 +195,7 @@ class NativeComposeState: ObservableObject {
 
 // MARK: - Mention Suggestion Model
 
-struct ComposeMentionSuggestion: Identifiable {
+struct ComposeMentionSuggestion: Identifiable, Equatable {
     let id: String  // DID
     let handle: String
     let displayName: String?

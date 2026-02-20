@@ -51,17 +51,18 @@ class ComposerState: ObservableObject {
         var atPos = -1
         for i in stride(from: cursorPos - 1, through: 0, by: -1) {
             let char = nsText.character(at: i)
-            let scalar = Unicode.Scalar(char)
+            guard let scalar = Unicode.Scalar(char) else { break }
 
             if scalar == Unicode.Scalar("@") {
-                // Check that the @ is at the start or preceded by whitespace
-                if i == 0 || CharacterSet.whitespacesAndNewlines.contains(Unicode.Scalar(nsText.character(at: i - 1))) {
+                if i == 0 {
+                    atPos = i
+                } else if let prevScalar = Unicode.Scalar(nsText.character(at: i - 1)),
+                          CharacterSet.whitespacesAndNewlines.contains(prevScalar) {
                     atPos = i
                 }
                 break
             }
 
-            // Stop scanning if we hit whitespace
             if CharacterSet.whitespacesAndNewlines.contains(scalar) {
                 break
             }
@@ -285,7 +286,7 @@ struct AutoGrowingTextEditor: View {
                 .onChange(of: text) { newValue in
                     onTextChange?(newValue)
                 }
-                .scrollContentBackground(.hidden)
+                .modifier(HideScrollContentBackgroundModifier())
                 .accessibilityLabel("Reply text")
         }
         .background(Color(UIColor.secondarySystemGroupedBackground))
@@ -294,6 +295,18 @@ struct AutoGrowingTextEditor: View {
             RoundedRectangle(cornerRadius: 18)
                 .stroke(Color(.systemGray4), lineWidth: 0.5)
         )
+    }
+}
+
+// MARK: - Compatibility Modifier
+
+struct HideScrollContentBackgroundModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content.scrollContentBackground(.hidden)
+        } else {
+            content
+        }
     }
 }
 

@@ -14,31 +14,8 @@
 		B2D6665851598A763A095CA7 /* libPods-Asphodel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6DF363A9F9DD08BA7C3C7F57 /* libPods-Asphodel.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		A1B2C3D400000001000TESTS /* MockData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000011000TESTS /* MockData.swift */; };
-		A1B2C3D400000002000TESTS /* TestHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000012000TESTS /* TestHelpers.swift */; };
-		A1B2C3D400000003000TESTS /* MessagesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000013000TESTS /* MessagesTests.swift */; };
-		A1B2C3D400000004000TESTS /* ProfileViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000014000TESTS /* ProfileViewTests.swift */; };
-		A1B2C3D400000005000TESTS /* SearchViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000015000TESTS /* SearchViewTests.swift */; };
-		A1B2C3D400000006000TESTS /* InfrastructureValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000016000TESTS /* InfrastructureValidationTests.swift */; };
-		A1B2C3D400000007000TESTS /* libPods-AsphodelUITests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000017000TESTS /* libPods-AsphodelUITests.a */; };
-		A1B2C3D400000008000NOTIF /* NotificationBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000018000NOTIF /* NotificationBridgeTests.swift */; };
-		A1B2C3D4E0000001000ERROR /* FeedBridgeErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E0000011000ERROR /* FeedBridgeErrorTests.swift */; };
-		A1B2C3D4E0000002000ERROR /* FeedListErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E0000012000ERROR /* FeedListErrorTests.swift */; };
-		A1B2C3D4E0000003000ERROR /* ThreadViewErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E0000013000ERROR /* ThreadViewErrorTests.swift */; };
-		A1B2C3D4E0000004000ERROR /* ComposeErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E0000014000ERROR /* ComposeErrorTests.swift */; };
-		A1B2C3D4E0000005000ERROR /* MessagesErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E0000015000ERROR /* MessagesErrorTests.swift */; };
-		A1B2C3D4E0000006000ERROR /* NotificationsErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E0000016000ERROR /* NotificationsErrorTests.swift */; };
+		AA1111112D0307B40044C1D9 /* SpotlightDeepLinkResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1111102D0307B40044C1D9 /* SpotlightDeepLinkResolver.swift */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		A1B2C3D400000020000TESTS /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 13B07F861A680F5B00A75B9A;
-			remoteInfo = Asphodel;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		13B07F961A680F5B00A75B9A /* Asphodel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Asphodel.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -52,26 +29,9 @@
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Asphodel/AppDelegate.swift; sourceTree = "<group>"; };
+		AA1111102D0307B40044C1D9 /* SpotlightDeepLinkResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SpotlightDeepLinkResolver.swift; path = Asphodel/SpotlightDeepLinkResolver.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Asphodel-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Asphodel-Bridging-Header.h"; path = "Asphodel/Asphodel-Bridging-Header.h"; sourceTree = "<group>"; };
 		FDB630D1731BB87E128DA536 /* Pods-Asphodel.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Asphodel.debug.xcconfig"; path = "Target Support Files/Pods-Asphodel/Pods-Asphodel.debug.xcconfig"; sourceTree = "<group>"; };
-		A1B2C3D400000010000TESTS /* AsphodelUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AsphodelUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		A1B2C3D400000011000TESTS /* MockData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockData.swift; sourceTree = "<group>"; };
-		A1B2C3D400000012000TESTS /* TestHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHelpers.swift; sourceTree = "<group>"; };
-		A1B2C3D400000013000TESTS /* MessagesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesTests.swift; sourceTree = "<group>"; };
-		A1B2C3D400000014000TESTS /* ProfileViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewTests.swift; sourceTree = "<group>"; };
-		A1B2C3D400000015000TESTS /* SearchViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewTests.swift; sourceTree = "<group>"; };
-		A1B2C3D400000016000TESTS /* InfrastructureValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfrastructureValidationTests.swift; sourceTree = "<group>"; };
-		A1B2C3D400000017000TESTS /* libPods-AsphodelUITests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AsphodelUITests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		A1B2C3D400000018000NOTIF /* NotificationBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBridgeTests.swift; sourceTree = "<group>"; };
-		A1B2C3D400000018000TESTS /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A1B2C3D4E0000011000ERROR /* FeedBridgeErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedBridgeErrorTests.swift; sourceTree = "<group>"; };
-		A1B2C3D4E0000012000ERROR /* FeedListErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedListErrorTests.swift; sourceTree = "<group>"; };
-		A1B2C3D4E0000013000ERROR /* ThreadViewErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadViewErrorTests.swift; sourceTree = "<group>"; };
-		A1B2C3D4E0000014000ERROR /* ComposeErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeErrorTests.swift; sourceTree = "<group>"; };
-		A1B2C3D4E0000015000ERROR /* MessagesErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesErrorTests.swift; sourceTree = "<group>"; };
-		A1B2C3D4E0000016000ERROR /* NotificationsErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsErrorTests.swift; sourceTree = "<group>"; };
-		A1B2C3D400000019000TESTS /* Pods-AsphodelUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AsphodelUITests.debug.xcconfig"; path = "Target Support Files/Pods-AsphodelUITests/Pods-AsphodelUITests.debug.xcconfig"; sourceTree = "<group>"; };
-		A1B2C3D40000001A000TESTS /* Pods-AsphodelUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AsphodelUITests.release.xcconfig"; path = "Target Support Files/Pods-AsphodelUITests/Pods-AsphodelUITests.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,14 +43,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A1B2C3D400000030000TESTS /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A1B2C3D400000007000TESTS /* libPods-AsphodelUITests.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -98,6 +50,7 @@
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
+				AA1111102D0307B40044C1D9 /* SpotlightDeepLinkResolver.swift */,
 				F11748442D0722820044C1D9 /* Asphodel-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
@@ -113,7 +66,6 @@
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				6DF363A9F9DD08BA7C3C7F57 /* libPods-Asphodel.a */,
-				A1B2C3D400000017000TESTS /* libPods-AsphodelUITests.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -123,8 +75,6 @@
 			children = (
 				FDB630D1731BB87E128DA536 /* Pods-Asphodel.debug.xcconfig */,
 				B31B6C514A9B93E1DBB2BC95 /* Pods-Asphodel.release.xcconfig */,
-				A1B2C3D400000019000TESTS /* Pods-AsphodelUITests.debug.xcconfig */,
-				A1B2C3D40000001A000TESTS /* Pods-AsphodelUITests.release.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
@@ -141,7 +91,6 @@
 			isa = PBXGroup;
 			children = (
 				13B07FAE1A68108700A75B9A /* Asphodel */,
-				A1B2C3D400000040000TESTS /* AsphodelUITests */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
@@ -157,7 +106,6 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* Asphodel.app */,
-				A1B2C3D400000010000TESTS /* AsphodelUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -187,28 +135,6 @@
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
-		A1B2C3D400000040000TESTS /* AsphodelUITests */ = {
-			isa = PBXGroup;
-			children = (
-				A1B2C3D400000018000TESTS /* Info.plist */,
-				A1B2C3D400000011000TESTS /* MockData.swift */,
-				A1B2C3D400000012000TESTS /* TestHelpers.swift */,
-				A1B2C3D400000013000TESTS /* MessagesTests.swift */,
-				A1B2C3D400000014000TESTS /* ProfileViewTests.swift */,
-				A1B2C3D400000015000TESTS /* SearchViewTests.swift */,
-				A1B2C3D400000016000TESTS /* InfrastructureValidationTests.swift */,
-				A1B2C3D400000018000NOTIF /* NotificationBridgeTests.swift */,
-				A1B2C3D4E0000011000ERROR /* FeedBridgeErrorTests.swift */,
-				A1B2C3D4E0000012000ERROR /* FeedListErrorTests.swift */,
-				A1B2C3D4E0000013000ERROR /* ThreadViewErrorTests.swift */,
-				A1B2C3D4E0000014000ERROR /* ComposeErrorTests.swift */,
-				A1B2C3D4E0000015000ERROR /* MessagesErrorTests.swift */,
-				A1B2C3D4E0000016000ERROR /* NotificationsErrorTests.swift */,
-			);
-			name = AsphodelUITests;
-			path = AsphodelUITests;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -234,25 +160,6 @@
 			productReference = 13B07F961A680F5B00A75B9A /* Asphodel.app */;
 			productType = "com.apple.product-type.application";
 		};
-		A1B2C3D400000050000TESTS /* AsphodelUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = A1B2C3D400000060000TESTS /* Build configuration list for PBXNativeTarget "AsphodelUITests" */;
-			buildPhases = (
-				A1B2C3D400000051000TESTS /* [CP] Check Pods Manifest.lock */,
-				A1B2C3D400000031000TESTS /* Sources */,
-				A1B2C3D400000030000TESTS /* Frameworks */,
-				A1B2C3D400000032000TESTS /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				A1B2C3D400000021000TESTS /* PBXTargetDependency */,
-			);
-			name = AsphodelUITests;
-			productName = AsphodelUITests;
-			productReference = A1B2C3D400000010000TESTS /* AsphodelUITests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -265,11 +172,6 @@
 						DevelopmentTeam = P8T66U743T;
 						LastSwiftMigration = 1250;
 						ProvisioningStyle = Automatic;
-					};
-					A1B2C3D400000050000TESTS = {
-						DevelopmentTeam = P8T66U743T;
-						ProvisioningStyle = Automatic;
-						TestTargetID = 13B07F861A680F5B00A75B9A;
 					};
 				};
 			};
@@ -287,7 +189,6 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* Asphodel */,
-				A1B2C3D400000050000TESTS /* AsphodelUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -301,13 +202,6 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				9A9EDE8A288416E8AEBE570C /* PrivacyInfo.xcprivacy in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		A1B2C3D400000032000TESTS /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -455,28 +349,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Asphodel/Pods-Asphodel-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		A1B2C3D400000051000TESTS /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-AsphodelUITests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -485,39 +357,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
+				AA1111112D0307B40044C1D9 /* SpotlightDeepLinkResolver.swift in Sources */,
 				B0BC29485188E8235E8D60E8 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A1B2C3D400000031000TESTS /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A1B2C3D400000001000TESTS /* MockData.swift in Sources */,
-				A1B2C3D400000002000TESTS /* TestHelpers.swift in Sources */,
-				A1B2C3D400000003000TESTS /* MessagesTests.swift in Sources */,
-				A1B2C3D400000004000TESTS /* ProfileViewTests.swift in Sources */,
-				A1B2C3D400000005000TESTS /* SearchViewTests.swift in Sources */,
-				A1B2C3D400000006000TESTS /* InfrastructureValidationTests.swift in Sources */,
-				A1B2C3D400000008000NOTIF /* NotificationBridgeTests.swift in Sources */,
-				A1B2C3D4E0000001000ERROR /* FeedBridgeErrorTests.swift in Sources */,
-				A1B2C3D4E0000002000ERROR /* FeedListErrorTests.swift in Sources */,
-				A1B2C3D4E0000003000ERROR /* ThreadViewErrorTests.swift in Sources */,
-				A1B2C3D4E0000004000ERROR /* ComposeErrorTests.swift in Sources */,
-				A1B2C3D4E0000005000ERROR /* MessagesErrorTests.swift in Sources */,
-				A1B2C3D4E0000006000ERROR /* NotificationsErrorTests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		A1B2C3D400000021000TESTS /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 13B07F861A680F5B00A75B9A /* Asphodel */;
-			targetProxy = A1B2C3D400000020000TESTS /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
@@ -710,67 +555,6 @@
 			};
 			name = Release;
 		};
-		A1B2C3D400000061000TESTS /* Debug */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = A1B2C3D400000019000TESTS /* Pods-AsphodelUITests.debug.xcconfig */;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = P8T66U743T;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = AsphodelUITests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-ObjC",
-					"-lc++",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.asphodel.app.uitests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Asphodel.app/Asphodel";
-			};
-			name = Debug;
-		};
-		A1B2C3D400000062000TESTS /* Release */ = {
-			isa = XCBuildConfiguration;
-			baseConfigurationReference = A1B2C3D40000001A000TESTS /* Pods-AsphodelUITests.release.xcconfig */;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = P8T66U743T;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = AsphodelUITests/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-ObjC",
-					"-lc++",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = io.asphodel.app.uitests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Asphodel.app/Asphodel";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -788,15 +572,6 @@
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,
 				83CBBA211A601CBA00E9B192 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		A1B2C3D400000060000TESTS /* Build configuration list for PBXNativeTarget "AsphodelUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A1B2C3D400000061000TESTS /* Debug */,
-				A1B2C3D400000062000TESTS /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -336,8 +336,6 @@ PODS:
   - FBLazyVector (0.81.5)
   - FeedBridge (1.0.0):
     - ExpoModulesCore
-  - FeedNative (1.0.0):
-    - ExpoModulesCore
   - hermes-engine (0.81.5):
     - hermes-engine/Pre-built (= 0.81.5)
   - hermes-engine/Pre-built (0.81.5)
@@ -358,14 +356,34 @@ PODS:
   - libwebp/sharpyuv (1.5.0)
   - libwebp/webp (1.5.0):
     - libwebp/sharpyuv
+  - NativeCompose (1.0.0):
+    - ExpoModulesCore
   - NativeFeedList (1.0.0):
     - ExpoModulesCore
     - ExpoSwiftUIFeed
     - FeedBridge
     - RichTextView
+  - NativeMessages (1.0.0):
+    - ExpoModulesCore
+  - NativeNotificationsList (1.0.0):
+    - ExpoModulesCore
+    - ExpoSwiftUIFeed
+    - FeedBridge
+    - NotificationBridge
+    - RichTextView
   - NativeProfileView (1.0.0):
     - ExpoModulesCore
     - ExpoSwiftUIFeed
+  - NativeSearch (1.0.0):
+    - ExpoModulesCore
+  - NativeThreadView (1.0.0):
+    - ExpoModulesCore
+    - ExpoSwiftUIFeed
+    - FeedBridge
+    - RichTextView
+  - NotificationBridge (1.0.0):
+    - ExpoModulesCore
+    - FeedBridge
   - RCTDeprecation (0.81.5)
   - RCTRequired (0.81.5)
   - RCTTypeSafety (0.81.5):
@@ -2389,8 +2407,6 @@ PODS:
     - ExpoModulesCore
   - SpotlightSearch (1.0.0):
     - ExpoModulesCore
-  - ThreadBridge (1.0.0):
-    - ExpoModulesCore
   - UMAppLoader (6.0.8)
   - VideoCompressor (1.0.0):
     - ExpoModulesCore
@@ -2450,10 +2466,15 @@ DEPENDENCIES:
   - EXUpdatesInterface (from `../node_modules/expo-updates-interface/ios`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FeedBridge (from `../modules/feed-bridge/ios`)
-  - FeedNative (from `../modules/feed-native/ios`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
+  - NativeCompose (from `../modules/native-compose/ios`)
   - NativeFeedList (from `../modules/native-feed-list/ios`)
+  - NativeMessages (from `../modules/native-messages/ios`)
+  - NativeNotificationsList (from `../modules/native-notifications-list/ios`)
   - NativeProfileView (from `../modules/native-profile-view/ios`)
+  - NativeSearch (from `../modules/native-search/ios`)
+  - NativeThreadView (from `../modules/native-thread-view/ios`)
+  - NotificationBridge (from `../modules/notification-bridge/ios`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../node_modules/react-native/Libraries/Required`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -2531,7 +2552,6 @@ DEPENDENCIES:
   - RNSVG (from `../node_modules/react-native-svg`)
   - ShareIntent (from `../modules/share-intent/ios`)
   - SpotlightSearch (from `../modules/spotlight-search/ios`)
-  - ThreadBridge (from `../modules/thread-bridge/ios`)
   - UMAppLoader (from `../node_modules/unimodules-app-loader/ios`)
   - VideoCompressor (from `../modules/video-compressor/ios`)
   - WidgetDataBridge (from `../modules/widget-data-bridge/ios`)
@@ -2643,15 +2663,25 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/Libraries/FBLazyVector"
   FeedBridge:
     :path: "../modules/feed-bridge/ios"
-  FeedNative:
-    :path: "../modules/feed-native/ios"
   hermes-engine:
     :podspec: "../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2025-07-07-RNv0.81.0-e0fc67142ec0763c6b6153ca2bf96df815539782
+  NativeCompose:
+    :path: "../modules/native-compose/ios"
   NativeFeedList:
     :path: "../modules/native-feed-list/ios"
+  NativeMessages:
+    :path: "../modules/native-messages/ios"
+  NativeNotificationsList:
+    :path: "../modules/native-notifications-list/ios"
   NativeProfileView:
     :path: "../modules/native-profile-view/ios"
+  NativeSearch:
+    :path: "../modules/native-search/ios"
+  NativeThreadView:
+    :path: "../modules/native-thread-view/ios"
+  NotificationBridge:
+    :path: "../modules/notification-bridge/ios"
   RCTDeprecation:
     :path: "../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation"
   RCTRequired:
@@ -2804,8 +2834,6 @@ EXTERNAL SOURCES:
     :path: "../modules/share-intent/ios"
   SpotlightSearch:
     :path: "../modules/spotlight-search/ios"
-  ThreadBridge:
-    :path: "../modules/thread-bridge/ios"
   UMAppLoader:
     :path: "../node_modules/unimodules-app-loader/ios"
   VideoCompressor:
@@ -2862,13 +2890,18 @@ SPEC CHECKSUMS:
   EXUpdatesInterface: 5adf50cb41e079c861da6d9b4b954c3db9a50734
   FBLazyVector: e95a291ad2dadb88e42b06e0c5fb8262de53ec12
   FeedBridge: 9a076c557998bc5a6abda0d6bd3ad8271f18e345
-  FeedNative: fb3f4e9a1f38ce1bc1595c105516d85cd3c39a34
   hermes-engine: 9f4dfe93326146a1c99eb535b1cb0b857a3cd172
   libavif: 5f8e715bea24debec477006f21ef9e95432e254d
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
+  NativeCompose: 84f4994c150a13da10677f6b66885e729466278f
   NativeFeedList: d7adafc2ce4df71e7ac29b4b0a5b915dfbab9439
-  NativeProfileView: 4e07251f0f92ae1c51a75aaef0ba06c47faba4af
+  NativeMessages: 5f8dc1ea49db758a9b5f6d5dcb036099530e9114
+  NativeNotificationsList: f28486a4e690e1b53371fe5524148fc8132134cb
+  NativeProfileView: aab8865f3dd1ac2532bb6fd74eaebe7efca107b9
+  NativeSearch: fe5112908fa1d515c64f42a9dc87276e15267687
+  NativeThreadView: c3f43ccf5364b06cba7c40871612d22e8e62bc96
+  NotificationBridge: 69a83c558960ce20e262985486f16b07a981789b
   RCTDeprecation: 943572d4be82d480a48f4884f670135ae30bf990
   RCTRequired: 8f3cfc90cc25cf6e420ddb3e7caaaabc57df6043
   RCTTypeSafety: 16a4144ca3f959583ab019b57d5633df10b5e97c
@@ -2951,7 +2984,6 @@ SPEC CHECKSUMS:
   Sentry: 990a381d8592207a52e7be654b31a27738c3a6a8
   ShareIntent: b296af361d20433cce18619f6fd29af5f220ce97
   SpotlightSearch: e38bfb4d915bea2c670c34185712d465ecc5d2d8
-  ThreadBridge: 6585da93da99818627e7ac39f9c3f41f5a510e28
   UMAppLoader: 145337733539f9af9b3dd97eeaa7f3bd97cacb23
   VideoCompressor: cafd4dd3d28e415104a5687d40beda23fc878857
   WidgetDataBridge: afa1a7cb02957b72691b357aeefb66e7fab37d67

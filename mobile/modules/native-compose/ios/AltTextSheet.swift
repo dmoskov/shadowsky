@@ -97,10 +97,10 @@ struct AltTextSheet: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        onSave(editText)
+                    Button(action: { onSave(editText) }) {
+                        Text("Save")
+                            .fontWeight(.semibold)
                     }
-                    .fontWeight(.semibold)
                 }
             }
         }

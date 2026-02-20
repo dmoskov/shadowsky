@@ -38,14 +38,24 @@ struct MessageComposerView: View {
             // Input row
             HStack(alignment: .bottom, spacing: 8) {
                 // Text input
-                TextField("Type a message...", text: $composerState.text, axis: .vertical)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 16))
-                    .lineLimit(1...5)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(Color(UIColor.secondarySystemBackground))
-                    .cornerRadius(20)
+                if #available(iOS 16.0, *) {
+                    TextField("Type a message...", text: $composerState.text, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 16))
+                        .lineLimit(1...5)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Color(UIColor.secondarySystemBackground))
+                        .cornerRadius(20)
+                } else {
+                    TextField("Type a message...", text: $composerState.text)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 16))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Color(UIColor.secondarySystemBackground))
+                        .cornerRadius(20)
+                }
 
                 // Send button
                 Button(action: {

@@ -10,7 +10,7 @@ import SwiftUI
 
 // MARK: - Mention Suggestion Model
 
-struct MentionSuggestion: Identifiable {
+struct MentionSuggestion: Identifiable, Equatable {
     let id: String  // DID
     let handle: String
     let displayName: String?

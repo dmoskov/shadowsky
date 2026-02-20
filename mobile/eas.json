@@ -41,7 +41,6 @@
       "ios": {
         "resourceClass": "m-large",
         "simulator": false,
-        "autoSubmit": true,
         "autoIncrement": true
       },
       "channel": "testflight",

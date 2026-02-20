@@ -1,11 +1,14 @@
 import { ComposeScreen } from "../../src/screens/compose/ComposeScreen";
-import { ComposeScreenNative } from "../../src/screens/compose/ComposeScreenNative";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 
 // Feature flag: set to true to use the native SwiftUI compose screen on iOS
 const USE_NATIVE_COMPOSE = false;
+
+// Lazy-load native compose to avoid eager requireNativeModule crash
+const getComposeScreenNative = () =>
+  require("../../src/screens/compose/ComposeScreenNative").ComposeScreenNative;
 
 export default function ComposeRoute() {
   const params = useLocalSearchParams();
@@ -51,7 +54,7 @@ export default function ComposeRoute() {
     }
   }, [hasImages]);
 
-  const Compose = USE_NATIVE_COMPOSE && Platform.OS === "ios" ? ComposeScreenNative : ComposeScreen;
+  const Compose = USE_NATIVE_COMPOSE && Platform.OS === "ios" ? getComposeScreenNative() : ComposeScreen;
 
   return (
     <Compose

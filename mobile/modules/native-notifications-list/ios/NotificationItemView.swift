@@ -76,7 +76,8 @@ struct NotificationItemView: View {
                 }
             }
             .padding(16)
-            .background(notification.isRead ? Color(UIColor.systemBackground) : Color(UIColor.systemBackground).opacity(0.95).overlay(NotificationThemeColors.primary.opacity(0.04)))
+            .background(Color(UIColor.systemBackground))
+            .overlay(notification.isRead ? Color.clear : NotificationThemeColors.primary.opacity(0.04))
         }
         .buttonStyle(.plain)
         .overlay(alignment: .leading) {

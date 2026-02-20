@@ -82,9 +82,8 @@ struct AggregatedNotificationItemView: View {
                 }
             }
             .padding(16)
-            .background(model.hasUnread
-                ? Color(UIColor.systemBackground).overlay(NotificationThemeColors.primary.opacity(0.04))
-                : Color(UIColor.systemBackground))
+            .background(Color(UIColor.systemBackground))
+            .overlay(model.hasUnread ? NotificationThemeColors.primary.opacity(0.04) : Color.clear)
         }
         .buttonStyle(.plain)
         .overlay(alignment: .leading) {

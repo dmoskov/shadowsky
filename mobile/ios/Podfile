@@ -62,7 +62,11 @@ target 'Asphodel' do
   end
 end
 
-target 'AsphodelUITests' do
-  inherit! :search_paths
-  pod 'ViewInspector', '~> 0.10'
+# Only include UI test target when it exists in the Xcode project (not on EAS)
+project_path = File.join(__dir__, 'Asphodel.xcodeproj', 'project.pbxproj')
+if File.exist?(project_path) && File.read(project_path).include?('AsphodelUITests')
+  target 'AsphodelUITests' do
+    inherit! :search_paths
+    pod 'ViewInspector', '~> 0.10'
+  end
 end

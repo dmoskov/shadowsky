@@ -38,7 +38,7 @@ struct ComposeTextEditor: View {
                 .padding(.top, 8)
                 .focused($isFocused)
                 .disabled(!isEnabled)
-                .scrollContentBackground(.hidden)
+                .modifier(HideScrollContentBackground())
                 .onChange(of: text) { newValue in
                     onTextChange?(newValue)
                 }
@@ -95,7 +95,7 @@ struct ThreadPostEditor: View {
                     .padding(.horizontal, 4)
                     .padding(.vertical, 2)
                     .disabled(!isEnabled)
-                    .scrollContentBackground(.hidden)
+                    .modifier(HideScrollContentBackground())
                     .onChange(of: text) { newValue in
                         onTextChange?(newValue)
                     }
@@ -106,6 +106,19 @@ struct ThreadPostEditor: View {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(text.count > maxChars ? Color.red.opacity(0.5) : Color(.systemGray4), lineWidth: 0.5)
             )
+        }
+    }
+}
+
+// MARK: - Compatibility Modifier
+
+/// Hides the default TextEditor background on iOS 16+, no-op on iOS 15
+struct HideScrollContentBackground: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content.scrollContentBackground(.hidden)
+        } else {
+            content
         }
     }
 }
