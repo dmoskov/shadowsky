@@ -44,6 +44,7 @@ import {
 import { registerBackgroundFetch } from "../src/services/background-fetch";
 import {
   initializeSentry,
+  captureException,
   setTags,
   Sentry,
 } from "../src/utils/error-reporting";
@@ -58,6 +59,17 @@ import "../src/i18n";
 // Initialize Sentry as early as possible
 const sentryDsn = Constants.expoConfig?.extra?.sentryDsn;
 initializeSentry(sentryDsn);
+
+// Global unhandled error handler — catches JS errors and unhandled promise
+// rejections that slip past React error boundaries (e.g. async callbacks,
+// event handlers). Reports them to Sentry so they don't go unnoticed.
+if (!__DEV__) {
+  const defaultHandler = ErrorUtils.getGlobalHandler();
+  ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
+    captureException(error, { extra: { isFatal: !!isFatal, source: "globalHandler" } });
+    defaultHandler(error, isFatal);
+  });
+}
 
 function AppLockGate({ children }: { children: React.ReactNode }) {
   const { preferences } = usePreferences();

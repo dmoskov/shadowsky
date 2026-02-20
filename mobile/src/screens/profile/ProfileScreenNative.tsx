@@ -41,6 +41,7 @@ import {
   ProfileTab,
 } from "../../../modules/native-profile-view/src/NativeProfileViewTypes";
 import { ProfileScreen } from "./ProfileScreen";
+import { InlineErrorBoundary } from "../../components/ui/InlineErrorBoundary";
 import { createLogger } from "../../utils/logger";
 
 const logger = createLogger("ProfileScreenNative");
@@ -470,15 +471,17 @@ function ProfileScreenNativeIOS({
 
   const renderPost = useCallback(
     ({ item }: { item: AppBskyFeedDefs.FeedViewPost }) => (
-      <PostCard
-        post={item}
-        onPress={() => onNavigateToPost?.(item.post.uri)}
-        onPressProfile={(profileHandle) =>
-          onNavigateToProfile?.(profileHandle)
-        }
-        onMentionPress={handleMentionPress}
-        onHashtagPress={handleHashtagPress}
-      />
+      <InlineErrorBoundary silent context="ProfilePostCard">
+        <PostCard
+          post={item}
+          onPress={() => onNavigateToPost?.(item.post.uri)}
+          onPressProfile={(profileHandle) =>
+            onNavigateToProfile?.(profileHandle)
+          }
+          onMentionPress={handleMentionPress}
+          onHashtagPress={handleHashtagPress}
+        />
+      </InlineErrorBoundary>
     ),
     [onNavigateToPost, onNavigateToProfile, handleMentionPress, handleHashtagPress],
   );
@@ -518,48 +521,52 @@ function ProfileScreenNativeIOS({
   const renderHeader = useCallback(() => {
     return (
       <>
-        <NativeProfileViewWithData
-          profile={profileData}
-          starterPacks={starterPacksForNative}
-          pinnedPost={pinnedPostForNative}
-          isOwnProfile={isOwnProfile}
-          isLoading={isLoadingProfile}
-          error={profileError ?? null}
-          isFollowPending={followMutation.isPending || unfollowMutation.isPending}
-          isMessagePending={isStartingConversation}
-          onTabChange={handleTabChange}
-          onFollowToggle={handleFollowToggle}
-          onFollowersPress={handleFollowersPress}
-          onFollowingPress={handleFollowingPress}
-          onMessagePress={handleMessagePress}
-          onMenuPress={handleMenuPress}
-          onAddToList={handleAddToList}
-          onPinnedPostPress={handlePinnedPostPress}
-          onStarterPackPress={handleStarterPackPress}
-          onKnownFollowerPress={handleKnownFollowerPress}
-          onRefresh={handleRefresh}
-          style={styles.nativeHeader}
-        />
+        <InlineErrorBoundary context="ProfileHeader" onRetry={refetchProfile}>
+          <NativeProfileViewWithData
+            profile={profileData}
+            starterPacks={starterPacksForNative}
+            pinnedPost={pinnedPostForNative}
+            isOwnProfile={isOwnProfile}
+            isLoading={isLoadingProfile}
+            error={profileError ?? null}
+            isFollowPending={followMutation.isPending || unfollowMutation.isPending}
+            isMessagePending={isStartingConversation}
+            onTabChange={handleTabChange}
+            onFollowToggle={handleFollowToggle}
+            onFollowersPress={handleFollowersPress}
+            onFollowingPress={handleFollowingPress}
+            onMessagePress={handleMessagePress}
+            onMenuPress={handleMenuPress}
+            onAddToList={handleAddToList}
+            onPinnedPostPress={handlePinnedPostPress}
+            onStarterPackPress={handleStarterPackPress}
+            onKnownFollowerPress={handleKnownFollowerPress}
+            onRefresh={handleRefresh}
+            style={styles.nativeHeader}
+          />
+        </InlineErrorBoundary>
         {pinnedPost && activeTab === "posts" && (
-          <View style={styles.pinnedPostContainer}>
-            <View style={styles.pinnedPostLabel}>
-              <Text style={styles.pinnedPostLabelText}>Pinned</Text>
+          <InlineErrorBoundary silent context="PinnedPost">
+            <View style={styles.pinnedPostContainer}>
+              <View style={styles.pinnedPostLabel}>
+                <Text style={styles.pinnedPostLabelText}>Pinned</Text>
+              </View>
+              <PostCard
+                post={
+                  {
+                    post: pinnedPost,
+                    reply: undefined,
+                  } as AppBskyFeedDefs.FeedViewPost
+                }
+                onPress={() => onNavigateToPost?.(pinnedPost.uri)}
+                onPressProfile={(profileHandle) =>
+                  onNavigateToProfile?.(profileHandle)
+                }
+                onMentionPress={handleMentionPress}
+                onHashtagPress={handleHashtagPress}
+              />
             </View>
-            <PostCard
-              post={
-                {
-                  post: pinnedPost,
-                  reply: undefined,
-                } as AppBskyFeedDefs.FeedViewPost
-              }
-              onPress={() => onNavigateToPost?.(pinnedPost.uri)}
-              onPressProfile={(profileHandle) =>
-                onNavigateToProfile?.(profileHandle)
-              }
-              onMentionPress={handleMentionPress}
-              onHashtagPress={handleHashtagPress}
-            />
-          </View>
+          </InlineErrorBoundary>
         )}
       </>
     );
@@ -587,6 +594,7 @@ function ProfileScreenNativeIOS({
     handleStarterPackPress,
     handleKnownFollowerPress,
     handleRefresh,
+    refetchProfile,
     onNavigateToPost,
     onNavigateToProfile,
     handleMentionPress,

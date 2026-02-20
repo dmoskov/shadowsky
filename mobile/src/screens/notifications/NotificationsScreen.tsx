@@ -21,6 +21,7 @@ import {NotificationTabBar, NotificationFilter} from '../../components/Notificat
 import {ErrorState} from '../../components/ErrorState';
 import { EmptyState } from '../../components/EmptyState';
 import {useAppNavigation} from '../../hooks/useNavigation';
+import {InlineErrorBoundary} from '../../components/ui/InlineErrorBoundary';
 import {AppBskyNotificationListNotifications} from '@atproto/api';
 import {usePreferences} from '../../contexts/PreferencesContext';
 import {clearBadgeCount} from '../../utils/badge';
@@ -222,27 +223,31 @@ export function NotificationsScreen() {
     ({item}: {item: ProcessedNotification}) => {
       if (item.type === 'aggregated') {
         return (
-          <AggregatedNotificationItem
-            notifications={item.notifications}
-            reason={item.reason}
-            onPress={() => {
-              const notif = item.notifications[0];
-              if (notif) {
-                handleNotificationPress(notif);
-              }
-            }}
-            onMentionPress={handleMentionPress}
-            onHashtagPress={handleHashtagPress}
-          />
+          <InlineErrorBoundary silent context="AggregatedNotificationItem">
+            <AggregatedNotificationItem
+              notifications={item.notifications}
+              reason={item.reason}
+              onPress={() => {
+                const notif = item.notifications[0];
+                if (notif) {
+                  handleNotificationPress(notif);
+                }
+              }}
+              onMentionPress={handleMentionPress}
+              onHashtagPress={handleHashtagPress}
+            />
+          </InlineErrorBoundary>
         );
       }
       return (
-        <NotificationItem
-          notification={item.notification}
-          onPress={() => handleNotificationPress(item.notification)}
-          onMentionPress={handleMentionPress}
-          onHashtagPress={handleHashtagPress}
-        />
+        <InlineErrorBoundary silent context="NotificationItem">
+          <NotificationItem
+            notification={item.notification}
+            onPress={() => handleNotificationPress(item.notification)}
+            onMentionPress={handleMentionPress}
+            onHashtagPress={handleHashtagPress}
+          />
+        </InlineErrorBoundary>
       );
     },
     [handleMentionPress, handleHashtagPress, handleNotificationPress],

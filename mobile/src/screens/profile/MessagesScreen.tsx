@@ -30,6 +30,7 @@ import { LockIcon, ChatBubbleIcon, ArrowLeftIcon, SearchIcon, CloseIcon, PlusIco
 import { useConversations, useConversation, useSendMessage, useMarkAsRead, useMuteConversation, useUnmuteConversation, useLeaveConversation, useDeleteMessage } from "../../hooks/api";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAppNavigation } from "../../hooks/useNavigation";
+import { InlineErrorBoundary } from "../../components/ui/InlineErrorBoundary";
 
 import { createLogger } from '../../utils/logger';
 
@@ -353,6 +354,7 @@ export function MessagesScreen() {
     const isSelected = selectedConversation === item.id;
 
     return (
+      <InlineErrorBoundary silent context="ConversationItem">
       <Swipeable
         renderRightActions={(progress, dragX) =>
           renderRightActions(progress, dragX, item.id)
@@ -412,6 +414,7 @@ export function MessagesScreen() {
           </View>
         </TouchableOpacity>
       </Swipeable>
+      </InlineErrorBoundary>
     );
   };
 
@@ -459,28 +462,30 @@ export function MessagesScreen() {
     );
 
     return (
-      <View
-        style={[
-          styles.messageContainer,
-          isOwnMessage ? styles.ownMessage : styles.otherMessage,
-        ]}
-      >
-        {isOwnMessage ? (
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onLongPress={() => handleDeleteMessage(item.id)}
-            style={[styles.messageBubble, styles.ownMessageBubble]}
-          >
-            {messageBubbleContent}
-          </TouchableOpacity>
-        ) : (
-          <View
-            style={[styles.messageBubble, styles.otherMessageBubble]}
-          >
-            {messageBubbleContent}
-          </View>
-        )}
-      </View>
+      <InlineErrorBoundary silent context="MessageBubble">
+        <View
+          style={[
+            styles.messageContainer,
+            isOwnMessage ? styles.ownMessage : styles.otherMessage,
+          ]}
+        >
+          {isOwnMessage ? (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onLongPress={() => handleDeleteMessage(item.id)}
+              style={[styles.messageBubble, styles.ownMessageBubble]}
+            >
+              {messageBubbleContent}
+            </TouchableOpacity>
+          ) : (
+            <View
+              style={[styles.messageBubble, styles.otherMessageBubble]}
+            >
+              {messageBubbleContent}
+            </View>
+          )}
+        </View>
+      </InlineErrorBoundary>
     );
   };
 
