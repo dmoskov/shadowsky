@@ -94,6 +94,7 @@ struct ThreadSummaryView: View {
     let onToggleMode: ((String) -> Void)?
 
     @State private var isExpanded: Bool = true
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -122,8 +123,12 @@ struct ThreadSummaryView: View {
     private var headerView: some View {
         Button(action: {
             if summaryData.isComprehensive {
-                withAnimation(.easeInOut(duration: 0.25)) {
+                if reduceMotion {
                     isExpanded.toggle()
+                } else {
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        isExpanded.toggle()
+                    }
                 }
             }
         }) {

@@ -332,22 +332,30 @@ private struct SkeletonRect: View {
     var cornerRadius: CGFloat = 4
 
     @State private var isAnimating = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         RoundedRectangle(cornerRadius: cornerRadius)
             .fill(
-                LinearGradient(
-                    colors: [
-                        Color.gray.opacity(0.15),
-                        Color.gray.opacity(0.25),
-                        Color.gray.opacity(0.15)
-                    ],
-                    startPoint: isAnimating ? .trailing : .leading,
-                    endPoint: isAnimating ? .init(x: 2, y: 0) : .trailing
-                )
+                reduceMotion
+                    ? LinearGradient(
+                        colors: [Color.gray.opacity(0.2)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    : LinearGradient(
+                        colors: [
+                            Color.gray.opacity(0.15),
+                            Color.gray.opacity(0.25),
+                            Color.gray.opacity(0.15)
+                        ],
+                        startPoint: isAnimating ? .trailing : .leading,
+                        endPoint: isAnimating ? .init(x: 2, y: 0) : .trailing
+                    )
             )
             .frame(width: width, height: height)
             .onAppear {
+                guard !reduceMotion else { return }
                 withAnimation(
                     .linear(duration: 1.5)
                     .repeatForever(autoreverses: false)
@@ -362,22 +370,30 @@ private struct SkeletonCircle: View {
     let size: CGFloat
 
     @State private var isAnimating = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Circle()
             .fill(
-                LinearGradient(
-                    colors: [
-                        Color.gray.opacity(0.15),
-                        Color.gray.opacity(0.25),
-                        Color.gray.opacity(0.15)
-                    ],
-                    startPoint: isAnimating ? .trailing : .leading,
-                    endPoint: isAnimating ? .init(x: 2, y: 0) : .trailing
-                )
+                reduceMotion
+                    ? LinearGradient(
+                        colors: [Color.gray.opacity(0.2)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    : LinearGradient(
+                        colors: [
+                            Color.gray.opacity(0.15),
+                            Color.gray.opacity(0.25),
+                            Color.gray.opacity(0.15)
+                        ],
+                        startPoint: isAnimating ? .trailing : .leading,
+                        endPoint: isAnimating ? .init(x: 2, y: 0) : .trailing
+                    )
             )
             .frame(width: size, height: size)
             .onAppear {
+                guard !reduceMotion else { return }
                 withAnimation(
                     .linear(duration: 1.5)
                     .repeatForever(autoreverses: false)

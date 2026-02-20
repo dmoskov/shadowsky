@@ -20,6 +20,7 @@ struct AggregatedNotificationItemView: View {
     let onLinkPress: (String) -> Void
 
     @State private var isExpanded = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo: .body) private var iconCircleSize: CGFloat = 32
 
     private var themeColor: Color {
@@ -232,7 +233,13 @@ struct AggregatedNotificationItemView: View {
     // MARK: - Expand Button
 
     private var expandButton: some View {
-        Button(action: { withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() } }) {
+        Button(action: {
+            if reduceMotion {
+                isExpanded.toggle()
+            } else {
+                withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
+            }
+        }) {
             HStack(spacing: 6) {
                 Text(isExpanded ? "Collapse" : "Show all \(model.count) notifications")
                     .font(.footnote.weight(.semibold))

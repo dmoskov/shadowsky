@@ -10,6 +10,7 @@ import SwiftUI
 
 struct NotificationSkeletonView: View {
     @State private var isAnimating = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -43,6 +44,7 @@ struct NotificationSkeletonView: View {
         .padding(16)
         .background(Color(UIColor.systemBackground))
         .onAppear {
+            guard !reduceMotion else { return }
             withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
                 isAnimating = true
             }
@@ -54,7 +56,7 @@ struct NotificationSkeletonView: View {
             .fill(Color(UIColor.tertiarySystemFill))
             .frame(width: width == .infinity ? nil : width, height: height)
             .frame(maxWidth: width == .infinity ? .infinity : nil, alignment: .leading)
-            .opacity(isAnimating ? 0.4 : 0.8)
+            .opacity(reduceMotion ? 0.6 : (isAnimating ? 0.4 : 0.8))
     }
 }
 

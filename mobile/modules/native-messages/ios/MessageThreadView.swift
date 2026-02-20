@@ -12,6 +12,7 @@ import SwiftUI
 
 struct MessageThreadView: View {
     @ObservedObject var dataState: MessagesDataState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     let isLoading: Bool
     let currentUserDid: String
@@ -167,8 +168,12 @@ struct MessageThreadView: View {
             .onChange(of: dataState.messages.count) { _ in
                 // Scroll to bottom when new messages arrive
                 if let lastMessage = dataState.messages.last {
-                    withAnimation(.easeOut(duration: 0.2)) {
+                    if reduceMotion {
                         proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                    } else {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                        }
                     }
                 }
             }
