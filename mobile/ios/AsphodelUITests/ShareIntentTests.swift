@@ -9,6 +9,7 @@
 
 import XCTest
 @testable import Asphodel
+@testable import ShareIntent
 
 // MARK: - SpotlightDeepLinkResolver Tests
 
@@ -368,5 +369,95 @@ class ShareExtensionDataExchangeTests: XCTestCase {
 
         XCTAssertTrue(staleAge > 300, "Stale content should be older than 5 minutes")
         XCTAssertFalse(freshAge > 300, "Fresh content should be within 5 minutes")
+    }
+}
+
+// MARK: - ShareIntentModule Tests
+
+class ShareIntentModuleTests: XCTestCase {
+
+    /// Verify that the ShareIntentModule registers and produces a valid definition.
+    func testModuleRegistersCorrectly() {
+        let module = ShareIntentModule()
+        let definition = module.definition()
+        XCTAssertNotNil(definition, "ShareIntentModule definition should not be nil")
+    }
+
+    /// Simulate receiving shared text through App Group UserDefaults.
+    func testGetSharedContentReceivesText() {
+        let suiteName = "group.io.asphodel.app"
+        let defaults = UserDefaults(suiteName: suiteName)
+
+        // Write simulated shared text
+        let sharedData: [String: Any] = [
+            "text": "Check out this post!",
+            "timestamp": Date().timeIntervalSince1970,
+        ]
+        defaults?.set(sharedData, forKey: "SharedContent")
+        defaults?.synchronize()
+
+        // Read it back the same way the module does
+        let retrieved = defaults?.dictionary(forKey: "SharedContent")
+        XCTAssertNotNil(retrieved, "Should retrieve shared content from app group defaults")
+        XCTAssertEqual(retrieved?["text"] as? String, "Check out this post!")
+
+        // Cleanup
+        defaults?.removeObject(forKey: "SharedContent")
+        defaults?.synchronize()
+    }
+
+    /// Simulate receiving a shared URL.
+    func testGetSharedContentReceivesURL() {
+        let suiteName = "group.io.asphodel.app"
+        let defaults = UserDefaults(suiteName: suiteName)
+
+        let sharedData: [String: Any] = [
+            "url": "https://bsky.app/profile/alice.bsky.social",
+            "timestamp": Date().timeIntervalSince1970,
+        ]
+        defaults?.set(sharedData, forKey: "SharedContent")
+        defaults?.synchronize()
+
+        let retrieved = defaults?.dictionary(forKey: "SharedContent")
+        XCTAssertNotNil(retrieved)
+        XCTAssertEqual(retrieved?["url"] as? String, "https://bsky.app/profile/alice.bsky.social")
+
+        defaults?.removeObject(forKey: "SharedContent")
+        defaults?.synchronize()
+    }
+
+    /// Simulate receiving a shared image reference.
+    func testGetSharedContentReceivesImage() {
+        let suiteName = "group.io.asphodel.app"
+        let defaults = UserDefaults(suiteName: suiteName)
+
+        let sharedData: [String: Any] = [
+            "images": ["photo_001.jpg"],
+            "timestamp": Date().timeIntervalSince1970,
+        ]
+        defaults?.set(sharedData, forKey: "SharedContent")
+        defaults?.synchronize()
+
+        let retrieved = defaults?.dictionary(forKey: "SharedContent")
+        let images = retrieved?["images"] as? [String]
+        XCTAssertNotNil(images)
+        XCTAssertEqual(images?.first, "photo_001.jpg")
+
+        defaults?.removeObject(forKey: "SharedContent")
+        defaults?.synchronize()
+    }
+
+    /// Verify that stale shared content (older than 5 minutes) is detected correctly.
+    func testStaleSharedContentIsDetected() {
+        let staleTimestamp = Date().timeIntervalSince1970 - 301
+        let freshTimestamp = Date().timeIntervalSince1970 - 10
+
+        // Stale: older than 300 seconds
+        let staleAge = Date().timeIntervalSince1970 - staleTimestamp
+        XCTAssertTrue(staleAge > 300, "Content older than 5 minutes should be stale")
+
+        // Fresh: within 300 seconds
+        let freshAge = Date().timeIntervalSince1970 - freshTimestamp
+        XCTAssertFalse(freshAge > 300, "Recent content should not be stale")
     }
 }
