@@ -390,17 +390,19 @@ enum MockSearch {
     }
 }
 
-// MARK: - Feed Mock Data
+// MARK: - Thread Mock Data
 
-enum MockFeed {
+enum MockThread {
 
-    static func makePostAuthor(
+    // MARK: - Authors
+
+    static func makeAuthor(
         did: String = "did:plc:author1",
         handle: String = "alice.bsky.social",
         displayName: String? = "Alice Johnson",
         avatar: String? = nil
-    ) -> PostAuthor {
-        PostAuthor(
+    ) -> ThreadAuthor {
+        ThreadAuthor(
             did: did,
             handle: handle,
             displayName: displayName,
@@ -408,177 +410,248 @@ enum MockFeed {
         )
     }
 
-    static func makePostRecord(
-        text: String = "Hello world! This is a test post.",
-        facets: [PostFacet]? = nil,
+    // MARK: - Records
+
+    static func makeRecord(
+        text: String = "Hello world!",
+        facets: [Facet]? = nil,
         createdAt: String = "2026-02-20T10:00:00.000Z",
-        embed: PostEmbedData? = nil
-    ) -> PostRecord {
-        PostRecord(
+        langs: [String]? = ["en"]
+    ) -> ThreadRecord {
+        ThreadRecord(
             text: text,
             facets: facets,
             createdAt: createdAt,
-            embed: embed
+            langs: langs
         )
     }
 
-    static func makePostView(
+    // MARK: - Posts
+
+    static func makePost(
         uri: String = "at://did:plc:author1/app.bsky.feed.post/post1",
-        cid: String = "bafyrei-post1",
-        author: PostAuthor? = nil,
-        record: PostRecord? = nil,
+        cid: String = "bafypost1",
+        author: ThreadAuthor? = nil,
+        record: ThreadRecord? = nil,
+        embed: PostEmbedData? = nil,
         indexedAt: String = "2026-02-20T10:00:00.000Z",
-        likeCount: Int = 0,
-        repostCount: Int = 0,
-        replyCount: Int = 0,
-        viewer: PostViewer? = nil,
-        labels: [ContentLabel]? = nil
-    ) -> PostView {
-        PostView(
+        likeCount: Int = 10,
+        repostCount: Int = 3,
+        replyCount: Int = 2,
+        quoteCount: Int? = 1,
+        viewer: ThreadViewer? = nil,
+        labels: [ThreadLabel]? = nil
+    ) -> ThreadPost {
+        ThreadPost(
             uri: uri,
             cid: cid,
-            author: author ?? makePostAuthor(),
-            record: record ?? makePostRecord(),
+            author: author ?? makeAuthor(),
+            record: record ?? makeRecord(),
+            embed: embed,
             indexedAt: indexedAt,
             likeCount: likeCount,
             repostCount: repostCount,
             replyCount: replyCount,
+            quoteCount: quoteCount,
             viewer: viewer,
             labels: labels
         )
     }
 
-    static func makeFeedViewPost(
-        post: PostView? = nil
-    ) -> FeedViewPost {
-        FeedViewPost(post: post ?? makePostView())
+    // MARK: - Nodes
+
+    static func makeNode(
+        post: ThreadPost? = nil,
+        parent: ThreadReplyRef? = nil,
+        replies: [ThreadNode] = [],
+        depth: Int = 0
+    ) -> ThreadNode {
+        ThreadNode(
+            post: post ?? makePost(),
+            parent: parent,
+            replies: replies,
+            depth: depth
+        )
     }
 
-    /// A post with engagement counts for testing action bar display
-    static var postWithCounts: FeedViewPost {
-        makeFeedViewPost(post: makePostView(
-            uri: "at://did:plc:author1/app.bsky.feed.post/counted",
+    // MARK: - Summary Data
+
+    static func makeSummaryData(
+        summary: String = "This thread discusses SwiftUI testing patterns.",
+        format: String = "brief",
+        postCount: Int? = 5,
+        authors: [String]? = ["alice.bsky.social", "bob.bsky.social"],
+        generatedAt: String? = "2026-02-20T10:05:00.000Z",
+        cached: Bool = false,
+        totalEngagement: Int? = nil,
+        highlightedSubThreads: [SubThreadHighlight]? = nil
+    ) -> ThreadSummaryData {
+        ThreadSummaryData(
+            summary: summary,
+            format: format,
+            metadata: ThreadSummaryMetadata(
+                postCount: postCount,
+                authors: authors,
+                generatedAt: generatedAt,
+                cached: cached,
+                totalEngagement: totalEngagement,
+                highlightedSubThreads: highlightedSubThreads
+            )
+        )
+    }
+
+    // MARK: - Mention Suggestions
+
+    static func makeMentionSuggestion(
+        did: String = "did:plc:mention1",
+        handle: String = "bob.bsky.social",
+        displayName: String? = "Bob Smith",
+        avatar: String? = nil
+    ) -> MentionSuggestion {
+        MentionSuggestion(
+            id: did,
+            handle: handle,
+            displayName: displayName,
+            avatar: avatar
+        )
+    }
+
+    // MARK: - Prebuilt Samples
+
+    /// A root post with two reply children
+    static var sampleRootNode: ThreadNode {
+        let rootPost = makePost(
+            uri: "at://did:plc:alice/app.bsky.feed.post/root1",
+            cid: "bafyroot1",
+            author: makeAuthor(did: "did:plc:alice", handle: "alice.bsky.social", displayName: "Alice Johnson"),
+            record: makeRecord(text: "This is the root post of the thread."),
             likeCount: 42,
             repostCount: 7,
-            replyCount: 13
-        ))
+            replyCount: 2,
+            quoteCount: 3,
+            viewer: ThreadViewer(like: nil, repost: nil)
+        )
+
+        let reply1Post = makePost(
+            uri: "at://did:plc:bob/app.bsky.feed.post/reply1",
+            cid: "bafyreply1",
+            author: makeAuthor(did: "did:plc:bob", handle: "bob.bsky.social", displayName: "Bob Smith"),
+            record: makeRecord(text: "Great post, Alice!"),
+            likeCount: 5,
+            repostCount: 0,
+            replyCount: 0,
+            quoteCount: nil,
+            viewer: ThreadViewer(like: "at://did:plc:me/app.bsky.feed.like/1", repost: nil)
+        )
+
+        let reply2Post = makePost(
+            uri: "at://did:plc:carol/app.bsky.feed.post/reply2",
+            cid: "bafyreply2",
+            author: makeAuthor(did: "did:plc:carol", handle: "carol.bsky.social", displayName: "Carol Davis"),
+            record: makeRecord(text: "I agree, this is interesting."),
+            likeCount: 2,
+            repostCount: 1,
+            replyCount: 0,
+            quoteCount: nil,
+            viewer: nil
+        )
+
+        return makeNode(
+            post: rootPost,
+            replies: [
+                makeNode(post: reply1Post, depth: 1),
+                makeNode(post: reply2Post, depth: 1)
+            ],
+            depth: 0
+        )
     }
 
-    /// A post that the current user has liked
-    static var likedPost: FeedViewPost {
-        makeFeedViewPost(post: makePostView(
-            uri: "at://did:plc:author1/app.bsky.feed.post/liked",
-            likeCount: 10,
-            viewer: PostViewer(like: "at://did:plc:me/app.bsky.feed.like/abc", repost: nil)
-        ))
-    }
-
-    /// A post that the current user has reposted
-    static var repostedPost: FeedViewPost {
-        makeFeedViewPost(post: makePostView(
-            uri: "at://did:plc:author1/app.bsky.feed.post/reposted",
-            repostCount: 5,
-            viewer: PostViewer(like: nil, repost: "at://did:plc:me/app.bsky.feed.repost/abc")
-        ))
-    }
-
-    /// A post with an image embed
-    static var postWithImages: FeedViewPost {
-        makeFeedViewPost(post: makePostView(
-            uri: "at://did:plc:author1/app.bsky.feed.post/images",
-            record: makePostRecord(
-                text: "Check out these photos!",
-                embed: PostEmbedData(embedType: .images([
-                    ImageEmbedData(
-                        thumb: "https://example.com/thumb1.jpg",
-                        fullsize: "https://example.com/full1.jpg",
-                        alt: "A sunset",
-                        aspectRatio: 1.5
-                    ),
-                ]))
-            )
-        ))
-    }
-
-    /// A post with a quote embed
-    static var postWithQuote: FeedViewPost {
-        makeFeedViewPost(post: makePostView(
-            uri: "at://did:plc:author1/app.bsky.feed.post/quote",
-            record: makePostRecord(
-                text: "Great post!",
-                embed: PostEmbedData(embedType: .quote(QuoteEmbedData(
-                    uri: "at://did:plc:quoted/app.bsky.feed.post/orig",
-                    author: AuthorData(
-                        handle: "bob.bsky.social",
-                        displayName: "Bob Smith",
-                        avatar: nil
-                    ),
-                    text: "This is the quoted post.",
-                    createdAt: "2026-02-19T08:00:00.000Z"
-                )))
-            )
-        ))
-    }
-
-    /// A post with an external link embed
-    static var postWithExternalLink: FeedViewPost {
-        makeFeedViewPost(post: makePostView(
-            uri: "at://did:plc:author1/app.bsky.feed.post/link",
-            record: makePostRecord(
-                text: "Check out this article",
-                embed: PostEmbedData(embedType: .external(ExternalLinkEmbedData(
-                    uri: "https://example.com/article",
-                    title: "An Example Article",
-                    description: "A fascinating read about testing.",
-                    thumb: nil
-                )))
-            )
-        ))
-    }
-
-    /// A post with a video embed
-    static var postWithVideo: FeedViewPost {
-        makeFeedViewPost(post: makePostView(
-            uri: "at://did:plc:author1/app.bsky.feed.post/video",
-            record: makePostRecord(
-                text: "Watch this video",
-                embed: PostEmbedData(embedType: .video(VideoEmbedData(
-                    playlist: "https://example.com/video.m3u8",
-                    thumbnail: "https://example.com/video-thumb.jpg",
-                    alt: "A demo video",
-                    aspectRatio: 1.78
-                )))
-            )
-        ))
-    }
-
-    /// A list of sample posts for feed list tests
-    static var samplePosts: [FeedViewPost] {
-        [
-            makeFeedViewPost(post: makePostView(
-                uri: "at://did:plc:a1/app.bsky.feed.post/p1",
-                author: makePostAuthor(did: "did:plc:a1", handle: "alice.bsky.social", displayName: "Alice Johnson"),
-                record: makePostRecord(text: "Hello from Alice!"),
-                likeCount: 10,
-                repostCount: 2,
-                replyCount: 3
-            )),
-            makeFeedViewPost(post: makePostView(
-                uri: "at://did:plc:a2/app.bsky.feed.post/p2",
-                author: makePostAuthor(did: "did:plc:a2", handle: "bob.bsky.social", displayName: "Bob Smith"),
-                record: makePostRecord(text: "Bob here with an update."),
-                likeCount: 5,
-                repostCount: 1,
-                replyCount: 0
-            )),
-            makeFeedViewPost(post: makePostView(
-                uri: "at://did:plc:a3/app.bsky.feed.post/p3",
-                author: makePostAuthor(did: "did:plc:a3", handle: "carol.bsky.social", displayName: "Carol Davis"),
-                record: makePostRecord(text: "Testing the feed!"),
+    /// A root post with no replies
+    static var sampleEmptyThread: ThreadNode {
+        makeNode(
+            post: makePost(
+                uri: "at://did:plc:alice/app.bsky.feed.post/empty1",
+                cid: "bafyempty1",
+                author: makeAuthor(did: "did:plc:alice", handle: "alice.bsky.social", displayName: "Alice Johnson"),
+                record: makeRecord(text: "A post with no replies yet."),
                 likeCount: 0,
                 repostCount: 0,
-                replyCount: 1
-            )),
+                replyCount: 0,
+                quoteCount: nil,
+                viewer: nil
+            ),
+            replies: [],
+            depth: 0
+        )
+    }
+
+    /// A liked root post (viewer has liked it)
+    static var sampleLikedNode: ThreadNode {
+        makeNode(
+            post: makePost(
+                viewer: ThreadViewer(like: "at://did:plc:me/app.bsky.feed.like/abc", repost: nil)
+            )
+        )
+    }
+
+    /// A reposted root post (viewer has reposted it)
+    static var sampleRepostedNode: ThreadNode {
+        makeNode(
+            post: makePost(
+                viewer: ThreadViewer(like: nil, repost: "at://did:plc:me/app.bsky.feed.repost/xyz")
+            )
+        )
+    }
+
+    /// A post in a non-English language for translation tests
+    static var sampleForeignLanguageNode: ThreadNode {
+        makeNode(
+            post: makePost(
+                uri: "at://did:plc:france/app.bsky.feed.post/fr1",
+                cid: "bafyfr1",
+                author: makeAuthor(did: "did:plc:france", handle: "jean.bsky.social", displayName: "Jean Dupont"),
+                record: makeRecord(text: "Bonjour le monde!", langs: ["fr"]),
+                likeCount: 8,
+                repostCount: 1,
+                replyCount: 0
+            )
+        )
+    }
+
+    /// Sample mention suggestions for autocomplete tests
+    static var sampleMentionSuggestions: [MentionSuggestion] {
+        [
+            makeMentionSuggestion(did: "did:plc:m1", handle: "alice.bsky.social", displayName: "Alice Johnson"),
+            makeMentionSuggestion(did: "did:plc:m2", handle: "bob.bsky.social", displayName: "Bob Smith"),
+            makeMentionSuggestion(did: "did:plc:m3", handle: "carol.bsky.social", displayName: nil),
         ]
+    }
+
+    /// Comprehensive summary with highlights
+    static var sampleComprehensiveSummary: ThreadSummaryData {
+        makeSummaryData(
+            summary: "A comprehensive discussion about Swift testing patterns, with multiple participants sharing their experiences.",
+            format: "comprehensive",
+            postCount: 15,
+            authors: ["alice.bsky.social", "bob.bsky.social", "carol.bsky.social"],
+            cached: true,
+            totalEngagement: 250,
+            highlightedSubThreads: [
+                SubThreadHighlight(
+                    id: "at://did:plc:bob/app.bsky.feed.post/hl1",
+                    uri: "at://did:plc:bob/app.bsky.feed.post/hl1",
+                    authorHandle: "bob.bsky.social",
+                    snippet: "Great insight about ViewInspector",
+                    engagement: 45
+                ),
+                SubThreadHighlight(
+                    id: "at://did:plc:carol/app.bsky.feed.post/hl2",
+                    uri: "at://did:plc:carol/app.bsky.feed.post/hl2",
+                    authorHandle: "carol.bsky.social",
+                    snippet: "Alternative approach using XCTest",
+                    engagement: 30
+                )
+            ]
+        )
     }
 }
