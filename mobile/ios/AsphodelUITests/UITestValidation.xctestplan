@@ -1,0 +1,49 @@
+{
+  "configurations" : [
+    {
+      "id" : "A1B2C3D4-5E6F-7890-ABCD-EF0123456780",
+      "name" : "Default",
+      "options" : {
+        "defaultTestExecutionTimeAllowance" : 60,
+        "maximumTestExecutionTimeAllowance" : 120,
+        "testTimeoutsEnabled" : true
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : true,
+    "defaultTestExecutionTimeAllowance" : 60,
+    "environmentVariableEntries" : [
+      {
+        "key" : "DYLD_INSERT_LIBRARIES",
+        "value" : ""
+      }
+    ],
+    "language" : "en",
+    "maximumTestExecutionTimeAllowance" : 120,
+    "region" : "US",
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Asphodel.xcodeproj",
+      "identifier" : "AsphodelUITests",
+      "name" : "AsphodelUITests"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Asphodel.xcodeproj",
+        "identifier" : "AsphodelUITests",
+        "name" : "AsphodelUITests"
+      },
+      "selectedTests" : [
+        "ConversationListViewTests",
+        "MessageThreadViewTests",
+        "MessageComposerViewTests",
+        "MessageComposerStateTests",
+        "MessagesDataStateTests",
+        "MessageTimeFormatterTests"
+      ]
+    }
+  ],
+  "version" : 1
+}
