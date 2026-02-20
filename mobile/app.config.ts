@@ -32,6 +32,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       NSPhotoLibraryUsageDescription: "Select photos and videos to share",
       NSMicrophoneUsageDescription: "Record video with audio",
       NSFaceIDUsageDescription: "Unlock app with Face ID",
+      ITSAppUsesNonExemptEncryption: false,
     },
   },
   notification: {

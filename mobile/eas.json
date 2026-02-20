@@ -36,6 +36,21 @@
         "NODE_OPTIONS": "--max-old-space-size=4096"
       }
     },
+    "testflight": {
+      "distribution": "store",
+      "ios": {
+        "resourceClass": "m-large",
+        "simulator": false,
+        "autoSubmit": true,
+        "autoIncrement": true
+      },
+      "channel": "testflight",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.shadowsky.io",
+        "SENTRY_UPLOAD_SOURCE_MAPS": "true",
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
+    },
     "production": {
       "ios": {
         "resourceClass": "m-medium",
@@ -52,6 +67,13 @@
     }
   },
   "submit": {
+    "testflight": {
+      "ios": {
+        "appleId": "dustin.moskovitz@gmail.com",
+        "ascAppId": "6738274061",
+        "appleTeamId": "2Y3U7TMLHM"
+      }
+    },
     "production": {
       "ios": {
         "appleId": "dustin.moskovitz@gmail.com",

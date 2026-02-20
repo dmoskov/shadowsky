@@ -16,11 +16,14 @@
     "build:preview": "eas build --platform all --profile preview",
     "build:preview:ios": "eas build --platform ios --profile preview",
     "build:preview:android": "eas build --platform android --profile preview",
+    "build:testflight": "eas build --platform ios --profile testflight",
     "build:production": "eas build --platform all --profile production",
     "build:production:ios": "eas build --platform ios --profile production",
     "build:production:android": "eas build --platform android --profile production",
+    "submit:testflight": "eas submit --platform ios --profile testflight",
     "update:development": "eas update --branch development --message",
     "update:preview": "eas update --branch preview --message",
+    "update:testflight": "eas update --branch testflight --message",
     "update:production": "eas update --branch production --message"
   },
   "dependencies": {
