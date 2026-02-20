@@ -5,8 +5,9 @@ import { ErrorState } from "../../../../../src/components/ErrorState";
 
 export default function ThreadRoute() {
   const { value: postId, isValid } = useRequiredParam("postId");
-  const { handle, focusUri } = useLocalSearchParams<{
+  const { handle, did, focusUri } = useLocalSearchParams<{
     handle?: string;
+    did?: string;
     focusUri?: string;
   }>();
 
@@ -18,6 +19,7 @@ export default function ThreadRoute() {
     <ThreadScreenNative
       postId={postId}
       handle={handle || ""}
+      did={did}
       focusedReplyUri={focusUri}
     />
   );

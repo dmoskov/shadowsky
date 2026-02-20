@@ -3,7 +3,9 @@ import { View, StyleSheet, Alert, ActionSheetIOS, Platform, ScrollView, Touchabl
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useScrollToTop } from "@react-navigation/native";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTimeline, useCustomFeed, useSavedFeeds } from "../../hooks/api";
+import { getPostThread } from "../../services/atproto/feeds";
 import { useLikePost, useUnlikePost, useRepost, useDeleteRepost } from "../../hooks/api/usePosts";
 import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useAppNavigation } from "../../hooks/useNavigation";
@@ -42,6 +44,7 @@ export function HomeScreen() {
   const deleteRepost = useDeleteRepost();
   const { toggleBookmark, bookmarks } = useBookmarks();
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
   const scrollRef = useRef<any>(null);
 
   // Compute bookmarked post URIs for the native feed list
@@ -88,6 +91,15 @@ export function HomeScreen() {
     const { uri, handle } = event.nativeEvent;
     const postId = getPostIdFromUri(uri);
     const did = getDidFromUri(uri);
+    // Prefetch thread data during navigation animation
+    const threadUri = did ? `at://${did}/app.bsky.feed.post/${postId}` : undefined;
+    if (threadUri) {
+      queryClient.prefetchQuery({
+        queryKey: ['thread', threadUri],
+        queryFn: () => getPostThread(threadUri),
+        staleTime: 2 * 60 * 1000,
+      });
+    }
     navigateToThread(handle, postId, did || undefined);
   };
 

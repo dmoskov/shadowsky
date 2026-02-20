@@ -64,5 +64,6 @@ export function usePostThread(uri: string) {
     queryKey: ['thread', uri],
     queryFn: () => getPostThread(uri),
     enabled: !!uri,
+    staleTime: 2 * 60 * 1000,
   });
 }

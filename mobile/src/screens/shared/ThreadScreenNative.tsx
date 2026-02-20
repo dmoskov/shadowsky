@@ -38,22 +38,18 @@ const MIN_POSTS_FOR_SUMMARY = 5;
 interface ThreadScreenProps {
   handle: string;
   postId: string;
+  did?: string;
   focusedReplyUri?: string;
 }
 
 /**
- * Build AT Protocol URI from handle and post ID
- * Format: at://did/app.bsky.feed.post/postId
+ * Resolve a handle to a DID using the lightweight resolveHandle API
  */
-async function buildPostUri(handle: string, postId: string): Promise<string> {
+async function resolveHandleToDid(handle: string): Promise<string> {
   const client = getAtProtoClient();
   const agent = client.getAgent();
-
-  // Resolve handle to DID
-  const profile = await agent.getProfile({ actor: handle });
-  const did = profile.data.did;
-
-  return `at://${did}/app.bsky.feed.post/${postId}`;
+  const res = await agent.resolveHandle({ handle });
+  return res.data.did;
 }
 
 /**
@@ -146,11 +142,14 @@ function getSummaryFormat(postCount: number, totalEngagement: number): ThreadSum
   return "brief";
 }
 
-export function ThreadScreenNative({ handle, postId, focusedReplyUri }: ThreadScreenProps) {
+export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: ThreadScreenProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
-  const [postUri, setPostUri] = useState<string | null>(null);
+  // If DID is available, construct URI immediately — no API call needed
+  const [postUri, setPostUri] = useState<string | null>(
+    did ? `at://${did}/app.bsky.feed.post/${postId}` : null
+  );
   const [isResolvingUri, setIsResolvingUri] = useState(false);
   const [resolveError, setResolveError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -163,14 +162,16 @@ export function ThreadScreenNative({ handle, postId, focusedReplyUri }: ThreadSc
   const deleteRepost = useDeleteRepost();
   const createPost = useCreatePost();
 
-  // Resolve handle to URI on mount
+  // Only resolve handle→DID if DID wasn't provided (e.g. deep links)
   useEffect(() => {
+    if (postUri) return; // Already have URI from DID prop
+
     async function resolveUri() {
       setIsResolvingUri(true);
       setResolveError(null);
       try {
-        const uri = await buildPostUri(handle, postId);
-        setPostUri(uri);
+        const resolvedDid = await resolveHandleToDid(handle);
+        setPostUri(`at://${resolvedDid}/app.bsky.feed.post/${postId}`);
       } catch (error) {
         logger.error('Failed to resolve post URI:', error);
         setResolveError(error instanceof Error ? error.message : "Failed to load post");
@@ -182,7 +183,7 @@ export function ThreadScreenNative({ handle, postId, focusedReplyUri }: ThreadSc
     if (handle && postId) {
       resolveUri();
     }
-  }, [handle, postId]);
+  }, [handle, postId, postUri]);
 
   // Fetch thread data
   const { data: thread, isLoading, error, refetch } = usePostThread(postUri || "");
