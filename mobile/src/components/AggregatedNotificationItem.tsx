@@ -13,6 +13,7 @@ import {
 } from './icons';
 import { useTheme } from "../contexts/ThemeContext";
 import {NotificationItem} from './NotificationItem';
+import {InlineErrorBoundary} from './ui/InlineErrorBoundary';
 
 interface AggregatedNotificationItemProps {
   notifications: AppBskyNotificationListNotifications.Notification[];
@@ -210,12 +211,13 @@ const AggregatedNotificationItemInner = React.memo(function AggregatedNotificati
       {isExpanded && (
         <View style={styles.expandedList}>
           {notifications.map((notification, idx) => (
-            <NotificationItem
-              key={notification.uri + idx}
-              notification={notification}
-              onMentionPress={onMentionPress}
-              onHashtagPress={onHashtagPress}
-            />
+            <InlineErrorBoundary key={notification.uri + idx} silent context="ExpandedNotificationItem">
+              <NotificationItem
+                notification={notification}
+                onMentionPress={onMentionPress}
+                onHashtagPress={onHashtagPress}
+              />
+            </InlineErrorBoundary>
           ))}
         </View>
       )}

@@ -15,6 +15,7 @@ import {RichText} from '../utils/rich-text';
 import {useNetwork} from '../contexts/NetworkContext';
 import {sharePost} from '../utils/share';
 import {PostEmbed} from './PostEmbed';
+import {InlineErrorBoundary} from './ui/InlineErrorBoundary';
 import {useBlockUser, useMuteUser} from '../hooks/api/useProfile';
 import {recordBlock, recordMute} from '../services/moderation-history';
 import {useTheme} from '../contexts/ThemeContext';
@@ -393,13 +394,15 @@ function PostCardComponent({
 
         {/* Post Text */}
         {record && typeof record.text === 'string' && (
-          <RichText
-            text={record.text}
-            facets={record.facets as AppBskyRichtextFacet.Main[] | undefined}
-            onMentionPress={onMentionPress}
-            onHashtagPress={onHashtagPress}
-            style={styles.text}
-          />
+          <InlineErrorBoundary silent context="RichText">
+            <RichText
+              text={record.text}
+              facets={record.facets as AppBskyRichtextFacet.Main[] | undefined}
+              onMentionPress={onMentionPress}
+              onHashtagPress={onHashtagPress}
+              style={styles.text}
+            />
+          </InlineErrorBoundary>
         )}
 
         {/* Inline Translation */}
