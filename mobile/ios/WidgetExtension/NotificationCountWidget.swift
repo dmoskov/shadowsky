@@ -40,66 +40,89 @@ struct NotificationCountWidgetView: View {
     private let brandGold = Color(red: 201/255, green: 168/255, blue: 76/255)
     private let darkBg = Color(red: 10/255, green: 10/255, blue: 15/255)
 
+    private var isStale: Bool {
+        guard !entry.isPlaceholder else { return false }
+        return SharedData.isDataStale
+    }
+
     var body: some View {
         ZStack {
             darkBg
 
-            VStack(alignment: .leading, spacing: 6) {
-                // Header row
-                HStack {
-                    Image(systemName: "bell.fill")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundColor(brandGold)
-                    Text("Notifications")
-                        .font(.caption.weight(.medium))
-                        .foregroundColor(.white.opacity(0.7))
+            if isStale {
+                staleOverlay
+            } else {
+                VStack(alignment: .leading, spacing: 6) {
+                    // Header row
+                    HStack {
+                        Image(systemName: "bell.fill")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(brandGold)
+                        Text("Notifications")
+                            .font(.caption.weight(.medium))
+                            .foregroundColor(.white.opacity(0.7))
+                        Spacer()
+                    }
+
+                    // Unread count
+                    if entry.isPlaceholder {
+                        Text("--")
+                            .font(.system(.largeTitle, design: .rounded).weight(.bold))
+                            .foregroundColor(.white)
+                    } else if entry.data.unreadCount > 0 {
+                        Text("\(entry.data.unreadCount)")
+                            .font(.system(.largeTitle, design: .rounded).weight(.bold))
+                            .foregroundColor(brandGold)
+                    } else {
+                        Text("0")
+                            .font(.system(.largeTitle, design: .rounded).weight(.bold))
+                            .foregroundColor(.white.opacity(0.4))
+                    }
+
                     Spacer()
-                }
 
-                // Unread count
-                if entry.isPlaceholder {
-                    Text("--")
-                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
-                        .foregroundColor(.white)
-                } else if entry.data.unreadCount > 0 {
-                    Text("\(entry.data.unreadCount)")
-                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
-                        .foregroundColor(brandGold)
-                } else {
-                    Text("0")
-                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
-                        .foregroundColor(.white.opacity(0.4))
-                }
-
-                Spacer()
-
-                // Last notification preview
-                if entry.isPlaceholder {
-                    Text("Loading...")
-                        .font(.caption2)
-                        .foregroundColor(.white.opacity(0.5))
-                        .lineLimit(2)
-                } else if !entry.data.lastNotificationText.isEmpty {
-                    VStack(alignment: .leading, spacing: 2) {
-                        if !entry.data.lastNotificationAuthor.isEmpty {
-                            Text(entry.data.lastNotificationAuthor)
-                                .font(.caption2.weight(.semibold))
-                                .foregroundColor(.white.opacity(0.8))
-                                .lineLimit(1)
-                        }
-                        Text(entry.data.lastNotificationText)
+                    // Last notification preview
+                    if entry.isPlaceholder {
+                        Text("Loading...")
                             .font(.caption2)
                             .foregroundColor(.white.opacity(0.5))
                             .lineLimit(2)
+                    } else if !entry.data.lastNotificationText.isEmpty {
+                        VStack(alignment: .leading, spacing: 2) {
+                            if !entry.data.lastNotificationAuthor.isEmpty {
+                                Text(entry.data.lastNotificationAuthor)
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .lineLimit(1)
+                            }
+                            Text(entry.data.lastNotificationText)
+                                .font(.caption2)
+                                .foregroundColor(.white.opacity(0.5))
+                                .lineLimit(2)
+                        }
+                    } else {
+                        Text("No new notifications")
+                            .font(.caption2)
+                            .foregroundColor(.white.opacity(0.4))
                     }
-                } else {
-                    Text("No new notifications")
-                        .font(.caption2)
-                        .foregroundColor(.white.opacity(0.4))
                 }
+                .padding(12)
             }
-            .padding(12)
         }
+        .containerBackground(darkBg, for: .widget)
+    }
+
+    private var staleOverlay: some View {
+        VStack(spacing: 6) {
+            Image(systemName: "bell.fill")
+                .font(.title2)
+                .foregroundColor(brandGold.opacity(0.5))
+            Text("Open app to refresh")
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.5))
+                .multilineTextAlignment(.center)
+        }
+        .padding(12)
     }
 }
 

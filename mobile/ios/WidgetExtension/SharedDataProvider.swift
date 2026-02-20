@@ -23,6 +23,19 @@ enum SharedData {
     static var defaults: UserDefaults? {
         UserDefaults(suiteName: suiteName)
     }
+
+    /// Maximum age (in seconds) before widget data is considered stale.
+    /// If data is older than this, widgets show a "refresh" prompt.
+    static let staleThresholdSeconds: TimeInterval = 30 * 60 // 30 minutes
+
+    /// Check if the shared data is stale (older than threshold).
+    static var isDataStale: Bool {
+        guard let defaults = defaults else { return true }
+        let updated = defaults.double(forKey: Keys.lastUpdated)
+        guard updated > 0 else { return true }
+        let lastUpdatedDate = Date(timeIntervalSince1970: updated / 1000)
+        return Date().timeIntervalSince(lastUpdatedDate) > staleThresholdSeconds
+    }
 }
 
 // MARK: - Notification Data

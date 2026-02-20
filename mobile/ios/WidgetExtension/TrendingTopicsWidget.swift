@@ -39,60 +39,83 @@ struct TrendingTopicsWidgetView: View {
     private let brandGold = Color(red: 201/255, green: 168/255, blue: 76/255)
     private let darkBg = Color(red: 10/255, green: 10/255, blue: 15/255)
 
+    private var isStale: Bool {
+        guard !entry.isPlaceholder else { return false }
+        return SharedData.isDataStale
+    }
+
     var body: some View {
         ZStack {
             darkBg
 
-            VStack(alignment: .leading, spacing: 8) {
-                // Header
-                HStack {
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundColor(brandGold)
-                    Text("Trending")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundColor(.white)
-                    Spacer()
-                    if let updated = entry.data.lastUpdated {
-                        Text(updated, style: .relative)
-                            .font(.caption2)
-                            .foregroundColor(.white.opacity(0.3))
-                    }
-                }
-
-                if entry.isPlaceholder {
-                    ForEach(0..<3, id: \.self) { _ in
-                        placeholderRow
-                    }
-                } else if entry.data.topics.isEmpty {
-                    Spacer()
+            if isStale {
+                staleOverlay
+            } else {
+                VStack(alignment: .leading, spacing: 8) {
+                    // Header
                     HStack {
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(brandGold)
+                        Text("Trending")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundColor(.white)
                         Spacer()
-                        VStack(spacing: 4) {
-                            Image(systemName: "chart.line.uptrend.xyaxis")
-                                .font(.title2)
-                                .foregroundColor(.white.opacity(0.2))
-                            Text("No trending topics")
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.4))
+                        if let updated = entry.data.lastUpdated {
+                            Text(updated, style: .relative)
+                                .font(.caption2)
+                                .foregroundColor(.white.opacity(0.3))
+                        }
+                    }
+
+                    if entry.isPlaceholder {
+                        ForEach(0..<3, id: \.self) { _ in
+                            placeholderRow
+                        }
+                    } else if entry.data.topics.isEmpty {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            VStack(spacing: 4) {
+                                Image(systemName: "chart.line.uptrend.xyaxis")
+                                    .font(.title2)
+                                    .foregroundColor(.white.opacity(0.2))
+                                Text("No trending topics")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.4))
+                            }
+                            Spacer()
+                        }
+                        Spacer()
+                    } else {
+                        let displayTopics = Array(entry.data.topics.prefix(3))
+                        ForEach(Array(displayTopics.enumerated()), id: \.element.id) { index, topic in
+                            topicRow(topic: topic, index: index + 1)
+                            if index < displayTopics.count - 1 {
+                                Divider()
+                                    .background(Color.white.opacity(0.1))
+                            }
                         }
                         Spacer()
                     }
-                    Spacer()
-                } else {
-                    let displayTopics = Array(entry.data.topics.prefix(3))
-                    ForEach(Array(displayTopics.enumerated()), id: \.element.id) { index, topic in
-                        topicRow(topic: topic, index: index + 1)
-                        if index < displayTopics.count - 1 {
-                            Divider()
-                                .background(Color.white.opacity(0.1))
-                        }
-                    }
-                    Spacer()
                 }
+                .padding(12)
             }
-            .padding(12)
         }
+        .containerBackground(darkBg, for: .widget)
+    }
+
+    private var staleOverlay: some View {
+        VStack(spacing: 6) {
+            Image(systemName: "chart.line.uptrend.xyaxis")
+                .font(.title2)
+                .foregroundColor(brandGold.opacity(0.5))
+            Text("Open app to refresh")
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.5))
+                .multilineTextAlignment(.center)
+        }
+        .padding(12)
     }
 
     private var placeholderRow: some View {

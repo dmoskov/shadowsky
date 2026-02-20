@@ -39,60 +39,83 @@ struct RecentDMsWidgetView: View {
     private let brandGold = Color(red: 201/255, green: 168/255, blue: 76/255)
     private let darkBg = Color(red: 10/255, green: 10/255, blue: 15/255)
 
+    private var isStale: Bool {
+        guard !entry.isPlaceholder else { return false }
+        return SharedData.isDataStale
+    }
+
     var body: some View {
         ZStack {
             darkBg
 
-            VStack(alignment: .leading, spacing: 8) {
-                // Header
-                HStack {
-                    Image(systemName: "bubble.left.and.bubble.right.fill")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundColor(brandGold)
-                    Text("Messages")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundColor(.white)
-                    Spacer()
-                    if let updated = entry.data.lastUpdated {
-                        Text(updated, style: .relative)
-                            .font(.caption2)
-                            .foregroundColor(.white.opacity(0.3))
-                    }
-                }
-
-                if entry.isPlaceholder {
-                    ForEach(0..<3, id: \.self) { _ in
-                        placeholderRow
-                    }
-                } else if entry.data.conversations.isEmpty {
-                    Spacer()
+            if isStale {
+                staleOverlay
+            } else {
+                VStack(alignment: .leading, spacing: 8) {
+                    // Header
                     HStack {
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(brandGold)
+                        Text("Messages")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundColor(.white)
                         Spacer()
-                        VStack(spacing: 4) {
-                            Image(systemName: "bubble.left.and.bubble.right")
-                                .font(.title2)
-                                .foregroundColor(.white.opacity(0.2))
-                            Text("No recent messages")
-                                .font(.caption)
-                                .foregroundColor(.white.opacity(0.4))
+                        if let updated = entry.data.lastUpdated {
+                            Text(updated, style: .relative)
+                                .font(.caption2)
+                                .foregroundColor(.white.opacity(0.3))
+                        }
+                    }
+
+                    if entry.isPlaceholder {
+                        ForEach(0..<3, id: \.self) { _ in
+                            placeholderRow
+                        }
+                    } else if entry.data.conversations.isEmpty {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            VStack(spacing: 4) {
+                                Image(systemName: "bubble.left.and.bubble.right")
+                                    .font(.title2)
+                                    .foregroundColor(.white.opacity(0.2))
+                                Text("No recent messages")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.4))
+                            }
+                            Spacer()
+                        }
+                        Spacer()
+                    } else {
+                        let displayConvos = Array(entry.data.conversations.prefix(3))
+                        ForEach(Array(displayConvos.enumerated()), id: \.element.id) { index, convo in
+                            dmRow(convo: convo)
+                            if index < displayConvos.count - 1 {
+                                Divider()
+                                    .background(Color.white.opacity(0.1))
+                            }
                         }
                         Spacer()
                     }
-                    Spacer()
-                } else {
-                    let displayConvos = Array(entry.data.conversations.prefix(3))
-                    ForEach(Array(displayConvos.enumerated()), id: \.element.id) { index, convo in
-                        dmRow(convo: convo)
-                        if index < displayConvos.count - 1 {
-                            Divider()
-                                .background(Color.white.opacity(0.1))
-                        }
-                    }
-                    Spacer()
                 }
+                .padding(12)
             }
-            .padding(12)
         }
+        .containerBackground(darkBg, for: .widget)
+    }
+
+    private var staleOverlay: some View {
+        VStack(spacing: 6) {
+            Image(systemName: "bubble.left.and.bubble.right.fill")
+                .font(.title2)
+                .foregroundColor(brandGold.opacity(0.5))
+            Text("Open app to refresh")
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.5))
+                .multilineTextAlignment(.center)
+        }
+        .padding(12)
     }
 
     private var placeholderRow: some View {

@@ -465,7 +465,7 @@ const withWidgetExtension = (config) => {
       productName: `"${WIDGET_EXT_NAME}"`,
       productReference: WE_PRODUCT_REF,
       productReference_comment: `${WIDGET_EXT_NAME}.appex`,
-      productType: '"com.apple.product-type.app-extension"',
+      productType: '"com.apple.product-type.app-extension.widgets-extension"',
     };
     xcodeProject.hash.project.objects["PBXNativeTarget"][
       `${WE_TARGET_REF}_comment`
