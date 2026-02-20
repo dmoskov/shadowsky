@@ -46,7 +46,12 @@
         "ProfileViewTests",
         "ProfileTabTests",
         "SearchViewTests",
-        "SearchStateTests"
+        "SearchStateTests",
+        "PostCardViewTests",
+        "DateFormattingTests",
+        "FeedListViewTests",
+        "FeedListPropsTests",
+        "ConvertedFeedPostTests"
       ]
     }
   ],
