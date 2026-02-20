@@ -32,7 +32,7 @@ export function AnalyticsScreen() {
     error,
     refetch,
     isRefetching,
-  } = useUserAnalytics(account?.handle || "", timeRange);
+  } = useUserAnalytics(account?.did || "", timeRange);
 
   // Prepare posts for AI analysis
   const postsForAI = useMemo<PostAnalysisPost[] | undefined>(() => {

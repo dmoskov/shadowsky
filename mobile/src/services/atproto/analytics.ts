@@ -96,15 +96,17 @@ export async function getUserAnalytics(
 
   // Fetch posts until we reach the time range or max pages
   while (hasMore && pageCount < maxPages) {
-    const response = await getAuthorFeed(actor, { cursor, limit: 100 });
+    const response = await getAuthorFeed(actor, { cursor, limit: 100, filter: "posts_and_author_threads" });
     const posts = response.feed;
 
-    // Filter posts within time range, excluding reposts (matching web behavior)
+    // Filter posts within time range, excluding reposts and other users' posts
     for (const post of posts) {
       const postDate = new Date(post.post.indexedAt);
       const isRepost = post.reason?.$type === "app.bsky.feed.defs#reasonRepost";
+      // Verify this post was authored by the requested actor (not someone else's content)
+      const isOwnPost = post.post.author.did === actor || post.post.author.handle === actor;
       if (postDate >= startDate) {
-        if (!isRepost && postDate <= now) {
+        if (!isRepost && isOwnPost && postDate <= now) {
           allPosts.push(post);
         }
       } else {
