@@ -182,7 +182,7 @@ export function aggregateNotifications(
  */
 export function filterNotificationsByType(
   notifications: Notification[],
-  filter: 'all' | 'likes' | 'replies' | 'follows' | 'mentions' | 'quotes',
+  filter: 'all' | 'likes' | 'reposts' | 'replies' | 'follows' | 'mentions' | 'quotes',
 ): Notification[] {
   if (filter === 'all') {
     return notifications;
@@ -190,6 +190,7 @@ export function filterNotificationsByType(
 
   const reasonMap: Record<string, string[]> = {
     likes: ['like', 'like-via-repost'],
+    reposts: ['repost', 'repost-via-repost'],
     replies: ['reply'],
     follows: ['follow', 'starterpack-joined'],
     mentions: ['mention'],
@@ -206,7 +207,7 @@ export function filterNotificationsByType(
  */
 export function filterProcessedNotifications(
   processed: ProcessedNotification[],
-  filter: 'all' | 'likes' | 'replies' | 'follows' | 'mentions' | 'quotes',
+  filter: 'all' | 'likes' | 'reposts' | 'replies' | 'follows' | 'mentions' | 'quotes',
 ): ProcessedNotification[] {
   if (filter === 'all') {
     return processed;
@@ -214,6 +215,7 @@ export function filterProcessedNotifications(
 
   const reasonMap: Record<string, string[]> = {
     likes: ['like', 'like-via-repost'],
+    reposts: ['repost', 'repost-via-repost'],
     replies: ['reply'],
     follows: ['follow', 'starterpack-joined'],
     mentions: ['mention'],
@@ -238,6 +240,7 @@ export function countNotificationsByType(
   const counts: Record<string, number> = {
     all: notifications.length,
     likes: 0,
+    reposts: 0,
     replies: 0,
     follows: 0,
     mentions: 0,
@@ -252,6 +255,7 @@ export function countNotificationsByType(
         break;
       case 'repost':
       case 'repost-via-repost':
+        counts.reposts++;
         break;
       case 'reply':
         counts.replies++;

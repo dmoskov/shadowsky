@@ -6,7 +6,7 @@
  */
 
 import { useMemo } from 'react';
-import { AppBskyNotificationListNotifications, AppBskyFeedPost } from '@atproto/api';
+import { AppBskyNotificationListNotifications, AppBskyFeedPost, AppBskyFeedDefs } from '@atproto/api';
 import { UseInfiniteQueryResult, InfiniteData } from '@tanstack/react-query';
 import { ProcessedNotification } from '../../utils/notification-aggregator';
 
@@ -46,6 +46,36 @@ interface SerializedNotificationLabel {
   src: string;
 }
 
+// Post preview types for rich notification rendering
+interface SerializedPostPreviewImage {
+  thumb: string;
+  fullsize: string;
+  alt: string;
+  aspectRatio?: { width: number; height: number };
+}
+
+interface SerializedPostPreviewExternal {
+  uri: string;
+  title: string;
+  description: string;
+  thumb?: string;
+}
+
+interface SerializedPostPreviewVideo {
+  playlist: string;
+  thumbnail?: string;
+  aspectRatio?: { width: number; height: number };
+}
+
+interface SerializedPostPreview {
+  uri: string;
+  text?: string;
+  author: SerializedNotificationAuthor;
+  images?: SerializedPostPreviewImage[];
+  video?: SerializedPostPreviewVideo;
+  external?: SerializedPostPreviewExternal;
+}
+
 interface SerializedNotification {
   uri: string;
   cid: string;
@@ -56,6 +86,7 @@ interface SerializedNotification {
   isRead: boolean;
   indexedAt: string;
   labels?: SerializedNotificationLabel[];
+  postPreview?: SerializedPostPreview;
 }
 
 interface SerializedNotificationUser {
@@ -73,6 +104,7 @@ interface SerializedAggregatedNotification {
   latestTimestamp: string;
   notifications: SerializedNotification[];
   targetPostUri?: string;
+  postPreview?: SerializedPostPreview;
 }
 
 interface SerializedSingleNotification {
@@ -95,6 +127,7 @@ interface SerializedNotificationData {
 
 export interface NotificationSerializerOptions {
   isOnline?: boolean;
+  postMap?: Map<string, AppBskyFeedDefs.PostView>;
 }
 
 export interface NotificationSerializerResult {
@@ -186,12 +219,105 @@ function serializeNotificationLabels(labels: any[] | undefined): SerializedNotif
 }
 
 /**
+ * Serialize a post preview from a PostView for rich notification rendering
+ */
+function serializePostPreview(post: AppBskyFeedDefs.PostView): SerializedPostPreview {
+  const embed = post.embed as any;
+  const record = post.record as any;
+  const preview: SerializedPostPreview = {
+    uri: post.uri,
+    text: record?.text,
+    author: serializeNotificationAuthor(post.author),
+  };
+
+  if (!embed) return preview;
+
+  // Extract images
+  if (embed.$type === 'app.bsky.embed.images#view' && embed.images) {
+    preview.images = embed.images.map((img: any) => ({
+      thumb: img.thumb,
+      fullsize: img.fullsize,
+      alt: img.alt || '',
+      aspectRatio: img.aspectRatio,
+    }));
+  } else if (
+    embed.$type === 'app.bsky.embed.recordWithMedia#view' &&
+    embed.media?.$type === 'app.bsky.embed.images#view' &&
+    embed.media.images
+  ) {
+    preview.images = embed.media.images.map((img: any) => ({
+      thumb: img.thumb,
+      fullsize: img.fullsize,
+      alt: img.alt || '',
+      aspectRatio: img.aspectRatio,
+    }));
+  }
+
+  // Extract video
+  if (embed.$type === 'app.bsky.embed.video#view') {
+    preview.video = {
+      playlist: embed.playlist,
+      thumbnail: embed.thumbnail,
+      aspectRatio: embed.aspectRatio,
+    };
+  } else if (
+    embed.$type === 'app.bsky.embed.recordWithMedia#view' &&
+    embed.media?.$type === 'app.bsky.embed.video#view'
+  ) {
+    preview.video = {
+      playlist: embed.media.playlist,
+      thumbnail: embed.media.thumbnail,
+      aspectRatio: embed.media.aspectRatio,
+    };
+  }
+
+  // Extract external link
+  if (embed.$type === 'app.bsky.embed.external#view' && embed.external) {
+    preview.external = {
+      uri: embed.external.uri,
+      title: embed.external.title || '',
+      description: embed.external.description || '',
+      thumb: embed.external.thumb,
+    };
+  } else if (
+    embed.$type === 'app.bsky.embed.recordWithMedia#view' &&
+    embed.media?.$type === 'app.bsky.embed.external#view' &&
+    embed.media.external
+  ) {
+    preview.external = {
+      uri: embed.media.external.uri,
+      title: embed.media.external.title || '',
+      description: embed.media.external.description || '',
+      thumb: embed.media.external.thumb,
+    };
+  }
+
+  return preview;
+}
+
+/**
+ * Get the post URI for a notification
+ */
+function getPostUriForNotification(
+  notification: AppBskyNotificationListNotifications.Notification,
+): string | undefined {
+  if (['like', 'repost', 'like-via-repost', 'repost-via-repost'].includes(notification.reason)) {
+    return notification.reasonSubject || undefined;
+  }
+  if (['reply', 'quote', 'mention'].includes(notification.reason)) {
+    return notification.uri;
+  }
+  return undefined;
+}
+
+/**
  * Serialize a single notification
  */
 function serializeSingleNotification(
-  notification: AppBskyNotificationListNotifications.Notification
+  notification: AppBskyNotificationListNotifications.Notification,
+  postMap?: Map<string, AppBskyFeedDefs.PostView>,
 ): SerializedNotification {
-  return {
+  const serialized: SerializedNotification = {
     uri: notification.uri,
     cid: notification.cid,
     author: serializeNotificationAuthor(notification.author),
@@ -202,16 +328,39 @@ function serializeSingleNotification(
     indexedAt: notification.indexedAt,
     labels: serializeNotificationLabels(notification.labels),
   };
+
+  // Add post preview if we have the post data
+  if (postMap) {
+    const postUri = getPostUriForNotification(notification);
+    if (postUri) {
+      const post = postMap.get(postUri);
+      if (post) {
+        serialized.postPreview = serializePostPreview(post);
+      }
+    }
+  }
+
+  return serialized;
 }
 
 /**
  * Serialize processed notifications
  */
 function serializeProcessedNotifications(
-  processedNotifications: ProcessedNotification[]
+  processedNotifications: ProcessedNotification[],
+  postMap?: Map<string, AppBskyFeedDefs.PostView>,
 ): SerializedProcessedNotification[] {
   return processedNotifications.map(item => {
     if (item.type === 'aggregated') {
+      // Get the target post preview for aggregated notifications
+      let postPreview: SerializedPostPreview | undefined;
+      if (postMap && item.targetPostUri) {
+        const post = postMap.get(item.targetPostUri);
+        if (post) {
+          postPreview = serializePostPreview(post);
+        }
+      }
+
       return {
         type: 'aggregated',
         reason: item.reason,
@@ -223,13 +372,14 @@ function serializeProcessedNotifications(
           avatar: user.avatar,
         })),
         latestTimestamp: item.latestTimestamp,
-        notifications: item.notifications.map(serializeSingleNotification),
+        notifications: item.notifications.map(n => serializeSingleNotification(n, postMap)),
         targetPostUri: item.targetPostUri,
+        postPreview,
       } as SerializedAggregatedNotification;
     } else {
       return {
         type: 'single',
-        notification: serializeSingleNotification(item.notification),
+        notification: serializeSingleNotification(item.notification, postMap),
       } as SerializedSingleNotification;
     }
   });
@@ -243,7 +393,7 @@ export function useCompleteNotificationSerializer(
   cursor: string | undefined,
   options: NotificationSerializerOptions = {}
 ): NotificationSerializerResult {
-  const { isOnline = true } = options;
+  const { isOnline = true, postMap } = options;
 
   const serializedJSON = useMemo(() => {
     if (!processedNotifications || processedNotifications.length === 0) {
@@ -251,7 +401,7 @@ export function useCompleteNotificationSerializer(
     }
 
     const serializedData: SerializedNotificationData = {
-      notifications: serializeProcessedNotifications(processedNotifications),
+      notifications: serializeProcessedNotifications(processedNotifications, postMap),
       metadata: {
         timestamp: Date.now(),
         isOnline,
@@ -260,7 +410,7 @@ export function useCompleteNotificationSerializer(
     };
 
     return JSON.stringify(serializedData);
-  }, [processedNotifications, cursor, isOnline]);
+  }, [processedNotifications, cursor, isOnline, postMap]);
 
   return { serializedJSON };
 }

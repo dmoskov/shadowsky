@@ -63,7 +63,7 @@ class NotificationListState: ObservableObject {
 
     private func updateNotifications(_ data: SerializedNotificationData) {
         var newProcessed: [ProcessedNotificationUIModel] = []
-        var newCounts: [String: Int] = ["all": 0, "likes": 0, "replies": 0, "follows": 0, "mentions": 0, "quotes": 0]
+        var newCounts: [String: Int] = ["all": 0, "likes": 0, "reposts": 0, "replies": 0, "follows": 0, "mentions": 0, "quotes": 0]
         var totalCount = 0
 
         for item in data.notifications {
@@ -94,6 +94,8 @@ class NotificationListState: ObservableObject {
         switch reason {
         case "like", "like-via-repost":
             counts["likes", default: 0] += 1
+        case "repost", "repost-via-repost":
+            counts["reposts", default: 0] += 1
         case "reply":
             counts["replies", default: 0] += 1
         case "follow", "starterpack-joined":
