@@ -16,6 +16,7 @@ import { getNotifications, getUnreadCount } from './atproto/notifications';
 import { preferencesService } from './preferences';
 import { syncNotificationWidget, syncTrendingWidget } from './widget-data-service';
 import { getTrendingTopics } from './trending-service';
+import { isLowPowerModeEnabled } from '../../modules/low-power-mode';
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('BackgroundFetch');
@@ -99,6 +100,12 @@ async function updateBadgeCount(count: number): Promise<void> {
 TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
   try {
     logger.log('Starting background fetch task');
+
+    // Skip background fetch in Low Power Mode to save battery
+    if (isLowPowerModeEnabled()) {
+      logger.log('Low Power Mode active, skipping background fetch');
+      return BackgroundFetch.BackgroundFetchResult.NoData;
+    }
 
     // Check if user has enabled background fetch
     const prefs = await preferencesService.get();

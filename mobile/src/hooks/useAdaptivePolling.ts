@@ -4,12 +4,17 @@
  * Provides app-state-aware polling intervals that:
  * 1. Stop polling when the app is backgrounded
  * 2. Reduce frequency when Jetstream provides real-time updates
+ * 3. Triple intervals when Low Power Mode is enabled
  */
 
 import { useCallback, useSyncExternalStore } from "react";
 import { AppState } from "react-native";
 import { useJetstreamOptional } from "../contexts/JetstreamContext";
 import { useIsScrolling } from "./useScrollState";
+import { useLowPowerMode } from "./useLowPowerMode";
+
+/** Multiplier applied to all polling intervals when Low Power Mode is active */
+const LOW_POWER_MULTIPLIER = 3;
 
 /**
  * Subscribe to AppState and return current state via useSyncExternalStore.
@@ -41,14 +46,18 @@ export interface AdaptivePollingConfig {
  *
  * When the app is backgrounded, returns `false` to stop polling entirely.
  * When Jetstream is connected, uses the longer realtime interval.
+ * When Low Power Mode is enabled, triples all intervals.
  * Otherwise uses the standard active interval.
  *
  * Pair with `refetchIntervalInBackground: false` for defense-in-depth.
  */
-export function useAdaptivePolling(config: AdaptivePollingConfig): number | false {
+export function useAdaptivePolling(
+  config: AdaptivePollingConfig,
+): number | false {
   const isAppActive = useAppStateActive();
   const jetstream = useJetstreamOptional();
   const isScrolling = useIsScrolling();
+  const isLowPower = useLowPowerMode();
 
   if (!isAppActive) {
     return false;
@@ -61,9 +70,9 @@ export function useAdaptivePolling(config: AdaptivePollingConfig): number | fals
     return false;
   }
 
-  if (jetstream?.isConnected) {
-    return config.activeRealtimeInterval;
-  }
+  const base = jetstream?.isConnected
+    ? config.activeRealtimeInterval
+    : config.activeInterval;
 
-  return config.activeInterval;
+  return isLowPower ? base * LOW_POWER_MULTIPLIER : base;
 }

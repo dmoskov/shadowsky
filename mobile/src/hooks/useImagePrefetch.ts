@@ -2,6 +2,7 @@ import {useRef, useCallback, useEffect} from 'react';
 import {Image} from 'expo-image';
 import {AppBskyFeedDefs, AppBskyEmbedImages} from '@atproto/api';
 import {getOptimizedUrl} from '../utils/image-cdn';
+import {useLowPowerMode} from './useLowPowerMode';
 
 const PREFETCH_WINDOW = 10; // prefetch thumbs for posts 3-13 ahead
 const MAX_PREFETCH_SET_SIZE = 200; // cap to prevent unbounded memory growth
@@ -31,9 +32,13 @@ function extractImageUrls(post: AppBskyFeedDefs.FeedViewPost): string[] {
 
 export function useImagePrefetch(posts: AppBskyFeedDefs.FeedViewPost[]) {
   const prefetchedUrls = useRef(new Set<string>());
+  const isLowPower = useLowPowerMode();
 
   const prefetchVisibleWindow = useCallback(
     (firstVisibleIndex: number) => {
+      // Skip prefetching entirely in Low Power Mode — images load on demand
+      if (isLowPower) return;
+
       const startIdx = firstVisibleIndex + 3;
       const endIdx = Math.min(startIdx + PREFETCH_WINDOW, posts.length);
       const urlsToPrefetch: string[] = [];
@@ -62,7 +67,7 @@ export function useImagePrefetch(posts: AppBskyFeedDefs.FeedViewPost[]) {
         Image.prefetch(urlsToPrefetch);
       }
     },
-    [posts],
+    [posts, isLowPower],
   );
 
   /**

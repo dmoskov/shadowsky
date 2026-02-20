@@ -16,6 +16,7 @@ import {
   clearAllWidgetData,
 } from "../services/widget-data-service";
 import { useAuth } from "../contexts/AuthContext";
+import { useLowPowerMode } from "./useLowPowerMode";
 
 export function useWidgetSync() {
   if (Platform.OS !== "ios") return;
@@ -23,6 +24,7 @@ export function useWidgetSync() {
   const queryClient = useQueryClient();
   const { session } = useAuth();
   const prevSessionRef = useRef(session);
+  const isLowPower = useLowPowerMode();
 
   // Sync user handle on sign in, clear on sign out
   useEffect(() => {
@@ -34,7 +36,9 @@ export function useWidgetSync() {
     prevSessionRef.current = session;
   }, [session]);
 
-  // Subscribe to query cache changes and sync to widgets
+  // Subscribe to query cache changes and sync to widgets.
+  // In Low Power Mode, only sync notification count (essential for badge);
+  // skip trending and DM widget updates to reduce processing.
   useEffect(() => {
     if (!session) return;
 
@@ -68,6 +72,9 @@ export function useWidgetSync() {
           syncNotificationWidget(unreadCount, notifications);
         }
       }
+
+      // Skip non-essential widget syncs in Low Power Mode
+      if (isLowPower) return;
 
       // Sync trending topics to widget
       if (queryKey[0] === "trendingTopics" && query.state.data != null) {
@@ -111,5 +118,5 @@ export function useWidgetSync() {
     return () => {
       unsubscribe();
     };
-  }, [queryClient, session]);
+  }, [queryClient, session, isLowPower]);
 }
