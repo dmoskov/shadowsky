@@ -106,8 +106,22 @@ export function useMarkAsRead() {
   return useMutation({
     mutationFn: (conversationId: string) =>
       dmService.updateRead(conversationId),
+    onMutate: (conversationId: string) => {
+      // Optimistically update the unread count to 0 in the conversations cache
+      queryClient.setQueryData(
+        ["dm-conversations"],
+        (oldData: any[] | undefined) => {
+          if (!oldData) return oldData;
+          return oldData.map((convo: any) =>
+            convo.id === conversationId
+              ? { ...convo, unreadCount: 0 }
+              : convo,
+          );
+        },
+      );
+    },
     onSuccess: () => {
-      // Invalidate conversations list to update unread counts
+      // Invalidate conversations list to sync with server
       queryClient.invalidateQueries({ queryKey: ["dm-conversations"] });
     },
   });
