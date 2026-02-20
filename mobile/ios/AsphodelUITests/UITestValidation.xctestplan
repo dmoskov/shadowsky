@@ -76,7 +76,15 @@
         "ShareIntentModuleTests",
         "SpotlightSearchModuleTests",
         "VideoCompressorModuleTests",
-        "WidgetDataBridgeModuleTests"
+        "WidgetDataBridgeModuleTests",
+        "ImageEmbedTests",
+        "ImageTileTests",
+        "VideoEmbedTests",
+        "QuoteEmbedTests",
+        "ExternalLinkEmbedTests",
+        "PostEmbedDispatcherTests",
+        "CachedAsyncImageTests",
+        "PostEmbedDataFactoryTests"
       ]
     }
   ],
