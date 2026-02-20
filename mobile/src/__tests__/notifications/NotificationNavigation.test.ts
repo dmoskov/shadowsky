@@ -135,6 +135,43 @@ describe('Notification Navigation (tap-to-open)', () => {
 
       expect(mockPush).toHaveBeenCalledWith('/(tabs)/notifications');
     });
+
+    it('tap reply notification with focusUri → passes focusUri as query param', async () => {
+      await tapNotification({
+        type: 'thread',
+        postId: 'thread123',
+        focusUri: 'at://did:plc:abc/app.bsky.feed.post/reply456',
+      });
+
+      expect(mockPush).toHaveBeenCalledWith(
+        '/(tabs)/(home)/thread/thread123?focusUri=at%3A%2F%2Fdid%3Aplc%3Aabc%2Fapp.bsky.feed.post%2Freply456',
+      );
+    });
+
+    it('tap notification with handle and focusUri → passes both query params', async () => {
+      await tapNotification({
+        type: 'post',
+        postId: 'p1',
+        handle: 'alice.bsky.social',
+        focusUri: 'at://did:plc:abc/app.bsky.feed.post/r1',
+      });
+
+      expect(mockPush).toHaveBeenCalledWith(
+        '/(tabs)/(home)/thread/p1?handle=alice.bsky.social&focusUri=at%3A%2F%2Fdid%3Aplc%3Aabc%2Fapp.bsky.feed.post%2Fr1',
+      );
+    });
+
+    it('tap notification with handle only → passes handle query param', async () => {
+      await tapNotification({
+        type: 'post',
+        postId: 'p2',
+        handle: 'bob.bsky.social',
+      });
+
+      expect(mockPush).toHaveBeenCalledWith(
+        '/(tabs)/(home)/thread/p2?handle=bob.bsky.social',
+      );
+    });
   });
 
   // ── Profile / Follow Notifications ────────────────────
