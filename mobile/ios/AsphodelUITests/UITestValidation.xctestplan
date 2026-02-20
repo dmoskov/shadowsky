@@ -72,7 +72,11 @@
         "NotificationReasonEdgeCaseTests",
         "NotificationListFilterTests",
         "NotificationUIModelConversionErrorTests",
-        "NotificationBridgeModuleErrorTests"
+        "NotificationBridgeModuleErrorTests",
+        "ShareIntentModuleTests",
+        "SpotlightSearchModuleTests",
+        "VideoCompressorModuleTests",
+        "WidgetDataBridgeModuleTests"
       ]
     }
   ],
