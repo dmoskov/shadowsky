@@ -55,7 +55,24 @@
         "ComposeToolbarViewTests",
         "NotificationBridgeTypesTests",
         "NotificationDataDecodeTests",
-        "NotificationBridgeModuleTests"
+        "NotificationBridgeModuleTests",
+        "FeedBridgeErrorTests",
+        "FeedStateConversionErrorTests",
+        "FeedListViewErrorStateTests",
+        "ThreadStateParsingErrorTests",
+        "ThreadViewUIErrorStateTests",
+        "ThreadNodeTypeTests",
+        "NativeComposeStateErrorTests",
+        "ComposeViewErrorUITests",
+        "MessagesDataStateParsingErrorTests",
+        "MessageTimeFormatterErrorTests",
+        "ConversationListViewEdgeCaseTests",
+        "MessageThreadViewEdgeCaseTests",
+        "NotificationBridgeDecodeErrorTests",
+        "NotificationReasonEdgeCaseTests",
+        "NotificationListFilterTests",
+        "NotificationUIModelConversionErrorTests",
+        "NotificationBridgeModuleErrorTests"
       ]
     }
   ],
