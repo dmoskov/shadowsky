@@ -23,7 +23,12 @@ function handleNotificationNavigation(
     case 'thread':
       // Navigate to specific post/thread
       if (data.postId) {
-        router.push(`/(tabs)/(home)/thread/${data.postId}` as never);
+        const params = new URLSearchParams();
+        if (data.handle) params.set('handle', data.handle);
+        if (data.focusUri) params.set('focusUri', data.focusUri);
+        const qs = params.toString();
+        const path = `/(tabs)/(home)/thread/${data.postId}${qs ? `?${qs}` : ''}`;
+        router.push(path as never);
       } else {
         router.push('/(tabs)/notifications' as never);
       }

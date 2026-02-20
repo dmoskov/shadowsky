@@ -8,6 +8,9 @@ export type ThreadViewProps = ViewProps & {
   error?: string;
   threadUri?: string;
 
+  // Focused reply (scroll-to target from notification tap)
+  focusedReplyUri?: string;
+
   // Summary props (JSON-serialized ThreadSummaryResult from JS)
   summaryJson?: string;
   isSummaryLoading?: boolean;

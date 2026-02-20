@@ -33,6 +33,10 @@ public class ThreadViewModule: Module {
                 view.threadUri = threadUri
             }
 
+            Prop("focusedReplyUri") { (view: ThreadViewWrapper, focusedReplyUri: String?) in
+                view.focusedReplyUri = focusedReplyUri
+            }
+
             // Summary props
             Prop("summaryJson") { (view: ThreadViewWrapper, summaryJson: String?) in
                 view.summaryJson = summaryJson
@@ -155,6 +159,10 @@ class ThreadViewWrapper: ExpoView {
     }
 
     var threadUri: String? = nil {
+        didSet { updateView() }
+    }
+
+    var focusedReplyUri: String? = nil {
         didSet { updateView() }
     }
 
@@ -302,6 +310,7 @@ class ThreadViewWrapper: ExpoView {
             isRefreshing: isRefreshing,
             error: error,
             threadUri: threadUri,
+            focusedReplyUri: focusedReplyUri,
             summaryData: parsedSummaryData,
             isSummaryLoading: isSummaryLoading,
             summaryMode: summaryMode,

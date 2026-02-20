@@ -5,11 +5,20 @@ import { ErrorState } from "../../../../../src/components/ErrorState";
 
 export default function ThreadRoute() {
   const { value: postId, isValid } = useRequiredParam("postId");
-  const { handle } = useLocalSearchParams<{ handle?: string }>();
+  const { handle, focusUri } = useLocalSearchParams<{
+    handle?: string;
+    focusUri?: string;
+  }>();
 
   if (!isValid || !postId) {
     return <ErrorState message="Missing post ID" />;
   }
 
-  return <ThreadScreenNative postId={postId} handle={handle || ""} />;
+  return (
+    <ThreadScreenNative
+      postId={postId}
+      handle={handle || ""}
+      focusedReplyUri={focusUri}
+    />
+  );
 }

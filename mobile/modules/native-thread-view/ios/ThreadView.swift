@@ -29,6 +29,12 @@ struct ThreadView: View {
     let isRefreshing: Bool
     let error: String?
     let threadUri: String?
+    let focusedReplyUri: String?
+
+    // Track whether we've already scrolled to the focused reply
+    @State private var hasScrolledToFocus = false
+    // Controls the highlight flash animation
+    @State private var highlightedUri: String? = nil
 
     // Summary data (passed from JS via bridge)
     let summaryData: ThreadSummaryData?
@@ -129,126 +135,52 @@ struct ThreadView: View {
     // MARK: - Thread Scroll View
 
     private func threadScrollView(rootPost: ThreadNode) -> some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                // Pull to refresh indicator
-                if isRefreshing {
-                    ProgressView()
-                        .padding()
-                }
-
-                // Root post
-                ThreadPostCard(
-                    node: rootPost,
-                    isRoot: true,
-                    onPress: {
-                        onPostPress?(rootPost.post.uri, rootPost.post.author.handle)
-                    },
-                    onPressProfile: { handle in
-                        onProfilePress?(handle)
-                    },
-                    onLike: {
-                        onLike?(
-                            rootPost.post.uri,
-                            rootPost.post.cid,
-                            rootPost.post.viewer?.like
-                        )
-                    },
-                    onRepost: {
-                        onRepost?(
-                            rootPost.post.uri,
-                            rootPost.post.cid,
-                            rootPost.post.viewer?.repost
-                        )
-                    },
-                    onReply: {
-                        // Focus the inline composer with this post as reply target
-                        composerState.replyToHandle = rootPost.post.author.handle
-                        composerState.replyToUri = rootPost.post.uri
-                        composerState.replyToCid = rootPost.post.cid
-                        onReply?(
-                            rootPost.post.uri,
-                            rootPost.post.cid,
-                            rootPost.post.author.handle
-                        )
-                    },
-                    onBookmark: {
-                        onBookmark?(rootPost.post.uri)
-                    },
-                    onMentionPress: { handle, did in
-                        onMentionPress?(handle, did)
-                    },
-                    onHashtagPress: { tag in
-                        onHashtagPress?(tag)
-                    },
-                    onShare: {
-                        onShare?(rootPost.post.uri)
-                    },
-                    onPressLikeCount: {
-                        onPressLikeCount?(rootPost.post.uri)
-                    },
-                    onPressRepostCount: {
-                        onPressRepostCount?(rootPost.post.uri)
-                    },
-                    onPressQuoteCount: {
-                        onPressQuoteCount?(rootPost.post.uri)
-                    },
-                    onTranslate: onTranslate,
-                    onLinkPress: { uri in
-                        onLinkPress?(uri)
-                    },
-                    onImagePress: { images, index in
-                        onImagePress?(images, index)
-                    },
-                    onQuotePress: { uri, handle in
-                        onQuotePress?(uri, handle)
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    // Pull to refresh indicator
+                    if isRefreshing {
+                        ProgressView()
+                            .padding()
                     }
-                )
 
-                // AI Thread Summary (between root post and replies)
-                if isSummaryLoading {
-                    ThreadSummaryLoadingView()
-                } else if let summary = summaryData {
-                    ThreadSummaryView(
-                        summaryData: summary,
-                        summaryMode: summaryMode,
-                        onToggleMode: { mode in
-                            onSummaryModeChange?(mode)
-                        }
-                    )
-                }
-
-                // Divider
-                if !rootPost.replies.isEmpty {
-                    Divider()
-                        .padding(.vertical, 8)
-                }
-
-                // Nested replies
-                ForEach(rootPost.replies) { replyNode in
-                    ThreadReplyView(
-                        node: replyNode,
-                        onPress: { uri, handle in
-                            onPostPress?(uri, handle)
+                    // Root post
+                    ThreadPostCard(
+                        node: rootPost,
+                        isRoot: true,
+                        onPress: {
+                            onPostPress?(rootPost.post.uri, rootPost.post.author.handle)
                         },
                         onPressProfile: { handle in
                             onProfilePress?(handle)
                         },
-                        onLike: { uri, cid, likeUri in
-                            onLike?(uri, cid, likeUri)
+                        onLike: {
+                            onLike?(
+                                rootPost.post.uri,
+                                rootPost.post.cid,
+                                rootPost.post.viewer?.like
+                            )
                         },
-                        onRepost: { uri, cid, repostUri in
-                            onRepost?(uri, cid, repostUri)
+                        onRepost: {
+                            onRepost?(
+                                rootPost.post.uri,
+                                rootPost.post.cid,
+                                rootPost.post.viewer?.repost
+                            )
                         },
-                        onReply: { uri, cid, handle in
+                        onReply: {
                             // Focus the inline composer with this post as reply target
-                            composerState.replyToHandle = handle
-                            composerState.replyToUri = uri
-                            composerState.replyToCid = cid
-                            onReply?(uri, cid, handle)
+                            composerState.replyToHandle = rootPost.post.author.handle
+                            composerState.replyToUri = rootPost.post.uri
+                            composerState.replyToCid = rootPost.post.cid
+                            onReply?(
+                                rootPost.post.uri,
+                                rootPost.post.cid,
+                                rootPost.post.author.handle
+                            )
                         },
-                        onBookmark: { uri in
-                            onBookmark?(uri)
+                        onBookmark: {
+                            onBookmark?(rootPost.post.uri)
                         },
                         onMentionPress: { handle, did in
                             onMentionPress?(handle, did)
@@ -256,17 +188,17 @@ struct ThreadView: View {
                         onHashtagPress: { tag in
                             onHashtagPress?(tag)
                         },
-                        onShare: { uri in
-                            onShare?(uri)
+                        onShare: {
+                            onShare?(rootPost.post.uri)
                         },
-                        onPressLikeCount: { uri in
-                            onPressLikeCount?(uri)
+                        onPressLikeCount: {
+                            onPressLikeCount?(rootPost.post.uri)
                         },
-                        onPressRepostCount: { uri in
-                            onPressRepostCount?(uri)
+                        onPressRepostCount: {
+                            onPressRepostCount?(rootPost.post.uri)
                         },
-                        onPressQuoteCount: { uri in
-                            onPressQuoteCount?(uri)
+                        onPressQuoteCount: {
+                            onPressQuoteCount?(rootPost.post.uri)
                         },
                         onTranslate: onTranslate,
                         onLinkPress: { uri in
@@ -279,21 +211,159 @@ struct ThreadView: View {
                             onQuotePress?(uri, handle)
                         }
                     )
-                }
+                    .id(rootPost.post.uri)
 
-                // Empty replies message
-                if rootPost.replies.isEmpty {
-                    Text("No replies yet")
-                        .foregroundColor(.secondary)
-                        .font(.subheadline)
-                        .padding()
+                    // AI Thread Summary (between root post and replies)
+                    if isSummaryLoading {
+                        ThreadSummaryLoadingView()
+                    } else if let summary = summaryData {
+                        ThreadSummaryView(
+                            summaryData: summary,
+                            summaryMode: summaryMode,
+                            onToggleMode: { mode in
+                                onSummaryModeChange?(mode)
+                            }
+                        )
+                    }
+
+                    // Divider
+                    if !rootPost.replies.isEmpty {
+                        Divider()
+                            .padding(.vertical, 8)
+                    }
+
+                    // Nested replies
+                    ForEach(rootPost.replies) { replyNode in
+                        threadReplyWithHighlight(replyNode: replyNode)
+                    }
+
+                    // Empty replies message
+                    if rootPost.replies.isEmpty {
+                        Text("No replies yet")
+                            .foregroundColor(.secondary)
+                            .font(.subheadline)
+                            .padding()
+                    }
+                }
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .refreshable {
+                onRefresh?()
+            }
+            .onChange(of: threadState.rootPost?.post.uri) { _ in
+                scrollToFocusedReplyIfNeeded(proxy: proxy)
+            }
+            .onAppear {
+                scrollToFocusedReplyIfNeeded(proxy: proxy)
+            }
+        }
+    }
+
+    // MARK: - Reply with highlight overlay
+
+    private func threadReplyWithHighlight(replyNode: ThreadNode) -> some View {
+        ThreadReplyView(
+            node: replyNode,
+            onPress: { uri, handle in
+                onPostPress?(uri, handle)
+            },
+            onPressProfile: { handle in
+                onProfilePress?(handle)
+            },
+            onLike: { uri, cid, likeUri in
+                onLike?(uri, cid, likeUri)
+            },
+            onRepost: { uri, cid, repostUri in
+                onRepost?(uri, cid, repostUri)
+            },
+            onReply: { uri, cid, handle in
+                // Focus the inline composer with this post as reply target
+                composerState.replyToHandle = handle
+                composerState.replyToUri = uri
+                composerState.replyToCid = cid
+                onReply?(uri, cid, handle)
+            },
+            onBookmark: { uri in
+                onBookmark?(uri)
+            },
+            onMentionPress: { handle, did in
+                onMentionPress?(handle, did)
+            },
+            onHashtagPress: { tag in
+                onHashtagPress?(tag)
+            },
+            onShare: { uri in
+                onShare?(uri)
+            },
+            onPressLikeCount: { uri in
+                onPressLikeCount?(uri)
+            },
+            onPressRepostCount: { uri in
+                onPressRepostCount?(uri)
+            },
+            onPressQuoteCount: { uri in
+                onPressQuoteCount?(uri)
+            },
+            onTranslate: onTranslate,
+            onLinkPress: { uri in
+                onLinkPress?(uri)
+            },
+            onImagePress: { images, index in
+                onImagePress?(images, index)
+            },
+            onQuotePress: { uri, handle in
+                onQuotePress?(uri, handle)
+            }
+        )
+        .id(replyNode.post.uri)
+        .background(
+            highlightedUri == replyNode.post.uri
+                ? Color.accentColor.opacity(0.12)
+                : Color.clear
+        )
+    }
+
+    // MARK: - Scroll to focused reply
+
+    private func scrollToFocusedReplyIfNeeded(proxy: ScrollViewProxy) {
+        guard let focusUri = focusedReplyUri,
+              !focusUri.isEmpty,
+              !hasScrolledToFocus,
+              threadState.rootPost != nil else { return }
+
+        // Check that the target URI exists in the thread tree
+        guard findNodeInTree(threadState.rootPost!, uri: focusUri) else { return }
+
+        hasScrolledToFocus = true
+
+        // Delay to allow LazyVStack to render the target row
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                proxy.scrollTo(focusUri, anchor: .center)
+            }
+
+            // Flash highlight
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.easeIn(duration: 0.15)) {
+                    highlightedUri = focusUri
+                }
+                // Fade highlight out after 1.5 seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    withAnimation(.easeOut(duration: 0.6)) {
+                        highlightedUri = nil
+                    }
                 }
             }
         }
-        .scrollDismissesKeyboard(.interactively)
-        .refreshable {
-            onRefresh?()
+    }
+
+    /// Recursively check if a URI exists in the thread node tree
+    private func findNodeInTree(_ node: ThreadNode, uri: String) -> Bool {
+        if node.post.uri == uri { return true }
+        for reply in node.replies {
+            if findNodeInTree(reply, uri: uri) { return true }
         }
+        return false
     }
 
     // MARK: - Loading View
@@ -577,6 +647,7 @@ struct ThreadView_Previews: PreviewProvider {
             isRefreshing: false,
             error: nil,
             threadUri: "at://did:plc:test/app.bsky.feed.post/test",
+            focusedReplyUri: nil,
             summaryData: nil,
             isSummaryLoading: false,
             summaryMode: "quick",

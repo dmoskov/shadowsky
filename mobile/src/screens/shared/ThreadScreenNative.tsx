@@ -38,6 +38,7 @@ const MIN_POSTS_FOR_SUMMARY = 5;
 interface ThreadScreenProps {
   handle: string;
   postId: string;
+  focusedReplyUri?: string;
 }
 
 /**
@@ -145,7 +146,7 @@ function getSummaryFormat(postCount: number, totalEngagement: number): ThreadSum
   return "brief";
 }
 
-export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
+export function ThreadScreenNative({ handle, postId, focusedReplyUri }: ThreadScreenProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
@@ -553,6 +554,7 @@ export function ThreadScreenNative({ handle, postId }: ThreadScreenProps) {
         isRefreshing={isRefreshing}
         error={error ? (typeof error === 'object' && error !== null && 'message' in error ? (error as Error).message : "Failed to load thread") : undefined}
         threadUri={postUri}
+        focusedReplyUri={focusedReplyUri}
         summaryJson={summaryJson}
         isSummaryLoading={shouldFetchSummary && isSummaryLoading}
         summaryMode={summaryMode}
