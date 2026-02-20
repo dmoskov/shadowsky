@@ -10,6 +10,7 @@ import React, {
   useCallback,
   useState,
   useRef,
+  useMemo,
   forwardRef,
   useImperativeHandle,
 } from 'react';
@@ -21,6 +22,7 @@ import { useSearchPosts } from '../../../src/hooks/api/useSearchPosts';
 import { useTrendingData } from '../../../src/hooks/useTrending';
 import { useRouter } from 'expo-router';
 import { setSearchResults, setTrendingData, setSearchHistory } from '../index';
+import { SearchFilterSheet, type SearchFilterValues } from '../../../src/components/SearchFilterSheet';
 
 const SEARCH_HISTORY_KEY = '@search_history';
 const MAX_HISTORY_ITEMS = 20;
@@ -63,6 +65,7 @@ export interface NativeSearchViewProps
   isLoadingTrending?: boolean;
   error?: string | null;
   showHistory?: boolean;
+  activeFilterCount?: number;
 }
 
 // MARK: - Low-level Native View
@@ -93,6 +96,11 @@ const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
     const [isManualRefreshing, setIsManualRefreshing] = useState(false);
     const [searchHistory, setSearchHistoryState] = useState<string[]>([]);
     const [showHistory, setShowHistory] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
+    const [filters, setFilters] = useState<SearchFilterValues>({
+      sort: 'top',
+      mediaFilter: 'all',
+    });
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Data hooks
@@ -103,6 +111,12 @@ const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
       isLoading: isLoadingActors,
       refetch: refetchActors,
     } = useSearchActors(activeTab === 'people' ? debouncedQuery : '');
+
+    // Build API filters (exclude mediaFilter which is applied client-side)
+    const apiFilters = useMemo(() => {
+      const { mediaFilter: _media, ...rest } = filters;
+      return rest;
+    }, [filters]);
 
     const {
       data: postsData,
@@ -117,11 +131,23 @@ const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
           ? `#${debouncedQuery}`
           : debouncedQuery
         : '',
-      { sort: 'top' },
+      apiFilters,
     );
 
     const isLoading =
       activeTab === 'people' ? isLoadingActors : isLoadingPosts;
+
+    // Calculate active filter count
+    const activeFilterCount = useMemo(() => {
+      let count = 0;
+      if (filters.sort !== 'top') count++;
+      if (filters.mediaFilter && filters.mediaFilter !== 'all') count++;
+      if (filters.since) count++;
+      if (filters.lang) count++;
+      if (filters.author) count++;
+      if (filters.domain) count++;
+      return count;
+    }, [filters]);
 
     // Load search history on mount
     useEffect(() => {
@@ -174,7 +200,7 @@ const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
       }
     }, [topics, trends, isLoadingTrending]);
 
-    // Push search results to native
+    // Push search results to native (with client-side media filtering)
     useEffect(() => {
       if (activeTab === 'people' && actors) {
         const payload = JSON.stringify({
@@ -201,7 +227,33 @@ const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
         (activeTab === 'posts' || activeTab === 'hashtags') &&
         postsData?.pages
       ) {
-        const allPosts = postsData.pages.flatMap((page: any) => page.feed || []);
+        let allPosts = postsData.pages.flatMap((page: any) => page.feed || []);
+
+        // Apply client-side media filtering
+        if (filters.mediaFilter && filters.mediaFilter !== 'all') {
+          allPosts = allPosts.filter((item: any) => {
+            const embed = item.post?.embed;
+            if (!embed) return filters.mediaFilter === 'links';
+            const media = embed?.media;
+            switch (filters.mediaFilter) {
+              case 'images':
+                return embed.$type === 'app.bsky.embed.images#view' ||
+                  (embed.$type === 'app.bsky.embed.recordWithMedia#view' &&
+                    media?.$type === 'app.bsky.embed.images#view');
+              case 'videos':
+                return embed.$type === 'app.bsky.embed.video#view' ||
+                  (embed.$type === 'app.bsky.embed.recordWithMedia#view' &&
+                    media?.$type === 'app.bsky.embed.video#view');
+              case 'links':
+                return embed.$type === 'app.bsky.embed.external#view' ||
+                  (embed.$type === 'app.bsky.embed.recordWithMedia#view' &&
+                    media?.$type === 'app.bsky.embed.external#view');
+              default:
+                return true;
+            }
+          });
+        }
+
         const payload = JSON.stringify({
           tab: 'posts',
           posts: allPosts.map((item: any) => ({
@@ -230,7 +282,7 @@ const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
           // Module not loaded
         }
       }
-    }, [postsData, activeTab, hasNextPage]);
+    }, [postsData, activeTab, hasNextPage, filters.mediaFilter]);
 
     // Push search history to native
     useEffect(() => {
@@ -359,6 +411,14 @@ const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
       clearHistory();
     }, []);
 
+    const handleFilterPress = useCallback(() => {
+      setShowFilters(true);
+    }, []);
+
+    const handleApplyFilters = useCallback((newFilters: SearchFilterValues) => {
+      setFilters(newFilters);
+    }, []);
+
     useImperativeHandle(ref, () => ({
       scrollToTop: () => {
         // SwiftUI handles scroll-to-top natively
@@ -366,26 +426,36 @@ const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
     }));
 
     return (
-      <NativeSearchViewRaw
-        {...props}
-        query={searchQuery}
-        activeTab={activeTab}
-        isLoading={isLoading && !!debouncedQuery}
-        isRefreshing={isManualRefreshing}
-        isLoadingMore={isFetchingNextPage}
-        isLoadingTrending={isLoadingTrending}
-        showHistory={showHistory}
-        onQueryChange={handleQueryChange}
-        onTabChange={handleTabChange}
-        onRefresh={handleRefresh}
-        onLoadMore={handleLoadMore}
-        onProfilePress={handleProfilePress}
-        onPostPress={handlePostPress}
-        onTrendingTopicPress={handleTrendingTopicPress}
-        onHistoryItemPress={handleHistoryItemPress}
-        onClearHistory={handleClearHistory}
-        style={{ flex: 1 }}
-      />
+      <View style={{ flex: 1 }}>
+        <NativeSearchViewRaw
+          {...props}
+          query={searchQuery}
+          activeTab={activeTab}
+          isLoading={isLoading && !!debouncedQuery}
+          isRefreshing={isManualRefreshing}
+          isLoadingMore={isFetchingNextPage}
+          isLoadingTrending={isLoadingTrending}
+          showHistory={showHistory}
+          activeFilterCount={activeFilterCount}
+          onQueryChange={handleQueryChange}
+          onTabChange={handleTabChange}
+          onRefresh={handleRefresh}
+          onLoadMore={handleLoadMore}
+          onProfilePress={handleProfilePress}
+          onPostPress={handlePostPress}
+          onTrendingTopicPress={handleTrendingTopicPress}
+          onHistoryItemPress={handleHistoryItemPress}
+          onClearHistory={handleClearHistory}
+          onFilterPress={handleFilterPress}
+          style={{ flex: 1 }}
+        />
+        <SearchFilterSheet
+          visible={showFilters}
+          onClose={() => setShowFilters(false)}
+          filters={filters}
+          onApplyFilters={handleApplyFilters}
+        />
+      </View>
     );
   },
 );

@@ -41,6 +41,9 @@ struct SearchView: View {
             } else {
                 // Tab bar + results
                 tabBar
+                if state.activeTab != .people {
+                    filterBar
+                }
                 resultsList
             }
         }
@@ -142,6 +145,56 @@ struct SearchView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 12)
+    }
+
+    // MARK: - Filter Bar
+
+    private var filterBar: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Button(action: {
+                    onFilterPress()
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "line.3.horizontal.decrease")
+                            .font(.system(size: 13))
+
+                        Text(state.activeFilterCount > 0
+                            ? "Filters (\(state.activeFilterCount))"
+                            : "Filters")
+                            .font(.system(size: 14, weight: .medium))
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(
+                        state.activeFilterCount > 0
+                            ? Color.accentColor.opacity(0.1)
+                            : Color(UIColor.secondarySystemGroupedBackground)
+                    )
+                    .foregroundColor(
+                        state.activeFilterCount > 0
+                            ? .accentColor
+                            : Color(UIColor.secondaryLabel)
+                    )
+                    .cornerRadius(18)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(
+                                state.activeFilterCount > 0
+                                    ? Color.accentColor.opacity(0.3)
+                                    : Color.clear,
+                                lineWidth: 1
+                            )
+                    )
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+
+            Divider()
+        }
     }
 
     // MARK: - Results List

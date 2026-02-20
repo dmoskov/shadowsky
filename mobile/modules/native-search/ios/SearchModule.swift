@@ -48,6 +48,10 @@ public class SearchModule: Module {
                 view.searchState.error = error
             }
 
+            Prop("activeFilterCount") { (view: SearchViewWrapper, count: Int) in
+                view.searchState.activeFilterCount = count
+            }
+
             Prop("showHistory") { (view: SearchViewWrapper, show: Bool) in
                 view.searchState.showHistory = show
             }

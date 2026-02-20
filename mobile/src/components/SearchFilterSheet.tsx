@@ -15,6 +15,7 @@ import {
   CalendarIcon,
   CloseIcon,
   GlobeIcon,
+  PersonIcon,
   SearchIcon,
 } from './icons';
 import { PINNED_LANGUAGES } from '../constants/languages';
@@ -130,6 +131,7 @@ export function SearchFilterSheet({
     if (draft.mediaFilter && draft.mediaFilter !== 'all') count++;
     if (draft.since) count++;
     if (draft.lang) count++;
+    if (draft.author) count++;
     if (draft.domain) count++;
     return count;
   }, [draft]);
@@ -163,6 +165,13 @@ export function SearchFilterSheet({
         key: 'lang',
         label: getLanguageName(draft.lang),
         onRemove: () => updateDraft({ lang: undefined }),
+      });
+    }
+    if (draft.author) {
+      chips.push({
+        key: 'author',
+        label: `@${draft.author}`,
+        onRemove: () => updateDraft({ author: undefined }),
       });
     }
     if (draft.domain) {
@@ -328,6 +337,36 @@ export function SearchFilterSheet({
                     </Text>
                   </TouchableOpacity>
                 ))}
+              </View>
+
+              {/* From User */}
+              <View style={styles.sectionHeader}>
+                <PersonIcon size={16} color={colors.textSecondary} />
+                <Text style={styles.sectionLabel}>From User</Text>
+              </View>
+              <View style={styles.textInputContainer}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="e.g. alice.bsky.social"
+                  placeholderTextColor={colors.textTertiary}
+                  value={draft.author || ''}
+                  onChangeText={(text) => {
+                    const cleaned = text.replace(/^@/, '');
+                    updateDraft({ author: cleaned || undefined });
+                  }}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="default"
+                />
+                {draft.author ? (
+                  <TouchableOpacity
+                    onPress={() => updateDraft({ author: undefined })}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    style={styles.clearFieldButton}
+                  >
+                    <CloseIcon size={16} color={colors.textTertiary} />
+                  </TouchableOpacity>
+                ) : null}
               </View>
 
               {/* Language */}
