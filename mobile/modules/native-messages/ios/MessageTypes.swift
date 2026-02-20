@@ -45,6 +45,19 @@ struct Conversation: Identifiable {
     let lastMessage: LastMessagePreview?
 }
 
+// MARK: - Search Result
+
+struct SearchResult: Identifiable {
+    let id: String // conversationId
+    let conversationId: String
+    let matchType: String // "contact" or "message"
+    let displayName: String
+    let handle: String
+    let avatar: String?
+    let matchedMessageText: String?
+    let matchedMessageSentAt: String?
+}
+
 // MARK: - Message Embed Image
 
 struct MessageEmbedImage {
@@ -71,10 +84,12 @@ class MessagesDataState: ObservableObject {
     @Published var conversations: [Conversation] = []
     @Published var currentConversation: Conversation?
     @Published var messages: [Message] = []
+    @Published var searchResults: [SearchResult] = []
 
     private var conversationsObserver: NSObjectProtocol?
     private var messagesObserver: NSObjectProtocol?
     private var clearObserver: NSObjectProtocol?
+    private var searchResultsObserver: NSObjectProtocol?
 
     func startObserving() {
         conversationsObserver = NotificationCenter.default.addObserver(
@@ -100,6 +115,16 @@ class MessagesDataState: ObservableObject {
             }
         }
 
+        searchResultsObserver = NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("MessagesBridgeSearchResultsUpdated"),
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            if let data = notification.userInfo?["results"] as? [[String: Any]] {
+                self?.searchResults = data.compactMap { Self.parseSearchResult(from: $0) }
+            }
+        }
+
         clearObserver = NotificationCenter.default.addObserver(
             forName: NSNotification.Name("MessagesBridgeDataCleared"),
             object: nil,
@@ -108,6 +133,7 @@ class MessagesDataState: ObservableObject {
             self?.conversations = []
             self?.currentConversation = nil
             self?.messages = []
+            self?.searchResults = []
         }
     }
 
@@ -116,6 +142,9 @@ class MessagesDataState: ObservableObject {
             NotificationCenter.default.removeObserver(observer)
         }
         if let observer = messagesObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        if let observer = searchResultsObserver {
             NotificationCenter.default.removeObserver(observer)
         }
         if let observer = clearObserver {
@@ -155,6 +184,21 @@ class MessagesDataState: ObservableObject {
             muted: data["muted"] as? Bool ?? false,
             unreadCount: data["unreadCount"] as? Int ?? 0,
             lastMessage: lastMessage
+        )
+    }
+
+    static func parseSearchResult(from data: [String: Any]) -> SearchResult? {
+        guard let conversationId = data["conversationId"] as? String else { return nil }
+
+        return SearchResult(
+            id: conversationId,
+            conversationId: conversationId,
+            matchType: data["matchType"] as? String ?? "contact",
+            displayName: data["displayName"] as? String ?? "Unknown",
+            handle: data["handle"] as? String ?? "",
+            avatar: data["avatar"] as? String,
+            matchedMessageText: data["matchedMessageText"] as? String,
+            matchedMessageSentAt: data["matchedMessageSentAt"] as? String
         )
     }
 

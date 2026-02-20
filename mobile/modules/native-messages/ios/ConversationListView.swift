@@ -29,10 +29,13 @@ enum MessagesThemeColors {
 
 struct ConversationListView: View {
     @ObservedObject var dataState: MessagesDataState
+    @State private var localSearchText: String = ""
+    @State private var isSearchActive: Bool = false
 
     let isLoading: Bool
     let isRefreshing: Bool
     let searchText: String
+    let isSearching: Bool
     let currentUserDid: String
 
     // Events
@@ -41,6 +44,7 @@ struct ConversationListView: View {
     let onNewConversation: (() -> Void)?
     let onDeleteConversation: ((String) -> Void)?
     let onToggleMute: ((String, Bool) -> Void)?
+    let onSearchTextChange: ((String) -> Void)?
 
     private var filteredConversations: [Conversation] {
         let conversations = dataState.conversations
@@ -59,11 +63,25 @@ struct ConversationListView: View {
         }
     }
 
+    private var hasSearchQuery: Bool {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines).count >= 2
+    }
+
+    /// Deep message search results from the JS bridge (conversations that matched on message content)
+    private var messageSearchResults: [SearchResult] {
+        guard hasSearchQuery else { return [] }
+        // Only show message-type results that aren't already in the filtered conversation list
+        let conversationIds = Set(filteredConversations.map { $0.id })
+        return dataState.searchResults.filter { result in
+            result.matchType == "message" && !conversationIds.contains(result.conversationId)
+        }
+    }
+
     var body: some View {
         ZStack {
             if isLoading && dataState.conversations.isEmpty {
                 loadingView
-            } else if dataState.conversations.isEmpty {
+            } else if dataState.conversations.isEmpty && !isSearchActive {
                 emptyView
             } else {
                 conversationScrollView
@@ -72,15 +90,97 @@ struct ConversationListView: View {
         .background(Color(UIColor.systemBackground))
     }
 
+    // MARK: - Search Bar
+
+    private var searchBar: some View {
+        HStack(spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 16))
+                    .foregroundColor(.secondary)
+
+                TextField("Search messages...", text: $localSearchText)
+                    .font(.system(size: 16))
+                    .foregroundColor(Color(UIColor.label))
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    .onChange(of: localSearchText) { newValue in
+                        onSearchTextChange?(newValue)
+                    }
+
+                if !localSearchText.isEmpty {
+                    Button(action: {
+                        localSearchText = ""
+                        onSearchTextChange?("")
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(UIColor.secondarySystemBackground))
+            .cornerRadius(20)
+
+            if isSearchActive {
+                Button("Cancel") {
+                    localSearchText = ""
+                    isSearchActive = false
+                    onSearchTextChange?("")
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+                .font(.system(size: 16))
+                .foregroundColor(MessagesThemeColors.primary)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .onTapGesture {
+            isSearchActive = true
+        }
+    }
+
     // MARK: - Conversation Scroll View
 
     private var conversationScrollView: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
+                // Search bar
+                searchBar
+
+                // Searching indicator
+                if isSearching && hasSearchQuery {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Searching messages...")
+                            .font(.system(size: 13))
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 8)
+                }
+
+                // Conversation matches (by contact name/handle/last message)
+                if hasSearchQuery && !filteredConversations.isEmpty {
+                    HStack {
+                        Text("Conversations")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.secondary)
+                            .textCase(.uppercase)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 12)
+                    .padding(.bottom, 4)
+                }
+
                 ForEach(filteredConversations) { conversation in
                     ConversationRowView(
                         conversation: conversation,
                         otherMember: getOtherMember(conversation),
+                        searchText: hasSearchQuery ? searchText : nil,
                         onPress: {
                             onConversationPress?(conversation.id)
                         },
@@ -93,17 +193,47 @@ struct ConversationListView: View {
                     )
                 }
 
-                if filteredConversations.isEmpty && !searchText.isEmpty {
+                // Message content matches section
+                if hasSearchQuery && !messageSearchResults.isEmpty {
+                    HStack {
+                        Text("Messages")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.secondary)
+                            .textCase(.uppercase)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+                    .padding(.bottom, 4)
+
+                    ForEach(messageSearchResults) { result in
+                        MessageSearchResultRow(
+                            result: result,
+                            searchText: searchText,
+                            onPress: {
+                                onConversationPress?(result.conversationId)
+                            }
+                        )
+                    }
+                }
+
+                // No results state
+                if hasSearchQuery && filteredConversations.isEmpty && messageSearchResults.isEmpty && !isSearching {
                     VStack(spacing: 12) {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 48))
                             .foregroundColor(.secondary)
-                        Text("No conversations found")
+                        Text("No results found")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.top, 60)
+                }
+
+                // Not searching — show all conversations without section header
+                if !hasSearchQuery {
+                    // Already shown above via ForEach(filteredConversations)
                 }
             }
         }
@@ -153,6 +283,7 @@ struct ConversationListView: View {
 struct ConversationRowView: View {
     let conversation: Conversation
     let otherMember: ConversationMember
+    var searchText: String? = nil
     let onPress: () -> Void
     let onDelete: () -> Void
     let onToggleMute: () -> Void
@@ -168,9 +299,11 @@ struct ConversationRowView: View {
                     // Name row
                     HStack {
                         HStack(spacing: 6) {
-                            Text(otherMember.displayName ?? otherMember.handle ?? "Unknown User")
+                            HighlightedText(
+                                text: otherMember.displayName ?? otherMember.handle ?? "Unknown User",
+                                highlight: searchText
+                            )
                                 .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(Color(UIColor.label))
                                 .lineLimit(1)
 
                             if conversation.muted {
@@ -195,18 +328,22 @@ struct ConversationRowView: View {
 
                     // Handle
                     if let handle = otherMember.handle {
-                        Text("@\(handle)")
+                        HighlightedText(
+                            text: "@\(handle)",
+                            highlight: searchText
+                        )
                             .font(.system(size: 14))
-                            .foregroundColor(.secondary)
                             .lineLimit(1)
                     }
 
                     // Last message with time
                     if let lastMessage = conversation.lastMessage {
                         HStack {
-                            Text(lastMessage.text)
+                            HighlightedText(
+                                text: lastMessage.text,
+                                highlight: searchText
+                            )
                                 .font(.system(size: 14))
-                                .foregroundColor(.secondary)
                                 .lineLimit(1)
 
                             Spacer(minLength: 4)
@@ -271,5 +408,131 @@ struct ConversationRowView: View {
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(Color(UIColor.label))
             )
+    }
+}
+
+// MARK: - Message Search Result Row
+
+struct MessageSearchResultRow: View {
+    let result: SearchResult
+    let searchText: String
+    let onPress: () -> Void
+
+    var body: some View {
+        Button(action: onPress) {
+            HStack(spacing: 12) {
+                // Avatar
+                searchResultAvatar
+
+                // Details
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(result.displayName)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(Color(UIColor.label))
+                        .lineLimit(1)
+
+                    if !result.handle.isEmpty {
+                        Text("@\(result.handle)")
+                            .font(.system(size: 13))
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+
+                    if let messageText = result.matchedMessageText {
+                        HStack {
+                            HighlightedText(
+                                text: messageText,
+                                highlight: searchText
+                            )
+                                .font(.system(size: 13))
+                                .lineLimit(2)
+
+                            Spacer(minLength: 4)
+
+                            if let sentAt = result.matchedMessageSentAt {
+                                Text(MessageTimeFormatter.formatRelativeTime(from: sentAt))
+                                    .font(.system(size: 11))
+                                    .foregroundColor(Color(UIColor.tertiaryLabel))
+                            }
+                        }
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+        }
+        .buttonStyle(.plain)
+
+        Divider()
+            .padding(.leading, 76)
+    }
+
+    @ViewBuilder
+    private var searchResultAvatar: some View {
+        if let avatarUrl = result.avatar, let url = URL(string: avatarUrl) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 40, height: 40)
+                        .clipShape(Circle())
+                default:
+                    searchResultAvatarPlaceholder
+                }
+            }
+        } else {
+            searchResultAvatarPlaceholder
+        }
+    }
+
+    private var searchResultAvatarPlaceholder: some View {
+        Circle()
+            .fill(Color(UIColor.secondarySystemBackground))
+            .frame(width: 40, height: 40)
+            .overlay(
+                Text(String(result.displayName.prefix(1)).uppercased())
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(Color(UIColor.label))
+            )
+    }
+}
+
+// MARK: - Highlighted Text
+
+struct HighlightedText: View {
+    let text: String
+    let highlight: String?
+
+    var body: some View {
+        if let highlight = highlight, !highlight.isEmpty {
+            highlightedTextView(text: text, highlight: highlight)
+        } else {
+            Text(text)
+                .foregroundColor(Color(UIColor.label))
+        }
+    }
+
+    private func highlightedTextView(text: String, highlight: String) -> some View {
+        let lowercaseText = text.lowercased()
+        let lowercaseHighlight = highlight.lowercased()
+
+        guard let range = lowercaseText.range(of: lowercaseHighlight) else {
+            return Text(text)
+                .foregroundColor(Color(UIColor.label))
+        }
+
+        let before = String(text[text.startIndex..<range.lowerBound])
+        let match = String(text[range.lowerBound..<range.upperBound])
+        let after = String(text[range.upperBound..<text.endIndex])
+
+        return Text(before)
+            .foregroundColor(Color(UIColor.label))
+            + Text(match)
+                .foregroundColor(MessagesThemeColors.primary)
+                .bold()
+            + Text(after)
+                .foregroundColor(Color(UIColor.label))
     }
 }
