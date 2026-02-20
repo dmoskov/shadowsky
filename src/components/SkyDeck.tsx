@@ -572,7 +572,7 @@ export default function SkyDeck() {
                             <div className="font-medium text-gray-900 dark:text-white">
                               {option.label}
                             </div>
-                            <div className="whitespace-normal text-sm text-gray-500 dark:text-gray-400">
+                            <div className="whitespace-normal text-sm text-asph-text-tertiary">
                               {option.description}
                             </div>
                           </div>
@@ -586,7 +586,7 @@ export default function SkyDeck() {
                       feedGenerators.length > 0 && (
                         <>
                           <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
-                            <h4 className="mb-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <h4 className="mb-2 px-3 text-sm font-medium text-asph-text-secondary">
                               Add Feed
                             </h4>
                             <div className="grid gap-1">
@@ -618,14 +618,14 @@ export default function SkyDeck() {
                                         {savedFeed.pinned ? (
                                           <Star className="mt-0.5 h-4 w-4 text-yellow-500" />
                                         ) : (
-                                          <Hash className="mt-0.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                                          <Hash className="mt-0.5 h-4 w-4 text-asph-text-tertiary" />
                                         )}
                                         <div className="min-w-0 flex-1">
                                           <div className="truncate text-sm font-medium text-gray-900 dark:text-white">
                                             {generator.displayName}
                                           </div>
                                           {generator.description && (
-                                            <div className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
+                                            <div className="line-clamp-2 text-xs text-asph-text-tertiary">
                                               {generator.description}
                                             </div>
                                           )}
@@ -643,7 +643,7 @@ export default function SkyDeck() {
                     {userLists && userLists.length > 0 && (
                       <>
                         <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
-                          <h4 className="mb-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          <h4 className="mb-2 px-3 text-sm font-medium text-asph-text-secondary">
                             Add List
                           </h4>
                           <div className="grid gap-1">
@@ -662,11 +662,11 @@ export default function SkyDeck() {
                                       {list.name}
                                     </div>
                                     {list.description && (
-                                      <div className="truncate text-xs text-gray-500 dark:text-gray-400">
+                                      <div className="truncate text-xs text-asph-text-tertiary">
                                         {list.description}
                                       </div>
                                     )}
-                                    <div className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                                    <div className="mt-0.5 text-xs text-asph-text-tertiary">
                                       {list.listItemCount || 0} members
                                     </div>
                                   </div>
@@ -680,7 +680,7 @@ export default function SkyDeck() {
 
                     {/* Add Custom Feed by URI */}
                     <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
-                      <h4 className="mb-2 px-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <h4 className="mb-2 px-3 text-sm font-medium text-asph-text-secondary">
                         Add Custom Feed or List by URI
                       </h4>
                       <div className="flex gap-2 px-3">
@@ -868,7 +868,7 @@ export default function SkyDeck() {
                   <div className="mt-4">
                     <button
                       onClick={() => setIsAddingColumn(false)}
-                      className="w-full rounded-md bg-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-400 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500"
+                      className="w-full rounded-md bg-gray-300 px-4 py-2 text-asph-text-secondary transition-colors hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500"
                     >
                       Cancel
                     </button>
@@ -882,7 +882,7 @@ export default function SkyDeck() {
                 aria-label="Add new column"
               >
                 <Plus
-                  className="h-12 w-12 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300"
+                  className="h-12 w-12 text-asph-text-tertiary group-hover:text-gray-600 dark:group-hover:text-gray-300"
                   aria-hidden="true"
                 />
               </button>

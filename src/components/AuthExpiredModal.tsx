@@ -97,14 +97,14 @@ export function AuthExpiredModal({
             </h3>
             <div
               id="auth-expired-description"
-              className="text-gray-600 dark:text-gray-300"
+              className="text-asph-text-secondary"
             >
               <p className="mb-2">
                 Your session has expired or your authentication is no longer
                 valid. Please log in again to continue.
               </p>
               {reason && (
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-asph-text-tertiary">
                   Reason: {reason}
                 </p>
               )}

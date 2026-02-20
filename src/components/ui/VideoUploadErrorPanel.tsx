@@ -337,7 +337,7 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
             className="rounded p-1 transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-gray-700"
             aria-label="Retry upload"
           >
-            <RefreshCw className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+            <RefreshCw className="h-4 w-4 text-asph-text-secondary" />
           </button>
         )}
         {showCancelButton && (
@@ -346,7 +346,7 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
             className="rounded p-1 transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-gray-700"
             aria-label="Cancel upload"
           >
-            <X className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+            <X className="h-4 w-4 text-asph-text-secondary" />
           </button>
         )}
       </div>
@@ -372,29 +372,29 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
                 {config.title}
               </h3>
               {fileName && (
-                <p className="mb-1 truncate text-xs text-gray-600 dark:text-gray-400">
+                <p className="mb-1 truncate text-xs text-asph-text-secondary">
                   {fileName}
                 </p>
               )}
             </div>
           </div>
 
-          <p className="mb-3 text-sm text-gray-700 dark:text-gray-300">
+          <p className="mb-3 text-sm text-asph-text-secondary">
             {config.description}
           </p>
 
           {config.recoverySteps && config.recoverySteps.length > 0 && (
             <div className="mb-4">
-              <p className="mb-2 text-xs font-medium text-gray-700 dark:text-gray-300">
+              <p className="mb-2 text-xs font-medium text-asph-text-secondary">
                 What you can do:
               </p>
               <ul className="space-y-1.5" role="list">
                 {config.recoverySteps.map((step, index) => (
                   <li
                     key={`recovery-step-${index}-${step.substring(0, 20)}`}
-                    className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400"
+                    className="flex items-start gap-2 text-xs text-asph-text-secondary"
                   >
-                    <span className="select-none text-gray-400 dark:text-gray-600">
+                    <span className="select-none text-asph-text-tertiary">
                       •
                     </span>
                     <span className="flex-1">{step}</span>
@@ -428,7 +428,7 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
           </div>
 
           {uploadId && (
-            <p className="mt-3 font-mono text-xs text-gray-500 dark:text-gray-500">
+            <p className="mt-3 font-mono text-xs text-asph-text-tertiary">
               Upload ID: {uploadId}
             </p>
           )}

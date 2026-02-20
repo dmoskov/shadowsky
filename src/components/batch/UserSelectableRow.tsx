@@ -130,7 +130,7 @@ export const UserSelectableRow: React.FC<UserSelectableRowProps> = ({
             {user.displayName || user.handle}
           </div>
         </ProfileHoverCard>
-        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex items-center text-sm text-asph-text-tertiary">
           <ProfileHoverCard handle={user.handle}>
             <span className="cursor-pointer truncate hover:underline">
               @{user.handle}
@@ -139,7 +139,7 @@ export const UserSelectableRow: React.FC<UserSelectableRowProps> = ({
           <DomainVerifiedBadgeInline handle={user.handle} />
         </div>
         {user.description && (
-          <div className="mt-1 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">
+          <div className="mt-1 line-clamp-2 text-sm text-asph-text-secondary">
             {user.description}
           </div>
         )}

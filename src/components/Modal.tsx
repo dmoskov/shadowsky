@@ -166,7 +166,7 @@ export function Modal({
             )}
             <div
               id="modal-description"
-              className="whitespace-pre-wrap text-gray-600 dark:text-gray-300"
+              className="whitespace-pre-wrap text-asph-text-secondary"
             >
               {message}
             </div>
@@ -185,7 +185,7 @@ export function Modal({
           {type === "confirm" && (
             <button
               onClick={handleClose}
-              className="ios-press-light rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
+              className="ios-press-light rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700"
             >
               {cancelText}
             </button>

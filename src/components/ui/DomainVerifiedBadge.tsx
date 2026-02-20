@@ -61,9 +61,7 @@ const DomainVerifiedBadgeComponent: React.FC<DomainVerifiedBadgeProps> = ({
         />
       )}
       {showDomain && domain && (
-        <span className="text-xs text-gray-500 dark:text-gray-400">
-          {domain}
-        </span>
+        <span className="text-xs text-asph-text-tertiary">{domain}</span>
       )}
     </span>
   );

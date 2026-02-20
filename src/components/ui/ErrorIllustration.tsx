@@ -205,14 +205,14 @@ const NotFoundIllustration: React.FC<{ width: number; height: number }> = ({
       r="24"
       stroke="currentColor"
       strokeWidth="6"
-      className="text-gray-400 dark:text-gray-600"
+      className="text-asph-text-tertiary"
     />
     <path
       d="M70 70L88 88"
       stroke="currentColor"
       strokeWidth="6"
       strokeLinecap="round"
-      className="text-gray-400 dark:text-gray-600"
+      className="text-asph-text-tertiary"
     />
     <text
       x="52"
@@ -221,7 +221,7 @@ const NotFoundIllustration: React.FC<{ width: number; height: number }> = ({
       fontSize="28"
       fontWeight="bold"
       fill="currentColor"
-      className="text-gray-500 dark:text-gray-400"
+      className="text-asph-text-tertiary"
     >
       ?
     </text>
@@ -253,12 +253,12 @@ const EmptyIllustration: React.FC<{ width: number; height: number }> = ({
     <path
       d="M35 50L60 38L85 50L60 62L35 50Z"
       fill="currentColor"
-      className="text-gray-300 dark:text-gray-600"
+      className="text-asph-text-tertiary"
     />
     <path
       d="M35 50V74L60 86V62L35 50Z"
       fill="currentColor"
-      className="text-gray-400 dark:text-gray-500"
+      className="text-asph-text-tertiary"
     />
     <path
       d="M85 50V74L60 86V62L85 50Z"
@@ -271,7 +271,7 @@ const EmptyIllustration: React.FC<{ width: number; height: number }> = ({
       stroke="currentColor"
       strokeWidth="2"
       strokeDasharray="4 2"
-      className="text-gray-500 dark:text-gray-400"
+      className="text-asph-text-tertiary"
     />
   </svg>
 );

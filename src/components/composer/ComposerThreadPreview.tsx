@@ -231,7 +231,7 @@ const PostPreviewCard: React.FC<PostPreviewCardProps> = ({
       {/* Post header */}
       <div className="mb-3 flex items-center justify-between">
         <span className="flex items-center gap-2">
-          <GripVertical size={16} className="text-gray-400" />
+          <GripVertical size={16} className="text-asph-text-tertiary" />
           {totalPosts > 1 && (
             <span
               className="font-semibold"

@@ -465,7 +465,7 @@ export const DirectMessages: React.FC = () => {
                         />
                       ) : (
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-700">
-                          <span className="text-lg text-gray-600 dark:text-gray-400">
+                          <span className="text-lg text-asph-text-secondary">
                             {(otherMember.displayName ||
                               otherMember.handle ||
                               "U")[0].toUpperCase()}
@@ -536,7 +536,7 @@ export const DirectMessages: React.FC = () => {
                 />
               ) : (
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-700">
-                  <span className="text-lg text-gray-600 dark:text-gray-400">
+                  <span className="text-lg text-asph-text-secondary">
                     {(getOtherMember(conversationData.conversation)
                       .displayName ||
                       getOtherMember(conversationData.conversation).handle ||

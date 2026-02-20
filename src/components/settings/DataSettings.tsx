@@ -479,7 +479,7 @@ export const DataSettings: React.FC = () => {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3">
-                    <Icon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                    <Icon className="h-5 w-5 text-asph-text-tertiary" />
                     <h3
                       className="text-lg font-medium"
                       style={{ color: "var(--asph-text-primary)" }}
@@ -551,7 +551,7 @@ export const DataSettings: React.FC = () => {
                         <span className="text-blue-600">{item.atProtoKey}</span>
                         {isEnabled && recordCounts[item.id] !== undefined && (
                           <span
-                            className={`ml-2 ${recordCounts[item.id] > 0 ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"}`}
+                            className={`ml-2 ${recordCounts[item.id] > 0 ? "text-green-600 dark:text-green-400" : "text-asph-text-tertiary"}`}
                           >
                             ({recordCounts[item.id]}{" "}
                             {item.id === "columns"
@@ -580,7 +580,7 @@ export const DataSettings: React.FC = () => {
                           className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                             !isEnabled
                               ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                              : "cursor-not-allowed text-gray-600 opacity-50 dark:text-gray-400"
+                              : "cursor-not-allowed text-asph-text-secondary opacity-50"
                           }`}
                           onClick={() => item.onToggle(false)}
                           disabled={item.isLoading || isEnabled}
@@ -596,7 +596,7 @@ export const DataSettings: React.FC = () => {
                           className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                             isEnabled
                               ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                              : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                              : "text-asph-text-secondary hover:text-gray-900 dark:hover:text-gray-200"
                           }`}
                           onClick={() => item.onToggle(true)}
                           disabled={item.isLoading || isEnabled}
@@ -605,7 +605,7 @@ export const DataSettings: React.FC = () => {
                         </button>
                       </div>
                       {item.isLoading && (
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-asph-text-tertiary">
                           Migrating...
                         </p>
                       )}
@@ -617,7 +617,7 @@ export const DataSettings: React.FC = () => {
                           className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                             !isEnabled
                               ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                              : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                              : "text-asph-text-secondary hover:text-gray-900 dark:hover:text-gray-200"
                           }`}
                           onClick={() => item.onToggle(false)}
                           disabled={item.isLoading}
@@ -628,7 +628,7 @@ export const DataSettings: React.FC = () => {
                           className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                             isEnabled
                               ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                              : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                              : "text-asph-text-secondary hover:text-gray-900 dark:hover:text-gray-200"
                           }`}
                           onClick={() => item.onToggle(true)}
                           disabled={item.isLoading}
@@ -642,7 +642,7 @@ export const DataSettings: React.FC = () => {
                         </button>
                       </div>
                       {item.isLoading && (
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-asph-text-tertiary">
                           Migrating...
                         </p>
                       )}
@@ -675,7 +675,7 @@ export const DataSettings: React.FC = () => {
                         isEnabled &&
                         recordCounts.columns === 0 &&
                         !showMigrationPrompt && (
-                          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                          <p className="mt-2 text-xs text-asph-text-tertiary">
                             ✓ Column record exists. Add columns in the main app
                             to see them here.
                           </p>
@@ -742,7 +742,7 @@ export const DataSettings: React.FC = () => {
                         !missingRecords.bookmarks &&
                         isEnabled &&
                         recordCounts.bookmarks !== undefined && (
-                          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                          <p className="mt-2 text-xs text-asph-text-tertiary">
                             ✓ Bookmarks record exists
                             {recordCounts.bookmarks === 0
                               ? ". Add bookmarks to see them here."

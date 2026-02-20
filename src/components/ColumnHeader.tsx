@@ -115,7 +115,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
             className="rounded-md p-2 transition-opacity hover:opacity-70"
             title="Refresh"
           >
-            <RefreshCw className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <RefreshCw className="h-4 w-4 text-asph-text-tertiary" />
           </button>
         )}
 
@@ -145,9 +145,9 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
               className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               title="Change feed"
             >
-              <span className="text-gray-600 dark:text-gray-400">Change</span>
+              <span className="text-asph-text-secondary">Change</span>
               <ChevronDown
-                className={`h-3.5 w-3.5 text-gray-600 transition-transform dark:text-gray-400 ${showFeedDropdown ? "rotate-180" : ""}`}
+                className={`h-3.5 w-3.5 text-asph-text-secondary transition-transform ${showFeedDropdown ? "rotate-180" : ""}`}
               />
             </button>
 
@@ -172,7 +172,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
                         }}
                         className="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
-                        <option.icon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                        <option.icon className="h-4 w-4 text-asph-text-secondary" />
                         <span className="text-sm text-gray-900 dark:text-gray-100">
                           {option.label}
                         </span>
@@ -188,7 +188,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
                           }}
                           className="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
-                          <Plus className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                          <Plus className="h-4 w-4 text-asph-text-secondary" />
                           <span className="text-sm text-gray-900 dark:text-gray-100">
                             Discover Feeds...
                           </span>
@@ -209,7 +209,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
             className="rounded-md p-2 transition-opacity hover:opacity-70"
             title="Remove column"
           >
-            <X className="h-4 w-4 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400" />
+            <X className="h-4 w-4 text-asph-text-tertiary hover:text-red-600 dark:hover:text-red-400" />
           </button>
         )}
 
@@ -238,7 +238,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
             className="rounded-md p-2 transition-opacity hover:opacity-70"
             title="More options"
           >
-            <MoreVertical className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <MoreVertical className="h-4 w-4 text-asph-text-tertiary" />
           </button>
 
           {showMenu &&

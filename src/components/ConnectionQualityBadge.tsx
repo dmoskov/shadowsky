@@ -37,7 +37,7 @@ export function getConnectionQuality(
     return {
       quality: "unknown",
       label: "Unknown",
-      color: "text-gray-400",
+      color: "text-asph-text-tertiary",
       description: "No latency data available",
     };
   }

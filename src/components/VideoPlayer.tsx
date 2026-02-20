@@ -724,7 +724,7 @@ function VideoPlayerComponent({
             className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700"
             style={{ zIndex: 1 }}
           >
-            <span className="text-gray-500 dark:text-gray-400">Video</span>
+            <span className="text-asph-text-tertiary">Video</span>
           </div>
         )}
         <div
@@ -766,7 +766,7 @@ function VideoPlayerComponent({
             className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700"
             style={{ zIndex: 1 }}
           >
-            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            <Loader2 className="h-8 w-8 animate-spin text-asph-text-tertiary" />
           </div>
         )}
       </div>

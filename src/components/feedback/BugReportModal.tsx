@@ -362,14 +362,14 @@ export function BugReportModal({
                 </h3>
                 <p
                   id="bug-report-description"
-                  className="text-gray-600 dark:text-gray-300"
+                  className="text-asph-text-secondary"
                 >
                   Thank you for helping us improve Asphodel! We&apos;ve received
                   your bug report and will investigate the issue.
                 </p>
                 {referenceId && (
                   <div className="mt-4 rounded-md bg-gray-100 p-3 dark:bg-gray-800">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-asph-text-tertiary">
                       Reference ID:
                     </p>
                     <p className="font-mono text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -411,7 +411,7 @@ export function BugReportModal({
                 </h3>
                 <p
                   id="bug-report-description"
-                  className="text-sm text-gray-600 dark:text-gray-300"
+                  className="text-sm text-asph-text-secondary"
                 >
                   Help us improve Asphodel by reporting issues you encounter.
                   Diagnostic information will be automatically included to help
@@ -527,7 +527,7 @@ export function BugReportModal({
                     <button
                       onClick={captureScreenshot}
                       disabled={isCapturingScreenshot}
-                      className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
                     >
                       {isCapturingScreenshot ? (
                         <>
@@ -551,7 +551,7 @@ export function BugReportModal({
                       <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         Include Diagnostic Information
                       </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-asph-text-tertiary">
                         Browser info, error logs, and performance metrics
                       </p>
                     </div>
@@ -578,7 +578,7 @@ export function BugReportModal({
                     <div className="mt-3 space-y-2 border-t border-gray-200 pt-3 dark:border-gray-600">
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         <div>
-                          <span className="text-gray-500 dark:text-gray-400">
+                          <span className="text-asph-text-tertiary">
                             Version:
                           </span>{" "}
                           <span className="text-gray-900 dark:text-gray-100">
@@ -586,7 +586,7 @@ export function BugReportModal({
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-500 dark:text-gray-400">
+                          <span className="text-asph-text-tertiary">
                             Screen:
                           </span>{" "}
                           <span className="text-gray-900 dark:text-gray-100">
@@ -594,7 +594,7 @@ export function BugReportModal({
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-500 dark:text-gray-400">
+                          <span className="text-asph-text-tertiary">
                             Platform:
                           </span>{" "}
                           <span className="text-gray-900 dark:text-gray-100">
@@ -602,7 +602,7 @@ export function BugReportModal({
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-500 dark:text-gray-400">
+                          <span className="text-asph-text-tertiary">
                             Errors (1h):
                           </span>{" "}
                           <span className="text-gray-900 dark:text-gray-100">
@@ -612,7 +612,7 @@ export function BugReportModal({
                       </div>
                       {diagnosticData.recentErrors.length > 0 && (
                         <div className="mt-2">
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                          <p className="text-xs text-asph-text-tertiary">
                             Recent errors: {diagnosticData.recentErrors.length}
                           </p>
                         </div>
@@ -637,7 +637,7 @@ export function BugReportModal({
               <button
                 onClick={handleModalClose}
                 disabled={isSubmitting}
-                className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 disabled:opacity-50 dark:hover:bg-gray-700"
               >
                 Cancel
               </button>

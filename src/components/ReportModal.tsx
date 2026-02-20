@@ -267,7 +267,7 @@ export function ReportModal({
                 <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Report Submitted
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300">
+                <p className="text-asph-text-secondary">
                   Thank you for helping keep our community safe. We'll review
                   this report and take appropriate action.
                 </p>
@@ -286,14 +286,14 @@ export function ReportModal({
                 <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
                   Block @{subjectHandle}?
                 </h4>
-                <p className="mb-4 text-sm text-gray-600 dark:text-gray-300">
+                <p className="mb-4 text-sm text-asph-text-secondary">
                   Blocking will prevent this user from seeing your posts and
                   interacting with you.
                 </p>
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={handleClose}
-                    className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
+                    className="rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700"
                   >
                     Skip
                   </button>
@@ -328,7 +328,7 @@ export function ReportModal({
                 <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Report {reportType === "post" ? "Post" : "Account"}
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
+                <p className="text-sm text-asph-text-secondary">
                   {reportType === "post"
                     ? "Help us understand what's wrong with this post"
                     : `Report @${subjectHandle || "this account"} for violating community guidelines`}
@@ -372,7 +372,7 @@ export function ReportModal({
                         {category.label}
                       </span>
                     </div>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p className="mt-1 text-sm text-asph-text-secondary">
                       {category.description}
                     </p>
                   </div>
@@ -398,7 +398,7 @@ export function ReportModal({
                   rows={4}
                   maxLength={300}
                 />
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-xs text-asph-text-tertiary">
                   {additionalContext.length}/300 characters
                 </p>
               </div>
@@ -418,7 +418,7 @@ export function ReportModal({
               <button
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 disabled:opacity-50 dark:hover:bg-gray-700"
               >
                 Cancel
               </button>

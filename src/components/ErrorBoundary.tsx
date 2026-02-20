@@ -288,7 +288,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   {showGoBack && (
                     <button
                       onClick={this.handleGoBack}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-asph-text-secondary transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
                       aria-label="Go back to previous page"
                     >
                       <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -298,7 +298,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
                   <button
                     onClick={this.handleRefresh}
-                    className={`flex ${showGoBack ? "flex-1" : "w-full"} items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700`}
+                    className={`flex ${showGoBack ? "flex-1" : "w-full"} items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-asph-text-secondary transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700`}
                     aria-label="Refresh the page"
                   >
                     <RefreshCw className="h-4 w-4" aria-hidden="true" />
