@@ -170,6 +170,7 @@ struct FeedListView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .refreshable {
             onRefresh?()
         }

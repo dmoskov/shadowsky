@@ -244,6 +244,7 @@ struct NotificationListView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .refreshable {
             onRefresh?()
         }

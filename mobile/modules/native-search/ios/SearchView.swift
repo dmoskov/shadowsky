@@ -48,6 +48,9 @@ struct SearchView: View {
             }
         }
         .background(Color(UIColor.systemBackground))
+        .onTapGesture {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
         .onAppear {
             state.startObserving()
             searchText = state.query
@@ -226,6 +229,7 @@ struct SearchView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .refreshable {
             onRefresh()
         }
@@ -297,6 +301,7 @@ struct SearchView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .refreshable {
             onRefresh()
         }
@@ -454,6 +459,7 @@ struct SearchView: View {
             }
             .padding(.top, 16)
         }
+        .scrollDismissesKeyboard(.interactively)
     }
 
     private var trendingSkeletonView: some View {
@@ -557,6 +563,7 @@ struct SearchView: View {
                     }
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
         }
     }
 

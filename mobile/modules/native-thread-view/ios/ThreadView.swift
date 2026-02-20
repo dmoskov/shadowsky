@@ -290,20 +290,10 @@ struct ThreadView: View {
                 }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .refreshable {
             onRefresh?()
         }
-        .simultaneousGesture(
-            DragGesture().onChanged { value in
-                // Dismiss keyboard on downward scroll
-                if value.translation.height > 20 {
-                    UIApplication.shared.sendAction(
-                        #selector(UIResponder.resignFirstResponder),
-                        to: nil, from: nil, for: nil
-                    )
-                }
-            }
-        )
     }
 
     // MARK: - Loading View
