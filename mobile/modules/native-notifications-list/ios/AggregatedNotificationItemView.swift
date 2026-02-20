@@ -20,6 +20,7 @@ struct AggregatedNotificationItemView: View {
     let onLinkPress: (String) -> Void
 
     @State private var isExpanded = false
+    @ScaledMetric(relativeTo: .body) private var iconCircleSize: CGFloat = 32
 
     private var themeColor: Color {
         NotificationThemeColors.color(for: model.reason)
@@ -54,10 +55,10 @@ struct AggregatedNotificationItemView: View {
                     ZStack {
                         Circle()
                             .fill(themeColor.opacity(0.12))
-                            .frame(width: 32, height: 32)
+                            .frame(width: iconCircleSize, height: iconCircleSize)
 
                         Image(systemName: model.reason.sfSymbolName)
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundColor(themeColor)
                     }
 
@@ -68,7 +69,7 @@ struct AggregatedNotificationItemView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             summaryText
                             Text(model.timestamp)
-                                .font(.system(size: 12))
+                                .font(.caption)
                                 .foregroundColor(Color(UIColor.tertiaryLabel))
                         }
                     }
@@ -112,13 +113,13 @@ struct AggregatedNotificationItemView: View {
                     }
                 }()
                 Text(contextLabel)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.caption.weight(.medium))
                     .foregroundColor(Color(UIColor.tertiaryLabel))
 
                 avatarView(url: preview.author.avatar, size: 18)
 
                 Text(preview.author.displayName ?? preview.author.handle)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.caption.weight(.medium))
                     .foregroundColor(Color(UIColor.secondaryLabel))
                     .lineLimit(1)
 
@@ -127,15 +128,15 @@ struct AggregatedNotificationItemView: View {
                         .foregroundColor(Color(UIColor.tertiaryLabel))
                     if preview.video != nil {
                         Image(systemName: "film")
-                            .font(.system(size: 10))
+                            .font(.caption2)
                             .foregroundColor(Color(UIColor.tertiaryLabel))
                     } else if preview.external != nil {
                         Image(systemName: "link")
-                            .font(.system(size: 10))
+                            .font(.caption2)
                             .foregroundColor(Color(UIColor.tertiaryLabel))
                     } else {
                         Image(systemName: "photo")
-                            .font(.system(size: 10))
+                            .font(.caption2)
                             .foregroundColor(Color(UIColor.tertiaryLabel))
                     }
                 }
@@ -144,7 +145,7 @@ struct AggregatedNotificationItemView: View {
             // Post text
             if let text = preview.text, !text.isEmpty {
                 Text(text)
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundColor(Color(UIColor.label))
                     .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
@@ -195,7 +196,7 @@ struct AggregatedNotificationItemView: View {
                         )
 
                     Text("+\(model.users.count - 3)")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.caption.weight(.semibold))
                         .foregroundColor(Color(UIColor.secondaryLabel))
                 }
             }
@@ -206,10 +207,10 @@ struct AggregatedNotificationItemView: View {
 
     private var summaryText: some View {
         (Text(userSummary)
-            .font(.system(size: 15, weight: .semibold))
+            .font(.subheadline.weight(.semibold))
             .foregroundColor(Color(UIColor.label))
         + Text(" \(model.reason.actionText)")
-            .font(.system(size: 15))
+            .font(.subheadline)
             .foregroundColor(Color(UIColor.secondaryLabel)))
         .lineLimit(2)
     }
@@ -234,11 +235,11 @@ struct AggregatedNotificationItemView: View {
         Button(action: { withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() } }) {
             HStack(spacing: 6) {
                 Text(isExpanded ? "Collapse" : "Show all \(model.count) notifications")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundColor(Color(UIColor.tertiaryLabel))
 
                 Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundColor(Color(UIColor.tertiaryLabel))
             }
             .frame(maxWidth: .infinity)

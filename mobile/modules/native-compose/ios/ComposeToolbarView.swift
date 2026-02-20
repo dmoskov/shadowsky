@@ -85,9 +85,9 @@ struct ComposeToolbarView: View {
                 Button(action: onLanguagePicker) {
                     HStack(spacing: 4) {
                         Image(systemName: "globe")
-                            .font(.system(size: 16))
+                            .font(.body)
                         Text(languageLabel)
-                            .font(.system(size: 12, weight: .semibold))
+                            .font(.caption.weight(.semibold))
                     }
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 8)
@@ -106,7 +106,7 @@ struct ComposeToolbarView: View {
 
             // Character count
             Text("\(charCount)/\(maxLength)")
-                .font(.system(size: 14, weight: .medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundColor(isOverLimit ? .red : .secondary)
         }
         .padding(.horizontal, 16)
@@ -124,9 +124,9 @@ struct ComposeToolbarView: View {
             Button(action: onToggleThreadMode) {
                 HStack(spacing: 8) {
                     Image(systemName: "text.line.first.and.arrowtriangle.forward")
-                        .font(.system(size: 18))
+                        .font(.title3)
                     Text("Exit Thread Mode")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                 }
                 .foregroundColor(.accentColor)
             }
@@ -153,7 +153,7 @@ struct ComposeToolbarView: View {
     private func toolbarButton(icon: String, label: String, disabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 20))
+                .font(.title3)
                 .foregroundColor(disabled ? Color(.systemGray4) : .secondary)
                 .frame(width: 30, height: 30)
                 .contentShape(Rectangle())

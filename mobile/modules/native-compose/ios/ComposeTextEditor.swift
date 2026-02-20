@@ -25,7 +25,7 @@ struct ComposeTextEditor: View {
             if text.isEmpty {
                 Text(placeholder)
                     .foregroundColor(Color(.placeholderText))
-                    .font(.system(size: 18))
+                    .font(.title3)
                     .padding(.horizontal, 16)
                     .padding(.top, 16)
                     .allowsHitTesting(false)
@@ -33,7 +33,7 @@ struct ComposeTextEditor: View {
 
             // Text editor
             TextEditor(text: $text)
-                .font(.system(size: 18))
+                .font(.title3)
                 .padding(.horizontal, 12)
                 .padding(.top, 8)
                 .focused($isFocused)

@@ -67,7 +67,7 @@ struct QuoteEmbed: View {
                                     .fill(Color.gray.opacity(0.3))
                                     .overlay(
                                         Image(systemName: "person.fill")
-                                            .font(.system(size: 10))
+                                            .font(.caption2)
                                             .foregroundColor(.gray)
                                     )
                             @unknown default:
@@ -83,7 +83,7 @@ struct QuoteEmbed: View {
                             .frame(width: 20, height: 20)
                             .overlay(
                                 Image(systemName: "person.fill")
-                                    .font(.system(size: 10))
+                                    .font(.caption2)
                                     .foregroundColor(.gray)
                             )
                     }
@@ -91,12 +91,12 @@ struct QuoteEmbed: View {
                     // Author info
                     HStack(spacing: 6) {
                         Text(record.author.displayName ?? record.author.handle)
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundColor(.primary)
                             .lineLimit(1)
 
                         Text("@\(record.author.handle)")
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundColor(.gray)
                             .lineLimit(1)
                     }
@@ -107,7 +107,7 @@ struct QuoteEmbed: View {
                 // Post text (truncated to 3 lines)
                 if let text = record.text {
                     Text(text)
-                        .font(.system(size: 14))
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                         .lineLimit(3)
                         .multilineTextAlignment(.leading)
@@ -128,7 +128,7 @@ struct QuoteEmbed: View {
     private var notFoundView: some View {
         VStack {
             Text("[Post not found]")
-                .font(.system(size: 14))
+                .font(.subheadline)
                 .foregroundColor(.gray)
                 .italic()
                 .padding(16)

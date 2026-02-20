@@ -58,14 +58,14 @@ struct ExternalLinkEmbed: View {
                 VStack(alignment: .leading, spacing: 4) {
                     // Domain
                     Text(getDomain(from: external.uri))
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundColor(.gray)
                         .lineLimit(1)
 
                     // Title
                     if let title = external.title {
                         Text(title)
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundColor(.primary)
                             .lineLimit(2)
                     }
@@ -73,7 +73,7 @@ struct ExternalLinkEmbed: View {
                     // Description
                     if let description = external.description {
                         Text(description)
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundColor(.secondary)
                             .lineLimit(2)
                     }

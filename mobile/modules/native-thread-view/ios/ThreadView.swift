@@ -322,7 +322,7 @@ struct ThreadView: View {
     private func errorView(_ errorMessage: String) -> some View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundColor(.secondary)
 
             Text(errorMessage)
@@ -343,7 +343,7 @@ struct ThreadView: View {
     private var emptyView: some View {
         VStack(spacing: 16) {
             Image(systemName: "bubble.left.and.bubble.right")
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundColor(.secondary)
 
             Text("Thread not found")

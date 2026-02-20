@@ -47,15 +47,15 @@ struct TrendingTopicsWidgetView: View {
                 // Header
                 HStack {
                     Image(systemName: "chart.line.uptrend.xyaxis")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundColor(brandGold)
                     Text("Trending")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.footnote.weight(.semibold))
                         .foregroundColor(.white)
                     Spacer()
                     if let updated = entry.data.lastUpdated {
                         Text(updated, style: .relative)
-                            .font(.system(size: 10))
+                            .font(.caption2)
                             .foregroundColor(.white.opacity(0.3))
                     }
                 }
@@ -70,10 +70,10 @@ struct TrendingTopicsWidgetView: View {
                         Spacer()
                         VStack(spacing: 4) {
                             Image(systemName: "chart.line.uptrend.xyaxis")
-                                .font(.system(size: 24))
+                                .font(.title2)
                                 .foregroundColor(.white.opacity(0.2))
                             Text("No trending topics")
-                                .font(.system(size: 12))
+                                .font(.caption)
                                 .foregroundColor(.white.opacity(0.4))
                         }
                         Spacer()
@@ -109,18 +109,18 @@ struct TrendingTopicsWidgetView: View {
     private func topicRow(topic: TrendingTopicItem, index: Int) -> some View {
         HStack(spacing: 8) {
             Text("\(index)")
-                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .font(.system(.subheadline, design: .rounded).weight(.bold))
                 .foregroundColor(brandGold.opacity(0.8))
                 .frame(width: 18, alignment: .center)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(topic.topic)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.footnote.weight(.medium))
                     .foregroundColor(.white)
                     .lineLimit(1)
                 if let status = topic.status, !status.isEmpty {
                     Text(statusLabel(status))
-                        .font(.system(size: 10))
+                        .font(.caption2)
                         .foregroundColor(statusColor(status))
                 }
             }
@@ -129,7 +129,7 @@ struct TrendingTopicsWidgetView: View {
 
             if let status = topic.status {
                 Image(systemName: statusIcon(status))
-                    .font(.system(size: 10))
+                    .font(.caption2)
                     .foregroundColor(statusColor(status))
             }
         }

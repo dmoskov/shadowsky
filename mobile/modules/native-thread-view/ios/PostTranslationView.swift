@@ -48,7 +48,7 @@ struct PostTranslationView: View {
             // Error message
             if case .error(let message) = translationState {
                 Text(message)
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundColor(.red)
                     .accessibilityLabel("Translation error: \(message)")
             }
@@ -63,12 +63,12 @@ struct PostTranslationView: View {
     private func translatedTextView(_ text: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(text)
-                .font(.system(size: 16))
+                .font(.body)
                 .foregroundColor(.primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Text("Translated from \(sourceLanguageName)")
-                .font(.system(size: 12))
+                .font(.caption)
                 .foregroundColor(Color(UIColor.tertiaryLabel))
                 .italic()
         }
@@ -94,7 +94,7 @@ struct PostTranslationView: View {
                 ProgressView()
                     .scaleEffect(0.7)
                 Text("Translating...")
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.footnote.weight(.medium))
                     .foregroundColor(.accentColor)
             }
             .padding(.top, 2)
@@ -106,9 +106,9 @@ struct PostTranslationView: View {
             }) {
                 HStack(spacing: 4) {
                     Image(systemName: "globe")
-                        .font(.system(size: 13))
+                        .font(.footnote)
                     Text(isShowing ? "Show original" : "Show translation")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.footnote.weight(.medium))
                 }
                 .foregroundColor(.accentColor)
             }
@@ -123,9 +123,9 @@ struct PostTranslationView: View {
             }) {
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 13))
+                        .font(.footnote)
                     Text("Retry translation")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.footnote.weight(.medium))
                 }
                 .foregroundColor(.accentColor)
             }
@@ -139,9 +139,9 @@ struct PostTranslationView: View {
             }) {
                 HStack(spacing: 4) {
                     Image(systemName: "globe")
-                        .font(.system(size: 13))
+                        .font(.footnote)
                     Text("Translate from \(sourceLanguageName)")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.footnote.weight(.medium))
                 }
                 .foregroundColor(.accentColor)
             }

@@ -172,7 +172,7 @@ struct NotificationListView: View {
                     onAnalyticsPress?()
                 }) {
                     Image(systemName: "chart.bar.xaxis")
-                        .font(.system(size: 20))
+                        .font(.title3)
                         .foregroundColor(NotificationThemeColors.primary)
                 }
                 .accessibilityLabel("Notification Analytics")
@@ -302,7 +302,7 @@ struct NotificationListView: View {
     private func errorView(_ errorMessage: String) -> some View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundColor(.secondary)
 
             Text(errorMessage)
@@ -324,7 +324,7 @@ struct NotificationListView: View {
     private var emptyView: some View {
         VStack(spacing: 12) {
             Image(systemName: "bell.slash")
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundColor(.secondary)
 
             Text("No notifications yet")
@@ -345,9 +345,9 @@ struct NotificationListView: View {
     private var offlineBanner: some View {
         HStack(spacing: 6) {
             Image(systemName: "wifi.slash")
-                .font(.system(size: 12))
+                .font(.caption)
             Text("You're offline. Showing cached notifications.")
-                .font(.system(size: 13))
+                .font(.footnote)
         }
         .foregroundColor(Color(UIColor.secondaryLabel))
         .frame(maxWidth: .infinity)

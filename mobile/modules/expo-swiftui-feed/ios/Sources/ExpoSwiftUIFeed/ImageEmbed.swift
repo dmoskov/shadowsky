@@ -191,7 +191,7 @@ struct ImageTile: View {
                 // ALT badge
                 if let alt = imageData.alt, !alt.isEmpty {
                     Text("ALT")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.caption2.weight(.semibold))
                         .foregroundColor(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)

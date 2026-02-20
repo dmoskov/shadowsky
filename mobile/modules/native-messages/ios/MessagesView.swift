@@ -99,7 +99,7 @@ struct MessagesView: View {
                 permissionErrorView
             } else {
                 Image(systemName: "exclamationmark.triangle")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundColor(.secondary)
 
                 Text(errorMessage)
@@ -122,31 +122,31 @@ struct MessagesView: View {
     private var permissionErrorView: some View {
         VStack(spacing: 16) {
             Image(systemName: "lock.fill")
-                .font(.system(size: 64))
+                .font(.largeTitle)
                 .foregroundColor(.secondary)
 
             Text("App Password Required")
-                .font(.system(size: 20, weight: .bold))
+                .font(.title3.weight(.bold))
                 .foregroundColor(Color(UIColor.label))
 
             Text("Direct Messages require an app password with chat permissions.")
-                .font(.system(size: 16))
+                .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("To enable DMs:")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
                 Text("1. Go to Settings \u{2192} App Passwords on Bluesky")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
                 Text("2. Create a new app password with \"Direct Messages\" enabled")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
                 Text("3. Log out and log back in with the new app password")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
             }
             .padding(.horizontal, 24)

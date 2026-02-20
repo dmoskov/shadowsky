@@ -41,7 +41,7 @@ struct MessageComposerView: View {
                 if #available(iOS 16.0, *) {
                     TextField("Type a message...", text: $composerState.text, axis: .vertical)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 16))
+                        .font(.body)
                         .lineLimit(1...5)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
@@ -50,7 +50,7 @@ struct MessageComposerView: View {
                 } else {
                     TextField("Type a message...", text: $composerState.text)
                         .textFieldStyle(.plain)
-                        .font(.system(size: 16))
+                        .font(.body)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
                         .background(Color(UIColor.secondarySystemBackground))
@@ -69,7 +69,7 @@ struct MessageComposerView: View {
                             .frame(width: 36, height: 36)
                     } else {
                         Text("Send")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.body.weight(.semibold))
                             .foregroundColor(canSend ? .white : Color(UIColor.tertiaryLabel))
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)

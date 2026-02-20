@@ -125,7 +125,7 @@ struct ProfileView: View {
                 }) {
                     VStack(spacing: 8) {
                         Text(tab.title)
-                            .font(.system(size: 15, weight: activeTab == tab ? .semibold : .regular))
+                            .font(.subheadline.weight(activeTab == tab ? .semibold : .regular))
                             .foregroundColor(activeTab == tab ? .blue : .secondary)
 
                         Rectangle()
@@ -239,48 +239,48 @@ struct ProfileView: View {
             switch type {
             case "deleted":
                 Image(systemName: "person.slash")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundColor(.gray)
                     .accessibilityHidden(true)
 
                 Text("Account Deleted")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.title3.weight(.semibold))
                     .foregroundColor(.primary)
 
                 Text("This account has been deleted and is no longer available.")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
 
             case "suspended":
                 Image(systemName: "exclamationmark.shield")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundColor(.orange)
                     .accessibilityHidden(true)
 
                 Text("Account Suspended")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.title3.weight(.semibold))
                     .foregroundColor(.primary)
 
                 Text("This account has been suspended for violating community guidelines.")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
 
             case "blocked":
                 Image(systemName: "hand.raised")
-                    .font(.system(size: 48))
+                    .font(.largeTitle)
                     .foregroundColor(.red)
                     .accessibilityHidden(true)
 
                 Text("Blocked Account")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.title3.weight(.semibold))
                     .foregroundColor(.primary)
 
                 Text("You have blocked this account.")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
@@ -307,16 +307,16 @@ struct ProfileView: View {
     private func errorViewContent(errorMessage: String) -> some View {
         Group {
             Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundColor(.red)
                 .accessibilityHidden(true)
 
             Text("Failed to load profile")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.title3.weight(.semibold))
                 .foregroundColor(.primary)
 
             Text(errorMessage)
-                .font(.system(size: 14))
+                .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)

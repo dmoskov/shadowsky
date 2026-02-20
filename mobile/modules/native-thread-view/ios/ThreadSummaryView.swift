@@ -130,29 +130,29 @@ struct ThreadSummaryView: View {
             HStack(spacing: 8) {
                 // Sparkle icon
                 Text("\u{2728}")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
 
                 // Label + metadata
                 HStack(spacing: 0) {
                     Text("AI Summary")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.caption.weight(.semibold))
                         .foregroundColor(.secondary)
 
                     if summaryData.metadata.cached {
                         Text(" cached")
-                            .font(.system(size: 10))
+                            .font(.caption2)
                             .foregroundColor(Color(UIColor.tertiaryLabel))
                             .italic()
                     }
 
                     if let postCount = summaryData.metadata.postCount {
                         Text(" \u{2022} \(postCount) posts")
-                            .font(.system(size: 11))
+                            .font(.caption2)
                             .foregroundColor(Color(UIColor.tertiaryLabel))
 
                         if let authors = summaryData.metadata.authors {
                             Text(", \(authors.count) participants")
-                                .font(.system(size: 11))
+                                .font(.caption2)
                                 .foregroundColor(Color(UIColor.tertiaryLabel))
                         }
                     }
@@ -168,7 +168,7 @@ struct ThreadSummaryView: View {
                 // Chevron for comprehensive
                 if summaryData.isComprehensive {
                     Text(isExpanded ? "\u{25BC}" : "\u{25B6}")
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
@@ -186,7 +186,7 @@ struct ThreadSummaryView: View {
             onToggleMode?(mode)
         }) {
             Text(label)
-                .font(.system(size: 12, weight: .medium))
+                .font(.caption.weight(.medium))
                 .foregroundColor(summaryMode == mode ? .accentColor : Color(UIColor.tertiaryLabel))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
@@ -202,7 +202,7 @@ struct ThreadSummaryView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Summary text
             Text(summaryData.summary)
-                .font(.system(size: 14))
+                .font(.subheadline)
                 .foregroundColor(.secondary)
                 .lineSpacing(4)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -221,7 +221,7 @@ struct ThreadSummaryView: View {
             if summaryData.isDetailed,
                let totalEngagement = summaryData.metadata.totalEngagement {
                 Text("\(totalEngagement.formatted()) total interactions")
-                    .font(.system(size: 11))
+                    .font(.caption2)
                     .foregroundColor(Color(UIColor.tertiaryLabel))
                     .padding(.horizontal, 12)
                     .padding(.bottom, 12)
@@ -241,18 +241,18 @@ struct ThreadSummaryView: View {
                 .padding(.bottom, 2)
 
             Text("NOTABLE DISCUSSIONS")
-                .font(.system(size: 11, weight: .semibold))
+                .font(.caption2.weight(.semibold))
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 12)
 
             ForEach(highlights) { highlight in
                 HStack(spacing: 0) {
                     Text("@\(highlight.authorHandle)")
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundColor(.accentColor)
 
                     Text(" (\(highlight.engagement) interactions)")
-                        .font(.system(size: 11))
+                        .font(.caption2)
                         .foregroundColor(Color(UIColor.tertiaryLabel))
                 }
                 .padding(.vertical, 4)
@@ -295,7 +295,7 @@ struct ThreadSummaryLoadingView: View {
             ProgressView()
                 .scaleEffect(0.8)
             Text("Generating summary...")
-                .font(.system(size: 13))
+                .font(.footnote)
                 .foregroundColor(.secondary)
         }
         .padding(12)

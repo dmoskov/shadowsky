@@ -128,7 +128,7 @@ struct ComposeView: View {
             Button(action: onClose) {
                 Text("Cancel")
                     .foregroundColor(.secondary)
-                    .font(.system(size: 16))
+                    .font(.body)
             }
             .frame(minWidth: 44, minHeight: 44)
             .accessibilityLabel("Cancel")
@@ -141,7 +141,7 @@ struct ComposeView: View {
                 Button(action: onOpenDrafts) {
                     Text("Drafts")
                         .foregroundColor(.accentColor)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.subheadline.weight(.medium))
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
@@ -156,7 +156,7 @@ struct ComposeView: View {
                         .frame(width: 20, height: 20)
                 } else {
                     Text("Post")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.body.weight(.semibold))
                 }
             }
             .frame(minWidth: 70, minHeight: 44)
@@ -179,7 +179,7 @@ struct ComposeView: View {
     private func replyContextView(_ context: ReplyContext) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Replying to @\(context.authorHandle)")
-                .font(.system(size: 14, weight: .medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundColor(.secondary)
 
             HStack(alignment: .top, spacing: 8) {
@@ -204,16 +204,16 @@ struct ComposeView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
                         Text(context.authorDisplayName ?? context.authorHandle)
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundColor(.primary)
                             .lineLimit(1)
                         Text("@\(context.authorHandle)")
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
                     }
                     Text(context.text)
-                        .font(.system(size: 14))
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                         .lineLimit(2)
                 }
@@ -300,7 +300,7 @@ struct ComposeView: View {
                                 // Add image to this thread post
                                 Button(action: { onThreadImagePicker(index) }) {
                                     Image(systemName: "photo")
-                                        .font(.system(size: 16))
+                                        .font(.body)
                                         .foregroundColor(.secondary)
                                 }
                                 .frame(width: 32, height: 32)
@@ -311,7 +311,7 @@ struct ComposeView: View {
                                 if composeState.threadPosts.count > 1 {
                                     Button(action: { onRemoveThreadPost(index) }) {
                                         Image(systemName: "trash")
-                                            .font(.system(size: 14))
+                                            .font(.subheadline)
                                             .foregroundColor(.red.opacity(0.7))
                                     }
                                     .frame(width: 32, height: 32)
@@ -327,9 +327,9 @@ struct ComposeView: View {
                 Button(action: onAddThreadPost) {
                     HStack(spacing: 8) {
                         Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 20))
+                            .font(.title3)
                         Text("Add to thread")
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.subheadline.weight(.medium))
                     }
                     .foregroundColor(.accentColor)
                     .padding(.vertical, 12)
@@ -346,16 +346,16 @@ struct ComposeView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Text(context.authorDisplayName ?? context.authorHandle)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundColor(.primary)
                     .lineLimit(1)
                 Text("@\(context.authorHandle)")
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
             }
             Text(context.text)
-                .font(.system(size: 13))
+                .font(.footnote)
                 .foregroundColor(.secondary)
                 .lineLimit(3)
         }

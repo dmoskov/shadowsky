@@ -47,15 +47,15 @@ struct RecentDMsWidgetView: View {
                 // Header
                 HStack {
                     Image(systemName: "bubble.left.and.bubble.right.fill")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundColor(brandGold)
                     Text("Messages")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.footnote.weight(.semibold))
                         .foregroundColor(.white)
                     Spacer()
                     if let updated = entry.data.lastUpdated {
                         Text(updated, style: .relative)
-                            .font(.system(size: 10))
+                            .font(.caption2)
                             .foregroundColor(.white.opacity(0.3))
                     }
                 }
@@ -70,10 +70,10 @@ struct RecentDMsWidgetView: View {
                         Spacer()
                         VStack(spacing: 4) {
                             Image(systemName: "bubble.left.and.bubble.right")
-                                .font(.system(size: 24))
+                                .font(.title2)
                                 .foregroundColor(.white.opacity(0.2))
                             Text("No recent messages")
-                                .font(.system(size: 12))
+                                .font(.caption)
                                 .foregroundColor(.white.opacity(0.4))
                         }
                         Spacer()
@@ -119,20 +119,20 @@ struct RecentDMsWidgetView: View {
                     .fill(brandGold.opacity(0.2))
                     .frame(width: 28, height: 28)
                 Text(String(convo.memberName.prefix(1)).uppercased())
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.caption.weight(.bold))
                     .foregroundColor(brandGold)
             }
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
                     Text(convo.memberName)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.caption.weight(.semibold))
                         .foregroundColor(.white)
                         .lineLimit(1)
                     Spacer()
                     if convo.unreadCount > 0 {
                         Text("\(convo.unreadCount)")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.caption2.weight(.bold))
                             .foregroundColor(.white)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 1)
@@ -140,11 +140,11 @@ struct RecentDMsWidgetView: View {
                             .clipShape(Capsule())
                     }
                     Text(relativeTime(from: convo.lastMessageTimestamp))
-                        .font(.system(size: 10))
+                        .font(.caption2)
                         .foregroundColor(.white.opacity(0.3))
                 }
                 Text(convo.lastMessageText)
-                    .font(.system(size: 11))
+                    .font(.caption2)
                     .foregroundColor(.white.opacity(0.5))
                     .lineLimit(1)
             }

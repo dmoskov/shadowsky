@@ -45,6 +45,8 @@ struct NotificationItemView: View {
     let onHashtagPress: (String) -> Void
     let onLinkPress: (String) -> Void
 
+    @ScaledMetric(relativeTo: .body) private var iconCircleSize: CGFloat = 32
+
     private var themeColor: Color {
         NotificationThemeColors.color(for: notification.reason)
     }
@@ -101,10 +103,10 @@ struct NotificationItemView: View {
         ZStack {
             Circle()
                 .fill(themeColor.opacity(0.12))
-                .frame(width: 32, height: 32)
+                .frame(width: iconCircleSize, height: iconCircleSize)
 
             Image(systemName: notification.reason.sfSymbolName)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundColor(themeColor)
         }
     }
@@ -124,17 +126,17 @@ struct NotificationItemView: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 0) {
                     Text(notification.authorDisplayName ?? notification.authorHandle)
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundColor(Color(UIColor.label))
                         .lineLimit(1)
 
                     Text(" \(notification.reason.actionText)")
-                        .font(.system(size: 15))
+                        .font(.subheadline)
                         .foregroundColor(Color(UIColor.secondaryLabel))
                 }
 
                 Text("@\(notification.authorHandle)")
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundColor(Color(UIColor.tertiaryLabel))
                     .lineLimit(1)
             }
@@ -143,7 +145,7 @@ struct NotificationItemView: View {
 
             // Timestamp
             Text(notification.timestamp)
-                .font(.system(size: 12))
+                .font(.caption)
                 .foregroundColor(Color(UIColor.tertiaryLabel))
         }
     }
@@ -154,7 +156,7 @@ struct NotificationItemView: View {
         VStack(alignment: .leading) {
             if facets.isEmpty {
                 Text(text)
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundColor(Color(UIColor.secondaryLabel))
                     .lineLimit(4)
             } else {
@@ -189,13 +191,13 @@ struct NotificationItemView: View {
                     }
                 }()
                 Text(contextLabel)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.caption.weight(.medium))
                     .foregroundColor(Color(UIColor.tertiaryLabel))
 
                 avatarView(url: preview.author.avatar, size: 18)
 
                 Text(preview.author.displayName ?? preview.author.handle)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.caption.weight(.medium))
                     .foregroundColor(Color(UIColor.secondaryLabel))
                     .lineLimit(1)
 
@@ -205,15 +207,15 @@ struct NotificationItemView: View {
                         .foregroundColor(Color(UIColor.tertiaryLabel))
                     if preview.video != nil {
                         Image(systemName: "film")
-                            .font(.system(size: 10))
+                            .font(.caption2)
                             .foregroundColor(Color(UIColor.tertiaryLabel))
                     } else if preview.external != nil {
                         Image(systemName: "link")
-                            .font(.system(size: 10))
+                            .font(.caption2)
                             .foregroundColor(Color(UIColor.tertiaryLabel))
                     } else {
                         Image(systemName: "photo")
-                            .font(.system(size: 10))
+                            .font(.caption2)
                             .foregroundColor(Color(UIColor.tertiaryLabel))
                     }
                 }
@@ -222,7 +224,7 @@ struct NotificationItemView: View {
             // Post text
             if let text = preview.text, !text.isEmpty {
                 Text(text)
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundColor(Color(UIColor.label))
                     .lineLimit(4)
                     .fixedSize(horizontal: false, vertical: true)
@@ -254,7 +256,7 @@ struct NotificationItemView: View {
 
     private var tapHintView: some View {
         Text("Tap to view post")
-            .font(.system(size: 13))
+            .font(.footnote)
             .italic()
             .foregroundColor(Color(UIColor.tertiaryLabel))
             .padding(12)
@@ -359,7 +361,7 @@ func notificationVideoThumbnail(video: PostPreviewVideo) -> some View {
             .frame(width: 44, height: 44)
             .overlay(
                 Image(systemName: "play.fill")
-                    .font(.system(size: 18))
+                    .font(.title3)
                     .foregroundColor(.white)
                     .offset(x: 2)
             )
@@ -397,14 +399,14 @@ func notificationExternalLink(external: PostPreviewExternal) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             if let host = URL(string: external.uri)?.host?.replacingOccurrences(of: "^www\\.", with: "", options: .regularExpression) {
                 Text(host)
-                    .font(.system(size: 11))
+                    .font(.caption2)
                     .foregroundColor(Color(UIColor.tertiaryLabel))
                     .lineLimit(1)
             }
 
             if !external.title.isEmpty {
                 Text(external.title)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundColor(Color(UIColor.label))
                     .lineLimit(2)
             }
