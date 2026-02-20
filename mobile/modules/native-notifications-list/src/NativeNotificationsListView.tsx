@@ -174,10 +174,19 @@ export const NativeNotificationsList = forwardRef<any, ViewProps>((props, ref) =
     postMap,
   });
 
+  // Bridge error state
+  const [bridgeError, setBridgeError] = useState<string | null>(null);
+
   // Push serialized data to Swift via NotificationBridge
   useEffect(() => {
     if (serializedJSON && NotificationBridge) {
-      NotificationBridge.updateNotificationData(serializedJSON);
+      try {
+        NotificationBridge.updateNotificationData(serializedJSON);
+        setBridgeError(null); // Clear on successful send
+      } catch (e: any) {
+        console.warn('[NativeNotificationsList] Failed to send notification data:', e?.message);
+        setBridgeError(e?.message || 'Failed to load notification data');
+      }
     }
   }, [serializedJSON]);
 
@@ -311,7 +320,7 @@ export const NativeNotificationsList = forwardRef<any, ViewProps>((props, ref) =
       isLoading={isLoading}
       isRefreshing={isManualRefreshing}
       isLoadingMore={isFetchingNextPage}
-      error={isError ? error?.message || 'Failed to load notifications' : null}
+      error={isError ? error?.message || 'Failed to load notifications' : bridgeError}
       isOnline={isNotifOnline}
       onRefresh={handleRefresh}
       onLoadMore={handleLoadMore}

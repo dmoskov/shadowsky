@@ -27,9 +27,11 @@ class NotificationListProps: ObservableObject {
 class NotificationListState: ObservableObject {
     @Published var processedNotifications: [ProcessedNotificationUIModel] = []
     @Published var counts: [String: Int] = [:]
+    @Published var decodeError: String? = nil
 
     private var notificationDataObserver: NSObjectProtocol?
     private var clearDataObserver: NSObjectProtocol?
+    private var decodeErrorObserver: NSObjectProtocol?
 
     func startObserving() {
         notificationDataObserver = NotificationCenter.default.addObserver(
@@ -38,6 +40,7 @@ class NotificationListState: ObservableObject {
             queue: .main
         ) { [weak self] notification in
             if let data = notification.userInfo?["notificationData"] as? SerializedNotificationData {
+                self?.decodeError = nil // Clear error on successful data
                 self?.updateNotifications(data)
             }
         }
@@ -50,6 +53,20 @@ class NotificationListState: ObservableObject {
             self?.processedNotifications = []
             self?.counts = [:]
         }
+
+        // Observe decode errors from bridge
+        decodeErrorObserver = NotificationCenter.default.addObserver(
+            forName: NotificationBridgeModule.notificationDecodeErrorNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            let isPartial = notification.userInfo?["isPartial"] as? Bool ?? false
+            let message = notification.userInfo?["message"] as? String ?? "Failed to load notifications"
+            // Only set full error if it's a total failure (not partial skip)
+            if !isPartial {
+                self?.decodeError = message
+            }
+        }
     }
 
     func stopObserving() {
@@ -57,6 +74,9 @@ class NotificationListState: ObservableObject {
             NotificationCenter.default.removeObserver(observer)
         }
         if let observer = clearDataObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        if let observer = decodeErrorObserver {
             NotificationCenter.default.removeObserver(observer)
         }
     }
@@ -177,7 +197,7 @@ struct NotificationListView: View {
                 if props.isLoading && state.processedNotifications.isEmpty {
                     NotificationSkeletonListView()
                         .frame(maxHeight: .infinity, alignment: .top)
-                } else if let error = props.error, state.processedNotifications.isEmpty {
+                } else if let error = props.error ?? state.decodeError, state.processedNotifications.isEmpty {
                     errorView(error)
                 } else if state.processedNotifications.isEmpty {
                     emptyView

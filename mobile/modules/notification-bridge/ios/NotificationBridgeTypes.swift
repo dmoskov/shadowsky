@@ -286,7 +286,7 @@ public struct SerializedNotificationData: Codable {
         return try JSONDecoder().decode(SerializedNotificationData.self, from: data)
     }
 
-    public static func decodeLenient(from jsonString: String) throws -> SerializedNotificationData {
+    public static func decodeLenient(from jsonString: String) throws -> LenientNotificationDecodeResult {
         guard let data = jsonString.data(using: .utf8) else {
             throw DecodingError.dataCorrupted(
                 DecodingError.Context(codingPath: [], debugDescription: "Invalid UTF8 string")
@@ -294,7 +294,8 @@ public struct SerializedNotificationData: Codable {
         }
 
         do {
-            return try JSONDecoder().decode(SerializedNotificationData.self, from: data)
+            let notifData = try JSONDecoder().decode(SerializedNotificationData.self, from: data)
+            return LenientNotificationDecodeResult(data: notifData, skippedCount: 0)
         } catch {
             // Lenient fallback: decode metadata+cursor, then try each notification individually
             struct PartialData: Codable {
@@ -304,46 +305,37 @@ public struct SerializedNotificationData: Codable {
 
             let partial = try JSONDecoder().decode(PartialData.self, from: data)
 
-            // Try to decode notifications array individually
-            struct RawNotifications: Codable {
-                let notifications: [AnyCodable]
-            }
-            struct AnyCodable: Codable {
-                let value: Any
-
-                init(from decoder: Decoder) throws {
-                    let container = try decoder.singleValueContainer()
-                    if let data = try? container.decode(Data.self) {
-                        value = data
-                    } else {
-                        value = NSNull()
-                    }
-                }
-
-                func encode(to encoder: Encoder) throws {}
-            }
-
             // Re-decode full JSON to get raw notifications
             var decodedNotifications: [ProcessedSerializedNotification] = []
+            var skipped = 0
             if let jsonObject = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                let notificationsArray = jsonObject["notifications"] as? [[String: Any]] {
-                for notifDict in notificationsArray {
+                for (index, notifDict) in notificationsArray.enumerated() {
                     do {
                         let notifData = try JSONSerialization.data(withJSONObject: notifDict)
                         let notification = try JSONDecoder().decode(ProcessedSerializedNotification.self, from: notifData)
                         decodedNotifications.append(notification)
                     } catch {
-                        // Skip individual failures
-                        continue
+                        skipped += 1
+                        print("[NotificationBridge] Skipping notification at index \(index): \(error.localizedDescription)")
                     }
                 }
             }
 
-            return SerializedNotificationData(
+            let notifData = SerializedNotificationData(
                 notifications: decodedNotifications,
                 metadata: partial.metadata,
                 cursor: partial.cursor
             )
+            return LenientNotificationDecodeResult(data: notifData, skippedCount: skipped)
         }
     }
+}
+
+// MARK: - Lenient Decode Result
+
+/// Result of a lenient decode operation, including the count of skipped items
+public struct LenientNotificationDecodeResult {
+    public let data: SerializedNotificationData
+    public let skippedCount: Int
 }

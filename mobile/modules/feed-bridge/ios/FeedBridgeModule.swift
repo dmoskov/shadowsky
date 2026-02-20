@@ -21,6 +21,7 @@ public class FeedBridgeModule: Module {
     public static let feedDataUpdatedNotification = Notification.Name("FeedBridgeDataUpdated")
     public static let feedIncrementalUpdateNotification = Notification.Name("FeedBridgeIncrementalUpdate")
     public static let feedDataClearedNotification = Notification.Name("FeedBridgeDataCleared")
+    public static let feedDecodeErrorNotification = Notification.Name("FeedBridgeDecodeError")
 
     public func definition() -> ModuleDefinition {
         Name("FeedBridge")
@@ -30,20 +31,43 @@ public class FeedBridgeModule: Module {
             self.decodeQueue.async { [weak self] in
                 guard let self = self else { return }
                 do {
-                    let feedData = try SerializedFeedData.decodeLenient(from: jsonData)
+                    let result = try SerializedFeedData.decodeLenient(from: jsonData)
 
                     self.feedDataLock.lock()
-                    self.currentFeedData = feedData
+                    self.currentFeedData = result.data
                     self.feedDataLock.unlock()
 
                     // Post notification for SwiftUI views to observe
                     NotificationCenter.default.post(
                         name: FeedBridgeModule.feedDataUpdatedNotification,
                         object: nil,
-                        userInfo: ["feedData": feedData]
+                        userInfo: ["feedData": result.data]
                     )
+
+                    // If some posts were skipped, notify so UI can inform user
+                    if result.skippedCount > 0 {
+                        print("[FeedBridge] Lenient decode skipped \(result.skippedCount) posts")
+                        NotificationCenter.default.post(
+                            name: FeedBridgeModule.feedDecodeErrorNotification,
+                            object: nil,
+                            userInfo: [
+                                "message": "\(result.skippedCount) post(s) couldn't be loaded",
+                                "skippedCount": result.skippedCount,
+                                "isPartial": true
+                            ]
+                        )
+                    }
                 } catch {
                     print("[FeedBridge] Failed to decode feed data: \(error)")
+                    NotificationCenter.default.post(
+                        name: FeedBridgeModule.feedDecodeErrorNotification,
+                        object: nil,
+                        userInfo: [
+                            "message": "Failed to decode feed data: \(error.localizedDescription)",
+                            "error": String(describing: error),
+                            "isPartial": false
+                        ]
+                    )
                 }
             }
         }
@@ -103,6 +127,15 @@ public class FeedBridgeModule: Module {
                     }
                 } catch {
                     print("[FeedBridge] Failed to decode batch update: \(error)")
+                    NotificationCenter.default.post(
+                        name: FeedBridgeModule.feedDecodeErrorNotification,
+                        object: nil,
+                        userInfo: [
+                            "message": "Failed to decode feed update: \(error.localizedDescription)",
+                            "error": String(describing: error),
+                            "isPartial": false
+                        ]
+                    )
                 }
             }
         }

@@ -4,7 +4,7 @@
  * React Native wrapper for the native SwiftUI FeedListView
  */
 
-import React, { useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
+import React, { useEffect, useCallback, forwardRef, useImperativeHandle, useState } from 'react';
 import { requireNativeViewManager } from 'expo-modules-core';
 import { ViewProps, Platform, View } from 'react-native';
 import { useCompleteFeedSerializer } from '../../../src/services/feed-bridge';
@@ -126,6 +126,7 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
   } = props;
 
   const { isLoading, isRefetching, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = query;
+  const [bridgeError, setBridgeError] = useState<string | null>(null);
 
   // Serialize feed data for Swift
   const { serializedJSON } = useCompleteFeedSerializer(query, {
@@ -133,8 +134,13 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
     bookmarkedPostUris,
     onIncrementalUpdate: useCallback((update: unknown) => {
       if (isOnline && FeedBridge) {
-        const json = JSON.stringify(update);
-        FeedBridge.updateFeedIncremental(json);
+        try {
+          const json = JSON.stringify(update);
+          FeedBridge.updateFeedIncremental(json);
+        } catch (e: any) {
+          console.warn('[NativeFeedList] Failed to send incremental update:', e?.message);
+          setBridgeError(e?.message || 'Failed to update feed');
+        }
       }
     }, [isOnline]),
   });
@@ -142,7 +148,13 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
   // Update feed data in Swift whenever it changes
   useEffect(() => {
     if (serializedJSON && FeedBridge) {
-      FeedBridge.updateFeedData(serializedJSON);
+      try {
+        FeedBridge.updateFeedData(serializedJSON);
+        setBridgeError(null); // Clear on successful send
+      } catch (e: any) {
+        console.warn('[NativeFeedList] Failed to send feed data:', e?.message);
+        setBridgeError(e?.message || 'Failed to load feed data');
+      }
     }
   }, [serializedJSON]);
 
@@ -183,7 +195,7 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
       isLoading={isLoading}
       isRefreshing={isRefetching}
       isLoadingMore={isFetchingNextPage}
-      error={error?.message || null}
+      error={error?.message || bridgeError || null}
       emptyMessage={emptyMessage}
       onRefresh={handleRefresh}
       onLoadMore={handleLoadMore}

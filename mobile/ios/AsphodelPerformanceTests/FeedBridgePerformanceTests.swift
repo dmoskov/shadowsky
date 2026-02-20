@@ -127,7 +127,7 @@ class FeedBridgePerformanceTests: XCTestCase {
         let jsonString = encodeFeedData(feedData)
 
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
-            _ = try? SerializedFeedData.decodeLenient(from: jsonString)
+            _ = try? SerializedFeedData.decodeLenient(from: jsonString).data
         }
     }
 
@@ -138,7 +138,7 @@ class FeedBridgePerformanceTests: XCTestCase {
         let jsonString = encodeFeedData(feedData)
 
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
-            _ = try? SerializedFeedData.decodeLenient(from: jsonString)
+            _ = try? SerializedFeedData.decodeLenient(from: jsonString).data
         }
     }
 
@@ -150,7 +150,7 @@ class FeedBridgePerformanceTests: XCTestCase {
         let jsonString = encodeFeedData(feedData)
 
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
-            _ = try? SerializedFeedData.decodeLenient(from: jsonString)
+            _ = try? SerializedFeedData.decodeLenient(from: jsonString).data
         }
     }
 
@@ -165,7 +165,7 @@ class FeedBridgePerformanceTests: XCTestCase {
 
         // Pre-load feed data
         let feedJSON = encodeFeedData(feedData)
-        _ = try SerializedFeedData.decodeLenient(from: feedJSON)
+        _ = try SerializedFeedData.decodeLenient(from: feedJSON).data
 
         measure(metrics: [XCTClockMetric(), XCTMemoryMetric()]) {
             _ = try? FeedBatchUpdate.decode(from: batchJSON)
@@ -221,7 +221,7 @@ class FeedBridgePerformanceTests: XCTestCase {
         var sharedData: SerializedFeedData?
 
         // Pre-load
-        sharedData = try SerializedFeedData.decodeLenient(from: feedJSON)
+        sharedData = try SerializedFeedData.decodeLenient(from: feedJSON).data
 
         let expectation = self.expectation(description: "concurrent access")
         expectation.expectedFulfillmentCount = 2
@@ -243,7 +243,7 @@ class FeedBridgePerformanceTests: XCTestCase {
             // Simulate bridge thread writes (10 full updates)
             writeQueue.async {
                 for _ in 0..<10 {
-                    let newData = try? SerializedFeedData.decodeLenient(from: feedJSON)
+                    let newData = try? SerializedFeedData.decodeLenient(from: feedJSON).data
                     lock.lock()
                     sharedData = newData
                     lock.unlock()
@@ -262,7 +262,7 @@ class FeedBridgePerformanceTests: XCTestCase {
         let feedJSON = encodeFeedData(feedData)
 
         measure(metrics: [XCTMemoryMetric()]) {
-            _ = try? SerializedFeedData.decodeLenient(from: feedJSON)
+            _ = try? SerializedFeedData.decodeLenient(from: feedJSON).data
         }
     }
 

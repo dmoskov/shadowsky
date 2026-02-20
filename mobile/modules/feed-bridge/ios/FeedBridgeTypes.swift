@@ -586,6 +586,14 @@ public struct FeedBatchUpdate: Codable {
     }
 }
 
+// MARK: - Lenient Decode Result
+
+/// Result of a lenient decode operation, including the count of skipped items
+public struct LenientFeedDecodeResult {
+    public let data: SerializedFeedData
+    public let skippedCount: Int
+}
+
 // MARK: - Helper Extensions
 
 public extension SerializedFeedData {
@@ -603,8 +611,9 @@ public extension SerializedFeedData {
         return try decoder.decode(SerializedFeedData.self, from: data)
     }
 
-    /// Lenient decoder that skips individual posts that fail to decode
-    static func decodeLenient(from jsonString: String) throws -> SerializedFeedData {
+    /// Lenient decoder that skips individual posts that fail to decode.
+    /// Returns both the decoded data and a count of skipped posts.
+    static func decodeLenient(from jsonString: String) throws -> LenientFeedDecodeResult {
         guard let data = jsonString.data(using: .utf8) else {
             throw DecodingError.dataCorrupted(
                 DecodingError.Context(
@@ -617,7 +626,8 @@ public extension SerializedFeedData {
         // First try strict decode
         let decoder = JSONDecoder()
         do {
-            return try decoder.decode(SerializedFeedData.self, from: data)
+            let feedData = try decoder.decode(SerializedFeedData.self, from: data)
+            return LenientFeedDecodeResult(data: feedData, skippedCount: 0)
         } catch {
             // Fall back to lenient: decode metadata/cursor, then decode posts individually
             let raw = try JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -631,19 +641,22 @@ public extension SerializedFeedData {
 
             // Decode posts individually, skipping failures
             var posts: [SerializedFeedViewPost] = []
+            var skipped = 0
             if let postsArray = raw["posts"] as? [[String: Any]] {
-                for postDict in postsArray {
+                for (index, postDict) in postsArray.enumerated() {
                     do {
                         let postData = try JSONSerialization.data(withJSONObject: postDict)
                         let post = try decoder.decode(SerializedFeedViewPost.self, from: postData)
                         posts.append(post)
                     } catch {
-                        print("[FeedBridge] Skipping post that failed to decode: \(error.localizedDescription)")
+                        skipped += 1
+                        print("[FeedBridge] Skipping post at index \(index): \(error.localizedDescription)")
                     }
                 }
             }
 
-            return SerializedFeedData(posts: posts, metadata: metadata, cursor: cursor)
+            let feedData = SerializedFeedData(posts: posts, metadata: metadata, cursor: cursor)
+            return LenientFeedDecodeResult(data: feedData, skippedCount: skipped)
         }
     }
 }

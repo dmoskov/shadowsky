@@ -587,12 +587,14 @@ class NotificationDataDecodeTests: XCTestCase {
         }
         """
 
-        let data = try SerializedNotificationData.decodeLenient(from: jsonString)
+        let result = try SerializedNotificationData.decodeLenient(from: jsonString)
+        let data = result.data
 
         // The lenient decoder should skip the malformed notification
         XCTAssertEqual(data.notifications.count, 2, "Should decode 2 valid notifications, skipping the broken one")
         XCTAssertEqual(data.metadata.timestamp, 1708430400)
         XCTAssertNil(data.cursor)
+        XCTAssertEqual(result.skippedCount, 1, "Should have skipped 1 malformed notification")
     }
 
     // MARK: - Empty Array Handling
@@ -651,10 +653,12 @@ class NotificationDataDecodeTests: XCTestCase {
         let jsonData = try JSONSerialization.data(withJSONObject: fullDict)
         let jsonString = String(data: jsonData, encoding: .utf8)!
 
-        let data = try SerializedNotificationData.decodeLenient(from: jsonString)
+        let result = try SerializedNotificationData.decodeLenient(from: jsonString)
+        let data = result.data
 
         XCTAssertEqual(data.notifications.count, 55, "Should decode all 55 notifications")
         XCTAssertEqual(data.cursor, "large-batch-cursor")
+        XCTAssertEqual(result.skippedCount, 0, "Should have skipped 0 notifications")
 
         // Verify first and last notifications
         if case .single(let first) = data.notifications[0] {
