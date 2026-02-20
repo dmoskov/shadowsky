@@ -205,33 +205,6 @@ struct MessageBubbleView: View {
             if isOwnMessage { Spacer(minLength: 60) }
 
             VStack(alignment: isOwnMessage ? .trailing : .leading, spacing: 0) {
-                // Image embeds
-                if let images = message.embedImages, !images.isEmpty {
-                    VStack(spacing: 4) {
-                        ForEach(Array(images.enumerated()), id: \.offset) { _, image in
-                            if let url = URL(string: "https://cdn.bsky.app/img/feed_thumbnail/plain/\(message.senderDid)/\(image.refLink)@jpeg") {
-                                AsyncImage(url: url) { phase in
-                                    switch phase {
-                                    case .success(let img):
-                                        img
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .frame(maxWidth: 200, maxHeight: 200)
-                                            .clipped()
-                                            .cornerRadius(12)
-                                    default:
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color(UIColor.tertiarySystemBackground))
-                                            .frame(width: 200, height: 150)
-                                            .overlay(ProgressView())
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .padding(.bottom, message.text.isEmpty ? 0 : 4)
-                }
-
                 // Text bubble
                 if !message.text.isEmpty {
                     Text(message.text)

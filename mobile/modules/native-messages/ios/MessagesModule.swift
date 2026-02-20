@@ -52,7 +52,6 @@ public class MessagesModule: Module {
                 "onToggleMute",
                 "onSendMessage",
                 "onDeleteMessage",
-                "onPickImage",
                 "onMarkAsRead",
                 "onProfilePress",
                 "onSearchTextChange"
@@ -169,7 +168,6 @@ class MessagesViewWrapper: ExpoView {
     private let onToggleMute = EventDispatcher()
     private let onSendMessage = EventDispatcher()
     private let onDeleteMessage = EventDispatcher()
-    private let onPickImage = EventDispatcher()
     private let onMarkAsRead = EventDispatcher()
     private let onProfilePress = EventDispatcher()
     private let onSearchTextChange = EventDispatcher()
@@ -258,9 +256,6 @@ class MessagesViewWrapper: ExpoView {
                 self?.onDeleteMessage([
                     "messageId": messageId
                 ])
-            },
-            onPickImage: { [weak self] in
-                self?.onPickImage([:])
             },
             onMarkAsRead: { [weak self] conversationId in
                 self?.onMarkAsRead([
