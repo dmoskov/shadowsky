@@ -47,17 +47,12 @@
         "ProfileTabTests",
         "SearchViewTests",
         "SearchStateTests",
-        "ThreadViewTests",
-        "ThreadSummaryViewTests",
-        "PostTranslationViewTests",
-        "LanguageUtilsTests",
-        "ThreadPostCardTests",
-        "ActionButtonTests",
-        "ThreadReplyViewTests",
-        "ThreadReplyComposerTests",
-        "ComposerStateTests",
-        "ComposerToolbarViewTests",
-        "MentionSuggestionsViewTests"
+        "ComposeViewTests",
+        "ComposeMediaGridTests",
+        "ComposeMentionSuggestionsTests",
+        "AltTextSheetTests",
+        "NativeComposeStateTests",
+        "ComposeToolbarViewTests"
       ]
     }
   ],

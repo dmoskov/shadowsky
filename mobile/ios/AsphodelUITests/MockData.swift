@@ -390,268 +390,117 @@ enum MockSearch {
     }
 }
 
-// MARK: - Thread Mock Data
+// MARK: - Compose Mock Data
 
-enum MockThread {
+enum MockCompose {
 
-    // MARK: - Authors
+    static func makeMediaAttachment(
+        id: String = "media-1",
+        uri: String = "https://example.com/image1.jpg",
+        mimeType: String = "image/jpeg",
+        altText: String = "",
+        width: Int = 800,
+        height: Int = 600,
+        isVideo: Bool = false,
+        thumbnail: String? = nil,
+        duration: Double? = nil
+    ) -> MediaAttachment {
+        MediaAttachment(
+            id: id,
+            uri: uri,
+            mimeType: mimeType,
+            altText: altText,
+            width: width,
+            height: height,
+            isVideo: isVideo,
+            thumbnail: thumbnail,
+            duration: duration
+        )
+    }
 
-    static func makeAuthor(
-        did: String = "did:plc:author1",
+    static func makeReplyContext(
+        uri: String = "at://did:plc:author1/app.bsky.feed.post/reply1",
+        cid: String = "bafyreireply1",
+        authorHandle: String = "alice.bsky.social",
+        authorDisplayName: String? = "Alice Johnson",
+        authorAvatar: String? = nil,
+        text: String = "Original post being replied to"
+    ) -> ReplyContext {
+        ReplyContext(
+            uri: uri,
+            cid: cid,
+            authorHandle: authorHandle,
+            authorDisplayName: authorDisplayName,
+            authorAvatar: authorAvatar,
+            text: text
+        )
+    }
+
+    static func makeQuoteContext(
+        uri: String = "at://did:plc:author1/app.bsky.feed.post/quote1",
+        cid: String = "bafyreiquote1",
+        authorHandle: String = "bob.bsky.social",
+        authorDisplayName: String? = "Bob Smith",
+        authorAvatar: String? = nil,
+        text: String = "Post being quoted"
+    ) -> QuoteContext {
+        QuoteContext(
+            uri: uri,
+            cid: cid,
+            authorHandle: authorHandle,
+            authorDisplayName: authorDisplayName,
+            authorAvatar: authorAvatar,
+            text: text
+        )
+    }
+
+    static func makeMentionSuggestion(
+        id: String = "did:plc:mention1",
         handle: String = "alice.bsky.social",
         displayName: String? = "Alice Johnson",
         avatar: String? = nil
-    ) -> ThreadAuthor {
-        ThreadAuthor(
-            did: did,
+    ) -> ComposeMentionSuggestion {
+        ComposeMentionSuggestion(
+            id: id,
             handle: handle,
             displayName: displayName,
             avatar: avatar
         )
     }
 
-    // MARK: - Records
-
-    static func makeRecord(
-        text: String = "Hello world!",
-        facets: [Facet]? = nil,
-        createdAt: String = "2026-02-20T10:00:00.000Z",
-        langs: [String]? = ["en"]
-    ) -> ThreadRecord {
-        ThreadRecord(
-            text: text,
-            facets: facets,
-            createdAt: createdAt,
-            langs: langs
-        )
-    }
-
-    // MARK: - Posts
-
-    static func makePost(
-        uri: String = "at://did:plc:author1/app.bsky.feed.post/post1",
-        cid: String = "bafypost1",
-        author: ThreadAuthor? = nil,
-        record: ThreadRecord? = nil,
-        embed: PostEmbedData? = nil,
-        indexedAt: String = "2026-02-20T10:00:00.000Z",
-        likeCount: Int = 10,
-        repostCount: Int = 3,
-        replyCount: Int = 2,
-        quoteCount: Int? = 1,
-        viewer: ThreadViewer? = nil,
-        labels: [ThreadLabel]? = nil
-    ) -> ThreadPost {
-        ThreadPost(
-            uri: uri,
-            cid: cid,
-            author: author ?? makeAuthor(),
-            record: record ?? makeRecord(),
-            embed: embed,
-            indexedAt: indexedAt,
-            likeCount: likeCount,
-            repostCount: repostCount,
-            replyCount: replyCount,
-            quoteCount: quoteCount,
-            viewer: viewer,
-            labels: labels
-        )
-    }
-
-    // MARK: - Nodes
-
-    static func makeNode(
-        post: ThreadPost? = nil,
-        parent: ThreadReplyRef? = nil,
-        replies: [ThreadNode] = [],
-        depth: Int = 0
-    ) -> ThreadNode {
-        ThreadNode(
-            post: post ?? makePost(),
-            parent: parent,
-            replies: replies,
-            depth: depth
-        )
-    }
-
-    // MARK: - Summary Data
-
-    static func makeSummaryData(
-        summary: String = "This thread discusses SwiftUI testing patterns.",
-        format: String = "brief",
-        postCount: Int? = 5,
-        authors: [String]? = ["alice.bsky.social", "bob.bsky.social"],
-        generatedAt: String? = "2026-02-20T10:05:00.000Z",
-        cached: Bool = false,
-        totalEngagement: Int? = nil,
-        highlightedSubThreads: [SubThreadHighlight]? = nil
-    ) -> ThreadSummaryData {
-        ThreadSummaryData(
-            summary: summary,
-            format: format,
-            metadata: ThreadSummaryMetadata(
-                postCount: postCount,
-                authors: authors,
-                generatedAt: generatedAt,
-                cached: cached,
-                totalEngagement: totalEngagement,
-                highlightedSubThreads: highlightedSubThreads
-            )
-        )
-    }
-
-    // MARK: - Mention Suggestions
-
-    static func makeMentionSuggestion(
-        did: String = "did:plc:mention1",
-        handle: String = "bob.bsky.social",
-        displayName: String? = "Bob Smith",
-        avatar: String? = nil
-    ) -> MentionSuggestion {
-        MentionSuggestion(
-            id: did,
-            handle: handle,
-            displayName: displayName,
-            avatar: avatar
-        )
-    }
-
-    // MARK: - Prebuilt Samples
-
-    /// A root post with two reply children
-    static var sampleRootNode: ThreadNode {
-        let rootPost = makePost(
-            uri: "at://did:plc:alice/app.bsky.feed.post/root1",
-            cid: "bafyroot1",
-            author: makeAuthor(did: "did:plc:alice", handle: "alice.bsky.social", displayName: "Alice Johnson"),
-            record: makeRecord(text: "This is the root post of the thread."),
-            likeCount: 42,
-            repostCount: 7,
-            replyCount: 2,
-            quoteCount: 3,
-            viewer: ThreadViewer(like: nil, repost: nil)
-        )
-
-        let reply1Post = makePost(
-            uri: "at://did:plc:bob/app.bsky.feed.post/reply1",
-            cid: "bafyreply1",
-            author: makeAuthor(did: "did:plc:bob", handle: "bob.bsky.social", displayName: "Bob Smith"),
-            record: makeRecord(text: "Great post, Alice!"),
-            likeCount: 5,
-            repostCount: 0,
-            replyCount: 0,
-            quoteCount: nil,
-            viewer: ThreadViewer(like: "at://did:plc:me/app.bsky.feed.like/1", repost: nil)
-        )
-
-        let reply2Post = makePost(
-            uri: "at://did:plc:carol/app.bsky.feed.post/reply2",
-            cid: "bafyreply2",
-            author: makeAuthor(did: "did:plc:carol", handle: "carol.bsky.social", displayName: "Carol Davis"),
-            record: makeRecord(text: "I agree, this is interesting."),
-            likeCount: 2,
-            repostCount: 1,
-            replyCount: 0,
-            quoteCount: nil,
-            viewer: nil
-        )
-
-        return makeNode(
-            post: rootPost,
-            replies: [
-                makeNode(post: reply1Post, depth: 1),
-                makeNode(post: reply2Post, depth: 1)
-            ],
-            depth: 0
-        )
-    }
-
-    /// A root post with no replies
-    static var sampleEmptyThread: ThreadNode {
-        makeNode(
-            post: makePost(
-                uri: "at://did:plc:alice/app.bsky.feed.post/empty1",
-                cid: "bafyempty1",
-                author: makeAuthor(did: "did:plc:alice", handle: "alice.bsky.social", displayName: "Alice Johnson"),
-                record: makeRecord(text: "A post with no replies yet."),
-                likeCount: 0,
-                repostCount: 0,
-                replyCount: 0,
-                quoteCount: nil,
-                viewer: nil
-            ),
-            replies: [],
-            depth: 0
-        )
-    }
-
-    /// A liked root post (viewer has liked it)
-    static var sampleLikedNode: ThreadNode {
-        makeNode(
-            post: makePost(
-                viewer: ThreadViewer(like: "at://did:plc:me/app.bsky.feed.like/abc", repost: nil)
-            )
-        )
-    }
-
-    /// A reposted root post (viewer has reposted it)
-    static var sampleRepostedNode: ThreadNode {
-        makeNode(
-            post: makePost(
-                viewer: ThreadViewer(like: nil, repost: "at://did:plc:me/app.bsky.feed.repost/xyz")
-            )
-        )
-    }
-
-    /// A post in a non-English language for translation tests
-    static var sampleForeignLanguageNode: ThreadNode {
-        makeNode(
-            post: makePost(
-                uri: "at://did:plc:france/app.bsky.feed.post/fr1",
-                cid: "bafyfr1",
-                author: makeAuthor(did: "did:plc:france", handle: "jean.bsky.social", displayName: "Jean Dupont"),
-                record: makeRecord(text: "Bonjour le monde!", langs: ["fr"]),
-                likeCount: 8,
-                repostCount: 1,
-                replyCount: 0
-            )
-        )
-    }
-
-    /// Sample mention suggestions for autocomplete tests
-    static var sampleMentionSuggestions: [MentionSuggestion] {
+    /// Sample media attachments for grid tests
+    static var sampleImageAttachments: [MediaAttachment] {
         [
-            makeMentionSuggestion(did: "did:plc:m1", handle: "alice.bsky.social", displayName: "Alice Johnson"),
-            makeMentionSuggestion(did: "did:plc:m2", handle: "bob.bsky.social", displayName: "Bob Smith"),
-            makeMentionSuggestion(did: "did:plc:m3", handle: "carol.bsky.social", displayName: nil),
+            makeMediaAttachment(id: "img-1", uri: "https://example.com/photo1.jpg", altText: ""),
+            makeMediaAttachment(id: "img-2", uri: "https://example.com/photo2.jpg", altText: "A sunset"),
+            makeMediaAttachment(id: "img-3", uri: "https://example.com/photo3.jpg", altText: ""),
         ]
     }
 
-    /// Comprehensive summary with highlights
-    static var sampleComprehensiveSummary: ThreadSummaryData {
-        makeSummaryData(
-            summary: "A comprehensive discussion about Swift testing patterns, with multiple participants sharing their experiences.",
-            format: "comprehensive",
-            postCount: 15,
-            authors: ["alice.bsky.social", "bob.bsky.social", "carol.bsky.social"],
-            cached: true,
-            totalEngagement: 250,
-            highlightedSubThreads: [
-                SubThreadHighlight(
-                    id: "at://did:plc:bob/app.bsky.feed.post/hl1",
-                    uri: "at://did:plc:bob/app.bsky.feed.post/hl1",
-                    authorHandle: "bob.bsky.social",
-                    snippet: "Great insight about ViewInspector",
-                    engagement: 45
-                ),
-                SubThreadHighlight(
-                    id: "at://did:plc:carol/app.bsky.feed.post/hl2",
-                    uri: "at://did:plc:carol/app.bsky.feed.post/hl2",
-                    authorHandle: "carol.bsky.social",
-                    snippet: "Alternative approach using XCTest",
-                    engagement: 30
-                )
-            ]
+    /// Four images (max allowed)
+    static var maxImageAttachments: [MediaAttachment] {
+        (1...4).map { i in
+            makeMediaAttachment(id: "img-\(i)", uri: "https://example.com/photo\(i).jpg")
+        }
+    }
+
+    /// Sample video attachment
+    static var sampleVideoAttachment: MediaAttachment {
+        makeMediaAttachment(
+            id: "vid-1",
+            uri: "https://example.com/video1.mp4",
+            mimeType: "video/mp4",
+            isVideo: true,
+            duration: 30.0
         )
+    }
+
+    /// Sample mention suggestions
+    static var sampleMentionSuggestions: [ComposeMentionSuggestion] {
+        [
+            makeMentionSuggestion(id: "did:plc:alice1", handle: "alice.bsky.social", displayName: "Alice Johnson"),
+            makeMentionSuggestion(id: "did:plc:alex1", handle: "alex.bsky.social", displayName: "Alex Smith"),
+            makeMentionSuggestion(id: "did:plc:amy1", handle: "amy.bsky.social", displayName: "Amy Davis"),
+        ]
     }
 }
