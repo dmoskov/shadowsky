@@ -57,6 +57,7 @@
         "NotificationDataDecodeTests",
         "NotificationBridgeModuleTests",
         "FeedBridgeErrorTests",
+        "FeedBridgeTests",
         "FeedStateConversionErrorTests",
         "FeedListViewErrorStateTests",
         "ThreadStateParsingErrorTests",
