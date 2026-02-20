@@ -82,6 +82,7 @@ struct MessagesView: View {
             }
         }
         .background(Color(UIColor.systemBackground))
+        .ignoresSafeArea(.keyboard)
         .onAppear {
             dataState.startObserving()
         }

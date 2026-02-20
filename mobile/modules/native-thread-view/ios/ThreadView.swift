@@ -94,6 +94,7 @@ struct ThreadView: View {
             )
         }
         .background(Color(UIColor.systemBackground))
+        .ignoresSafeArea(.keyboard)
         .onAppear {
             threadState.startObserving()
             threadState.startSpotlightTimer()

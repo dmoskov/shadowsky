@@ -84,6 +84,7 @@ struct ComposeView: View {
             )
         }
         .background(Color(UIColor.systemBackground))
+        .ignoresSafeArea(.keyboard)
         .onAppear {
             mentionManager.startObserving()
         }

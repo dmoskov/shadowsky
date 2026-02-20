@@ -3,7 +3,7 @@ import * as Device from "expo-device";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState, useRef } from "react";
-import { InteractionManager, LogBox, Platform, AppState, AppStateStatus } from "react-native";
+import { Appearance, InteractionManager, LogBox, Platform, AppState, AppStateStatus } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // Suppress known harmless warnings from dependencies
@@ -112,6 +112,14 @@ function AppLockGate({ children }: { children: React.ReactNode }) {
 
 function DynamicStatusBar() {
   const { isDark } = useTheme();
+
+  useEffect(() => {
+    // Sync native UIKit/SwiftUI appearance with the app's theme preference.
+    // Without this, native UIHostingControllers use the system appearance
+    // instead of the app's chosen theme, causing light/dark mode mismatches.
+    Appearance.setColorScheme(isDark ? "dark" : "light");
+  }, [isDark]);
+
   return <StatusBar style={isDark ? "light" : "dark"} />;
 }
 

@@ -127,7 +127,14 @@ class ProfileViewWrapper: ExpoView {
         hostingController.view.translatesAutoresizingMaskIntoConstraints = false
         hostingController.view.backgroundColor = .clear
 
-        addSubview(hostingController.view)
+        // Add hosting controller to the view controller hierarchy so it gets proper layout passes
+        if let parentVC = findViewController() {
+            parentVC.addChild(hostingController)
+            addSubview(hostingController.view)
+            hostingController.didMove(toParent: parentVC)
+        } else {
+            addSubview(hostingController.view)
+        }
 
         NSLayoutConstraint.activate([
             hostingController.view.topAnchor.constraint(equalTo: topAnchor),
@@ -137,6 +144,45 @@ class ProfileViewWrapper: ExpoView {
         ])
 
         self.hostingController = hostingController
+    }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        // Retry parent VC attachment when the view moves to a window
+        if let hostingController = hostingController,
+           hostingController.parent == nil,
+           let parentVC = findViewController() {
+            parentVC.addChild(hostingController)
+            hostingController.didMove(toParent: parentVC)
+        }
+    }
+
+    override var intrinsicContentSize: CGSize {
+        guard let hostingController = hostingController else {
+            return super.intrinsicContentSize
+        }
+        let fittingSize = hostingController.view.systemLayoutSizeFitting(
+            CGSize(width: bounds.width > 0 ? bounds.width : UIScreen.main.bounds.width, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        )
+        return fittingSize
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        invalidateIntrinsicContentSize()
+    }
+
+    private func findViewController() -> UIViewController? {
+        var responder: UIResponder? = self
+        while let next = responder?.next {
+            if let vc = next as? UIViewController {
+                return vc
+            }
+            responder = next
+        }
+        return nil
     }
 
     private func updateView() {

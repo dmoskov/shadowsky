@@ -182,7 +182,7 @@ private struct WrappingRichText: UIViewRepresentable {
     let onLinkTap: (String) -> Void
 
     func makeUIView(context: Context) -> UITextView {
-        let textView = UITextView()
+        let textView = SafeLinkTextView()
         textView.isEditable = false
         textView.isScrollEnabled = false
         textView.backgroundColor = .clear
@@ -337,6 +337,37 @@ private struct WrappingRichText: UIViewRepresentable {
                 viewController.present(alert, animated: true)
             }
         }
+    }
+}
+
+// MARK: - Safe Link Text View
+
+/// UITextView subclass that guards against nil URL crashes from VoiceOver.
+/// UIKit's _accessibilityActivateLink can bridge a nil NSURL to Swift's
+/// non-optional URL parameter, causing a fatal crash. This subclass
+/// intercepts the accessibility action to prevent that.
+private class SafeLinkTextView: UITextView {
+    override func accessibilityActivate() -> Bool {
+        // Let the delegate handle link activation through the normal tap path.
+        // Returning true prevents UIKit from calling _accessibilityActivateLink
+        // which can pass a nil URL.
+        if let delegate = delegate {
+            // Find the first link in the attributed text and activate it safely
+            var foundLink = false
+            attributedText?.enumerateAttribute(.link, in: NSRange(location: 0, length: attributedText?.length ?? 0)) { value, range, stop in
+                if let url = value as? URL {
+                    _ = delegate.textView?(self, shouldInteractWith: url, in: range, interaction: .invokeDefaultAction)
+                    foundLink = true
+                    stop.pointee = true
+                } else if let urlString = value as? String, let url = URL(string: urlString) {
+                    _ = delegate.textView?(self, shouldInteractWith: url, in: range, interaction: .invokeDefaultAction)
+                    foundLink = true
+                    stop.pointee = true
+                }
+            }
+            if foundLink { return true }
+        }
+        return super.accessibilityActivate()
     }
 }
 
