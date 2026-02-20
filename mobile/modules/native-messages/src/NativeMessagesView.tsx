@@ -27,6 +27,7 @@ import {
   useLeaveConversation,
   useDeleteMessage,
 } from '../../../src/hooks/api/useMessages';
+import { useMessageSearch, MessageSearchResult } from '../../../src/hooks/api/useMessageSearch';
 import { useImagePicker } from '../../../src/hooks/useImagePicker';
 import {
   dmService,
@@ -64,6 +65,7 @@ export interface MessagesViewEvents {
   onPickImage?: () => void;
   onMarkAsRead?: (event: { nativeEvent: { conversationId: string } }) => void;
   onProfilePress?: (event: { nativeEvent: { handle: string } }) => void;
+  onSearchTextChange?: (event: { nativeEvent: { text: string } }) => void;
 }
 
 // MARK: - Props Types
@@ -75,6 +77,7 @@ export interface NativeMessagesProps extends ViewProps, MessagesViewEvents {
   currentUserDid?: string;
   selectedConversationId?: string | null;
   searchText?: string;
+  isSearching?: boolean;
 }
 
 // MARK: - Low-level Native View
@@ -88,6 +91,7 @@ export const NativeMessagesView = forwardRef<any, NativeMessagesProps>(
       currentUserDid = '',
       selectedConversationId = null,
       searchText = '',
+      isSearching = false,
       onConversationPress,
       onBack,
       onRefresh,
@@ -99,6 +103,7 @@ export const NativeMessagesView = forwardRef<any, NativeMessagesProps>(
       onPickImage,
       onMarkAsRead,
       onProfilePress,
+      onSearchTextChange,
       ...viewProps
     } = props;
 
@@ -115,6 +120,7 @@ export const NativeMessagesView = forwardRef<any, NativeMessagesProps>(
         currentUserDid={currentUserDid}
         selectedConversationId={selectedConversationId}
         searchText={searchText}
+        isSearching={isSearching}
         onConversationPress={onConversationPress}
         onBack={onBack}
         onRefresh={onRefresh}
@@ -126,6 +132,7 @@ export const NativeMessagesView = forwardRef<any, NativeMessagesProps>(
         onPickImage={onPickImage}
         onMarkAsRead={onMarkAsRead}
         onProfilePress={onProfilePress}
+        onSearchTextChange={onSearchTextChange}
       />
     );
   },
@@ -203,6 +210,27 @@ function serializeConversationMessages(
   return JSON.stringify(serialized);
 }
 
+function serializeSearchResults(
+  results: MessageSearchResult[],
+  currentUserDid: string,
+): string {
+  const serialized = results.map((r) => {
+    const otherMember =
+      r.conversation.members.find((m) => m.did !== currentUserDid) ||
+      r.conversation.members[0];
+    return {
+      conversationId: r.conversationId,
+      matchType: r.matchType,
+      displayName: otherMember?.displayName || otherMember?.handle || 'Unknown',
+      handle: otherMember?.handle || '',
+      avatar: otherMember?.avatar || null,
+      matchedMessageText: r.matchedMessage?.text || null,
+      matchedMessageSentAt: r.matchedMessage?.sentAt || null,
+    };
+  });
+  return JSON.stringify(serialized);
+}
+
 // MARK: - High-level Component with Data Bridge
 
 export interface NativeMessagesHandle {
@@ -217,7 +245,7 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
   const { session } = useAuth();
 
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
-  const [searchText] = useState('');
+  const [searchText, setSearchText] = useState('');
 
   // Set up DM service with agent
   useEffect(() => {
@@ -254,6 +282,9 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
   const leaveConversationMutation = useLeaveConversation();
   const deleteMessageMutation = useDeleteMessage();
 
+  // Message search
+  const { results: searchResults, isSearching } = useMessageSearch(searchText);
+
   // Image picker
   const {
     pickFromLibrary,
@@ -279,6 +310,16 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
       }
     }
   }, [conversationData]);
+
+  // Bridge search results to native
+  useEffect(() => {
+    if (NativeMessagesModule && searchText.trim().length >= 2) {
+      const json = serializeSearchResults(searchResults, session?.did || '');
+      NativeMessagesModule.updateSearchResults(json);
+    } else if (NativeMessagesModule) {
+      NativeMessagesModule.updateSearchResults('[]');
+    }
+  }, [searchResults, searchText, session?.did]);
 
   // Mark conversation as read when opened
   useEffect(() => {
@@ -452,6 +493,13 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
     [onNavigateToProfile],
   );
 
+  const handleSearchTextChange = useCallback(
+    (event: { nativeEvent: { text: string } }) => {
+      setSearchText(event.nativeEvent.text);
+    },
+    [],
+  );
+
   // Expose scroll-to-top
   useImperativeHandle(ref, () => ({
     scrollToTop: () => {
@@ -468,6 +516,7 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
       currentUserDid={session?.did || ''}
       selectedConversationId={selectedConversation}
       searchText={searchText}
+      isSearching={isSearching}
       onConversationPress={handleConversationPress}
       onBack={handleBack}
       onRefresh={handleRefresh}
@@ -478,6 +527,7 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
       onDeleteMessage={handleDeleteMessage}
       onPickImage={handlePickImage}
       onProfilePress={handleProfilePress}
+      onSearchTextChange={handleSearchTextChange}
       style={{ flex: 1 }}
     />
   );

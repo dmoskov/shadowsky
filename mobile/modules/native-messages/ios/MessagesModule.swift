@@ -39,6 +39,10 @@ public class MessagesModule: Module {
                 view.searchText = searchText ?? ""
             }
 
+            Prop("isSearching") { (view: MessagesViewWrapper, isSearching: Bool) in
+                view.isSearching = isSearching
+            }
+
             Events(
                 "onConversationPress",
                 "onBack",
@@ -50,7 +54,8 @@ public class MessagesModule: Module {
                 "onDeleteMessage",
                 "onPickImage",
                 "onMarkAsRead",
-                "onProfilePress"
+                "onProfilePress",
+                "onSearchTextChange"
             )
         }
 
@@ -97,6 +102,20 @@ public class MessagesModule: Module {
             }
         }
 
+        Function("updateSearchResults") { (searchResultsJson: String) in
+            DispatchQueue.main.async {
+                guard let data = searchResultsJson.data(using: .utf8),
+                      let results = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+                    return
+                }
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("MessagesBridgeSearchResultsUpdated"),
+                    object: nil,
+                    userInfo: ["results": results]
+                )
+            }
+        }
+
         Function("clearData") {
             DispatchQueue.main.async {
                 NotificationCenter.default.post(
@@ -137,6 +156,10 @@ class MessagesViewWrapper: ExpoView {
         didSet { updateView() }
     }
 
+    var isSearching: Bool = false {
+        didSet { updateView() }
+    }
+
     // Event dispatchers
     private let onConversationPress = EventDispatcher()
     private let onBack = EventDispatcher()
@@ -149,6 +172,7 @@ class MessagesViewWrapper: ExpoView {
     private let onPickImage = EventDispatcher()
     private let onMarkAsRead = EventDispatcher()
     private let onProfilePress = EventDispatcher()
+    private let onSearchTextChange = EventDispatcher()
 
     // Hosting controller
     private var hostingController: UIHostingController<MessagesView>?
@@ -199,6 +223,7 @@ class MessagesViewWrapper: ExpoView {
             currentUserDid: currentUserDid,
             selectedConversationId: selectedConversationId,
             searchText: searchText,
+            isSearching: isSearching,
             onConversationPress: { [weak self] conversationId in
                 self?.onConversationPress([
                     "conversationId": conversationId
@@ -245,6 +270,11 @@ class MessagesViewWrapper: ExpoView {
             onProfilePress: { [weak self] handle in
                 self?.onProfilePress([
                     "handle": handle
+                ])
+            },
+            onSearchTextChange: { [weak self] text in
+                self?.onSearchTextChange([
+                    "text": text
                 ])
             }
         )

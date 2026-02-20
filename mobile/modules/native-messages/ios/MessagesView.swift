@@ -22,6 +22,7 @@ struct MessagesView: View {
     let currentUserDid: String
     let selectedConversationId: String?
     let searchText: String
+    let isSearching: Bool
 
     // Events (sent back to React Native)
     let onConversationPress: ((String) -> Void)?
@@ -35,6 +36,7 @@ struct MessagesView: View {
     let onPickImage: (() -> Void)?
     let onMarkAsRead: ((String) -> Void)?
     let onProfilePress: ((String) -> Void)?
+    let onSearchTextChange: ((String) -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -68,6 +70,7 @@ struct MessagesView: View {
                     isLoading: isLoading,
                     isRefreshing: false,
                     searchText: searchText,
+                    isSearching: isSearching,
                     currentUserDid: currentUserDid,
                     onConversationPress: { conversationId in
                         onConversationPress?(conversationId)
@@ -75,7 +78,8 @@ struct MessagesView: View {
                     onRefresh: onRefresh,
                     onNewConversation: onNewConversation,
                     onDeleteConversation: onDeleteConversation,
-                    onToggleMute: onToggleMute
+                    onToggleMute: onToggleMute,
+                    onSearchTextChange: onSearchTextChange
                 )
             }
         }

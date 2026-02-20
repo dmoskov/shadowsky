@@ -25,6 +25,10 @@ export function setMessageSent(success: boolean, errorMessage?: string): void {
   NativeMessagesModule.setMessageSent(success, errorMessage ?? null);
 }
 
+export function updateSearchResults(searchResultsJson: string): void {
+  NativeMessagesModule.updateSearchResults(searchResultsJson);
+}
+
 export function clearData(): void {
   NativeMessagesModule.clearData();
 }
