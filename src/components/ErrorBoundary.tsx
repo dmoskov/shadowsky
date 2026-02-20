@@ -18,6 +18,9 @@ interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  /** Called when the user clicks "Try Again" — use this to reset external state
+   *  (e.g. React Query's QueryErrorResetBoundary). */
+  onReset?: () => void;
   componentName?: string;
   showTechnicalDetails?: boolean;
   /** Show go back button (uses browser history) */
@@ -180,6 +183,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   handleReset = (): void => {
+    this.props.onReset?.();
     this.setState({
       hasError: false,
       error: null,

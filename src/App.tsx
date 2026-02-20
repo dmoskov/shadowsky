@@ -11,6 +11,7 @@ import { ProviderComposer } from "./components/providers/ProviderComposer";
 import { StorageErrorProvider } from "./components/providers/StorageErrorProvider";
 import { Sidebar } from "./components/Sidebar";
 import { AriaLiveProvider } from "./components/ui/AriaLiveRegion";
+import { InlineErrorBoundary } from "./components/ui/InlineErrorBoundary";
 import { ConnectedOfflineIndicator } from "./components/ui/OfflineIndicator";
 import { SkipLinks } from "./components/ui/SkipLinks";
 import { AccessibilityProvider } from "./contexts/AccessibilityContext";
@@ -235,20 +236,26 @@ function AppContent() {
     >
       {/* Skip navigation links for keyboard users - WCAG 2.4.1 Bypass Blocks */}
       <SkipLinks />
-      <Suspense fallback={null}>
-        <BackgroundNotificationLoader />
-      </Suspense>
-      <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+      <InlineErrorBoundary componentName="BackgroundNotificationLoader" silent>
+        <Suspense fallback={null}>
+          <BackgroundNotificationLoader />
+        </Suspense>
+      </InlineErrorBoundary>
+      <InlineErrorBoundary componentName="Header">
+        <Header onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)} />
+      </InlineErrorBoundary>
       {/* Offline/reconnection status indicator */}
       <ConnectedOfflineIndicator position="top" />
       <div
         className={`relative flex ${isHomeRoute ? "" : "mx-auto 2xl:max-w-[1536px]"}`}
       >
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          isCollapsed={isSidebarCollapsed}
-        />
+        <InlineErrorBoundary componentName="Sidebar">
+          <Sidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+            isCollapsed={isSidebarCollapsed}
+          />
+        </InlineErrorBoundary>
         <main
           id="main-content"
           role="main"
@@ -258,25 +265,29 @@ function AppContent() {
           <AppRoutes />
         </main>
       </div>
-      <MobileTabBar />
-      {/* Lazy loaded UI components */}
-      <Suspense fallback={null}>
-        <FloatingActionButton />
-        <SwipeIndicator />
-        <StatusBar />
-        <DebugConsole />
-        <DevPerformanceOverlay />
-        <WebSocketStressPanel />
-        <ColumnMigrationNotice />
-        <CommandPalette
-          isOpen={isCommandPaletteOpen}
-          onClose={() => setIsCommandPaletteOpen(false)}
-        />
-        <KeyboardShortcutsHelp
-          isOpen={isShortcutsHelpOpen}
-          onClose={() => setIsShortcutsHelpOpen(false)}
-        />
-      </Suspense>
+      <InlineErrorBoundary componentName="MobileTabBar" silent>
+        <MobileTabBar />
+      </InlineErrorBoundary>
+      {/* Lazy loaded UI components — wrapped so overlay failures don't crash the app */}
+      <InlineErrorBoundary componentName="Overlays" silent>
+        <Suspense fallback={null}>
+          <FloatingActionButton />
+          <SwipeIndicator />
+          <StatusBar />
+          <DebugConsole />
+          <DevPerformanceOverlay />
+          <WebSocketStressPanel />
+          <ColumnMigrationNotice />
+          <CommandPalette
+            isOpen={isCommandPaletteOpen}
+            onClose={() => setIsCommandPaletteOpen(false)}
+          />
+          <KeyboardShortcutsHelp
+            isOpen={isShortcutsHelpOpen}
+            onClose={() => setIsShortcutsHelpOpen(false)}
+          />
+        </Suspense>
+      </InlineErrorBoundary>
     </div>
   );
 }

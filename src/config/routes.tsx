@@ -53,8 +53,22 @@ export function AppRoutes() {
   return (
     <Suspense fallback={<RouteSkeletonFallback />}>
       <Routes>
-        <Route path="/home" element={<SkyDeck />} />
-        <Route path="/" element={<SkyDeck />} />
+        <Route
+          path="/home"
+          element={
+            <ErrorBoundary componentName="SkyDeck">
+              <SkyDeck />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <ErrorBoundary componentName="SkyDeck">
+              <SkyDeck />
+            </ErrorBoundary>
+          }
+        />
         <Route
           path="/timeline"
           element={
@@ -175,7 +189,14 @@ export function AppRoutes() {
             </ErrorBoundary>
           }
         />
-        <Route path="/compression-test" element={<CompressionTest />} />
+        <Route
+          path="/compression-test"
+          element={
+            <ErrorBoundary componentName="CompressionTest">
+              <CompressionTest />
+            </ErrorBoundary>
+          }
+        />
         <Route
           path="/add-account"
           element={
