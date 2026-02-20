@@ -54,6 +54,7 @@ import { useGlobalKeyboardShortcuts } from "../src/hooks/useKeyboardShortcuts";
 import { useImageMemoryManagement } from "../src/hooks/useImageMemoryManagement";
 import { usePendingMutationsWarning } from "../src/hooks/usePendingMutationsWarning";
 import { useWidgetSync } from "../src/hooks/useWidgetSync";
+import { useStateRestoration, useRestoredRoute } from "../src/hooks/useStateRestoration";
 import "../src/i18n";
 
 // Initialize Sentry as early as possible
@@ -149,6 +150,10 @@ function AuthGate() {
   const { isAuthenticated, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const restoredRoute = useRestoredRoute();
+
+  // Persist navigation state when the app moves to the background
+  useStateRestoration();
 
   useEffect(() => {
     if (isLoading) return;
@@ -163,13 +168,16 @@ function AuthGate() {
       const { onboardingService } = require("../src/services/onboarding/onboarding-service");
       if (!onboardingService.isCompleted()) {
         router.replace("/(onboarding)");
+      } else if (restoredRoute) {
+        // Restore saved navigation state from a previous session
+        router.replace(restoredRoute as any);
       } else {
         router.replace("/(app)/(tabs)/(home)");
       }
     } else if (!isAuthenticated && inOnboardingGroup) {
       router.replace("/(auth)");
     }
-  }, [isAuthenticated, isLoading, segments, router]);
+  }, [isAuthenticated, isLoading, segments, router, restoredRoute]);
 
   return (
     <AppLockGate>
