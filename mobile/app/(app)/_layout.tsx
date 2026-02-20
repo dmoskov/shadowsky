@@ -84,6 +84,13 @@ function PhoneAppLayout() {
           headerTintColor: "#ffffff",
         }}
       />
+      <Drawer.Screen
+        name="messages"
+        options={{
+          headerShown: false,
+          drawerItemStyle: { display: "none" },
+        }}
+      />
     </Drawer>
   );
 }
@@ -121,7 +128,7 @@ export default function AppLayout() {
         id: "messages",
         title: "Messages",
         icon: "message",
-        params: { href: "/(app)/(tabs)/(profile)/messages" },
+        params: { href: "/(app)/messages" },
       },
     ]);
   }, []);

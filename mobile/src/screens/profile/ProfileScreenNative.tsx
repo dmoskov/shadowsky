@@ -261,7 +261,7 @@ function ProfileScreenNativeIOS({
       if (onNavigateToMessages) {
         onNavigateToMessages(conversation.id);
       } else {
-        router.push("/(app)/(tabs)/(profile)/messages");
+        router.push("/(app)/messages");
       }
     } catch (error) {
       logger.error("Failed to start conversation:", error);

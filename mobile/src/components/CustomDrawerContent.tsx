@@ -81,7 +81,7 @@ export function CustomDrawerContent() {
           label="Messages"
           icon={<ChatBubbleIcon size={20} color={pathname.includes("/messages") ? colors.primary : colors.text} />}
           isActive={pathname.includes("/messages")}
-          onPress={() => router.push("/(app)/(tabs)/(profile)/messages")}
+          onPress={() => router.push("/(app)/messages")}
           badge={unreadCount}
           styles={styles}
         />

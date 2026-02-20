@@ -20,7 +20,7 @@ export default function ProfileRoute() {
   };
 
   const handleNavigateToMessages = (_conversationId: string) => {
-    router.push('/(app)/(tabs)/(profile)/messages');
+    router.push('/(app)/messages');
   };
 
   return (

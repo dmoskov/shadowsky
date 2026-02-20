@@ -119,7 +119,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
             id: "messages",
             title: "Messages",
             icon: "message",
-            params: { href: "/(app)/(tabs)/(profile)/messages" },
+            params: { href: "/(app)/messages" },
           },
         ],
       },

@@ -21,7 +21,7 @@ export default function UserProfileRoute() {
 
   const handleNavigateToMessages = (_conversationId: string) => {
     // Navigate to messages screen - the conversation will be available in the list
-    router.push('/(app)/(tabs)/(profile)/messages');
+    router.push('/(app)/messages');
   };
 
   return (

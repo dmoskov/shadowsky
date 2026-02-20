@@ -85,7 +85,7 @@ export function useAppNavigation() {
   }, [router]);
 
   const navigateToMessages = useCallback(() => {
-    router.push("/(app)/(tabs)/(profile)/messages");
+    router.push("/(app)/messages");
   }, [router]);
 
   const navigateToList = useCallback(

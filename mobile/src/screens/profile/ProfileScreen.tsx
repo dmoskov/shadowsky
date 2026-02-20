@@ -317,7 +317,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
         onNavigateToMessages(conversation.id);
       } else {
         // Fallback to messages screen
-        router.push('/(app)/(tabs)/(profile)/messages');
+        router.push('/(app)/messages');
       }
     } catch (error) {
       logger.error('Failed to start conversation:', error);

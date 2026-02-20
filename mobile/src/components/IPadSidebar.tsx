@@ -182,7 +182,7 @@ export function IPadSidebar() {
             icon={<ChatBubbleIcon size={22} color={pathname.includes("/messages") ? colors.primary : colors.text} />}
             isActive={pathname.includes("/messages")}
             badge={unreadMessages}
-            onPress={() => router.push("/(app)/(tabs)/(profile)/messages")}
+            onPress={() => router.push("/(app)/messages")}
             colors={colors}
           />
           <SidebarItem

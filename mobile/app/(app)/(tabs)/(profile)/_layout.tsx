@@ -25,7 +25,6 @@ export default function ProfileLayout() {
         }}
       />
       <Stack.Screen name="bookmarks" options={{ title: "Bookmarks" }} />
-      <Stack.Screen name="messages" options={{ title: "Messages" }} />
     </Stack>
   );
 }
