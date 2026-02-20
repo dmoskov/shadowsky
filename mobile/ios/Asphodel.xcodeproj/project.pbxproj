@@ -21,6 +21,7 @@
 		A1B2C3D400000005000TESTS /* SearchViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000015000TESTS /* SearchViewTests.swift */; };
 		A1B2C3D400000006000TESTS /* InfrastructureValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000016000TESTS /* InfrastructureValidationTests.swift */; };
 		A1B2C3D400000007000TESTS /* libPods-AsphodelUITests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000017000TESTS /* libPods-AsphodelUITests.a */; };
+		A1B2C3D400000008000NOTIF /* NotificationBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000018000NOTIF /* NotificationBridgeTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -55,6 +56,7 @@
 		A1B2C3D400000015000TESTS /* SearchViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewTests.swift; sourceTree = "<group>"; };
 		A1B2C3D400000016000TESTS /* InfrastructureValidationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfrastructureValidationTests.swift; sourceTree = "<group>"; };
 		A1B2C3D400000017000TESTS /* libPods-AsphodelUITests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AsphodelUITests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1B2C3D400000018000NOTIF /* NotificationBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBridgeTests.swift; sourceTree = "<group>"; };
 		A1B2C3D400000018000TESTS /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A1B2C3D400000019000TESTS /* Pods-AsphodelUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AsphodelUITests.debug.xcconfig"; path = "Target Support Files/Pods-AsphodelUITests/Pods-AsphodelUITests.debug.xcconfig"; sourceTree = "<group>"; };
 		A1B2C3D40000001A000TESTS /* Pods-AsphodelUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AsphodelUITests.release.xcconfig"; path = "Target Support Files/Pods-AsphodelUITests/Pods-AsphodelUITests.release.xcconfig"; sourceTree = "<group>"; };
@@ -183,6 +185,7 @@
 				A1B2C3D400000014000TESTS /* ProfileViewTests.swift */,
 				A1B2C3D400000015000TESTS /* SearchViewTests.swift */,
 				A1B2C3D400000016000TESTS /* InfrastructureValidationTests.swift */,
+				A1B2C3D400000018000NOTIF /* NotificationBridgeTests.swift */,
 			);
 			name = AsphodelUITests;
 			path = AsphodelUITests;
@@ -478,6 +481,7 @@
 				A1B2C3D400000004000TESTS /* ProfileViewTests.swift in Sources */,
 				A1B2C3D400000005000TESTS /* SearchViewTests.swift in Sources */,
 				A1B2C3D400000006000TESTS /* InfrastructureValidationTests.swift in Sources */,
+				A1B2C3D400000008000NOTIF /* NotificationBridgeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
