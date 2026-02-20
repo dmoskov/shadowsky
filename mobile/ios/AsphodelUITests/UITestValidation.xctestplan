@@ -52,7 +52,10 @@
         "ComposeMentionSuggestionsTests",
         "AltTextSheetTests",
         "NativeComposeStateTests",
-        "ComposeToolbarViewTests"
+        "ComposeToolbarViewTests",
+        "NotificationBridgeTypesTests",
+        "NotificationDataDecodeTests",
+        "NotificationBridgeModuleTests"
       ]
     }
   ],
