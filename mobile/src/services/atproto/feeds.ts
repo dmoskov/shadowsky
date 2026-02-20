@@ -283,6 +283,54 @@ export async function searchFeedGenerators(query: string, options: FeedOptions =
 }
 
 /**
+ * Extract saved feed URIs from preferences, supporting both v1 and v2 formats.
+ * v1: savedFeedsPref { saved: string[], pinned: string[] }
+ * v2: savedFeedsPrefV2 { items: Array<{ type: string, value: string, pinned: boolean }> }
+ */
+function extractSavedFeedUris(preferences: any[]): string[] {
+  // Try v2 format first (newer accounts)
+  const v2Pref = preferences.find(
+    (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPrefV2'
+  ) as {items?: Array<{type: string; value: string; pinned: boolean}>} | undefined;
+
+  if (v2Pref?.items && v2Pref.items.length > 0) {
+    return v2Pref.items
+      .filter((item) => item.type === 'feed')
+      .map((item) => item.value);
+  }
+
+  // Fall back to v1 format
+  const v1Pref = preferences.find(
+    (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
+  ) as {saved?: string[]; pinned?: string[]} | undefined;
+
+  return v1Pref?.saved || [];
+}
+
+/**
+ * Extract pinned feed URIs from preferences, supporting both v1 and v2 formats.
+ */
+function extractPinnedFeedUris(preferences: any[]): string[] {
+  // Try v2 format first
+  const v2Pref = preferences.find(
+    (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPrefV2'
+  ) as {items?: Array<{type: string; value: string; pinned: boolean}>} | undefined;
+
+  if (v2Pref?.items && v2Pref.items.length > 0) {
+    return v2Pref.items
+      .filter((item) => item.type === 'feed' && item.pinned)
+      .map((item) => item.value);
+  }
+
+  // Fall back to v1 format
+  const v1Pref = preferences.find(
+    (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
+  ) as {saved?: string[]; pinned?: string[]} | undefined;
+
+  return v1Pref?.pinned || [];
+}
+
+/**
  * Get the current user's saved feeds (feed preferences)
  */
 export async function getSavedFeeds(): Promise<FeedDefs.GeneratorView[]> {
@@ -292,17 +340,15 @@ export async function getSavedFeeds(): Promise<FeedDefs.GeneratorView[]> {
       const agent = client.getAgent();
 
       const response = await agent.app.bsky.actor.getPreferences();
-      const savedFeedsPreference = response.data.preferences.find(
-        (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
-      ) as {saved?: string[]; pinned?: string[]} | undefined;
+      const savedUris = extractSavedFeedUris(response.data.preferences);
 
-      if (!savedFeedsPreference || !savedFeedsPreference.saved || savedFeedsPreference.saved.length === 0) {
+      if (savedUris.length === 0) {
         return [];
       }
 
       // Get feed generator info for all saved feeds
       const feedsResponse = await agent.app.bsky.feed.getFeedGenerators({
-        feeds: savedFeedsPreference.saved,
+        feeds: savedUris,
       });
 
       return feedsResponse.data.feeds;
@@ -517,11 +563,7 @@ export async function getPinnedFeeds(): Promise<string[]> {
       const agent = client.getAgent();
 
       const response = await agent.app.bsky.actor.getPreferences();
-      const savedFeedsPreference = response.data.preferences.find(
-        (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
-      ) as {saved?: string[]; pinned?: string[]} | undefined;
-
-      return savedFeedsPreference?.pinned || [];
+      return extractPinnedFeedUris(response.data.preferences);
     },
     ATProtoEndpointType.FEED
   );

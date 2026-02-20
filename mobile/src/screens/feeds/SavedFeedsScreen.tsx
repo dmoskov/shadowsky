@@ -23,7 +23,6 @@ import {
 } from '../../hooks/api';
 import {AppBskyFeedDefs} from '@atproto/api';
 import DraggableFlatList, {RenderItemParams, ScaleDecorator} from 'react-native-draggable-flatlist';
-import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
 interface SavedFeedsScreenProps {
   onClose?: () => void;
@@ -37,7 +36,7 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const {data: savedFeedsData, isLoading, refetch} = useSavedFeeds();
+  const {data: savedFeedsData, isLoading, isError, refetch} = useSavedFeeds();
   const {data: pinnedFeedUris} = usePinnedFeeds();
   const {mutate: unsaveFeed} = useUnsaveFeed();
   const {mutate: pinFeed} = usePinFeed();
@@ -56,6 +55,11 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
       setLocalFeeds(savedFeedsData);
     }
   }, [savedFeedsData]);
+
+  // Use localFeeds for rendering, but fall back to savedFeedsData to avoid
+  // the empty flash before the useEffect runs
+  const feeds = localFeeds.length > 0 ? localFeeds : (savedFeedsData ?? []);
+  const hasFeeds = feeds.length > 0;
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -162,7 +166,7 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
     );
   };
 
-  const renderEmptyState = () => {
+  const renderContent = () => {
     if (isLoading) {
       return (
         <View style={styles.loadingContainer}>
@@ -171,78 +175,80 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
       );
     }
 
+    if (isError) {
+      return (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateText}>Could not load feeds</Text>
+          <Text style={styles.emptyStateSubtext}>
+            Pull down to retry
+          </Text>
+        </View>
+      );
+    }
+
+    if (!hasFeeds) {
+      return (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateText}>No saved feeds</Text>
+          <Text style={styles.emptyStateSubtext}>
+            Visit the Discover tab to find and save feeds
+          </Text>
+        </View>
+      );
+    }
+
+    if (isReorderMode) {
+      return (
+        <DraggableFlatList
+          data={feeds}
+          renderItem={renderFeedCard}
+          keyExtractor={(item) => item.uri}
+          onDragEnd={({data}) => setLocalFeeds(data)}
+          contentContainerStyle={styles.listContent}
+        />
+      );
+    }
+
     return (
-      <View style={styles.emptyState}>
-        <Text style={styles.emptyStateText}>No saved feeds</Text>
-        <Text style={styles.emptyStateSubtext}>
-          Visit the Discover tab to find and save feeds
-        </Text>
-      </View>
+      <FlatList
+        data={feeds}
+        keyboardDismissMode="on-drag"
+        renderItem={({item}) =>
+          renderFeedCard({
+            item,
+            drag: () => {},
+            isActive: false,
+            getIndex: () => 0,
+          })
+        }
+        keyExtractor={(item) => item.uri}
+        contentContainerStyle={styles.listContent}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
+      />
     );
   };
 
-  if (!savedFeedsData || savedFeedsData.length === 0) {
-    return (
-      <View style={[styles.container, {paddingTop: insets.top}]}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>My Feeds</Text>
+  return (
+    <View style={[styles.container, {paddingTop: insets.top}]}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Feeds</Text>
+        <View style={styles.headerActions}>
+          {hasFeeds && (
+            <TouchableOpacity onPress={handleToggleReorderMode} style={styles.reorderButton}>
+              <Text style={[styles.reorderButtonText, isReorderMode && styles.reorderButtonTextActive]}>
+                {isReorderMode ? 'Done' : 'Reorder'}
+              </Text>
+            </TouchableOpacity>
+          )}
           {onClose && (
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>
           )}
         </View>
-        {renderEmptyState()}
       </View>
-    );
-  }
-
-  return (
-    <GestureHandlerRootView style={{flex: 1}}>
-      <View style={[styles.container, {paddingTop: insets.top}]}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>My Feeds</Text>
-          <View style={styles.headerActions}>
-            <TouchableOpacity onPress={handleToggleReorderMode} style={styles.reorderButton}>
-              <Text style={[styles.reorderButtonText, isReorderMode && styles.reorderButtonTextActive]}>
-                {isReorderMode ? 'Done' : 'Reorder'}
-              </Text>
-            </TouchableOpacity>
-            {onClose && (
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Text style={styles.closeButtonText}>✕</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {isReorderMode ? (
-          <DraggableFlatList
-            data={localFeeds}
-            renderItem={renderFeedCard}
-            keyExtractor={(item) => item.uri}
-            onDragEnd={({data}) => setLocalFeeds(data)}
-            contentContainerStyle={styles.listContent}
-          />
-        ) : (
-          <FlatList
-            data={localFeeds}
-            keyboardDismissMode="on-drag"
-            renderItem={({item}) =>
-              renderFeedCard({
-                item,
-                drag: () => {},
-                isActive: false,
-                getIndex: () => 0,
-              })
-            }
-            keyExtractor={(item) => item.uri}
-            contentContainerStyle={styles.listContent}
-            refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
-          />
-        )}
-      </View>
-    </GestureHandlerRootView>
+      {renderContent()}
+    </View>
   );
 }
 
