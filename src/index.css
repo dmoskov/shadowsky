@@ -44,6 +44,135 @@
   }
 }
 
+/* ==========================================
+ * Design Polish - Refined Component Styles
+ * ==========================================
+ * Elevated design language with attention to detail:
+ * layered shadows, refined borders, optical spacing,
+ * and subtle micro-interactions.
+ */
+
+/* Polished post card hover state */
+@layer utilities {
+  .post-hover-refined {
+    transition:
+      background-color var(--transition-fast) var(--ease-default),
+      box-shadow var(--transition-fast) var(--ease-out);
+  }
+
+  .post-hover-refined:hover {
+    background-color: var(--asph-bg-hover);
+  }
+}
+
+/* Refined embed card styles */
+.embed-card-refined {
+  border-radius: 0.75rem;
+  border: 1px solid var(--asph-border-primary);
+  overflow: hidden;
+  transition:
+    border-color var(--transition-fast) var(--ease-default),
+    box-shadow var(--transition-fast) var(--ease-out),
+    background-color var(--transition-fast) var(--ease-default);
+  box-shadow: var(--asph-shadow-ring);
+}
+
+.embed-card-refined:hover {
+  border-color: var(--asph-border-secondary);
+  box-shadow: var(--asph-shadow-sm);
+  background-color: var(--asph-bg-hover);
+}
+
+/* Embed card header bar */
+.embed-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  background-color: var(--asph-bg-tertiary);
+  border-bottom: 1px solid var(--asph-border-primary);
+  color: var(--asph-text-secondary);
+  letter-spacing: var(--asph-letter-spacing-wide);
+  font-weight: 500;
+}
+
+/* Embed card body */
+.embed-card-body {
+  padding: 0.75rem;
+}
+
+/* Refined divider with gradient fade */
+.divider-refined {
+  border: none;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--asph-border-primary) 15%,
+    var(--asph-border-primary) 85%,
+    transparent
+  );
+}
+
+/* Polished dropdown menu */
+.dropdown-refined {
+  border-radius: 0.75rem;
+  border: 1px solid var(--asph-border-primary);
+  background-color: var(--asph-bg-secondary);
+  box-shadow: var(--asph-shadow-lg);
+  overflow: hidden;
+}
+
+/* Refined avatar ring for active/online state */
+.avatar-ring {
+  box-shadow:
+    0 0 0 2px var(--asph-bg-primary),
+    0 0 0 3px var(--asph-primary);
+}
+
+/* Polished inline code / mention styling */
+.inline-highlight {
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  background-color: var(--asph-bg-tertiary);
+  box-shadow: var(--asph-shadow-ring);
+  font-size: 0.875em;
+}
+
+/* Subtle text gradient for branding elements */
+.text-gradient-refined {
+  background: linear-gradient(
+    135deg,
+    var(--asph-primary) 0%,
+    var(--asph-accent) 50%,
+    var(--asph-primary) 100%
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Refined scrollbar with smoother track */
+.scrollbar-refined::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-refined::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-refined::-webkit-scrollbar-thumb {
+  background: var(--asph-bg-active);
+  border-radius: 3px;
+}
+
+.scrollbar-refined::-webkit-scrollbar-thumb:hover {
+  background: var(--asph-text-tertiary);
+}
+
 /* Consistent spacing system */
 @layer utilities {
   /* Hide scrollbar in minimap */

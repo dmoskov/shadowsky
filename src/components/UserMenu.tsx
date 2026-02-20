@@ -115,7 +115,7 @@ export const UserMenu: React.FC = () => {
           }
           setIsOpen(!isOpen);
         }}
-        className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-gray-200/50 dark:hover:bg-white/10"
+        className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-asph-bg-hover"
         style={{ color: "var(--asph-text-primary)" }}
         aria-label="User menu"
         aria-haspopup="menu"
@@ -139,10 +139,8 @@ export const UserMenu: React.FC = () => {
             id={menuId}
             role="menu"
             aria-label="User menu"
-            className="animate-dropdown-in asph-glass fixed z-[9999] w-56 overflow-hidden rounded-lg shadow-lg"
+            className="dropdown-refined animate-dropdown-in fixed z-[9999] w-56"
             style={{
-              backgroundColor: "var(--asph-bg-secondary)",
-              border: "1px solid var(--asph-border-primary)",
               top: `${menuPosition.top}px`,
               right: `${menuPosition.right}px`,
             }}
@@ -172,8 +170,7 @@ export const UserMenu: React.FC = () => {
                     <div
                       key={`menu-divider-${index}`}
                       role="separator"
-                      className="my-1 border-t"
-                      style={{ borderColor: "var(--asph-border-primary)" }}
+                      className="divider-refined mx-3 my-1"
                     />
                   );
                 }
@@ -184,7 +181,7 @@ export const UserMenu: React.FC = () => {
                     key={`menu-item-${item.label}-${index}`}
                     role="menuitem"
                     onClick={item.onClick}
-                    className={`ios-press-light flex w-full items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-blue-50 focus-visible:bg-blue-50 focus-visible:outline-none dark:hover:bg-blue-900/20 dark:focus-visible:bg-blue-900/20 ${
+                    className={`ios-press-light flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-asph-bg-hover focus-visible:bg-asph-bg-hover focus-visible:outline-none ${
                       item.className || ""
                     }`}
                     style={{
