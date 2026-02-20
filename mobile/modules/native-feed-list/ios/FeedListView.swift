@@ -179,11 +179,8 @@ struct FeedListView: View {
     // MARK: - Loading View
 
     private var loadingView: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-            Text("Loading feed...")
-                .foregroundColor(.secondary)
-                .font(.subheadline)
+        ScrollView {
+            FeedSkeletonView()
         }
     }
 
