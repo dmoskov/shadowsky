@@ -76,7 +76,12 @@
         "ShareIntentModuleTests",
         "SpotlightSearchModuleTests",
         "VideoCompressorModuleTests",
-        "WidgetDataBridgeModuleTests"
+        "WidgetDataBridgeModuleTests",
+        "RichTextParserTests",
+        "ByteOffsetConverterTests",
+        "RichTextParserUTF8Tests",
+        "RichTextViewTests",
+        "RichTextParserEdgeCaseTests"
       ]
     }
   ],

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+@testable import FeedBridge
 
 // MARK: - Messages Mock Data
 
@@ -503,4 +504,109 @@ enum MockCompose {
             makeMentionSuggestion(id: "did:plc:amy1", handle: "amy.bsky.social", displayName: "Amy Davis"),
         ]
     }
+}
+
+// MARK: - Rich Text / Facet Mock Data
+
+enum MockFacets {
+
+    // MARK: - Facet Builders
+
+    static func makeMentionFacet(
+        byteStart: Int,
+        byteEnd: Int,
+        did: String = "did:plc:alice123"
+    ) -> Facet {
+        Facet(
+            index: FacetIndex(byteStart: byteStart, byteEnd: byteEnd),
+            features: [.mention(FacetFeatureMention(type: "app.bsky.richtext.facet#mention", did: did))]
+        )
+    }
+
+    static func makeLinkFacet(
+        byteStart: Int,
+        byteEnd: Int,
+        uri: String = "https://example.com"
+    ) -> Facet {
+        Facet(
+            index: FacetIndex(byteStart: byteStart, byteEnd: byteEnd),
+            features: [.link(FacetFeatureLink(type: "app.bsky.richtext.facet#link", uri: uri))]
+        )
+    }
+
+    static func makeHashtagFacet(
+        byteStart: Int,
+        byteEnd: Int,
+        tag: String = "bluesky"
+    ) -> Facet {
+        Facet(
+            index: FacetIndex(byteStart: byteStart, byteEnd: byteEnd),
+            features: [.tag(FacetFeatureTag(type: "app.bsky.richtext.facet#tag", tag: tag))]
+        )
+    }
+
+    // MARK: - Pre-built Scenarios
+
+    /// Plain text with no facets: "Hello, world!"
+    static let plainText = "Hello, world!"
+    static let plainTextFacets: [Facet] = []
+
+    /// Text with a single mention: "Hello @alice how are you?"
+    /// "@alice" is bytes 6..12
+    static let mentionText = "Hello @alice how are you?"
+    static let mentionFacets: [Facet] = [
+        makeMentionFacet(byteStart: 6, byteEnd: 12, did: "did:plc:alice123")
+    ]
+
+    /// Text with a single link: "Check out https://example.com today"
+    /// "https://example.com" is bytes 10..29
+    static let linkText = "Check out https://example.com today"
+    static let linkFacets: [Facet] = [
+        makeLinkFacet(byteStart: 10, byteEnd: 29, uri: "https://example.com")
+    ]
+
+    /// Text with a single hashtag: "I love #swiftui so much"
+    /// "#swiftui" is bytes 7..15
+    static let hashtagText = "I love #swiftui so much"
+    static let hashtagFacets: [Facet] = [
+        makeHashtagFacet(byteStart: 7, byteEnd: 15, tag: "swiftui")
+    ]
+
+    /// Mixed content: "Hey @bob check https://news.com #trending today"
+    static let mixedText = "Hey @bob check https://news.com #trending today"
+    static let mixedFacets: [Facet] = [
+        makeMentionFacet(byteStart: 4, byteEnd: 8, did: "did:plc:bob456"),
+        makeLinkFacet(byteStart: 15, byteEnd: 31, uri: "https://news.com"),
+        makeHashtagFacet(byteStart: 32, byteEnd: 41, tag: "trending")
+    ]
+
+    /// Text with emoji before a mention (tests UTF-8 byte offset):
+    /// "Hello 👋 @alice check this 🔥"
+    /// 👋 is 4 bytes in UTF-8, so "@alice" starts at byte 11 (6 + 1 space + 4 emoji bytes)
+    static let emojiText = "Hello 👋 @alice check this 🔥"
+    static let emojiFacets: [Facet] = [
+        makeMentionFacet(byteStart: 11, byteEnd: 17, did: "did:plc:alice123")
+    ]
+
+    /// Multi-byte characters (CJK): "你好 @alice 世界"
+    /// 你 = 3 bytes, 好 = 3 bytes, space = 1 → "@alice" starts at byte 7
+    static let cjkText = "你好 @alice 世界"
+    static let cjkFacets: [Facet] = [
+        makeMentionFacet(byteStart: 7, byteEnd: 13, did: "did:plc:alice123")
+    ]
+
+    /// Multiple consecutive mentions: "@alice @bob @carol"
+    static let consecutiveMentionsText = "@alice @bob @carol"
+    static let consecutiveMentionsFacets: [Facet] = [
+        makeMentionFacet(byteStart: 0, byteEnd: 6, did: "did:plc:alice123"),
+        makeMentionFacet(byteStart: 7, byteEnd: 11, did: "did:plc:bob456"),
+        makeMentionFacet(byteStart: 12, byteEnd: 18, did: "did:plc:carol789")
+    ]
+
+    /// Link with display text (display text differs from URL):
+    /// "Visit my site today" where "my site" is the link text
+    static let linkDisplayText = "Visit my site today"
+    static let linkDisplayFacets: [Facet] = [
+        makeLinkFacet(byteStart: 6, byteEnd: 13, uri: "https://mywebsite.com")
+    ]
 }
