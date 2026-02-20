@@ -70,7 +70,7 @@ struct FeedListView: View {
         ZStack {
             if props.isLoading && feedState.convertedPosts.isEmpty {
                 loadingView
-            } else if let error = props.error, feedState.convertedPosts.isEmpty {
+            } else if let error = props.error ?? feedState.decodeError, feedState.convertedPosts.isEmpty {
                 errorView(error)
             } else if feedState.convertedPosts.isEmpty {
                 emptyView
@@ -232,10 +232,12 @@ struct FeedListView: View {
 class FeedState: ObservableObject {
     @Published var posts: [SerializedFeedViewPost] = []
     @Published var convertedPosts: [ConvertedFeedPost] = []
+    @Published var decodeError: String? = nil
 
     private var feedDataObserver: NSObjectProtocol?
     private var incrementalUpdateObserver: NSObjectProtocol?
     private var clearDataObserver: NSObjectProtocol?
+    private var decodeErrorObserver: NSObjectProtocol?
 
     func startObserving() {
         // Observe feed data updates
@@ -245,7 +247,22 @@ class FeedState: ObservableObject {
             queue: .main
         ) { [weak self] notification in
             if let feedData = notification.userInfo?["feedData"] as? SerializedFeedData {
+                self?.decodeError = nil // Clear error on successful data
                 self?.updatePosts(feedData.posts)
+            }
+        }
+
+        // Observe decode errors from bridge
+        decodeErrorObserver = NotificationCenter.default.addObserver(
+            forName: FeedBridgeModule.feedDecodeErrorNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            let isPartial = notification.userInfo?["isPartial"] as? Bool ?? false
+            let message = notification.userInfo?["message"] as? String ?? "Failed to load feed"
+            // Only set full error if it's a total failure (not partial skip)
+            if !isPartial {
+                self?.decodeError = message
             }
         }
 
@@ -315,6 +332,9 @@ class FeedState: ObservableObject {
             NotificationCenter.default.removeObserver(observer)
         }
         if let observer = clearDataObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        if let observer = decodeErrorObserver {
             NotificationCenter.default.removeObserver(observer)
         }
     }

@@ -123,7 +123,7 @@ class FeedBridgeErrorTests: XCTestCase {
         let dict = wrapInFeedData(posts: [goodPost, badPost])
         let json = try jsonString(from: dict)
 
-        let feedData = try SerializedFeedData.decodeLenient(from: json)
+        let feedData = try SerializedFeedData.decodeLenient(from: json).data
 
         // The lenient decoder should skip the bad post and keep the good one
         XCTAssertEqual(feedData.posts.count, 1,
@@ -153,7 +153,7 @@ class FeedBridgeErrorTests: XCTestCase {
 
         let dict = wrapInFeedData(posts: [postDict])
         let json = try jsonString(from: dict)
-        let feedData = try SerializedFeedData.decodeLenient(from: json)
+        let feedData = try SerializedFeedData.decodeLenient(from: json).data
 
         XCTAssertEqual(feedData.posts.count, 1, "Post with null embed should decode")
         XCTAssertNil(feedData.posts.first?.post.embed, "Embed should be nil")
@@ -180,7 +180,7 @@ class FeedBridgeErrorTests: XCTestCase {
 
         let dict = wrapInFeedData(posts: [postDict])
         let json = try jsonString(from: dict)
-        let feedData = try SerializedFeedData.decodeLenient(from: json)
+        let feedData = try SerializedFeedData.decodeLenient(from: json).data
 
         XCTAssertEqual(feedData.posts.count, 1, "Post with empty strings should still decode")
         XCTAssertEqual(feedData.posts.first?.post.uri, "", "URI should be empty string")
@@ -211,7 +211,7 @@ class FeedBridgeErrorTests: XCTestCase {
         let dict = wrapInFeedData(posts: [postDict])
         let json = try jsonString(from: dict)
 
-        let feedData = try SerializedFeedData.decodeLenient(from: json)
+        let feedData = try SerializedFeedData.decodeLenient(from: json).data
 
         XCTAssertEqual(feedData.posts.count, 1, "Should decode post with 100KB text")
         XCTAssertEqual(feedData.posts.first?.post.record.text.count, 100_000,
@@ -245,7 +245,7 @@ class FeedBridgeErrorTests: XCTestCase {
         let dict = wrapInFeedData(posts: [postDict, goodPost])
         let json = try jsonString(from: dict)
 
-        let feedData = try SerializedFeedData.decodeLenient(from: json)
+        let feedData = try SerializedFeedData.decodeLenient(from: json).data
 
         // The post with unknown embed should be skipped, good post kept
         XCTAssertGreaterThanOrEqual(feedData.posts.count, 1,
@@ -297,7 +297,7 @@ class FeedBridgeErrorTests: XCTestCase {
         let dict = wrapInFeedData(posts: [good1, bad1, good2, bad2, good3])
         let json = try jsonString(from: dict)
 
-        let feedData = try SerializedFeedData.decodeLenient(from: json)
+        let feedData = try SerializedFeedData.decodeLenient(from: json).data
 
         XCTAssertEqual(feedData.posts.count, 3,
             "Should decode 3 valid posts, skipping 2 invalid ones")
@@ -400,7 +400,7 @@ class FeedBridgeErrorTests: XCTestCase {
 
         let dict = wrapInFeedData(posts: [postDict])
         let json = try jsonString(from: dict)
-        let feedData = try SerializedFeedData.decodeLenient(from: json)
+        let feedData = try SerializedFeedData.decodeLenient(from: json).data
 
         XCTAssertEqual(feedData.posts.count, 1, "Should decode post with all-emoji text")
         XCTAssertEqual(feedData.posts.first?.post.record.text, emojiText,

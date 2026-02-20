@@ -102,9 +102,10 @@ class NotificationBridgeDecodeErrorTests: XCTestCase {
         XCTAssertThrowsError(try SerializedNotificationData.decode(from: json))
 
         // Lenient decode should skip the bad one, keep the good one
-        let data = try SerializedNotificationData.decodeLenient(from: json)
-        XCTAssertEqual(data.notifications.count, 1,
+        let result = try SerializedNotificationData.decodeLenient(from: json)
+        XCTAssertEqual(result.data.notifications.count, 1,
             "Lenient decoder should skip malformed notification")
+        XCTAssertEqual(result.skippedCount, 1, "Should report 1 skipped notification")
     }
 
     // MARK: - Test: Unknown notification type is skipped by lenient decoder
@@ -133,9 +134,10 @@ class NotificationBridgeDecodeErrorTests: XCTestCase {
         ]
         let json = try jsonString(from: dict)
 
-        let data = try SerializedNotificationData.decodeLenient(from: json)
-        XCTAssertEqual(data.notifications.count, 1,
+        let result = try SerializedNotificationData.decodeLenient(from: json)
+        XCTAssertEqual(result.data.notifications.count, 1,
             "Should skip unknown type and keep valid notification")
+        XCTAssertEqual(result.skippedCount, 1, "Should report 1 skipped notification")
     }
 
     // MARK: - Test: ProcessedSerializedNotification unknown type throws
@@ -191,7 +193,8 @@ class NotificationBridgeDecodeErrorTests: XCTestCase {
         ]
         let json = try jsonString(from: fullDict)
 
-        let data = try SerializedNotificationData.decodeLenient(from: json)
+        let result = try SerializedNotificationData.decodeLenient(from: json)
+        let data = result.data
         XCTAssertEqual(data.notifications.count, 1, "Should decode the aggregated notification")
 
         if case .aggregated(let agg) = data.notifications.first {
