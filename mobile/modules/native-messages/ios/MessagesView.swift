@@ -33,7 +33,6 @@ struct MessagesView: View {
     let onToggleMute: ((String, Bool) -> Void)?
     let onSendMessage: ((String) -> Void)?
     let onDeleteMessage: ((String) -> Void)?
-    let onPickImage: (() -> Void)?
     let onMarkAsRead: ((String) -> Void)?
     let onProfilePress: ((String) -> Void)?
     let onSearchTextChange: ((String) -> Void)?
@@ -59,8 +58,7 @@ struct MessagesView: View {
                         composerState: composerState,
                         onSendMessage: { text in
                             onSendMessage?(text)
-                        },
-                        onPickImage: onPickImage
+                        }
                     )
                 }
             } else {

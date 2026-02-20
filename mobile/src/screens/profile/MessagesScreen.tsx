@@ -29,8 +29,6 @@ import { NewConversationModal } from "../../components/NewConversationModal";
 import { LockIcon, ChatBubbleIcon, ArrowLeftIcon, SearchIcon, CloseIcon, PlusIcon, TrashIcon, BellIcon, BellSlashIcon } from "../../components/icons";
 import { useConversations, useConversation, useSendMessage, useMarkAsRead, useMuteConversation, useUnmuteConversation, useLeaveConversation, useDeleteMessage } from "../../hooks/api";
 import { useTheme } from "../../contexts/ThemeContext";
-import { useImagePicker } from "../../hooks/useImagePicker";
-import { ImageIcon } from "../../components/icons/ImageIcon";
 import { useAppNavigation } from "../../hooks/useNavigation";
 
 import { createLogger } from '../../utils/logger';
@@ -64,16 +62,6 @@ export function MessagesScreen() {
   const [showNewConversationModal, setShowNewConversationModal] = useState(false);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const flatListRef = useRef<FlatList>(null);
-
-  // Image picker for media attachments
-  const {
-    pickFromLibrary,
-    selectedImages,
-    removeImage,
-    clearImages,
-    isUploading,
-    setIsUploading,
-  } = useImagePicker();
 
   const [showNewConversationModalNative, setShowNewConversationModalNative] = useState(false);
 
@@ -171,23 +159,16 @@ export function MessagesScreen() {
   }, [conversationData?.messages.length]);
 
   const handleSendMessage = async () => {
-    if (!selectedConversation || (!messageText.trim() && selectedImages.length === 0) || sendMessageMutation.isPending || isUploading) return;
+    if (!selectedConversation || !messageText.trim() || sendMessageMutation.isPending) return;
 
     const text = messageText.trim();
-    const images = selectedImages.map(img => ({ uri: img.uri, alt: img.altText }));
-
     setMessageText("");
-    setIsUploading(true);
 
     try {
       await sendMessageMutation.mutateAsync({
         conversationId: selectedConversation,
         text,
-        images: images.length > 0 ? images : undefined,
       });
-
-      // Clear images after successful send
-      clearImages();
 
       // Refresh messages after sending
       setTimeout(() => {
@@ -197,8 +178,6 @@ export function MessagesScreen() {
       logger.error('Failed to send message:', error);
       Alert.alert("Error", "Failed to send message. Please try again.");
       setMessageText(text); // Restore message on error
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -443,35 +422,8 @@ export function MessagesScreen() {
     // If message exists on server, it's delivered
     const deliveryStatus = isOwnMessage ? (item.id ? "delivered" : "sent") : null;
 
-    // Check if message has media attachments — guard deeply to prevent render crashes
-    const embedImages = item.embed?.images;
-    const hasImages =
-      item.embed?.$type === "chat.bsky.convo.defs#messageEmbed" &&
-      Array.isArray(embedImages) &&
-      embedImages.length > 0;
-
     const messageBubbleContent = (
       <>
-        {/* Display images if present */}
-        {hasImages && embedImages && (
-          <View style={styles.messageImagesContainer}>
-            {embedImages.map((img, imgIndex) => {
-              const link = img?.image?.ref?.$link;
-              if (!link) return null;
-              const imageUrl = `https://cdn.bsky.app/img/feed_thumbnail/plain/${session?.did}/${link}@jpeg`;
-              return (
-                <Image
-                  key={imgIndex}
-                  source={{ uri: imageUrl }}
-                  style={styles.messageImage}
-                  resizeMode="cover"
-                />
-              );
-            })}
-          </View>
-        )}
-
-        {/* Display text if present */}
         {item.text && (
           <Text
             style={[
@@ -776,39 +728,7 @@ export function MessagesScreen() {
 
       {/* Input */}
       <View style={styles.inputContainer}>
-        {/* Image preview */}
-        {selectedImages.length > 0 && (
-          <View style={styles.imagePreviewContainer}>
-            <FlatList
-              horizontal
-              data={selectedImages}
-              keyExtractor={(_, index) => index.toString()}
-              renderItem={({ item, index }) => (
-                <View style={styles.imagePreviewItem}>
-                  <Image source={{ uri: item.uri }} style={styles.imagePreview} />
-                  <TouchableOpacity
-                    style={styles.removeImageButton}
-                    onPress={() => removeImage(index)}
-                  >
-                    <CloseIcon size={16} color={colors.text} />
-                  </TouchableOpacity>
-                </View>
-              )}
-              style={styles.imagePreviewList}
-              showsHorizontalScrollIndicator={false}
-            />
-          </View>
-        )}
-
         <View style={styles.inputRow}>
-          <TouchableOpacity
-            style={styles.attachButton}
-            onPress={() => pickFromLibrary(true)}
-            disabled={isUploading || selectedImages.length >= 4}
-          >
-            <ImageIcon size={24} color={selectedImages.length >= 4 ? colors.textTertiary : colors.primary} />
-          </TouchableOpacity>
-
           <TextInput
             style={styles.input}
             value={messageText}
@@ -822,12 +742,12 @@ export function MessagesScreen() {
           <TouchableOpacity
             style={[
               styles.sendButton,
-              ((!messageText.trim() && selectedImages.length === 0) || sendMessageMutation.isPending || isUploading) && styles.sendButtonDisabled,
+              (!messageText.trim() || sendMessageMutation.isPending) && styles.sendButtonDisabled,
             ]}
             onPress={handleSendMessage}
-            disabled={(!messageText.trim() && selectedImages.length === 0) || sendMessageMutation.isPending || isUploading}
+            disabled={!messageText.trim() || sendMessageMutation.isPending}
           >
-            {sendMessageMutation.isPending || isUploading ? (
+            {sendMessageMutation.isPending ? (
               <ActivityIndicator color={colors.text} size="small" />
             ) : (
               <Text style={styles.sendButtonText}>Send</Text>
@@ -1077,55 +997,14 @@ function createStyles(colors: any) {
   ownDeliveryStatus: {
     color: "rgba(255, 255, 255, 0.7)",
   },
-  messageImagesContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 4,
-    marginBottom: 8,
-  },
-  messageImage: {
-    width: 200,
-    height: 200,
-    borderRadius: 8,
-  },
   inputContainer: {
     padding: 12,
     borderTopWidth: 1,
     borderTopColor: colors.surfaceAlt,
   },
-  imagePreviewContainer: {
-    marginBottom: 8,
-  },
-  imagePreviewList: {
-    maxHeight: 100,
-  },
-  imagePreviewItem: {
-    position: "relative",
-    marginRight: 8,
-  },
-  imagePreview: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-  },
-  removeImageButton: {
-    position: "absolute",
-    top: 4,
-    right: 4,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   inputRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-  },
-  attachButton: {
-    padding: 8,
-    marginRight: 8,
   },
   input: {
     flex: 1,

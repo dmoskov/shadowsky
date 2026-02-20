@@ -58,15 +58,6 @@ struct SearchResult: Identifiable {
     let matchedMessageSentAt: String?
 }
 
-// MARK: - Message Embed Image
-
-struct MessageEmbedImage {
-    let refLink: String
-    let mimeType: String
-    let size: Int
-    let alt: String
-}
-
 // MARK: - Message
 
 struct Message: Identifiable {
@@ -75,7 +66,6 @@ struct Message: Identifiable {
     let text: String
     let sentAt: String
     let senderDid: String
-    let embedImages: [MessageEmbedImage]?
 }
 
 // MARK: - Messages State
@@ -205,27 +195,12 @@ class MessagesDataState: ObservableObject {
     static func parseMessage(from data: [String: Any]) -> Message? {
         guard let id = data["id"] as? String else { return nil }
 
-        var embedImages: [MessageEmbedImage]?
-        if let embedData = data["embed"] as? [String: Any],
-           let imagesData = embedData["images"] as? [[String: Any]] {
-            embedImages = imagesData.compactMap { imgData in
-                guard let refLink = imgData["refLink"] as? String else { return nil }
-                return MessageEmbedImage(
-                    refLink: refLink,
-                    mimeType: imgData["mimeType"] as? String ?? "image/jpeg",
-                    size: imgData["size"] as? Int ?? 0,
-                    alt: imgData["alt"] as? String ?? ""
-                )
-            }
-        }
-
         return Message(
             id: id,
             rev: data["rev"] as? String ?? "",
             text: data["text"] as? String ?? "",
             sentAt: data["sentAt"] as? String ?? "",
-            senderDid: data["senderDid"] as? String ?? "",
-            embedImages: embedImages
+            senderDid: data["senderDid"] as? String ?? ""
         )
     }
 }

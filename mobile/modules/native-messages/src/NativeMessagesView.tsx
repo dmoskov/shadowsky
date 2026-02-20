@@ -28,7 +28,6 @@ import {
   useDeleteMessage,
 } from '../../../src/hooks/api/useMessages';
 import { useMessageSearch, MessageSearchResult } from '../../../src/hooks/api/useMessageSearch';
-import { useImagePicker } from '../../../src/hooks/useImagePicker';
 import {
   dmService,
   DmConversation,
@@ -62,7 +61,6 @@ export interface MessagesViewEvents {
   onToggleMute?: (event: { nativeEvent: { conversationId: string; isMuted: boolean } }) => void;
   onSendMessage?: (event: { nativeEvent: { text: string } }) => void;
   onDeleteMessage?: (event: { nativeEvent: { messageId: string } }) => void;
-  onPickImage?: () => void;
   onMarkAsRead?: (event: { nativeEvent: { conversationId: string } }) => void;
   onProfilePress?: (event: { nativeEvent: { handle: string } }) => void;
   onSearchTextChange?: (event: { nativeEvent: { text: string } }) => void;
@@ -100,7 +98,6 @@ export const NativeMessagesView = forwardRef<any, NativeMessagesProps>(
       onToggleMute,
       onSendMessage,
       onDeleteMessage,
-      onPickImage,
       onMarkAsRead,
       onProfilePress,
       onSearchTextChange,
@@ -129,7 +126,6 @@ export const NativeMessagesView = forwardRef<any, NativeMessagesProps>(
         onToggleMute={onToggleMute}
         onSendMessage={onSendMessage}
         onDeleteMessage={onDeleteMessage}
-        onPickImage={onPickImage}
         onMarkAsRead={onMarkAsRead}
         onProfilePress={onProfilePress}
         onSearchTextChange={onSearchTextChange}
@@ -195,16 +191,6 @@ function serializeConversationMessages(
       text: msg.text,
       sentAt: msg.sentAt,
       senderDid: msg.sender.did,
-      embed: msg.embed
-        ? {
-            images: msg.embed.images?.map((img: any) => ({
-              refLink: img.image?.ref?.$link,
-              mimeType: img.image?.mimeType,
-              size: img.image?.size,
-              alt: img.alt,
-            })),
-          }
-        : null,
     })),
   };
   return JSON.stringify(serialized);
@@ -284,14 +270,6 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
 
   // Message search
   const { results: searchResults, isSearching } = useMessageSearch(searchText);
-
-  // Image picker
-  const {
-    pickFromLibrary,
-    selectedImages,
-    clearImages,
-    setIsUploading,
-  } = useImagePicker();
 
   // Bridge conversations data to native
   useEffect(() => {
@@ -422,16 +400,12 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
     async (event: { nativeEvent: { text: string } }) => {
       if (!selectedConversation) return;
       const text = event.nativeEvent.text;
-      const images = selectedImages.map((img) => ({ uri: img.uri, alt: img.altText }));
 
-      setIsUploading(true);
       try {
         await sendMessageMutation.mutateAsync({
           conversationId: selectedConversation,
           text,
-          images: images.length > 0 ? images : undefined,
         });
-        clearImages();
         if (NativeMessagesModule) {
           NativeMessagesModule.setMessageSent(true, null);
         }
@@ -444,11 +418,9 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
           NativeMessagesModule.setMessageSent(false, 'Failed to send message');
         }
         Alert.alert('Error', 'Failed to send message. Please try again.');
-      } finally {
-        setIsUploading(false);
       }
     },
-    [selectedConversation, selectedImages, sendMessageMutation, clearImages, setIsUploading, refetchMessages],
+    [selectedConversation, sendMessageMutation, refetchMessages],
   );
 
   const handleDeleteMessage = useCallback(
@@ -481,10 +453,6 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
     },
     [selectedConversation, deleteMessageMutation],
   );
-
-  const handlePickImage = useCallback(() => {
-    pickFromLibrary(true);
-  }, [pickFromLibrary]);
 
   const handleProfilePress = useCallback(
     (event: { nativeEvent: { handle: string } }) => {
@@ -525,7 +493,6 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
       onToggleMute={handleToggleMute}
       onSendMessage={handleSendMessage}
       onDeleteMessage={handleDeleteMessage}
-      onPickImage={handlePickImage}
       onProfilePress={handleProfilePress}
       onSearchTextChange={handleSearchTextChange}
       style={{ flex: 1 }}
