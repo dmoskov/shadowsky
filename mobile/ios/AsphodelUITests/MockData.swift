@@ -389,3 +389,118 @@ enum MockSearch {
         ]
     }
 }
+
+// MARK: - Compose Mock Data
+
+enum MockCompose {
+
+    static func makeMediaAttachment(
+        id: String = "media-1",
+        uri: String = "https://example.com/image1.jpg",
+        mimeType: String = "image/jpeg",
+        altText: String = "",
+        width: Int = 800,
+        height: Int = 600,
+        isVideo: Bool = false,
+        thumbnail: String? = nil,
+        duration: Double? = nil
+    ) -> MediaAttachment {
+        MediaAttachment(
+            id: id,
+            uri: uri,
+            mimeType: mimeType,
+            altText: altText,
+            width: width,
+            height: height,
+            isVideo: isVideo,
+            thumbnail: thumbnail,
+            duration: duration
+        )
+    }
+
+    static func makeReplyContext(
+        uri: String = "at://did:plc:author1/app.bsky.feed.post/reply1",
+        cid: String = "bafyreireply1",
+        authorHandle: String = "alice.bsky.social",
+        authorDisplayName: String? = "Alice Johnson",
+        authorAvatar: String? = nil,
+        text: String = "Original post being replied to"
+    ) -> ReplyContext {
+        ReplyContext(
+            uri: uri,
+            cid: cid,
+            authorHandle: authorHandle,
+            authorDisplayName: authorDisplayName,
+            authorAvatar: authorAvatar,
+            text: text
+        )
+    }
+
+    static func makeQuoteContext(
+        uri: String = "at://did:plc:author1/app.bsky.feed.post/quote1",
+        cid: String = "bafyreiquote1",
+        authorHandle: String = "bob.bsky.social",
+        authorDisplayName: String? = "Bob Smith",
+        authorAvatar: String? = nil,
+        text: String = "Post being quoted"
+    ) -> QuoteContext {
+        QuoteContext(
+            uri: uri,
+            cid: cid,
+            authorHandle: authorHandle,
+            authorDisplayName: authorDisplayName,
+            authorAvatar: authorAvatar,
+            text: text
+        )
+    }
+
+    static func makeMentionSuggestion(
+        id: String = "did:plc:mention1",
+        handle: String = "alice.bsky.social",
+        displayName: String? = "Alice Johnson",
+        avatar: String? = nil
+    ) -> ComposeMentionSuggestion {
+        ComposeMentionSuggestion(
+            id: id,
+            handle: handle,
+            displayName: displayName,
+            avatar: avatar
+        )
+    }
+
+    /// Sample media attachments for grid tests
+    static var sampleImageAttachments: [MediaAttachment] {
+        [
+            makeMediaAttachment(id: "img-1", uri: "https://example.com/photo1.jpg", altText: ""),
+            makeMediaAttachment(id: "img-2", uri: "https://example.com/photo2.jpg", altText: "A sunset"),
+            makeMediaAttachment(id: "img-3", uri: "https://example.com/photo3.jpg", altText: ""),
+        ]
+    }
+
+    /// Four images (max allowed)
+    static var maxImageAttachments: [MediaAttachment] {
+        (1...4).map { i in
+            makeMediaAttachment(id: "img-\(i)", uri: "https://example.com/photo\(i).jpg")
+        }
+    }
+
+    /// Sample video attachment
+    static var sampleVideoAttachment: MediaAttachment {
+        makeMediaAttachment(
+            id: "vid-1",
+            uri: "https://example.com/video1.mp4",
+            mimeType: "video/mp4",
+            isVideo: true,
+            duration: 30.0
+        )
+    }
+
+    /// Sample mention suggestions
+    static var sampleMentionSuggestions: [ComposeMentionSuggestion] {
+        [
+            makeMentionSuggestion(id: "did:plc:alice1", handle: "alice.bsky.social", displayName: "Alice Johnson"),
+            makeMentionSuggestion(id: "did:plc:alex1", handle: "alex.bsky.social", displayName: "Alex Smith"),
+            makeMentionSuggestion(id: "did:plc:amy1", handle: "amy.bsky.social", displayName: "Amy Davis"),
+        ]
+    }
+}
