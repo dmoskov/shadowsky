@@ -8,6 +8,7 @@
 import React, { useEffect, useCallback, useMemo, forwardRef, useImperativeHandle, useState } from 'react';
 import { requireNativeViewManager } from 'expo-modules-core';
 import { ViewProps, Platform, View, Linking } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   useNotifications,
   useMarkNotificationsSeen,
@@ -197,7 +198,17 @@ export const NativeNotificationsList = forwardRef<any, ViewProps>((props, ref) =
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Handle mark as seen on appear
+  // Mark notifications as seen when the tab is focused (handles tab switches)
+  useFocusEffect(
+    useCallback(() => {
+      if (data?.pages?.[0]?.notifications?.length) {
+        markNotificationsSeen.mutate(new Date().toISOString());
+      }
+      clearBadgeCount();
+    }, [data?.pages]),
+  );
+
+  // Handle mark as seen on SwiftUI view appear (initial render)
   const handleAppear = useCallback(() => {
     if (data?.pages?.[0]?.notifications?.length) {
       markNotificationsSeen.mutate(new Date().toISOString());

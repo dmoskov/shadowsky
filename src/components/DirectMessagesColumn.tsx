@@ -205,10 +205,23 @@ export const DirectMessagesColumn: React.FC = () => {
       conversationData?.conversation?.unreadCount &&
       conversationData.conversation.unreadCount > 0
     ) {
-      // Small delay to ensure messages are visible
+      // Optimistically update unread count to 0 in the conversations list cache
+      queryClient.setQueryData(
+        ["dm-conversations"],
+        (oldData: DmConversation[] | undefined) => {
+          if (!oldData) return oldData;
+          return oldData.map((convo) =>
+            convo.id === selectedConversation
+              ? { ...convo, unreadCount: 0 }
+              : convo,
+          );
+        },
+      );
+
+      // Small delay to ensure messages are visible, then call the API
       const timer = setTimeout(() => {
         dmService.updateRead(selectedConversation).then(() => {
-          // Invalidate the conversations list to update unread counts
+          // Invalidate the conversations list to sync with server
           queryClient.invalidateQueries({ queryKey: ["dm-conversations"] });
         });
       }, 1000);
