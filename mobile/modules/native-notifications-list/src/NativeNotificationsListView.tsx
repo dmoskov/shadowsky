@@ -17,6 +17,7 @@ import { useCompleteNotificationSerializer } from '../../../src/services/notific
 import { usePreferences } from '../../../src/contexts/PreferencesContext';
 import { useAppNavigation } from '../../../src/hooks/useNavigation';
 import { useOfflineNotificationsEnhancer } from '../../../src/hooks/useOfflineFeed';
+import { useNotificationPosts } from '../../../src/hooks/api/useNotificationPosts';
 import { aggregateNotifications } from '../../../src/utils/notification-aggregator';
 import { filterMutedNotifications } from '../../../src/utils/content-filter';
 import { clearBadgeCount } from '../../../src/utils/badge';
@@ -158,15 +159,19 @@ export const NativeNotificationsList = forwardRef<any, ViewProps>((props, ref) =
     return aggregateNotifications(notifications);
   }, [notifications]);
 
+  // Fetch post data for rich notification previews (images, videos, links)
+  const { postMap } = useNotificationPosts(notifications);
+
   // Get cursor for pagination
   const cursor = useMemo(() => {
     const pages = data?.pages;
     return pages?.[pages.length - 1]?.cursor;
   }, [data?.pages]);
 
-  // Serialize for Swift
+  // Serialize for Swift (including post preview data)
   const { serializedJSON } = useCompleteNotificationSerializer(processedNotifications, cursor, {
     isOnline: isNotifOnline,
+    postMap,
   });
 
   // Push serialized data to Swift via NotificationBridge

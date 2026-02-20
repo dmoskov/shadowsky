@@ -86,18 +86,20 @@ enum NotificationReason {
 
 enum NotificationListFilter: String, CaseIterable {
     case all
+    case likes
+    case reposts
     case replies
     case mentions
-    case likes
     case follows
     case quotes
 
     var label: String {
         switch self {
         case .all: return "All"
+        case .likes: return "Likes"
+        case .reposts: return "Reposts"
         case .replies: return "Replies"
         case .mentions: return "Mentions"
-        case .likes: return "Likes"
         case .follows: return "Follows"
         case .quotes: return "Quotes"
         }
@@ -107,6 +109,7 @@ enum NotificationListFilter: String, CaseIterable {
         switch self {
         case .all: return []
         case .likes: return ["like", "like-via-repost"]
+        case .reposts: return ["repost", "repost-via-repost"]
         case .replies: return ["reply"]
         case .follows: return ["follow", "starterpack-joined"]
         case .mentions: return ["mention"]
@@ -132,6 +135,7 @@ struct NotificationUIModel: Identifiable {
     let isRead: Bool
     let indexedAt: Date
     let timestamp: String
+    let postPreview: PostPreview?
 }
 
 /// An aggregated notification group ready for rendering
@@ -145,6 +149,7 @@ struct AggregatedNotificationUIModel: Identifiable {
     let hasUnread: Bool
     let targetPostUri: String?
     let notifications: [NotificationUIModel]
+    let postPreview: PostPreview?
 }
 
 /// Union type for processed notifications
@@ -191,7 +196,8 @@ extension NotificationUIModel {
             postFacets: facets,
             isRead: serialized.isRead,
             indexedAt: date,
-            timestamp: timestamp
+            timestamp: timestamp,
+            postPreview: serialized.postPreview
         )
     }
 
@@ -233,7 +239,8 @@ extension AggregatedNotificationUIModel {
             timestamp: timestamp,
             hasUnread: hasUnread,
             targetPostUri: aggregated.targetPostUri,
-            notifications: notifications
+            notifications: notifications,
+            postPreview: aggregated.postPreview
         )
     }
 }

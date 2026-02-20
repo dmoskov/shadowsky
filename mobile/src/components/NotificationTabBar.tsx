@@ -3,7 +3,7 @@ import {Text, StyleSheet, TouchableOpacity, ScrollView} from 'react-native';
 import { useTheme } from "../contexts/ThemeContext";
 import { triggerHaptic } from "../utils/haptics";
 
-export type NotificationFilter = 'all' | 'likes' | 'replies' | 'follows' | 'mentions' | 'quotes';
+export type NotificationFilter = 'all' | 'likes' | 'reposts' | 'replies' | 'follows' | 'mentions' | 'quotes';
 
 interface NotificationTabBarProps {
   activeFilter: NotificationFilter;
@@ -21,9 +21,10 @@ export function NotificationTabBar({
 
   const tabs: {key: NotificationFilter; label: string}[] = [
     {key: 'all', label: 'All'},
+    {key: 'likes', label: 'Likes'},
+    {key: 'reposts', label: 'Reposts'},
     {key: 'replies', label: 'Replies'},
     {key: 'mentions', label: 'Mentions'},
-    {key: 'likes', label: 'Likes'},
     {key: 'follows', label: 'Follows'},
     {key: 'quotes', label: 'Quotes'},
   ];

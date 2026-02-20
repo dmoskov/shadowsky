@@ -48,28 +48,37 @@ struct AggregatedNotificationItemView: View {
 
     private var mainContent: some View {
         Button(action: onPress) {
-            HStack(alignment: .center, spacing: 12) {
-                // Icon
-                ZStack {
-                    Circle()
-                        .fill(themeColor.opacity(0.12))
-                        .frame(width: 32, height: 32)
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .center, spacing: 12) {
+                    // Icon
+                    ZStack {
+                        Circle()
+                            .fill(themeColor.opacity(0.12))
+                            .frame(width: 32, height: 32)
 
-                    Image(systemName: model.reason.sfSymbolName)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(themeColor)
+                        Image(systemName: model.reason.sfSymbolName)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(themeColor)
+                    }
+
+                    // Avatar stack + text
+                    HStack(spacing: 12) {
+                        avatarStack
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            summaryText
+                            Text(model.timestamp)
+                                .font(.system(size: 12))
+                                .foregroundColor(Color(UIColor.tertiaryLabel))
+                        }
+                    }
                 }
 
-                // Avatar stack + text
-                HStack(spacing: 12) {
-                    avatarStack
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        summaryText
-                        Text(model.timestamp)
-                            .font(.system(size: 12))
-                            .foregroundColor(Color(UIColor.tertiaryLabel))
-                    }
+                // Post preview for non-follow notifications
+                if model.reason != .follow, let preview = model.postPreview {
+                    aggregatedPostPreview(preview: preview)
+                        .padding(.top, 10)
+                        .padding(.leading, 44) // Align with text content
                 }
             }
             .padding(16)
@@ -89,6 +98,78 @@ struct AggregatedNotificationItemView: View {
         .accessibilityLabel(accessibilityLabelText)
         .accessibilityHint("Double tap to view details")
         .accessibilityAddTraits(.isButton)
+    }
+
+    // MARK: - Aggregated Post Preview
+
+    private func aggregatedPostPreview(preview: PostPreview) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Post author header
+            HStack(spacing: 6) {
+                let contextLabel: String = {
+                    switch model.reason {
+                    case .quote: return "Quoting your post:"
+                    default: return "Your post:"
+                    }
+                }()
+                Text(contextLabel)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(Color(UIColor.tertiaryLabel))
+
+                avatarView(url: preview.author.avatar, size: 18)
+
+                Text(preview.author.displayName ?? preview.author.handle)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(Color(UIColor.secondaryLabel))
+                    .lineLimit(1)
+
+                if preview.images != nil || preview.video != nil || preview.external != nil {
+                    Text("·")
+                        .foregroundColor(Color(UIColor.tertiaryLabel))
+                    if preview.video != nil {
+                        Image(systemName: "film")
+                            .font(.system(size: 10))
+                            .foregroundColor(Color(UIColor.tertiaryLabel))
+                    } else if preview.external != nil {
+                        Image(systemName: "link")
+                            .font(.system(size: 10))
+                            .foregroundColor(Color(UIColor.tertiaryLabel))
+                    } else {
+                        Image(systemName: "photo")
+                            .font(.system(size: 10))
+                            .foregroundColor(Color(UIColor.tertiaryLabel))
+                    }
+                }
+            }
+
+            // Post text
+            if let text = preview.text, !text.isEmpty {
+                Text(text)
+                    .font(.system(size: 14))
+                    .foregroundColor(Color(UIColor.label))
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            // Images
+            if let images = preview.images, !images.isEmpty {
+                notificationImageGrid(images: images)
+            }
+
+            // Video thumbnail
+            if let video = preview.video {
+                notificationVideoThumbnail(video: video)
+            }
+
+            // External link
+            if let external = preview.external {
+                notificationExternalLink(external: external)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(UIColor.secondarySystemBackground))
+        .cornerRadius(8)
     }
 
     // MARK: - Avatar Stack

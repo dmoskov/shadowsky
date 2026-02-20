@@ -54,6 +54,76 @@ public struct SerializedLabel: Codable {
     }
 }
 
+// MARK: - Post Preview (Rich Notification Content)
+
+public struct PostPreviewImage: Codable {
+    public let thumb: String
+    public let fullsize: String
+    public let alt: String
+    public let aspectRatio: PostPreviewAspectRatio?
+
+    public init(thumb: String, fullsize: String, alt: String, aspectRatio: PostPreviewAspectRatio?) {
+        self.thumb = thumb
+        self.fullsize = fullsize
+        self.alt = alt
+        self.aspectRatio = aspectRatio
+    }
+}
+
+public struct PostPreviewAspectRatio: Codable {
+    public let width: Int
+    public let height: Int
+
+    public init(width: Int, height: Int) {
+        self.width = width
+        self.height = height
+    }
+}
+
+public struct PostPreviewVideo: Codable {
+    public let playlist: String
+    public let thumbnail: String?
+    public let aspectRatio: PostPreviewAspectRatio?
+
+    public init(playlist: String, thumbnail: String?, aspectRatio: PostPreviewAspectRatio?) {
+        self.playlist = playlist
+        self.thumbnail = thumbnail
+        self.aspectRatio = aspectRatio
+    }
+}
+
+public struct PostPreviewExternal: Codable {
+    public let uri: String
+    public let title: String
+    public let description: String
+    public let thumb: String?
+
+    public init(uri: String, title: String, description: String, thumb: String?) {
+        self.uri = uri
+        self.title = title
+        self.description = description
+        self.thumb = thumb
+    }
+}
+
+public struct PostPreview: Codable {
+    public let uri: String
+    public let text: String?
+    public let author: SerializedAuthor
+    public let images: [PostPreviewImage]?
+    public let video: PostPreviewVideo?
+    public let external: PostPreviewExternal?
+
+    public init(uri: String, text: String?, author: SerializedAuthor, images: [PostPreviewImage]?, video: PostPreviewVideo?, external: PostPreviewExternal?) {
+        self.uri = uri
+        self.text = text
+        self.author = author
+        self.images = images
+        self.video = video
+        self.external = external
+    }
+}
+
 // MARK: - Serialized Notification
 
 public struct SerializedNotification: Codable {
@@ -66,6 +136,7 @@ public struct SerializedNotification: Codable {
     public let isRead: Bool
     public let indexedAt: String
     public let labels: [SerializedLabel]?
+    public let postPreview: PostPreview?
 
     public init(
         uri: String,
@@ -76,7 +147,8 @@ public struct SerializedNotification: Codable {
         record: SerializedRecord?,
         isRead: Bool,
         indexedAt: String,
-        labels: [SerializedLabel]?
+        labels: [SerializedLabel]?,
+        postPreview: PostPreview? = nil
     ) {
         self.uri = uri
         self.cid = cid
@@ -87,6 +159,7 @@ public struct SerializedNotification: Codable {
         self.isRead = isRead
         self.indexedAt = indexedAt
         self.labels = labels
+        self.postPreview = postPreview
     }
 }
 
@@ -100,6 +173,7 @@ public struct AggregatedNotification: Codable {
     public let latestTimestamp: String
     public let notifications: [SerializedNotification]
     public let targetPostUri: String?
+    public let postPreview: PostPreview?
 
     public init(
         type: String,
@@ -108,7 +182,8 @@ public struct AggregatedNotification: Codable {
         users: [SerializedAuthor],
         latestTimestamp: String,
         notifications: [SerializedNotification],
-        targetPostUri: String?
+        targetPostUri: String?,
+        postPreview: PostPreview? = nil
     ) {
         self.type = type
         self.reason = reason
@@ -117,6 +192,7 @@ public struct AggregatedNotification: Codable {
         self.latestTimestamp = latestTimestamp
         self.notifications = notifications
         self.targetPostUri = targetPostUri
+        self.postPreview = postPreview
     }
 }
 

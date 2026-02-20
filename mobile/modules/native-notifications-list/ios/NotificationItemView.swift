@@ -60,8 +60,12 @@ struct NotificationItemView: View {
                     // Author row
                     authorRow
 
-                    // Post preview
-                    if let postText = notification.postText, !postText.isEmpty,
+                    // Rich post preview (with fetched post data)
+                    if let preview = notification.postPreview {
+                        richPostPreviewView(preview: preview)
+                    }
+                    // Fallback: show notification record text
+                    else if let postText = notification.postText, !postText.isEmpty,
                        let facets = notification.postFacets {
                         postPreviewView(text: postText, facets: facets)
                     } else if let postText = notification.postText, !postText.isEmpty {
@@ -170,6 +174,81 @@ struct NotificationItemView: View {
         .padding(.top, 8)
     }
 
+    // MARK: - Rich Post Preview
+
+    private func richPostPreviewView(preview: PostPreview) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Post author and context label
+            HStack(spacing: 6) {
+                let contextLabel: String = {
+                    switch notification.reason {
+                    case .reply: return "Replying to your post:"
+                    case .quote: return "Quoting your post:"
+                    default: return "Your post:"
+                    }
+                }()
+                Text(contextLabel)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(Color(UIColor.tertiaryLabel))
+
+                avatarView(url: preview.author.avatar, size: 18)
+
+                Text(preview.author.displayName ?? preview.author.handle)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(Color(UIColor.secondaryLabel))
+                    .lineLimit(1)
+
+                // Media indicator
+                if preview.images != nil || preview.video != nil || preview.external != nil {
+                    Text("·")
+                        .foregroundColor(Color(UIColor.tertiaryLabel))
+                    if preview.video != nil {
+                        Image(systemName: "film")
+                            .font(.system(size: 10))
+                            .foregroundColor(Color(UIColor.tertiaryLabel))
+                    } else if preview.external != nil {
+                        Image(systemName: "link")
+                            .font(.system(size: 10))
+                            .foregroundColor(Color(UIColor.tertiaryLabel))
+                    } else {
+                        Image(systemName: "photo")
+                            .font(.system(size: 10))
+                            .foregroundColor(Color(UIColor.tertiaryLabel))
+                    }
+                }
+            }
+
+            // Post text
+            if let text = preview.text, !text.isEmpty {
+                Text(text)
+                    .font(.system(size: 14))
+                    .foregroundColor(Color(UIColor.label))
+                    .lineLimit(4)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            // Images
+            if let images = preview.images, !images.isEmpty {
+                notificationImageGrid(images: images)
+            }
+
+            // Video thumbnail
+            if let video = preview.video {
+                notificationVideoThumbnail(video: video)
+            }
+
+            // External link
+            if let external = preview.external {
+                notificationExternalLink(external: external)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(UIColor.secondarySystemBackground))
+        .cornerRadius(8)
+        .padding(.top, 8)
+    }
+
     // MARK: - Tap Hint
 
     private var tapHintView: some View {
@@ -193,6 +272,150 @@ struct NotificationItemView: View {
         let readStatus = notification.isRead ? "Read notification" : "Unread notification"
         return "\(name) \(action). \(postPreview) \(notification.timestamp). \(readStatus)"
     }
+}
+
+// MARK: - Notification Media Views
+
+/// Compact image grid for notification post previews (smaller than feed images)
+func notificationImageGrid(images: [PostPreviewImage]) -> some View {
+    let imageCount = min(images.count, 4)
+
+    return Group {
+        if imageCount == 1 {
+            notificationImageTile(image: images[0])
+                .frame(height: 160)
+                .cornerRadius(8)
+        } else {
+            HStack(spacing: 4) {
+                ForEach(0..<imageCount, id: \.self) { index in
+                    notificationImageTile(image: images[index])
+                        .frame(height: imageCount <= 2 ? 120 : 100)
+                        .cornerRadius(8)
+                }
+            }
+        }
+    }
+}
+
+func notificationImageTile(image: PostPreviewImage) -> some View {
+    Group {
+        if let url = URL(string: image.thumb) {
+            CachedAsyncImage(url: url) { phase in
+                switch phase {
+                case .empty:
+                    Color.gray.opacity(0.2)
+                case .success(let img):
+                    img
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                case .failure:
+                    Color.gray.opacity(0.2)
+                        .overlay(
+                            Image(systemName: "photo")
+                                .foregroundColor(.gray)
+                        )
+                @unknown default:
+                    Color.gray.opacity(0.2)
+                }
+            }
+            .clipped()
+        } else {
+            Color.gray.opacity(0.2)
+        }
+    }
+}
+
+/// Video thumbnail with play button overlay
+func notificationVideoThumbnail(video: PostPreviewVideo) -> some View {
+    ZStack {
+        if let thumbURL = video.thumbnail, let url = URL(string: thumbURL) {
+            CachedAsyncImage(url: url) { phase in
+                switch phase {
+                case .empty:
+                    Color.gray.opacity(0.2)
+                case .success(let img):
+                    img
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                case .failure:
+                    Color.gray.opacity(0.2)
+                @unknown default:
+                    Color.gray.opacity(0.2)
+                }
+            }
+            .clipped()
+        } else {
+            Color.gray.opacity(0.2)
+                .overlay(
+                    Image(systemName: "video")
+                        .foregroundColor(.gray)
+                )
+        }
+
+        // Play button overlay
+        Circle()
+            .fill(Color.black.opacity(0.6))
+            .frame(width: 44, height: 44)
+            .overlay(
+                Image(systemName: "play.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(.white)
+                    .offset(x: 2)
+            )
+    }
+    .frame(height: 160)
+    .frame(maxWidth: .infinity)
+    .cornerRadius(8)
+}
+
+/// External link card preview
+func notificationExternalLink(external: PostPreviewExternal) -> some View {
+    VStack(alignment: .leading, spacing: 0) {
+        // Thumbnail
+        if let thumbURL = external.thumb, let url = URL(string: thumbURL) {
+            CachedAsyncImage(url: url) { phase in
+                switch phase {
+                case .empty:
+                    Color.gray.opacity(0.2)
+                        .frame(height: 120)
+                case .success(let img):
+                    img
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 120)
+                        .clipped()
+                case .failure:
+                    EmptyView()
+                @unknown default:
+                    EmptyView()
+                }
+            }
+        }
+
+        // Link metadata
+        VStack(alignment: .leading, spacing: 2) {
+            if let host = URL(string: external.uri)?.host?.replacingOccurrences(of: "^www\\.", with: "", options: .regularExpression) {
+                Text(host)
+                    .font(.system(size: 11))
+                    .foregroundColor(Color(UIColor.tertiaryLabel))
+                    .lineLimit(1)
+            }
+
+            if !external.title.isEmpty {
+                Text(external.title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(Color(UIColor.label))
+                    .lineLimit(2)
+            }
+        }
+        .padding(8)
+    }
+    .background(Color(UIColor.tertiarySystemBackground))
+    .cornerRadius(8)
+    .overlay(
+        RoundedRectangle(cornerRadius: 8)
+            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+    )
 }
 
 // MARK: - Avatar View
