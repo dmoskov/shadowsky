@@ -301,6 +301,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
     if (filters.mediaFilter && filters.mediaFilter !== "all") count++;
     if (filters.since) count++;
     if (filters.lang) count++;
+    if (filters.author) count++;
     if (filters.domain) count++;
     return count;
   }, [filters]);

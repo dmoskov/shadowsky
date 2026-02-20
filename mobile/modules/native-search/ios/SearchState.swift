@@ -15,6 +15,7 @@ class SearchState: ObservableObject {
     @Published var isRefreshing: Bool = false
     @Published var isLoadingMore: Bool = false
     @Published var error: String? = nil
+    @Published var activeFilterCount: Int = 0
 
     // Results
     @Published var actors: [SearchActorResult] = []
