@@ -209,9 +209,9 @@ Mobile apps will follow the web app's design patterns:
 ## 🔐 Security Considerations
 
 - Store sensitive credentials securely (Keychain/Keystore)
-- Use HTTPS for all API calls
-- Implement certificate pinning (optional)
-- Handle authentication tokens securely
+- Use HTTPS for all API calls (ATS enforced, `NSAllowsArbitraryLoads = false`)
+- Certificate pinning: evaluated and **declined** — see `docs/security-certificate-pinning-assessment.md`
+- Handle authentication tokens securely (expo-secure-store / iOS Keychain)
 - Follow platform security best practices
 
 ## 💰 Cost Estimate (First Year)
