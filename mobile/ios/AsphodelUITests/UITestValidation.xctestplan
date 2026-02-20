@@ -36,6 +36,7 @@
         "name" : "AsphodelUITests"
       },
       "selectedTests" : [
+        "InfrastructureValidationTests",
         "ConversationListViewTests",
         "MessageThreadViewTests",
         "MessageComposerViewTests",
