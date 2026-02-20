@@ -12,15 +12,21 @@ import {
 import {
   BadgeCheck,
   Calendar,
+  ChevronDown,
+  ChevronUp,
   Edit,
   ExternalLink,
   Flag,
+  Heart,
   List as ListIcon,
+  MessageCircle,
   MoreHorizontal,
   Pin,
+  Repeat2,
   Rss,
   Share2,
   Sparkles,
+  TrendingUp,
   UserX,
   Users,
   VolumeX,
@@ -132,7 +138,6 @@ export default function ProfilePage() {
   const [openThreadToQuote, setOpenThreadToQuote] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showAddToListModal, setShowAddToListModal] = useState(false);
-  const [showProfileAnalysis, setShowProfileAnalysis] = useState(false);
   const [analysisRequested, setAnalysisRequested] = useState(false);
 
   const profileMenuButtonRef = useRef<HTMLButtonElement>(null);
@@ -408,12 +413,23 @@ export default function ProfilePage() {
     enabled: !!agent && !!profile?.description,
   });
 
-  // Top posts for the "Top Posts" tab
+  // Top posts - always fetched for showcase and tab
   const { data: topPostsData, isLoading: isTopPostsLoading } = useTopPosts({
     handle: handle || "",
     limit: 10,
-    enabled: activeTab === "top" && !!handle,
+    enabled: !!handle,
   });
+
+  // Showcase state for top posts and AI analysis
+  const [showTopPostsShowcase, setShowTopPostsShowcase] = useState(true);
+  const [aiInsightsExpanded, setAiInsightsExpanded] = useState(false);
+
+  // Auto-trigger AI analysis when profile loads (for inline insights)
+  useEffect(() => {
+    if (profile && !analysisRequested && posts.length > 0) {
+      setAnalysisRequested(true);
+    }
+  }, [profile, posts.length, analysisRequested]);
 
   // Measure container height for virtual list
   useEffect(() => {
@@ -857,7 +873,7 @@ export default function ProfilePage() {
                             onClick={() => {
                               setShowProfileMenu(false);
                               setAnalysisRequested(true);
-                              setShowProfileAnalysis(true);
+                              setAiInsightsExpanded(true);
                             }}
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--asph-text-primary)" }}
@@ -928,7 +944,7 @@ export default function ProfilePage() {
                             onClick={() => {
                               setShowProfileMenu(false);
                               setAnalysisRequested(true);
-                              setShowProfileAnalysis(true);
+                              setAiInsightsExpanded(true);
                             }}
                             className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--asph-text-primary)" }}
@@ -1217,6 +1233,373 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Top Posts Showcase */}
+      {topPostsData &&
+        topPostsData.topPosts.length > 0 &&
+        showTopPostsShowcase && (
+          <div className="mt-4">
+            <div
+              className="rounded-xl p-4"
+              style={{
+                backgroundColor: "var(--asph-bg-secondary)",
+                border: "1px solid var(--asph-border-primary)",
+              }}
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <TrendingUp
+                    className="h-4 w-4"
+                    style={{ color: "var(--asph-primary)" }}
+                  />
+                  <h2
+                    className="text-sm font-semibold"
+                    style={{ color: "var(--asph-text-primary)" }}
+                  >
+                    Top Posts
+                  </h2>
+                  <span
+                    className="text-xs"
+                    style={{ color: "var(--asph-text-tertiary)" }}
+                  >
+                    by engagement
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowTopPostsShowcase(false)}
+                  className="rounded px-2 py-1 text-xs transition-all hover:opacity-80"
+                  style={{
+                    color: "var(--asph-text-tertiary)",
+                  }}
+                >
+                  Hide
+                </button>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-1">
+                {topPostsData.topPosts.slice(0, 5).map((item, idx) => {
+                  const postText =
+                    (item.post.record as { text?: string })?.text || "";
+                  return (
+                    <button
+                      key={item.uri}
+                      onClick={() => {
+                        setSelectedPost(item.post);
+                        setOpenThreadToReply(false);
+                        setOpenThreadToQuote(false);
+                        setShowThread(true);
+                      }}
+                      className="group flex-shrink-0 rounded-lg p-3 text-left transition-all hover:scale-[1.02]"
+                      style={{
+                        backgroundColor: "var(--asph-bg-tertiary)",
+                        width: "220px",
+                      }}
+                    >
+                      <div className="mb-2 flex items-center gap-1.5">
+                        <span
+                          className="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold"
+                          style={{
+                            backgroundColor:
+                              idx === 0
+                                ? "var(--asph-primary)"
+                                : "var(--asph-bg-hover)",
+                            color:
+                              idx === 0
+                                ? "white"
+                                : "var(--asph-text-secondary)",
+                          }}
+                        >
+                          {idx + 1}
+                        </span>
+                        <span
+                          className="truncate text-xs font-medium"
+                          style={{ color: "var(--asph-text-primary)" }}
+                        >
+                          {formatCount(item.totalEngagement)} total
+                        </span>
+                      </div>
+                      <p
+                        className="mb-2 line-clamp-3 text-xs leading-relaxed"
+                        style={{ color: "var(--asph-text-secondary)" }}
+                      >
+                        {postText || "(media post)"}
+                      </p>
+                      <div className="flex items-center gap-3 text-xs">
+                        <span
+                          className="flex items-center gap-1"
+                          style={{ color: "var(--asph-text-tertiary)" }}
+                        >
+                          <Heart className="h-3 w-3" />
+                          {formatCount(item.likes)}
+                        </span>
+                        <span
+                          className="flex items-center gap-1"
+                          style={{ color: "var(--asph-text-tertiary)" }}
+                        >
+                          <Repeat2 className="h-3 w-3" />
+                          {formatCount(item.reposts)}
+                        </span>
+                        <span
+                          className="flex items-center gap-1"
+                          style={{ color: "var(--asph-text-tertiary)" }}
+                        >
+                          <MessageCircle className="h-3 w-3" />
+                          {formatCount(item.replies)}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {topPostsData.totalPostsAnalyzed > 0 && (
+                <div
+                  className="mt-2 text-xs"
+                  style={{ color: "var(--asph-text-tertiary)" }}
+                >
+                  Based on {topPostsData.totalPostsAnalyzed} posts analyzed
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+      {/* AI Profile Insights */}
+      {analysisRequested && (analysisData || isLoadingAnalysis) && (
+        <div className="mt-4">
+          <div
+            className="rounded-xl p-4"
+            style={{
+              backgroundColor: "var(--asph-bg-secondary)",
+              border: "1px solid var(--asph-border-primary)",
+            }}
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles
+                  className="h-4 w-4"
+                  style={{ color: "rgb(168, 85, 247)" }}
+                />
+                <h2
+                  className="text-sm font-semibold"
+                  style={{ color: "var(--asph-text-primary)" }}
+                >
+                  AI Insights
+                </h2>
+                {haikuAnalysis && !sonnetAnalysis && (
+                  <div className="flex items-center gap-1">
+                    <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-purple-500" />
+                    <span
+                      className="text-xs"
+                      style={{ color: "var(--asph-text-tertiary)" }}
+                    >
+                      analyzing...
+                    </span>
+                  </div>
+                )}
+                {sonnetAnalysis && (
+                  <span
+                    className="rounded-full px-1.5 py-0.5 text-xs"
+                    style={{
+                      backgroundColor: "rgba(168, 85, 247, 0.1)",
+                      color: "rgb(168, 85, 247)",
+                    }}
+                  >
+                    Full analysis
+                  </span>
+                )}
+              </div>
+              {analysisData && (
+                <button
+                  onClick={() => setAiInsightsExpanded(!aiInsightsExpanded)}
+                  className="flex items-center gap-1 rounded px-2 py-1 text-xs transition-all hover:opacity-80"
+                  style={{ color: "var(--asph-text-tertiary)" }}
+                >
+                  {aiInsightsExpanded ? "Less" : "More"}
+                  {aiInsightsExpanded ? (
+                    <ChevronUp className="h-3 w-3" />
+                  ) : (
+                    <ChevronDown className="h-3 w-3" />
+                  )}
+                </button>
+              )}
+            </div>
+
+            {isLoadingAnalysis && !analysisData ? (
+              <div className="flex items-center gap-3 py-3">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-200 border-t-purple-500" />
+                <div>
+                  <p
+                    className="text-sm"
+                    style={{ color: "var(--asph-text-primary)" }}
+                  >
+                    Analyzing profile...
+                  </p>
+                  <p
+                    className="text-xs"
+                    style={{ color: "var(--asph-text-tertiary)" }}
+                  >
+                    Reviewing posts for themes, style, and engagement
+                  </p>
+                </div>
+              </div>
+            ) : analysisError && !analysisData ? (
+              <p
+                className="py-2 text-sm"
+                style={{ color: "var(--asph-text-secondary)" }}
+              >
+                {analysisError instanceof Error &&
+                analysisError.message.includes("Rate limit")
+                  ? "Rate limited. Try again later."
+                  : "Analysis unavailable."}
+              </p>
+            ) : analysisData ? (
+              <div>
+                {/* Summary - always visible */}
+                <p
+                  className="text-sm leading-relaxed"
+                  style={{ color: "var(--asph-text-secondary)" }}
+                >
+                  {analysisData.summary}
+                </p>
+
+                {/* Expanded details */}
+                {aiInsightsExpanded && sonnetAnalysis && (
+                  <div className="mt-4 space-y-4">
+                    {/* Content Themes */}
+                    {sonnetAnalysis.contentThemes &&
+                      sonnetAnalysis.contentThemes.length > 0 && (
+                        <div>
+                          <h3
+                            className="mb-2 text-xs font-semibold uppercase tracking-wide"
+                            style={{ color: "var(--asph-text-tertiary)" }}
+                          >
+                            Content Themes
+                          </h3>
+                          <div className="flex flex-wrap gap-2">
+                            {sonnetAnalysis.contentThemes.map((theme) => (
+                              <div
+                                key={theme.theme}
+                                className="rounded-lg px-3 py-1.5"
+                                style={{
+                                  backgroundColor: "var(--asph-bg-tertiary)",
+                                }}
+                              >
+                                <span
+                                  className="text-xs font-medium"
+                                  style={{
+                                    color: "var(--asph-text-primary)",
+                                  }}
+                                >
+                                  {theme.theme}
+                                </span>
+                                <span
+                                  className="ml-1.5 text-xs"
+                                  style={{
+                                    color: "var(--asph-text-tertiary)",
+                                  }}
+                                >
+                                  {theme.frequency}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Writing Style */}
+                    {sonnetAnalysis.writingStyle && (
+                      <div>
+                        <h3
+                          className="mb-2 text-xs font-semibold uppercase tracking-wide"
+                          style={{ color: "var(--asph-text-tertiary)" }}
+                        >
+                          Writing Style
+                        </h3>
+                        <p
+                          className="text-sm"
+                          style={{ color: "var(--asph-text-secondary)" }}
+                        >
+                          {sonnetAnalysis.writingStyle.voiceDescription}
+                        </p>
+                        {sonnetAnalysis.writingStyle.characteristics &&
+                          sonnetAnalysis.writingStyle.characteristics.length >
+                            0 && (
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {sonnetAnalysis.writingStyle.characteristics.map(
+                                (char, idx) => (
+                                  <span
+                                    key={`style-${idx}`}
+                                    className="rounded-full px-2 py-0.5 text-xs"
+                                    style={{
+                                      backgroundColor:
+                                        "var(--asph-bg-tertiary)",
+                                      color: "var(--asph-text-secondary)",
+                                    }}
+                                  >
+                                    {char}
+                                  </span>
+                                ),
+                              )}
+                            </div>
+                          )}
+                      </div>
+                    )}
+
+                    {/* Engagement Patterns */}
+                    {sonnetAnalysis.engagementPatterns && (
+                      <div>
+                        <h3
+                          className="mb-2 text-xs font-semibold uppercase tracking-wide"
+                          style={{ color: "var(--asph-text-tertiary)" }}
+                        >
+                          Engagement Patterns
+                        </h3>
+                        {sonnetAnalysis.engagementPatterns.contentStrengths &&
+                          sonnetAnalysis.engagementPatterns.contentStrengths
+                            .length > 0 && (
+                            <ul className="space-y-1">
+                              {sonnetAnalysis.engagementPatterns.contentStrengths.map(
+                                (strength, idx) => (
+                                  <li
+                                    key={`strength-${idx}`}
+                                    className="text-xs"
+                                    style={{
+                                      color: "var(--asph-text-secondary)",
+                                    }}
+                                  >
+                                    &bull; {strength}
+                                  </li>
+                                ),
+                              )}
+                            </ul>
+                          )}
+                        {sonnetAnalysis.engagementPatterns.observations &&
+                          sonnetAnalysis.engagementPatterns.observations
+                            .length > 0 && (
+                            <ul className="mt-1 space-y-1">
+                              {sonnetAnalysis.engagementPatterns.observations.map(
+                                (obs, idx) => (
+                                  <li
+                                    key={`obs-${idx}`}
+                                    className="text-xs"
+                                    style={{
+                                      color: "var(--asph-text-tertiary)",
+                                    }}
+                                  >
+                                    &bull; {obs}
+                                  </li>
+                                ),
+                              )}
+                            </ul>
+                          )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
+
       {/* Profile Tabs */}
       <div
         className="sticky top-16 z-10 mt-4 rounded-t-xl"
@@ -1330,220 +1713,6 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
-
-      {/* Profile Analysis Section */}
-      {showProfileAnalysis &&
-        (isLoadingAnalysis || analysisData || analysisError) && (
-          <div className="mb-4">
-            <div
-              className="rounded-lg p-6"
-              style={{ background: "var(--asph-bg-secondary)" }}
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <h2
-                  className="flex items-center gap-2 text-lg font-semibold"
-                  style={{ color: "var(--asph-text-primary)" }}
-                >
-                  <Sparkles size={20} className="text-purple-500" />
-                  Profile Analysis
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowProfileAnalysis(false);
-                    setAnalysisRequested(false);
-                  }}
-                  className="rounded px-3 py-1 text-sm transition-all hover:opacity-80"
-                  style={{
-                    backgroundColor: "var(--asph-bg-tertiary)",
-                    color: "var(--asph-text-secondary)",
-                  }}
-                >
-                  Hide
-                </button>
-              </div>
-
-              {isLoadingAnalysis ? (
-                <div className="py-8 text-center">
-                  <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-500" />
-                  <p style={{ color: "var(--asph-text-primary)" }}>
-                    Analyzing profile...
-                  </p>
-                </div>
-              ) : analysisError && !analysisData ? (
-                <div className="py-6 text-center">
-                  <div
-                    className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full"
-                    style={{ backgroundColor: "rgba(239, 68, 68, 0.1)" }}
-                  >
-                    <span className="text-2xl">⚠️</span>
-                  </div>
-                  <p
-                    className="mb-2 font-medium"
-                    style={{ color: "var(--asph-text-primary)" }}
-                  >
-                    Analysis Failed
-                  </p>
-                  <p
-                    className="text-sm"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  >
-                    {analysisError instanceof Error
-                      ? analysisError.message.includes("Rate limit")
-                        ? "Too many requests. Please wait a minute and try again."
-                        : analysisError.message.includes("401") ||
-                            analysisError.message.includes("Authentication")
-                          ? "Please sign in to use AI analysis."
-                          : analysisError.message
-                      : "An unexpected error occurred. Please try again."}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Show haiku if that's all we have, or sonnet if ready */}
-                  {haikuAnalysis && !sonnetAnalysis && (
-                    <div
-                      className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm"
-                      style={{
-                        backgroundColor: "var(--asph-bg-tertiary)",
-                        color: "var(--asph-text-secondary)",
-                      }}
-                    >
-                      <div className="h-2 w-2 animate-pulse rounded-full bg-purple-500" />
-                      Quick analysis ({postsInMemory.length} posts) •{" "}
-                      {isLoadingPostsForSonnet
-                        ? "Fetching more posts..."
-                        : "Deep analysis loading..."}
-                    </div>
-                  )}
-                  {sonnetAnalysis && (
-                    <div
-                      className="mb-3 flex items-center gap-2 rounded px-3 py-2 text-sm font-medium"
-                      style={{
-                        backgroundColor: "rgba(168, 85, 247, 0.1)",
-                        color: "var(--asph-primary)",
-                      }}
-                    >
-                      ✨ Full analysis complete ({postsForSonnet?.length || 0}{" "}
-                      posts analyzed)
-                    </div>
-                  )}
-
-                  {/* Summary (always shown) */}
-                  <p style={{ color: "var(--asph-text-secondary)" }}>
-                    {analysisData?.summary}
-                  </p>
-
-                  {/* Full sonnet details (only when sonnet is available) */}
-                  {sonnetAnalysis && (
-                    <div className="mt-6 space-y-6">
-                      {/* Content Themes */}
-                      {sonnetAnalysis.contentThemes &&
-                        sonnetAnalysis.contentThemes.length > 0 && (
-                          <div>
-                            <h3
-                              className="mb-3 text-sm font-semibold"
-                              style={{ color: "var(--asph-text-primary)" }}
-                            >
-                              Content Themes
-                            </h3>
-                            <div className="space-y-3">
-                              {sonnetAnalysis.contentThemes.map((theme) => (
-                                <div
-                                  key={theme.theme}
-                                  className="rounded-lg p-3"
-                                  style={{
-                                    backgroundColor: "var(--asph-bg-tertiary)",
-                                  }}
-                                >
-                                  <div className="mb-1 flex items-center gap-2">
-                                    <span
-                                      className="font-medium"
-                                      style={{
-                                        color: "var(--asph-text-primary)",
-                                      }}
-                                    >
-                                      {theme.theme}
-                                    </span>
-                                    <span
-                                      className="rounded-full px-2 py-0.5 text-xs"
-                                      style={{
-                                        backgroundColor:
-                                          theme.frequency === "primary"
-                                            ? "var(--asph-primary)"
-                                            : theme.frequency === "regular"
-                                              ? "var(--asph-primary-light)"
-                                              : "var(--asph-bg-tertiary)",
-                                        color:
-                                          theme.frequency === "occasional"
-                                            ? "var(--asph-text-primary)"
-                                            : "white",
-                                      }}
-                                    >
-                                      {theme.frequency}
-                                    </span>
-                                  </div>
-                                  <p
-                                    className="text-sm"
-                                    style={{
-                                      color: "var(--asph-text-secondary)",
-                                    }}
-                                  >
-                                    {theme.description}
-                                  </p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                      {/* Writing Style */}
-                      {sonnetAnalysis.writingStyle && (
-                        <div>
-                          <h3
-                            className="mb-3 text-sm font-semibold"
-                            style={{ color: "var(--asph-text-primary)" }}
-                          >
-                            Writing Style
-                          </h3>
-                          <div
-                            className="rounded-lg p-3"
-                            style={{
-                              backgroundColor: "var(--asph-bg-tertiary)",
-                            }}
-                          >
-                            <p
-                              className="mb-2 text-sm font-medium"
-                              style={{ color: "var(--asph-text-primary)" }}
-                            >
-                              {sonnetAnalysis.writingStyle.tone}
-                            </p>
-                            {sonnetAnalysis.writingStyle.characteristics && (
-                              <ul className="space-y-1">
-                                {sonnetAnalysis.writingStyle.characteristics.map(
-                                  (char, idx) => (
-                                    <li
-                                      key={`char-${char.slice(0, 20)}-${idx}`}
-                                      className="text-sm"
-                                      style={{
-                                        color: "var(--asph-text-secondary)",
-                                      }}
-                                    >
-                                      • {char}
-                                    </li>
-                                  ),
-                                )}
-                              </ul>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
       {/* Pinned Post */}
       {pinnedPostData && activeTab === "posts" && (
