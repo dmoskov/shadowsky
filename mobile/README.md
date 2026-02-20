@@ -15,6 +15,7 @@ The mobile apps are currently in the foundation stage with infrastructure comple
 - **[Quick Reference Guide](../docs/MOBILE_APP_QUICK_REFERENCE.md)** - Quick start and key info
 - **[Navigation Architecture](./src/navigation/README.md)** - Navigation structure and deep linking
 - **[Push Notifications Setup](./PUSH_NOTIFICATIONS.md)** - Real-time push notification implementation
+- **[TestFlight Setup](./TESTFLIGHT_SETUP.md)** - Internal beta testing via TestFlight
 - **[Apple Developer Setup](../docs/guides/APPLE_DEVELOPER_SETUP.md)** - iOS setup guide
 - **[Android Signing Setup](../docs/guides/ANDROID_SIGNING_SETUP.md)** - Android setup guide
 

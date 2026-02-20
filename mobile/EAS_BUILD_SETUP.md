@@ -331,10 +331,26 @@ npx eas-cli credentials --platform android
 - Rebuild after adding device
 - Alternative: Use TestFlight for easier distribution
 
+## TestFlight (Internal Beta Testing)
+
+A dedicated `testflight` build profile is available for uploading to TestFlight:
+
+```bash
+# Build and auto-submit to TestFlight
+npm run build:testflight
+
+# Push OTA update to TestFlight testers
+npm run update:testflight -- "Description of changes"
+```
+
+The testflight profile uses `distribution: "store"` with `autoSubmit: true`, so builds are automatically uploaded to App Store Connect and distributed to internal testers.
+
+See **[TESTFLIGHT_SETUP.md](./TESTFLIGHT_SETUP.md)** for full setup instructions including tester groups, beta app description, and pre-submission checklist.
+
 ## Next Steps
 
 1. **Set up CI/CD**: Integrate EAS builds into your CI/CD pipeline
-2. **Configure TestFlight**: Set up beta testing for iOS
+2. ~~**Configure TestFlight**: Set up beta testing for iOS~~ ✅ Done - see [TESTFLIGHT_SETUP.md](./TESTFLIGHT_SETUP.md)
 3. **Internal Testing Track**: Set up internal testing for Android
 4. **Monitoring**: Set up error tracking and analytics
 5. **Update Strategy**: Plan your OTA update strategy
