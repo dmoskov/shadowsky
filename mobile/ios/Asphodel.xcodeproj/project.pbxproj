@@ -22,6 +22,12 @@
 		A1B2C3D400000006000TESTS /* InfrastructureValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000016000TESTS /* InfrastructureValidationTests.swift */; };
 		A1B2C3D400000007000TESTS /* libPods-AsphodelUITests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000017000TESTS /* libPods-AsphodelUITests.a */; };
 		A1B2C3D400000008000NOTIF /* NotificationBridgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D400000018000NOTIF /* NotificationBridgeTests.swift */; };
+		A1B2C3D4E0000001000ERROR /* FeedBridgeErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E0000011000ERROR /* FeedBridgeErrorTests.swift */; };
+		A1B2C3D4E0000002000ERROR /* FeedListErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E0000012000ERROR /* FeedListErrorTests.swift */; };
+		A1B2C3D4E0000003000ERROR /* ThreadViewErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E0000013000ERROR /* ThreadViewErrorTests.swift */; };
+		A1B2C3D4E0000004000ERROR /* ComposeErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E0000014000ERROR /* ComposeErrorTests.swift */; };
+		A1B2C3D4E0000005000ERROR /* MessagesErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E0000015000ERROR /* MessagesErrorTests.swift */; };
+		A1B2C3D4E0000006000ERROR /* NotificationsErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E0000016000ERROR /* NotificationsErrorTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -58,6 +64,12 @@
 		A1B2C3D400000017000TESTS /* libPods-AsphodelUITests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AsphodelUITests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1B2C3D400000018000NOTIF /* NotificationBridgeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBridgeTests.swift; sourceTree = "<group>"; };
 		A1B2C3D400000018000TESTS /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1B2C3D4E0000011000ERROR /* FeedBridgeErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedBridgeErrorTests.swift; sourceTree = "<group>"; };
+		A1B2C3D4E0000012000ERROR /* FeedListErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedListErrorTests.swift; sourceTree = "<group>"; };
+		A1B2C3D4E0000013000ERROR /* ThreadViewErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadViewErrorTests.swift; sourceTree = "<group>"; };
+		A1B2C3D4E0000014000ERROR /* ComposeErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposeErrorTests.swift; sourceTree = "<group>"; };
+		A1B2C3D4E0000015000ERROR /* MessagesErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessagesErrorTests.swift; sourceTree = "<group>"; };
+		A1B2C3D4E0000016000ERROR /* NotificationsErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsErrorTests.swift; sourceTree = "<group>"; };
 		A1B2C3D400000019000TESTS /* Pods-AsphodelUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AsphodelUITests.debug.xcconfig"; path = "Target Support Files/Pods-AsphodelUITests/Pods-AsphodelUITests.debug.xcconfig"; sourceTree = "<group>"; };
 		A1B2C3D40000001A000TESTS /* Pods-AsphodelUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AsphodelUITests.release.xcconfig"; path = "Target Support Files/Pods-AsphodelUITests/Pods-AsphodelUITests.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -186,6 +198,12 @@
 				A1B2C3D400000015000TESTS /* SearchViewTests.swift */,
 				A1B2C3D400000016000TESTS /* InfrastructureValidationTests.swift */,
 				A1B2C3D400000018000NOTIF /* NotificationBridgeTests.swift */,
+				A1B2C3D4E0000011000ERROR /* FeedBridgeErrorTests.swift */,
+				A1B2C3D4E0000012000ERROR /* FeedListErrorTests.swift */,
+				A1B2C3D4E0000013000ERROR /* ThreadViewErrorTests.swift */,
+				A1B2C3D4E0000014000ERROR /* ComposeErrorTests.swift */,
+				A1B2C3D4E0000015000ERROR /* MessagesErrorTests.swift */,
+				A1B2C3D4E0000016000ERROR /* NotificationsErrorTests.swift */,
 			);
 			name = AsphodelUITests;
 			path = AsphodelUITests;
@@ -482,6 +500,12 @@
 				A1B2C3D400000005000TESTS /* SearchViewTests.swift in Sources */,
 				A1B2C3D400000006000TESTS /* InfrastructureValidationTests.swift in Sources */,
 				A1B2C3D400000008000NOTIF /* NotificationBridgeTests.swift in Sources */,
+				A1B2C3D4E0000001000ERROR /* FeedBridgeErrorTests.swift in Sources */,
+				A1B2C3D4E0000002000ERROR /* FeedListErrorTests.swift in Sources */,
+				A1B2C3D4E0000003000ERROR /* ThreadViewErrorTests.swift in Sources */,
+				A1B2C3D4E0000004000ERROR /* ComposeErrorTests.swift in Sources */,
+				A1B2C3D4E0000005000ERROR /* MessagesErrorTests.swift in Sources */,
+				A1B2C3D4E0000006000ERROR /* NotificationsErrorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
