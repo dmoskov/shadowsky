@@ -61,3 +61,8 @@ target 'Asphodel' do
     )
   end
 end
+
+target 'AsphodelUITests' do
+  inherit! :search_paths
+  pod 'ViewInspector', '~> 0.10'
+end
