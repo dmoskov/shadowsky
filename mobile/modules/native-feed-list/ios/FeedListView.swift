@@ -45,6 +45,11 @@ struct FeedListView: View {
     // Feed data
     @StateObject private var feedState = FeedState()
 
+    // Scroll position restoration
+    @State private var visiblePostIds: Set<String> = []
+    @State private var firstVisiblePostId: String? = nil
+    @State private var scrollProxy: ScrollViewProxy? = nil
+
     // Configuration (observable to avoid full rootView replacement)
     @ObservedObject var props: FeedListProps
 
@@ -90,89 +95,141 @@ struct FeedListView: View {
     // MARK: - Feed Scroll View
 
     private var feedScrollView: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                // Pull to refresh indicator
-                if props.isRefreshing {
-                    ProgressView()
-                        .padding()
-                }
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    // Pull to refresh indicator
+                    if props.isRefreshing {
+                        ProgressView()
+                            .padding()
+                    }
 
-                // Post items - uses pre-computed conversions
-                ForEach(feedState.convertedPosts) { converted in
-                    PostCardView(
-                        post: converted.feedViewPost,
-                        isBookmarked: converted.isBookmarked,
-                        isOnline: true,
-                        currentUserDid: nil,
-                        onPress: {
-                            onPostPress?(converted.sourcePost.post.uri, converted.sourcePost.post.author.handle)
-                        },
-                        onPressProfile: { handle in
-                            onProfilePress?(handle)
-                        },
-                        onLike: {
-                            onLike?(
-                                converted.sourcePost.post.uri,
-                                converted.sourcePost.post.cid,
-                                converted.sourcePost.post.viewer?.like
-                            )
-                        },
-                        onRepost: {
-                            onRepost?(
-                                converted.sourcePost.post.uri,
-                                converted.sourcePost.post.cid,
-                                converted.sourcePost.post.viewer?.repost
-                            )
-                        },
-                        onReply: {
-                            onReply?(
-                                converted.sourcePost.post.uri,
-                                converted.sourcePost.post.cid,
-                                converted.sourcePost.post.author.handle
-                            )
-                        },
-                        onBookmark: {
-                            onBookmark?(converted.sourcePost.post.uri)
-                        },
-                        onMentionPress: { handle, did in
-                            onMentionPress?(handle, did)
-                        },
-                        onHashtagPress: { tag in
-                            onHashtagPress?(tag)
-                        },
-                        onShare: {
-                            onShare?(converted.sourcePost.post.uri)
-                        },
-                        onMute: nil,
-                        onBlock: nil,
-                        onImagePress: onImagePress,
-                        onLinkPress: onLinkPress,
-                        onQuotePress: onQuotePress
-                    )
+                    // Post items - uses pre-computed conversions
+                    ForEach(feedState.convertedPosts) { converted in
+                        PostCardView(
+                            post: converted.feedViewPost,
+                            isBookmarked: converted.isBookmarked,
+                            isOnline: true,
+                            currentUserDid: nil,
+                            onPress: {
+                                onPostPress?(converted.sourcePost.post.uri, converted.sourcePost.post.author.handle)
+                            },
+                            onPressProfile: { handle in
+                                onProfilePress?(handle)
+                            },
+                            onLike: {
+                                onLike?(
+                                    converted.sourcePost.post.uri,
+                                    converted.sourcePost.post.cid,
+                                    converted.sourcePost.post.viewer?.like
+                                )
+                            },
+                            onRepost: {
+                                onRepost?(
+                                    converted.sourcePost.post.uri,
+                                    converted.sourcePost.post.cid,
+                                    converted.sourcePost.post.viewer?.repost
+                                )
+                            },
+                            onReply: {
+                                onReply?(
+                                    converted.sourcePost.post.uri,
+                                    converted.sourcePost.post.cid,
+                                    converted.sourcePost.post.author.handle
+                                )
+                            },
+                            onBookmark: {
+                                onBookmark?(converted.sourcePost.post.uri)
+                            },
+                            onMentionPress: { handle, did in
+                                onMentionPress?(handle, did)
+                            },
+                            onHashtagPress: { tag in
+                                onHashtagPress?(tag)
+                            },
+                            onShare: {
+                                onShare?(converted.sourcePost.post.uri)
+                            },
+                            onMute: nil,
+                            onBlock: nil,
+                            onImagePress: onImagePress,
+                            onLinkPress: onLinkPress,
+                            onQuotePress: onQuotePress
+                        )
+                        .id(converted.id)
+                        .onAppear {
+                            visiblePostIds.insert(converted.id)
+                            updateFirstVisiblePost()
+                        }
+                        .onDisappear {
+                            visiblePostIds.remove(converted.id)
+                            updateFirstVisiblePost()
+                        }
 
-                    // Load more trigger - fire when near end of list
-                    if converted.id == feedState.convertedPosts.dropLast(min(3, feedState.convertedPosts.count)).last?.id {
-                        Color.clear
-                            .frame(height: 1)
-                            .onAppear {
-                                if !props.isLoadingMore {
-                                    onLoadMore?()
+                        // Load more trigger - fire when near end of list
+                        if converted.id == feedState.convertedPosts.dropLast(min(3, feedState.convertedPosts.count)).last?.id {
+                            Color.clear
+                                .frame(height: 1)
+                                .onAppear {
+                                    if !props.isLoadingMore {
+                                        onLoadMore?()
+                                    }
                                 }
-                            }
+                        }
+                    }
+
+                    // Loading more indicator
+                    if props.isLoadingMore {
+                        ProgressView()
+                            .padding()
                     }
                 }
-
-                // Loading more indicator
-                if props.isLoadingMore {
-                    ProgressView()
-                        .padding()
-                }
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .refreshable {
+                // Clear tracked position so refresh shows content from top
+                firstVisiblePostId = nil
+                visiblePostIds.removeAll()
+                onRefresh?()
+            }
+            .onAppear {
+                scrollProxy = proxy
+            }
+            .onChange(of: feedState.convertedPosts.count) { _ in
+                restoreScrollPositionIfNeeded()
             }
         }
-        .scrollDismissesKeyboard(.interactively)
-        .refreshable {
-            onRefresh?()
+    }
+
+    // MARK: - Scroll Position Tracking
+
+    /// Determines the topmost visible post based on the order in the feed.
+    /// Posts report visibility via onAppear/onDisappear; this finds the first
+    /// one in feed order that is currently on screen.
+    private func updateFirstVisiblePost() {
+        guard !visiblePostIds.isEmpty else {
+            firstVisiblePostId = nil
+            return
+        }
+        firstVisiblePostId = feedState.convertedPosts.first { visiblePostIds.contains($0.id) }?.id
+    }
+
+    /// When new posts are prepended to the feed (e.g. after background refetch),
+    /// scroll back to the post the user was viewing so their position isn't lost.
+    private func restoreScrollPositionIfNeeded() {
+        guard let target = firstVisiblePostId,
+              let proxy = scrollProxy,
+              feedState.convertedPosts.contains(where: { $0.id == target }) else {
+            return
+        }
+
+        // Only restore if the target post is not the first post
+        // (if it's the first post, the user is already at the top)
+        guard feedState.convertedPosts.first?.id != target else { return }
+
+        // Dispatch async to allow LazyVStack layout to settle after data change
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            proxy.scrollTo(target, anchor: .top)
         }
     }
 
