@@ -338,6 +338,7 @@ struct ComposeView: View {
             }
             .padding(.vertical, 8)
         }
+        .scrollDismissesKeyboard(.interactively)
     }
 
     // MARK: - Quote Preview

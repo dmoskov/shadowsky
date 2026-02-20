@@ -42,6 +42,9 @@ struct MessageThreadView: View {
             }
         }
         .background(Color(UIColor.systemBackground))
+        .onTapGesture {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
     }
 
     // MARK: - Chat Header
@@ -160,6 +163,7 @@ struct MessageThreadView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
             }
+            .scrollDismissesKeyboard(.interactively)
             .onChange(of: dataState.messages.count) { _ in
                 // Scroll to bottom when new messages arrive
                 if let lastMessage = dataState.messages.last {
