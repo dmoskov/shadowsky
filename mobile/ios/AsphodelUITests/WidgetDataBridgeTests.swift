@@ -83,8 +83,9 @@ class WidgetDataBridgeModuleTests: XCTestCase {
             return
         }
 
+        // JSON must match TrendingTopicItem Codable struct: {topic: String, status: String?}
         let trendingJSON = """
-        [{"topic":"bluesky","count":1500},{"topic":"swift","count":800}]
+        [{"topic":"bluesky","status":"hot"},{"topic":"swift","status":"rising"}]
         """
         defaults.set(trendingJSON, forKey: "widget_trending_topics")
         defaults.synchronize()
@@ -93,12 +94,13 @@ class WidgetDataBridgeModuleTests: XCTestCase {
         XCTAssertNotNil(retrieved)
         XCTAssertEqual(retrieved, trendingJSON)
 
-        // Verify it parses as valid JSON
+        // Verify it parses as valid JSON matching the expected schema
         if let data = retrieved?.data(using: .utf8) {
             let parsed = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
             XCTAssertNotNil(parsed)
             XCTAssertEqual(parsed?.count, 2)
             XCTAssertEqual(parsed?.first?["topic"] as? String, "bluesky")
+            XCTAssertEqual(parsed?.first?["status"] as? String, "hot")
         } else {
             XCTFail("Trending data should be valid UTF-8")
         }
@@ -110,14 +112,29 @@ class WidgetDataBridgeModuleTests: XCTestCase {
             return
         }
 
+        // JSON must match DMConversationItem Codable struct
         let dmJSON = """
-        [{"convoId":"c1","lastMessage":"Hey!","author":"bob.bsky.social"}]
+        [{"conversationId":"c1","memberName":"Bob","memberHandle":"bob.bsky.social","lastMessageText":"Hey!","lastMessageTimestamp":1708430400000,"unreadCount":2}]
         """
         defaults.set(dmJSON, forKey: "widget_recent_dms")
         defaults.synchronize()
 
         let retrieved = defaults.string(forKey: "widget_recent_dms")
-        XCTAssertEqual(retrieved, dmJSON)
+        XCTAssertNotNil(retrieved)
+
+        // Verify it parses as valid JSON matching the expected schema
+        if let data = retrieved?.data(using: .utf8) {
+            let parsed = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+            XCTAssertNotNil(parsed)
+            XCTAssertEqual(parsed?.count, 1)
+            XCTAssertEqual(parsed?.first?["conversationId"] as? String, "c1")
+            XCTAssertEqual(parsed?.first?["memberName"] as? String, "Bob")
+            XCTAssertEqual(parsed?.first?["memberHandle"] as? String, "bob.bsky.social")
+            XCTAssertEqual(parsed?.first?["lastMessageText"] as? String, "Hey!")
+            XCTAssertEqual(parsed?.first?["unreadCount"] as? Int, 2)
+        } else {
+            XCTFail("DM data should be valid UTF-8")
+        }
     }
 
     // MARK: - Handle Missing/Empty Data

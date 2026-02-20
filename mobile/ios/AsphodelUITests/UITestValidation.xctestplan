@@ -82,7 +82,14 @@
         "ByteOffsetConverterTests",
         "RichTextParserUTF8Tests",
         "RichTextViewTests",
-        "RichTextParserEdgeCaseTests"
+        "RichTextParserEdgeCaseTests",
+        "SharedDataProviderTests",
+        "NotificationWidgetDataTests",
+        "TrendingTopicsWidgetDataTests",
+        "RecentDMsWidgetDataTests",
+        "StaleDataDetectionTests",
+        "WidgetDeepLinkTests",
+        "DataFormatConsistencyTests"
       ]
     }
   ],

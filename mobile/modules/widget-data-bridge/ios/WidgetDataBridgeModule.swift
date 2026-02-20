@@ -95,7 +95,9 @@ public class WidgetDataBridgeModule: Module {
 
     private func reloadWidgets() {
         if #available(iOS 14.0, *) {
-            WidgetCenter.shared.reloadAllTimelines()
+            DispatchQueue.main.async {
+                WidgetCenter.shared.reloadAllTimelines()
+            }
         }
     }
 }
