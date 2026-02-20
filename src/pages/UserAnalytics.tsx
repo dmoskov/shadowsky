@@ -521,7 +521,7 @@ export const UserAnalytics: React.FC = () => {
             <Heart size={16} className="text-red-500" />
             <span style={{ color: "var(--asph-text-secondary)" }}>Likes</span>
           </div>
-          <div className="mt-2 text-2xl font-bold text-red-500">
+          <div className="mt-2 text-2xl font-bold text-red-600 dark:text-red-500">
             {postsData?.totalLikes?.toLocaleString() || 0}
           </div>
         </div>
@@ -531,10 +531,10 @@ export const UserAnalytics: React.FC = () => {
           style={{ background: "var(--asph-bg-secondary)" }}
         >
           <div className="flex items-center gap-2 text-sm">
-            <Repeat2 size={16} className="text-blue-500" />
+            <Repeat2 size={16} className="text-blue-600 dark:text-blue-500" />
             <span style={{ color: "var(--asph-text-secondary)" }}>Reposts</span>
           </div>
-          <div className="mt-2 text-2xl font-bold text-blue-500">
+          <div className="mt-2 text-2xl font-bold text-blue-600 dark:text-blue-500">
             {postsData?.totalReposts?.toLocaleString() || 0}
           </div>
         </div>
@@ -544,10 +544,13 @@ export const UserAnalytics: React.FC = () => {
           style={{ background: "var(--asph-bg-secondary)" }}
         >
           <div className="flex items-center gap-2 text-sm">
-            <MessageCircle size={16} className="text-green-500" />
+            <MessageCircle
+              size={16}
+              className="text-green-600 dark:text-green-500"
+            />
             <span style={{ color: "var(--asph-text-secondary)" }}>Replies</span>
           </div>
-          <div className="mt-2 text-2xl font-bold text-green-500">
+          <div className="mt-2 text-2xl font-bold text-green-600 dark:text-green-500">
             {postsData?.totalReplies?.toLocaleString() || 0}
           </div>
         </div>
@@ -557,12 +560,15 @@ export const UserAnalytics: React.FC = () => {
           style={{ background: "var(--asph-bg-secondary)" }}
         >
           <div className="flex items-center gap-2 text-sm">
-            <TrendingUp size={16} className="text-purple-500" />
+            <TrendingUp
+              size={16}
+              className="text-purple-600 dark:text-purple-500"
+            />
             <span style={{ color: "var(--asph-text-secondary)" }}>
               Engagement Rate
             </span>
           </div>
-          <div className="mt-2 text-2xl font-bold text-purple-500">
+          <div className="mt-2 text-2xl font-bold text-purple-600 dark:text-purple-500">
             {postsData?.totalPosts && postsData.totalPosts > 0
               ? (postsData.totalEngagement / postsData.totalPosts).toFixed(1)
               : "0.0"}
@@ -681,17 +687,17 @@ export const UserAnalytics: React.FC = () => {
                       >
                         <div className="mb-1 font-bold">{data.total} total</div>
                         {data.likes > 0 && (
-                          <div style={{ color: "#ef4444" }}>
+                          <div style={{ color: "#dc2626" }}>
                             {data.likes} likes
                           </div>
                         )}
                         {data.reposts > 0 && (
-                          <div style={{ color: "#60a5fa" }}>
+                          <div style={{ color: "#2563eb" }}>
                             {data.reposts} reposts
                           </div>
                         )}
                         {data.replies > 0 && (
-                          <div style={{ color: "#4ade80" }}>
+                          <div style={{ color: "#16a34a" }}>
                             {data.replies} replies
                           </div>
                         )}
@@ -1006,7 +1012,10 @@ export const UserAnalytics: React.FC = () => {
           className="mb-4 flex items-center gap-2 text-lg font-semibold"
           style={{ color: "var(--asph-text-primary)" }}
         >
-          <TrendingUp size={20} className="text-green-500" />
+          <TrendingUp
+            size={20}
+            className="text-green-600 dark:text-green-500"
+          />
           Top Performing Posts
         </h2>
         {postsData?.topPosts && postsData.topPosts.length > 0 ? (
@@ -1070,7 +1079,10 @@ export const UserAnalytics: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <MessageCircle size={14} className="text-green-500" />
+                      <MessageCircle
+                        size={14}
+                        className="text-green-600 dark:text-green-500"
+                      />
                       <span style={{ color: "var(--asph-text-secondary)" }}>
                         {post.replies.toLocaleString()}
                       </span>
@@ -1178,7 +1190,7 @@ export const UserAnalytics: React.FC = () => {
             >
               <Sparkles
                 size={48}
-                className="mx-auto mb-3 text-purple-400 opacity-50"
+                className="mx-auto mb-3 text-purple-500 opacity-50 dark:text-purple-400"
               />
               <p
                 className="mb-2 text-lg font-medium"
@@ -1306,7 +1318,10 @@ export const UserAnalytics: React.FC = () => {
                     className="mb-4 flex items-center gap-2 text-base font-semibold"
                     style={{ color: "var(--asph-text-primary)" }}
                   >
-                    <MessageCircle size={18} className="text-green-500" />
+                    <MessageCircle
+                      size={18}
+                      className="text-green-600 dark:text-green-500"
+                    />
                     Writing Style
                   </h3>
                   <div className="space-y-3">
@@ -1339,7 +1354,9 @@ export const UserAnalytics: React.FC = () => {
                               className="flex items-start gap-2 text-sm"
                               style={{ color: "var(--asph-text-secondary)" }}
                             >
-                              <span className="text-green-500">•</span>
+                              <span className="text-green-600 dark:text-green-500">
+                                •
+                              </span>
                               {char}
                             </li>
                           ),
@@ -1412,7 +1429,10 @@ export const UserAnalytics: React.FC = () => {
                             className="text-sm"
                             style={{ color: "var(--asph-text-secondary)" }}
                           >
-                            <span className="text-green-500">✓</span> {item}
+                            <span className="text-green-600 dark:text-green-500">
+                              ✓
+                            </span>{" "}
+                            {item}
                           </li>
                         ),
                       )}

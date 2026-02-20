@@ -1174,27 +1174,27 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                 {bucket.total} total
                               </div>
                               {bucket.likes > 0 && (
-                                <div style={{ color: "#ef4444" }}>
+                                <div style={{ color: "#dc2626" }}>
                                   {bucket.likes} likes
                                 </div>
                               )}
                               {bucket.reposts > 0 && (
-                                <div style={{ color: "#60a5fa" }}>
+                                <div style={{ color: "#2563eb" }}>
                                   {bucket.reposts} reposts
                                 </div>
                               )}
                               {bucket.follows > 0 && (
-                                <div style={{ color: "#a78bfa" }}>
+                                <div style={{ color: "#7c3aed" }}>
                                   {bucket.follows} follows
                                 </div>
                               )}
                               {bucket.replies > 0 && (
-                                <div style={{ color: "#4ade80" }}>
+                                <div style={{ color: "#16a34a" }}>
                                   {bucket.replies} replies
                                 </div>
                               )}
                               {bucket.mentions > 0 && (
-                                <div style={{ color: "#fb7185" }}>
+                                <div style={{ color: "#e11d48" }}>
                                   {bucket.mentions} mentions
                                 </div>
                               )}
@@ -1311,22 +1311,22 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                   {total} total
                                 </div>
                                 {bucket.posts > 0 && (
-                                  <div style={{ color: "#3b82f6" }}>
+                                  <div style={{ color: "#2563eb" }}>
                                     {bucket.posts} posts
                                   </div>
                                 )}
                                 {bucket.replies > 0 && (
-                                  <div style={{ color: "#4ade80" }}>
+                                  <div style={{ color: "#16a34a" }}>
                                     {bucket.replies} replies
                                   </div>
                                 )}
                                 {bucket.reposts > 0 && (
-                                  <div style={{ color: "#a78bfa" }}>
+                                  <div style={{ color: "#7c3aed" }}>
                                     {bucket.reposts} reposts
                                   </div>
                                 )}
                                 {bucket.quotes > 0 && (
-                                  <div style={{ color: "#fb7185" }}>
+                                  <div style={{ color: "#e11d48" }}>
                                     {bucket.quotes} quotes
                                   </div>
                                 )}
@@ -1674,7 +1674,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                 className="rounded-lg p-3 text-center"
                 style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
-                <div className="text-2xl font-bold text-red-500">
+                <div className="text-2xl font-bold text-red-600 dark:text-red-500">
                   {userActivity.likesReceived}
                 </div>
                 <div
@@ -1689,7 +1689,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                 className="rounded-lg p-3 text-center"
                 style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
-                <div className="text-2xl font-bold text-blue-500">
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-500">
                   {userActivity.repostsReceived}
                 </div>
                 <div
@@ -1704,7 +1704,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                 className="rounded-lg p-3 text-center"
                 style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
               >
-                <div className="text-2xl font-bold text-green-500">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-500">
                   {userActivity.repliesReceived}
                 </div>
                 <div

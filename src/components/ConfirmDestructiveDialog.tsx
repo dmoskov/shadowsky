@@ -223,7 +223,7 @@ export const ConfirmDestructiveDialog: React.FC<
             <button
               onClick={handleClose}
               disabled={isProcessing}
-              className="rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-500 disabled:opacity-50 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+              className="rounded-full p-1 text-asph-text-tertiary transition-colors hover:bg-gray-100 hover:text-gray-500 disabled:opacity-50 dark:hover:bg-gray-800 dark:hover:text-gray-300"
               aria-label="Close dialog"
             >
               <X className="h-5 w-5" aria-hidden="true" />
@@ -233,7 +233,7 @@ export const ConfirmDestructiveDialog: React.FC<
 
         {/* Content */}
         <div id={descriptionId} className="space-y-4 px-6 py-4">
-          <p className="text-gray-600 dark:text-gray-300">{message}</p>
+          <p className="text-asph-text-secondary">{message}</p>
 
           {/* Warning message */}
           {warningMessage && (
@@ -280,7 +280,7 @@ export const ConfirmDestructiveDialog: React.FC<
             <div className="space-y-2">
               <label
                 htmlFor="confirm-input"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-asph-text-secondary"
               >
                 Type{" "}
                 <span className="font-mono font-bold">
@@ -312,7 +312,7 @@ export const ConfirmDestructiveDialog: React.FC<
           <button
             onClick={handleClose}
             disabled={isProcessing}
-            className="ios-press-light rounded-lg px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 disabled:opacity-50 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="ios-press-light rounded-lg px-4 py-2 text-sm font-medium text-asph-text-secondary transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 disabled:opacity-50 dark:hover:bg-gray-700"
           >
             {cancelButtonLabel}
           </button>

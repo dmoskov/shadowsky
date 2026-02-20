@@ -77,7 +77,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
         <button
           role="menuitem"
           onClick={onNativeShare}
-          className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+          className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
         >
           <Share className="h-4 w-4" aria-hidden="true" />
           Share post
@@ -88,7 +88,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
       <button
         role="menuitem"
         onClick={onCopyLink}
-        className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+        className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
       >
         <Link className="h-4 w-4" aria-hidden="true" />
         Copy link to post
@@ -97,7 +97,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
       <button
         role="menuitem"
         onClick={onCopyDeepLink}
-        className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+        className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
         title="Copy link with scroll-to-post fragment"
       >
         <Link className="h-4 w-4" aria-hidden="true" />
@@ -107,7 +107,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
       <button
         role="menuitem"
         onClick={onCopyBlueskyLink}
-        className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+        className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
       >
         <Link className="h-4 w-4" aria-hidden="true" />
         Copy Bluesky link
@@ -116,7 +116,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
       <button
         role="menuitem"
         onClick={onEmbed}
-        className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+        className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
       >
         <Code className="h-4 w-4" aria-hidden="true" />
         Embed post
@@ -125,7 +125,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
       <button
         role="menuitem"
         onClick={onOpenInBluesky}
-        className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+        className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
       >
         <ExternalLink className="h-4 w-4" aria-hidden="true" />
         Open in Bluesky
@@ -143,7 +143,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
             <button
               role="menuitem"
               onClick={onUnmuteThread}
-              className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+              className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
             >
               <Bell className="h-4 w-4" aria-hidden="true" />
               Unmute thread
@@ -152,7 +152,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
             <button
               role="menuitem"
               onClick={onMuteThread}
-              className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+              className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
             >
               <BellOff className="h-4 w-4" aria-hidden="true" />
               Mute thread
@@ -171,7 +171,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
           <button
             role="menuitem"
             onClick={onHidePost}
-            className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+            className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
           >
             <EyeOff className="h-4 w-4" aria-hidden="true" />
             Hide this post
@@ -180,7 +180,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
           <button
             role="menuitem"
             onClick={onOpenAddToListModal}
-            className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+            className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
             title={`Add @${post.author.handle} to lists`}
           >
             <List className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
@@ -195,7 +195,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
           <button
             role="menuitem"
             onClick={onMute}
-            className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+            className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
             title={`Mute @${post.author.handle}`}
           >
             <VolumeX className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
@@ -205,7 +205,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
           <button
             role="menuitem"
             onClick={onBlock}
-            className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+            className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
             title={`Block @${post.author.handle}`}
           >
             <UserX className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
@@ -215,7 +215,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
           <button
             role="menuitem"
             onClick={onOpenReportModal}
-            className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+            className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
           >
             <Flag className="h-4 w-4" aria-hidden="true" />
             Report post
@@ -230,7 +230,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
             <button
               role="menuitem"
               onClick={onUnpinFromProfile}
-              className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+              className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
             >
               <PinOff className="h-4 w-4" aria-hidden="true" />
               Unpin from profile
@@ -239,7 +239,7 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
             <button
               role="menuitem"
               onClick={onPinToProfile}
-              className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-gray-700 transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:text-gray-300 dark:focus-visible:bg-gray-800"
+              className="flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-gray-100 focus-visible:outline-none dark:focus-visible:bg-gray-800"
             >
               <Pin className="h-4 w-4" aria-hidden="true" />
               Pin to profile

@@ -142,7 +142,7 @@ export const BatchConfirmationDialog: React.FC<
                 {getDialogTitle()}
               </h2>
               {actionType === "add_to_list" && listName && (
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-asph-text-secondary">
                   Adding to: {listName}
                 </p>
               )}
@@ -155,16 +155,22 @@ export const BatchConfirmationDialog: React.FC<
           {/* Stats */}
           <div className="flex gap-4">
             <div className="flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 dark:bg-gray-800">
-              <Users className="h-4 w-4 text-gray-500" aria-hidden="true" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <Users
+                className="h-4 w-4 text-asph-text-tertiary"
+                aria-hidden="true"
+              />
+              <span className="text-sm font-medium text-asph-text-secondary">
                 {selectedCount} user{selectedCount !== 1 ? "s" : ""}
               </span>
             </div>
 
             {estimation.estimatedTimeSeconds > 0 && (
               <div className="flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 dark:bg-gray-800">
-                <Clock className="h-4 w-4 text-gray-500" aria-hidden="true" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Clock
+                  className="h-4 w-4 text-asph-text-tertiary"
+                  aria-hidden="true"
+                />
+                <span className="text-sm font-medium text-asph-text-secondary">
                   ~{estimation.estimatedTimeFormatted}
                 </span>
               </div>
@@ -184,7 +190,7 @@ export const BatchConfirmationDialog: React.FC<
                 {riskDescription}
               </p>
               {estimation.warningMessage && (
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <p className="mt-1 text-sm text-asph-text-secondary">
                   {estimation.warningMessage}
                 </p>
               )}
@@ -241,7 +247,7 @@ export const BatchConfirmationDialog: React.FC<
         <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800/50">
           <button
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 dark:hover:bg-gray-700"
           >
             Cancel
           </button>

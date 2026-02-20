@@ -299,7 +299,7 @@ const SkyColumn = memo(
         default:
           return (
             <div className="py-8 text-center">
-              <p className="text-gray-500 dark:text-gray-300">
+              <p className="text-asph-text-tertiary">
                 Column type "{column.type}" coming soon
               </p>
             </div>

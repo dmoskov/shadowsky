@@ -653,7 +653,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
               {feedback.correctedVersion.text}
             </p>
             {feedback.correctedVersion.changes.length > 0 && (
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-asph-text-tertiary">
                 <p className="font-medium">Corrections made:</p>
                 <ul className="list-disc space-y-0.5 pl-5">
                   {feedback.correctedVersion.changes.map((change, i) => (
@@ -689,7 +689,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
               {feedback.enhancedVersion.text}
             </p>
             {feedback.enhancedVersion.improvements.length > 0 && (
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-asph-text-tertiary">
                 <p className="font-medium">Improvements:</p>
                 <ul className="list-disc space-y-0.5 pl-5">
                   {feedback.enhancedVersion.improvements.map(
@@ -737,7 +737,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
                   )}
                 </p>
                 {feedback.styleAnalysis.styleNotes.length > 0 && (
-                  <ul className="list-disc space-y-0.5 pl-5 text-xs text-gray-500">
+                  <ul className="list-disc space-y-0.5 pl-5 text-xs text-asph-text-tertiary">
                     {feedback.styleAnalysis.styleNotes.map((note, i) => (
                       <li key={`style-note-${note.slice(0, 20)}-${i}`}>
                         {note}

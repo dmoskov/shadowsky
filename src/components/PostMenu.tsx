@@ -104,7 +104,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
           aria-expanded={isOpen}
           aria-controls={isOpen ? menuId : undefined}
         >
-          <MoreHorizontal className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+          <MoreHorizontal className="h-5 w-5 text-asph-text-tertiary" />
         </button>
 
         {isOpen &&

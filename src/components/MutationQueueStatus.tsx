@@ -143,7 +143,7 @@ export const MutationQueueStatus: React.FC = () => {
               <span className={`text-sm font-medium ${config.textColor}`}>
                 {config.title}
               </span>
-              <ChevronUp className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+              <ChevronUp className="h-4 w-4 text-asph-text-tertiary" />
             </div>
           ) : (
             <>
@@ -153,7 +153,7 @@ export const MutationQueueStatus: React.FC = () => {
               >
                 {getCompactLabel()}
               </span>
-              <ChevronDown className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+              <ChevronDown className="h-3 w-3 text-asph-text-tertiary" />
             </>
           )}
         </button>

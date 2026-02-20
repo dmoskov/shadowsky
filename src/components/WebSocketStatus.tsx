@@ -34,7 +34,7 @@ export const WebSocketStatus: React.FC = () => {
       case WebSocketConnectionState.ERROR:
         return <AlertCircle className="h-4 w-4 text-red-500" />;
       default:
-        return <WifiOff className="h-4 w-4 text-gray-500 dark:text-gray-400" />;
+        return <WifiOff className="h-4 w-4 text-asph-text-tertiary" />;
     }
   };
 

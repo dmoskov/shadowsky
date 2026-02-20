@@ -160,14 +160,14 @@ export const VideoUploadErrorDemo: React.FC = () => {
         <h1 className="mb-4 text-2xl font-bold text-gray-900 dark:text-gray-100">
           Video Upload Error UI Demo
         </h1>
-        <p className="mb-6 text-gray-600 dark:text-gray-400">
+        <p className="mb-6 text-asph-text-secondary">
           This demo showcases the different error states for video uploads with
           actionable recovery options.
         </p>
 
         <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="mb-2 block text-sm font-medium text-asph-text-secondary">
               Error Type
             </label>
             <select
@@ -209,7 +209,7 @@ export const VideoUploadErrorDemo: React.FC = () => {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="mb-2 block text-sm font-medium text-asph-text-secondary">
               Layout
             </label>
             <div className="flex h-[42px] items-center gap-4">
@@ -220,9 +220,7 @@ export const VideoUploadErrorDemo: React.FC = () => {
                   onChange={() => setCompact(false)}
                   className="h-4 w-4"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Full
-                </span>
+                <span className="text-sm text-asph-text-secondary">Full</span>
               </label>
               <label className="flex cursor-pointer items-center gap-2">
                 <input
@@ -231,7 +229,7 @@ export const VideoUploadErrorDemo: React.FC = () => {
                   onChange={() => setCompact(true)}
                   className="h-4 w-4"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-asph-text-secondary">
                   Compact
                 </span>
               </label>

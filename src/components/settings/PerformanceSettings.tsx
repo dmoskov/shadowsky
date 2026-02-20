@@ -59,7 +59,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
       style={{ borderColor: "var(--asph-border-primary)" }}
     >
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+        <span className="text-sm font-medium text-asph-text-secondary">
           {info.shortName}
         </span>
         {rating && (
@@ -74,7 +74,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
       </div>
       <div className="mb-1 flex items-baseline gap-2">
         <span
-          className={`text-2xl font-bold ${rating ? getRatingColor(rating) : "text-gray-400"}`}
+          className={`text-2xl font-bold ${rating ? getRatingColor(rating) : "text-asph-text-tertiary"}`}
         >
           {value !== null ? formatMetricValue(metric, value) : "—"}
         </span>
@@ -82,7 +82,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
           <AlertTriangle className="h-4 w-4 text-red-500" aria-hidden="true" />
         )}
       </div>
-      <div className="text-xs text-gray-500 dark:text-gray-400">
+      <div className="text-xs text-asph-text-tertiary">
         Budget: {formatMetricValue(metric, budget)}
       </div>
     </div>
@@ -115,7 +115,7 @@ const TrendItem: React.FC<TrendItemProps> = ({
       ? "text-green-600 dark:text-green-400"
       : trend === "degrading"
         ? "text-red-600 dark:text-red-400"
-        : "text-gray-500 dark:text-gray-400";
+        : "text-asph-text-tertiary";
 
   const metricKey = metric.toLowerCase() as keyof typeof METRIC_INFO;
   const unit = METRIC_INFO[metricKey]?.unit || "";
@@ -124,7 +124,7 @@ const TrendItem: React.FC<TrendItemProps> = ({
     <div className="flex items-center justify-between border-b border-gray-200 py-2 last:border-0 dark:border-gray-700">
       <div>
         <span className="font-medium">{metric}</span>
-        <span className="ml-2 text-sm text-gray-500">
+        <span className="ml-2 text-sm text-asph-text-tertiary">
           {Math.round(current)}
           {unit} avg
         </span>
@@ -252,7 +252,7 @@ export const PerformanceSettings: React.FC = () => {
       >
         <div className="flex items-center gap-3">
           <Activity
-            className={`h-5 w-5 ${isMonitoring ? "text-green-500" : "text-gray-400"}`}
+            className={`h-5 w-5 ${isMonitoring ? "text-green-500" : "text-asph-text-tertiary"}`}
             aria-hidden="true"
           />
           <div>
@@ -262,7 +262,7 @@ export const PerformanceSettings: React.FC = () => {
                 : "Monitoring Not Initialized"}
             </span>
             {lastUpdate && (
-              <span className="ml-2 text-sm text-gray-500">
+              <span className="ml-2 text-sm text-asph-text-tertiary">
                 Last updated: {lastUpdate.toLocaleTimeString()}
               </span>
             )}
@@ -349,7 +349,10 @@ export const PerformanceSettings: React.FC = () => {
         }}
       >
         <div className="mb-4 flex items-center gap-2">
-          <Gauge className="h-5 w-5 text-gray-500" aria-hidden="true" />
+          <Gauge
+            className="h-5 w-5 text-asph-text-tertiary"
+            aria-hidden="true"
+          />
           <h2
             className="text-lg font-semibold"
             style={{ color: "var(--asph-text-primary)" }}
@@ -394,7 +397,10 @@ export const PerformanceSettings: React.FC = () => {
         }}
       >
         <div className="mb-4 flex items-center gap-2">
-          <Clock className="h-5 w-5 text-gray-500" aria-hidden="true" />
+          <Clock
+            className="h-5 w-5 text-asph-text-tertiary"
+            aria-hidden="true"
+          />
           <h2
             className="text-lg font-semibold"
             style={{ color: "var(--asph-text-primary)" }}
@@ -419,7 +425,7 @@ export const PerformanceSettings: React.FC = () => {
                   className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                     budgetPreset === preset
                       ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                      : "bg-gray-100 text-asph-text-secondary hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
                   }`}
                 >
                   {preset.charAt(0).toUpperCase() + preset.slice(1)}
@@ -467,7 +473,10 @@ export const PerformanceSettings: React.FC = () => {
           }}
         >
           <div className="mb-4 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-gray-500" aria-hidden="true" />
+            <BarChart3
+              className="h-5 w-5 text-asph-text-tertiary"
+              aria-hidden="true"
+            />
             <h2
               className="text-lg font-semibold"
               style={{ color: "var(--asph-text-primary)" }}
@@ -494,7 +503,10 @@ export const PerformanceSettings: React.FC = () => {
       >
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-gray-500" aria-hidden="true" />
+            <BarChart3
+              className="h-5 w-5 text-asph-text-tertiary"
+              aria-hidden="true"
+            />
             <h2
               className="text-lg font-semibold"
               style={{ color: "var(--asph-text-primary)" }}
@@ -711,7 +723,7 @@ export const PerformanceSettings: React.FC = () => {
             >
               <div className="flex items-center gap-2">
                 <Wifi
-                  className={`h-4 w-4 ${engagementMetrics.isActive ? "text-green-500" : "text-gray-400"}`}
+                  className={`h-4 w-4 ${engagementMetrics.isActive ? "text-green-500" : "text-asph-text-tertiary"}`}
                 />
                 <span
                   className="text-xs font-medium"
@@ -842,7 +854,7 @@ export const PerformanceSettings: React.FC = () => {
             • <strong>INP:</strong> Measures interactivity - target under 200ms
           </li>
         </ul>
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-asph-text-tertiary">
           Metrics are collected as you use the app and stored locally. Enable
           debug mode (<code>window.enableDebug()</code>) to see detailed logs.
         </p>

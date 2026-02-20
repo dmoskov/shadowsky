@@ -147,7 +147,7 @@ export const BatchActionsToolbar: React.FC<BatchActionsToolbarProps> = ({
       case "warning":
         return `${base} bg-amber-100 text-amber-700 hover:bg-amber-200 focus-visible:ring-amber-500 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50`;
       default:
-        return `${base} bg-gray-100 text-gray-700 hover:bg-gray-200 focus-visible:ring-gray-500 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700`;
+        return `${base} bg-gray-100 text-asph-text-secondary hover:bg-gray-200 focus-visible:ring-gray-500 dark:bg-gray-800 dark:hover:bg-gray-700`;
     }
   };
 
@@ -163,7 +163,7 @@ export const BatchActionsToolbar: React.FC<BatchActionsToolbarProps> = ({
       {/* Selection count */}
       <div className="flex items-center gap-2 border-r border-gray-200 pr-3 dark:border-gray-700">
         <CheckSquare className="h-4 w-4 text-blue-500" aria-hidden="true" />
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <span className="text-sm font-medium text-asph-text-secondary">
           {selectedCount} selected
         </span>
       </div>
@@ -172,7 +172,7 @@ export const BatchActionsToolbar: React.FC<BatchActionsToolbarProps> = ({
       {onSelectAll && (
         <button
           onClick={onSelectAll}
-          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-asph-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800"
           disabled={isOperationActive}
         >
           <Check className="h-4 w-4" aria-hidden="true" />
@@ -233,7 +233,7 @@ export const BatchActionsToolbar: React.FC<BatchActionsToolbarProps> = ({
                     <button
                       key={action.type}
                       onClick={() => handleAction(action.type)}
-                      className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                      className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-asph-text-secondary hover:bg-gray-100 dark:hover:bg-gray-700"
                       role="menuitem"
                     >
                       <Icon className="h-4 w-4" aria-hidden="true" />
@@ -267,7 +267,7 @@ export const BatchActionsToolbar: React.FC<BatchActionsToolbarProps> = ({
       {/* Deselect all */}
       <button
         onClick={deselectAll}
-        className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+        className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-asph-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800"
         disabled={selectedCount === 0 || isOperationActive}
         title="Deselect all"
         aria-label="Deselect all"
@@ -279,7 +279,7 @@ export const BatchActionsToolbar: React.FC<BatchActionsToolbarProps> = ({
       {/* Exit selection mode */}
       <button
         onClick={() => toggleSelectionMode(false)}
-        className="flex items-center gap-1.5 rounded-lg bg-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+        className="flex items-center gap-1.5 rounded-lg bg-gray-200 px-3 py-1.5 text-sm font-medium text-asph-text-secondary hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
         title="Exit selection mode (Esc)"
         aria-label="Exit selection mode"
       >

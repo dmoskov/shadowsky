@@ -224,7 +224,7 @@ export function UserListModal({
             <UserListSkeleton count={5} aria-label="Loading users" />
           ) : users.length === 0 ? (
             <div
-              className="p-8 text-center text-gray-500 dark:text-gray-400"
+              className="p-8 text-center text-asph-text-tertiary"
               role="status"
             >
               No {type} yet
@@ -263,7 +263,7 @@ export function UserListModal({
                         {user.displayName || user.handle}
                       </div>
                     </ProfileHoverCard>
-                    <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center text-sm text-asph-text-tertiary">
                       <ProfileHoverCard handle={user.handle}>
                         <span className="cursor-pointer hover:underline">
                           @{user.handle}
@@ -272,7 +272,7 @@ export function UserListModal({
                       <DomainVerifiedBadgeInline handle={user.handle} />
                     </div>
                     {user.description && (
-                      <div className="mt-1 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">
+                      <div className="mt-1 line-clamp-2 text-sm text-asph-text-secondary">
                         {user.description}
                       </div>
                     )}

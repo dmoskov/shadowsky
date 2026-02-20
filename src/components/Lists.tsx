@@ -177,7 +177,7 @@ export const Lists: React.FC = () => {
       {!isLoading && !error && lists?.length === 0 && (
         <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
           <ListIcon
-            className="h-12 w-12 text-gray-400 dark:text-gray-500"
+            className="h-12 w-12 text-asph-text-tertiary"
             aria-hidden="true"
           />
           <p className="mb-2 mt-4 text-base font-medium text-asph-text-primary">

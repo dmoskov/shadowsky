@@ -307,7 +307,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
             />
           </div>
         </div>
-        <span className="text-xs font-medium tabular-nums text-gray-700 dark:text-gray-300">
+        <span className="text-xs font-medium tabular-nums text-asph-text-secondary">
           {progress.percentage.toFixed(0)}%
         </span>
       </div>
@@ -346,7 +346,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
               <h3 className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                 {fileName || "Video Upload"}
               </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
+              <p className="text-xs text-asph-text-secondary">
                 {stateConfig.label}
                 {progress.retryAttempts > 0 && (
                   <span className="ml-2 text-orange-600 dark:text-orange-400">
@@ -362,9 +362,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
                 className="ml-2 rounded-md p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                 aria-label="Cancel upload"
               >
-                <span className="text-xs text-gray-600 dark:text-gray-400">
-                  ✕
-                </span>
+                <span className="text-xs text-asph-text-secondary">✕</span>
               </button>
             )}
           </div>
@@ -383,7 +381,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
             />
           </div>
 
-          <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+          <div className="flex items-center justify-between text-xs text-asph-text-secondary">
             <div className="flex items-center gap-3">
               <span className="font-medium tabular-nums" aria-live="polite">
                 {progress.percentage.toFixed(0)}%
@@ -391,7 +389,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
 
               {progress.state === "uploading" && progress.speed > 0 && (
                 <>
-                  <span className="text-gray-400 dark:text-gray-600">•</span>
+                  <span className="text-asph-text-tertiary">•</span>
                   <span
                     className="tabular-nums"
                     aria-label={`Upload speed: ${formatSpeed(progress.speed)}`}
@@ -403,7 +401,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
 
               {progress.totalBytes > 0 && (
                 <>
-                  <span className="text-gray-400 dark:text-gray-600">•</span>
+                  <span className="text-asph-text-tertiary">•</span>
                   <span className="tabular-nums">
                     {formatBytes(progress.bytesUploaded)} /{" "}
                     {formatBytes(progress.totalBytes)}

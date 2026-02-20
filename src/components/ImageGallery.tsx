@@ -148,7 +148,7 @@ export function ImageGallery({
         {imageError ? (
           <div className="p-4 text-center text-white">
             <p>Failed to load image</p>
-            <p className="mt-2 text-sm text-gray-400">
+            <p className="mt-2 text-sm text-asph-text-tertiary">
               URL: {images[currentIndex].fullsize || images[currentIndex].thumb}
             </p>
           </div>

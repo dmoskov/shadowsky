@@ -168,7 +168,7 @@ export const StorageManagementSettings: React.FC = () => {
         }}
       >
         <div className="mb-4 flex items-center gap-3">
-          <HardDrive className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+          <HardDrive className="h-6 w-6 text-asph-text-tertiary" />
           <h2
             className="text-xl font-semibold"
             style={{ color: "var(--asph-text-primary)" }}
@@ -250,7 +250,7 @@ export const StorageManagementSettings: React.FC = () => {
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <Database className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                      <Database className="h-4 w-4 text-asph-text-tertiary" />
                       <span
                         className="font-mono text-xs"
                         style={{ color: "var(--asph-text-secondary)" }}
@@ -289,7 +289,7 @@ export const StorageManagementSettings: React.FC = () => {
         }}
       >
         <div className="mb-4 flex items-center gap-3">
-          <Trash2 className="h-6 w-6 text-gray-500 dark:text-gray-400" />
+          <Trash2 className="h-6 w-6 text-asph-text-tertiary" />
           <h2
             className="text-xl font-semibold"
             style={{ color: "var(--asph-text-primary)" }}
