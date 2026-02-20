@@ -156,12 +156,14 @@ struct ImageEmbed: View {
     }
 }
 
-/// Individual image tile with ALT badge
+/// Individual image tile with ALT badge and VoiceOver support
 struct ImageTile: View {
     let imageData: ImageEmbedData
     let blurImage: Bool
     let index: Int
     let onPress: (Int) -> Void
+
+    @State private var showingAltText = false
 
     var body: some View {
         Button(action: { onPress(index) }) {
@@ -188,20 +190,45 @@ struct ImageTile: View {
                 }
                 .clipped()
 
-                // ALT badge
+                // ALT badge / expanded alt text
                 if let alt = imageData.alt, !alt.isEmpty {
-                    Text("ALT")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.black.opacity(0.7))
-                        .cornerRadius(4)
-                        .padding(8)
+                    if showingAltText {
+                        // Expanded alt text overlay
+                        Text(alt)
+                            .font(.caption)
+                            .foregroundColor(.white)
+                            .padding(8)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.black.opacity(0.8))
+                            .cornerRadius(8)
+                            .padding(4)
+                            .onTapGesture {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showingAltText = false
+                                }
+                            }
+                    } else {
+                        // Compact ALT badge
+                        Text("ALT")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.black.opacity(0.7))
+                            .cornerRadius(4)
+                            .padding(8)
+                            .onTapGesture {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    showingAltText = true
+                                }
+                            }
+                    }
                 }
             }
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel(imageData.alt ?? "Image")
+        .accessibilityAddTraits(.isImage)
     }
 }
 
