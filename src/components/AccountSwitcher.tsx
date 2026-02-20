@@ -83,7 +83,7 @@ export const AccountSwitcher: React.FC = () => {
           }
           setIsOpen(!isOpen);
         }}
-        className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-all hover:bg-gray-200/50 dark:hover:bg-white/10"
+        className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-all hover:bg-asph-bg-hover"
         style={{ color: "var(--asph-text-primary)" }}
       >
         {currentAccount?.avatar ? (
@@ -111,17 +111,18 @@ export const AccountSwitcher: React.FC = () => {
         ReactDOM.createPortal(
           <div
             ref={menuRef}
-            className="animate-dropdown-in asph-glass fixed z-[9999] w-64 overflow-hidden rounded-lg shadow-lg"
+            className="dropdown-refined animate-dropdown-in fixed z-[9999] w-64"
             style={{
-              backgroundColor: "var(--asph-bg-secondary)",
-              border: "1px solid var(--asph-border-primary)",
               top: `${menuPosition.top}px`,
               right: `${menuPosition.right}px`,
             }}
           >
             <div
-              className="px-3 py-2 text-xs font-medium"
-              style={{ color: "var(--asph-text-tertiary)" }}
+              className="px-3 py-2.5 text-xs font-medium"
+              style={{
+                color: "var(--asph-text-tertiary)",
+                letterSpacing: "var(--asph-letter-spacing-wide)",
+              }}
             >
               Switch Account
             </div>
@@ -133,7 +134,7 @@ export const AccountSwitcher: React.FC = () => {
                   <button
                     key={account.did}
                     onClick={() => handleSwitchAccount(account.did)}
-                    className="ios-press-light flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    className="ios-press-light flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-asph-bg-hover"
                     style={{
                       backgroundColor: isActive
                         ? "rgba(var(--asph-primary-rgb), 0.1)"
@@ -179,13 +180,10 @@ export const AccountSwitcher: React.FC = () => {
               })}
             </div>
 
-            <div
-              className="border-t"
-              style={{ borderColor: "var(--asph-border-primary)" }}
-            >
+            <div className="divider-refined">
               <button
                 onClick={handleAddAccount}
-                className="flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                className="flex w-full items-center gap-3 px-3 py-2 transition-colors hover:bg-asph-bg-hover"
                 style={{ color: "var(--asph-text-primary)" }}
               >
                 <div

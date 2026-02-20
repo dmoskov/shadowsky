@@ -166,11 +166,32 @@
   --asph-yellow: #ffd600;
   --asph-yellow-light: #ffea00;
 
-  /* Shadows and effects - softer, more modern */
-  --asph-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
-  --asph-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.15);
-  --asph-shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.18);
-  --asph-glow: 0 0 24px rgba(255, 107, 157, 0.4);
+  /* Shadows and effects - layered, natural depth */
+  --asph-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
+  --asph-shadow-md:
+    0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 8px rgba(0, 0, 0, 0.08),
+    0 8px 16px rgba(0, 0, 0, 0.04);
+  --asph-shadow-lg:
+    0 4px 6px rgba(0, 0, 0, 0.02), 0 10px 20px rgba(0, 0, 0, 0.06),
+    0 24px 48px rgba(0, 0, 0, 0.08);
+  --asph-shadow-xl:
+    0 8px 16px rgba(0, 0, 0, 0.04), 0 24px 48px rgba(0, 0, 0, 0.08),
+    0 48px 96px rgba(0, 0, 0, 0.06);
+  --asph-glow:
+    0 0 20px rgba(255, 107, 157, 0.25), 0 0 40px rgba(255, 107, 157, 0.1);
+
+  /* Refined inner shadow for inset elements */
+  --asph-shadow-inner:
+    inset 0 1px 2px rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+
+  /* Subtle ring shadow for elevated interactive elements */
+  --asph-shadow-ring: 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --asph-shadow-ring-primary: 0 0 0 1px rgba(255, 107, 157, 0.3);
+
+  /* Typography refinements */
+  --asph-letter-spacing-tight: -0.015em;
+  --asph-letter-spacing-heading: -0.025em;
+  --asph-letter-spacing-wide: 0.025em;
 
   /* Accent backgrounds (10% opacity for backgrounds) */
   --asph-primary-10: rgba(255, 107, 157, 0.1);
@@ -252,11 +273,33 @@
   --asph-yellow: #ffd600;
   --asph-yellow-light: #ffea00;
 
-  /* Shadows and effects for dark theme - enhanced glow */
-  --asph-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.7);
-  --asph-shadow-md: 0 4px 8px rgba(0, 0, 0, 0.8);
-  --asph-shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.9);
-  --asph-glow: 0 0 30px rgba(255, 107, 157, 0.5);
+  /* Shadows and effects for dark theme - layered with subtle glow */
+  --asph-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --asph-shadow-md:
+    0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.25),
+    0 8px 16px rgba(0, 0, 0, 0.15);
+  --asph-shadow-lg:
+    0 4px 6px rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.3),
+    0 24px 48px rgba(0, 0, 0, 0.2);
+  --asph-shadow-xl:
+    0 8px 16px rgba(0, 0, 0, 0.25), 0 24px 48px rgba(0, 0, 0, 0.3),
+    0 48px 96px rgba(0, 0, 0, 0.2);
+  --asph-glow:
+    0 0 20px rgba(255, 107, 157, 0.3), 0 0 40px rgba(255, 107, 157, 0.15);
+
+  /* Dark inner shadow */
+  --asph-shadow-inner:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+
+  /* Dark ring shadow */
+  --asph-shadow-ring: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --asph-shadow-ring-primary: 0 0 0 1px rgba(255, 107, 157, 0.4);
+
+  /* Typography refinements */
+  --asph-letter-spacing-tight: -0.015em;
+  --asph-letter-spacing-heading: -0.025em;
+  --asph-letter-spacing-wide: 0.025em;
 
   /* Accent backgrounds - dark theme with more opacity */
   --asph-primary-10: rgba(255, 107, 157, 0.15);

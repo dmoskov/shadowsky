@@ -14,13 +14,6 @@ import {
 import { PostMenu } from "./PostMenu";
 import { SyncStatusBadge } from "./SyncStatusBadge";
 
-// Extracted constant styles to avoid creating new objects on every render
-const repostMenuStyle: React.CSSProperties = {
-  backgroundColor: "var(--asph-bg-secondary)",
-  borderColor: "var(--asph-border-primary)",
-  boxShadow: "var(--asph-shadow-lg)",
-};
-
 interface PostActionBarProps {
   post: AppBskyFeedDefs.PostView;
   onReply?: () => void;
@@ -257,16 +250,15 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
               <div
                 role="menu"
                 aria-label="Repost options"
-                className="animate-dropdown-in-left fixed z-[9999] w-40 rounded-lg border shadow-lg"
+                className="dropdown-refined animate-dropdown-in-left fixed z-[9999] w-40"
                 style={{
-                  ...repostMenuStyle,
                   top: `${menuPosition.top}px`,
                   left: `${menuPosition.left}px`,
                 }}
               >
                 <button
                   role="menuitem"
-                  className="ios-press-light flex min-h-[44px] w-full items-center gap-3 rounded-t-lg bg-transparent px-4 py-3 text-left text-sm text-asph-text-primary transition-all hover:bg-asph-bg-hover"
+                  className="ios-press-light flex min-h-[44px] w-full items-center gap-3 bg-transparent px-4 py-3 text-left text-sm text-asph-text-primary transition-all hover:bg-asph-bg-hover"
                   onClick={(e) => {
                     setRepostAnimating(true);
                     setTimeout(() => setRepostAnimating(false), 400);
@@ -279,7 +271,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
                 </button>
                 <button
                   role="menuitem"
-                  className="ios-press-light flex min-h-[44px] w-full items-center gap-3 rounded-b-lg bg-transparent px-4 py-3 text-left text-sm text-asph-text-primary transition-all hover:bg-asph-bg-hover"
+                  className="ios-press-light flex min-h-[44px] w-full items-center gap-3 bg-transparent px-4 py-3 text-left text-sm text-asph-text-primary transition-all hover:bg-asph-bg-hover"
                   onClick={(e) => {
                     handleAction(e, onQuote);
                     setShowRepostMenu(false);

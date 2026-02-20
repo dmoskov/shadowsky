@@ -124,14 +124,23 @@ const BskyUrlEmbed: React.FC<{
   if (loading) {
     return (
       <div
-        className="mt-2 rounded-lg border p-4"
-        style={{ borderColor: "var(--asph-border-primary)" }}
+        className="mt-2 rounded-xl p-4"
+        style={{
+          backgroundColor: "var(--asph-bg-tertiary)",
+          boxShadow: "var(--asph-shadow-ring)",
+        }}
       >
         <div
           className="flex items-center gap-2 text-sm"
           style={{ color: "var(--asph-text-secondary)" }}
         >
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500 dark:border-gray-600 dark:border-t-blue-400" />
+          <div
+            className="h-4 w-4 animate-spin rounded-full border-2"
+            style={{
+              borderColor: "var(--asph-border-secondary)",
+              borderTopColor: "var(--asph-primary)",
+            }}
+          />
           <span>Loading quoted post...</span>
         </div>
       </div>
@@ -143,8 +152,7 @@ const BskyUrlEmbed: React.FC<{
   const record = quotedPost.record as any;
   return (
     <div
-      className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
-      style={{ borderColor: "var(--asph-border-primary)" }}
+      className="embed-card-refined mt-2 cursor-pointer"
       onClick={(e) => {
         e.stopPropagation();
         if (onQuoteClick && quotedPost.uri) {
@@ -152,14 +160,7 @@ const BskyUrlEmbed: React.FC<{
         }
       }}
     >
-      <div
-        className="flex items-center gap-2 px-3 py-1.5 text-xs"
-        style={{
-          backgroundColor: "var(--asph-bg-tertiary)",
-          borderBottom: "1px solid var(--asph-border-primary)",
-          color: "var(--asph-text-secondary)",
-        }}
-      >
+      <div className="embed-card-header">
         <MessageCircle size={12} />
         <span>Quoted post</span>
       </div>
@@ -260,10 +261,11 @@ const ExternalLinkEmbed: React.FC<{
   if (loading) {
     return (
       <div
-        className="mt-2 flex items-center gap-2 rounded-lg border p-3 text-sm"
+        className="mt-2 flex items-center gap-2 rounded-xl p-3 text-sm"
         style={{
-          borderColor: "var(--asph-border-primary)",
+          backgroundColor: "var(--asph-bg-tertiary)",
           color: "var(--asph-text-secondary)",
+          boxShadow: "var(--asph-shadow-ring)",
         }}
       >
         <Loader size={14} className="animate-spin" />
@@ -290,8 +292,7 @@ const ExternalLinkEmbed: React.FC<{
 
   return (
     <div
-      className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
-      style={{ borderColor: "var(--asph-border-primary)" }}
+      className="embed-card-refined mt-2 cursor-pointer"
       onClick={handleClick}
     >
       {metadata.imageUrl && (
@@ -545,8 +546,9 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                   className={`group relative ${colSpan}`}
                 >
                   <div
-                    className="relative w-full cursor-pointer overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
+                    className="relative w-full cursor-pointer overflow-hidden rounded-xl"
                     style={{
+                      backgroundColor: "var(--asph-bg-tertiary)",
                       aspectRatio: imageAspectRatio,
                       maxHeight:
                         isThreeImageLayout && index === 0 ? "500px" : "350px",
@@ -667,10 +669,11 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
       if (recordData.$type === "app.bsky.embed.record#viewNotFound") {
         return (
           <div
-            className="mt-2 overflow-hidden rounded-lg border p-3 text-sm italic"
+            className="mt-2 overflow-hidden rounded-xl p-3 text-sm italic"
             style={{
-              borderColor: "var(--asph-border-primary)",
+              backgroundColor: "var(--asph-bg-tertiary)",
               color: "var(--asph-text-secondary)",
+              boxShadow: "var(--asph-shadow-ring)",
             }}
           >
             Post not found or deleted
@@ -681,10 +684,11 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
       if (recordData.$type === "app.bsky.embed.record#viewBlocked") {
         return (
           <div
-            className="mt-2 overflow-hidden rounded-lg border p-3 text-sm italic"
+            className="mt-2 overflow-hidden rounded-xl p-3 text-sm italic"
             style={{
-              borderColor: "var(--asph-border-primary)",
+              backgroundColor: "var(--asph-bg-tertiary)",
               color: "var(--asph-text-secondary)",
+              boxShadow: "var(--asph-shadow-ring)",
             }}
           >
             Post from blocked user
@@ -695,10 +699,11 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
       if (recordData.$type === "app.bsky.embed.record#viewDetached") {
         return (
           <div
-            className="mt-2 overflow-hidden rounded-lg border p-3 text-sm italic"
+            className="mt-2 overflow-hidden rounded-xl p-3 text-sm italic"
             style={{
-              borderColor: "var(--asph-border-primary)",
+              backgroundColor: "var(--asph-bg-tertiary)",
               color: "var(--asph-text-secondary)",
+              boxShadow: "var(--asph-shadow-ring)",
             }}
           >
             Post is no longer available
@@ -714,8 +719,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
         const packDescription = packRecord?.description || "";
         return (
           <div
-            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
-            style={{ borderColor: "var(--asph-border-primary)" }}
+            className="embed-card-refined mt-2 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               // Open the starter pack on bsky.app
@@ -731,14 +735,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               }
             }}
           >
-            <div
-              className="flex items-center gap-2 px-3 py-1.5 text-xs"
-              style={{
-                backgroundColor: "var(--asph-bg-tertiary)",
-                borderBottom: "1px solid var(--asph-border-primary)",
-                color: "var(--asph-text-secondary)",
-              }}
-            >
+            <div className="embed-card-header">
               <Users size={12} />
               <span>Starter Pack</span>
             </div>
@@ -793,8 +790,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
         const feedGen = recordData as any;
         return (
           <div
-            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
-            style={{ borderColor: "var(--asph-border-primary)" }}
+            className="embed-card-refined mt-2 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               // Open the feed on bsky.app
@@ -810,14 +806,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               }
             }}
           >
-            <div
-              className="flex items-center gap-2 px-3 py-1.5 text-xs"
-              style={{
-                backgroundColor: "var(--asph-bg-tertiary)",
-                borderBottom: "1px solid var(--asph-border-primary)",
-                color: "var(--asph-text-secondary)",
-              }}
-            >
+            <div className="embed-card-header">
               <Rss size={12} />
               <span>Feed</span>
             </div>
@@ -880,8 +869,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               : "List";
         return (
           <div
-            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
-            style={{ borderColor: "var(--asph-border-primary)" }}
+            className="embed-card-refined mt-2 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               if (listView.creator?.handle) {
@@ -896,14 +884,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               }
             }}
           >
-            <div
-              className="flex items-center gap-2 px-3 py-1.5 text-xs"
-              style={{
-                backgroundColor: "var(--asph-bg-tertiary)",
-                borderBottom: "1px solid var(--asph-border-primary)",
-                color: "var(--asph-text-secondary)",
-              }}
-            >
+            <div className="embed-card-header">
               <List size={12} />
               <span>{purposeLabel}</span>
             </div>
@@ -959,8 +940,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
         const labeler = recordData as any;
         return (
           <div
-            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
-            style={{ borderColor: "var(--asph-border-primary)" }}
+            className="embed-card-refined mt-2 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               if (labeler.creator?.handle) {
@@ -972,14 +952,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               }
             }}
           >
-            <div
-              className="flex items-center gap-2 px-3 py-1.5 text-xs"
-              style={{
-                backgroundColor: "var(--asph-bg-tertiary)",
-                borderBottom: "1px solid var(--asph-border-primary)",
-                color: "var(--asph-text-secondary)",
-              }}
-            >
+            <div className="embed-card-header">
               <Shield size={12} />
               <span>Labeler</span>
             </div>
@@ -1031,8 +1004,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
         const quotedPost = recordData;
         return (
           <div
-            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
-            style={{ borderColor: "var(--asph-border-primary)" }}
+            className="embed-card-refined mt-2 cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               if (onQuoteClick && quotedPost.uri) {
@@ -1040,14 +1012,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               }
             }}
           >
-            <div
-              className="flex items-center gap-2 px-3 py-1.5 text-xs"
-              style={{
-                backgroundColor: "var(--asph-bg-tertiary)",
-                borderBottom: "1px solid var(--asph-border-primary)",
-                color: "var(--asph-text-secondary)",
-              }}
-            >
+            <div className="embed-card-header">
               <MessageCircle size={12} />
               <span>Quoted post</span>
             </div>
@@ -1174,11 +1139,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
 
       return (
         <div
-          className="relative mt-2 cursor-pointer overflow-hidden rounded-lg border p-2.5 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/10"
-          style={{
-            borderColor: "var(--asph-border-primary)",
-            backgroundColor: "var(--asph-bg-primary)",
-          }}
+          className="embed-card-refined relative mt-2 cursor-pointer p-2.5"
           onClick={(e) => {
             e.stopPropagation();
             if (externalUri && isUriValid) {
@@ -1227,7 +1188,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
   return (
     <>
       <article
-        className={`post-renderer p-4 ${compact ? "compact" : ""} ${record?.reply?.parent ? "is-reply" : ""} ${onClick ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" : ""}`}
+        className={`post-renderer p-4 ${compact ? "compact" : ""} ${record?.reply?.parent ? "is-reply" : ""} ${onClick ? "post-hover-refined cursor-pointer" : ""}`}
         onClick={handlePostClick}
         aria-label={`Post by ${post.author.displayName || post.author.handle}`}
       >
@@ -1342,7 +1303,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               {onMenuClick && (
                 <button
                   onClick={onMenuClick}
-                  className="rounded-full p-1 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+                  className="rounded-full p-1 transition-colors hover:bg-asph-bg-hover"
                   aria-label="More options"
                   aria-haspopup="menu"
                 >

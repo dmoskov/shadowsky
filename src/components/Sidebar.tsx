@@ -112,9 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => onClose()}
                 className={({ isActive }) =>
                   `group relative flex min-h-[44px] items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} ios-press-light py-2.5 transition-all duration-200 ${
-                    isActive
-                      ? "scale-[1.02] text-white shadow-md"
-                      : "hover:scale-[1.02] hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    isActive ? "text-white" : "hover:bg-asph-bg-hover"
                   } `
                 }
                 style={({ isActive }) => ({
@@ -122,6 +120,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   backgroundColor: isActive
                     ? "var(--asph-primary)"
                     : "transparent",
+                  boxShadow: isActive
+                    ? "var(--asph-shadow-sm), inset 0 1px 0 rgba(255, 255, 255, 0.15)"
+                    : "none",
                 })}
                 title={isCollapsed ? item.label : undefined}
                 {...prefetchHandlers}
@@ -138,12 +139,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         className="animate-badge-in animate-badge-pulse absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full"
                         style={{
                           backgroundColor: "var(--asph-accent)",
+                          boxShadow: "0 0 0 2px var(--asph-bg-primary)",
                         }}
                       />
                     )}
                 </div>
                 {!isCollapsed && (
-                  <span className="font-medium transition-colors">
+                  <span
+                    className="font-medium transition-colors"
+                    style={{
+                      letterSpacing: "var(--asph-letter-spacing-tight)",
+                    }}
+                  >
                     {item.label}
                   </span>
                 )}
@@ -153,10 +160,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         {/* Divider */}
-        <div
-          className="mx-4 my-4 border-t"
-          style={{ borderColor: "var(--asph-border-primary)" }}
-        ></div>
+        <div className="divider-refined mx-4 my-4"></div>
 
         {/* External Links */}
         <div className={`space-y-1 ${isCollapsed ? "px-2" : "px-4"}`}>
@@ -164,7 +168,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             href="https://bsky.app"
             target="_blank"
             rel="noopener noreferrer"
-            className={`group flex min-h-[44px] items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 hover:bg-blue-100 dark:hover:bg-blue-900/20`}
+            className={`group flex min-h-[44px] items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} py-2.5 transition-all duration-200 hover:bg-asph-bg-hover`}
             style={{ color: "var(--asph-text-secondary)" }}
             title={isCollapsed ? "Open Bluesky" : undefined}
           >
@@ -181,16 +185,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {!isCollapsed && (
-          <div
-            className="absolute bottom-0 left-0 right-0 border-t p-6"
-            style={{ borderColor: "var(--asph-border-primary)" }}
-          >
+          <div className="absolute bottom-0 left-0 right-0 p-6">
+            <div className="divider-refined mb-4"></div>
             <div
               className="text-center text-xs"
               style={{ color: "var(--asph-text-tertiary)" }}
             >
-              <div className="asph-gradient-text mb-1 font-bold">Asphodel</div>
-              <div className="tracking-wide">Version 0.7.4</div>
+              <div className="text-gradient-refined mb-1 font-bold">
+                Asphodel
+              </div>
+              <div style={{ letterSpacing: "var(--asph-letter-spacing-wide)" }}>
+                Version 0.7.4
+              </div>
             </div>
           </div>
         )}

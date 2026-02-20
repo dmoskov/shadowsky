@@ -53,7 +53,16 @@ export default {
         "asph-sm": "var(--asph-shadow-sm)",
         "asph-md": "var(--asph-shadow-md)",
         "asph-lg": "var(--asph-shadow-lg)",
+        "asph-xl": "var(--asph-shadow-xl)",
         "asph-glow": "var(--asph-glow)",
+        "asph-inner": "var(--asph-shadow-inner)",
+        "asph-ring": "var(--asph-shadow-ring)",
+        "asph-ring-primary": "var(--asph-shadow-ring-primary)",
+      },
+      letterSpacing: {
+        "asph-tight": "var(--asph-letter-spacing-tight)",
+        "asph-heading": "var(--asph-letter-spacing-heading)",
+        "asph-wide": "var(--asph-letter-spacing-wide)",
       },
       animation: {
         // Existing animations
@@ -529,26 +538,33 @@ export default {
     // Custom component classes plugin
     function ({ addComponents }) {
       addComponents({
-        // Glass morphism effect with subtle gradient overlay
+        // Glass morphism effect with refined blur and subtle noise texture
         ".asph-glass": {
           background:
-            "linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.92) 100%)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          border: "1px solid rgba(0, 0, 0, 0.08)",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.03)",
+            "linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.88) 100%)",
+          backdropFilter: "blur(16px) saturate(1.8)",
+          WebkitBackdropFilter: "blur(16px) saturate(1.8)",
+          border: "1px solid rgba(0, 0, 0, 0.06)",
+          boxShadow:
+            "0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.02), inset 0 1px 0 rgba(255, 255, 255, 0.8)",
         },
         ".dark .asph-glass": {
           background:
-            "linear-gradient(180deg, rgba(17, 24, 39, 0.98) 0%, rgba(17, 24, 39, 0.92) 100%)",
-          border: "1px solid rgba(255, 255, 255, 0.12)",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3)",
+            "linear-gradient(180deg, rgba(17, 24, 39, 0.92) 0%, rgba(17, 24, 39, 0.85) 100%)",
+          backdropFilter: "blur(16px) saturate(1.5)",
+          WebkitBackdropFilter: "blur(16px) saturate(1.5)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          boxShadow:
+            "0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04)",
         },
         '[data-theme="dark"] .asph-glass': {
           background:
             "linear-gradient(180deg, rgba(17, 24, 39, 0.88) 0%, rgba(17, 24, 39, 0.82) 100%)",
-          border: "1px solid rgba(255, 255, 255, 0.12)",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3)",
+          backdropFilter: "blur(16px) saturate(1.5)",
+          WebkitBackdropFilter: "blur(16px) saturate(1.5)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          boxShadow:
+            "0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04)",
         },
         // Custom scrollbar
         ".asph-scrollbar": {
