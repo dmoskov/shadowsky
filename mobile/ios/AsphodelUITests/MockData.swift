@@ -7,7 +7,8 @@
 //
 
 import Foundation
-@testable import FeedBridge
+import ExpoSwiftUIFeed
+@testable import NativeFeedList
 
 // MARK: - Messages Mock Data
 
@@ -506,107 +507,391 @@ enum MockCompose {
     }
 }
 
-// MARK: - Rich Text / Facet Mock Data
+// MARK: - Feed Mock Data
 
-enum MockFacets {
+enum MockFeed {
 
-    // MARK: - Facet Builders
-
-    static func makeMentionFacet(
-        byteStart: Int,
-        byteEnd: Int,
-        did: String = "did:plc:alice123"
-    ) -> Facet {
-        Facet(
-            index: FacetIndex(byteStart: byteStart, byteEnd: byteEnd),
-            features: [.mention(FacetFeatureMention(type: "app.bsky.richtext.facet#mention", did: did))]
+    static func makePostAuthor(
+        did: String = "did:plc:author1",
+        handle: String = "alice.bsky.social",
+        displayName: String? = "Alice Johnson",
+        avatar: String? = nil
+    ) -> PostAuthor {
+        PostAuthor(
+            did: did,
+            handle: handle,
+            displayName: displayName,
+            avatar: avatar
         )
     }
 
-    static func makeLinkFacet(
-        byteStart: Int,
-        byteEnd: Int,
-        uri: String = "https://example.com"
-    ) -> Facet {
-        Facet(
-            index: FacetIndex(byteStart: byteStart, byteEnd: byteEnd),
-            features: [.link(FacetFeatureLink(type: "app.bsky.richtext.facet#link", uri: uri))]
+    static func makePostRecord(
+        text: String = "Hello world! This is a test post.",
+        facets: [PostFacet]? = nil,
+        createdAt: String = "2026-02-20T10:00:00.000Z",
+        embed: PostEmbedData? = nil
+    ) -> PostRecord {
+        PostRecord(
+            text: text,
+            facets: facets,
+            createdAt: createdAt,
+            embed: embed
         )
     }
 
-    static func makeHashtagFacet(
-        byteStart: Int,
-        byteEnd: Int,
-        tag: String = "bluesky"
-    ) -> Facet {
-        Facet(
-            index: FacetIndex(byteStart: byteStart, byteEnd: byteEnd),
-            features: [.tag(FacetFeatureTag(type: "app.bsky.richtext.facet#tag", tag: tag))]
+    static func makePostView(
+        uri: String = "at://did:plc:author1/app.bsky.feed.post/post1",
+        cid: String = "bafyrei-post1",
+        author: PostAuthor? = nil,
+        record: PostRecord? = nil,
+        indexedAt: String = "2026-02-20T10:00:00.000Z",
+        likeCount: Int = 0,
+        repostCount: Int = 0,
+        replyCount: Int = 0,
+        viewer: PostViewer? = nil,
+        labels: [ContentLabel]? = nil
+    ) -> PostView {
+        PostView(
+            uri: uri,
+            cid: cid,
+            author: author ?? makePostAuthor(),
+            record: record ?? makePostRecord(),
+            indexedAt: indexedAt,
+            likeCount: likeCount,
+            repostCount: repostCount,
+            replyCount: replyCount,
+            viewer: viewer,
+            labels: labels
         )
     }
 
-    // MARK: - Pre-built Scenarios
+    static func makeFeedViewPost(
+        post: PostView? = nil
+    ) -> FeedViewPost {
+        FeedViewPost(post: post ?? makePostView())
+    }
 
-    /// Plain text with no facets: "Hello, world!"
-    static let plainText = "Hello, world!"
-    static let plainTextFacets: [Facet] = []
+    /// A post with engagement counts for testing action bar display
+    static var postWithCounts: FeedViewPost {
+        makeFeedViewPost(post: makePostView(
+            uri: "at://did:plc:author1/app.bsky.feed.post/counted",
+            likeCount: 42,
+            repostCount: 7,
+            replyCount: 13
+        ))
+    }
 
-    /// Text with a single mention: "Hello @alice how are you?"
-    /// "@alice" is bytes 6..12
-    static let mentionText = "Hello @alice how are you?"
-    static let mentionFacets: [Facet] = [
-        makeMentionFacet(byteStart: 6, byteEnd: 12, did: "did:plc:alice123")
-    ]
+    /// A post that the current user has liked
+    static var likedPost: FeedViewPost {
+        makeFeedViewPost(post: makePostView(
+            uri: "at://did:plc:author1/app.bsky.feed.post/liked",
+            likeCount: 10,
+            viewer: PostViewer(like: "at://did:plc:me/app.bsky.feed.like/abc", repost: nil)
+        ))
+    }
 
-    /// Text with a single link: "Check out https://example.com today"
-    /// "https://example.com" is bytes 10..29
-    static let linkText = "Check out https://example.com today"
-    static let linkFacets: [Facet] = [
-        makeLinkFacet(byteStart: 10, byteEnd: 29, uri: "https://example.com")
-    ]
+    /// A post that the current user has reposted
+    static var repostedPost: FeedViewPost {
+        makeFeedViewPost(post: makePostView(
+            uri: "at://did:plc:author1/app.bsky.feed.post/reposted",
+            repostCount: 5,
+            viewer: PostViewer(like: nil, repost: "at://did:plc:me/app.bsky.feed.repost/abc")
+        ))
+    }
 
-    /// Text with a single hashtag: "I love #swiftui so much"
-    /// "#swiftui" is bytes 7..15
-    static let hashtagText = "I love #swiftui so much"
-    static let hashtagFacets: [Facet] = [
-        makeHashtagFacet(byteStart: 7, byteEnd: 15, tag: "swiftui")
-    ]
+    /// A post with an image embed
+    static var postWithImages: FeedViewPost {
+        makeFeedViewPost(post: makePostView(
+            uri: "at://did:plc:author1/app.bsky.feed.post/images",
+            record: makePostRecord(
+                text: "Check out these photos!",
+                embed: PostEmbedData(embedType: .images([
+                    ImageEmbedData(
+                        thumb: "https://example.com/thumb1.jpg",
+                        fullsize: "https://example.com/full1.jpg",
+                        alt: "A sunset",
+                        aspectRatio: 1.5
+                    ),
+                ]))
+            )
+        ))
+    }
 
-    /// Mixed content: "Hey @bob check https://news.com #trending today"
-    static let mixedText = "Hey @bob check https://news.com #trending today"
-    static let mixedFacets: [Facet] = [
-        makeMentionFacet(byteStart: 4, byteEnd: 8, did: "did:plc:bob456"),
-        makeLinkFacet(byteStart: 15, byteEnd: 31, uri: "https://news.com"),
-        makeHashtagFacet(byteStart: 32, byteEnd: 41, tag: "trending")
-    ]
+    /// A post with a quote embed
+    static var postWithQuote: FeedViewPost {
+        makeFeedViewPost(post: makePostView(
+            uri: "at://did:plc:author1/app.bsky.feed.post/quote",
+            record: makePostRecord(
+                text: "Great post!",
+                embed: PostEmbedData(embedType: .quote(QuoteEmbedData(
+                    uri: "at://did:plc:quoted/app.bsky.feed.post/orig",
+                    author: AuthorData(
+                        handle: "bob.bsky.social",
+                        displayName: "Bob Smith",
+                        avatar: nil
+                    ),
+                    text: "This is the quoted post.",
+                    createdAt: "2026-02-19T08:00:00.000Z"
+                )))
+            )
+        ))
+    }
 
-    /// Text with emoji before a mention (tests UTF-8 byte offset):
-    /// "Hello 👋 @alice check this 🔥"
-    /// 👋 is 4 bytes in UTF-8, so "@alice" starts at byte 11 (6 + 1 space + 4 emoji bytes)
-    static let emojiText = "Hello 👋 @alice check this 🔥"
-    static let emojiFacets: [Facet] = [
-        makeMentionFacet(byteStart: 11, byteEnd: 17, did: "did:plc:alice123")
-    ]
+    /// A post with an external link embed
+    static var postWithExternalLink: FeedViewPost {
+        makeFeedViewPost(post: makePostView(
+            uri: "at://did:plc:author1/app.bsky.feed.post/link",
+            record: makePostRecord(
+                text: "Check out this article",
+                embed: PostEmbedData(embedType: .external(ExternalLinkEmbedData(
+                    uri: "https://example.com/article",
+                    title: "An Example Article",
+                    description: "A fascinating read about testing.",
+                    thumb: nil
+                )))
+            )
+        ))
+    }
 
-    /// Multi-byte characters (CJK): "你好 @alice 世界"
-    /// 你 = 3 bytes, 好 = 3 bytes, space = 1 → "@alice" starts at byte 7
-    static let cjkText = "你好 @alice 世界"
-    static let cjkFacets: [Facet] = [
-        makeMentionFacet(byteStart: 7, byteEnd: 13, did: "did:plc:alice123")
-    ]
+    /// A post with a video embed
+    static var postWithVideo: FeedViewPost {
+        makeFeedViewPost(post: makePostView(
+            uri: "at://did:plc:author1/app.bsky.feed.post/video",
+            record: makePostRecord(
+                text: "Watch this video",
+                embed: PostEmbedData(embedType: .video(VideoEmbedData(
+                    playlist: "https://example.com/video.m3u8",
+                    thumbnail: "https://example.com/video-thumb.jpg",
+                    alt: "A fun video",
+                    aspectRatio: 1.78
+                )))
+            )
+        ))
+    }
 
-    /// Multiple consecutive mentions: "@alice @bob @carol"
-    static let consecutiveMentionsText = "@alice @bob @carol"
-    static let consecutiveMentionsFacets: [Facet] = [
-        makeMentionFacet(byteStart: 0, byteEnd: 6, did: "did:plc:alice123"),
-        makeMentionFacet(byteStart: 7, byteEnd: 11, did: "did:plc:bob456"),
-        makeMentionFacet(byteStart: 12, byteEnd: 18, did: "did:plc:carol789")
-    ]
+    /// A list of sample posts for feed list tests
+    static var samplePosts: [FeedViewPost] {
+        [
+            makeFeedViewPost(post: makePostView(
+                uri: "at://did:plc:a1/app.bsky.feed.post/p1",
+                author: makePostAuthor(did: "did:plc:a1", handle: "alice.bsky.social", displayName: "Alice Johnson"),
+                record: makePostRecord(text: "Hello from Alice!"),
+                likeCount: 10,
+                repostCount: 2,
+                replyCount: 3
+            )),
+            makeFeedViewPost(post: makePostView(
+                uri: "at://did:plc:a2/app.bsky.feed.post/p2",
+                author: makePostAuthor(did: "did:plc:a2", handle: "bob.bsky.social", displayName: "Bob Smith"),
+                record: makePostRecord(text: "Bob here with an update."),
+                likeCount: 5,
+                repostCount: 1,
+                replyCount: 0
+            )),
+            makeFeedViewPost(post: makePostView(
+                uri: "at://did:plc:a3/app.bsky.feed.post/p3",
+                author: makePostAuthor(did: "did:plc:a3", handle: "carol.bsky.social", displayName: "Carol Davis"),
+                record: makePostRecord(text: "Testing the feed!"),
+                likeCount: 0,
+                repostCount: 0,
+                replyCount: 1
+            )),
+        ]
+    }
+}
 
-    /// Link with display text (display text differs from URL):
-    /// "Visit my site today" where "my site" is the link text
-    static let linkDisplayText = "Visit my site today"
-    static let linkDisplayFacets: [Facet] = [
-        makeLinkFacet(byteStart: 6, byteEnd: 13, uri: "https://mywebsite.com")
-    ]
+// MARK: - Embed View Mock Data
+
+enum MockEmbed {
+
+    // MARK: - Image Embed Mocks
+
+    static func makeImage(
+        thumb: String = "https://example.com/thumb.jpg",
+        fullsize: String = "https://example.com/full.jpg",
+        alt: String? = nil,
+        aspectRatio: Double? = 1.5
+    ) -> ImageEmbedData {
+        ImageEmbedData(
+            thumb: thumb,
+            fullsize: fullsize,
+            alt: alt,
+            aspectRatio: aspectRatio
+        )
+    }
+
+    static var singleImage: [ImageEmbedData] {
+        [makeImage(alt: "A sunset photo", aspectRatio: 1.5)]
+    }
+
+    static var twoImages: [ImageEmbedData] {
+        [
+            makeImage(thumb: "https://example.com/thumb1.jpg", fullsize: "https://example.com/full1.jpg", alt: "First image"),
+            makeImage(thumb: "https://example.com/thumb2.jpg", fullsize: "https://example.com/full2.jpg", alt: nil),
+        ]
+    }
+
+    static var threeImages: [ImageEmbedData] {
+        [
+            makeImage(thumb: "https://example.com/thumb1.jpg", fullsize: "https://example.com/full1.jpg", alt: nil),
+            makeImage(thumb: "https://example.com/thumb2.jpg", fullsize: "https://example.com/full2.jpg", alt: nil),
+            makeImage(thumb: "https://example.com/thumb3.jpg", fullsize: "https://example.com/full3.jpg", alt: "Third image"),
+        ]
+    }
+
+    static var fourImages: [ImageEmbedData] {
+        [
+            makeImage(thumb: "https://example.com/thumb1.jpg", fullsize: "https://example.com/full1.jpg"),
+            makeImage(thumb: "https://example.com/thumb2.jpg", fullsize: "https://example.com/full2.jpg"),
+            makeImage(thumb: "https://example.com/thumb3.jpg", fullsize: "https://example.com/full3.jpg"),
+            makeImage(thumb: "https://example.com/thumb4.jpg", fullsize: "https://example.com/full4.jpg"),
+        ]
+    }
+
+    // MARK: - Video Embed Mocks
+
+    static func makeVideo(
+        playlist: String = "https://example.com/video.m3u8",
+        thumbnail: String? = "https://example.com/video-thumb.jpg",
+        alt: String? = nil,
+        aspectRatio: Double? = 1.78
+    ) -> VideoEmbedData {
+        VideoEmbedData(
+            playlist: playlist,
+            thumbnail: thumbnail,
+            alt: alt,
+            aspectRatio: aspectRatio
+        )
+    }
+
+    static var videoWithThumbnail: VideoEmbedData {
+        makeVideo(thumbnail: "https://example.com/video-thumb.jpg", alt: "Demo video")
+    }
+
+    static var videoWithoutThumbnail: VideoEmbedData {
+        makeVideo(thumbnail: nil, alt: nil)
+    }
+
+    // MARK: - Quote Embed Mocks
+
+    static func makeAuthor(
+        handle: String = "alice.bsky.social",
+        displayName: String? = "Alice Johnson",
+        avatar: String? = nil
+    ) -> AuthorData {
+        AuthorData(handle: handle, displayName: displayName, avatar: avatar)
+    }
+
+    static func makeQuote(
+        uri: String = "at://did:plc:quoted/app.bsky.feed.post/orig",
+        author: AuthorData? = nil,
+        text: String? = "This is the quoted post content.",
+        createdAt: String? = "2026-02-19T08:00:00.000Z"
+    ) -> QuoteEmbedData {
+        QuoteEmbedData(
+            uri: uri,
+            author: author ?? makeAuthor(),
+            text: text,
+            createdAt: createdAt
+        )
+    }
+
+    static var validQuote: QuoteEmbedData {
+        makeQuote(
+            author: makeAuthor(
+                handle: "bob.bsky.social",
+                displayName: "Bob Smith",
+                avatar: "https://example.com/avatar.jpg"
+            ),
+            text: "This is a great post that I want to share with everyone."
+        )
+    }
+
+    static var quoteWithoutAvatar: QuoteEmbedData {
+        makeQuote(
+            author: makeAuthor(handle: "carol.bsky.social", displayName: nil, avatar: nil),
+            text: "Short quote."
+        )
+    }
+
+    // MARK: - External Link Embed Mocks
+
+    static func makeExternalLink(
+        uri: String = "https://example.com/article",
+        title: String? = "An Interesting Article",
+        description: String? = "A detailed description of this article.",
+        thumb: String? = "https://example.com/thumb.jpg"
+    ) -> ExternalLinkEmbedData {
+        ExternalLinkEmbedData(
+            uri: uri,
+            title: title,
+            description: description,
+            thumb: thumb
+        )
+    }
+
+    static var linkWithThumbnail: ExternalLinkEmbedData {
+        makeExternalLink(
+            uri: "https://www.news.com/story",
+            title: "Breaking News Story",
+            description: "Latest updates on the developing situation.",
+            thumb: "https://example.com/news-thumb.jpg"
+        )
+    }
+
+    static var linkWithoutThumbnail: ExternalLinkEmbedData {
+        makeExternalLink(
+            uri: "https://blog.example.com/post",
+            title: "Blog Post Title",
+            description: "A blog post description.",
+            thumb: nil
+        )
+    }
+
+    static var linkMinimal: ExternalLinkEmbedData {
+        makeExternalLink(
+            uri: "https://example.com",
+            title: nil,
+            description: nil,
+            thumb: nil
+        )
+    }
+
+    static var linkWithLongTitle: ExternalLinkEmbedData {
+        makeExternalLink(
+            uri: "https://example.com/long",
+            title: "This is a very long article title that should be truncated when displayed because it exceeds the normal display width for link cards in the feed",
+            description: "This is also a very long description that provides extensive detail about the content of the article and should also be truncated after two lines.",
+            thumb: "https://example.com/thumb.jpg"
+        )
+    }
+
+    // MARK: - PostEmbed Mocks
+
+    static var imagePostEmbed: PostEmbedData {
+        PostEmbedData(embedType: .images(singleImage))
+    }
+
+    static var videoPostEmbed: PostEmbedData {
+        PostEmbedData(embedType: .video(videoWithThumbnail))
+    }
+
+    static var quotePostEmbed: PostEmbedData {
+        PostEmbedData(embedType: .quote(validQuote))
+    }
+
+    static var externalPostEmbed: PostEmbedData {
+        PostEmbedData(embedType: .external(linkWithThumbnail))
+    }
+
+    static var recordWithMediaEmbed: PostEmbedData {
+        PostEmbedData(embedType: .recordWithMedia(
+            media: .images(singleImage),
+            record: validQuote
+        ))
+    }
+
+    static var nilQuotePostEmbed: PostEmbedData {
+        PostEmbedData(embedType: .quote(nil))
+    }
 }
