@@ -1,6 +1,6 @@
-import {getAtProtoClient} from './client';
-import {AppBskyFeedDefs, AppBskyFeedDefs as FeedDefs} from '@atproto/api';
-import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
+import { AppBskyFeedDefs, AppBskyFeedDefs as FeedDefs } from "@atproto/api";
+import { ATProtoEndpointType, rateLimited } from "../rate-limiter";
+import { getAtProtoClient } from "./client";
 
 export interface FeedOptions {
   limit?: number;
@@ -25,121 +25,117 @@ export interface FeedResponse {
 /**
  * Fetch the user's timeline feed
  */
-export async function getTimeline(options: FeedOptions = {}): Promise<FeedResponse> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+export async function getTimeline(
+  options: FeedOptions = {},
+): Promise<FeedResponse> {
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      const response = await agent.getTimeline({
-        limit: options.limit || 50,
-        cursor: options.cursor,
-      });
+    const response = await agent.getTimeline({
+      limit: options.limit || 50,
+      cursor: options.cursor,
+    });
 
-      return {
-        feed: response.data.feed,
-        cursor: response.data.cursor,
-      };
-    },
-    ATProtoEndpointType.FEED
-  );
+    return {
+      feed: response.data.feed,
+      cursor: response.data.cursor,
+    };
+  }, ATProtoEndpointType.FEED);
 }
 
 /**
  * Fetch a custom feed by URI
  */
-export async function getFeed(feedUri: string, options: FeedOptions = {}): Promise<FeedResponse> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+export async function getFeed(
+  feedUri: string,
+  options: FeedOptions = {},
+): Promise<FeedResponse> {
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      const response = await agent.app.bsky.feed.getFeed({
-        feed: feedUri,
-        limit: options.limit || 50,
-        cursor: options.cursor,
-      });
+    const response = await agent.app.bsky.feed.getFeed({
+      feed: feedUri,
+      limit: options.limit || 50,
+      cursor: options.cursor,
+    });
 
-      return {
-        feed: response.data.feed,
-        cursor: response.data.cursor,
-      };
-    },
-    ATProtoEndpointType.FEED
-  );
+    return {
+      feed: response.data.feed,
+      cursor: response.data.cursor,
+    };
+  }, ATProtoEndpointType.FEED);
 }
 
 /**
  * Fetch author feed (posts from a specific user)
  */
-export async function getAuthorFeed(actor: string, options: AuthorFeedOptions = {}): Promise<FeedResponse> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+export async function getAuthorFeed(
+  actor: string,
+  options: AuthorFeedOptions = {},
+): Promise<FeedResponse> {
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      const response = await agent.getAuthorFeed({
-        actor,
-        limit: options.limit || 50,
-        cursor: options.cursor,
-        filter: options.filter,
-      });
+    const response = await agent.getAuthorFeed({
+      actor,
+      limit: options.limit || 50,
+      cursor: options.cursor,
+      filter: options.filter,
+    });
 
-      return {
-        feed: response.data.feed,
-        cursor: response.data.cursor,
-      };
-    },
-    ATProtoEndpointType.FEED
-  );
+    return {
+      feed: response.data.feed,
+      cursor: response.data.cursor,
+    };
+  }, ATProtoEndpointType.FEED);
 }
 
 /**
  * Fetch likes for a specific user
  */
-export async function getActorLikes(actor: string, options: FeedOptions = {}): Promise<FeedResponse> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+export async function getActorLikes(
+  actor: string,
+  options: FeedOptions = {},
+): Promise<FeedResponse> {
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      const response = await agent.getActorLikes({
-        actor,
-        limit: options.limit || 50,
-        cursor: options.cursor,
-      });
+    const response = await agent.getActorLikes({
+      actor,
+      limit: options.limit || 50,
+      cursor: options.cursor,
+    });
 
-      return {
-        feed: response.data.feed,
-        cursor: response.data.cursor,
-      };
-    },
-    ATProtoEndpointType.FEED
-  );
+    return {
+      feed: response.data.feed,
+      cursor: response.data.cursor,
+    };
+  }, ATProtoEndpointType.FEED);
 }
 
 /**
  * Get a single post thread with replies
  */
 export async function getPostThread(uri: string, depth: number = 6) {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      const response = await agent.getPostThread({
-        uri,
-        depth,
-      });
+    const response = await agent.getPostThread({
+      uri,
+      depth,
+    });
 
-      return response.data.thread;
-    },
-    ATProtoEndpointType.FEED
-  );
+    return response.data.thread;
+  }, ATProtoEndpointType.FEED);
 }
 
 export interface SearchPostsOptions extends FeedOptions {
-  sort?: 'top' | 'latest';
+  sort?: "top" | "latest";
   since?: string;
   until?: string;
   mentions?: string;
@@ -153,39 +149,39 @@ export interface SearchPostsOptions extends FeedOptions {
 /**
  * Search posts with filters
  */
-export async function searchPosts(query: string, options: SearchPostsOptions = {}): Promise<FeedResponse> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+export async function searchPosts(
+  query: string,
+  options: SearchPostsOptions = {},
+): Promise<FeedResponse> {
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      const response = await agent.app.bsky.feed.searchPosts({
-        q: query,
-        limit: options.limit || 50,
-        cursor: options.cursor,
-        sort: options.sort,
-        since: options.since,
-        until: options.until,
-        mentions: options.mentions,
-        author: options.author,
-        lang: options.lang,
-        domain: options.domain,
-        url: options.url,
-        tag: options.tag,
-      });
+    const response = await agent.app.bsky.feed.searchPosts({
+      q: query,
+      limit: options.limit || 50,
+      cursor: options.cursor,
+      sort: options.sort,
+      since: options.since,
+      until: options.until,
+      mentions: options.mentions,
+      author: options.author,
+      lang: options.lang,
+      domain: options.domain,
+      url: options.url,
+      tag: options.tag,
+    });
 
-      return {
-        feed: response.data.posts.map((post) => ({
-          post,
-          reply: undefined,
-          reason: undefined,
-          feedContext: undefined,
-        })) as AppBskyFeedDefs.FeedViewPost[],
-        cursor: response.data.cursor,
-      };
-    },
-    ATProtoEndpointType.FEED
-  );
+    return {
+      feed: response.data.posts.map((post) => ({
+        post,
+        reply: undefined,
+        reason: undefined,
+        feedContext: undefined,
+      })) as AppBskyFeedDefs.FeedViewPost[],
+      cursor: response.data.cursor,
+    };
+  }, ATProtoEndpointType.FEED);
 }
 
 export interface FeedGeneratorResponse {
@@ -196,47 +192,45 @@ export interface FeedGeneratorResponse {
 /**
  * Get popular feed generators
  */
-export async function getPopularFeedGenerators(options: FeedOptions = {}): Promise<FeedGeneratorResponse> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+export async function getPopularFeedGenerators(
+  options: FeedOptions = {},
+): Promise<FeedGeneratorResponse> {
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      const response = await agent.app.bsky.unspecced.getPopularFeedGenerators({
-        limit: options.limit || 50,
-        cursor: options.cursor,
-      });
+    const response = await agent.app.bsky.unspecced.getPopularFeedGenerators({
+      limit: options.limit || 50,
+      cursor: options.cursor,
+    });
 
-      return {
-        feeds: response.data.feeds,
-        cursor: response.data.cursor,
-      };
-    },
-    ATProtoEndpointType.FEED
-  );
+    return {
+      feeds: response.data.feeds,
+      cursor: response.data.cursor,
+    };
+  }, ATProtoEndpointType.FEED);
 }
 
 /**
  * Get suggested feed generators for the current user
  */
-export async function getSuggestedFeeds(options: FeedOptions = {}): Promise<FeedGeneratorResponse> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+export async function getSuggestedFeeds(
+  options: FeedOptions = {},
+): Promise<FeedGeneratorResponse> {
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      const response = await agent.app.bsky.feed.getSuggestedFeeds({
-        limit: options.limit || 50,
-        cursor: options.cursor,
-      });
+    const response = await agent.app.bsky.feed.getSuggestedFeeds({
+      limit: options.limit || 50,
+      cursor: options.cursor,
+    });
 
-      return {
-        feeds: response.data.feeds,
-        cursor: response.data.cursor,
-      };
-    },
-    ATProtoEndpointType.FEED
-  );
+    return {
+      feeds: response.data.feeds,
+      cursor: response.data.cursor,
+    };
+  }, ATProtoEndpointType.FEED);
 }
 
 /**
@@ -244,67 +238,42 @@ export async function getSuggestedFeeds(options: FeedOptions = {}): Promise<Feed
  * Note: AT Protocol doesn't have a native search endpoint for feed generators yet,
  * so we fetch popular feeds and filter them client-side
  */
-export async function searchFeedGenerators(query: string, options: FeedOptions = {}): Promise<FeedGeneratorResponse> {
-  if (!query || query.trim() === '') {
-    return {feeds: [], cursor: undefined};
+export async function searchFeedGenerators(
+  query: string,
+  options: FeedOptions = {},
+): Promise<FeedGeneratorResponse> {
+  if (!query || query.trim() === "") {
+    return { feeds: [], cursor: undefined };
   }
 
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      // Fetch popular feeds and filter client-side
-      const response = await agent.app.bsky.unspecced.getPopularFeedGenerators({
-        limit: 100, // Fetch more to have better search results
-        cursor: options.cursor,
-      });
+    // Fetch popular feeds and filter client-side
+    const response = await agent.app.bsky.unspecced.getPopularFeedGenerators({
+      limit: 100, // Fetch more to have better search results
+      cursor: options.cursor,
+    });
 
-      const searchLower = query.toLowerCase().trim();
-      const filteredFeeds = response.data.feeds.filter((feed) => {
-        const displayName = feed.displayName?.toLowerCase() || '';
-        const description = feed.description?.toLowerCase() || '';
-        const creatorHandle = feed.creator.handle?.toLowerCase() || '';
+    const searchLower = query.toLowerCase().trim();
+    const filteredFeeds = response.data.feeds.filter((feed) => {
+      const displayName = feed.displayName?.toLowerCase() || "";
+      const description = feed.description?.toLowerCase() || "";
+      const creatorHandle = feed.creator.handle?.toLowerCase() || "";
 
-        return (
-          displayName.includes(searchLower) ||
-          description.includes(searchLower) ||
-          creatorHandle.includes(searchLower)
-        );
-      });
+      return (
+        displayName.includes(searchLower) ||
+        description.includes(searchLower) ||
+        creatorHandle.includes(searchLower)
+      );
+    });
 
-      return {
-        feeds: filteredFeeds,
-        cursor: response.data.cursor,
-      };
-    },
-    ATProtoEndpointType.FEED
-  );
-}
-
-/**
- * Extract saved feed URIs from preferences, supporting both v1 and v2 formats.
- * v1: savedFeedsPref { saved: string[], pinned: string[] }
- * v2: savedFeedsPrefV2 { items: Array<{ type: string, value: string, pinned: boolean }> }
- */
-function extractSavedFeedUris(preferences: any[]): string[] {
-  // Try v2 format first (newer accounts)
-  const v2Pref = preferences.find(
-    (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPrefV2'
-  ) as {items?: Array<{type: string; value: string; pinned: boolean}>} | undefined;
-
-  if (v2Pref?.items && v2Pref.items.length > 0) {
-    return v2Pref.items
-      .filter((item) => item.type === 'feed')
-      .map((item) => item.value);
-  }
-
-  // Fall back to v1 format
-  const v1Pref = preferences.find(
-    (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
-  ) as {saved?: string[]; pinned?: string[]} | undefined;
-
-  return v1Pref?.saved || [];
+    return {
+      feeds: filteredFeeds,
+      cursor: response.data.cursor,
+    };
+  }, ATProtoEndpointType.FEED);
 }
 
 /**
@@ -313,297 +282,308 @@ function extractSavedFeedUris(preferences: any[]): string[] {
 function extractPinnedFeedUris(preferences: any[]): string[] {
   // Try v2 format first
   const v2Pref = preferences.find(
-    (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPrefV2'
-  ) as {items?: Array<{type: string; value: string; pinned: boolean}>} | undefined;
+    (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPrefV2",
+  ) as
+    | { items?: Array<{ type: string; value: string; pinned: boolean }> }
+    | undefined;
 
   if (v2Pref?.items && v2Pref.items.length > 0) {
     return v2Pref.items
-      .filter((item) => item.type === 'feed' && item.pinned)
+      .filter((item) => item.type === "feed" && item.pinned)
       .map((item) => item.value);
   }
 
   // Fall back to v1 format
   const v1Pref = preferences.find(
-    (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
-  ) as {saved?: string[]; pinned?: string[]} | undefined;
+    (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPref",
+  ) as { saved?: string[]; pinned?: string[] } | undefined;
 
   return v1Pref?.pinned || [];
 }
 
 /**
- * Get the current user's saved feeds (feed preferences)
+ * Get the current user's pinned feeds in pinned order.
+ * These are the feeds shown in the home screen feed bar.
  */
 export async function getSavedFeeds(): Promise<FeedDefs.GeneratorView[]> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      const response = await agent.app.bsky.actor.getPreferences();
-      const savedUris = extractSavedFeedUris(response.data.preferences);
+    const response = await agent.app.bsky.actor.getPreferences();
+    const pinnedUris = extractPinnedFeedUris(response.data.preferences);
 
-      if (savedUris.length === 0) {
-        return [];
-      }
+    if (pinnedUris.length === 0) {
+      return [];
+    }
 
-      // Get feed generator info for all saved feeds
-      const feedsResponse = await agent.app.bsky.feed.getFeedGenerators({
-        feeds: savedUris,
-      });
+    // Get feed generator info for pinned feeds
+    const feedsResponse = await agent.app.bsky.feed.getFeedGenerators({
+      feeds: pinnedUris,
+    });
 
-      return feedsResponse.data.feeds;
-    },
-    ATProtoEndpointType.FEED
-  );
+    // Reorder to match pinned array order (API doesn't guarantee order)
+    const feedMap = new Map(feedsResponse.data.feeds.map((f) => [f.uri, f]));
+    return pinnedUris
+      .map((uri) => feedMap.get(uri))
+      .filter((f): f is FeedDefs.GeneratorView => f != null);
+  }, ATProtoEndpointType.FEED);
 }
 
 /**
  * Save a feed to the user's preferences
  */
 export async function saveFeed(feedUri: string): Promise<void> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      // Get current preferences
-      const response = await agent.app.bsky.actor.getPreferences();
-      const preferences = response.data.preferences;
+    // Get current preferences
+    const response = await agent.app.bsky.actor.getPreferences();
+    const preferences = response.data.preferences;
 
-      // Find saved feeds preference
-      const savedFeedsIndex = preferences.findIndex(
-        (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
-      );
+    // Find saved feeds preference
+    const savedFeedsIndex = preferences.findIndex(
+      (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPref",
+    );
 
-      let savedFeeds: string[] = [];
-      let pinnedFeeds: string[] = [];
+    let savedFeeds: string[] = [];
+    let pinnedFeeds: string[] = [];
 
+    if (savedFeedsIndex >= 0) {
+      const savedFeedsPref = preferences[savedFeedsIndex] as {
+        saved?: string[];
+        pinned?: string[];
+      };
+      savedFeeds = savedFeedsPref.saved || [];
+      pinnedFeeds = savedFeedsPref.pinned || [];
+    }
+
+    // Add feed if not already saved
+    if (!savedFeeds.includes(feedUri)) {
+      savedFeeds.push(feedUri);
+
+      // Update preferences
+      const updatedPreferences = [...preferences];
       if (savedFeedsIndex >= 0) {
-        const savedFeedsPref = preferences[savedFeedsIndex] as {saved?: string[]; pinned?: string[]};
-        savedFeeds = savedFeedsPref.saved || [];
-        pinnedFeeds = savedFeedsPref.pinned || [];
+        updatedPreferences[savedFeedsIndex] = {
+          $type: "app.bsky.actor.defs#savedFeedsPref",
+          saved: savedFeeds,
+          pinned: pinnedFeeds,
+        };
+      } else {
+        updatedPreferences.push({
+          $type: "app.bsky.actor.defs#savedFeedsPref",
+          saved: savedFeeds,
+          pinned: pinnedFeeds,
+        });
       }
 
-      // Add feed if not already saved
-      if (!savedFeeds.includes(feedUri)) {
-        savedFeeds.push(feedUri);
-
-        // Update preferences
-        const updatedPreferences = [...preferences];
-        if (savedFeedsIndex >= 0) {
-          updatedPreferences[savedFeedsIndex] = {
-            $type: 'app.bsky.actor.defs#savedFeedsPref',
-            saved: savedFeeds,
-            pinned: pinnedFeeds,
-          };
-        } else {
-          updatedPreferences.push({
-            $type: 'app.bsky.actor.defs#savedFeedsPref',
-            saved: savedFeeds,
-            pinned: pinnedFeeds,
-          });
-        }
-
-        await agent.app.bsky.actor.putPreferences({preferences: updatedPreferences});
-      }
-    },
-    ATProtoEndpointType.FEED
-  );
+      await agent.app.bsky.actor.putPreferences({
+        preferences: updatedPreferences,
+      });
+    }
+  }, ATProtoEndpointType.FEED);
 }
 
 /**
  * Remove a feed from the user's preferences
  */
 export async function unsaveFeed(feedUri: string): Promise<void> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      // Get current preferences
-      const response = await agent.app.bsky.actor.getPreferences();
-      const preferences = response.data.preferences;
+    // Get current preferences
+    const response = await agent.app.bsky.actor.getPreferences();
+    const preferences = response.data.preferences;
 
-      // Find saved feeds preference
-      const savedFeedsIndex = preferences.findIndex(
-        (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
-      );
+    // Find saved feeds preference
+    const savedFeedsIndex = preferences.findIndex(
+      (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPref",
+    );
 
-      if (savedFeedsIndex >= 0) {
-        const savedFeedsPref = preferences[savedFeedsIndex] as {saved?: string[]; pinned?: string[]};
-        const savedFeeds = savedFeedsPref.saved || [];
-        const pinnedFeeds = savedFeedsPref.pinned || [];
+    if (savedFeedsIndex >= 0) {
+      const savedFeedsPref = preferences[savedFeedsIndex] as {
+        saved?: string[];
+        pinned?: string[];
+      };
+      const savedFeeds = savedFeedsPref.saved || [];
+      const pinnedFeeds = savedFeedsPref.pinned || [];
 
-        // Remove feed from saved and pinned
-        const updatedSavedFeeds = savedFeeds.filter((uri) => uri !== feedUri);
-        const updatedPinnedFeeds = pinnedFeeds.filter((uri) => uri !== feedUri);
+      // Remove feed from saved and pinned
+      const updatedSavedFeeds = savedFeeds.filter((uri) => uri !== feedUri);
+      const updatedPinnedFeeds = pinnedFeeds.filter((uri) => uri !== feedUri);
 
-        // Update preferences
-        const updatedPreferences = [...preferences];
-        updatedPreferences[savedFeedsIndex] = {
-          $type: 'app.bsky.actor.defs#savedFeedsPref',
-          saved: updatedSavedFeeds,
-          pinned: updatedPinnedFeeds,
-        };
+      // Update preferences
+      const updatedPreferences = [...preferences];
+      updatedPreferences[savedFeedsIndex] = {
+        $type: "app.bsky.actor.defs#savedFeedsPref",
+        saved: updatedSavedFeeds,
+        pinned: updatedPinnedFeeds,
+      };
 
-        await agent.app.bsky.actor.putPreferences({preferences: updatedPreferences});
-      }
-    },
-    ATProtoEndpointType.FEED
-  );
+      await agent.app.bsky.actor.putPreferences({
+        preferences: updatedPreferences,
+      });
+    }
+  }, ATProtoEndpointType.FEED);
 }
 
 /**
  * Pin a feed to the home screen
  */
 export async function pinFeed(feedUri: string): Promise<void> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      // Get current preferences
-      const response = await agent.app.bsky.actor.getPreferences();
-      const preferences = response.data.preferences;
+    // Get current preferences
+    const response = await agent.app.bsky.actor.getPreferences();
+    const preferences = response.data.preferences;
 
-      // Find saved feeds preference
-      const savedFeedsIndex = preferences.findIndex(
-        (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
-      );
+    // Find saved feeds preference
+    const savedFeedsIndex = preferences.findIndex(
+      (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPref",
+    );
 
-      let savedFeeds: string[] = [];
-      let pinnedFeeds: string[] = [];
+    let savedFeeds: string[] = [];
+    let pinnedFeeds: string[] = [];
 
+    if (savedFeedsIndex >= 0) {
+      const savedFeedsPref = preferences[savedFeedsIndex] as {
+        saved?: string[];
+        pinned?: string[];
+      };
+      savedFeeds = savedFeedsPref.saved || [];
+      pinnedFeeds = savedFeedsPref.pinned || [];
+    }
+
+    // Add feed to pinned if not already pinned
+    if (!pinnedFeeds.includes(feedUri)) {
+      pinnedFeeds.push(feedUri);
+
+      // Also ensure it's saved
+      if (!savedFeeds.includes(feedUri)) {
+        savedFeeds.push(feedUri);
+      }
+
+      // Update preferences
+      const updatedPreferences = [...preferences];
       if (savedFeedsIndex >= 0) {
-        const savedFeedsPref = preferences[savedFeedsIndex] as {saved?: string[]; pinned?: string[]};
-        savedFeeds = savedFeedsPref.saved || [];
-        pinnedFeeds = savedFeedsPref.pinned || [];
+        updatedPreferences[savedFeedsIndex] = {
+          $type: "app.bsky.actor.defs#savedFeedsPref",
+          saved: savedFeeds,
+          pinned: pinnedFeeds,
+        };
+      } else {
+        updatedPreferences.push({
+          $type: "app.bsky.actor.defs#savedFeedsPref",
+          saved: savedFeeds,
+          pinned: pinnedFeeds,
+        });
       }
 
-      // Add feed to pinned if not already pinned
-      if (!pinnedFeeds.includes(feedUri)) {
-        pinnedFeeds.push(feedUri);
-
-        // Also ensure it's saved
-        if (!savedFeeds.includes(feedUri)) {
-          savedFeeds.push(feedUri);
-        }
-
-        // Update preferences
-        const updatedPreferences = [...preferences];
-        if (savedFeedsIndex >= 0) {
-          updatedPreferences[savedFeedsIndex] = {
-            $type: 'app.bsky.actor.defs#savedFeedsPref',
-            saved: savedFeeds,
-            pinned: pinnedFeeds,
-          };
-        } else {
-          updatedPreferences.push({
-            $type: 'app.bsky.actor.defs#savedFeedsPref',
-            saved: savedFeeds,
-            pinned: pinnedFeeds,
-          });
-        }
-
-        await agent.app.bsky.actor.putPreferences({preferences: updatedPreferences});
-      }
-    },
-    ATProtoEndpointType.FEED
-  );
+      await agent.app.bsky.actor.putPreferences({
+        preferences: updatedPreferences,
+      });
+    }
+  }, ATProtoEndpointType.FEED);
 }
 
 /**
  * Unpin a feed from the home screen
  */
 export async function unpinFeed(feedUri: string): Promise<void> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      // Get current preferences
-      const response = await agent.app.bsky.actor.getPreferences();
-      const preferences = response.data.preferences;
+    // Get current preferences
+    const response = await agent.app.bsky.actor.getPreferences();
+    const preferences = response.data.preferences;
 
-      // Find saved feeds preference
-      const savedFeedsIndex = preferences.findIndex(
-        (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
-      );
+    // Find saved feeds preference
+    const savedFeedsIndex = preferences.findIndex(
+      (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPref",
+    );
 
-      if (savedFeedsIndex >= 0) {
-        const savedFeedsPref = preferences[savedFeedsIndex] as {saved?: string[]; pinned?: string[]};
-        const savedFeeds = savedFeedsPref.saved || [];
-        const pinnedFeeds = savedFeedsPref.pinned || [];
+    if (savedFeedsIndex >= 0) {
+      const savedFeedsPref = preferences[savedFeedsIndex] as {
+        saved?: string[];
+        pinned?: string[];
+      };
+      const savedFeeds = savedFeedsPref.saved || [];
+      const pinnedFeeds = savedFeedsPref.pinned || [];
 
-        // Remove feed from pinned
-        const updatedPinnedFeeds = pinnedFeeds.filter((uri) => uri !== feedUri);
+      // Remove feed from pinned
+      const updatedPinnedFeeds = pinnedFeeds.filter((uri) => uri !== feedUri);
 
-        // Update preferences
-        const updatedPreferences = [...preferences];
-        updatedPreferences[savedFeedsIndex] = {
-          $type: 'app.bsky.actor.defs#savedFeedsPref',
-          saved: savedFeeds,
-          pinned: updatedPinnedFeeds,
-        };
+      // Update preferences
+      const updatedPreferences = [...preferences];
+      updatedPreferences[savedFeedsIndex] = {
+        $type: "app.bsky.actor.defs#savedFeedsPref",
+        saved: savedFeeds,
+        pinned: updatedPinnedFeeds,
+      };
 
-        await agent.app.bsky.actor.putPreferences({preferences: updatedPreferences});
-      }
-    },
-    ATProtoEndpointType.FEED
-  );
+      await agent.app.bsky.actor.putPreferences({
+        preferences: updatedPreferences,
+      });
+    }
+  }, ATProtoEndpointType.FEED);
 }
 
 /**
  * Get the pinned feeds for the current user
  */
 export async function getPinnedFeeds(): Promise<string[]> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      const response = await agent.app.bsky.actor.getPreferences();
-      return extractPinnedFeedUris(response.data.preferences);
-    },
-    ATProtoEndpointType.FEED
-  );
+    const response = await agent.app.bsky.actor.getPreferences();
+    return extractPinnedFeedUris(response.data.preferences);
+  }, ATProtoEndpointType.FEED);
 }
 
 /**
  * Reorder saved feeds
  */
 export async function reorderSavedFeeds(feedUris: string[]): Promise<void> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
 
-      // Get current preferences
-      const response = await agent.app.bsky.actor.getPreferences();
-      const preferences = response.data.preferences;
+    // Get current preferences
+    const response = await agent.app.bsky.actor.getPreferences();
+    const preferences = response.data.preferences;
 
-      // Find saved feeds preference
-      const savedFeedsIndex = preferences.findIndex(
-        (pref) => pref.$type === 'app.bsky.actor.defs#savedFeedsPref'
-      );
+    // Find saved feeds preference
+    const savedFeedsIndex = preferences.findIndex(
+      (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPref",
+    );
 
-      if (savedFeedsIndex >= 0) {
-        const savedFeedsPref = preferences[savedFeedsIndex] as {saved?: string[]; pinned?: string[]};
-        const pinnedFeeds = savedFeedsPref.pinned || [];
+    if (savedFeedsIndex >= 0) {
+      const savedFeedsPref = preferences[savedFeedsIndex] as {
+        saved?: string[];
+        pinned?: string[];
+      };
+      const pinnedFeeds = savedFeedsPref.pinned || [];
 
-        // Update preferences with new order
-        const updatedPreferences = [...preferences];
-        updatedPreferences[savedFeedsIndex] = {
-          $type: 'app.bsky.actor.defs#savedFeedsPref',
-          saved: feedUris,
-          pinned: pinnedFeeds,
-        };
+      // Update preferences with new order
+      const updatedPreferences = [...preferences];
+      updatedPreferences[savedFeedsIndex] = {
+        $type: "app.bsky.actor.defs#savedFeedsPref",
+        saved: feedUris,
+        pinned: pinnedFeeds,
+      };
 
-        await agent.app.bsky.actor.putPreferences({preferences: updatedPreferences});
-      }
-    },
-    ATProtoEndpointType.FEED
-  );
+      await agent.app.bsky.actor.putPreferences({
+        preferences: updatedPreferences,
+      });
+    }
+  }, ATProtoEndpointType.FEED);
 }
 
 export interface CreateFeedGeneratorParams {
@@ -618,37 +598,36 @@ export interface CreateFeedGeneratorParams {
  * Note: This only creates the record. You must have a feed generator service
  * running at the serviceEndpoint that implements the AT Protocol feed generator API.
  */
-export async function createFeedGenerator(params: CreateFeedGeneratorParams): Promise<{uri: string; cid: string}> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
-      const session = client.getSession();
+export async function createFeedGenerator(
+  params: CreateFeedGeneratorParams,
+): Promise<{ uri: string; cid: string }> {
+  return rateLimited(async () => {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
+    const session = client.getSession();
 
-      if (!session?.did) {
-        throw new Error('No active session');
-      }
+    if (!session?.did) {
+      throw new Error("No active session");
+    }
 
-      const record = {
-        $type: 'app.bsky.feed.generator',
-        did: session.did,
-        displayName: params.displayName,
-        description: params.description,
-        avatar: params.avatar,
-        createdAt: new Date().toISOString(),
-      };
+    const record = {
+      $type: "app.bsky.feed.generator",
+      did: session.did,
+      displayName: params.displayName,
+      description: params.description,
+      avatar: params.avatar,
+      createdAt: new Date().toISOString(),
+    };
 
-      const response = await agent.api.com.atproto.repo.createRecord({
-        repo: session.did,
-        collection: 'app.bsky.feed.generator',
-        record,
-      });
+    const response = await agent.api.com.atproto.repo.createRecord({
+      repo: session.did,
+      collection: "app.bsky.feed.generator",
+      record,
+    });
 
-      return {
-        uri: response.data.uri,
-        cid: response.data.cid,
-      };
-    },
-    ATProtoEndpointType.RECORD
-  );
+    return {
+      uri: response.data.uri,
+      cid: response.data.cid,
+    };
+  }, ATProtoEndpointType.RECORD);
 }
