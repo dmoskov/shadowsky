@@ -272,7 +272,7 @@ const withShareExtension = (config) => {
       DEVELOPMENT_TEAM: "P8T66U743T",
       GENERATE_INFOPLIST_FILE: "NO",
       INFOPLIST_FILE: `${SHARE_EXT_NAME}/Info.plist`,
-      IPHONEOS_DEPLOYMENT_TARGET: "15.1",
+      IPHONEOS_DEPLOYMENT_TARGET: "16.0",
       LD_RUNPATH_SEARCH_PATHS: [
         '"$(inherited)"',
         '"@executable_path/Frameworks"',
