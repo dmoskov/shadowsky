@@ -36,7 +36,9 @@ const logger = createLogger("JetstreamCtx");
 interface JetstreamContextType {
   /** Whether the Jetstream WebSocket is currently connected */
   isConnected: boolean;
-  /** Manually trigger a reconnect */
+  /** Whether reconnection attempts have been exhausted (real-time updates paused) */
+  isReconnectExhausted: boolean;
+  /** Manually trigger a reconnect (resets backoff if exhausted) */
   reconnect: () => void;
   /** Update the list of followed DIDs for timeline filtering */
   updateFollowedDids: (dids: string[]) => void;
@@ -69,6 +71,7 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
   const isLowPower = useLowPowerMode();
   const isInitializedRef = useRef(false);
   const [isConnected, setIsConnected] = React.useState(false);
+  const [isReconnectExhausted, setIsReconnectExhausted] = React.useState(false);
 
   // Track whether Jetstream was connected before low-power mode kicked in
   const wasConnectedBeforeLowPowerRef = useRef(false);
@@ -87,6 +90,7 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
         disconnectJetstream();
         isInitializedRef.current = false;
         setIsConnected(false);
+        setIsReconnectExhausted(false);
       }
       return;
     }
@@ -101,6 +105,7 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
     const handleConnect = () => {
       logger.log("Jetstream connected");
       setIsConnected(true);
+      setIsReconnectExhausted(false);
 
       // Refresh stale caches on connect
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
@@ -145,6 +150,11 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
     const handleError = (event: JetstreamEvent) => {
       if (event.type === JetstreamEventType.ERROR) {
         logger.error("Jetstream error:", event.error);
+        if (
+          event.error === "Max reconnection attempts exceeded"
+        ) {
+          setIsReconnectExhausted(true);
+        }
       }
     };
 
@@ -205,10 +215,10 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
     const service = getJetstreamService();
     if (service) {
       logger.log("Manual reconnect triggered");
+      service.resetReconnect();
+      setIsReconnectExhausted(false);
       service.disconnect();
-      setTimeout(() => {
-        service.connect();
-      }, 1000);
+      service.connect();
     }
   }, []);
 
@@ -222,10 +232,11 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
   const value = useMemo(
     (): JetstreamContextType => ({
       isConnected,
+      isReconnectExhausted,
       reconnect,
       updateFollowedDids,
     }),
-    [isConnected, reconnect, updateFollowedDids],
+    [isConnected, isReconnectExhausted, reconnect, updateFollowedDids],
   );
 
   return (

@@ -116,8 +116,9 @@ export class JetstreamService {
   private isIntentionallyClosed = false;
   private reconnectAttempts = 0;
   private readonly MAX_RECONNECT_ATTEMPTS = 10;
-  private readonly INITIAL_RECONNECT_DELAY = 5000;
-  private readonly MAX_RECONNECT_DELAY = 30000;
+  private readonly INITIAL_RECONNECT_DELAY = 1000;
+  private readonly MAX_RECONNECT_DELAY = 60000;
+  private readonly JITTER_FACTOR = 0.2;
 
   private readonly JETSTREAM_URL =
     "wss://jetstream1.us-east.bsky.network/subscribe";
@@ -245,6 +246,29 @@ export class JetstreamService {
    */
   public getStats() {
     return { ...this.stats };
+  }
+
+  /**
+   * Whether reconnection attempts have been exhausted
+   */
+  public isReconnectExhausted(): boolean {
+    return this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS;
+  }
+
+  /**
+   * Get current reconnection attempt count
+   */
+  public getReconnectAttempts(): number {
+    return this.reconnectAttempts;
+  }
+
+  /**
+   * Reset reconnection state (e.g., for manual retry after exhaustion)
+   */
+  public resetReconnect(): void {
+    this.reconnectAttempts = 0;
+    this.isIntentionallyClosed = false;
+    this.clearReconnectTimer();
   }
 
   // --- WebSocket event wiring ---
@@ -446,14 +470,17 @@ export class JetstreamService {
     }
 
     this.reconnectAttempts++;
-    const delay = Math.min(
+    const baseDelay = Math.min(
       this.INITIAL_RECONNECT_DELAY *
         Math.pow(2, this.reconnectAttempts - 1),
       this.MAX_RECONNECT_DELAY,
     );
+    // Add ±20% jitter to prevent thundering herd
+    const jitter = baseDelay * this.JITTER_FACTOR * (2 * Math.random() - 1);
+    const delay = Math.max(0, Math.round(baseDelay + jitter));
 
     logger.log(
-      `Reconnect attempt ${this.reconnectAttempts} in ${delay}ms`,
+      `Reconnect attempt ${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS} in ${delay}ms`,
     );
 
     this.reconnectTimer = setTimeout(() => {
