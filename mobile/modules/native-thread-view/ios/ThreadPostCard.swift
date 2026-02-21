@@ -276,6 +276,7 @@ struct ActionButton: View {
 struct ThreadReplyView: View {
     let node: ThreadNode
     @State private var isCollapsed: Bool = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Event handlers
     let onPress: ((String, String) -> Void)?
@@ -314,8 +315,12 @@ struct ThreadReplyView: View {
                     if !node.replies.isEmpty {
                         HStack {
                             Button(action: {
-                                withAnimation {
+                                if reduceMotion {
                                     isCollapsed.toggle()
+                                } else {
+                                    withAnimation {
+                                        isCollapsed.toggle()
+                                    }
                                 }
                             }) {
                                 HStack(spacing: 4) {

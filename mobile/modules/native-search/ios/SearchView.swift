@@ -27,6 +27,7 @@ struct SearchView: View {
 
     @State private var searchText: String = ""
     @FocusState private var isSearchFocused: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(spacing: 0) {
@@ -112,7 +113,7 @@ struct SearchView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .animation(.easeInOut(duration: 0.2), value: isSearchFocused)
+            .animation(reduceMotion ? .none : .easeInOut(duration: 0.2), value: isSearchFocused)
 
             Divider()
         }
