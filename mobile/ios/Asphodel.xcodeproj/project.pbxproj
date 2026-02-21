@@ -15,6 +15,14 @@
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 		AA1111112D0307B40044C1D9 /* SpotlightDeepLinkResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1111102D0307B40044C1D9 /* SpotlightDeepLinkResolver.swift */; };
+		WIDGET_EXT_BLD_BNDL /* WidgetExtensionBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = WIDGET_EXT_BUNDLE_FL /* WidgetExtensionBundle.swift */; };
+		WIDGET_EXT_BLD_SHRD /* SharedDataProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = WIDGET_EXT_SHARED_FL /* SharedDataProvider.swift */; };
+		WIDGET_EXT_BLD_NOTF /* NotificationCountWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = WIDGET_EXT_NOTIF_FIL /* NotificationCountWidget.swift */; };
+		WIDGET_EXT_BLD_TRND /* TrendingTopicsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = WIDGET_EXT_TREND_FIL /* TrendingTopicsWidget.swift */; };
+		WIDGET_EXT_BLD_DMS1 /* RecentDMsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = WIDGET_EXT_DMS_FILE1 /* RecentDMsWidget.swift */; };
+		WIDGET_EXT_COPY_BLD1 /* WidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = WIDGET_EXT_PRODUCT_01 /* WidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		SHARE_EXT_VC_BUILD_01 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = SHARE_EXT_VC_FILE_001 /* ShareViewController.swift */; };
+		SHARE_EXT_COPY_BLD_1 /* ShareExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = SHARE_EXT_PRODUCT_001 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +40,18 @@
 		AA1111102D0307B40044C1D9 /* SpotlightDeepLinkResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SpotlightDeepLinkResolver.swift; path = Asphodel/SpotlightDeepLinkResolver.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Asphodel-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Asphodel-Bridging-Header.h"; path = "Asphodel/Asphodel-Bridging-Header.h"; sourceTree = "<group>"; };
 		FDB630D1731BB87E128DA536 /* Pods-Asphodel.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Asphodel.debug.xcconfig"; path = "Target Support Files/Pods-Asphodel/Pods-Asphodel.debug.xcconfig"; sourceTree = "<group>"; };
+		WIDGET_EXT_BUNDLE_FL /* WidgetExtensionBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WidgetExtensionBundle.swift; path = WidgetExtension/WidgetExtensionBundle.swift; sourceTree = "<group>"; };
+		WIDGET_EXT_SHARED_FL /* SharedDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SharedDataProvider.swift; path = WidgetExtension/SharedDataProvider.swift; sourceTree = "<group>"; };
+		WIDGET_EXT_NOTIF_FIL /* NotificationCountWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NotificationCountWidget.swift; path = WidgetExtension/NotificationCountWidget.swift; sourceTree = "<group>"; };
+		WIDGET_EXT_TREND_FIL /* TrendingTopicsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TrendingTopicsWidget.swift; path = WidgetExtension/TrendingTopicsWidget.swift; sourceTree = "<group>"; };
+		WIDGET_EXT_DMS_FILE1 /* RecentDMsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RecentDMsWidget.swift; path = WidgetExtension/RecentDMsWidget.swift; sourceTree = "<group>"; };
+		WIDGET_EXT_PLIST_FL1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = WidgetExtension/Info.plist; sourceTree = "<group>"; };
+		WIDGET_EXT_ENTL_FL1 /* WidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = WidgetExtension.entitlements; path = WidgetExtension/WidgetExtension.entitlements; sourceTree = "<group>"; };
+		WIDGET_EXT_PRODUCT_01 /* WidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		SHARE_EXT_VC_FILE_001 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ShareViewController.swift; path = ShareExtension/ShareViewController.swift; sourceTree = "<group>"; };
+		SHARE_EXT_PLIST_FILE1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = ShareExtension/Info.plist; sourceTree = "<group>"; };
+		SHARE_EXT_ENTL_FILE1 /* ShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = ShareExtension.entitlements; path = ShareExtension/ShareExtension.entitlements; sourceTree = "<group>"; };
+		SHARE_EXT_PRODUCT_001 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -40,6 +60,20 @@
 			buildActionMask = 2147483647;
 			files = (
 				B2D6665851598A763A095CA7 /* libPods-Asphodel.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		WIDGET_EXT_FRM_PHS01 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		SHARE_EXT_FRM_PHASE1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -96,6 +130,8 @@
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
 				5B32D1ECF2D4552A2915B8C0 /* Pods */,
 				D85AA496F58635310EA882D9 /* ExpoModulesProviders */,
+				WIDGET_EXT_GROUP_001 /* WidgetExtension */,
+				SHARE_EXT_GROUP_0001 /* ShareExtension */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -106,6 +142,8 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* Asphodel.app */,
+				WIDGET_EXT_PRODUCT_01 /* WidgetExtension.appex */,
+				SHARE_EXT_PRODUCT_001 /* ShareExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -135,6 +173,30 @@
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
+		WIDGET_EXT_GROUP_001 /* WidgetExtension */ = {
+			isa = PBXGroup;
+			children = (
+				WIDGET_EXT_BUNDLE_FL /* WidgetExtensionBundle.swift */,
+				WIDGET_EXT_SHARED_FL /* SharedDataProvider.swift */,
+				WIDGET_EXT_NOTIF_FIL /* NotificationCountWidget.swift */,
+				WIDGET_EXT_TREND_FIL /* TrendingTopicsWidget.swift */,
+				WIDGET_EXT_DMS_FILE1 /* RecentDMsWidget.swift */,
+				WIDGET_EXT_PLIST_FL1 /* Info.plist */,
+				WIDGET_EXT_ENTL_FL1 /* WidgetExtension.entitlements */,
+			);
+			name = "WidgetExtension";
+			sourceTree = "<group>";
+		};
+		SHARE_EXT_GROUP_0001 /* ShareExtension */ = {
+			isa = PBXGroup;
+			children = (
+				SHARE_EXT_VC_FILE_001 /* ShareViewController.swift */,
+				SHARE_EXT_PLIST_FILE1 /* Info.plist */,
+				SHARE_EXT_ENTL_FILE1 /* ShareExtension.entitlements */,
+			);
+			name = "ShareExtension";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -160,6 +222,40 @@
 			productReference = 13B07F961A680F5B00A75B9A /* Asphodel.app */;
 			productType = "com.apple.product-type.application";
 		};
+		WIDGET_EXT_TARGET_01 /* WidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = WIDGET_EXT_CFG_LIST1 /* Build configuration list for PBXNativeTarget "WidgetExtension" */;
+			buildPhases = (
+				WIDGET_EXT_SRC_PHS01 /* Sources */,
+				WIDGET_EXT_FRM_PHS01 /* Frameworks */,
+				WIDGET_EXT_RES_PHS01 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "WidgetExtension";
+			productName = "WidgetExtension";
+			productReference = WIDGET_EXT_PRODUCT_01 /* WidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension.widgets-extension";
+		};
+		SHARE_EXT_TARGET_001 /* ShareExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = SHARE_EXT_CFG_LIST_1 /* Build configuration list for PBXNativeTarget "ShareExtension" */;
+			buildPhases = (
+				SHARE_EXT_SRC_PHASE1 /* Sources */,
+				SHARE_EXT_FRM_PHASE1 /* Frameworks */,
+				SHARE_EXT_RES_PHASE1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "ShareExtension";
+			productName = "ShareExtension";
+			productReference = SHARE_EXT_PRODUCT_001 /* ShareExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -171,6 +267,16 @@
 					13B07F861A680F5B00A75B9A = {
 						DevelopmentTeam = P8T66U743T;
 						LastSwiftMigration = 1250;
+						ProvisioningStyle = Automatic;
+					};
+					WIDGET_EXT_TARGET_01 = {
+						CreatedOnToolsVersion = 15.0;
+						DevelopmentTeam = P8T66U743T;
+						ProvisioningStyle = Automatic;
+					};
+					SHARE_EXT_TARGET_001 = {
+						CreatedOnToolsVersion = 15.0;
+						DevelopmentTeam = P8T66U743T;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -189,6 +295,8 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* Asphodel */,
+				WIDGET_EXT_TARGET_01 /* WidgetExtension */,
+				SHARE_EXT_TARGET_001 /* ShareExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -202,6 +310,20 @@
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				9A9EDE8A288416E8AEBE570C /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		WIDGET_EXT_RES_PHS01 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		SHARE_EXT_RES_PHASE1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -362,6 +484,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		WIDGET_EXT_SRC_PHS01 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				WIDGET_EXT_BLD_BNDL /* WidgetExtensionBundle.swift in Sources */,
+				WIDGET_EXT_BLD_SHRD /* SharedDataProvider.swift in Sources */,
+				WIDGET_EXT_BLD_NOTF /* NotificationCountWidget.swift in Sources */,
+				WIDGET_EXT_BLD_TRND /* TrendingTopicsWidget.swift in Sources */,
+				WIDGET_EXT_BLD_DMS1 /* RecentDMsWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		SHARE_EXT_SRC_PHASE1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				SHARE_EXT_VC_BUILD_01 /* ShareViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
@@ -395,7 +537,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = io.asphodel.app;
-				PRODUCT_NAME = Asphodel;
+				PRODUCT_NAME = "Asphodel";
 				SWIFT_OBJC_BRIDGING_HEADER = "Asphodel/Asphodel-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -429,7 +571,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = io.asphodel.app;
-				PRODUCT_NAME = Asphodel;
+				PRODUCT_NAME = "Asphodel";
 				SWIFT_OBJC_BRIDGING_HEADER = "Asphodel/Asphodel-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -555,6 +697,120 @@
 			};
 			name = Release;
 		};
+		WIDGET_EXT_CFG_DBG01 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = WidgetExtension/WidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = P8T66U743T;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WidgetExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.asphodel.app.WidgetExtension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		WIDGET_EXT_CFG_REL01 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = WidgetExtension/WidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = P8T66U743T;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WidgetExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.asphodel.app.WidgetExtension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+			};
+			name = Release;
+		};
+		SHARE_EXT_CFG_DEBUG1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = P8T66U743T;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.asphodel.app.ShareExtension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		SHARE_EXT_CFG_RELEAS /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = P8T66U743T;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.asphodel.app.ShareExtension";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -576,7 +832,80 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		WIDGET_EXT_CFG_LIST1 /* Build configuration list for PBXNativeTarget "WidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				WIDGET_EXT_CFG_DBG01 /* Debug */,
+				WIDGET_EXT_CFG_REL01 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		SHARE_EXT_CFG_LIST_1 /* Build configuration list for PBXNativeTarget "ShareExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				SHARE_EXT_CFG_DEBUG1 /* Debug */,
+				SHARE_EXT_CFG_RELEAS /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		WIDGET_EXT_COPY_PHS1 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				WIDGET_EXT_COPY_BLD1 /* WidgetExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		SHARE_EXT_COPY_FILE1 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				SHARE_EXT_COPY_BLD_1 /* ShareExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXContainerItemProxy section */
+		WIDGET_EXT_PROXY_001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = WIDGET_EXT_TARGET_01;
+			remoteInfo = "WidgetExtension";
+		};
+		SHARE_EXT_PROXY_0001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 83CBB9F71A601CBA00E9B192 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = SHARE_EXT_TARGET_001;
+			remoteInfo = "ShareExtension";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		WIDGET_EXT_DEPEND_01 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = WIDGET_EXT_TARGET_01 /* WidgetExtension */;
+			targetProxy = WIDGET_EXT_PROXY_001 /* PBXContainerItemProxy */;
+		};
+		SHARE_EXT_DEPEND_001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = SHARE_EXT_TARGET_001 /* ShareExtension */;
+			targetProxy = SHARE_EXT_PROXY_0001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

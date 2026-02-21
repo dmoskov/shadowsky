@@ -18,6 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "io.asphodel.app",
+    deploymentTarget: "16.0",
     associatedDomains: [
       "applinks:shadowsky.io",
       "applinks:main.shadowsky.io",
