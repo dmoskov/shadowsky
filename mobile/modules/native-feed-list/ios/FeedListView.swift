@@ -408,13 +408,16 @@ class FeedState: ObservableObject {
 
     private func updatePosts(_ newPosts: [SerializedFeedViewPost]) {
         // Build a lookup of existing converted posts by URI for O(1) access
+        // Use uniquingKeysWith to handle duplicate URIs (e.g. repost + original in same feed)
         let existingByURI: [String: ConvertedFeedPost] = Dictionary(
-            uniqueKeysWithValues: convertedPosts.map { ($0.id, $0) }
+            convertedPosts.map { ($0.id, $0) },
+            uniquingKeysWith: { _, latest in latest }
         )
 
         // Build fingerprint lookup for existing posts to detect changes
         let existingFingerprints: [String: String] = Dictionary(
-            uniqueKeysWithValues: posts.map { ($0.post.uri, Self.postFingerprint($0)) }
+            posts.map { ($0.post.uri, Self.postFingerprint($0)) },
+            uniquingKeysWith: { _, latest in latest }
         )
 
         // Map new posts, reusing existing conversions where possible
