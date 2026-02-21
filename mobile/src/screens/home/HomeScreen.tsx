@@ -13,6 +13,7 @@ import { NativeFeedList } from "../../../modules/native-feed-list";
 import { useRouter } from "expo-router";
 import { triggerHaptic } from "../../utils/haptics";
 import { useToast } from "../../contexts/ToastContext";
+import { useDataPrefetch } from "../../hooks/useDataPrefetch";
 
 /**
  * Extract post ID (rkey) from AT Protocol URI
@@ -63,15 +64,23 @@ export function HomeScreen() {
   const { data } =
     selectedFeedUri ? customFeedQuery : timelineQuery;
 
+  // Flatten paginated feed data into a single array
+  const flatPosts = useMemo(
+    () => data?.pages.flatMap((page) => page.feed) ?? [],
+    [data?.pages],
+  );
+
   // Build a URI → post index map for O(1) lookups in action handlers
   const postsByUri = useMemo(() => {
-    const posts = data?.pages.flatMap((page) => page.feed) ?? [];
-    const map = new Map<string, typeof posts[number]>();
-    for (const p of posts) {
+    const map = new Map<string, typeof flatPosts[number]>();
+    for (const p of flatPosts) {
       map.set(p.post.uri, p);
     }
     return map;
-  }, [data?.pages]);
+  }, [flatPosts]);
+
+  // Prefetch thread and profile data for the first visible posts
+  useDataPrefetch(flatPosts);
 
   // Enable scroll-to-top on tab press
   useScrollToTop(scrollRef);
