@@ -28,6 +28,7 @@ import {
   disconnectJetstream,
   type JetstreamEvent,
 } from "../services/jetstream-service";
+import { useLowPowerMode } from "../hooks/useLowPowerMode";
 import { createLogger } from "../utils/logger";
 
 const logger = createLogger("JetstreamCtx");
@@ -65,8 +66,12 @@ interface JetstreamProviderProps {
 export function JetstreamProvider({ children }: JetstreamProviderProps) {
   const { isAuthenticated, session } = useAuth();
   const queryClient = useQueryClient();
+  const isLowPower = useLowPowerMode();
   const isInitializedRef = useRef(false);
   const [isConnected, setIsConnected] = React.useState(false);
+
+  // Track whether Jetstream was connected before low-power mode kicked in
+  const wasConnectedBeforeLowPowerRef = useRef(false);
 
   // Debounce timer for notification cache invalidation
   const notificationDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -175,6 +180,26 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
       setIsConnected(false);
     };
   }, [isAuthenticated, session?.did, queryClient]);
+
+  // Disconnect Jetstream in Low Power Mode to save battery.
+  // The app falls back to polling-only (with tripled intervals) via useAdaptivePolling.
+  // When Low Power Mode is turned off, reconnect automatically.
+  useEffect(() => {
+    const service = getJetstreamService();
+    if (!service) return;
+
+    if (isLowPower) {
+      wasConnectedBeforeLowPowerRef.current = service.isConnected();
+      if (service.isConnected()) {
+        logger.log("Low Power Mode enabled, disconnecting Jetstream");
+        service.disconnect();
+      }
+    } else if (wasConnectedBeforeLowPowerRef.current) {
+      logger.log("Low Power Mode disabled, reconnecting Jetstream");
+      wasConnectedBeforeLowPowerRef.current = false;
+      service.connect();
+    }
+  }, [isLowPower]);
 
   const reconnect = useCallback(() => {
     const service = getJetstreamService();
