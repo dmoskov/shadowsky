@@ -3443,3 +3443,75 @@ References:
 - Asana Task: https://app.asana.com/0/1211710875848660/1212311529588064
 - Blocked Task: Reduce hover:scale effects from 110 to 105 across action buttons
 - Decision made by: Dustin Moskovitz (2025-12-04) - via Validation Status approval
+
+---
+
+## Decision: Do Not Implement Certificate Pinning for AT Protocol API Calls
+
+Date: 2026-02-20
+Status: Accepted
+
+### Context
+
+Evaluated whether to implement TLS certificate pinning (via TrustKit or native iOS APIs) for AT Protocol API connections to prevent MITM attacks from compromised CAs or corporate proxies intercepting session tokens (accessJwt, refreshJwt).
+
+The app connects to multiple Bluesky domains:
+
+| Domain                            | CA              | Cert Lifetime | Purpose            |
+| --------------------------------- | --------------- | ------------- | ------------------ |
+| `bsky.social`                     | Amazon RSA 2048 | ~13 months    | PDS (auth, data)   |
+| `public.api.bsky.app`             | Let's Encrypt   | 90 days       | Public API         |
+| `cdn.bsky.app`                    | Let's Encrypt   | 90 days       | CDN (images)       |
+| `video.bsky.app`                  | Let's Encrypt   | 90 days       | Video delivery     |
+| `api.bsky.chat`                   | Amazon RSA 2048 | ~13 months    | Direct messages    |
+| `jetstream1.us-east.bsky.network` | Let's Encrypt   | 90 days       | WebSocket firehose |
+
+### Decision
+
+**Do not implement certificate pinning.** The risk/reward does not justify the maintenance burden or breakage potential.
+
+### Rationale
+
+1. **Multiple CAs in use**: Bluesky infrastructure uses both Amazon CA and Let's Encrypt across different services. No single CA can be pinned without separate configurations per domain, and domain-to-CA mappings can change without notice.
+
+2. **90-day certificate rotation**: Four of six key domains use Let's Encrypt with 90-day certificates. Leaf-cert pinning would break the app every 90 days. Even CA-level pinning is fragile since Let's Encrypt rotates intermediate certificates (R10-R14).
+
+3. **Custom PDS compatibility**: AT Protocol supports users connecting to custom PDS servers (the `pdsUrl` parameter in auth). Pinning would break third-party PDS connectivity, which is a core architectural feature of the protocol.
+
+4. **AT Protocol self-authenticating data**: The protocol's security model relies on signed data repositories and DIDs for authentication/integrity, not transport-layer security alone. Even if TLS were compromised, repository data integrity is independently verifiable.
+
+5. **Short-lived tokens**: AT Protocol access tokens are short-lived and auto-refresh. The window for token theft via MITM is narrow, and stolen tokens expire quickly.
+
+6. **Official Bluesky app does not pin**: The official bluesky-social/social-app repository contains no certificate pinning implementation.
+
+7. **Industry consensus against pinning**: Google recommends against SSL pinning in mobile apps (2025). The operational risks (app-breaking cert rotations, emergency app updates) outweigh the marginal security benefit over standard CA validation.
+
+8. **ATS enforcement already active**: The app has `NSAllowsArbitraryLoads = false` in Info.plist, enforcing iOS App Transport Security which requires TLS 1.2+ and valid certificates.
+
+### Mitigating Controls Already in Place
+
+- **App Transport Security (ATS)**: Enforced (`NSAllowsArbitraryLoads = false`, `NSAllowsLocalNetworking = true` only for dev)
+- **Secure token storage**: Tokens stored in iOS Keychain via expo-secure-store
+- **Token auto-refresh**: Short-lived access tokens with automatic refresh
+- **Self-authenticating data**: AT Protocol signed repositories provide data integrity independent of TLS
+- **Trusted domain allowlist**: `TRUSTED_MEDIA_DOMAINS` in `src/utils/security.ts` restricts media loading
+
+### Consequences
+
+- The app relies on the standard iOS CA trust store for TLS validation
+- Users behind corporate MITM proxies can use the app normally (which is a feature, not a bug, for enterprise users)
+- No risk of app breakage from certificate rotation on Bluesky's infrastructure
+- Third-party PDS servers work without additional TLS configuration
+- Accepted residual risk: a compromised CA could theoretically MITM connections, but this risk is mitigated by short-lived tokens and self-authenticating data
+
+### Re-evaluation Triggers
+
+- If AT Protocol moves to long-lived tokens
+- If Bluesky consolidates to a single CA with stable intermediate certificates
+- If Apple introduces a lightweight, automatic pinning mechanism in iOS
+- If the official Bluesky app implements pinning
+
+References:
+
+- Asana Task: https://app.asana.com/1/19421316985/project/1211710875848660/task/1213383294928275
+- Security Assessment: `docs/security-certificate-pinning-assessment.md`
