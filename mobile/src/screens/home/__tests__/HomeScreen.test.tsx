@@ -138,6 +138,10 @@ jest.mock('../../../../modules/native-feed-list', () => {
   return { NativeFeedList };
 });
 
+jest.mock('../../../hooks/useDataPrefetch', () => ({
+  useDataPrefetch: () => ({ resetPrefetchCache: jest.fn() }),
+}));
+
 const mockRouterPush = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({
