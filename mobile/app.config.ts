@@ -18,6 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "io.asphodel.app",
+    // @ts-expect-error deploymentTarget is valid for EAS builds but not in ExpoConfig type
     deploymentTarget: "16.0",
     associatedDomains: [
       "applinks:shadowsky.io",
