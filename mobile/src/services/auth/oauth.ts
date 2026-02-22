@@ -15,7 +15,7 @@ const logger = createLogger("OAuth");
 
 const OAUTH_STATE_KEY = "@shadowsky/oauth_state";
 const CLIENT_ID = "https://shadowsky.io/client-metadata-mobile.json";
-const REDIRECT_URI = "shadowsky://oauth-callback";
+const REDIRECT_URI = "io.asphodel.app:/oauth-callback";
 const DEFAULT_PDS = "https://bsky.social";
 
 export interface OAuthState {
