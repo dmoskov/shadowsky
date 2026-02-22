@@ -7,7 +7,7 @@
   "tos_uri": "https://shadowsky.io/terms",
   "policy_uri": "https://shadowsky.io/privacy",
   "redirect_uris": [
-    "io.shadowsky.app:/oauth-callback"
+    "io.shadowsky:/oauth-callback"
   ],
   "scope": "atproto transition:generic",
   "grant_types": ["authorization_code", "refresh_token"],
