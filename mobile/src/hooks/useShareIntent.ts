@@ -1,12 +1,17 @@
 import { useEffect, useState, useCallback } from "react";
 import { AppState, AppStateStatus, Platform } from "react-native";
 import type { SharedContent } from "../../modules/share-intent";
+import { createLogger } from "../utils/logger";
+
+const logger = createLogger("ShareIntent");
 
 let shareIntentModule: typeof import("../../modules/share-intent") | null = null;
 try {
   shareIntentModule = require("../../modules/share-intent");
-} catch {
-  // Not available
+} catch (error) {
+  if (Platform.OS === "ios") {
+    logger.error("Failed to load share-intent native module:", error);
+  }
 }
 
 /**
