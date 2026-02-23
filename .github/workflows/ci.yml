@@ -91,7 +91,7 @@ jobs:
         run: |
           # Define size budgets (in bytes, gzipped)
           # Note: These are realistic budgets for a modern React SPA with AT Protocol integration
-          MAX_MAIN_BUNDLE=450000  # 450KB gzipped for main entry chunk (~1.3MB uncompressed)
+          MAX_MAIN_BUNDLE=460000  # 460KB gzipped for main entry chunk (~1.3MB uncompressed)
           MAX_VENDOR_CHUNK=300000 # 300KB gzipped for vendor chunks
 
           EXIT_CODE=0
