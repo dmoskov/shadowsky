@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { mockTheme } from '../../../components/__tests__/test-utils';
 
 // ─── Module mocks ──────────────────────────────────────────
@@ -157,6 +158,16 @@ import { HomeScreen } from '../HomeScreen';
 
 // ─── Helpers ──────────────────────────────────────────────
 
+const testQueryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
+
+function renderWithProviders(ui: React.ReactElement) {
+  return render(
+    <QueryClientProvider client={testQueryClient}>{ui}</QueryClientProvider>
+  );
+}
+
 function makeFeedPage(posts: any[] = []) {
   return {
     pages: [{ cursor: 'cursor-1', feed: posts }],
@@ -219,12 +230,12 @@ describe('HomeScreen', () => {
   // ─── Loading state ──────────────────────────────────────
   describe('loading state', () => {
     it('renders loading indicator when timeline is loading', () => {
-      const { getByTestId } = render(<HomeScreen />);
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
       expect(getByTestId('feed-loading')).toBeTruthy();
     });
 
     it('passes loading query to NativeFeedList', () => {
-      const { getByTestId } = render(<HomeScreen />);
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
       expect(getByTestId('native-feed-list')).toBeTruthy();
     });
   });
@@ -238,7 +249,7 @@ describe('HomeScreen', () => {
         isLoading: false,
       };
 
-      const { getByTestId, getByText } = render(<HomeScreen />);
+      const { getByTestId, getByText } = renderWithProviders(<HomeScreen />);
       expect(getByTestId('feed-empty')).toBeTruthy();
       expect(getByText('No posts in your timeline yet')).toBeTruthy();
     });
@@ -255,7 +266,7 @@ describe('HomeScreen', () => {
         isLoading: false,
       };
 
-      const { getByTestId } = render(<HomeScreen />);
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
       expect(getByTestId('feed-content')).toBeTruthy();
     });
   });
@@ -272,7 +283,7 @@ describe('HomeScreen', () => {
         refetch: mockRefetch,
       };
 
-      const { getByTestId, getByText } = render(<HomeScreen />);
+      const { getByTestId, getByText } = renderWithProviders(<HomeScreen />);
       expect(getByTestId('feed-error')).toBeTruthy();
       expect(getByText('Failed to load feed')).toBeTruthy();
 
@@ -291,7 +302,7 @@ describe('HomeScreen', () => {
         isLoading: false,
       };
 
-      const { queryByText } = render(<HomeScreen />);
+      const { queryByText } = renderWithProviders(<HomeScreen />);
       expect(queryByText('Following')).toBeNull();
     });
 
@@ -306,7 +317,7 @@ describe('HomeScreen', () => {
         isLoading: false,
       };
 
-      const { getByText } = render(<HomeScreen />);
+      const { getByText } = renderWithProviders(<HomeScreen />);
       // The "Following" chip uses emoji prefix
       expect(getByText(/Following/)).toBeTruthy();
       expect(getByText('Hot Posts')).toBeTruthy();
@@ -323,7 +334,7 @@ describe('HomeScreen', () => {
         isLoading: false,
       };
 
-      const { getByText } = render(<HomeScreen />);
+      const { getByText } = renderWithProviders(<HomeScreen />);
       expect(getByText('+ Discover')).toBeTruthy();
     });
 
@@ -344,7 +355,7 @@ describe('HomeScreen', () => {
         isLoading: false,
       };
 
-      const { getByText } = render(<HomeScreen />);
+      const { getByText } = renderWithProviders(<HomeScreen />);
       fireEvent.press(getByText('Hot Posts'));
       // After pressing, the custom feed chip should be selected
       // The component re-renders with selectedFeedUri set
@@ -360,7 +371,7 @@ describe('HomeScreen', () => {
         isLoading: false,
       };
 
-      const { getByText } = render(<HomeScreen />);
+      const { getByText } = renderWithProviders(<HomeScreen />);
       // First switch to custom feed
       fireEvent.press(getByText('Hot Posts'));
       // Then switch back to Following
@@ -378,7 +389,7 @@ describe('HomeScreen', () => {
         isLoading: false,
       };
 
-      const { getByText } = render(<HomeScreen />);
+      const { getByText } = renderWithProviders(<HomeScreen />);
       fireEvent.press(getByText('+ Discover'));
       expect(mockRouterPush).toHaveBeenCalledWith('/(app)/feeds/discover');
     });
@@ -387,12 +398,12 @@ describe('HomeScreen', () => {
   // ─── Renders without crashing in various states ─────────
   describe('render stability', () => {
     it('renders without crashing with all default mocks', () => {
-      expect(() => render(<HomeScreen />)).not.toThrow();
+      expect(() => renderWithProviders(<HomeScreen />)).not.toThrow();
     });
 
     it('renders with empty saved feeds array', () => {
       mockSavedFeeds = [];
-      expect(() => render(<HomeScreen />)).not.toThrow();
+      expect(() => renderWithProviders(<HomeScreen />)).not.toThrow();
     });
 
     it('renders with multiple pages of feed data', () => {
@@ -415,7 +426,7 @@ describe('HomeScreen', () => {
         hasNextPage: true,
       };
 
-      expect(() => render(<HomeScreen />)).not.toThrow();
+      expect(() => renderWithProviders(<HomeScreen />)).not.toThrow();
     });
   });
 });

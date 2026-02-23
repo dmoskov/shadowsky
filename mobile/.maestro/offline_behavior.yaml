@@ -20,7 +20,8 @@ appId: com.shadowsky.mobile
 # Go offline
 - setAirplaneMode:
     value: enabled
-- wait: 2000
+- extendedWaitUntil:
+    timeout: 2000
 
 # Test that cached content is still visible
 - assertVisible: "Timeline"
@@ -47,7 +48,8 @@ appId: com.shadowsky.mobile
 # Come back online
 - setAirplaneMode:
     value: disabled
-- wait: 2000
+- extendedWaitUntil:
+    timeout: 2000
 
 # Test that app syncs
 - swipe:
