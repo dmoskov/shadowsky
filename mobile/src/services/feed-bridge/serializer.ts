@@ -215,7 +215,7 @@ function serializePost(post: AppBskyFeedDefs.PostView): SerializedPost {
  * Serialize reply reference
  */
 function serializeReplyRef(reply: any): SerializedReplyRef | undefined {
-  if (!reply?.parent || !reply?.root) return undefined;
+  if (!reply?.parent?.author || !reply?.root?.author) return undefined;
 
   return {
     parent: serializePost(reply.parent),

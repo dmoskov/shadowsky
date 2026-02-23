@@ -19,7 +19,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { sharePost } from "../../utils/share";
 import { triggerHaptic } from "../../utils/haptics";
 import { createLogger } from '../../utils/logger';
-import { NativeThreadView, setTranslationResult, setTranslationError, setMentionSearchResults, setReplySent } from '../../../modules/native-thread-view';
+import { NativeThreadView, setTranslationResult, setTranslationError, setMentionSearchResults, setReplySent, setThreadData, clearThreadData } from '../../../modules/native-thread-view';
 import { translatePost } from '../../services/translation-service';
 import { searchActors } from '../../services/atproto/profiles';
 import {
@@ -31,6 +31,61 @@ import {
 import { getCachedSummary, cacheSummary } from "../../services/thread-summary-cache";
 
 const logger = createLogger('ThreadScreenNative');
+
+/**
+ * Serialize a ThreadViewPost into the JSON format expected by native ThreadView.
+ * The native parseThreadNode expects: {post, parent, replies[]}
+ * where post = {uri, cid, author, record, embed, indexedAt, likeCount, ...}
+ */
+function serializeThreadNode(node: any): any {
+  if (!node || !AppBskyFeedDefs.isThreadViewPost(node)) return null;
+
+  const post = node.post;
+  const record = post.record as any;
+
+  const serialized: any = {
+    post: {
+      uri: post.uri,
+      cid: post.cid,
+      author: {
+        did: post.author.did,
+        handle: post.author.handle,
+        displayName: post.author.displayName,
+        avatar: post.author.avatar,
+      },
+      record: {
+        text: record?.text || '',
+        facets: record?.facets,
+        createdAt: record?.createdAt || post.indexedAt,
+        langs: record?.langs,
+      },
+      embed: post.embed,
+      indexedAt: post.indexedAt,
+      likeCount: post.likeCount ?? 0,
+      repostCount: post.repostCount ?? 0,
+      replyCount: post.replyCount ?? 0,
+      quoteCount: post.quoteCount ?? 0,
+      viewer: post.viewer ? {
+        like: post.viewer.like,
+        repost: post.viewer.repost,
+      } : undefined,
+    },
+    replies: (node.replies || [])
+      .filter((r: any) => AppBskyFeedDefs.isThreadViewPost(r))
+      .map(serializeThreadNode)
+      .filter(Boolean),
+  };
+
+  // Add parent reference if this is a reply
+  if (node.parent && AppBskyFeedDefs.isThreadViewPost(node.parent)) {
+    serialized.parent = {
+      uri: node.parent.post.uri,
+      cid: node.parent.post.cid,
+    };
+  }
+
+  return serialized;
+}
 
 const SUMMARY_STALE_TIME_MS = 10 * 60 * 1000; // 10 minutes
 const MIN_POSTS_FOR_SUMMARY = 5;
@@ -187,6 +242,23 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
 
   // Fetch thread data
   const { data: thread, isLoading, error, refetch } = usePostThread(postUri || "");
+
+  // Bridge thread data to native SwiftUI ThreadView
+  useEffect(() => {
+    if (thread && AppBskyFeedDefs.isThreadViewPost(thread)) {
+      try {
+        const serialized = serializeThreadNode(thread);
+        if (serialized) {
+          setThreadData(JSON.stringify(serialized));
+        }
+      } catch (e) {
+        logger.error('Failed to serialize thread data:', e);
+      }
+    }
+    return () => {
+      clearThreadData();
+    };
+  }, [thread]);
 
   // Extract posts and parent URIs for summary generation
   const threadPostData = useMemo(() => {

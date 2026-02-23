@@ -76,6 +76,32 @@ public class ThreadViewModule: Module {
                    "onOpenEmojiPicker", "onMentionSearchQuery")
         }
 
+        // Receive serialized thread data from JS and forward to native ThreadView
+        Function("setThreadData") { (jsonString: String) in
+            DispatchQueue.main.async {
+                guard let data = jsonString.data(using: .utf8),
+                      let threadData = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    print("[ThreadViewModule] Failed to decode thread data JSON")
+                    return
+                }
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("ThreadBridgeDataUpdated"),
+                    object: nil,
+                    userInfo: ["threadData": threadData]
+                )
+            }
+        }
+
+        // Clear thread data from native ThreadView
+        Function("clearThreadData") {
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("ThreadBridgeDataCleared"),
+                    object: nil
+                )
+            }
+        }
+
         // Receive translation results from JS and forward to native views
         Function("setTranslationResult") { (postUri: String, translatedText: String, sourceLang: String) in
             DispatchQueue.main.async {

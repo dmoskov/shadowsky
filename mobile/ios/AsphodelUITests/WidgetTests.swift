@@ -16,7 +16,7 @@ import XCTest
 
 class SharedDataProviderTests: XCTestCase {
 
-    private let suiteName = "group.io.asphodel.app"
+    private let suiteName = "group.io.shadowsky.app"
 
     private var sharedDefaults: UserDefaults? {
         UserDefaults(suiteName: suiteName)
@@ -45,10 +45,10 @@ class SharedDataProviderTests: XCTestCase {
     // MARK: - App Group Suite Name Consistency
 
     func testAppGroupIdMatchesBetweenBridgeAndWidgets() {
-        // The bridge writes to "group.io.asphodel.app" and widgets read from the same.
+        // The bridge writes to "group.io.shadowsky.app" and widgets read from the same.
         // This test verifies both sides use the same suite name.
-        let bridgeSuiteName = "group.io.asphodel.app"
-        let widgetSuiteName = "group.io.asphodel.app" // SharedData.suiteName
+        let bridgeSuiteName = "group.io.shadowsky.app"
+        let widgetSuiteName = "group.io.shadowsky.app" // SharedData.suiteName
 
         XCTAssertEqual(bridgeSuiteName, widgetSuiteName,
                         "Bridge and widget must use the same App Group suite name")
@@ -92,7 +92,7 @@ class SharedDataProviderTests: XCTestCase {
 
 class NotificationWidgetDataTests: XCTestCase {
 
-    private let suiteName = "group.io.asphodel.app"
+    private let suiteName = "group.io.shadowsky.app"
 
     private var sharedDefaults: UserDefaults? {
         UserDefaults(suiteName: suiteName)
@@ -203,7 +203,7 @@ class NotificationWidgetDataTests: XCTestCase {
 
 class TrendingTopicsWidgetDataTests: XCTestCase {
 
-    private let suiteName = "group.io.asphodel.app"
+    private let suiteName = "group.io.shadowsky.app"
 
     private var sharedDefaults: UserDefaults? {
         UserDefaults(suiteName: suiteName)
@@ -315,7 +315,7 @@ class TrendingTopicsWidgetDataTests: XCTestCase {
 
 class RecentDMsWidgetDataTests: XCTestCase {
 
-    private let suiteName = "group.io.asphodel.app"
+    private let suiteName = "group.io.shadowsky.app"
 
     private var sharedDefaults: UserDefaults? {
         UserDefaults(suiteName: suiteName)
@@ -462,7 +462,7 @@ class RecentDMsWidgetDataTests: XCTestCase {
 
 class StaleDataDetectionTests: XCTestCase {
 
-    private let suiteName = "group.io.asphodel.app"
+    private let suiteName = "group.io.shadowsky.app"
 
     private var sharedDefaults: UserDefaults? {
         UserDefaults(suiteName: suiteName)
@@ -556,7 +556,7 @@ class WidgetDeepLinkTests: XCTestCase {
 
 class DataFormatConsistencyTests: XCTestCase {
 
-    private let suiteName = "group.io.asphodel.app"
+    private let suiteName = "group.io.shadowsky.app"
 
     private var sharedDefaults: UserDefaults? {
         UserDefaults(suiteName: suiteName)

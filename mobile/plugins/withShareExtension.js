@@ -15,9 +15,9 @@ const fs = require("fs");
  * 3. Sets up the correct build settings for the extension
  */
 
-const APP_GROUP_ID = "group.io.asphodel.app";
+const APP_GROUP_ID = "group.io.shadowsky.app";
 const SHARE_EXT_NAME = "ShareExtension";
-const SHARE_EXT_BUNDLE_ID = "io.asphodel.app.ShareExtension";
+const SHARE_EXT_BUNDLE_ID = "io.shadowsky.app.ShareExtension";
 
 // Deterministic UUIDs for Share Extension (so config plugin is idempotent)
 const SE_PRODUCT_REF = "SHARE_EXT_PRODUCT_001";

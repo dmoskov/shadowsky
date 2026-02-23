@@ -21,7 +21,6 @@ jest.mock('../../screens/auth/OAuthCallbackScreen', () => {
   return {
     OAuthCallbackScreen: (props: any) => {
       const children = [R.createElement(RN.Text, { key: 'label' }, 'OAuthCallbackScreen')];
-      if (props.code) children.push(R.createElement(RN.Text, { key: 'code', testID: 'oauth-code' }, props.code));
       if (props.error) children.push(R.createElement(RN.Text, { key: 'error', testID: 'oauth-error' }, props.error));
       return R.createElement(RN.View, { testID: 'mock-OAuthCallbackScreen' }, ...children);
     },
@@ -59,14 +58,10 @@ describe('Auth Routes - Smoke Tests', () => {
       expect(getByTestId('mock-OAuthCallbackScreen')).toBeTruthy();
     });
 
-    it('renders OAuthCallbackRoute with code and state', () => {
-      mockUseLocalSearchParams.mockReturnValue({
-        code: 'auth-code-123',
-        state: 'state-456',
-      });
+    it('renders OAuthCallbackRoute without error', () => {
+      mockUseLocalSearchParams.mockReturnValue({});
       const { getByTestId } = render(<OAuthCallbackRoute />);
       expect(getByTestId('mock-OAuthCallbackScreen')).toBeTruthy();
-      expect(getByTestId('oauth-code')).toBeTruthy();
     });
 
     it('renders OAuthCallbackRoute with error', () => {

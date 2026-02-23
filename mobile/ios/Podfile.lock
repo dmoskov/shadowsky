@@ -214,6 +214,9 @@ PODS:
     - Yoga
   - ExpoAsset (12.0.12):
     - ExpoModulesCore
+  - ExpoAtprotoOAuthClient (0.0.10):
+    - ExpoModulesCore
+    - JOSESwift (~> 2.3)
   - ExpoBackgroundFetch (14.0.9):
     - ExpoModulesCore
   - ExpoCamera (17.0.10):
@@ -339,6 +342,7 @@ PODS:
   - hermes-engine (0.81.5):
     - hermes-engine/Pre-built (= 0.81.5)
   - hermes-engine/Pre-built (0.81.5)
+  - JOSESwift (2.4.0)
   - libavif/core (1.0.0)
   - libavif/libdav1d (1.0.0):
     - libavif/core
@@ -356,6 +360,8 @@ PODS:
   - libwebp/sharpyuv (1.5.0)
   - libwebp/webp (1.5.0):
     - libwebp/sharpyuv
+  - LowPowerMode (1.0.0):
+    - ExpoModulesCore
   - NativeCompose (1.0.0):
     - ExpoModulesCore
   - NativeFeedList (1.0.0):
@@ -2434,6 +2440,7 @@ DEPENDENCIES:
   - expo-dev-menu (from `../node_modules/expo-dev-menu`)
   - expo-dev-menu-interface (from `../node_modules/expo-dev-menu-interface/ios`)
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
+  - "ExpoAtprotoOAuthClient (from `../node_modules/@atproto/oauth-client-expo/ios`)"
   - ExpoBackgroundFetch (from `../node_modules/expo-background-fetch/ios`)
   - ExpoCamera (from `../node_modules/expo-camera/ios`)
   - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
@@ -2467,6 +2474,7 @@ DEPENDENCIES:
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FeedBridge (from `../modules/feed-bridge/ios`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
+  - LowPowerMode (from `../modules/low-power-mode/ios`)
   - NativeCompose (from `../modules/native-compose/ios`)
   - NativeFeedList (from `../modules/native-feed-list/ios`)
   - NativeMessages (from `../modules/native-messages/ios`)
@@ -2559,6 +2567,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - JOSESwift
     - libavif
     - libdav1d
     - libwebp
@@ -2599,6 +2608,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-dev-menu-interface/ios"
   ExpoAsset:
     :path: "../node_modules/expo-asset/ios"
+  ExpoAtprotoOAuthClient:
+    :path: "../node_modules/@atproto/oauth-client-expo/ios"
   ExpoBackgroundFetch:
     :path: "../node_modules/expo-background-fetch/ios"
   ExpoCamera:
@@ -2666,6 +2677,8 @@ EXTERNAL SOURCES:
   hermes-engine:
     :podspec: "../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2025-07-07-RNv0.81.0-e0fc67142ec0763c6b6153ca2bf96df815539782
+  LowPowerMode:
+    :path: "../modules/low-power-mode/ios"
   NativeCompose:
     :path: "../modules/native-compose/ios"
   NativeFeedList:
@@ -2858,6 +2871,7 @@ SPEC CHECKSUMS:
   expo-dev-menu: 05b18812110c175814c6af0d09dd658abcc5e00d
   expo-dev-menu-interface: 600df12ea01efecdd822daaf13cc0ac091775533
   ExpoAsset: f867e55ceb428aab99e1e8c082b5aee7c159ea18
+  ExpoAtprotoOAuthClient: 87c4b0380dd938fe1a445993478ac6776f519b3a
   ExpoBackgroundFetch: 1631d1fbf59e6ad98ca83b6780ae3a35f678f632
   ExpoCamera: 6a326deb45ba840749652e4c15198317aa78497e
   ExpoCrypto: b6105ebaa15d6b38a811e71e43b52cd934945322
@@ -2891,9 +2905,11 @@ SPEC CHECKSUMS:
   FBLazyVector: e95a291ad2dadb88e42b06e0c5fb8262de53ec12
   FeedBridge: 9a076c557998bc5a6abda0d6bd3ad8271f18e345
   hermes-engine: 9f4dfe93326146a1c99eb535b1cb0b857a3cd172
+  JOSESwift: 7ff178bb9173ff42c6e990929a9f2fa702a34f69
   libavif: 5f8e715bea24debec477006f21ef9e95432e254d
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
+  LowPowerMode: 157c69ed9967177f803fb9499b29591efff5ffd3
   NativeCompose: 84f4994c150a13da10677f6b66885e729466278f
   NativeFeedList: d7adafc2ce4df71e7ac29b4b0a5b915dfbab9439
   NativeMessages: 5f8dc1ea49db758a9b5f6d5dcb036099530e9114
@@ -2990,6 +3006,6 @@ SPEC CHECKSUMS:
   Yoga: 5934998fbeaef7845dbf698f698518695ab4cd1a
   ZXingObjC: 8898711ab495761b2dbbdec76d90164a6d7e14c5
 
-PODFILE CHECKSUM: fa7f22d8a19d4a85be13967d7124af558737c324
+PODFILE CHECKSUM: 31419ecccd292df7f85459038328838af9ee0246
 
 COCOAPODS: 1.16.2

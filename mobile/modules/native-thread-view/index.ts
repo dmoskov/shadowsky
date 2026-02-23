@@ -20,3 +20,15 @@ export function setMentionSearchResults(resultsJson: string): void {
 export function setReplySent(success: boolean, errorMessage?: string): void {
   NativeThreadViewModule.setReplySent(success, errorMessage ?? null);
 }
+
+export function setThreadData(jsonString: string): void {
+  if (typeof NativeThreadViewModule.setThreadData === 'function') {
+    NativeThreadViewModule.setThreadData(jsonString);
+  }
+}
+
+export function clearThreadData(): void {
+  if (typeof NativeThreadViewModule.clearThreadData === 'function') {
+    NativeThreadViewModule.clearThreadData();
+  }
+}

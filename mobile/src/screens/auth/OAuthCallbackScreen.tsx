@@ -1,62 +1,34 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-// OAuth callback is now handled by @atproto/oauth-client-expo internally.
-// This screen is a fallback that redirects to auth if hit directly.
 import { useTheme } from "../../contexts/ThemeContext";
 
 interface OAuthCallbackScreenProps {
-  code?: string;
-  state?: string;
   error?: string;
-  iss?: string;
 }
 
-export function OAuthCallbackScreen({
-  code,
-  state,
-  error,
-  iss,
-}: OAuthCallbackScreenProps) {
+/**
+ * OAuth callback screen — shown as a fallback route for deep-link
+ * OAuth callbacks. With @atproto/oauth-client-expo the callback is
+ * handled inline by expo-web-browser, so this screen just shows a
+ * spinner or redirects on error.
+ */
+export function OAuthCallbackScreen({ error }: OAuthCallbackScreenProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleCallback = async () => {
-      if (error) {
-        setErrorMessage(error);
-        setTimeout(() => router.replace("/(auth)"), 2000);
-        return;
-      }
-
-      if (code && state) {
-        try {
-          // With @atproto/oauth-client-expo, the token exchange happens
-          // automatically via the ExpoOAuthClient. If we reach this screen,
-          // the session should already be established. Navigate home.
-          router.replace("/(app)/(tabs)/(home)");
-        } catch (err) {
-          const message =
-            err instanceof Error ? err.message : "OAuth sign in failed";
-          setErrorMessage(message);
-          setTimeout(() => router.replace("/(auth)"), 2000);
-        }
-      } else {
-        setErrorMessage("Missing OAuth parameters");
-        setTimeout(() => router.replace("/(auth)"), 2000);
-      }
-    };
-
-    handleCallback();
-  }, [code, state, error, iss, router]);
+    if (error) {
+      setTimeout(() => router.replace("/(auth)"), 2000);
+    }
+  }, [error, router]);
 
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color={colors.primary} />
       <Text style={styles.text}>
-        {errorMessage || "Completing sign in..."}
+        {error || "Completing sign in..."}
       </Text>
     </View>
   );

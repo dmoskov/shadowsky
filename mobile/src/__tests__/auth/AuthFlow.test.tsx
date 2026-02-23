@@ -13,6 +13,7 @@ import { AuthProvider, useAuth } from '../../contexts/AuthContext';
 
 // auth-service: the main module under test — all functions mocked
 const mockSignInWithPassword = jest.fn();
+const mockSignInWithOAuth = jest.fn();
 const mockResumeSession = jest.fn();
 const mockGetAccounts = jest.fn().mockResolvedValue([]);
 const mockSignOut = jest.fn().mockResolvedValue(undefined);
@@ -20,6 +21,7 @@ const mockGetCurrentSession = jest.fn().mockResolvedValue(null);
 
 jest.mock('../../services/auth/auth-service', () => ({
   signInWithPassword: (...args: unknown[]) => mockSignInWithPassword(...args),
+  signInWithOAuth: (...args: unknown[]) => mockSignInWithOAuth(...args),
   resumeSession: (...args: unknown[]) => mockResumeSession(...args),
   getAccounts: (...args: unknown[]) => mockGetAccounts(...args),
   signOut: (...args: unknown[]) => mockSignOut(...args),
@@ -39,17 +41,6 @@ jest.mock('../../services/auth/secure-token-storage', () => ({
   migrateTokensToSecureStore: jest.fn().mockResolvedValue(undefined),
 }));
 
-// OAuth service
-const mockStartOAuthFlow = jest.fn();
-const mockParseCallbackUrl = jest.fn();
-const mockHandleOAuthCallback = jest.fn();
-
-jest.mock('../../services/auth/oauth', () => ({
-  startOAuthFlow: (...args: unknown[]) => mockStartOAuthFlow(...args),
-  parseCallbackUrl: (...args: unknown[]) => mockParseCallbackUrl(...args),
-  handleOAuthCallback: (...args: unknown[]) => mockHandleOAuthCallback(...args),
-}));
-
 // AT Proto client
 const mockGetProfile = jest.fn();
 const mockLogin = jest.fn();
@@ -64,6 +55,7 @@ jest.mock('../../services/atproto/client', () => ({
     })),
     resumeSession: mockClientResumeSession,
     refreshSession: jest.fn(),
+    isOAuthSession: jest.fn().mockReturnValue(false),
   })),
   resetAtProtoClient: jest.fn(),
 }));
@@ -300,47 +292,12 @@ describe('Auth Flow', () => {
   // ── OAuth login ──────────────────────────────────────────────────────────
 
   describe('OAuth login', () => {
-    it('processes OAuth callback and creates session', async () => {
-      const mockOAuthSessionData = {
+    it('signs in with OAuth and creates session', async () => {
+      const session = makeFakeSession({
         did: 'did:plc:oauthuser',
         handle: 'bob.bsky.social',
-        accessJwt: 'oauth-access-jwt',
-        refreshJwt: 'oauth-refresh-jwt',
-        active: true,
-      };
-
-      mockStartOAuthFlow.mockResolvedValue({
-        callbackUrl: 'shadowsky://oauth-callback?code=auth-code&state=test-state',
       });
-      mockParseCallbackUrl.mockReturnValue({
-        code: 'auth-code',
-        state: 'test-state',
-      });
-      mockHandleOAuthCallback.mockResolvedValue(mockOAuthSessionData);
-
-      renderWithAuth();
-      await act(async () => {
-        jest.runAllTimers();
-      });
-      await waitFor(() => expect(capturedAuth?.isLoading).toBe(false));
-
-      // OAuth sign-in calls startOAuthFlow, then parses callback, then exchanges code.
-      // The signInWithOAuth method uses a dynamic import for auth-service.signInWithOAuth,
-      // so we verify the flow up to the callback exchange step.
-      await act(async () => {
-        try {
-          await capturedAuth!.signInWithOAuth('bob.bsky.social');
-        } catch {
-          // Dynamic import may not resolve perfectly in test env — that's OK.
-        }
-      });
-
-      expect(mockStartOAuthFlow).toHaveBeenCalledWith('bob.bsky.social');
-    });
-
-    it('handles user cancellation of OAuth flow', async () => {
-      // User dismissed the browser — startOAuthFlow returns null
-      mockStartOAuthFlow.mockResolvedValue(null);
+      mockSignInWithOAuth.mockResolvedValue(session);
 
       renderWithAuth();
       await act(async () => {
@@ -352,16 +309,16 @@ describe('Auth Flow', () => {
         await capturedAuth!.signInWithOAuth('bob.bsky.social');
       });
 
-      // Should remain unauthenticated
-      expect(capturedAuth?.isAuthenticated).toBe(false);
-      expect(capturedAuth?.isLoading).toBe(false);
+      expect(mockSignInWithOAuth).toHaveBeenCalledWith('bob.bsky.social');
+      await waitFor(() => {
+        expect(capturedAuth?.isAuthenticated).toBe(true);
+        expect(capturedAuth?.session?.did).toBe('did:plc:oauthuser');
+      });
     });
 
-    it('throws on invalid OAuth callback URL', async () => {
-      mockStartOAuthFlow.mockResolvedValue({
-        callbackUrl: 'shadowsky://oauth-callback?error=access_denied',
-      });
-      mockParseCallbackUrl.mockReturnValue(null);
+    it('handles user cancellation of OAuth flow', async () => {
+      // ExpoOAuthClient throws "Authentication cancelled" when user dismisses browser
+      mockSignInWithOAuth.mockRejectedValue(new Error('Authentication cancelled: cancel'));
 
       renderWithAuth();
       await act(async () => {
@@ -373,7 +330,26 @@ describe('Auth Flow', () => {
         act(async () => {
           await capturedAuth!.signInWithOAuth('bob.bsky.social');
         }),
-      ).rejects.toThrow('Invalid OAuth callback');
+      ).rejects.toThrow('Authentication cancelled');
+
+      expect(capturedAuth?.isAuthenticated).toBe(false);
+      expect(capturedAuth?.isLoading).toBe(false);
+    });
+
+    it('throws on OAuth error and stays unauthenticated', async () => {
+      mockSignInWithOAuth.mockRejectedValue(new Error('OAuth sign-in failed'));
+
+      renderWithAuth();
+      await act(async () => {
+        jest.runAllTimers();
+      });
+      await waitFor(() => expect(capturedAuth?.isLoading).toBe(false));
+
+      await expect(
+        act(async () => {
+          await capturedAuth!.signInWithOAuth('bob.bsky.social');
+        }),
+      ).rejects.toThrow('OAuth sign-in failed');
 
       expect(capturedAuth?.isAuthenticated).toBe(false);
     });

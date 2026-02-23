@@ -41,6 +41,15 @@ jest.mock('expo-secure-store', () => ({
   WHEN_PASSCODE_SET_THIS_DEVICE_ONLY: 4,
 }));
 
+// Mock @atproto/oauth-client-expo (requires native module not available in tests)
+jest.mock('@atproto/oauth-client-expo', () => ({
+  ExpoOAuthClient: jest.fn().mockImplementation(() => ({
+    signIn: jest.fn(),
+    restore: jest.fn(),
+    revoke: jest.fn(),
+  })),
+}));
+
 // Mock Expo native modules
 jest.mock('expo-constants', () => ({
   ...jest.requireActual('expo-constants'),

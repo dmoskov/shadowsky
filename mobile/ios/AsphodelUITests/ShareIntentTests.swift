@@ -385,7 +385,7 @@ class ShareIntentModuleTests: XCTestCase {
 
     /// Simulate receiving shared text through App Group UserDefaults.
     func testGetSharedContentReceivesText() {
-        let suiteName = "group.io.asphodel.app"
+        let suiteName = "group.io.shadowsky.app"
         let defaults = UserDefaults(suiteName: suiteName)
 
         // Write simulated shared text
@@ -408,7 +408,7 @@ class ShareIntentModuleTests: XCTestCase {
 
     /// Simulate receiving a shared URL.
     func testGetSharedContentReceivesURL() {
-        let suiteName = "group.io.asphodel.app"
+        let suiteName = "group.io.shadowsky.app"
         let defaults = UserDefaults(suiteName: suiteName)
 
         let sharedData: [String: Any] = [
@@ -428,7 +428,7 @@ class ShareIntentModuleTests: XCTestCase {
 
     /// Simulate receiving a shared image reference.
     func testGetSharedContentReceivesImage() {
-        let suiteName = "group.io.asphodel.app"
+        let suiteName = "group.io.shadowsky.app"
         let defaults = UserDefaults(suiteName: suiteName)
 
         let sharedData: [String: Any] = [

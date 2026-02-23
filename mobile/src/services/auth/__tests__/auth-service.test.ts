@@ -28,9 +28,13 @@ import * as secureTokenStorage from '../secure-token-storage';
 jest.mock('@react-native-async-storage/async-storage');
 jest.mock('../../atproto/client');
 jest.mock('../secure-token-storage');
+jest.mock('../oauth-expo');
+
+import * as oauthExpo from '../oauth-expo';
 
 const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
 const mockSecureStorage = secureTokenStorage as jest.Mocked<typeof secureTokenStorage>;
+const mockOAuthExpo = oauthExpo as jest.Mocked<typeof oauthExpo>;
 
 describe('auth-service', () => {
   // Mock data
@@ -99,6 +103,8 @@ describe('auth-service', () => {
         refreshJwt: 'new-refresh-jwt',
       }),
       getAgent: jest.fn().mockReturnValue(mockAgent),
+      setOAuthAgent: jest.fn(),
+      isOAuthSession: jest.fn().mockReturnValue(false),
     };
 
     (clientModule.getAtProtoClient as jest.Mock).mockReturnValue(mockClient);
@@ -169,21 +175,29 @@ describe('auth-service', () => {
   });
 
   describe('signInWithOAuth', () => {
-    it('should successfully sign in with OAuth and store tokens in SecureStore', async () => {
-      const result = await signInWithOAuth(mockSessionData);
+    it('should successfully sign in with OAuth using oauth-expo', async () => {
+      const mockOAuthAgent = {
+        getProfile: jest.fn().mockResolvedValue(mockProfile),
+      };
+      mockOAuthExpo.signInWithOAuth.mockResolvedValue({
+        agent: mockOAuthAgent as any,
+        did: mockSessionData.did,
+      });
+
+      const result = await signInWithOAuth('testuser.bsky.social');
 
       expect(clientModule.resetAtProtoClient).toHaveBeenCalled();
-      expect(mockClient.initialize).toHaveBeenCalledWith(mockSessionData);
-      expect(mockAgent.getProfile).toHaveBeenCalledWith({actor: mockSessionData.did});
-
-      // Verify tokens stored in SecureStore
-      expect(mockSecureStorage.saveSessionTokens).toHaveBeenCalledWith(
+      expect(mockOAuthExpo.signInWithOAuth).toHaveBeenCalledWith('testuser.bsky.social');
+      expect(mockClient.setOAuthAgent).toHaveBeenCalledWith(
+        mockOAuthAgent,
         mockSessionData.did,
-        expect.objectContaining({
-          did: mockSessionData.did,
-          accessJwt: mockSessionData.accessJwt,
-          refreshJwt: mockSessionData.refreshJwt,
-        })
+      );
+      expect(mockOAuthAgent.getProfile).toHaveBeenCalledWith({actor: mockSessionData.did});
+
+      // Verify auth method flag was stored
+      expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
+        `@shadowsky/auth_method:${mockSessionData.did}`,
+        'oauth',
       );
 
       expect(result).toMatchObject({

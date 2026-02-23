@@ -14,7 +14,7 @@ import XCTest
 
 class WidgetDataBridgeModuleTests: XCTestCase {
 
-    private let suiteName = "group.io.asphodel.app"
+    private let suiteName = "group.io.shadowsky.app"
 
     private var sharedDefaults: UserDefaults? {
         UserDefaults(suiteName: suiteName)

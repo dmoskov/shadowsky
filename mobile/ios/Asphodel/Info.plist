@@ -29,7 +29,9 @@
         <array>
           <string>shadowsky</string>
           <string>bsky</string>
-          <string>io.asphodel.app</string>
+          <string>io.shadowsky.app</string>
+          <string>io.shadowsky</string>
+          <string>io.shadowsky.app</string>
         </array>
       </dict>
       <dict>
@@ -41,6 +43,8 @@
     </array>
     <key>CFBundleVersion</key>
     <string>1</string>
+    <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
     <key>LSMinimumSystemVersion</key>
     <string>12.0</string>
     <key>LSRequiresIPhoneOS</key>
@@ -68,6 +72,61 @@
     </array>
     <key>RCTNewArchEnabled</key>
     <true/>
+    <key>UIApplicationShortcutItems</key>
+    <array>
+      <dict>
+        <key>UIApplicationShortcutItemTitle</key>
+        <string>New Post</string>
+        <key>UIApplicationShortcutItemType</key>
+        <string>compose</string>
+        <key>UIApplicationShortcutItemUserInfo</key>
+        <dict>
+          <key>href</key>
+          <string>/(app)/compose</string>
+        </dict>
+        <key>UIApplicationShortcutItemIconType</key>
+        <string>UIApplicationShortcutIconTypeCompose</string>
+      </dict>
+      <dict>
+        <key>UIApplicationShortcutItemTitle</key>
+        <string>Search</string>
+        <key>UIApplicationShortcutItemType</key>
+        <string>search</string>
+        <key>UIApplicationShortcutItemUserInfo</key>
+        <dict>
+          <key>href</key>
+          <string>/(app)/(tabs)/(search)</string>
+        </dict>
+        <key>UIApplicationShortcutItemIconType</key>
+        <string>UIApplicationShortcutIconTypeSearch</string>
+      </dict>
+      <dict>
+        <key>UIApplicationShortcutItemTitle</key>
+        <string>Notifications</string>
+        <key>UIApplicationShortcutItemType</key>
+        <string>notifications</string>
+        <key>UIApplicationShortcutItemUserInfo</key>
+        <dict>
+          <key>href</key>
+          <string>/(app)/(tabs)/(notifications)</string>
+        </dict>
+        <key>UIApplicationShortcutItemIconSymbolName</key>
+        <string>bell.fill</string>
+      </dict>
+      <dict>
+        <key>UIApplicationShortcutItemTitle</key>
+        <string>Messages</string>
+        <key>UIApplicationShortcutItemType</key>
+        <string>messages</string>
+        <key>UIApplicationShortcutItemUserInfo</key>
+        <dict>
+          <key>href</key>
+          <string>/(app)/messages</string>
+        </dict>
+        <key>UIApplicationShortcutItemIconType</key>
+        <string>UIApplicationShortcutIconTypeMessage</string>
+      </dict>
+    </array>
     <key>UIBackgroundModes</key>
     <array>
       <string>remote-notification</string>
@@ -87,6 +146,8 @@
     <array>
       <string>UIInterfaceOrientationPortrait</string>
       <string>UIInterfaceOrientationPortraitUpsideDown</string>
+      <string>UIInterfaceOrientationLandscapeLeft</string>
+      <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
     <key>UISupportedInterfaceOrientations~ipad</key>
     <array>

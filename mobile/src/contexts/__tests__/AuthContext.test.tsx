@@ -6,8 +6,15 @@ import * as authService from '../../services/auth/auth-service';
 
 // Mock dependencies
 jest.mock('../../services/auth/auth-service');
-jest.mock('../../services/auth/oauth');
-jest.mock('../../services/atproto/client');
+jest.mock('../../services/atproto/client', () => ({
+  getAtProtoClient: jest.fn(() => ({
+    getAgent: jest.fn(() => ({ session: null, getProfile: jest.fn() })),
+    isOAuthSession: jest.fn().mockReturnValue(false),
+    resumeSession: jest.fn(),
+    refreshSession: jest.fn(),
+  })),
+  resetAtProtoClient: jest.fn(),
+}));
 jest.mock('../../utils/error-reporting', () => ({
   addBreadcrumb: jest.fn(),
   setUser: jest.fn().mockResolvedValue(undefined),
