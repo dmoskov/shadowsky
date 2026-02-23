@@ -1,26 +1,27 @@
-import React, {useMemo} from 'react';
+import { AppBskyFeedPost } from "@atproto/api";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
-import {AppBskyFeedPost} from '@atproto/api';
-import {useNotifications} from '../../hooks/api/useNotifications';
-import {LoadingState} from '../../components/LoadingState';
-import {ErrorState} from '../../components/ErrorState';
-import {EmptyState} from '../../components/EmptyState';
-import {useTheme} from '../../contexts/ThemeContext';
-import {
+  eachDayOfInterval,
   format,
+  isWithinInterval,
   startOfDay,
   subDays,
-  eachDayOfInterval,
-  isWithinInterval,
-} from 'date-fns';
+} from "date-fns";
+import React, { useMemo } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { EmptyState } from "../../components/EmptyState";
+import { ErrorState } from "../../components/ErrorState";
+import { LoadingState } from "../../components/LoadingState";
+import { useTheme } from "../../contexts/ThemeContext";
+import { useNotificationPosts } from "../../hooks/api/useNotificationPosts";
+import { useNotifications } from "../../hooks/api/useNotifications";
 
-type TimeRange = 'week' | 'month';
+type TimeRange = "week" | "month";
 
 interface DayData {
   date: Date;
@@ -43,28 +44,31 @@ interface TopPost {
 }
 
 export function NotificationsAnalyticsScreen() {
-  const [timeRange, setTimeRange] = React.useState<TimeRange>('week');
-  const {data, isLoading, isError, error, refetch} = useNotifications();
+  const [timeRange, setTimeRange] = React.useState<TimeRange>("week");
+  const { data, isLoading, isError, error, refetch } = useNotifications();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Flatten all notifications
   const notifications = useMemo(
-    () => data?.pages?.flatMap(page => page.notifications) || [],
+    () => data?.pages?.flatMap((page) => page.notifications) || [],
     [data],
   );
+
+  // Fetch actual post data for notifications (to get post text for like/repost notifications)
+  const { postMap } = useNotificationPosts(notifications);
 
   // Calculate date range
   const dateRange = useMemo(() => {
     const endDate = new Date();
     const startDate =
-      timeRange === 'week' ? subDays(endDate, 7) : subDays(endDate, 30);
-    return {startDate, endDate};
+      timeRange === "week" ? subDays(endDate, 7) : subDays(endDate, 30);
+    return { startDate, endDate };
   }, [timeRange]);
 
   // Filter notifications by date range
   const filteredNotifications = useMemo(() => {
-    return notifications.filter(notification => {
+    return notifications.filter((notification) => {
       const notificationDate = new Date(notification.indexedAt);
       return isWithinInterval(notificationDate, {
         start: dateRange.startDate,
@@ -80,12 +84,12 @@ export function NotificationsAnalyticsScreen() {
       end: dateRange.endDate,
     });
 
-    return days.map(day => {
+    return days.map((day) => {
       const dayStart = startOfDay(day);
       const dayEnd = new Date(dayStart);
       dayEnd.setHours(23, 59, 59, 999);
 
-      const count = filteredNotifications.filter(notification => {
+      const count = filteredNotifications.filter((notification) => {
         const notificationDate = new Date(notification.indexedAt);
         return isWithinInterval(notificationDate, {
           start: dayStart,
@@ -93,7 +97,7 @@ export function NotificationsAnalyticsScreen() {
         });
       }).length;
 
-      return {date: day, count};
+      return { date: day, count };
     });
   }, [dateRange.startDate, dateRange.endDate, filteredNotifications]);
 
@@ -102,27 +106,27 @@ export function NotificationsAnalyticsScreen() {
     const typeCounts: Record<string, number> = {};
     const total = filteredNotifications.length;
 
-    filteredNotifications.forEach(notification => {
+    filteredNotifications.forEach((notification) => {
       const type = notification.reason;
       typeCounts[type] = (typeCounts[type] || 0) + 1;
     });
 
     const typeConfig: Record<
       string,
-      {icon: string; color: string; label: string}
+      { icon: string; color: string; label: string }
     > = {
-      like: {icon: '❤️', color: colors.danger, label: 'Likes'},
-      repost: {icon: '🔄', color: colors.success, label: 'Reposts'},
-      follow: {icon: '👤', color: colors.primary, label: 'Follows'},
-      mention: {icon: '@', color: colors.mention, label: 'Mentions'},
-      reply: {icon: '💬', color: colors.reply, label: 'Replies'},
-      quote: {icon: '💭', color: colors.quote, label: 'Quotes'},
+      like: { icon: "❤️", color: colors.danger, label: "Likes" },
+      repost: { icon: "🔄", color: colors.success, label: "Reposts" },
+      follow: { icon: "👤", color: colors.primary, label: "Follows" },
+      mention: { icon: "@", color: colors.mention, label: "Mentions" },
+      reply: { icon: "💬", color: colors.reply, label: "Replies" },
+      quote: { icon: "💭", color: colors.quote, label: "Quotes" },
     };
 
     return Object.entries(typeCounts)
       .map(([type, count]) => {
         const config = typeConfig[type] || {
-          icon: '🔔',
+          icon: "🔔",
           color: colors.textSecondary,
           label: type,
         };
@@ -141,17 +145,28 @@ export function NotificationsAnalyticsScreen() {
   const topEngagedPosts = useMemo<TopPost[]>(() => {
     const postEngagement: Record<string, TopPost> = {};
 
-    filteredNotifications.forEach(notification => {
+    filteredNotifications.forEach((notification) => {
       // Only count notifications that relate to posts (not follows)
-      if (notification.reason === 'follow') return;
+      if (notification.reason === "follow") return;
 
       const uri = notification.reasonSubject || notification.uri;
       if (!uri) return;
 
       if (!postEngagement[uri]) {
-        const postText = AppBskyFeedPost.isRecord(notification.record)
-          ? (notification.record.text as string) || 'Post content unavailable'
-          : 'Post content unavailable';
+        // First try the fetched post data (works for like/repost notifications)
+        const fetchedPost = postMap.get(uri);
+        let postText = "Post content unavailable";
+
+        if (fetchedPost) {
+          const fetchedRecord = fetchedPost.record as
+            | { text?: string }
+            | undefined;
+          postText = fetchedRecord?.text || "Post content unavailable";
+        } else if (AppBskyFeedPost.isRecord(notification.record)) {
+          // For reply/mention/quote notifications, the record IS the post
+          postText =
+            (notification.record.text as string) || "Post content unavailable";
+        }
 
         postEngagement[uri] = {
           uri,
@@ -170,26 +185,28 @@ export function NotificationsAnalyticsScreen() {
     return Object.values(postEngagement)
       .sort((a, b) => b.engagementCount - a.engagementCount)
       .slice(0, 5);
-  }, [filteredNotifications]);
+  }, [filteredNotifications, postMap]);
 
   // Calculate engagement metrics
   const engagementMetrics = useMemo(() => {
     const totalNotifications = filteredNotifications.length;
-    const uniqueDays = dailyTrends.filter(day => day.count > 0).length;
+    const uniqueDays = dailyTrends.filter((day) => day.count > 0).length;
     const avgPerDay =
       uniqueDays > 0 ? totalNotifications / dailyTrends.length : 0;
 
     // Calculate engagement rate (notifications with post interaction vs follows)
     const postInteractions = filteredNotifications.filter(
-      n => n.reason !== 'follow',
+      (n) => n.reason !== "follow",
     ).length;
     const engagementRate =
-      totalNotifications > 0 ? (postInteractions / totalNotifications) * 100 : 0;
+      totalNotifications > 0
+        ? (postInteractions / totalNotifications) * 100
+        : 0;
 
     // Most active day
     const mostActiveDay = dailyTrends.reduce(
       (max, day) => (day.count > max.count ? day : max),
-      dailyTrends[0] || {date: new Date(), count: 0},
+      dailyTrends[0] || { date: new Date(), count: 0 },
     );
 
     return {
@@ -210,17 +227,22 @@ export function NotificationsAnalyticsScreen() {
   if (isError) {
     return (
       <ErrorState
-        message={error?.message || 'Failed to load analytics'}
+        message={error?.message || "Failed to load analytics"}
         onRetry={() => refetch()}
       />
     );
   }
 
   if (notifications.length === 0) {
-    return <EmptyState message="No notification data available yet" description="Analytics will appear once you start receiving notifications" />;
+    return (
+      <EmptyState
+        message="No notification data available yet"
+        description="Analytics will appear once you start receiving notifications"
+      />
+    );
   }
 
-  const maxDailyCount = Math.max(...dailyTrends.map(d => d.count), 1);
+  const maxDailyCount = Math.max(...dailyTrends.map((d) => d.count), 1);
 
   return (
     <ScrollView style={styles.container} keyboardDismissMode="on-drag">
@@ -230,28 +252,32 @@ export function NotificationsAnalyticsScreen() {
           <TouchableOpacity
             style={[
               styles.timeRangeButton,
-              timeRange === 'week' && styles.timeRangeButtonActive,
+              timeRange === "week" && styles.timeRangeButtonActive,
             ]}
-            onPress={() => setTimeRange('week')}>
+            onPress={() => setTimeRange("week")}
+          >
             <Text
               style={[
                 styles.timeRangeButtonText,
-                timeRange === 'week' && styles.timeRangeButtonTextActive,
-              ]}>
+                timeRange === "week" && styles.timeRangeButtonTextActive,
+              ]}
+            >
               Last 7 Days
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.timeRangeButton,
-              timeRange === 'month' && styles.timeRangeButtonActive,
+              timeRange === "month" && styles.timeRangeButtonActive,
             ]}
-            onPress={() => setTimeRange('month')}>
+            onPress={() => setTimeRange("month")}
+          >
             <Text
               style={[
                 styles.timeRangeButtonText,
-                timeRange === 'month' && styles.timeRangeButtonTextActive,
-              ]}>
+                timeRange === "month" && styles.timeRangeButtonTextActive,
+              ]}
+            >
               Last 30 Days
             </Text>
           </TouchableOpacity>
@@ -283,7 +309,7 @@ export function NotificationsAnalyticsScreen() {
               {engagementMetrics.mostActiveDay.count}
             </Text>
             <Text style={styles.metricLabel}>
-              Peak Day ({format(engagementMetrics.mostActiveDay.date, 'MMM d')})
+              Peak Day ({format(engagementMetrics.mostActiveDay.date, "MMM d")})
             </Text>
           </View>
         </View>
@@ -302,13 +328,13 @@ export function NotificationsAnalyticsScreen() {
                   <View
                     style={[
                       styles.bar,
-                      {height: `${barHeight}%`},
+                      { height: `${barHeight}%` },
                       day.count === 0 && styles.barEmpty,
                     ]}
                   />
                 </View>
                 <Text style={styles.barLabel}>
-                  {format(day.date, 'EEE')[0]}
+                  {format(day.date, "EEE")[0]}
                 </Text>
                 {day.count > 0 && (
                   <Text style={styles.barCount}>{day.count}</Text>
@@ -333,7 +359,10 @@ export function NotificationsAnalyticsScreen() {
                 <View
                   style={[
                     styles.progressBar,
-                    {width: `${stat.percentage}%`, backgroundColor: stat.color},
+                    {
+                      width: `${stat.percentage}%`,
+                      backgroundColor: stat.color,
+                    },
                   ]}
                 />
               </View>
@@ -365,17 +394,17 @@ export function NotificationsAnalyticsScreen() {
                 {post.text}
               </Text>
               <View style={styles.postTypes}>
-                {post.types.map(type => {
+                {post.types.map((type) => {
                   const icons: Record<string, string> = {
-                    like: '❤️',
-                    repost: '🔄',
-                    mention: '@',
-                    reply: '💬',
-                    quote: '💭',
+                    like: "❤️",
+                    repost: "🔄",
+                    mention: "@",
+                    reply: "💬",
+                    quote: "💭",
                   };
                   return (
                     <Text key={type} style={styles.postTypeIcon}>
-                      {icons[type] || '🔔'}
+                      {icons[type] || "🔔"}
                     </Text>
                   );
                 })}
@@ -405,11 +434,11 @@ function createStyles(colors: any) {
     sectionTitle: {
       color: colors.text,
       fontSize: 18,
-      fontWeight: '600',
+      fontWeight: "600",
       marginBottom: 16,
     },
     timeRangeSelector: {
-      flexDirection: 'row',
+      flexDirection: "row",
       gap: 8,
     },
     timeRangeButton: {
@@ -418,7 +447,7 @@ function createStyles(colors: any) {
       paddingHorizontal: 16,
       borderRadius: 8,
       backgroundColor: colors.surfaceElevated,
-      alignItems: 'center',
+      alignItems: "center",
     },
     timeRangeButtonActive: {
       backgroundColor: colors.primary,
@@ -426,55 +455,55 @@ function createStyles(colors: any) {
     timeRangeButtonText: {
       color: colors.textSecondary,
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     timeRangeButtonTextActive: {
       color: colors.text,
     },
     metricsGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+      flexDirection: "row",
+      flexWrap: "wrap",
       gap: 12,
     },
     metricCard: {
       flex: 1,
-      minWidth: '45%',
+      minWidth: "45%",
       backgroundColor: colors.surfaceElevated,
       borderRadius: 12,
       padding: 16,
-      alignItems: 'center',
+      alignItems: "center",
     },
     metricValue: {
       color: colors.text,
       fontSize: 28,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       marginBottom: 4,
     },
     metricLabel: {
       color: colors.textSecondary,
       fontSize: 12,
-      textAlign: 'center',
+      textAlign: "center",
     },
     chartContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'flex-end',
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-end",
       height: 160,
       gap: 4,
     },
     barContainer: {
       flex: 1,
-      alignItems: 'center',
-      justifyContent: 'flex-end',
+      alignItems: "center",
+      justifyContent: "flex-end",
     },
     barWrapper: {
-      width: '100%',
+      width: "100%",
       height: 120,
-      justifyContent: 'flex-end',
-      alignItems: 'center',
+      justifyContent: "flex-end",
+      alignItems: "center",
     },
     bar: {
-      width: '80%',
+      width: "80%",
       backgroundColor: colors.primary,
       borderTopLeftRadius: 4,
       borderTopRightRadius: 4,
@@ -494,14 +523,14 @@ function createStyles(colors: any) {
       marginTop: 2,
     },
     typeRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
       marginBottom: 16,
     },
     typeInfo: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 8,
       flex: 1,
     },
@@ -511,11 +540,11 @@ function createStyles(colors: any) {
     typeLabel: {
       color: colors.text,
       fontSize: 15,
-      fontWeight: '500',
+      fontWeight: "500",
     },
     typeStats: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 12,
       flex: 2,
     },
@@ -524,24 +553,24 @@ function createStyles(colors: any) {
       height: 8,
       backgroundColor: colors.surfaceElevated,
       borderRadius: 4,
-      overflow: 'hidden',
+      overflow: "hidden",
     },
     progressBar: {
-      height: '100%',
+      height: "100%",
       borderRadius: 4,
     },
     typeCount: {
       color: colors.text,
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: "600",
       minWidth: 30,
-      textAlign: 'right',
+      textAlign: "right",
     },
     typePercentage: {
       color: colors.textSecondary,
       fontSize: 13,
       minWidth: 40,
-      textAlign: 'right',
+      textAlign: "right",
     },
     postCard: {
       backgroundColor: colors.surfaceElevated,
@@ -550,23 +579,23 @@ function createStyles(colors: any) {
       marginBottom: 12,
     },
     postHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
       marginBottom: 12,
     },
     postRank: {
       color: colors.primary,
       fontSize: 20,
-      fontWeight: 'bold',
+      fontWeight: "bold",
     },
     postEngagement: {
-      alignItems: 'flex-end',
+      alignItems: "flex-end",
     },
     postEngagementCount: {
       color: colors.text,
       fontSize: 24,
-      fontWeight: 'bold',
+      fontWeight: "bold",
     },
     postEngagementLabel: {
       color: colors.textSecondary,
@@ -579,7 +608,7 @@ function createStyles(colors: any) {
       marginBottom: 12,
     },
     postTypes: {
-      flexDirection: 'row',
+      flexDirection: "row",
       gap: 8,
     },
     postTypeIcon: {
