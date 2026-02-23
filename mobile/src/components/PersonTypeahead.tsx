@@ -1,0 +1,211 @@
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
+import { AppBskyActorDefs } from '@atproto/api';
+import { Avatar } from './Avatar';
+import { CloseIcon } from './icons';
+import { useTheme } from '../contexts/ThemeContext';
+import { useSearchActors } from '../hooks/api/useProfile';
+
+interface PersonTypeaheadProps {
+  value: string;
+  onChangeText: (text: string) => void;
+  onSelectPerson: (handle: string) => void;
+  placeholder?: string;
+  maxSuggestions?: number;
+}
+
+export function PersonTypeahead({
+  value,
+  onChangeText,
+  onSelectPerson,
+  placeholder = 'e.g. alice.bsky.social',
+  maxSuggestions = 5,
+}: PersonTypeaheadProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const [query, setQuery] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { data: actors, isLoading } = useSearchActors(query);
+
+  // Debounce the search query
+  useEffect(() => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    const cleaned = value.replace(/^@/, '');
+    if (!cleaned || cleaned.length < 2) {
+      setQuery('');
+      return;
+    }
+    debounceTimer.current = setTimeout(() => {
+      setQuery(cleaned);
+    }, 200);
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [value]);
+
+  const suggestions = useMemo(() => {
+    if (!actors) return [];
+    return actors.slice(0, maxSuggestions);
+  }, [actors, maxSuggestions]);
+
+  const handleSelect = (actor: AppBskyActorDefs.ProfileView) => {
+    setShowSuggestions(false);
+    setQuery('');
+    onSelectPerson(actor.handle);
+  };
+
+  const handleChangeText = (text: string) => {
+    const cleaned = text.replace(/^@/, '');
+    onChangeText(cleaned);
+    setShowSuggestions(cleaned.length >= 2);
+  };
+
+  const handleClear = () => {
+    onChangeText('');
+    setShowSuggestions(false);
+    setQuery('');
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.textInput}
+          placeholder={placeholder}
+          placeholderTextColor={colors.textTertiary}
+          value={value}
+          onChangeText={handleChangeText}
+          onFocus={() => {
+            if (value && value.length >= 2) {
+              setShowSuggestions(true);
+            }
+          }}
+          onBlur={() => {
+            // Delay hiding to allow tap on suggestion
+            setTimeout(() => setShowSuggestions(false), 200);
+          }}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="default"
+        />
+        {value ? (
+          <TouchableOpacity
+            onPress={handleClear}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={styles.clearButton}
+          >
+            <CloseIcon size={16} color={colors.textTertiary} />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      {showSuggestions && (suggestions.length > 0 || isLoading) && (
+        <View style={styles.suggestionsContainer}>
+          {isLoading && suggestions.length === 0 && (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.loadingText}>Searching...</Text>
+            </View>
+          )}
+          {suggestions.map((actor) => (
+            <TouchableOpacity
+              key={actor.did}
+              style={styles.suggestionRow}
+              onPress={() => handleSelect(actor)}
+              activeOpacity={0.7}
+            >
+              <Avatar uri={actor.avatar} size={32} />
+              <View style={styles.suggestionInfo}>
+                <Text style={styles.displayName} numberOfLines={1}>
+                  {actor.displayName || actor.handle}
+                </Text>
+                <Text style={styles.handle} numberOfLines={1}>
+                  @{actor.handle}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      zIndex: 10,
+    },
+    inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surfaceElevated,
+      borderRadius: 8,
+      paddingRight: 8,
+    },
+    textInput: {
+      flex: 1,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 15,
+      color: colors.text,
+    },
+    clearButton: {
+      padding: 4,
+    },
+    suggestionsContainer: {
+      backgroundColor: colors.surface,
+      borderRadius: 8,
+      marginTop: 4,
+      borderWidth: 1,
+      borderColor: colors.surfaceElevated,
+      overflow: 'hidden',
+    },
+    suggestionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      gap: 10,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.surfaceElevated,
+    },
+    suggestionInfo: {
+      flex: 1,
+    },
+    displayName: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    handle: {
+      color: colors.textTertiary,
+      fontSize: 12,
+      marginTop: 1,
+    },
+    loadingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      gap: 8,
+    },
+    loadingText: {
+      color: colors.textSecondary,
+      fontSize: 13,
+    },
+  });
+}

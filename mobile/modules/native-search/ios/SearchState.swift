@@ -31,14 +31,20 @@ class SearchState: ObservableObject {
     @Published var searchHistory: [String] = []
     @Published var showHistory: Bool = false
 
+    // Typeahead (person suggestions while typing)
+    @Published var typeaheadActors: [SearchActorResult] = []
+    @Published var isLoadingTypeahead: Bool = false
+
     // Notifications for search results
     static let searchResultsNotification = NSNotification.Name("NativeSearchResultsUpdated")
     static let trendingDataNotification = NSNotification.Name("NativeSearchTrendingUpdated")
     static let searchHistoryNotification = NSNotification.Name("NativeSearchHistoryUpdated")
+    static let typeaheadResultsNotification = NSNotification.Name("NativeSearchTypeaheadUpdated")
 
     private var resultsObserver: NSObjectProtocol?
     private var trendingObserver: NSObjectProtocol?
     private var historyObserver: NSObjectProtocol?
+    private var typeaheadObserver: NSObjectProtocol?
 
     func startObserving() {
         resultsObserver = NotificationCenter.default.addObserver(
@@ -64,6 +70,14 @@ class SearchState: ObservableObject {
         ) { [weak self] notification in
             self?.handleHistoryData(notification)
         }
+
+        typeaheadObserver = NotificationCenter.default.addObserver(
+            forName: Self.typeaheadResultsNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            self?.handleTypeaheadResults(notification)
+        }
     }
 
     func stopObserving() {
@@ -74,6 +88,9 @@ class SearchState: ObservableObject {
             NotificationCenter.default.removeObserver(observer)
         }
         if let observer = historyObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        if let observer = typeaheadObserver {
             NotificationCenter.default.removeObserver(observer)
         }
     }
@@ -121,5 +138,15 @@ class SearchState: ObservableObject {
         guard let data = notification.userInfo,
               let history = data["history"] as? [String] else { return }
         searchHistory = history
+    }
+
+    private func handleTypeaheadResults(_ notification: Notification) {
+        guard let data = notification.userInfo else { return }
+
+        if let actorsArray = data["actors"] as? [[String: Any]] {
+            typeaheadActors = actorsArray.map { SearchActorResult.fromDict($0) }
+        }
+
+        isLoadingTypeahead = data["isLoading"] as? Bool ?? false
     }
 }

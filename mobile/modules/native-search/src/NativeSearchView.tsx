@@ -21,7 +21,7 @@ import { useSearchActors } from '../../../src/hooks/api/useProfile';
 import { useSearchPosts } from '../../../src/hooks/api/useSearchPosts';
 import { useTrendingData } from '../../../src/hooks/useTrending';
 import { useRouter } from 'expo-router';
-import { setSearchResults, setTrendingData, setSearchHistory } from '../index';
+import { setSearchResults, setTrendingData, setSearchHistory, setTypeaheadResults } from '../index';
 import { SearchFilterSheet, type SearchFilterValues } from '../../../src/components/SearchFilterSheet';
 
 const SEARCH_HISTORY_KEY = '@search_history';
@@ -102,6 +102,8 @@ const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
       mediaFilter: 'all',
     });
     const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const typeaheadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [typeaheadQuery, setTypeaheadQuery] = useState('');
 
     // Data hooks
     const { topics, trends, isLoading: isLoadingTrending } = useTrendingData();
@@ -111,6 +113,12 @@ const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
       isLoading: isLoadingActors,
       refetch: refetchActors,
     } = useSearchActors(activeTab === 'people' ? debouncedQuery : '');
+
+    // Typeahead: search actors with shorter debounce for instant suggestions
+    const {
+      data: typeaheadActors,
+      isLoading: isLoadingTypeahead,
+    } = useSearchActors(typeaheadQuery);
 
     // Build API filters (exclude mediaFilter which is applied client-side)
     const apiFilters = useMemo(() => {
@@ -168,6 +176,25 @@ const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
       return () => {
         if (debounceTimer.current) {
           clearTimeout(debounceTimer.current);
+        }
+      };
+    }, [searchQuery]);
+
+    // Typeahead debounce (faster, 150ms) for person suggestions
+    useEffect(() => {
+      if (typeaheadTimer.current) {
+        clearTimeout(typeaheadTimer.current);
+      }
+      if (!searchQuery || searchQuery.trim().length < 2) {
+        setTypeaheadQuery('');
+        return;
+      }
+      typeaheadTimer.current = setTimeout(() => {
+        setTypeaheadQuery(searchQuery.trim());
+      }, 150);
+      return () => {
+        if (typeaheadTimer.current) {
+          clearTimeout(typeaheadTimer.current);
         }
       };
     }, [searchQuery]);
@@ -292,6 +319,25 @@ const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
         // Module not loaded
       }
     }, [searchHistory]);
+
+    // Push typeahead results to native
+    useEffect(() => {
+      const payload = JSON.stringify({
+        actors: (typeaheadActors || []).slice(0, 5).map((a: any) => ({
+          did: a.did,
+          handle: a.handle,
+          displayName: a.displayName,
+          avatar: a.avatar,
+          description: a.description,
+        })),
+        isLoading: isLoadingTypeahead,
+      });
+      try {
+        setTypeaheadResults(payload);
+      } catch {
+        // Module not loaded
+      }
+    }, [typeaheadActors, isLoadingTypeahead]);
 
     // History management
     const loadSearchHistory = async () => {

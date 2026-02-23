@@ -101,6 +101,21 @@ public class SearchModule: Module {
             }
         }
 
+        // Receive typeahead results from JS
+        Function("setTypeaheadResults") { (resultsJson: String) in
+            DispatchQueue.main.async {
+                guard let data = resultsJson.data(using: .utf8),
+                      let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    return
+                }
+                NotificationCenter.default.post(
+                    name: SearchState.typeaheadResultsNotification,
+                    object: nil,
+                    userInfo: dict
+                )
+            }
+        }
+
         // Receive search history from JS
         Function("setSearchHistory") { (historyJson: String) in
             DispatchQueue.main.async {
