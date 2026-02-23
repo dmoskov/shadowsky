@@ -34,6 +34,11 @@ struct SearchView: View {
             // Search bar
             searchBar
 
+            // Person typeahead suggestions (shown while typing, before tab results)
+            if !searchText.isEmpty && !state.typeaheadActors.isEmpty && isSearchFocused {
+                typeaheadOverlay
+            }
+
             // Content
             if state.showHistory && !state.searchHistory.isEmpty {
                 historyList
@@ -566,6 +571,68 @@ struct SearchView: View {
             }
             .scrollDismissesKeyboard(.interactively)
         }
+    }
+
+    // MARK: - Person Typeahead Overlay
+
+    private var typeaheadOverlay: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("People")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundColor(Color(UIColor.secondaryLabel))
+                    .textCase(.uppercase)
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(Color(UIColor.secondarySystemGroupedBackground).opacity(0.5))
+
+            ForEach(state.typeaheadActors.prefix(5)) { actor in
+                Button(action: {
+                    isSearchFocused = false
+                    onProfilePress(actor.handle)
+                }) {
+                    HStack(spacing: 12) {
+                        avatarView(url: actor.avatar, size: 36)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(actor.displayName ?? actor.handle)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(Color(UIColor.label))
+                                .lineLimit(1)
+
+                            Text("@\(actor.handle)")
+                                .font(.footnote)
+                                .foregroundColor(Color(UIColor.secondaryLabel))
+                                .lineLimit(1)
+                        }
+
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                }
+
+                if actor.id != state.typeaheadActors.prefix(5).last?.id {
+                    Divider().padding(.leading, 64)
+                }
+            }
+
+            if state.isLoadingTypeahead {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("Searching people...")
+                        .font(.footnote)
+                        .foregroundColor(Color(UIColor.secondaryLabel))
+                }
+                .padding(.vertical, 8)
+            }
+
+            Divider()
+        }
+        .background(Color(UIColor.systemBackground))
     }
 
     // MARK: - Shared Views

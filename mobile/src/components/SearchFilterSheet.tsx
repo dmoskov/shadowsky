@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 import { LanguagePicker } from './LanguagePicker';
+import { PersonTypeahead } from './PersonTypeahead';
 import {
   CalendarIcon,
   CloseIcon,
@@ -344,30 +345,16 @@ export function SearchFilterSheet({
                 <PersonIcon size={16} color={colors.textSecondary} />
                 <Text style={styles.sectionLabel}>From User</Text>
               </View>
-              <View style={styles.textInputContainer}>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="e.g. alice.bsky.social"
-                  placeholderTextColor={colors.textTertiary}
-                  value={draft.author || ''}
-                  onChangeText={(text) => {
-                    const cleaned = text.replace(/^@/, '');
-                    updateDraft({ author: cleaned || undefined });
-                  }}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="default"
-                />
-                {draft.author ? (
-                  <TouchableOpacity
-                    onPress={() => updateDraft({ author: undefined })}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    style={styles.clearFieldButton}
-                  >
-                    <CloseIcon size={16} color={colors.textTertiary} />
-                  </TouchableOpacity>
-                ) : null}
-              </View>
+              <PersonTypeahead
+                value={draft.author || ''}
+                onChangeText={(text) => {
+                  updateDraft({ author: text || undefined });
+                }}
+                onSelectPerson={(handle) => {
+                  updateDraft({ author: handle });
+                }}
+                placeholder="e.g. alice.bsky.social"
+              />
 
               {/* Language */}
               <View style={styles.sectionHeader}>

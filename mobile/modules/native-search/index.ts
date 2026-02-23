@@ -17,3 +17,7 @@ export function setTrendingData(trendingJson: string): void {
 export function setSearchHistory(historyJson: string): void {
   NativeSearchModule.setSearchHistory(historyJson);
 }
+
+export function setTypeaheadResults(resultsJson: string): void {
+  NativeSearchModule.setTypeaheadResults(resultsJson);
+}
