@@ -16,13 +16,13 @@ import {
   getAccounts,
   resumeSession,
   signInWithPassword,
+  signInWithOAuth as authServiceSignInWithOAuth,
   StoredSession,
   switchToAccount,
   removeAccount as removeAccountFromStorage,
   getCurrentSession,
 } from "../services/auth/auth-service";
 import { saveSessionTokens } from "../services/auth/secure-token-storage";
-import * as OAuthService from "../services/auth/oauth";
 import { mutationQueue } from "../services/mutation-queue";
 import { clearQueryCache } from "../shared/query-client";
 import { preferencesService } from "../services/preferences";
@@ -275,8 +275,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     if (session && !isLoading) {
-      // Use ref to call setupSessionRefresh to avoid dependency on the callback itself
-      setupSessionRefreshRef.current?.();
+      // Skip session refresh timers for OAuth sessions — the library
+      // handles token refresh automatically.
+      const client = getAtProtoClient();
+      if (!client.isOAuthSession()) {
+        setupSessionRefreshRef.current?.();
+      }
     } else {
       clearTimers();
     }
@@ -306,24 +310,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signInWithOAuth = useCallback(async (handle: string) => {
     try {
       setIsLoading(true);
-      const result = await OAuthService.startOAuthFlow(handle);
-
-      if (!result) {
-        // User cancelled the auth session
-        return;
-      }
-
-      // Parse callback URL and exchange code for tokens
-      const params = OAuthService.parseCallbackUrl(result.callbackUrl);
-      if (!params) {
-        throw new Error("Invalid OAuth callback");
-      }
-
-      const sessionData = await OAuthService.handleOAuthCallback(params);
-
-      // Use auth-service to complete sign-in (sets up agent, stores session)
-      const { signInWithOAuth: authServiceSignIn } = await import("../services/auth/auth-service");
-      const newSession = await authServiceSignIn(sessionData);
+      const newSession = await authServiceSignInWithOAuth(handle);
       setSession(newSession);
       await loadAccounts();
 

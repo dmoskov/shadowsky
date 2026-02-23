@@ -107,10 +107,11 @@ export function LandingScreen() {
     try {
       setIsLoading(true);
       await signInWithOAuth(handle.trim());
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       Alert.alert(
         t("auth.sign_in_failed_title"),
-        t("auth.sign_in_failed_oauth"),
+        message,
       );
     } finally {
       setIsLoading(false);

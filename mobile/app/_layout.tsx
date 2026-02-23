@@ -1,3 +1,23 @@
+// Polyfill AbortSignal APIs missing in Hermes (used by @atproto/oauth-client)
+if (typeof AbortSignal.prototype.throwIfAborted !== "function") {
+  AbortSignal.prototype.throwIfAborted = function () {
+    if (this.aborted) {
+      throw this.reason ?? new Error("AbortError");
+    }
+  };
+}
+if (typeof AbortSignal.timeout !== "function") {
+  AbortSignal.timeout = (ms: number) => {
+    const controller = new AbortController();
+    setTimeout(() => {
+      const err = new Error("TimeoutError");
+      err.name = "TimeoutError";
+      controller.abort(err);
+    }, ms);
+    return controller.signal;
+  };
+}
+
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import { Slot, useRouter, useSegments } from "expo-router";

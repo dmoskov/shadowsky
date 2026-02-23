@@ -10,6 +10,16 @@ This is the CLAUDE.md file for your project. Add project-specific instructions h
 
 ## Git Workflow
 
+### Branch Strategy
+
+- **`main`** — Development branch. All feature work and fixes land here first.
+- **`prod`** — Production branch. Deploys the web app (including `public/` static files like OAuth client metadata). Merge `main` into `prod` to deploy.
+- **`task/*`** — Feature/task branches created from `main`.
+
+To deploy: merge `main` into `prod` and push. The `prod` branch auto-deploys to `shadowsky.io`.
+
+### Rules
+
 - **NO automatic commits or pushes**: Never run `git commit` or `git push` automatically. Always wait for explicit user approval before committing or pushing changes.
 - Show the user what changes would be committed and let them decide when to commit and push.
 - **ALWAYS run formatting checks before pushing**: Before pushing to any branch, run `npm run test:format` to check for formatting issues. If there are issues, run `npm run fix:format` to fix them automatically.

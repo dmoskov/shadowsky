@@ -1,4 +1,4 @@
-import {BskyAgent, AtpSessionData, AtpSessionEvent} from '@atproto/api';
+import {Agent, BskyAgent, AtpSessionData, AtpSessionEvent} from '@atproto/api';
 import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
 import {
   saveSessionTokens,
@@ -11,11 +11,14 @@ const logger = createLogger('AtProtoClient');
 
 /**
  * AT Protocol Client Wrapper
- * Manages authentication and provides a configured BskyAgent instance
+ * Manages authentication and provides a configured BskyAgent instance.
+ * Supports both app-password sessions (BskyAgent) and OAuth sessions (Agent).
  */
 export class AtProtoClient {
   private agent: BskyAgent;
   private session: AtpSessionData | null = null;
+  private _oauthAgent: Agent | null = null;
+  private _isOAuth: boolean = false;
 
   constructor(service: string = 'https://bsky.social') {
     this.agent = new BskyAgent({
@@ -112,18 +115,44 @@ export class AtProtoClient {
   }
 
   /**
+   * Set an OAuth-sourced Agent (from @atproto/oauth-client-expo).
+   * The agent has session compat properties patched by oauth-expo.ts.
+   */
+  setOAuthAgent(agent: Agent, did: string) {
+    this._oauthAgent = agent;
+    this._isOAuth = true;
+    // Store a minimal session so isAuthenticated() and getSession() work
+    this.session = {did, handle: '', accessJwt: '', refreshJwt: ''} as AtpSessionData;
+  }
+
+  /**
+   * Whether the current session is OAuth-based
+   */
+  isOAuthSession(): boolean {
+    return this._isOAuth;
+  }
+
+  /**
    * Logout and clear session
    */
   async logout() {
     this.session = null;
-    // Note: BskyAgent doesn't have a logout method
-    // Session cleanup happens on the client side
+    this._oauthAgent = null;
+    this._isOAuth = false;
   }
 
   /**
-   * Get the current agent instance
+   * Get the current agent instance.
+   * Returns the OAuth Agent when an OAuth session is active,
+   * or the BskyAgent for app-password sessions.
    */
   getAgent(): BskyAgent {
+    if (this._isOAuth && this._oauthAgent) {
+      // The OAuth Agent has AtpAgent-compatible session/did/hasSession
+      // properties patched in oauth-expo.ts, so callers using
+      // agent.session?.did continue to work.
+      return this._oauthAgent as unknown as BskyAgent;
+    }
     if (!this.session) {
       throw new Error('Not authenticated. Please login first.');
     }

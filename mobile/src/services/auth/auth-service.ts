@@ -18,8 +18,15 @@ import {
   clearActiveSessionDid,
   migrateTokensToSecureStore,
 } from './secure-token-storage';
+import {
+  signInWithOAuth as oauthExpoSignIn,
+  restoreOAuthSession,
+  signOutOAuth,
+  resetOAuthClient,
+} from './oauth-expo';
 
 const ACCOUNTS_STORAGE_KEY = '@shadowsky/accounts';
+const AUTH_METHOD_PREFIX = '@shadowsky/auth_method:';
 
 export interface AuthAccount {
   did: string;
@@ -85,45 +92,45 @@ export async function signInWithPassword(
 }
 
 /**
- * Sign in with OAuth session data
+ * Sign in with OAuth using @atproto/oauth-client-expo.
+ * Opens browser, handles DPoP/PKCE/PAR, returns a StoredSession.
  */
 export async function signInWithOAuth(
-  sessionData: AtpSessionData,
+  handle: string,
 ): Promise<StoredSession> {
   resetAtProtoClient();
+  resetOAuthClient();
 
+  const {agent, did} = await oauthExpoSignIn(handle);
+
+  // Set the OAuth agent on the global client
   const client = getAtProtoClient();
-  await client.initialize(sessionData);
+  client.setOAuthAgent(agent, did);
 
-  const agent = client.getAgent();
-  const profile = await agent.getProfile({actor: sessionData.did});
+  // Fetch profile to populate account metadata
+  const profile = await agent.getProfile({actor: did});
 
   const account: AuthAccount = {
-    did: sessionData.did,
-    handle: sessionData.handle || profile.data.handle,
-    email: sessionData.email,
+    did,
+    handle: profile.data.handle,
     displayName: profile.data.displayName,
     avatar: profile.data.avatar,
   };
 
   const session: StoredSession = {
-    ...sessionData,
+    did,
+    handle: profile.data.handle,
+    accessJwt: '',
+    refreshJwt: '',
+    active: true,
     account,
   } as StoredSession;
 
-  // Store tokens securely
-  await saveSessionTokens(session.did, {
-    did: session.did,
-    handle: session.handle,
-    accessJwt: session.accessJwt,
-    refreshJwt: session.refreshJwt,
-    email: session.email,
-    emailConfirmed: session.emailConfirmed,
-    active: session.active,
-  });
-  await setActiveSessionDid(session.did);
+  // Store auth method flag so resumeSession knows this is OAuth
+  await AsyncStorage.setItem(`${AUTH_METHOD_PREFIX}${did}`, 'oauth');
+  await setActiveSessionDid(did);
 
-  // Store non-sensitive account metadata in AsyncStorage
+  // Store non-sensitive account metadata
   await addAccount(account);
 
   return session;
@@ -132,15 +139,14 @@ export async function signInWithOAuth(
 /**
  * Resume existing session from storage.
  *
- * Runs a one-time migration from AsyncStorage to SecureStore on first launch
- * after the update. Then loads tokens from SecureStore and account metadata
- * from AsyncStorage.
+ * Checks the auth method flag to determine if this is an OAuth or
+ * app-password session and restores accordingly.
  *
- * Returns the cached session immediately after restoring credentials so the
- * app can render the authenticated UI without waiting for a network round-trip.
- * Profile data (avatar, displayName) is refreshed in the background via
- * `refreshProfileInBackground`, keeping the cold start path off the critical
- * rendering chain.
+ * For app-password sessions: runs one-time migration, loads tokens from
+ * SecureStore, and resumes with BskyAgent.
+ *
+ * For OAuth sessions: uses @atproto/oauth-client-expo to restore the
+ * session (the library handles token storage and refresh internally).
  */
 export async function resumeSession(): Promise<StoredSession | null> {
   try {
@@ -152,41 +158,79 @@ export async function resumeSession(): Promise<StoredSession | null> {
       return null;
     }
 
-    const tokenData = await getSessionTokens(activeDid);
-    if (!tokenData) {
-      return null;
+    // Check if this is an OAuth session
+    const authMethod = await AsyncStorage.getItem(`${AUTH_METHOD_PREFIX}${activeDid}`);
+
+    if (authMethod === 'oauth') {
+      return await resumeOAuthSession(activeDid);
     }
 
-    // Load account metadata from the accounts list
-    const accounts = await getAccounts();
-    const account = accounts.find(a => a.did === activeDid);
-
-    const session: StoredSession = {
-      did: tokenData.did,
-      handle: tokenData.handle,
-      accessJwt: tokenData.accessJwt,
-      refreshJwt: tokenData.refreshJwt,
-      email: tokenData.email,
-      emailConfirmed: tokenData.emailConfirmed,
-      active: tokenData.active,
-      account: account || {
-        did: tokenData.did,
-        handle: tokenData.handle,
-        email: tokenData.email,
-      },
-    } as StoredSession;
-
-    const client = getAtProtoClient();
-    await client.resumeSession(session);
-
-    // Return immediately — profile refresh happens in the background so the
-    // provider chain and first feed frame are not blocked by a network call.
-    refreshProfileInBackground(session);
-
-    return session;
+    return await resumeAppPasswordSession(activeDid);
   } catch {
     return null;
   }
+}
+
+async function resumeOAuthSession(activeDid: string): Promise<StoredSession | null> {
+  const result = await restoreOAuthSession(activeDid);
+  if (!result) {
+    return null;
+  }
+
+  const client = getAtProtoClient();
+  client.setOAuthAgent(result.agent, result.did);
+
+  // Load account metadata
+  const accounts = await getAccounts();
+  const account = accounts.find(a => a.did === activeDid);
+
+  const session: StoredSession = {
+    did: result.did,
+    handle: account?.handle || '',
+    accessJwt: '',
+    refreshJwt: '',
+    active: true,
+    account: account || {did: result.did, handle: ''},
+  } as StoredSession;
+
+  // Refresh profile in background
+  refreshProfileInBackground(session);
+
+  return session;
+}
+
+async function resumeAppPasswordSession(activeDid: string): Promise<StoredSession | null> {
+  const tokenData = await getSessionTokens(activeDid);
+  if (!tokenData) {
+    return null;
+  }
+
+  // Load account metadata from the accounts list
+  const accounts = await getAccounts();
+  const account = accounts.find(a => a.did === activeDid);
+
+  const session: StoredSession = {
+    did: tokenData.did,
+    handle: tokenData.handle,
+    accessJwt: tokenData.accessJwt,
+    refreshJwt: tokenData.refreshJwt,
+    email: tokenData.email,
+    emailConfirmed: tokenData.emailConfirmed,
+    active: tokenData.active,
+    account: account || {
+      did: tokenData.did,
+      handle: tokenData.handle,
+      email: tokenData.email,
+    },
+  } as StoredSession;
+
+  const client = getAtProtoClient();
+  await client.resumeSession(session);
+
+  // Return immediately — profile refresh happens in the background
+  refreshProfileInBackground(session);
+
+  return session;
 }
 
 /**
@@ -210,13 +254,20 @@ async function refreshProfileInBackground(session: StoredSession): Promise<void>
     // Update account metadata in AsyncStorage
     await addAccount(session.account);
   } catch {
-    // Profile fetch failed — session tokens may be stale. Attempt a refresh.
+    const client = getAtProtoClient();
+
+    // For OAuth sessions, the library handles token refresh automatically.
+    // If the profile fetch still failed, the session is truly invalid.
+    if (client.isOAuthSession()) {
+      await signOut();
+      return;
+    }
+
+    // For app-password sessions, attempt a manual token refresh.
     try {
-      const client = getAtProtoClient();
       const refreshedSession = await client.refreshSession();
       session.accessJwt = refreshedSession.accessJwt;
       session.refreshJwt = refreshedSession.refreshJwt;
-      // Persist refreshed tokens to SecureStore
       await saveSessionTokens(session.did, {
         did: session.did,
         handle: session.handle,
@@ -227,7 +278,6 @@ async function refreshProfileInBackground(session: StoredSession): Promise<void>
         active: session.active,
       });
     } catch {
-      // Token refresh also failed — sign the user out so they can re-auth.
       await signOut();
     }
   }
@@ -239,7 +289,14 @@ async function refreshProfileInBackground(session: StoredSession): Promise<void>
 export async function signOut(): Promise<void> {
   const activeDid = await getActiveSessionDid();
   if (activeDid) {
-    await deleteSessionTokens(activeDid);
+    const authMethod = await AsyncStorage.getItem(`${AUTH_METHOD_PREFIX}${activeDid}`);
+    if (authMethod === 'oauth') {
+      await signOutOAuth(activeDid);
+      await AsyncStorage.removeItem(`${AUTH_METHOD_PREFIX}${activeDid}`);
+      resetOAuthClient();
+    } else {
+      await deleteSessionTokens(activeDid);
+    }
   }
   await clearActiveSessionDid();
   resetAtProtoClient();
@@ -326,8 +383,14 @@ export async function removeAccount(did: string): Promise<void> {
     const filtered = accounts.filter(a => a.did !== did);
     await AsyncStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(filtered));
 
-    // Remove session tokens from SecureStore
-    await deleteSessionTokens(did);
+    const authMethod = await AsyncStorage.getItem(`${AUTH_METHOD_PREFIX}${did}`);
+    if (authMethod === 'oauth') {
+      await signOutOAuth(did);
+      await AsyncStorage.removeItem(`${AUTH_METHOD_PREFIX}${did}`);
+      resetOAuthClient();
+    } else {
+      await deleteSessionTokens(did);
+    }
 
     const activeDid = await getActiveSessionDid();
     if (activeDid === did) {
@@ -374,13 +437,53 @@ export async function getSessions(): Promise<StoredSession[]> {
  * Multi-account support: Switch to a different account
  */
 export async function switchToAccount(did: string): Promise<StoredSession> {
+  const authMethod = await AsyncStorage.getItem(`${AUTH_METHOD_PREFIX}${did}`);
+  const accounts = await getAccounts();
+  const account = accounts.find(a => a.did === did);
+
+  resetAtProtoClient();
+
+  if (authMethod === 'oauth') {
+    // Restore OAuth session via the library
+    const result = await restoreOAuthSession(did);
+    if (!result) {
+      throw new Error('OAuth session expired. Please sign in again.');
+    }
+
+    const client = getAtProtoClient();
+    client.setOAuthAgent(result.agent, result.did);
+
+    const targetSession: StoredSession = {
+      did: result.did,
+      handle: account?.handle || '',
+      accessJwt: '',
+      refreshJwt: '',
+      active: true,
+      account: account || {did: result.did, handle: ''},
+    } as StoredSession;
+
+    try {
+      const profile = await result.agent.getProfile({actor: result.did});
+      targetSession.account = {
+        ...targetSession.account,
+        handle: profile.data.handle,
+        displayName: profile.data.displayName,
+        avatar: profile.data.avatar,
+      };
+      await addAccount(targetSession.account);
+    } catch {
+      // Profile fetch failed — session may be invalid
+    }
+
+    await setActiveSessionDid(result.did);
+    return targetSession;
+  }
+
+  // App-password path (unchanged)
   const tokenData = await getSessionTokens(did);
   if (!tokenData) {
     throw new Error('Session not found for account');
   }
-
-  const accounts = await getAccounts();
-  const account = accounts.find(a => a.did === did);
 
   const targetSession: StoredSession = {
     did: tokenData.did,
@@ -392,8 +495,6 @@ export async function switchToAccount(did: string): Promise<StoredSession> {
     active: tokenData.active,
     account: account || {did: tokenData.did, handle: tokenData.handle, email: tokenData.email},
   } as StoredSession;
-
-  resetAtProtoClient();
 
   const client = getAtProtoClient();
   await client.resumeSession(targetSession);
@@ -411,12 +512,10 @@ export async function switchToAccount(did: string): Promise<StoredSession> {
 
     await addAccount(targetSession.account);
   } catch {
-    // Session might be expired, try to refresh
     try {
       const refreshedSession = await client.refreshSession();
       targetSession.accessJwt = refreshedSession.accessJwt;
       targetSession.refreshJwt = refreshedSession.refreshJwt;
-      // Persist refreshed tokens
       await saveSessionTokens(targetSession.did, {
         did: targetSession.did,
         handle: targetSession.handle,

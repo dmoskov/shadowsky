@@ -449,7 +449,10 @@ export const persistOptions = {
   persister: mmkvPersister,
   maxAge: 24 * 60 * 60 * 1000, // 24 hours
   dehydrateOptions: {
-    shouldDehydrateQuery: (query: { queryKey: readonly unknown[] }) => {
+    shouldDehydrateQuery: (query: { queryKey: readonly unknown[]; state: { status: string } }) => {
+      // Only persist queries that completed successfully — pending queries
+      // will reject on restore if no auth session is available yet.
+      if (query.state.status !== 'success') return false;
       const firstKey = query.queryKey[0];
       if (typeof firstKey !== 'string') return false;
       return PERSISTABLE_QUERY_PREFIXES.includes(firstKey);
