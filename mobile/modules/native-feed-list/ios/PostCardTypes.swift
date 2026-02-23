@@ -10,10 +10,26 @@ import Foundation
 import FeedBridge
 import ExpoSwiftUIFeed
 
+// MARK: - Reply Parent (UI Model)
+
+struct ReplyParent {
+    let uri: String
+    let authorHandle: String
+    let authorDisplayName: String?
+    let authorAvatar: String?
+    let text: String?
+}
+
 // MARK: - Feed View Post (UI Model)
 
 struct FeedViewPost {
     let post: PostView
+    let replyParent: ReplyParent?
+
+    init(post: PostView, replyParent: ReplyParent? = nil) {
+        self.post = post
+        self.replyParent = replyParent
+    }
 }
 
 struct PostView {

@@ -73,6 +73,11 @@ struct PostCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            // Reply context indicator
+            if let parent = post.replyParent {
+                ReplyContextView(parent: parent, onProfilePress: onPressProfile)
+            }
+
             // Author row
             HStack(spacing: 8) {
                 // Avatar
@@ -247,4 +252,48 @@ struct PostCardView: View {
         return "\(count)"
     }
 
+}
+
+// MARK: - Reply Context View
+
+/// Shows a "Replying to @handle" indicator with optional parent text preview
+/// when a post in the feed is a reply.
+struct ReplyContextView: View {
+    let parent: ReplyParent
+    let onProfilePress: ((String) -> Void)?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: "arrowshape.turn.up.left.fill")
+                    .font(.caption2)
+                    .foregroundColor(.blue.opacity(0.7))
+
+                Text("Replying to ")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                +
+                Text("@\(parent.authorHandle)")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.blue)
+            }
+            .onTapGesture {
+                onProfilePress?(parent.authorHandle)
+            }
+
+            // Show a one-line preview of the parent post text
+            if let parentText = parent.text {
+                Text(parentText)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(Color.blue.opacity(0.06))
+        .cornerRadius(8)
+    }
 }

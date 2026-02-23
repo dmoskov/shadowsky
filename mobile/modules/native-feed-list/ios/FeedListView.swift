@@ -442,6 +442,17 @@ class FeedState: ObservableObject {
     static func convertPost(_ serializedPost: SerializedFeedViewPost) -> ConvertedFeedPost {
         let post = serializedPost.post
 
+        // Convert reply parent if present
+        let replyParent: ReplyParent? = serializedPost.reply.map { reply in
+            ReplyParent(
+                uri: reply.parent.uri,
+                authorHandle: reply.parent.author.handle,
+                authorDisplayName: reply.parent.author.displayName,
+                authorAvatar: reply.parent.author.avatar,
+                text: reply.parent.record.text.isEmpty ? nil : reply.parent.record.text
+            )
+        }
+
         let feedViewPost = FeedViewPost(
             post: PostView(
                 uri: post.uri,
@@ -464,7 +475,8 @@ class FeedState: ObservableObject {
                 replyCount: post.replyCount ?? 0,
                 viewer: post.viewer.map { PostViewer(like: $0.like, repost: $0.repost) },
                 labels: post.labels?.map { ContentLabel(val: $0.val, src: $0.src) }
-            )
+            ),
+            replyParent: replyParent
         )
 
         return ConvertedFeedPost(
