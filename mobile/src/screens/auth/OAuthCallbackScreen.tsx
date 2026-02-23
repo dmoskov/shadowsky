@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { handleOAuthCallback } from "../../services/auth/oauth";
-import { signInWithOAuth } from "../../services/auth/auth-service";
+// OAuth callback is now handled by @atproto/oauth-client-expo internally.
+// This screen is a fallback that redirects to auth if hit directly.
 import { useTheme } from "../../contexts/ThemeContext";
 
 interface OAuthCallbackScreenProps {
@@ -33,13 +33,9 @@ export function OAuthCallbackScreen({
 
       if (code && state) {
         try {
-          // Exchange code for tokens using PKCE
-          const sessionData = await handleOAuthCallback({ code, state, iss });
-
-          // Sign in with the OAuth session
-          await signInWithOAuth(sessionData);
-
-          // Navigate to home
+          // With @atproto/oauth-client-expo, the token exchange happens
+          // automatically via the ExpoOAuthClient. If we reach this screen,
+          // the session should already be established. Navigate home.
           router.replace("/(app)/(tabs)/(home)");
         } catch (err) {
           const message =

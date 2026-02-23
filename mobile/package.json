@@ -85,7 +85,8 @@
     "react-native-svg": "15.12.1",
     "react-native-web": "^0.21.0",
     "rn-emoji-picker": "^1.1.6",
-    "sentry-expo": "^7.2.0"
+    "sentry-expo": "^7.2.0",
+    "@atproto/oauth-client-expo": "^0.0.10"
   },
   "devDependencies": {
     "@expo/ngrok": "^4.1.3",
