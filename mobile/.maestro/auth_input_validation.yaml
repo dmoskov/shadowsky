@@ -1,0 +1,40 @@
+appId: com.shadowsky.mobile
+---
+# E2E Test: Auth Input Validation
+# Tests form input and validation on the auth screen.
+# This test does NOT require authentication.
+
+- launchApp
+- waitForAnimationToEnd
+
+# --- OAuth Mode Input ---
+
+# Verify handle input field is interactable
+- tapOn: "yourhandle.bsky.social"
+- inputText: "testuser.bsky.social"
+
+# Verify text was entered
+- assertVisible: "testuser.bsky.social"
+
+# Clear the input
+- clearText
+
+# --- App Password Mode Input ---
+
+# Switch to App Password mode
+- tapOn: "App Password"
+- waitForAnimationToEnd
+
+# Verify handle/email input field exists
+- assertVisible: "Handle or Email"
+
+# Verify app password label
+- assertVisible: "App Password"
+
+# Verify the sign-in button is present
+- assertVisible: "Sign In"
+
+# Switch back to OAuth to verify mode toggle works
+- tapOn: "OAuth"
+- waitForAnimationToEnd
+- assertVisible: "Sign in with Bluesky"

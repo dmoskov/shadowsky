@@ -140,6 +140,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           return (
             <Pressable
               key={itemId}
+              testID={`tab-${itemId}`}
               style={tabStyles.tab}
               onPress={() => handleTabPress(itemId)}
               onLongPress={handleLongPress}

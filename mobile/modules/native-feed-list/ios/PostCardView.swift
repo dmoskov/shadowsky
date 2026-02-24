@@ -159,6 +159,7 @@ struct PostCardView: View {
                     activeColor: .blue,
                     action: { onReply?() }
                 )
+                .accessibilityIdentifier("reply-button")
 
                 // Repost
                 actionButton(
@@ -168,6 +169,7 @@ struct PostCardView: View {
                     activeColor: .green,
                     action: { onRepost?() }
                 )
+                .accessibilityIdentifier("repost-button")
 
                 // Like
                 actionButton(
@@ -177,6 +179,7 @@ struct PostCardView: View {
                     activeColor: .red,
                     action: { onLike?() }
                 )
+                .accessibilityIdentifier("like-button")
 
                 Spacer()
 
@@ -186,8 +189,10 @@ struct PostCardView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityIdentifier("share-button")
             }
             .padding(.top, 4)
+            .accessibilityIdentifier("post-actions")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)

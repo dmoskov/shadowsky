@@ -1,8 +1,30 @@
 appId: com.shadowsky.mobile
 ---
-# E2E Smoke Test: App Launch
-# Verifies the app launches without crashing.
-# More comprehensive tests need to be written against actual UI elements.
+# E2E Test: App Launch & Auth Screen
+# Verifies the app launches and the auth screen renders correctly.
+# This test does NOT require authentication.
 
 - launchApp
 - waitForAnimationToEnd
+
+# Verify the auth screen renders with the app title
+- assertVisible: "Asphodel"
+
+# Verify the subtitle is visible
+- assertVisible: "A powerful Bluesky client with advanced features"
+
+# Verify the OAuth tab is visible (default login mode)
+- assertVisible: "OAuth"
+- assertVisible: "App Password"
+
+# Verify the OAuth sign-in button is present
+- assertVisible: "Sign in with Bluesky"
+
+# Verify the handle input placeholder
+- assertVisible: "yourhandle.bsky.social"
+
+# Verify sign-up option exists
+- assertVisible: "Create New Account"
+
+# Verify the divider text
+- assertVisible: "OR"

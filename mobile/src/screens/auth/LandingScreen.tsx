@@ -161,7 +161,7 @@ export function LandingScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
-          <Text style={styles.title}>{t("auth.app_title")}</Text>
+          <Text testID="auth-title" style={styles.title}>{t("auth.app_title")}</Text>
           <Text style={styles.subtitle}>
             {t("auth.app_subtitle")}
           </Text>
@@ -169,8 +169,9 @@ export function LandingScreen() {
 
         <View style={styles.formContainer}>
           {/* Login Mode Toggle */}
-          <View style={styles.toggleContainer}>
+          <View testID="auth-mode-toggle" style={styles.toggleContainer}>
             <TouchableOpacity
+              testID="oauth-tab"
               style={[
                 styles.toggleButton,
                 loginMode === "oauth" && styles.toggleButtonActive,
@@ -188,6 +189,7 @@ export function LandingScreen() {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
+              testID="app-password-tab"
               style={[
                 styles.toggleButton,
                 loginMode === "app-password" && styles.toggleButtonActive,
@@ -215,6 +217,7 @@ export function LandingScreen() {
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>{t("auth.handle_label")}</Text>
                 <TextInput
+                  testID="oauth-handle-input"
                   style={styles.input}
                   placeholder={t("auth.handle_placeholder")}
                   placeholderTextColor={colors.textTertiary}
@@ -231,6 +234,7 @@ export function LandingScreen() {
               </View>
 
               <TouchableOpacity
+                testID="oauth-sign-in-button"
                 style={[
                   styles.loginButton,
                   isLoading && styles.loginButtonDisabled,
@@ -353,6 +357,7 @@ export function LandingScreen() {
           </View>
 
           <TouchableOpacity
+            testID="sign-up-button"
             style={styles.signUpButton}
             onPress={handleSignUp}
           >

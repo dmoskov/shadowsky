@@ -1,10 +1,8 @@
 # Maestro E2E Tests
 
-This directory contains End-to-End (E2E) tests for the Shadowsky mobile app using [Maestro](https://maestro.mobile.dev/).
+End-to-End tests for the Asphodel (Shadowsky) mobile app using [Maestro](https://maestro.mobile.dev/).
 
 ## Installation
-
-Install Maestro CLI:
 
 ```bash
 # macOS/Linux
@@ -15,122 +13,116 @@ brew tap mobile-dev-inc/tap
 brew install maestro
 ```
 
+## Test Categories
+
+### Unauthenticated Tests (always pass, no credentials needed)
+
+These tests exercise the auth screen UI without requiring a Bluesky account:
+
+| Test | File | What it covers |
+|------|------|----------------|
+| App Launch | `app_launch.yaml` | App starts, auth screen renders with correct text |
+| Auth Mode Switch | `auth_mode_switch.yaml` | Switching between OAuth and App Password modes |
+| Auth Input Validation | `auth_input_validation.yaml` | Form inputs, placeholder text, Advanced PDS toggle |
+
+### Authenticated Tests (require test credentials)
+
+These tests require `MAESTRO_TEST_HANDLE` and `MAESTRO_TEST_APP_PASSWORD` env vars.
+They sign in via App Password and exercise the main app screens:
+
+| Test | File | What it covers |
+|------|------|----------------|
+| Feed Scroll | `feed_scroll.yaml` | Home feed loads, scroll, pull-to-refresh |
+| Profile View | `profile_view.yaml` | Profile header, stats, tab switching |
+| Tab Navigation | `tab_navigation.yaml` | Navigate all 5 tabs: Home, Search, Feeds, Notifications, Profile |
+
+### Disabled Tests (reference only)
+
+Previous fictional tests are in `disabled/` for intent reference. They do not run.
+
 ## Running Tests
 
 ### Prerequisites
 
-1. Start the Expo development server:
-```bash
-npm start
-```
+1. Build and run the app on an iOS Simulator
+2. Ensure the simulator is booted (`xcrun simctl list devices booted`)
 
-2. Launch the app on a simulator/emulator or physical device
-
-### Run Individual Tests
+### Run unauthenticated tests (no credentials needed)
 
 ```bash
-# Test authentication flow
-maestro test .maestro/auth_flow.yaml
-
-# Test post creation
-maestro test .maestro/post_creation.yaml
-
-# Test feed navigation
-maestro test .maestro/feed_navigation.yaml
-
-# Test offline behavior
-maestro test .maestro/offline_behavior.yaml
-
-# Test profile navigation
-maestro test .maestro/profile_navigation.yaml
+maestro test .maestro/app_launch.yaml
+maestro test .maestro/auth_mode_switch.yaml
+maestro test .maestro/auth_input_validation.yaml
 ```
 
-### Run All Tests
+### Run authenticated tests (credentials required)
 
 ```bash
-maestro test .maestro/
+export MAESTRO_TEST_HANDLE=your.handle.bsky.social
+export MAESTRO_TEST_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+
+maestro test .maestro/feed_scroll.yaml
+maestro test .maestro/profile_view.yaml
+maestro test .maestro/tab_navigation.yaml
 ```
 
-### Run Tests with Recording
+### Run all tests with JUnit output
 
 ```bash
-maestro test --format junit --output results.xml .maestro/auth_flow.yaml
+maestro test --format junit --output e2e-results.xml .maestro/
 ```
 
-## Test Coverage
+## Accessibility Identifiers
 
-### 1. Authentication Flow (`auth_flow.yaml`)
-- ✅ User sign in with credentials
-- ✅ Navigation after authentication
-- ✅ Sign out functionality
-- ✅ Account switching
+Tests target elements via text content, accessibility labels, and accessibility identifiers.
+Key identifiers added to the codebase:
 
-### 2. Post Creation (`post_creation.yaml`)
-- ✅ Creating text posts
-- ✅ Creating posts with images
-- ✅ Adding alt text to images
-- ✅ Creating threads
-- ✅ Post validation
+### React Native (testID)
+- `auth-title` - App title on auth screen
+- `oauth-sign-in-button` - OAuth sign-in button
+- `oauth-handle-input` - Handle input field
+- `auth-mode-toggle` - OAuth/App Password toggle container
+- `tab-home`, `tab-search`, `tab-feeds`, `tab-notifications`, `tab-profile` - Tab bar items
+- `home-screen` - Home screen container
+- `feed-picker` - Feed picker scroll view
+- `feed-chip-following` - Following feed chip
 
-### 3. Feed Navigation (`feed_navigation.yaml`)
-- ✅ Scrolling through feed
-- ✅ Pull to refresh
-- ✅ Interacting with posts (like, reply, repost)
-- ✅ Quote posting
-- ✅ Feed switching (Following/Discover)
-
-### 4. Offline Behavior (`offline_behavior.yaml`)
-- ✅ Viewing cached content offline
-- ✅ Handling post creation while offline
-- ✅ Draft saving
-- ✅ Syncing when back online
-- ✅ Error messages for offline operations
-
-### 5. Profile Navigation (`profile_navigation.yaml`)
-- ✅ Viewing own profile
-- ✅ Editing profile information
-- ✅ Profile tabs (Posts, Replies, Media, Likes)
-- ✅ Viewing other users' profiles
-- ✅ Following/unfollowing users
-- ✅ Viewing followers/following lists
-
-## CI Integration
-
-These tests can be run in CI using Maestro Cloud or local runners. See the GitHub Actions workflow in `.github/workflows/mobile-e2e.yml`.
+### SwiftUI (accessibilityIdentifier)
+- `feed-list` - Main feed list container
+- `feed-post-{index}` - Individual post cards (0-indexed)
+- `feed-loading` - Feed loading skeleton
+- `feed-empty` - Empty feed state
+- `reply-button`, `repost-button`, `like-button`, `share-button` - Post action buttons
+- `post-actions` - Post actions bar
+- `profile-display-name` - Profile display name
+- `profile-handle` - Profile handle (@username)
+- `profile-stats` - Stats section container
+- `profile-posts-count`, `profile-followers-count`, `profile-following-count` - Stats
+- `profile-tab-bar` - Profile content tab bar
+- `profile-tab-{name}` - Individual profile tabs (posts, replies, media, likes)
+- `edit-profile-button`, `sign-out-button` - Profile action buttons
 
 ## Troubleshooting
 
 ### Test Fails to Find Element
 
-If a test fails to find an element, ensure:
-1. The app is fully loaded before the test runs
-2. Element IDs match those in the app code
-3. Add `wait` commands if needed for async operations
+1. Verify the app is fully loaded before assertions
+2. Check that element text matches exactly (case-sensitive)
+3. Use `waitForAnimationToEnd` after navigation actions
+4. For authenticated tests, verify credentials are valid
 
 ### Simulator Issues
 
-If tests fail on simulator:
-1. Reset simulator: `xcrun simctl erase all`
-2. Restart Maestro daemon: `maestro stop && maestro start`
+```bash
+# Reset simulator
+xcrun simctl erase all
 
-### Flaky Tests
+# Restart Maestro daemon
+maestro stop && maestro start
+```
 
-If tests are flaky:
-1. Add appropriate `wait` commands
-2. Increase timeouts for slow operations
-3. Check for race conditions in the app
+## CI Integration
 
-## Writing New Tests
-
-When writing new tests:
-1. Use clear, descriptive test names
-2. Assert expected states after actions
-3. Clean up state at the end of tests
-4. Use meaningful test IDs in components
-5. Test both happy paths and error cases
-
-## Resources
-
-- [Maestro Documentation](https://maestro.mobile.dev/)
-- [Maestro API Reference](https://maestro.mobile.dev/api-reference)
-- [Maestro Best Practices](https://maestro.mobile.dev/best-practices)
+See `.github/workflows/mobile-tests.yml` for the E2E job configuration.
+Unauthenticated tests run on every PR. Authenticated tests run when
+`MAESTRO_TEST_HANDLE` and `MAESTRO_TEST_APP_PASSWORD` secrets are configured.

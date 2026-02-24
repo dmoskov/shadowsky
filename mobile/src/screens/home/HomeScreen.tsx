@@ -284,15 +284,17 @@ export function HomeScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <View style={styles.container}>
+    <View testID="home-screen" style={styles.container}>
       {/* Feed Picker Chips */}
       {savedFeeds && savedFeeds.length > 0 && (
         <ScrollView
+          testID="feed-picker"
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.feedPickerContainer}
           contentContainerStyle={styles.feedPickerContent}>
           <TouchableOpacity
+            testID="feed-chip-following"
             style={[styles.feedChip, !selectedFeedUri && styles.feedChipActive]}
             onPress={() => handleFeedSelect(null)}
             activeOpacity={0.7}>
