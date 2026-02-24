@@ -1,6 +1,5 @@
 import React, { useState, useRef, useMemo } from "react";
 import { View, StyleSheet, Alert, ActionSheetIOS, Platform, ScrollView, TouchableOpacity, Text } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useScrollToTop } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
@@ -35,7 +34,6 @@ function getDidFromUri(uri: string): string {
 
 export function HomeScreen() {
   const { colors } = useTheme();
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const [selectedFeedUri, setSelectedFeedUri] = useState<string | null>(null);
   const { navigateToThread, navigateToProfile, navigateToCompose } = useAppNavigation();
@@ -278,7 +276,7 @@ export function HomeScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
       {/* Feed Picker Chips */}
       {savedFeeds && savedFeeds.length > 0 && (
         <ScrollView

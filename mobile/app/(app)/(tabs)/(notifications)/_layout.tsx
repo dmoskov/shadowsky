@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { useTheme } from "../../../../src/contexts/ThemeContext";
+import { DrawerMenuButton } from "../../../../src/components/DrawerMenuButton";
 
 export default function NotificationsLayout() {
   const { colors } = useTheme();
@@ -13,7 +14,15 @@ export default function NotificationsLayout() {
         headerBackTitle: "Back",
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="index"
+        options={{
+          title: "Notifications",
+          headerLeft: () => <DrawerMenuButton />,
+          headerStyle: { backgroundColor: colors.background },
+          headerShadowVisible: false,
+        }}
+      />
       <Stack.Screen
         name="analytics"
         options={{ title: "Notification Analytics" }}

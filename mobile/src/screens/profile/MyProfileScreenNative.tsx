@@ -9,7 +9,6 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScrollToTop } from "@react-navigation/native";
 import { useProfile } from "../../hooks/api/useProfile";
 import { useAuthorFeed, useActorLikes } from "../../hooks/api/useFeed";
@@ -57,7 +56,6 @@ function MyProfileScreenNativeIOS({
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { account, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
   const {
@@ -337,7 +335,7 @@ function MyProfileScreenNativeIOS({
 
   if (!account) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Not authenticated</Text>
         </View>
@@ -346,7 +344,7 @@ function MyProfileScreenNativeIOS({
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
       <FlatList
         ref={scrollRef}
         data={posts}

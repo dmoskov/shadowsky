@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { useTheme } from "../../../../src/contexts/ThemeContext";
+import { DrawerMenuButton } from "../../../../src/components/DrawerMenuButton";
 
 export default function ProfileLayout() {
   const { colors } = useTheme();
@@ -13,7 +14,15 @@ export default function ProfileLayout() {
         headerBackTitle: "Back",
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="index"
+        options={{
+          title: "Profile",
+          headerLeft: () => <DrawerMenuButton />,
+          headerStyle: { backgroundColor: colors.background },
+          headerShadowVisible: false,
+        }}
+      />
       <Stack.Screen name="edit" options={{ title: "Edit Profile" }} />
       <Stack.Screen name="user/[handle]" options={{ title: "Profile" }} />
       <Stack.Screen
