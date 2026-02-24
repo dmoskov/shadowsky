@@ -47,6 +47,7 @@ export const darkColors = {
   glowAccent: "rgba(249, 24, 128, 0.15)",
   cardBackground: "#16161f",
   cardBorder: "#2a2a35",
+  textOnPrimary: "#ffffff",
 } as const;
 
 // Light mode colors
@@ -98,6 +99,7 @@ export const lightColors = {
   glowAccent: "rgba(249, 24, 128, 0.1)",
   cardBackground: "#ffffff",
   cardBorder: "#e5e7eb",
+  textOnPrimary: "#ffffff",
 } as const;
 
 // For backwards compatibility

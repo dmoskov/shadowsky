@@ -114,12 +114,12 @@ const UserCard = memo(function UserCard({
         }
       >
         {isInProgress ? (
-          <ActivityIndicator size="small" color="#ffffff" />
+          <ActivityIndicator size="small" color={colors.textOnPrimary} />
         ) : (
           <Text
             style={[
               styles.followButtonText,
-              isFollowed && { color: colors.textSecondary },
+              { color: isFollowed ? colors.textSecondary : colors.textOnPrimary },
             ]}
           >
             {isFollowed || user.viewer?.following ? "Following" : "Follow"}
@@ -301,7 +301,7 @@ export const FollowsScreen = memo(function FollowsScreen({
             accessibilityRole="button"
             accessibilityLabel="Continue"
           >
-            <Text style={styles.continueButtonText}>Continue</Text>
+            <Text style={[styles.continueButtonText, { color: colors.textOnPrimary }]}>Continue</Text>
           </Pressable>
         </View>
       </View>
@@ -406,7 +406,6 @@ const styles = StyleSheet.create({
   followButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#ffffff",
   },
   emptyContainer: {
     flex: 1,
@@ -461,6 +460,5 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#ffffff",
   },
 });

@@ -100,7 +100,7 @@ const PreferenceToggle = memo(function PreferenceToggle({
         </View>
         {isActive && (
           <View style={[styles.checkBadge, { backgroundColor: colors.success }]}>
-            <Text style={styles.checkText}>{"\u2713"}</Text>
+            <Text style={[styles.checkText, { color: colors.textOnPrimary }]}>{"\u2713"}</Text>
           </View>
         )}
       </View>
@@ -221,7 +221,7 @@ export const PreferencesScreen = memo(function PreferencesScreen({
           accessibilityRole="button"
           accessibilityLabel="Continue"
         >
-          <Text style={styles.completeButtonText}>Continue</Text>
+          <Text style={[styles.completeButtonText, { color: colors.textOnPrimary }]}>Continue</Text>
         </Pressable>
       </View>
     </View>
@@ -308,7 +308,6 @@ const styles = StyleSheet.create({
   },
   checkText: {
     fontSize: 14,
-    color: "#ffffff",
     fontWeight: "700",
   },
   infoBox: {
@@ -347,6 +346,5 @@ const styles = StyleSheet.create({
   completeButtonText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#ffffff",
   },
 });
