@@ -1870,13 +1870,15 @@ export const Search: React.FC = () => {
               </div>
             )}
 
-            {searchResults && searchResults.posts.length === 0 && (
-              <EmptyState
-                variant="search"
-                message="No posts found matching your search criteria."
-                compact
-              />
-            )}
+            {searchResults &&
+              !isLoading &&
+              searchResults.posts.length === 0 && (
+                <EmptyState
+                  variant="search"
+                  message="No posts found matching your search criteria."
+                  compact
+                />
+              )}
 
             {searchResults && searchResults.posts.length > 0 && (
               <>
