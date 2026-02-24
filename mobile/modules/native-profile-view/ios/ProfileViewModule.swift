@@ -58,7 +58,8 @@ public class ProfileViewModule: Module {
                 "onPinnedPostPress",
                 "onStarterPackPress",
                 "onSignOut",
-                "onKnownFollowerPress"
+                "onKnownFollowerPress",
+                "onContentSizeChange"
             )
         }
     }
@@ -111,13 +112,86 @@ class ProfileViewWrapper: ExpoView {
     private let onStarterPackPress = EventDispatcher()
     private let onSignOut = EventDispatcher()
     private let onKnownFollowerPress = EventDispatcher()
+    private let onContentSizeChange = EventDispatcher()
 
     // SwiftUI hosting controller
     private var hostingController: UIHostingController<ProfileView>?
 
+    // Track current measured height for self-sizing
+    private var currentHeight: CGFloat = 400
+
+    // Notification observers
+    private var profileObserver: NSObjectProtocol?
+    private var clearObserver: NSObjectProtocol?
+    private var starterPacksObserver: NSObjectProtocol?
+    private var pinnedPostObserver: NSObjectProtocol?
+
     required init(appContext: AppContext? = nil) {
         super.init(appContext: appContext)
         setupView()
+        observeDataChanges()
+    }
+
+    deinit {
+        [profileObserver, clearObserver, starterPacksObserver, pinnedPostObserver].forEach { observer in
+            if let observer = observer {
+                NotificationCenter.default.removeObserver(observer)
+            }
+        }
+    }
+
+    private func observeDataChanges() {
+        profileObserver = NotificationCenter.default.addObserver(
+            forName: ProfileBridgeModule.profileDataUpdatedNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.recalculateHeight()
+        }
+
+        clearObserver = NotificationCenter.default.addObserver(
+            forName: ProfileBridgeModule.profileDataClearedNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.recalculateHeight()
+        }
+
+        starterPacksObserver = NotificationCenter.default.addObserver(
+            forName: ProfileBridgeModule.starterPacksUpdatedNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.recalculateHeight()
+        }
+
+        pinnedPostObserver = NotificationCenter.default.addObserver(
+            forName: ProfileBridgeModule.pinnedPostUpdatedNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.recalculateHeight()
+        }
+    }
+
+    private func recalculateHeight() {
+        guard let hostingController = hostingController else { return }
+
+        // Force the SwiftUI view to re-layout with the new data
+        hostingController.view.setNeedsLayout()
+        hostingController.view.layoutIfNeeded()
+
+        let width = bounds.width > 0 ? bounds.width : UIScreen.main.bounds.width
+        let fittingSize = hostingController.sizeThatFits(in: CGSize(width: width, height: .greatestFiniteMagnitude))
+
+        if fittingSize.height > 0 && abs(fittingSize.height - currentHeight) > 1 {
+            currentHeight = fittingSize.height
+            invalidateIntrinsicContentSize()
+            // Tell React Native to re-measure this view
+            superview?.setNeedsLayout()
+            // Also emit event so RN wrapper can explicitly set height
+            onContentSizeChange(["height": fittingSize.height, "width": width])
+        }
     }
 
     private func setupView() {
@@ -127,14 +201,7 @@ class ProfileViewWrapper: ExpoView {
         hostingController.view.translatesAutoresizingMaskIntoConstraints = false
         hostingController.view.backgroundColor = .clear
 
-        // Add hosting controller to the view controller hierarchy so it gets proper layout passes
-        if let parentVC = findViewController() {
-            parentVC.addChild(hostingController)
-            addSubview(hostingController.view)
-            hostingController.didMove(toParent: parentVC)
-        } else {
-            addSubview(hostingController.view)
-        }
+        addSubview(hostingController.view)
 
         NSLayoutConstraint.activate([
             hostingController.view.topAnchor.constraint(equalTo: topAnchor),
@@ -155,23 +222,20 @@ class ProfileViewWrapper: ExpoView {
             parentVC.addChild(hostingController)
             hostingController.didMove(toParent: parentVC)
         }
+        // Recalculate once we're in the view hierarchy
+        DispatchQueue.main.async { [weak self] in
+            self?.recalculateHeight()
+        }
     }
 
     override var intrinsicContentSize: CGSize {
-        guard let hostingController = hostingController else {
-            return super.intrinsicContentSize
-        }
-        let fittingSize = hostingController.view.systemLayoutSizeFitting(
-            CGSize(width: bounds.width > 0 ? bounds.width : UIScreen.main.bounds.width, height: UIView.layoutFittingCompressedSize.height),
-            withHorizontalFittingPriority: .required,
-            verticalFittingPriority: .fittingSizeLevel
-        )
-        return fittingSize
+        let width = bounds.width > 0 ? bounds.width : UIScreen.main.bounds.width
+        return CGSize(width: width, height: currentHeight)
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        invalidateIntrinsicContentSize()
+        recalculateHeight()
     }
 
     private func findViewController() -> UIViewController? {
@@ -188,6 +252,10 @@ class ProfileViewWrapper: ExpoView {
     private func updateView() {
         guard let hostingController = hostingController else { return }
         hostingController.rootView = createProfileView()
+        // After updating the SwiftUI root view, recalculate height
+        DispatchQueue.main.async { [weak self] in
+            self?.recalculateHeight()
+        }
     }
 
     private func createProfileView() -> ProfileView {

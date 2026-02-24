@@ -129,6 +129,11 @@ export interface KnownFollowerPressEvent {
   handle: string;
 }
 
+export interface ContentSizeChangeEvent {
+  height: number;
+  width: number;
+}
+
 // Component props
 export interface NativeProfileViewProps extends ViewProps {
   isOwnProfile?: boolean;
@@ -152,5 +157,8 @@ export interface NativeProfileViewProps extends ViewProps {
   onSignOut?: () => void;
   onKnownFollowerPress?: (event: {
     nativeEvent: KnownFollowerPressEvent;
+  }) => void;
+  onContentSizeChange?: (event: {
+    nativeEvent: ContentSizeChangeEvent;
   }) => void;
 }
