@@ -83,6 +83,7 @@ struct FeedListView: View {
                 feedScrollView
             }
         }
+        .accessibilityIdentifier("feed-list")
         .background(Color(UIColor.systemBackground))
         .onAppear {
             feedState.startObserving()
@@ -99,7 +100,7 @@ struct FeedListView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     // Post items - uses pre-computed conversions
-                    ForEach(feedState.convertedPosts) { converted in
+                    ForEach(Array(feedState.convertedPosts.enumerated()), id: \.element.id) { index, converted in
                         PostCardView(
                             post: converted.feedViewPost,
                             isBookmarked: converted.isBookmarked,
@@ -151,6 +152,7 @@ struct FeedListView: View {
                             onQuotePress: onQuotePress
                         )
                         .id(converted.id)
+                        .accessibilityIdentifier("feed-post-\(index)")
                         .onAppear {
                             visiblePostIds.insert(converted.id)
                             updateFirstVisiblePost()
@@ -233,6 +235,7 @@ struct FeedListView: View {
         ScrollView {
             FeedSkeletonView()
         }
+        .accessibilityIdentifier("feed-loading")
     }
 
     // MARK: - Error View
@@ -270,6 +273,7 @@ struct FeedListView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
         }
+        .accessibilityIdentifier("feed-empty")
     }
 }
 

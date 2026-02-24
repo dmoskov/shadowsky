@@ -21,7 +21,7 @@ const mockUseAuth = vi.fn(() => ({
 }));
 
 vi.mock("../contexts/AuthContext", () => ({
-  useAuth: (...args: unknown[]) => mockUseAuth(...args),
+  useAuth: () => mockUseAuth(),
 }));
 
 vi.mock("@bsky/shared", () => ({

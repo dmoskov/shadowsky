@@ -33,6 +33,9 @@ export interface FeedListEvents {
   onMentionPress?: (event: { nativeEvent: { handle: string; did: string } }) => void;
   onHashtagPress?: (event: { nativeEvent: { tag: string } }) => void;
   onShare?: (event: { nativeEvent: { uri: string } }) => void;
+  onImagePress?: (event: { nativeEvent: { images: Array<{ thumb: string; fullsize: string; alt: string }>; index: number } }) => void;
+  onLinkPress?: (event: { nativeEvent: { uri: string } }) => void;
+  onQuotePress?: (event: { nativeEvent: { uri: string; handle: string } }) => void;
 }
 
 // Props type
@@ -77,6 +80,9 @@ export const NativeFeedListView = forwardRef<any, NativeFeedListProps>((props, _
     onMentionPress,
     onHashtagPress,
     onShare,
+    onImagePress,
+    onLinkPress,
+    onQuotePress,
     ...viewProps
   } = props;
 
@@ -104,6 +110,9 @@ export const NativeFeedListView = forwardRef<any, NativeFeedListProps>((props, _
       onMentionPress={onMentionPress}
       onHashtagPress={onHashtagPress}
       onShare={onShare}
+      onImagePress={onImagePress}
+      onLinkPress={onLinkPress}
+      onQuotePress={onQuotePress}
     />
   );
 });

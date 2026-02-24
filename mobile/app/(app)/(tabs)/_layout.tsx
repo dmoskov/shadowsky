@@ -10,6 +10,7 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      initialRouteName="(home)"
       tabBar={(props) => (isMultiColumn ? null : <CustomTabBar {...props} />)}
       screenOptions={{
         headerShown: false,

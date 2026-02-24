@@ -93,16 +93,6 @@ jest.mock('@react-native-community/netinfo', () => ({
   addEventListener: jest.fn(() => jest.fn()),
 }));
 
-// Mock Sentry
-jest.mock('@sentry/react-native', () => ({
-  init: jest.fn(),
-  captureException: jest.fn(),
-  captureMessage: jest.fn(),
-  addBreadcrumb: jest.fn(),
-  setUser: jest.fn(),
-  setContext: jest.fn(),
-}));
-
 // Patch AppState for react-native (needed by AuthContext)
 const { AppState } = require('react-native');
 if (AppState) {

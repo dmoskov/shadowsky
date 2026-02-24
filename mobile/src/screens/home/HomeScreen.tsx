@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from "react";
-import { View, StyleSheet, Alert, ActionSheetIOS, Platform, ScrollView, TouchableOpacity, Text } from "react-native";
+import { View, StyleSheet, Alert, ActionSheetIOS, Platform, ScrollView, TouchableOpacity, Text, Linking } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useScrollToTop } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
@@ -121,6 +121,25 @@ export function HomeScreen() {
   const handleProfilePress = (event: { nativeEvent: { handle: string } }) => {
     const { handle } = event.nativeEvent;
     navigateToProfile(handle);
+  };
+
+  const handleLinkPress = (event: { nativeEvent: { uri: string } }) => {
+    const { uri } = event.nativeEvent;
+    Linking.openURL(uri);
+  };
+
+  const handleImagePress = (event: { nativeEvent: { images: Array<{ thumb: string; fullsize: string; alt: string }>; index: number } }) => {
+    const { images, index } = event.nativeEvent;
+    if (images[index]) {
+      Linking.openURL(images[index].fullsize);
+    }
+  };
+
+  const handleQuotePress = (event: { nativeEvent: { uri: string; handle: string } }) => {
+    const { uri, handle } = event.nativeEvent;
+    const postId = getPostIdFromUri(uri);
+    const did = getDidFromUri(uri);
+    navigateToThread(handle, postId, did || undefined);
   };
 
   const handleLike = (event: { nativeEvent: { uri: string; cid: string; likeUri?: string } }) => {
@@ -284,15 +303,17 @@ export function HomeScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <View style={styles.container}>
+    <View testID="home-screen" style={styles.container}>
       {/* Feed Picker Chips */}
       {savedFeeds && savedFeeds.length > 0 && (
         <ScrollView
+          testID="feed-picker"
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.feedPickerContainer}
           contentContainerStyle={styles.feedPickerContent}>
           <TouchableOpacity
+            testID="feed-chip-following"
             style={[styles.feedChip, !selectedFeedUri && styles.feedChipActive]}
             onPress={() => handleFeedSelect(null)}
             activeOpacity={0.7}>
@@ -334,6 +355,9 @@ export function HomeScreen() {
         onMentionPress={handleMentionPress}
         onHashtagPress={handleHashtagPress}
         onShare={handleShare}
+        onLinkPress={handleLinkPress}
+        onImagePress={handleImagePress}
+        onQuotePress={handleQuotePress}
         emptyMessage="No posts in your timeline yet"
       />
     </View>

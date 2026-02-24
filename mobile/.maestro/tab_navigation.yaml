@@ -1,0 +1,60 @@
+appId: com.shadowsky.mobile
+env:
+  TEST_HANDLE: ${MAESTRO_TEST_HANDLE}
+  TEST_APP_PASSWORD: ${MAESTRO_TEST_APP_PASSWORD}
+---
+# E2E Test: Tab Navigation
+# Tests navigating between all main tabs after authentication.
+# Requires MAESTRO_TEST_HANDLE and MAESTRO_TEST_APP_PASSWORD env vars.
+#
+# Run with:
+#   MAESTRO_TEST_HANDLE=your.handle MAESTRO_TEST_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx \
+#     maestro test .maestro/tab_navigation.yaml
+
+- launchApp
+- waitForAnimationToEnd
+
+# Sign in via App Password
+- tapOn: "App Password"
+- waitForAnimationToEnd
+- tapOn:
+    text: "yourhandle.bsky.social"
+    index: 0
+- inputText: "${TEST_HANDLE}"
+- tapOn: "xxxx-xxxx-xxxx-xxxx"
+- inputText: "${TEST_APP_PASSWORD}"
+- tapOn: "Sign In"
+
+# Wait for home feed to load
+- extendedWaitUntil:
+    visible: "Home tab"
+    timeout: 30000
+
+# Verify all 5 tabs are visible in the tab bar
+- assertVisible: "Home tab"
+- assertVisible: "Search tab"
+- assertVisible: "Feeds tab"
+- assertVisible: "Notifications tab"
+- assertVisible: "Profile tab"
+
+# Navigate to Search tab
+- tapOn: "Search tab"
+- waitForAnimationToEnd
+
+# Navigate to Feeds tab
+- tapOn: "Feeds tab"
+- waitForAnimationToEnd
+
+# Navigate to Notifications tab
+- tapOn: "Notifications tab"
+- waitForAnimationToEnd
+
+# Navigate to Profile tab
+- tapOn: "Profile tab"
+- waitForAnimationToEnd
+- assertVisible: "Edit Profile"
+
+# Navigate back to Home tab
+- tapOn: "Home tab"
+- waitForAnimationToEnd
+- assertVisible: "Home tab"

@@ -110,18 +110,32 @@ jobs:
             echo "⚠️ No booted simulators found — skipping Maestro tests"
           fi
 
-      - name: Run Maestro E2E tests
+      - name: Run Maestro E2E tests (unauthenticated)
         if: steps.check-devices.outputs.device_count != '0'
         working-directory: mobile
         run: |
-          maestro test .maestro/ --format junit --output e2e-results.xml
-        timeout-minutes: 30
+          maestro test .maestro/app_launch.yaml --format junit --output e2e-results-launch.xml
+          maestro test .maestro/auth_mode_switch.yaml --format junit --output e2e-results-auth-mode.xml
+          maestro test .maestro/auth_input_validation.yaml --format junit --output e2e-results-auth-input.xml
+        timeout-minutes: 15
+
+      - name: Run Maestro E2E tests (authenticated)
+        if: steps.check-devices.outputs.device_count != '0' && env.MAESTRO_TEST_HANDLE != ''
+        working-directory: mobile
+        env:
+          MAESTRO_TEST_HANDLE: ${{ secrets.MAESTRO_TEST_HANDLE }}
+          MAESTRO_TEST_APP_PASSWORD: ${{ secrets.MAESTRO_TEST_APP_PASSWORD }}
+        run: |
+          maestro test .maestro/feed_scroll.yaml --format junit --output e2e-results-feed.xml
+          maestro test .maestro/profile_view.yaml --format junit --output e2e-results-profile.xml
+          maestro test .maestro/tab_navigation.yaml --format junit --output e2e-results-tabs.xml
+        timeout-minutes: 15
 
       - name: Upload E2E test results
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results
-          path: mobile/e2e-results.xml
+          path: mobile/e2e-results-*.xml
         if: always() && steps.check-devices.outputs.device_count != '0'
 
       - name: Publish E2E test report
@@ -129,7 +143,7 @@ jobs:
         if: always() && steps.check-devices.outputs.device_count != '0'
         with:
           name: E2E Tests
-          path: mobile/e2e-results.xml
+          path: mobile/e2e-results-*.xml
           reporter: java-junit
 
   swift-ui-tests:

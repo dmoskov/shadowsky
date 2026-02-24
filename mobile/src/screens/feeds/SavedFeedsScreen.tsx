@@ -102,69 +102,74 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
     setIsReorderMode(!isReorderMode);
   };
 
-  const renderFeedCard = ({item, drag, isActive}: RenderItemParams<AppBskyFeedDefs.GeneratorView>) => {
+  const renderFeedCardContent = (item: AppBskyFeedDefs.GeneratorView, isActive = false, drag?: () => void) => {
     const isPinned = pinnedFeedUrisSet.has(item.uri);
     const likeCount = item.likeCount || 0;
 
     return (
-      <ScaleDecorator>
-        <TouchableOpacity
-          style={[styles.feedCard, isActive && styles.feedCardDragging]}
-          onPress={() => !isReorderMode && handleFeedPress(item.uri)}
-          onLongPress={isReorderMode ? drag : undefined}
-          disabled={isActive}
-          activeOpacity={0.7}>
-          <View style={styles.feedHeader}>
-            {isReorderMode && (
-              <View style={styles.dragHandle}>
-                <Text style={styles.dragHandleText}>☰</Text>
-              </View>
-            )}
-            {item.avatar ? (
-              <Image source={{uri: item.avatar}} style={styles.feedAvatar} />
-            ) : (
-              <View style={[styles.feedAvatar, styles.feedAvatarPlaceholder]}>
-                <Text style={styles.feedAvatarText}>{item.displayName?.[0] || '📰'}</Text>
-              </View>
-            )}
-            <View style={styles.feedInfo}>
-              <Text style={styles.feedName} numberOfLines={1}>
-                {item.displayName}
-              </Text>
-              <Text style={styles.feedCreator} numberOfLines={1}>
-                by @{item.creator.handle}
-              </Text>
+      <TouchableOpacity
+        style={[styles.feedCard, isActive && styles.feedCardDragging]}
+        onPress={() => !isReorderMode && handleFeedPress(item.uri)}
+        onLongPress={isReorderMode ? drag : undefined}
+        disabled={isActive}
+        activeOpacity={0.7}>
+        <View style={styles.feedHeader}>
+          {isReorderMode && (
+            <View style={styles.dragHandle}>
+              <Text style={styles.dragHandleText}>☰</Text>
             </View>
-            {!isReorderMode && (
-              <View style={styles.actionButtons}>
-                <TouchableOpacity
-                  style={[styles.pinButton, isPinned && styles.pinButtonActive]}
-                  onPress={() => handleTogglePin(item.uri)}
-                  activeOpacity={0.7}>
-                  <Text style={styles.pinButtonText}>📌</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.removeButton}
-                  onPress={() => handleRemoveFeed(item.uri, item.displayName)}
-                  activeOpacity={0.7}>
-                  <Text style={styles.removeButtonText}>✕</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-          {item.description && (
-            <Text style={styles.feedDescription} numberOfLines={2}>
-              {item.description}
-            </Text>
           )}
-          <View style={styles.feedFooter}>
-            <Text style={styles.feedLikes}>❤️ {likeCount.toLocaleString()} likes</Text>
-            {isPinned && <Text style={styles.pinnedBadge}>📌 Pinned</Text>}
+          {item.avatar ? (
+            <Image source={{uri: item.avatar}} style={styles.feedAvatar} />
+          ) : (
+            <View style={[styles.feedAvatar, styles.feedAvatarPlaceholder]}>
+              <Text style={styles.feedAvatarText}>{item.displayName?.[0] || '📰'}</Text>
+            </View>
+          )}
+          <View style={styles.feedInfo}>
+            <Text style={styles.feedName} numberOfLines={1}>
+              {item.displayName}
+            </Text>
+            <Text style={styles.feedCreator} numberOfLines={1}>
+              by @{item.creator.handle}
+            </Text>
           </View>
-        </TouchableOpacity>
-      </ScaleDecorator>
+          {!isReorderMode && (
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={[styles.pinButton, isPinned && styles.pinButtonActive]}
+                onPress={() => handleTogglePin(item.uri)}
+                activeOpacity={0.7}>
+                <Text style={styles.pinButtonText}>📌</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.removeButton}
+                onPress={() => handleRemoveFeed(item.uri, item.displayName)}
+                activeOpacity={0.7}>
+                <Text style={styles.removeButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+        {item.description && (
+          <Text style={styles.feedDescription} numberOfLines={2}>
+            {item.description}
+          </Text>
+        )}
+        <View style={styles.feedFooter}>
+          <Text style={styles.feedLikes}>❤️ {likeCount.toLocaleString()} likes</Text>
+          {isPinned && <Text style={styles.pinnedBadge}>📌 Pinned</Text>}
+        </View>
+      </TouchableOpacity>
     );
   };
+
+  const renderDraggableItem = ({item, drag, isActive}: RenderItemParams<AppBskyFeedDefs.GeneratorView>) => (
+    <ScaleDecorator>{renderFeedCardContent(item, isActive, drag)}</ScaleDecorator>
+  );
+
+  const renderStaticItem = ({item}: {item: AppBskyFeedDefs.GeneratorView}) =>
+    renderFeedCardContent(item);
 
   const renderContent = () => {
     if (isLoading) {
@@ -201,7 +206,7 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
       return (
         <DraggableFlatList
           data={feeds}
-          renderItem={renderFeedCard}
+          renderItem={renderDraggableItem}
           keyExtractor={(item) => item.uri}
           onDragEnd={({data}) => setLocalFeeds(data)}
           contentContainerStyle={styles.listContent}
@@ -213,14 +218,7 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
       <FlatList
         data={feeds}
         keyboardDismissMode="on-drag"
-        renderItem={({item}) =>
-          renderFeedCard({
-            item,
-            drag: () => {},
-            isActive: false,
-            getIndex: () => 0,
-          })
-        }
+        renderItem={renderStaticItem}
         keyExtractor={(item) => item.uri}
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}

@@ -13,6 +13,8 @@ export interface DailyEngagement {
   reposts: number;
   replies: number;
   posts: number;
+  originalPosts: number;
+  replyPosts: number;
 }
 
 export interface PostEngagementData {
@@ -105,11 +107,17 @@ export async function getUserAnalytics(
       const isRepost = post.reason?.$type === "app.bsky.feed.defs#reasonRepost";
       // Verify this post was authored by the requested actor (not someone else's content)
       const isOwnPost = post.post.author.did === actor || post.post.author.handle === actor;
-      if (postDate >= startDate) {
-        if (!isRepost && isOwnPost && postDate <= now) {
-          allPosts.push(post);
-        }
-      } else {
+
+      // Skip posts from other users in threads — their indexedAt can be
+      // much older than the feed position and must not trigger early exit
+      if (!isOwnPost || isRepost) {
+        continue;
+      }
+
+      if (postDate >= startDate && postDate <= now) {
+        allPosts.push(post);
+      } else if (postDate < startDate) {
+        // Only stop when we reach the user's OWN post older than the range
         hasMore = false;
         break;
       }
@@ -153,12 +161,18 @@ export async function getUserAnalytics(
     const postDate = new Date(post.post.indexedAt);
     const dateKey = formatDateKey(postDate);
     if (!dailyMap[dateKey]) {
-      dailyMap[dateKey] = { date: dateKey, likes: 0, reposts: 0, replies: 0, posts: 0 };
+      dailyMap[dateKey] = { date: dateKey, likes: 0, reposts: 0, replies: 0, posts: 0, originalPosts: 0, replyPosts: 0 };
     }
     dailyMap[dateKey].likes += likes;
     dailyMap[dateKey].reposts += reposts;
     dailyMap[dateKey].replies += replies;
     dailyMap[dateKey].posts += 1;
+    const isReply = !!(post.post.record as { reply?: unknown })?.reply;
+    if (isReply) {
+      dailyMap[dateKey].replyPosts += 1;
+    } else {
+      dailyMap[dateKey].originalPosts += 1;
+    }
 
     // Posting time analysis
     const hour = postDate.getHours();
@@ -185,7 +199,7 @@ export async function getUserAnalytics(
     const d = new Date();
     d.setDate(d.getDate() - i);
     const key = formatDateKey(d);
-    dailyEngagement.push(dailyMap[key] || { date: key, likes: 0, reposts: 0, replies: 0, posts: 0 });
+    dailyEngagement.push(dailyMap[key] || { date: key, likes: 0, reposts: 0, replies: 0, posts: 0, originalPosts: 0, replyPosts: 0 });
   }
 
   // Calculate best posting times

@@ -5,9 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "Asphodel",
   slug: "shadowsky",
   version: "0.7.0",
-  runtimeVersion: {
-    policy: "appVersion",
-  },
+  runtimeVersion: "0.7.0",
   orientation: "default",
   icon: "./assets/icon.png",
   scheme: ["shadowsky", "bsky", "io.shadowsky.app", "io.shadowsky"],
@@ -84,13 +82,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     [
-      "@sentry/react-native/expo",
-      {
-        organization: process.env.SENTRY_ORG || "",
-        project: process.env.SENTRY_PROJECT || "",
-      },
-    ],
-    [
       "expo-media-library",
       {
         photosPermission: "Allow $(PRODUCT_NAME) to save images to your photo library",
@@ -140,6 +131,5 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     eas: {
       projectId: "bb805399-ea1d-4550-9fee-e7ecf9cc8b74",
     },
-    sentryDsn: process.env.SENTRY_DSN || "",
   },
 });

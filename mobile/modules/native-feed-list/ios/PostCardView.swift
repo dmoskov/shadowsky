@@ -55,6 +55,9 @@ struct PostCardView: View {
     let isOnline: Bool
     let currentUserDid: String?
 
+    // Tap feedback
+    @State private var isContentHighlighted = false
+
     // Actions
     let onPress: (() -> Void)?
     let onPressProfile: ((String) -> Void)?
@@ -143,8 +146,16 @@ struct PostCardView: View {
                 }
             }
             .contentShape(Rectangle())
+            .background(isContentHighlighted ? Color.primary.opacity(0.08) : Color.clear)
             .onTapGesture {
+                // Instant visual + haptic feedback before navigation
+                isContentHighlighted = true
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 onPress?()
+                // Clear highlight after navigation begins
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    isContentHighlighted = false
+                }
             }
 
             // Action bar — kept outside the content tap area so Button
@@ -159,6 +170,7 @@ struct PostCardView: View {
                     activeColor: .blue,
                     action: { onReply?() }
                 )
+                .accessibilityIdentifier("reply-button")
 
                 // Repost
                 actionButton(
@@ -168,6 +180,7 @@ struct PostCardView: View {
                     activeColor: .green,
                     action: { onRepost?() }
                 )
+                .accessibilityIdentifier("repost-button")
 
                 // Like
                 actionButton(
@@ -177,6 +190,7 @@ struct PostCardView: View {
                     activeColor: .red,
                     action: { onLike?() }
                 )
+                .accessibilityIdentifier("like-button")
 
                 Spacer()
 
@@ -186,8 +200,10 @@ struct PostCardView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityIdentifier("share-button")
             }
             .padding(.top, 4)
+            .accessibilityIdentifier("post-actions")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)

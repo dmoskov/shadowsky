@@ -1,0 +1,38 @@
+appId: com.shadowsky.mobile
+---
+# E2E Test: Auth Mode Switching
+# Tests switching between OAuth and App Password login modes.
+# This test does NOT require authentication.
+
+- launchApp
+- waitForAnimationToEnd
+
+# Verify default state: OAuth mode
+- assertVisible: "Sign in with Bluesky"
+- assertVisible: "yourhandle.bsky.social"
+
+# Switch to App Password mode
+- tapOn: "App Password"
+- waitForAnimationToEnd
+
+# Verify App Password mode elements
+- assertVisible: "Sign In"
+- assertVisible: "Handle or Email"
+- assertVisible: "App Password"
+- assertVisible: "xxxx-xxxx-xxxx-xxxx"
+
+# Verify OAuth-specific elements are hidden
+- assertNotVisible: "Sign in with Bluesky"
+
+# Switch back to OAuth mode
+- tapOn: "OAuth"
+- waitForAnimationToEnd
+
+# Verify OAuth mode is back
+- assertVisible: "Sign in with Bluesky"
+- assertVisible: "yourhandle.bsky.social"
+
+# Common elements should always be visible
+- assertVisible: "Asphodel"
+- assertVisible: "Create New Account"
+- assertVisible: "OR"

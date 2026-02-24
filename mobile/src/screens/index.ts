@@ -6,7 +6,6 @@ export { ThreadScreenNative } from "./shared/ThreadScreenNative";
 export { SearchScreen } from "./search/SearchScreen";
 export { ComposeScreen } from "./compose/ComposeScreen";
 export { NotificationsScreen } from "./notifications/NotificationsScreen";
-export { NotificationsAnalyticsScreen } from "./notifications/NotificationsAnalyticsScreen";
 export { ProfileScreenNative } from "./profile/ProfileScreenNative";
 export { MyProfileScreenNative } from "./profile/MyProfileScreenNative";
 export { BookmarksScreen } from "./profile/BookmarksScreen";
