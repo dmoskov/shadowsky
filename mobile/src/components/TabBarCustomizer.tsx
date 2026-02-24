@@ -1,28 +1,28 @@
-import React, {useState, useCallback} from 'react';
+import React, { useCallback, useState } from "react";
 import {
-  View,
-  Text,
   Modal,
-  TouchableOpacity,
-  StyleSheet,
   ScrollView,
-} from 'react-native';
-import {useTheme} from '../contexts/ThemeContext';
-import {usePreferences} from '../contexts/PreferencesContext';
-import {triggerHaptic} from '../utils/haptics';
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { usePreferences } from "../contexts/PreferencesContext";
+import { useTheme } from "../contexts/ThemeContext";
+import { triggerHaptic } from "../utils/haptics";
+import type { IconProps } from "./icons";
 import {
-  HomeIcon,
-  SearchIcon,
   BellIcon,
-  PersonIcon,
-  ChatBubbleIcon,
   BookmarkIcon,
-  SettingsIcon,
-  ListIcon,
   ChartIcon,
+  ChatBubbleIcon,
+  HomeIcon,
+  ListIcon,
+  PersonIcon,
+  SearchIcon,
+  SettingsIcon,
   SparklesIcon,
-} from './icons';
-import type {IconProps} from './icons';
+} from "./icons";
 
 export interface NavItemDef {
   id: string;
@@ -35,34 +35,38 @@ export interface NavItemDef {
  * Each maps to a route group under (tabs).
  */
 export const ALL_NAV_ITEMS: NavItemDef[] = [
-  {id: 'home', label: 'Home', icon: (props) => <HomeIcon {...props} />},
-  {id: 'search', label: 'Search', icon: (props) => <SearchIcon {...props} />},
+  { id: "home", label: "Home", icon: (props) => <HomeIcon {...props} /> },
+  { id: "search", label: "Search", icon: (props) => <SearchIcon {...props} /> },
   {
-    id: 'notifications',
-    label: 'Notifications',
+    id: "notifications",
+    label: "Notifications",
     icon: (props) => <BellIcon {...props} />,
   },
-  {id: 'profile', label: 'Profile', icon: (props) => <PersonIcon {...props} />},
   {
-    id: 'messages',
-    label: 'Messages',
+    id: "profile",
+    label: "Profile",
+    icon: (props) => <PersonIcon {...props} />,
+  },
+  {
+    id: "messages",
+    label: "Messages",
     icon: (props) => <ChatBubbleIcon {...props} />,
   },
   {
-    id: 'bookmarks',
-    label: 'Bookmarks',
+    id: "bookmarks",
+    label: "Bookmarks",
     icon: (props) => <BookmarkIcon {...props} />,
   },
-  {id: 'feeds', label: 'Feeds', icon: (props) => <SparklesIcon {...props} />},
-  {id: 'lists', label: 'Lists', icon: (props) => <ListIcon {...props} />},
+  { id: "feeds", label: "Feeds", icon: (props) => <SparklesIcon {...props} /> },
+  { id: "lists", label: "Lists", icon: (props) => <ListIcon {...props} /> },
   {
-    id: 'analytics',
-    label: 'Analytics',
+    id: "analytics",
+    label: "Analytics",
     icon: (props) => <ChartIcon {...props} />,
   },
   {
-    id: 'settings',
-    label: 'Settings',
+    id: "settings",
+    label: "Settings",
     icon: (props) => <SettingsIcon {...props} />,
   },
 ];
@@ -75,15 +79,16 @@ interface TabBarCustomizerProps {
   onClose: () => void;
 }
 
-export function TabBarCustomizer({visible, onClose}: TabBarCustomizerProps) {
-  const {colors} = useTheme();
-  const {preferences, updatePreference} = usePreferences();
+export function TabBarCustomizer({ visible, onClose }: TabBarCustomizerProps) {
+  const { colors } = useTheme();
+  const { preferences, updatePreference } = usePreferences();
 
   const currentItems = preferences?.tabBarItems ?? [
-    'home',
-    'search',
-    'notifications',
-    'profile',
+    "home",
+    "search",
+    "feeds",
+    "notifications",
+    "profile",
   ];
   const [selectedItems, setSelectedItems] = useState<string[]>(currentItems);
 
@@ -92,53 +97,48 @@ export function TabBarCustomizer({visible, onClose}: TabBarCustomizerProps) {
     if (visible) {
       setSelectedItems(
         preferences?.tabBarItems ?? [
-          'home',
-          'search',
-          'notifications',
-          'profile',
+          "home",
+          "search",
+          "feeds",
+          "notifications",
+          "profile",
         ],
       );
     }
   }, [visible, preferences?.tabBarItems]);
 
-  const toggleItem = useCallback(
-    (itemId: string) => {
-      triggerHaptic('selection');
-      setSelectedItems(prev => {
-        const isSelected = prev.includes(itemId);
-        if (isSelected) {
-          // Don't allow fewer than MIN_TABS
-          if (prev.length <= MIN_TABS) return prev;
-          return prev.filter(id => id !== itemId);
-        } else {
-          // Don't allow more than MAX_TABS
-          if (prev.length >= MAX_TABS) return prev;
-          return [...prev, itemId];
-        }
-      });
-    },
-    [],
-  );
+  const toggleItem = useCallback((itemId: string) => {
+    triggerHaptic("selection");
+    setSelectedItems((prev) => {
+      const isSelected = prev.includes(itemId);
+      if (isSelected) {
+        // Don't allow fewer than MIN_TABS
+        if (prev.length <= MIN_TABS) return prev;
+        return prev.filter((id) => id !== itemId);
+      } else {
+        // Don't allow more than MAX_TABS
+        if (prev.length >= MAX_TABS) return prev;
+        return [...prev, itemId];
+      }
+    });
+  }, []);
 
-  const moveItem = useCallback(
-    (itemId: string, direction: 'up' | 'down') => {
-      triggerHaptic('light');
-      setSelectedItems(prev => {
-        const idx = prev.indexOf(itemId);
-        if (idx === -1) return prev;
-        const newIdx = direction === 'up' ? idx - 1 : idx + 1;
-        if (newIdx < 0 || newIdx >= prev.length) return prev;
-        const next = [...prev];
-        [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
-        return next;
-      });
-    },
-    [],
-  );
+  const moveItem = useCallback((itemId: string, direction: "up" | "down") => {
+    triggerHaptic("light");
+    setSelectedItems((prev) => {
+      const idx = prev.indexOf(itemId);
+      if (idx === -1) return prev;
+      const newIdx = direction === "up" ? idx - 1 : idx + 1;
+      if (newIdx < 0 || newIdx >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[newIdx]] = [next[newIdx], next[idx]];
+      return next;
+    });
+  }, []);
 
   const handleSave = useCallback(async () => {
-    triggerHaptic('success');
-    await updatePreference('tabBarItems', selectedItems);
+    triggerHaptic("success");
+    await updatePreference("tabBarItems", selectedItems);
     onClose();
   }, [selectedItems, updatePreference, onClose]);
 
@@ -153,7 +153,8 @@ export function TabBarCustomizer({visible, onClose}: TabBarCustomizerProps) {
       visible={visible}
       animationType="slide"
       transparent
-      onRequestClose={handleCancel}>
+      onRequestClose={handleCancel}
+    >
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <View style={styles.handle} />
@@ -183,35 +184,39 @@ export function TabBarCustomizer({visible, onClose}: TabBarCustomizerProps) {
           <ScrollView
             style={styles.scrollArea}
             contentContainerStyle={styles.scrollContent}
-            bounces={false}>
+            bounces={false}
+          >
             {selectedItems.map((itemId, index) => {
-              const def = ALL_NAV_ITEMS.find(n => n.id === itemId);
+              const def = ALL_NAV_ITEMS.find((n) => n.id === itemId);
               if (!def) return null;
               return (
                 <View key={itemId} style={styles.activeRow}>
                   <View style={styles.rowLeft}>
                     <View style={styles.iconContainer}>
-                      {def.icon({size: 22, color: colors.info})}
+                      {def.icon({ size: 22, color: colors.info })}
                     </View>
                     <Text style={styles.itemLabel}>{def.label}</Text>
                   </View>
                   <View style={styles.rowRight}>
                     <TouchableOpacity
-                      onPress={() => moveItem(itemId, 'up')}
+                      onPress={() => moveItem(itemId, "up")}
                       disabled={index === 0}
                       style={[
                         styles.reorderBtn,
                         index === 0 && styles.disabledBtn,
-                      ]}>
+                      ]}
+                    >
                       <Text style={styles.reorderText}>^</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      onPress={() => moveItem(itemId, 'down')}
+                      onPress={() => moveItem(itemId, "down")}
                       disabled={index === selectedItems.length - 1}
                       style={[
                         styles.reorderBtn,
-                        index === selectedItems.length - 1 && styles.disabledBtn,
-                      ]}>
+                        index === selectedItems.length - 1 &&
+                          styles.disabledBtn,
+                      ]}
+                    >
                       <Text style={[styles.reorderText, styles.reorderDown]}>
                         ^
                       </Text>
@@ -222,7 +227,8 @@ export function TabBarCustomizer({visible, onClose}: TabBarCustomizerProps) {
                       style={[
                         styles.removeBtn,
                         selectedItems.length <= MIN_TABS && styles.disabledBtn,
-                      ]}>
+                      ]}
+                    >
                       <Text style={styles.removeBtnText}>-</Text>
                     </TouchableOpacity>
                   </View>
@@ -231,18 +237,18 @@ export function TabBarCustomizer({visible, onClose}: TabBarCustomizerProps) {
             })}
 
             {/* Available items - not selected */}
-            {ALL_NAV_ITEMS.filter(n => !selectedItems.includes(n.id)).length >
+            {ALL_NAV_ITEMS.filter((n) => !selectedItems.includes(n.id)).length >
               0 && (
               <>
                 <View style={[styles.sectionHeader, styles.availableHeader]}>
                   <Text style={styles.sectionTitle}>AVAILABLE</Text>
                 </View>
-                {ALL_NAV_ITEMS.filter(n => !selectedItems.includes(n.id)).map(
-                  def => (
+                {ALL_NAV_ITEMS.filter((n) => !selectedItems.includes(n.id)).map(
+                  (def) => (
                     <View key={def.id} style={styles.availableRow}>
                       <View style={styles.rowLeft}>
                         <View style={styles.iconContainer}>
-                          {def.icon({size: 22, color: colors.textTertiary})}
+                          {def.icon({ size: 22, color: colors.textTertiary })}
                         </View>
                         <Text style={styles.availableLabel}>{def.label}</Text>
                       </View>
@@ -251,8 +257,10 @@ export function TabBarCustomizer({visible, onClose}: TabBarCustomizerProps) {
                         disabled={selectedItems.length >= MAX_TABS}
                         style={[
                           styles.addBtn,
-                          selectedItems.length >= MAX_TABS && styles.disabledBtn,
-                        ]}>
+                          selectedItems.length >= MAX_TABS &&
+                            styles.disabledBtn,
+                        ]}
+                      >
                         <Text style={styles.addBtnText}>+</Text>
                       </TouchableOpacity>
                     </View>
@@ -266,12 +274,12 @@ export function TabBarCustomizer({visible, onClose}: TabBarCustomizerProps) {
           <View style={styles.preview}>
             <Text style={styles.previewLabel}>Preview</Text>
             <View style={styles.previewBar}>
-              {selectedItems.map(itemId => {
-                const def = ALL_NAV_ITEMS.find(n => n.id === itemId);
+              {selectedItems.map((itemId) => {
+                const def = ALL_NAV_ITEMS.find((n) => n.id === itemId);
                 if (!def) return null;
                 return (
                   <View key={itemId} style={styles.previewItem}>
-                    {def.icon({size: 20, color: colors.textTertiary})}
+                    {def.icon({ size: 20, color: colors.textTertiary })}
                     <Text style={styles.previewItemText}>{def.label}</Text>
                   </View>
                 );
@@ -288,14 +296,14 @@ const createStyles = (colors: Record<string, string>) =>
   StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.6)',
-      justifyContent: 'flex-end',
+      backgroundColor: "rgba(0,0,0,0.6)",
+      justifyContent: "flex-end",
     },
     sheet: {
       backgroundColor: colors.surface,
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
-      maxHeight: '85%',
+      maxHeight: "85%",
       paddingBottom: 34,
     },
     handle: {
@@ -303,14 +311,14 @@ const createStyles = (colors: Record<string, string>) =>
       height: 5,
       borderRadius: 3,
       backgroundColor: colors.borderLight,
-      alignSelf: 'center',
+      alignSelf: "center",
       marginTop: 8,
       marginBottom: 4,
     },
     header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
       paddingHorizontal: 16,
       paddingVertical: 12,
     },
@@ -321,7 +329,7 @@ const createStyles = (colors: Record<string, string>) =>
     title: {
       color: colors.text,
       fontSize: 17,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     cancelText: {
       color: colors.textSecondary,
@@ -330,26 +338,26 @@ const createStyles = (colors: Record<string, string>) =>
     saveText: {
       color: colors.info,
       fontSize: 16,
-      fontWeight: '600',
-      textAlign: 'right',
+      fontWeight: "600",
+      textAlign: "right",
     },
     subtitle: {
       color: colors.textTertiary,
       fontSize: 13,
-      textAlign: 'center',
+      textAlign: "center",
       marginBottom: 12,
     },
     sectionHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
       paddingHorizontal: 16,
       paddingVertical: 8,
     },
     sectionTitle: {
       color: colors.textTertiary,
       fontSize: 12,
-      fontWeight: '600',
+      fontWeight: "600",
       letterSpacing: 0.5,
     },
     sectionCount: {
@@ -364,18 +372,18 @@ const createStyles = (colors: Record<string, string>) =>
       paddingBottom: 8,
     },
     activeRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
       paddingHorizontal: 16,
       paddingVertical: 10,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.border,
     },
     availableRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
       paddingHorizontal: 16,
       paddingVertical: 10,
       borderBottomWidth: StyleSheet.hairlineWidth,
@@ -385,26 +393,26 @@ const createStyles = (colors: Record<string, string>) =>
       marginTop: 8,
     },
     rowLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       flex: 1,
     },
     rowRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 8,
     },
     iconContainer: {
       width: 32,
       height: 32,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
       marginRight: 12,
     },
     itemLabel: {
       color: colors.text,
       fontSize: 16,
-      fontWeight: '500',
+      fontWeight: "500",
     },
     availableLabel: {
       color: colors.textSecondary,
@@ -415,43 +423,43 @@ const createStyles = (colors: Record<string, string>) =>
       height: 28,
       borderRadius: 14,
       backgroundColor: colors.background,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
     },
     reorderText: {
       color: colors.textSecondary,
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     reorderDown: {
-      transform: [{rotate: '180deg'}],
+      transform: [{ rotate: "180deg" }],
     },
     removeBtn: {
       width: 28,
       height: 28,
       borderRadius: 14,
-      backgroundColor: colors.danger + '20',
-      alignItems: 'center',
-      justifyContent: 'center',
+      backgroundColor: colors.danger + "20",
+      alignItems: "center",
+      justifyContent: "center",
     },
     removeBtnText: {
       color: colors.danger,
       fontSize: 18,
-      fontWeight: '700',
+      fontWeight: "700",
       lineHeight: 20,
     },
     addBtn: {
       width: 28,
       height: 28,
       borderRadius: 14,
-      backgroundColor: colors.info + '20',
-      alignItems: 'center',
-      justifyContent: 'center',
+      backgroundColor: colors.info + "20",
+      alignItems: "center",
+      justifyContent: "center",
     },
     addBtnText: {
       color: colors.info,
       fontSize: 18,
-      fontWeight: '700',
+      fontWeight: "700",
       lineHeight: 20,
     },
     disabledBtn: {
@@ -466,21 +474,21 @@ const createStyles = (colors: Record<string, string>) =>
     previewLabel: {
       color: colors.textTertiary,
       fontSize: 11,
-      fontWeight: '600',
+      fontWeight: "600",
       letterSpacing: 0.5,
-      textTransform: 'uppercase',
+      textTransform: "uppercase",
       marginBottom: 8,
     },
     previewBar: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-around",
+      alignItems: "center",
       backgroundColor: colors.background,
       borderRadius: 12,
       paddingVertical: 8,
     },
     previewItem: {
-      alignItems: 'center',
+      alignItems: "center",
       gap: 2,
     },
     previewItemText: {
