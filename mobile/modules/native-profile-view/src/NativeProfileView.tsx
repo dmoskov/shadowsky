@@ -7,8 +7,8 @@ import {
   NativeModulesProxy,
   requireNativeViewManager,
 } from "expo-modules-core";
-import { forwardRef, useEffect } from "react";
-import { Platform } from "react-native";
+import { forwardRef, useCallback, useEffect, useState } from "react";
+import { Platform, StyleSheet } from "react-native";
 import {
   NativeProfileViewProps,
   PinnedPostData,
@@ -50,6 +50,7 @@ export const NativeProfileView = forwardRef<any, NativeProfileViewProps>(
       onStarterPackPress,
       onSignOut,
       onKnownFollowerPress,
+      onContentSizeChange,
       ...viewProps
     } = props;
 
@@ -81,6 +82,7 @@ export const NativeProfileView = forwardRef<any, NativeProfileViewProps>(
         onStarterPackPress={onStarterPackPress}
         onSignOut={onSignOut}
         onKnownFollowerPress={onKnownFollowerPress}
+        onContentSizeChange={onContentSizeChange}
       />
     );
   },
@@ -115,8 +117,22 @@ export const NativeProfileViewWithData = forwardRef<
     errorType = null,
     starterPacks,
     pinnedPost,
+    style,
     ...rest
   } = props;
+
+  // Track the measured height from the native view
+  const [nativeHeight, setNativeHeight] = useState<number | undefined>(undefined);
+
+  const handleContentSizeChange = useCallback(
+    (event: { nativeEvent: { height: number; width: number } }) => {
+      const { height } = event.nativeEvent;
+      if (height > 0) {
+        setNativeHeight(height);
+      }
+    },
+    [],
+  );
 
   // Serialize and send profile data to Swift
   useEffect(() => {
@@ -148,14 +164,21 @@ export const NativeProfileViewWithData = forwardRef<
     }
   }, [pinnedPost]);
 
+  // Combine parent style with measured native height
+  const combinedStyle = StyleSheet.flatten([
+    style,
+    nativeHeight != null ? { height: nativeHeight } : undefined,
+  ]);
+
   return (
     <NativeProfileView
       {...rest}
       ref={ref}
+      style={combinedStyle}
       isLoadingProfile={isLoading}
       error={error?.message || null}
       errorType={errorType}
-      style={{ flex: 1 }}
+      onContentSizeChange={handleContentSizeChange}
     />
   );
 });
