@@ -156,6 +156,8 @@ export async function getAllSessionTokens(
   return sessions;
 }
 
+let migrationDone = false;
+
 /**
  * Migrate tokens from legacy AsyncStorage to SecureStore.
  *
@@ -165,10 +167,16 @@ export async function getAllSessionTokens(
  * AsyncStorage.
  *
  * This is idempotent — if SecureStore already has data for an account the
- * migration is a no-op for that account.
+ * migration is a no-op for that account. Only runs once per app lifecycle.
  */
 export async function migrateTokensToSecureStore(): Promise<void> {
+  if (migrationDone) {
+    return;
+  }
+
   try {
+    let migrated = false;
+
     // Migrate multi-account sessions
     const legacySessions = await AsyncStorage.getItem(LEGACY_SESSIONS_KEY);
     if (legacySessions) {
@@ -187,6 +195,7 @@ export async function migrateTokensToSecureStore(): Promise<void> {
               emailConfirmed: session.emailConfirmed,
               active: session.active,
             });
+            migrated = true;
           }
 
           // Strip tokens from the AsyncStorage copy, keeping account metadata
@@ -215,6 +224,7 @@ export async function migrateTokensToSecureStore(): Promise<void> {
             emailConfirmed: session.emailConfirmed,
             active: session.active,
           });
+          migrated = true;
         }
 
         // Set as active
@@ -227,7 +237,11 @@ export async function migrateTokensToSecureStore(): Promise<void> {
       }
     }
 
-    logger.log('Token migration to SecureStore complete');
+    migrationDone = true;
+
+    if (migrated) {
+      logger.log('Token migration to SecureStore complete');
+    }
   } catch (error) {
     logger.error('Token migration to SecureStore failed:', error);
     // Don't throw — the app can still function with tokens in AsyncStorage

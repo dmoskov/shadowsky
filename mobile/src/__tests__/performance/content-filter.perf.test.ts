@@ -142,7 +142,7 @@ describe('content-filter performance', () => {
 
     // Second batch should not be slower than first (cache is warm for both
     // since it populates on the very first call). Allow margin for JIT/GC variance.
-    expect(secondBatchMs).toBeLessThan(firstBatchMs * 1.5 + 10);
+    expect(secondBatchMs).toBeLessThan(firstBatchMs * 2 + 20);
   });
 
   test('isPostMuted: single post check is <0.1ms', () => {

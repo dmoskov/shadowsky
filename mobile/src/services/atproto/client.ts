@@ -81,14 +81,9 @@ export class AtProtoClient {
    * Resume session with stored data
    */
   async resumeSession(sessionData: AtpSessionData) {
-    return rateLimited(
-      async () => {
-        await this.agent.resumeSession(sessionData);
-        this.session = sessionData;
-        return this.agent;
-      },
-      ATProtoEndpointType.AUTH
-    );
+    await this.agent.resumeSession(sessionData);
+    this.session = sessionData;
+    return this.agent;
   }
 
   /**
@@ -110,7 +105,7 @@ export class AtProtoClient {
           throw new Error('Session expired, please log in again');
         }
       },
-      ATProtoEndpointType.AUTH
+      ATProtoEndpointType.FEED
     );
   }
 

@@ -18,12 +18,11 @@ import {
   clearActiveSessionDid,
   migrateTokensToSecureStore,
 } from './secure-token-storage';
-import {
-  signInWithOAuth as oauthExpoSignIn,
-  restoreOAuthSession,
-  signOutOAuth,
-  resetOAuthClient,
-} from './oauth-expo';
+// Lazy-load oauth-expo to avoid crashing when the native module
+// ExpoAtprotoOAuthClient isn't available (e.g. Expo Go or missing native build).
+function getOAuthModule(): typeof import('./oauth-expo') {
+  return require('./oauth-expo');
+}
 
 const ACCOUNTS_STORAGE_KEY = '@shadowsky/accounts';
 const AUTH_METHOD_PREFIX = '@shadowsky/auth_method:';
@@ -99,9 +98,10 @@ export async function signInWithOAuth(
   handle: string,
 ): Promise<StoredSession> {
   resetAtProtoClient();
-  resetOAuthClient();
+  const oauth = await getOAuthModule();
+  oauth.resetOAuthClient();
 
-  const {agent, did} = await oauthExpoSignIn(handle);
+  const {agent, did} = await oauth.signInWithOAuth(handle);
 
   // Set the OAuth agent on the global client
   const client = getAtProtoClient();
@@ -172,7 +172,8 @@ export async function resumeSession(): Promise<StoredSession | null> {
 }
 
 async function resumeOAuthSession(activeDid: string): Promise<StoredSession | null> {
-  const result = await restoreOAuthSession(activeDid);
+  const oauth = await getOAuthModule();
+  const result = await oauth.restoreOAuthSession(activeDid);
   if (!result) {
     return null;
   }
@@ -291,9 +292,10 @@ export async function signOut(): Promise<void> {
   if (activeDid) {
     const authMethod = await AsyncStorage.getItem(`${AUTH_METHOD_PREFIX}${activeDid}`);
     if (authMethod === 'oauth') {
-      await signOutOAuth(activeDid);
+      const oauth = await getOAuthModule();
+      await oauth.signOutOAuth(activeDid);
       await AsyncStorage.removeItem(`${AUTH_METHOD_PREFIX}${activeDid}`);
-      resetOAuthClient();
+      oauth.resetOAuthClient();
     } else {
       await deleteSessionTokens(activeDid);
     }
@@ -385,9 +387,10 @@ export async function removeAccount(did: string): Promise<void> {
 
     const authMethod = await AsyncStorage.getItem(`${AUTH_METHOD_PREFIX}${did}`);
     if (authMethod === 'oauth') {
-      await signOutOAuth(did);
+      const oauth = await getOAuthModule();
+      await oauth.signOutOAuth(did);
       await AsyncStorage.removeItem(`${AUTH_METHOD_PREFIX}${did}`);
-      resetOAuthClient();
+      oauth.resetOAuthClient();
     } else {
       await deleteSessionTokens(did);
     }
@@ -445,7 +448,8 @@ export async function switchToAccount(did: string): Promise<StoredSession> {
 
   if (authMethod === 'oauth') {
     // Restore OAuth session via the library
-    const result = await restoreOAuthSession(did);
+    const oauth = await getOAuthModule();
+    const result = await oauth.restoreOAuthSession(did);
     if (!result) {
       throw new Error('OAuth session expired. Please sign in again.');
     }
