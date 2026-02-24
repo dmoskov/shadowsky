@@ -143,6 +143,7 @@ function AuthGate() {
   const segments = useSegments();
   const router = useRouter();
   const restoredRoute = useRestoredRoute();
+  const hasNavigated = useRef(false);
 
   // Persist navigation state when the app moves to the background
   useStateRestoration();
@@ -162,6 +163,16 @@ function AuthGate() {
         router.replace("/(onboarding)");
       } else if (restoredRoute) {
         // Restore saved navigation state from a previous session
+        router.replace(restoredRoute as any);
+      } else {
+        router.replace("/(app)/(tabs)/(home)");
+      }
+    } else if (isAuthenticated && !hasNavigated.current) {
+      // Cold start: user is already authenticated and in the app group.
+      // Ensure the home tab is selected (Expo Router defaults to alphabetical
+      // filesystem order which picks (feeds) before (home)).
+      hasNavigated.current = true;
+      if (restoredRoute) {
         router.replace(restoredRoute as any);
       } else {
         router.replace("/(app)/(tabs)/(home)");
