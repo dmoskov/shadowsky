@@ -26,9 +26,10 @@ env:
 - tapOn: "Sign In"
 
 # Wait for home feed to load
-- extendedWaitUntil:
-    visible: "Home tab"
+# Wait for authentication and feed to load
+- waitForAnimationToEnd:
     timeout: 30000
+- assertVisible: "Home tab"
 
 # Navigate to profile tab
 - tapOn: "Profile tab"

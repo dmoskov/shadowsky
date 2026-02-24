@@ -26,9 +26,10 @@ env:
 - tapOn: "Sign In"
 
 # Wait for feed to load (generous timeout for network)
-- extendedWaitUntil:
-    visible: "Home tab"
+# Wait for authentication and feed to load
+- waitForAnimationToEnd:
     timeout: 30000
+- assertVisible: "Home tab"
 
 # Verify we're on the home feed
 - assertVisible: "Home tab"
