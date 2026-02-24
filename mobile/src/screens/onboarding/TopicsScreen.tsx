@@ -79,7 +79,7 @@ const TopicCard = memo(function TopicCard({
           <View
             style={[styles.checkBadge, { backgroundColor: colors.primary }]}
           >
-            <Text style={styles.checkText}>{"\u2713"}</Text>
+            <Text style={[styles.checkText, { color: colors.textOnPrimary }]}>{"\u2713"}</Text>
           </View>
         )}
       </View>
@@ -195,7 +195,7 @@ export const TopicsScreen = memo(function TopicsScreen({
             accessibilityLabel="Continue"
             accessibilityState={{ disabled: selectedTopics.length === 0 }}
           >
-            <Text style={styles.continueButtonText}>Continue</Text>
+            <Text style={[styles.continueButtonText, { color: colors.textOnPrimary }]}>Continue</Text>
           </Pressable>
         </View>
       </View>
@@ -269,7 +269,6 @@ const styles = StyleSheet.create({
   },
   checkText: {
     fontSize: 14,
-    color: "#ffffff",
     fontWeight: "700",
   },
   navigation: {
@@ -315,6 +314,5 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#ffffff",
   },
 });

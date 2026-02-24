@@ -79,7 +79,7 @@ export const WelcomeScreen = memo(function WelcomeScreen({
             accessibilityRole="button"
             accessibilityLabel="Get Started"
           >
-            <Text style={styles.primaryButtonText}>Get Started</Text>
+            <Text style={[styles.primaryButtonText, { color: colors.textOnPrimary }]}>Get Started</Text>
           </Pressable>
 
           <Pressable
@@ -188,7 +188,6 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     fontSize: 17,
     fontWeight: "600",
-    color: "#ffffff",
   },
   secondaryButton: {
     borderRadius: 12,

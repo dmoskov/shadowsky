@@ -11,6 +11,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { useTheme } from "../../contexts/ThemeContext";
 import { onboardingService } from "../../services/onboarding/onboarding-service";
 import { WelcomeScreen } from "./WelcomeScreen";
 import { TopicsScreen } from "./TopicsScreen";
@@ -82,6 +83,7 @@ function useSuggestedFeeds() {
 
 export const OnboardingScreen = memo(function OnboardingScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("welcome");
 
   const { users: suggestedUsers, isLoading: usersLoading } =
@@ -280,7 +282,7 @@ export const OnboardingScreen = memo(function OnboardingScreen() {
     }
   };
 
-  return <View style={styles.container}>{renderStep()}</View>;
+  return <View style={[styles.container, { backgroundColor: colors.background }]}>{renderStep()}</View>;
 });
 
 const styles = StyleSheet.create({

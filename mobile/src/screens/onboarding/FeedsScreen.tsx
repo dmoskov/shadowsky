@@ -122,12 +122,12 @@ const FeedCard = memo(function FeedCard({
           }
         >
           {isInProgress ? (
-            <ActivityIndicator size="small" color="#ffffff" />
+            <ActivityIndicator size="small" color={colors.textOnPrimary} />
           ) : (
             <Text
               style={[
                 styles.addButtonText,
-                isSaved && { color: colors.textSecondary },
+                { color: isSaved ? colors.textSecondary : colors.textOnPrimary },
               ]}
             >
               {isSaved ? "Added" : "Add"}
@@ -312,7 +312,7 @@ export const FeedsScreen = memo(function FeedsScreen({
             accessibilityRole="button"
             accessibilityLabel="Continue"
           >
-            <Text style={styles.continueButtonText}>Continue</Text>
+            <Text style={[styles.continueButtonText, { color: colors.textOnPrimary }]}>Continue</Text>
           </Pressable>
         </View>
       </View>
@@ -426,7 +426,6 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#ffffff",
   },
   emptyContainer: {
     flex: 1,
@@ -481,6 +480,5 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#ffffff",
   },
 });

@@ -170,7 +170,7 @@ export const FeatureTourScreen = memo(function FeatureTourScreen({
           accessibilityRole="button"
           accessibilityLabel="Start Exploring"
         >
-          <Text style={styles.completeButtonText}>Start Exploring</Text>
+          <Text style={[styles.completeButtonText, { color: colors.textOnPrimary }]}>Start Exploring</Text>
         </Pressable>
       </View>
     </View>
@@ -273,6 +273,5 @@ const styles = StyleSheet.create({
   completeButtonText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#ffffff",
   },
 });
