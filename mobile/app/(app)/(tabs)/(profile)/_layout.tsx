@@ -2,9 +2,11 @@ import { Stack } from "expo-router";
 import { useTheme } from "../../../../src/contexts/ThemeContext";
 import { DrawerMenuButton } from "../../../../src/components/DrawerMenuButton";
 import { ScreenErrorBoundary } from "../../../../src/components/ScreenErrorBoundary";
+import { useResetTabOnBlur } from "../../../../src/hooks/useResetTabOnBlur";
 
 export default function ProfileLayout() {
   const { colors } = useTheme();
+  useResetTabOnBlur();
 
   return (
     <ScreenErrorBoundary screenName="Profile">
