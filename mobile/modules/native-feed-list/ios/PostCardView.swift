@@ -72,74 +72,84 @@ struct PostCardView: View {
     let onQuotePress: ((String, String) -> Void)?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Reply context indicator
-            if let parent = post.replyParent {
-                ReplyContextView(parent: parent, onProfilePress: onPressProfile)
-            }
-
-            // Author row
-            HStack(spacing: 8) {
-                // Avatar
-                if let avatarUrl = post.post.author.avatar,
-                   let url = URL(string: avatarUrl) {
-                    CachedAsyncImage(url: url) { image in
-                        image.resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Circle().fill(Color.gray.opacity(0.3))
-                    }
-                    .frame(width: 40, height: 40)
-                    .clipShape(Circle())
-                } else {
-                    Circle()
-                        .fill(Color.gray.opacity(0.3))
-                        .frame(width: 40, height: 40)
+        VStack(alignment: .leading, spacing: 0) {
+            // Tappable content area — navigates to thread on tap
+            VStack(alignment: .leading, spacing: 8) {
+                // Reply context indicator
+                if let parent = post.replyParent {
+                    ReplyContextView(parent: parent, onProfilePress: onPressProfile)
                 }
 
-                VStack(alignment: .leading, spacing: 2) {
-                    if let displayName = post.post.author.displayName, !displayName.isEmpty {
-                        Text(displayName)
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.primary)
+                // Author row — has its own tap gesture for profile navigation.
+                // Child .onTapGesture takes priority over the parent content area's gesture.
+                HStack(spacing: 8) {
+                    // Avatar
+                    if let avatarUrl = post.post.author.avatar,
+                       let url = URL(string: avatarUrl) {
+                        CachedAsyncImage(url: url) { image in
+                            image.resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Circle().fill(Color.gray.opacity(0.3))
+                        }
+                        .frame(width: 40, height: 40)
+                        .clipShape(Circle())
+                    } else {
+                        Circle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 40, height: 40)
+                    }
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        if let displayName = post.post.author.displayName, !displayName.isEmpty {
+                            Text(displayName)
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                        }
+                        Text("@\(post.post.author.handle)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                             .lineLimit(1)
                     }
-                    Text("@\(post.post.author.handle)")
+
+                    Spacer()
+
+                    // Timestamp
+                    Text(DateFormatting.relativeTimeString(from: post.post.record.createdAt))
                         .font(.caption)
                         .foregroundColor(.secondary)
-                        .lineLimit(1)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onPressProfile?(post.post.author.handle)
                 }
 
-                Spacer()
+                // Post text
+                if !post.post.record.text.isEmpty {
+                    renderPostText()
+                }
 
-                // Timestamp
-                Text(DateFormatting.relativeTimeString(from: post.post.record.createdAt))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                // Embed (images, video, links, quotes)
+                if let embed = post.post.record.embed {
+                    PostEmbed(
+                        embed: embed,
+                        onImagePress: onImagePress,
+                        onLinkPress: onLinkPress,
+                        onQuotePress: onQuotePress,
+                        blurImages: false
+                    )
+                }
             }
             .contentShape(Rectangle())
             .onTapGesture {
-                onPressProfile?(post.post.author.handle)
+                onPress?()
             }
 
-            // Post text
-            if !post.post.record.text.isEmpty {
-                renderPostText()
-            }
-
-            // Embed (images, video, links, quotes)
-            if let embed = post.post.record.embed {
-                PostEmbed(
-                    embed: embed,
-                    onImagePress: onImagePress,
-                    onLinkPress: onLinkPress,
-                    onQuotePress: onQuotePress,
-                    blurImages: false
-                )
-            }
-
-            // Action bar
+            // Action bar — kept outside the content tap area so Button
+            // actions (like, repost, reply, share) fire correctly on iOS.
+            // A parent .onTapGesture intercepts Button taps in SwiftUI.
             HStack(spacing: 24) {
                 // Reply
                 actionButton(
@@ -181,10 +191,6 @@ struct PostCardView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            onPress?()
-        }
 
         Divider()
             .padding(.leading, 64)
