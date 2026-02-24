@@ -81,7 +81,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     [
-      "sentry-expo",
+      "@sentry/react-native/expo",
       {
         organization: process.env.SENTRY_ORG || "",
         project: process.env.SENTRY_PROJECT || "",
