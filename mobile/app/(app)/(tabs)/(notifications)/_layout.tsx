@@ -28,10 +28,6 @@ export default function NotificationsLayout() {
         }}
       />
       <Stack.Screen
-        name="analytics"
-        options={{ title: "Notification Analytics" }}
-      />
-      <Stack.Screen
         name="thread/[postId]"
         options={{
           title: "Thread",

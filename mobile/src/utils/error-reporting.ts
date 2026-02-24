@@ -1,27 +1,11 @@
 /**
  * Error Reporting Utility
  *
- * Centralized error tracking and reporting using Sentry.
- * Handles exception capture, breadcrumbs, user context, and performance monitoring.
- *
- * Features:
- * - Captures JavaScript exceptions and native crashes
- * - Tracks user actions as breadcrumbs for debugging
- * - Tags errors with user DID (hashed), app version, device info
- * - Performance monitoring for app startup, screen loads, API calls
- * - No PII sent (DID is hashed, no email/handle)
+ * Stub implementation — Sentry has been removed.
+ * Apple's native crash reporting (MetricKit / MXCrashDiagnostic) handles
+ * crash telemetry. These no-op functions preserve the call-site API so
+ * callers don't need changes.
  */
-
-import * as Sentry from "@sentry/react-native";
-import Constants from "expo-constants";
-import * as Crypto from "expo-crypto";
-
-
-import { createLogger } from '../utils/logger';
-
-const logger = createLogger('ErrorReporting');
-
-let sentryInitialized = false;
 
 export interface ErrorContext {
   endpoint?: string;
@@ -33,307 +17,54 @@ export interface ErrorContext {
 export interface BreadcrumbData {
   message: string;
   category: string;
-  level?: Sentry.SeverityLevel;
+  level?: string;
   data?: Record<string, unknown>;
 }
 
-/**
- * Hash a user DID to preserve privacy while maintaining session tracking
- */
-async function hashDid(did: string): Promise<string> {
-  try {
-    const digest = await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      did
-    );
-    // Return first 16 chars for brevity
-    return digest.substring(0, 16);
-  } catch (error) {
-    logger.error('Failed to hash DID:', error);
-    return "unknown";
-  }
-}
+export function initializeSentry(_dsn?: string): void {}
 
-/**
- * Initialize Sentry with configuration
- * Should be called early in app initialization
- */
-export function initializeSentry(dsn?: string): void {
-  // Skip initialization if no DSN provided or in development
-  if (!dsn) {
-    logger.log('No DSN provided, Sentry disabled');
-    return;
-  }
-
-  try {
-    Sentry.init({
-      dsn,
-      // Enable performance monitoring
-      enableAutoPerformanceTracing: true,
-      enableAutoSessionTracking: true,
-      sessionTrackingIntervalMillis: 30000,
-
-      // Track app start performance
-      enableNativeFramesTracking: true,
-      enableAppStartTracking: true,
-
-      // Sample rate for performance (50% in production)
-      tracesSampleRate: 0.5,
-
-      // Don't send default PII
-      sendDefaultPii: false,
-
-      // Environment detection
-      environment: __DEV__ ? "development" : "production",
-
-      // Release version from app config
-      release: `shadowsky-mobile@${Constants.expoConfig?.version || "unknown"}`,
-      dist: Constants.expoConfig?.version,
-
-      // Attach stack traces to errors
-      attachStacktrace: true,
-
-      // Max breadcrumbs to keep
-      maxBreadcrumbs: 100,
-
-      // Integration configurations
-      integrations: [],
-
-      // Before send hook to modify events
-      beforeSend(event) {
-        // Don't send events in development
-        if (__DEV__) {
-          logger.log('Would send event:', event);
-          return null;
-        }
-
-        return event;
-      },
-
-      // Before breadcrumb hook
-      beforeBreadcrumb(breadcrumb) {
-        // Filter out noisy breadcrumbs
-        if (breadcrumb.category === "console" && breadcrumb.level === "log") {
-          return null;
-        }
-        return breadcrumb;
-      },
-    });
-
-    sentryInitialized = true;
-    logger.log('Sentry initialized successfully');
-  } catch (error) {
-    logger.error('Failed to initialize Sentry:', error);
-  }
-}
-
-/**
- * Check if Sentry was successfully initialized
- */
 export function isSentryInitialized(): boolean {
-  return sentryInitialized;
+  return false;
 }
 
-/**
- * Set user context (call after authentication)
- * @param did - User's DID (will be hashed for privacy)
- */
-export async function setUser(did: string | null): Promise<void> {
-  try {
-    if (!did) {
-      Sentry.setUser(null);
-      return;
-    }
+export async function setUser(_did: string | null): Promise<void> {}
 
-    const hashedDid = await hashDid(did);
-    Sentry.setUser({
-      id: hashedDid,
-      // Don't include username/email to avoid PII
-    });
+export function clearUser(): void {}
 
-    // Add DID as tag for filtering
-    Sentry.setTag("user_did_hash", hashedDid);
-  } catch (error) {
-    logger.error('Failed to set user:', error);
-  }
-}
-
-/**
- * Clear user context (call on logout)
- */
-export function clearUser(): void {
-  Sentry.setUser(null);
-}
-
-/**
- * Capture an exception with optional context
- * @param error - The error to capture
- * @param context - Additional context (endpoint, status code, etc.)
- */
 export function captureException(
   error: Error | unknown,
-  context?: ErrorContext
+  _context?: ErrorContext,
 ): void {
-  try {
-    const eventId = Sentry.captureException(error, {
-      contexts: context
-        ? {
-            api: {
-              endpoint: context.endpoint,
-              status_code: context.statusCode,
-              method: context.method,
-            },
-          }
-        : undefined,
-      extra: context?.extra,
-      tags: context?.statusCode
-        ? {
-            status_code: context.statusCode.toString(),
-          }
-        : undefined,
-    });
-
-    logger.log(`Exception captured: ${eventId}`,
-      error,
-      context
-    );
-  } catch (err) {
-    logger.error('Failed to capture exception:', err);
+  if (__DEV__) {
+    console.error("[ErrorReporting] captureException:", error);
   }
 }
 
-/**
- * Capture a message (for non-error events)
- * @param message - The message to capture
- * @param level - Severity level
- */
-export function captureMessage(
-  message: string,
-  level: Sentry.SeverityLevel = "info"
-): void {
-  try {
-    Sentry.captureMessage(message, level);
-  } catch (error) {
-    logger.error('Failed to capture message:', error);
+export function captureMessage(message: string, _level?: string): void {
+  if (__DEV__) {
+    console.warn("[ErrorReporting] captureMessage:", message);
   }
 }
 
-/**
- * Add a breadcrumb for debugging
- * @param category - Breadcrumb category (navigate, compose, like, search, auth, etc.)
- * @param message - Breadcrumb message
- * @param data - Additional data
- */
 export function addBreadcrumb(
-  category: string,
-  message: string,
-  data?: Record<string, unknown>
-): void {
-  try {
-    Sentry.addBreadcrumb({
-      type: "user",
-      category,
-      message,
-      level: "info",
-      data,
-      timestamp: Date.now() / 1000,
-    });
-  } catch (error) {
-    logger.error('Failed to add breadcrumb:', error);
-  }
+  _category: string,
+  _message: string,
+  _data?: Record<string, unknown>,
+): void {}
+
+export function startTransaction(_name: string, _op: string): null {
+  return null;
 }
 
-/**
- * Start a performance transaction (using startSpan API)
- * @param name - Transaction name (e.g., "screen.home", "api.fetchFeed")
- * @param op - Operation type (e.g., "navigation", "http.client")
- * @returns Span object or null
- */
-export function startTransaction(
-  name: string,
-  op: string
-): ReturnType<typeof Sentry.startSpan> | null {
-  try {
-    return Sentry.startSpan({ name, op }, (span) => span);
-  } catch (error) {
-    logger.error('Failed to start transaction:', error);
-    return null;
-  }
+export function startSpan(_op: string, _description: string): null {
+  return null;
 }
 
-/**
- * Start a span within the current context
- * @param op - Operation name
- * @param description - Span description
- * @returns Span result or null
- */
-export function startSpan(
-  op: string,
-  description: string
-): ReturnType<typeof Sentry.startSpan> | null {
-  try {
-    return Sentry.startSpan({ op, name: description }, (span) => span);
-  } catch (error) {
-    logger.error('Failed to start span:', error);
-    return null;
-  }
-}
+export function setTag(_key: string, _value: string): void {}
 
-/**
- * Set a tag for filtering/grouping errors
- * @param key - Tag key
- * @param value - Tag value
- */
-export function setTag(key: string, value: string): void {
-  try {
-    Sentry.setTag(key, value);
-  } catch (error) {
-    logger.error('Failed to set tag:', error);
-  }
-}
+export function setTags(_tags: Record<string, string>): void {}
 
-/**
- * Set multiple tags at once
- * @param tags - Object with tag key-value pairs
- */
-export function setTags(tags: Record<string, string>): void {
-  try {
-    Sentry.setTags(tags);
-  } catch (error) {
-    logger.error('Failed to set tags:', error);
-  }
-}
-
-/**
- * Set custom context data
- * @param name - Context name
- * @param context - Context data
- */
-export function setContext(name: string, context: Record<string, unknown>): void {
-  try {
-    Sentry.setContext(name, context);
-  } catch (error) {
-    logger.error('Failed to set context:', error);
-  }
-}
-
-/**
- * Wrap a function to capture any errors it throws
- * @param fn - Function to wrap
- * @returns Wrapped function
- */
-export function wrapErrorHandler<T extends (...args: unknown[]) => unknown>(
-  fn: T
-): T {
-  return ((...args: unknown[]) => {
-    try {
-      return fn(...args);
-    } catch (error) {
-      captureException(error);
-      throw error;
-    }
-  }) as T;
-}
-
-// Export Sentry for advanced usage
-export { Sentry };
+export function setContext(
+  _name: string,
+  _context: Record<string, unknown>,
+): void {}

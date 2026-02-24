@@ -30,6 +30,23 @@ jest.mock('../../../utils/haptics', () => ({
   triggerHaptic: jest.fn(),
 }));
 
+jest.mock('../../../utils/logger', () => ({
+  createLogger: () => ({
+    log: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+  }),
+}));
+
+jest.mock('../../../services/atproto/feeds', () => ({
+  getPostThread: jest.fn(() => Promise.resolve({})),
+}));
+
+const mockOpenURL = jest.fn(() => Promise.resolve());
+jest.spyOn(require('react-native'), 'Linking', 'get').mockReturnValue({
+  openURL: mockOpenURL,
+});
+
 // Mock hooks with controllable return values
 const mockNavigateToThread = jest.fn();
 const mockNavigateToProfile = jest.fn();
@@ -106,12 +123,11 @@ jest.mock('../../../../modules/native-feed-list', () => {
   const React = require('react');
 
   const NativeFeedList = React.forwardRef((props: any, _ref: any) => {
-    const { query, emptyMessage } = props;
+    const { query, emptyMessage, onPostPress, onProfilePress, onLinkPress, onImagePress, onQuotePress } = props;
     const isLoading = query?.isLoading;
     const isError = query?.isError;
-    const hasData = query?.data?.pages?.some(
-      (p: any) => p.feed && p.feed.length > 0
-    );
+    const posts = query?.data?.pages?.flatMap((p: any) => p.feed || []) || [];
+    const hasData = posts.length > 0;
 
     return (
       <View testID="native-feed-list">
@@ -130,7 +146,76 @@ jest.mock('../../../../modules/native-feed-list', () => {
         {!isLoading && !isError && !hasData && (
           <Text testID="feed-empty">{emptyMessage}</Text>
         )}
-        {hasData && <Text testID="feed-content">Feed loaded</Text>}
+        {hasData && (
+          <View testID="feed-content">
+            {posts.map((item: any) => (
+              <View key={item.post.uri} testID={`post-${item.post.uri}`}>
+                <TouchableOpacity
+                  testID={`post-press-${item.post.uri}`}
+                  onPress={() =>
+                    onPostPress?.({
+                      nativeEvent: {
+                        uri: item.post.uri,
+                        handle: item.post.author.handle,
+                      },
+                    })
+                  }
+                >
+                  <Text>{item.post.record?.text}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  testID={`profile-press-${item.post.author.handle}`}
+                  onPress={() =>
+                    onProfilePress?.({
+                      nativeEvent: { handle: item.post.author.handle },
+                    })
+                  }
+                >
+                  <Text>{item.post.author.displayName}</Text>
+                </TouchableOpacity>
+                {item.post.embed?.external && (
+                  <TouchableOpacity
+                    testID={`link-press-${item.post.uri}`}
+                    onPress={() =>
+                      onLinkPress?.({
+                        nativeEvent: { uri: item.post.embed.external.uri },
+                      })
+                    }
+                  >
+                    <Text>{item.post.embed.external.title}</Text>
+                  </TouchableOpacity>
+                )}
+                {item.post.embed?.images && (
+                  <TouchableOpacity
+                    testID={`image-press-${item.post.uri}`}
+                    onPress={() =>
+                      onImagePress?.({
+                        nativeEvent: { images: item.post.embed.images, index: 0 },
+                      })
+                    }
+                  >
+                    <Text>Image</Text>
+                  </TouchableOpacity>
+                )}
+                {item.post.embed?.record && (
+                  <TouchableOpacity
+                    testID={`quote-press-${item.post.uri}`}
+                    onPress={() =>
+                      onQuotePress?.({
+                        nativeEvent: {
+                          uri: item.post.embed.record.uri,
+                          handle: item.post.embed.record.author?.handle,
+                        },
+                      })
+                    }
+                  >
+                    <Text>Quoted post</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
       </View>
     );
   });
@@ -176,14 +261,15 @@ function makeFeedPage(posts: any[] = []) {
 }
 
 function makePost(uri: string, handle = 'alice.bsky.social') {
+  const did = uri.split('/')[2] || 'did:plc:test';
   return {
     post: {
       uri,
       cid: `cid-${uri}`,
       author: {
-        did: 'did:plc:test',
+        did,
         handle,
-        displayName: 'Alice',
+        displayName: handle.split('.')[0].charAt(0).toUpperCase() + handle.split('.')[0].slice(1),
         avatar: 'https://example.com/avatar.jpg',
       },
       record: { text: 'Test post', createdAt: new Date().toISOString() },
@@ -427,6 +513,108 @@ describe('HomeScreen', () => {
       };
 
       expect(() => renderWithProviders(<HomeScreen />)).not.toThrow();
+    });
+  });
+
+  // ─── Post press navigation ──────────────────────────────
+  describe('post press navigation', () => {
+    it('navigates to thread when a post is pressed', () => {
+      const postUri = 'at://did:plc:alice/app.bsky.feed.post/abc123';
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([makePost(postUri, 'alice.bsky.social')]),
+        isLoading: false,
+      };
+
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      expect(getByTestId('feed-content')).toBeTruthy();
+
+      fireEvent.press(getByTestId(`post-press-${postUri}`));
+      expect(mockNavigateToThread).toHaveBeenCalledWith(
+        'alice.bsky.social',
+        'abc123',
+        'did:plc:alice'
+      );
+    });
+
+    it('navigates to profile when profile is pressed', () => {
+      const postUri = 'at://did:plc:bob/app.bsky.feed.post/xyz789';
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([makePost(postUri, 'bob.bsky.social')]),
+        isLoading: false,
+      };
+
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      fireEvent.press(getByTestId('profile-press-bob.bsky.social'));
+      expect(mockNavigateToProfile).toHaveBeenCalledWith('bob.bsky.social');
+    });
+  });
+
+  // ─── Embed press handling ───────────────────────────────
+  describe('embed press handling', () => {
+    it('opens external link when link embed is pressed', () => {
+      const postUri = 'at://did:plc:alice/app.bsky.feed.post/link1';
+      const post = makePost(postUri, 'alice.bsky.social');
+      post.post.embed = {
+        external: {
+          uri: 'https://example.com/article',
+          title: 'Example Article',
+          description: 'An article',
+        },
+      };
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([post]),
+        isLoading: false,
+      };
+
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      fireEvent.press(getByTestId(`link-press-${postUri}`));
+      expect(mockOpenURL).toHaveBeenCalledWith('https://example.com/article');
+    });
+
+    it('opens fullsize image when image embed is pressed', () => {
+      const postUri = 'at://did:plc:alice/app.bsky.feed.post/img1';
+      const post = makePost(postUri, 'alice.bsky.social');
+      post.post.embed = {
+        images: [
+          { thumb: 'https://cdn.example.com/thumb.jpg', fullsize: 'https://cdn.example.com/full.jpg', alt: 'A photo' },
+        ],
+      };
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([post]),
+        isLoading: false,
+      };
+
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      fireEvent.press(getByTestId(`image-press-${postUri}`));
+      expect(mockOpenURL).toHaveBeenCalledWith('https://cdn.example.com/full.jpg');
+    });
+
+    it('navigates to quoted post thread when quote embed is pressed', () => {
+      const postUri = 'at://did:plc:alice/app.bsky.feed.post/qt1';
+      const post = makePost(postUri, 'alice.bsky.social');
+      post.post.embed = {
+        record: {
+          uri: 'at://did:plc:carol/app.bsky.feed.post/quoted456',
+          author: { handle: 'carol.bsky.social' },
+        },
+      };
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([post]),
+        isLoading: false,
+      };
+
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      fireEvent.press(getByTestId(`quote-press-${postUri}`));
+      expect(mockNavigateToThread).toHaveBeenCalledWith(
+        'carol.bsky.social',
+        'quoted456',
+        'did:plc:carol'
+      );
     });
   });
 });

@@ -305,7 +305,7 @@ export const NativeNotificationsList = forwardRef<any, ViewProps>((props, ref) =
 
   // Handle analytics press - navigate to the JS analytics screen
   const handleAnalyticsPress = useCallback(() => {
-    router.push('/(tabs)/(notifications)/analytics' as any);
+    router.push('/(app)/analytics' as any);
   }, [router]);
 
   // Expose scroll-to-top

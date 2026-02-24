@@ -44,13 +44,7 @@ import {
   startupTimestamp,
 } from "../src/shared/query-client";
 import { registerBackgroundFetch } from "../src/services/background-fetch";
-import {
-  initializeSentry,
-  isSentryInitialized,
-  captureException,
-  setTags,
-  Sentry,
-} from "../src/utils/error-reporting";
+import { setTags } from "../src/utils/error-reporting";
 import { appLockService } from "../src/services/app-lock";
 import { setupOfflineStorageCleanup } from "../src/hooks/useOfflineFeed";
 import { useGlobalKeyboardShortcuts } from "../src/hooks/useKeyboardShortcuts";
@@ -60,17 +54,12 @@ import { useWidgetSync } from "../src/hooks/useWidgetSync";
 import { useStateRestoration, useRestoredRoute } from "../src/hooks/useStateRestoration";
 import "../src/i18n";
 
-// Initialize Sentry as early as possible
-const sentryDsn = Constants.expoConfig?.extra?.sentryDsn;
-initializeSentry(sentryDsn);
-
 // Global unhandled error handler — catches JS errors and unhandled promise
-// rejections that slip past React error boundaries (e.g. async callbacks,
-// event handlers). Reports them to Sentry so they don't go unnoticed.
+// rejections that slip past React error boundaries.
 if (!__DEV__) {
   const defaultHandler = ErrorUtils.getGlobalHandler();
   ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
-    captureException(error, { extra: { isFatal: !!isFatal, source: "globalHandler" } });
+    console.error("[GlobalHandler]", isFatal ? "FATAL:" : "", error);
     defaultHandler(error, isFatal);
   });
 }
@@ -285,7 +274,4 @@ function RootLayout() {
   );
 }
 
-// Wrap the root component with Sentry for crash reporting.
-// Only apply Sentry.wrap when Sentry was actually initialized (requires a DSN).
-// Calling Sentry.wrap without Sentry.init produces a noisy startup warning.
-export default isSentryInitialized() ? Sentry.wrap(RootLayout) : RootLayout;
+export default RootLayout;

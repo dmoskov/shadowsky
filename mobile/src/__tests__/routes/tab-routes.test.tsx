@@ -32,12 +32,6 @@ jest.mock('../../../modules/native-notifications-list/src/NativeNotificationsLis
   return { NativeNotificationsList: (props: any) => R.createElement(RN.View, { testID: 'mock-NativeNotificationsList', ...props }, R.createElement(RN.Text, null, 'NativeNotificationsList')) };
 });
 
-jest.mock('../../screens/notifications/NotificationsAnalyticsScreen', () => {
-  const RN = require('react-native');
-  const R = require('react');
-  return { NotificationsAnalyticsScreen: () => R.createElement(RN.View, { testID: 'mock-NotificationsAnalyticsScreen' }, R.createElement(RN.Text, null, 'NotificationsAnalyticsScreen')) };
-});
-
 jest.mock('../../screens/profile/MyProfileScreenNative', () => {
   const RN = require('react-native');
   const R = require('react');
@@ -72,7 +66,6 @@ jest.mock('react-native-safe-area-context', () => ({
 import HomeRoute from '../../../app/(app)/(tabs)/(home)/index';
 import TimelineRoute from '../../../app/(app)/(tabs)/(home)/timeline';
 import NotificationsRoute from '../../../app/(app)/(tabs)/(notifications)/index';
-import NotificationsAnalyticsRoute from '../../../app/(app)/(tabs)/(notifications)/analytics';
 import MyProfileRoute from '../../../app/(app)/(tabs)/(profile)/index';
 import EditProfileRoute from '../../../app/(app)/(tabs)/(profile)/edit';
 import BookmarksRoute from '../../../app/(app)/(tabs)/(profile)/bookmarks';
@@ -97,11 +90,7 @@ describe('Tab Routes - Smoke Tests', () => {
       expect(toJSON()).toBeTruthy();
     });
 
-    it('renders NotificationsAnalyticsRoute without crash', () => {
-      const { getByTestId } = render(<NotificationsAnalyticsRoute />);
-      expect(getByTestId('mock-NotificationsAnalyticsScreen')).toBeTruthy();
-    });
-  });
+});
 
   describe('Profile Tab', () => {
     it('renders MyProfileRoute without crash', () => {

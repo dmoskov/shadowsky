@@ -16,9 +16,7 @@
         "gradleCommand": ":app:assembleDebug"
       },
       "channel": "development",
-      "env": {
-        "SENTRY_UPLOAD_SOURCE_MAPS": "false"
-      }
+      "env": {}
     },
     "preview": {
       "distribution": "internal",
@@ -32,7 +30,6 @@
       "channel": "preview",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.shadowsky.io",
-        "SENTRY_UPLOAD_SOURCE_MAPS": "false",
         "NODE_OPTIONS": "--max-old-space-size=4096"
       }
     },
@@ -46,7 +43,6 @@
       "channel": "testflight",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.shadowsky.io",
-        "SENTRY_UPLOAD_SOURCE_MAPS": "true",
         "NODE_OPTIONS": "--max-old-space-size=4096"
       }
     },
@@ -60,8 +56,7 @@
       },
       "channel": "production",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.shadowsky.io",
-        "SENTRY_UPLOAD_SOURCE_MAPS": "true"
+        "EXPO_PUBLIC_API_URL": "https://api.shadowsky.io"
       }
     }
   },

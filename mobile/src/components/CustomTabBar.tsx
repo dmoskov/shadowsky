@@ -93,7 +93,10 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
               // Already on this tab — pop stack to root and scroll to top.
               // useScrollToTop in each root screen listens for the tabPress
               // event emitted above and handles scrolling automatically.
-              navigation.dispatch(StackActions.popToTop());
+              const tabNav = navigation.getState().routes[routeIndex]?.state;
+              if (tabNav && tabNav.index && tabNav.index > 0) {
+                navigation.dispatch(StackActions.popToTop());
+              }
             } else {
               navigation.navigate(state.routes[routeIndex].name);
             }
