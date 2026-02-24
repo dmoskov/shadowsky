@@ -186,7 +186,6 @@ export const DirectMessages: React.FC = () => {
     getOptimisticMessages,
     sendMessage: sendOptimisticMessage,
     retryMessage,
-    isInitialized: isQueueInitialized,
   } = useDMQueue();
 
   // Track if we're currently sending
@@ -599,7 +598,7 @@ export const DirectMessages: React.FC = () => {
               aria-label="Message history"
               aria-live="polite"
             >
-              {loadingMessages && !isQueueInitialized ? (
+              {loadingMessages ? (
                 <MessageListSkeleton count={5} aria-label="Loading messages" />
               ) : combinedMessages.length === 0 ? (
                 <div

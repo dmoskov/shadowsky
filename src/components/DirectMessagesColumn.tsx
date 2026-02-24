@@ -176,7 +176,6 @@ export const DirectMessagesColumn: React.FC = () => {
     getOptimisticMessages,
     sendMessage: sendOptimisticMessage,
     retryMessage,
-    isInitialized: isQueueInitialized,
   } = useDMQueue();
 
   // Track if we're currently sending
@@ -601,7 +600,7 @@ export const DirectMessagesColumn: React.FC = () => {
 
       {/* Messages */}
       <div className="asph-scrollbar flex-1 overflow-y-auto overflow-x-hidden p-4">
-        {loadingMessages && !isQueueInitialized ? (
+        {loadingMessages ? (
           <div
             className="text-center"
             style={{ color: "var(--asph-text-secondary)" }}

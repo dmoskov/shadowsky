@@ -780,6 +780,24 @@ const NotificationsFeedComponent: React.FC = () => {
             minFollowerCount={minFollowerCount}
             onConfigClick={() => setShowConfigModal(true)}
           />
+        ) : isRefreshing ||
+          (filter === "from-following" && isLoadingFollowing) ? (
+          <div className="skeleton-stagger">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={`notif-refresh-skeleton-${i}`}
+                className="animate-skeleton-reveal"
+                style={
+                  {
+                    "--reveal-delay": `${i * 40}ms`,
+                    "--reveal-duration": "300ms",
+                  } as React.CSSProperties
+                }
+              >
+                <NotificationSkeleton />
+              </div>
+            ))}
+          </div>
         ) : filteredNotifications.length === 0 ? (
           <div
             className="p-6 text-center sm:p-12"
