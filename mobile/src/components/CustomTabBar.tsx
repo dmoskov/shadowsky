@@ -30,9 +30,9 @@ const TAB_ROUTE_MAP: Record<string, string> = {
  * rather than switching tab groups.
  */
 const PUSH_ROUTE_MAP: Record<string, string> = {
-  messages: '/(app)/(tabs)/(profile)/messages',
-  bookmarks: '/(app)/(tabs)/(profile)',
-  feeds: '/(app)/feeds/discover',
+  messages: '/(app)/messages',
+  bookmarks: '/(app)/(tabs)/(profile)/bookmarks',
+  feeds: '/(app)/feeds/saved',
   lists: '/(app)/lists',
   analytics: '/(app)/analytics',
   settings: '/(app)/settings',
