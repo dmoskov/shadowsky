@@ -149,12 +149,14 @@ struct ProfileHeaderView: View {
                 Text(profile.displayName ?? profile.handle)
                     .font(.title2.weight(.bold))
                     .foregroundColor(.primary)
+                    .accessibilityIdentifier("profile-display-name")
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityLabel("Display name: \(profile.displayName ?? profile.handle)")
 
                 Text("@\(profile.handle)")
                     .font(.body)
                     .foregroundColor(.secondary)
+                    .accessibilityIdentifier("profile-handle")
                     .accessibilityLabel("Handle: @\(profile.handle)")
             }
 
@@ -335,6 +337,7 @@ struct ProfileHeaderView: View {
                 value: profile.postsCount ?? 0,
                 label: "Posts"
             )
+            .accessibilityIdentifier("profile-posts-count")
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(profile.postsCount ?? 0) posts")
 
@@ -348,6 +351,7 @@ struct ProfileHeaderView: View {
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("profile-followers-count")
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(profile.followersCount ?? 0) followers")
             .accessibilityHint("Double tap to view followers")
@@ -362,10 +366,12 @@ struct ProfileHeaderView: View {
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("profile-following-count")
             .accessibilityElement(children: .combine)
             .accessibilityLabel("\(profile.followsCount ?? 0) following")
             .accessibilityHint("Double tap to view following")
         }
+        .accessibilityIdentifier("profile-stats")
     }
 
     // MARK: - Starter Packs Section
@@ -449,6 +455,7 @@ struct ProfileHeaderView: View {
                             .fill(Color.blue)
                     )
             }
+            .accessibilityIdentifier("edit-profile-button")
             .accessibilityLabel("Edit Profile")
             .accessibilityHint("Double tap to edit your profile")
 
@@ -465,6 +472,7 @@ struct ProfileHeaderView: View {
                             .fill(Color.red)
                     )
             }
+            .accessibilityIdentifier("sign-out-button")
             .accessibilityLabel("Sign Out")
             .accessibilityHint("Double tap to sign out of your account")
         }

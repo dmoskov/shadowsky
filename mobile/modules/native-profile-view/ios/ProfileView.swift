@@ -136,12 +136,14 @@ struct ProfileView: View {
                     .padding(.vertical, 12)
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("profile-tab-\(tab.rawValue)")
                 .accessibilityLabel("\(tab.title) tab")
                 .accessibilityAddTraits(activeTab == tab ? [.isSelected] : [])
                 .accessibilityHint("Double tap to show \(tab.title.lowercased())")
             }
         }
         .background(Color(UIColor.systemBackground))
+        .accessibilityIdentifier("profile-tab-bar")
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Profile content tabs")
     }

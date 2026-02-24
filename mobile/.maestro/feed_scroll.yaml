@@ -1,0 +1,53 @@
+appId: com.shadowsky.mobile
+env:
+  TEST_HANDLE: ${MAESTRO_TEST_HANDLE}
+  TEST_APP_PASSWORD: ${MAESTRO_TEST_APP_PASSWORD}
+---
+# E2E Test: Feed Scroll & Interaction
+# Tests the home feed: sign in via App Password, scroll feed, verify posts render.
+# Requires MAESTRO_TEST_HANDLE and MAESTRO_TEST_APP_PASSWORD env vars.
+#
+# Run with:
+#   MAESTRO_TEST_HANDLE=your.handle MAESTRO_TEST_APP_PASSWORD=xxxx-xxxx-xxxx-xxxx \
+#     maestro test .maestro/feed_scroll.yaml
+
+- launchApp
+- waitForAnimationToEnd
+
+# Sign in via App Password
+- tapOn: "App Password"
+- waitForAnimationToEnd
+- tapOn:
+    text: "yourhandle.bsky.social"
+    index: 0
+- inputText: "${TEST_HANDLE}"
+- tapOn: "xxxx-xxxx-xxxx-xxxx"
+- inputText: "${TEST_APP_PASSWORD}"
+- tapOn: "Sign In"
+
+# Wait for feed to load (generous timeout for network)
+- extendedWaitUntil:
+    visible: "Home tab"
+    timeout: 30000
+
+# Verify we're on the home feed
+- assertVisible: "Home tab"
+
+# Verify the feed picker is visible (Following chip)
+- assertVisible: "Following"
+
+# Scroll down through the feed (swipe up to scroll content down)
+- scroll
+- scroll
+- scroll
+
+# Pull to refresh (swipe down from top)
+- swipe:
+    direction: DOWN
+    duration: 1000
+
+# Wait for refresh to complete
+- waitForAnimationToEnd
+
+# Verify feed is still showing
+- assertVisible: "Home tab"
