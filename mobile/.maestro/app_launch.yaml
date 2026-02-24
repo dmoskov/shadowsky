@@ -1,0 +1,8 @@
+appId: com.shadowsky.mobile
+---
+# E2E Smoke Test: App Launch
+# Verifies the app launches without crashing.
+# More comprehensive tests need to be written against actual UI elements.
+
+- launchApp
+- waitForAnimationToEnd
