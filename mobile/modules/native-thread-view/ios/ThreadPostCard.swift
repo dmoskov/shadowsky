@@ -71,81 +71,90 @@ struct ThreadPostCard: View {
     let onQuotePress: ((String, String) -> Void)?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Author info
-            HStack(spacing: 12) {
-                // Avatar
-                if let avatarUrl = node.post.author.avatar {
-                    CachedAsyncImage(url: URL(string: avatarUrl)) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Circle()
-                            .fill(Color.gray.opacity(0.3))
-                    }
-                    .frame(width: 48, height: 48)
-                    .clipShape(Circle())
-                    .onTapGesture {
-                        onPressProfile?(node.post.author.handle)
-                    }
-                } else {
-                    Circle()
-                        .fill(Color.gray.opacity(0.3))
+        VStack(alignment: .leading, spacing: 0) {
+            // Tappable content area — navigates to post on tap
+            VStack(alignment: .leading, spacing: 12) {
+                // Author info
+                HStack(spacing: 12) {
+                    // Avatar
+                    if let avatarUrl = node.post.author.avatar {
+                        CachedAsyncImage(url: URL(string: avatarUrl)) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        } placeholder: {
+                            Circle()
+                                .fill(Color.gray.opacity(0.3))
+                        }
                         .frame(width: 48, height: 48)
+                        .clipShape(Circle())
                         .onTapGesture {
                             onPressProfile?(node.post.author.handle)
                         }
-                }
+                    } else {
+                        Circle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 48, height: 48)
+                            .onTapGesture {
+                                onPressProfile?(node.post.author.handle)
+                            }
+                    }
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(node.post.author.displayName ?? node.post.author.handle)
-                        .font(.body.weight(.semibold))
-                        .foregroundColor(.primary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(node.post.author.displayName ?? node.post.author.handle)
+                            .font(.body.weight(.semibold))
+                            .foregroundColor(.primary)
 
-                    Text("@\(node.post.author.handle)")
+                        Text("@\(node.post.author.handle)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .onTapGesture {
+                        onPressProfile?(node.post.author.handle)
+                    }
+
+                    Spacer()
+
+                    // Timestamp
+                    Text(ThreadDateFormatting.relativeTimeString(from: node.post.record.createdAt))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
-                .onTapGesture {
-                    onPressProfile?(node.post.author.handle)
+
+                // Post content (rich text with facets)
+                if !node.post.record.text.isEmpty {
+                    renderPostText()
                 }
 
-                Spacer()
+                // Embed (images, video, links, quotes)
+                if let embed = node.post.embed {
+                    PostEmbed(
+                        embed: embed,
+                        onImagePress: onImagePress,
+                        onLinkPress: onLinkPress,
+                        onQuotePress: onQuotePress,
+                        blurImages: false
+                    )
+                }
 
-                // Timestamp
-                Text(ThreadDateFormatting.relativeTimeString(from: node.post.record.createdAt))
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                // Inline translation
+                if LanguageUtils.needsTranslation(postLangs: node.post.record.langs) {
+                    PostTranslationView(
+                        postUri: node.post.uri,
+                        postText: node.post.record.text,
+                        postLangs: node.post.record.langs,
+                        onTranslate: onTranslate
+                    )
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onPress?()
             }
 
-            // Post content (rich text with facets)
-            if !node.post.record.text.isEmpty {
-                renderPostText()
-            }
-
-            // Embed (images, video, links, quotes)
-            if let embed = node.post.embed {
-                PostEmbed(
-                    embed: embed,
-                    onImagePress: onImagePress,
-                    onLinkPress: onLinkPress,
-                    onQuotePress: onQuotePress,
-                    blurImages: false
-                )
-            }
-
-            // Inline translation
-            if LanguageUtils.needsTranslation(postLangs: node.post.record.langs) {
-                PostTranslationView(
-                    postUri: node.post.uri,
-                    postText: node.post.record.text,
-                    postLangs: node.post.record.langs,
-                    onTranslate: onTranslate
-                )
-            }
-
-            // Action buttons
+            // Action buttons — kept outside the content tap area so Button
+            // actions (like, repost, reply, share) fire correctly on iOS.
+            // A parent .onTapGesture intercepts Button taps in SwiftUI.
             HStack(spacing: 24) {
                 // Reply
                 ActionButton(
@@ -191,10 +200,6 @@ struct ThreadPostCard: View {
         }
         .padding(16)
         .background(isRoot ? Color(UIColor.systemBackground) : Color.clear)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            onPress?()
-        }
     }
 
     // MARK: - Rich Text Rendering
