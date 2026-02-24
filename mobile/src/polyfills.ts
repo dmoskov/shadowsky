@@ -3,15 +3,26 @@
  * Import this file at app entry before any other imports.
  */
 
+// Type augmentations for TC39 stage 3 proposals not yet in TypeScript's lib
+declare global {
+  interface Uint8ArrayConstructor {
+    fromBase64(b64: string): Uint8Array;
+  }
+  interface Uint8Array {
+    toBase64(): string;
+  }
+}
+
 // --- Uint8Array.fromBase64 / Uint8Array.prototype.toBase64 ---
 // TC39 stage 3 proposal, used by @atproto/lex-data.
 // Suppresses: "Uint8Array.fromBase64 / Uint8Array.prototype.toBase64 not available"
-if (typeof Uint8Array.fromBase64 !== 'function') {
-  const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+if (typeof Uint8Array.fromBase64 !== "function") {
+  const base64Chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-  (Uint8Array as any).fromBase64 = function (b64: string): Uint8Array {
+  Uint8Array.fromBase64 = function (b64: string): Uint8Array {
     // Remove padding
-    const cleaned = b64.replace(/=/g, '');
+    const cleaned = b64.replace(/=/g, "");
     const bytes: number[] = [];
     for (let i = 0; i < cleaned.length; i += 4) {
       const a = base64Chars.indexOf(cleaned[i]);
@@ -27,12 +38,13 @@ if (typeof Uint8Array.fromBase64 !== 'function') {
   };
 }
 
-if (typeof Uint8Array.prototype.toBase64 !== 'function') {
-  const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+if (typeof Uint8Array.prototype.toBase64 !== "function") {
+  const base64Chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-  (Uint8Array.prototype as any).toBase64 = function (): string {
+  Uint8Array.prototype.toBase64 = function (): string {
     const bytes = this as Uint8Array;
-    let result = '';
+    let result = "";
     for (let i = 0; i < bytes.length; i += 3) {
       const a = bytes[i];
       const b = bytes[i + 1];
@@ -40,8 +52,11 @@ if (typeof Uint8Array.prototype.toBase64 !== 'function') {
 
       result += base64Chars[a >> 2];
       result += base64Chars[((a & 3) << 4) | (b !== undefined ? b >> 4 : 0)];
-      result += b !== undefined ? base64Chars[((b & 15) << 2) | (c !== undefined ? c >> 6 : 0)] : '=';
-      result += c !== undefined ? base64Chars[c & 63] : '=';
+      result +=
+        b !== undefined
+          ? base64Chars[((b & 15) << 2) | (c !== undefined ? c >> 6 : 0)]
+          : "=";
+      result += c !== undefined ? base64Chars[c & 63] : "=";
     }
     return result;
   };
@@ -53,18 +68,19 @@ if (typeof Uint8Array.prototype.toBase64 !== 'function') {
 // Full polyfill is heavy; we provide a basic word/grapheme splitter
 // that handles common cases (ASCII, basic emoji). For full Unicode
 // segmentation, install 'intl-segmenter-polyfill'.
-if (typeof Intl === 'undefined' || !(Intl as any).Segmenter) {
+if (typeof Intl === "undefined" || !(Intl as any).Segmenter) {
   (Intl as any).Segmenter = class Segmenter {
     private granularity: string;
 
     constructor(_locale?: string, options?: { granularity?: string }) {
-      this.granularity = options?.granularity || 'grapheme';
+      this.granularity = options?.granularity || "grapheme";
     }
 
     segment(input: string) {
-      const segments: Array<{ segment: string; index: number; input: string }> = [];
+      const segments: Array<{ segment: string; index: number; input: string }> =
+        [];
 
-      if (this.granularity === 'grapheme') {
+      if (this.granularity === "grapheme") {
         // Basic grapheme splitting — handles most text correctly.
         // Does not handle complex emoji sequences (ZWJ, skin tones).
         const chars = [...input];
@@ -73,7 +89,7 @@ if (typeof Intl === 'undefined' || !(Intl as any).Segmenter) {
           segments.push({ segment: char, index, input });
           index += char.length;
         }
-      } else if (this.granularity === 'word') {
+      } else if (this.granularity === "word") {
         const regex = /\S+/g;
         let match;
         while ((match = regex.exec(input)) !== null) {

@@ -101,7 +101,17 @@ jobs:
           npm start &
           sleep 30
 
+      - name: Check for connected devices
+        id: check-devices
+        run: |
+          DEVICE_COUNT=$(xcrun simctl list devices booted 2>/dev/null | grep -c "Booted" || echo "0")
+          echo "device_count=$DEVICE_COUNT" >> $GITHUB_OUTPUT
+          if [ "$DEVICE_COUNT" -eq "0" ]; then
+            echo "⚠️ No booted simulators found — skipping Maestro tests"
+          fi
+
       - name: Run Maestro E2E tests
+        if: steps.check-devices.outputs.device_count != '0'
         working-directory: mobile
         run: |
           maestro test .maestro/ --format junit --output e2e-results.xml
@@ -112,11 +122,11 @@ jobs:
         with:
           name: e2e-test-results
           path: mobile/e2e-results.xml
-        if: always()
+        if: always() && steps.check-devices.outputs.device_count != '0'
 
       - name: Publish E2E test report
         uses: dorny/test-reporter@v1
-        if: always()
+        if: always() && steps.check-devices.outputs.device_count != '0'
         with:
           name: E2E Tests
           path: mobile/e2e-results.xml
