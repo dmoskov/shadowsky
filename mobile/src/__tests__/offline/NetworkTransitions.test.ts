@@ -294,6 +294,10 @@ describe('Network Transitions', () => {
 
       service.on(JetstreamEventType.ERROR, (e) => errorEvents.push(e));
 
+      // Seed Math.random to remove jitter nondeterminism
+      const originalRandom = Math.random;
+      Math.random = () => 0.5;
+
       // Override WebSocket to fail immediately each time
       const FailingWebSocket = class {
         url: string;
@@ -322,17 +326,24 @@ describe('Network Transitions', () => {
 
       // Connect (will fail)
       service.connect();
-      await Promise.resolve();
 
       // Pump through reconnection attempts (max 10)
+      // Each cycle: advance timers to fire setTimeout, then flush
+      // microtask queue thoroughly to let FailingWebSocket's
+      // Promise.resolve().then(onerror/onclose) fire and trigger
+      // the next scheduleReconnect.
       for (let i = 0; i < 12; i++) {
-        jest.advanceTimersByTime(60000);
-        await Promise.resolve();
-        await Promise.resolve();
+        jest.advanceTimersByTime(120000);
+        // Flush microtask queue thoroughly — each reconnect cycle
+        // chains through multiple promise resolutions
+        for (let j = 0; j < 5; j++) {
+          await Promise.resolve();
+        }
       }
 
-      // Restore original
+      // Restore originals
       (global as any).WebSocket = MockWebSocket;
+      Math.random = originalRandom;
 
       // Should have received an error about max attempts
       const maxAttemptError = errorEvents.find(
