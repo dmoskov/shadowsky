@@ -1,31 +1,31 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from "react";
 import {
-  View,
+  Modal,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Modal,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '../contexts/ThemeContext';
-import { LanguagePicker } from './LanguagePicker';
-import { PersonTypeahead } from './PersonTypeahead';
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PINNED_LANGUAGES } from "../constants/languages";
+import { useTheme } from "../contexts/ThemeContext";
+import { LanguagePicker } from "./LanguagePicker";
+import { PersonTypeahead } from "./PersonTypeahead";
 import {
   CalendarIcon,
   CloseIcon,
   GlobeIcon,
   PersonIcon,
   SearchIcon,
-} from './icons';
-import { PINNED_LANGUAGES } from '../constants/languages';
+} from "./icons";
 
-type MediaFilter = 'all' | 'images' | 'videos' | 'links';
-type DatePreset = '24h' | '7d' | '30d' | '1y' | 'all';
+type MediaFilter = "all" | "images" | "videos" | "links";
+type DatePreset = "24h" | "7d" | "30d" | "1y" | "all";
 
 export interface SearchFilterValues {
-  sort: 'top' | 'latest';
+  sort: "top" | "latest";
   since?: string;
   until?: string;
   lang?: string;
@@ -42,16 +42,16 @@ interface SearchFilterSheetProps {
 }
 
 function getDatePreset(since?: string): DatePreset {
-  if (!since) return 'all';
+  if (!since) return "all";
   const sinceTime = new Date(since).getTime();
   const now = Date.now();
   const diff = now - sinceTime;
   const hour = 60 * 60 * 1000;
-  if (diff <= 25 * hour) return '24h';
-  if (diff <= 8 * 24 * hour) return '7d';
-  if (diff <= 31 * 24 * hour) return '30d';
-  if (diff <= 366 * 24 * hour) return '1y';
-  return 'all';
+  if (diff <= 25 * hour) return "24h";
+  if (diff <= 8 * 24 * hour) return "7d";
+  if (diff <= 31 * 24 * hour) return "30d";
+  if (diff <= 366 * 24 * hour) return "1y";
+  return "all";
 }
 
 function getLanguageName(code: string): string {
@@ -78,12 +78,9 @@ export function SearchFilterSheet({
     }
   }, [visible, filters]);
 
-  const updateDraft = useCallback(
-    (updates: Partial<SearchFilterValues>) => {
-      setDraft((prev) => ({ ...prev, ...updates }));
-    },
-    [],
-  );
+  const updateDraft = useCallback((updates: Partial<SearchFilterValues>) => {
+    setDraft((prev) => ({ ...prev, ...updates }));
+  }, []);
 
   const handleApply = useCallback(() => {
     onApplyFilters(draft);
@@ -92,8 +89,8 @@ export function SearchFilterSheet({
 
   const handleReset = useCallback(() => {
     const reset: SearchFilterValues = {
-      sort: 'top',
-      mediaFilter: 'all',
+      sort: "top",
+      mediaFilter: "all",
       since: undefined,
       until: undefined,
       lang: undefined,
@@ -105,16 +102,16 @@ export function SearchFilterSheet({
 
   const setDatePreset = useCallback(
     (preset: DatePreset) => {
-      if (preset === 'all') {
+      if (preset === "all") {
         updateDraft({ since: undefined, until: undefined });
         return;
       }
       const now = Date.now();
       const msMap: Record<string, number> = {
-        '24h': 24 * 60 * 60 * 1000,
-        '7d': 7 * 24 * 60 * 60 * 1000,
-        '30d': 30 * 24 * 60 * 60 * 1000,
-        '1y': 365 * 24 * 60 * 60 * 1000,
+        "24h": 24 * 60 * 60 * 1000,
+        "7d": 7 * 24 * 60 * 60 * 1000,
+        "30d": 30 * 24 * 60 * 60 * 1000,
+        "1y": 365 * 24 * 60 * 60 * 1000,
       };
       updateDraft({
         since: new Date(now - msMap[preset]).toISOString(),
@@ -128,8 +125,8 @@ export function SearchFilterSheet({
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
-    if (draft.sort !== 'top') count++;
-    if (draft.mediaFilter && draft.mediaFilter !== 'all') count++;
+    if (draft.sort !== "top") count++;
+    if (draft.mediaFilter && draft.mediaFilter !== "all") count++;
     if (draft.since) count++;
     if (draft.lang) count++;
     if (draft.author) count++;
@@ -141,43 +138,45 @@ export function SearchFilterSheet({
   const activeChips = useMemo(() => {
     const chips: Array<{ key: string; label: string; onRemove: () => void }> =
       [];
-    if (draft.mediaFilter && draft.mediaFilter !== 'all') {
+    if (draft.mediaFilter && draft.mediaFilter !== "all") {
       chips.push({
-        key: 'media',
-        label: draft.mediaFilter.charAt(0).toUpperCase() + draft.mediaFilter.slice(1),
-        onRemove: () => updateDraft({ mediaFilter: 'all' }),
+        key: "media",
+        label:
+          draft.mediaFilter.charAt(0).toUpperCase() +
+          draft.mediaFilter.slice(1),
+        onRemove: () => updateDraft({ mediaFilter: "all" }),
       });
     }
     if (draft.since) {
       const presetLabels: Record<string, string> = {
-        '24h': 'Last 24h',
-        '7d': 'Last 7 days',
-        '30d': 'Last 30 days',
-        '1y': 'Last year',
+        "24h": "Last 24h",
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "1y": "Last year",
       };
       chips.push({
-        key: 'date',
-        label: presetLabels[activePreset] || 'Custom date',
+        key: "date",
+        label: presetLabels[activePreset] || "Custom date",
         onRemove: () => updateDraft({ since: undefined, until: undefined }),
       });
     }
     if (draft.lang) {
       chips.push({
-        key: 'lang',
+        key: "lang",
         label: getLanguageName(draft.lang),
         onRemove: () => updateDraft({ lang: undefined }),
       });
     }
     if (draft.author) {
       chips.push({
-        key: 'author',
+        key: "author",
         label: `@${draft.author}`,
         onRemove: () => updateDraft({ author: undefined }),
       });
     }
     if (draft.domain) {
       chips.push({
-        key: 'domain',
+        key: "domain",
         label: draft.domain,
         onRemove: () => updateDraft({ domain: undefined }),
       });
@@ -186,18 +185,18 @@ export function SearchFilterSheet({
   }, [draft, activePreset, updateDraft]);
 
   const mediaTypes: Array<{ value: MediaFilter; label: string }> = [
-    { value: 'all', label: 'All' },
-    { value: 'images', label: 'Images' },
-    { value: 'videos', label: 'Videos' },
-    { value: 'links', label: 'Links' },
+    { value: "all", label: "All" },
+    { value: "images", label: "Images" },
+    { value: "videos", label: "Videos" },
+    { value: "links", label: "Links" },
   ];
 
   const datePresets: Array<{ value: DatePreset; label: string }> = [
-    { value: '24h', label: '24h' },
-    { value: '7d', label: '7 days' },
-    { value: '30d', label: '30 days' },
-    { value: '1y', label: '1 year' },
-    { value: 'all', label: 'All time' },
+    { value: "24h", label: "24h" },
+    { value: "7d", label: "7 days" },
+    { value: "30d", label: "30 days" },
+    { value: "1y", label: "1 year" },
+    { value: "all", label: "All time" },
   ];
 
   return (
@@ -240,6 +239,7 @@ export function SearchFilterSheet({
               style={styles.content}
               showsVerticalScrollIndicator={false}
               keyboardDismissMode="on-drag"
+              keyboardShouldPersistTaps="handled"
             >
               {/* Active Filter Chips */}
               {activeChips.length > 0 && (
@@ -259,9 +259,11 @@ export function SearchFilterSheet({
               )}
 
               {/* Sort By */}
-              <Text style={[styles.sectionLabel, styles.sectionSpacing]}>Sort By</Text>
+              <Text style={[styles.sectionLabel, styles.sectionSpacing]}>
+                Sort By
+              </Text>
               <View style={styles.optionRow}>
-                {(['top', 'latest'] as const).map((sort) => (
+                {(["top", "latest"] as const).map((sort) => (
                   <TouchableOpacity
                     key={sort}
                     style={[
@@ -284,7 +286,9 @@ export function SearchFilterSheet({
               </View>
 
               {/* Media Type */}
-              <Text style={[styles.sectionLabel, styles.sectionSpacing]}>Media Type</Text>
+              <Text style={[styles.sectionLabel, styles.sectionSpacing]}>
+                Media Type
+              </Text>
               <View style={styles.optionRow}>
                 {mediaTypes.map((type) => (
                   <TouchableOpacity
@@ -321,8 +325,7 @@ export function SearchFilterSheet({
                     key={preset.value}
                     style={[
                       styles.optionPill,
-                      activePreset === preset.value &&
-                        styles.optionPillActive,
+                      activePreset === preset.value && styles.optionPillActive,
                     ]}
                     onPress={() => setDatePreset(preset.value)}
                     activeOpacity={0.7}
@@ -346,7 +349,7 @@ export function SearchFilterSheet({
                 <Text style={styles.sectionLabel}>From User</Text>
               </View>
               <PersonTypeahead
-                value={draft.author || ''}
+                value={draft.author || ""}
                 onChangeText={(text) => {
                   updateDraft({ author: text || undefined });
                 }}
@@ -372,9 +375,7 @@ export function SearchFilterSheet({
                     draft.lang && styles.selectButtonTextActive,
                   ]}
                 >
-                  {draft.lang
-                    ? getLanguageName(draft.lang)
-                    : 'Any language'}
+                  {draft.lang ? getLanguageName(draft.lang) : "Any language"}
                 </Text>
                 {draft.lang && (
                   <TouchableOpacity
@@ -397,7 +398,7 @@ export function SearchFilterSheet({
                   style={styles.textInput}
                   placeholder="e.g. nytimes.com"
                   placeholderTextColor={colors.textTertiary}
-                  value={draft.domain || ''}
+                  value={draft.domain || ""}
                   onChangeText={(text) =>
                     updateDraft({ domain: text || undefined })
                   }
@@ -423,9 +424,7 @@ export function SearchFilterSheet({
                   onPress={handleReset}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.resetButtonText}>
-                    Reset All Filters
-                  </Text>
+                  <Text style={styles.resetButtonText}>Reset All Filters</Text>
                 </TouchableOpacity>
               )}
             </ScrollView>
@@ -439,9 +438,7 @@ export function SearchFilterSheet({
               >
                 <Text style={styles.applyButtonText}>
                   Apply Filters
-                  {activeFilterCount > 0
-                    ? ` (${activeFilterCount})`
-                    : ''}
+                  {activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -467,7 +464,7 @@ function createStyles(colors: any) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
-      justifyContent: 'flex-end',
+      justifyContent: "flex-end",
     },
     overlayBackground: {
       ...StyleSheet.absoluteFillObject,
@@ -477,10 +474,10 @@ function createStyles(colors: any) {
       backgroundColor: colors.background,
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
-      maxHeight: '85%',
+      maxHeight: "85%",
     },
     handleBar: {
-      alignItems: 'center',
+      alignItems: "center",
       paddingTop: 8,
       paddingBottom: 4,
     },
@@ -492,9 +489,9 @@ function createStyles(colors: any) {
       opacity: 0.4,
     },
     header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
       paddingHorizontal: 16,
       paddingVertical: 12,
       borderBottomWidth: 1,
@@ -502,7 +499,7 @@ function createStyles(colors: any) {
     },
     title: {
       fontSize: 18,
-      fontWeight: '600',
+      fontWeight: "600",
       color: colors.text,
     },
     content: {
@@ -510,15 +507,15 @@ function createStyles(colors: any) {
       paddingTop: 8,
     },
     chipsContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+      flexDirection: "row",
+      flexWrap: "wrap",
       gap: 8,
       marginBottom: 12,
       marginTop: 4,
     },
     chip: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 6,
       backgroundColor: colors.primary,
       paddingHorizontal: 12,
@@ -526,20 +523,20 @@ function createStyles(colors: any) {
       borderRadius: 16,
     },
     chipText: {
-      color: '#ffffff',
+      color: "#ffffff",
       fontSize: 13,
-      fontWeight: '500',
+      fontWeight: "500",
     },
     sectionHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 6,
       marginTop: 16,
       marginBottom: 8,
     },
     sectionLabel: {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: "600",
       color: colors.textSecondary,
     },
     sectionSpacing: {
@@ -547,8 +544,8 @@ function createStyles(colors: any) {
       marginBottom: 8,
     },
     optionRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+      flexDirection: "row",
+      flexWrap: "wrap",
       gap: 8,
     },
     optionPill: {
@@ -557,7 +554,7 @@ function createStyles(colors: any) {
       borderRadius: 20,
       backgroundColor: colors.surfaceElevated,
       borderWidth: 1,
-      borderColor: 'transparent',
+      borderColor: "transparent",
     },
     optionPillActive: {
       borderColor: colors.primary,
@@ -566,16 +563,16 @@ function createStyles(colors: any) {
     optionPillText: {
       fontSize: 14,
       color: colors.textSecondary,
-      fontWeight: '500',
+      fontWeight: "500",
     },
     optionPillTextActive: {
       color: colors.primary,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     selectButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
       backgroundColor: colors.surfaceElevated,
       borderRadius: 8,
       paddingHorizontal: 16,
@@ -592,8 +589,8 @@ function createStyles(colors: any) {
       padding: 4,
     },
     textInputContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       backgroundColor: colors.surfaceElevated,
       borderRadius: 8,
       paddingRight: 8,
@@ -608,7 +605,7 @@ function createStyles(colors: any) {
     resetButton: {
       marginTop: 24,
       paddingVertical: 12,
-      alignItems: 'center',
+      alignItems: "center",
       borderRadius: 8,
       borderWidth: 1,
       borderColor: colors.surfaceElevated,
@@ -616,7 +613,7 @@ function createStyles(colors: any) {
     resetButtonText: {
       color: colors.danger,
       fontSize: 15,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     footer: {
       paddingHorizontal: 16,
@@ -629,12 +626,12 @@ function createStyles(colors: any) {
       backgroundColor: colors.primary,
       paddingVertical: 14,
       borderRadius: 8,
-      alignItems: 'center',
+      alignItems: "center",
     },
     applyButtonText: {
-      color: '#ffffff',
+      color: "#ffffff",
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: "600",
     },
   });
 }

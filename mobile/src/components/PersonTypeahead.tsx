@@ -1,17 +1,18 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { AppBskyActorDefs } from "@atproto/api";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
-import { AppBskyActorDefs } from '@atproto/api';
-import { Avatar } from './Avatar';
-import { CloseIcon } from './icons';
-import { useTheme } from '../contexts/ThemeContext';
-import { useSearchActors } from '../hooks/api/useProfile';
+  View,
+} from "react-native";
+import { useTheme } from "../contexts/ThemeContext";
+import { useSearchActors } from "../hooks/api/useProfile";
+import { Avatar } from "./Avatar";
+import { CloseIcon } from "./icons";
 
 interface PersonTypeaheadProps {
   value: string;
@@ -25,14 +26,15 @@ export function PersonTypeahead({
   value,
   onChangeText,
   onSelectPerson,
-  placeholder = 'e.g. alice.bsky.social',
+  placeholder = "e.g. alice.bsky.social",
   maxSuggestions = 5,
 }: PersonTypeaheadProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const selectingRef = useRef(false);
 
   const { data: actors, isLoading } = useSearchActors(query);
 
@@ -41,9 +43,9 @@ export function PersonTypeahead({
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
-    const cleaned = value.replace(/^@/, '');
+    const cleaned = value.replace(/^@/, "");
     if (!cleaned || cleaned.length < 2) {
-      setQuery('');
+      setQuery("");
       return;
     }
     debounceTimer.current = setTimeout(() => {
@@ -62,21 +64,26 @@ export function PersonTypeahead({
   }, [actors, maxSuggestions]);
 
   const handleSelect = (actor: AppBskyActorDefs.ProfileView) => {
+    selectingRef.current = true;
     setShowSuggestions(false);
-    setQuery('');
+    setQuery("");
     onSelectPerson(actor.handle);
+    // Reset selection flag after the event loop completes
+    setTimeout(() => {
+      selectingRef.current = false;
+    }, 0);
   };
 
   const handleChangeText = (text: string) => {
-    const cleaned = text.replace(/^@/, '');
+    const cleaned = text.replace(/^@/, "");
     onChangeText(cleaned);
     setShowSuggestions(cleaned.length >= 2);
   };
 
   const handleClear = () => {
-    onChangeText('');
+    onChangeText("");
     setShowSuggestions(false);
-    setQuery('');
+    setQuery("");
   };
 
   return (
@@ -94,8 +101,15 @@ export function PersonTypeahead({
             }
           }}
           onBlur={() => {
-            // Delay hiding to allow tap on suggestion
-            setTimeout(() => setShowSuggestions(false), 200);
+            // Delay hiding suggestions to allow tap events on suggestions
+            // to fire before the list disappears. On iOS the keyboard
+            // dismissal can race with touch handling, so we use a longer
+            // delay and also guard against hiding during an active selection.
+            setTimeout(() => {
+              if (!selectingRef.current) {
+                setShowSuggestions(false);
+              }
+            }, 300);
           }}
           autoCapitalize="none"
           autoCorrect={false}
@@ -113,7 +127,11 @@ export function PersonTypeahead({
       </View>
 
       {showSuggestions && (suggestions.length > 0 || isLoading) && (
-        <View style={styles.suggestionsContainer}>
+        <ScrollView
+          style={styles.suggestionsContainer}
+          keyboardShouldPersistTaps="always"
+          nestedScrollEnabled
+        >
           {isLoading && suggestions.length === 0 && (
             <View style={styles.loadingRow}>
               <ActivityIndicator size="small" color={colors.primary} />
@@ -138,7 +156,7 @@ export function PersonTypeahead({
               </View>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       )}
     </View>
   );
@@ -150,8 +168,8 @@ function createStyles(colors: any) {
       zIndex: 10,
     },
     inputContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       backgroundColor: colors.surfaceElevated,
       borderRadius: 8,
       paddingRight: 8,
@@ -172,11 +190,12 @@ function createStyles(colors: any) {
       marginTop: 4,
       borderWidth: 1,
       borderColor: colors.surfaceElevated,
-      overflow: 'hidden',
+      overflow: "hidden",
+      maxHeight: 250,
     },
     suggestionRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       paddingHorizontal: 12,
       paddingVertical: 10,
       gap: 10,
@@ -189,7 +208,7 @@ function createStyles(colors: any) {
     displayName: {
       color: colors.text,
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     handle: {
       color: colors.textTertiary,
@@ -197,9 +216,9 @@ function createStyles(colors: any) {
       marginTop: 1,
     },
     loadingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
       paddingVertical: 12,
       gap: 8,
     },

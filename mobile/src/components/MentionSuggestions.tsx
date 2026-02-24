@@ -1,15 +1,15 @@
+import { AppBskyActorDefs } from "@atproto/api";
 import React, { useMemo } from "react";
 import {
-  View,
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
+  View,
 } from "react-native";
-import { AppBskyActorDefs } from "@atproto/api";
-import { Avatar } from "./Avatar";
 import { useTheme } from "../contexts/ThemeContext";
+import { Avatar } from "./Avatar";
 
 interface MentionSuggestionsProps {
   suggestions: AppBskyActorDefs.ProfileView[];
@@ -63,7 +63,7 @@ export function MentionSuggestions({
             </View>
           </TouchableOpacity>
         )}
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="always"
       />
     </View>
   );

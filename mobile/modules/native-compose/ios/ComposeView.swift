@@ -7,12 +7,45 @@
 //
 
 import SwiftUI
+import Combine
+
+// MARK: - Keyboard Height Observer
+
+/// Tracks the current keyboard height so the compose UI can keep the toolbar
+/// and mention suggestions visible above the software keyboard.
+class KeyboardHeightObserver: ObservableObject {
+    @Published var keyboardHeight: CGFloat = 0
+
+    private var cancellables = Set<AnyCancellable>()
+
+    init() {
+        NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
+            .compactMap { notification -> CGFloat? in
+                (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect)?.height
+            }
+            .sink { [weak self] height in
+                withAnimation(.easeOut(duration: 0.25)) {
+                    self?.keyboardHeight = height
+                }
+            }
+            .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)
+            .sink { [weak self] _ in
+                withAnimation(.easeOut(duration: 0.25)) {
+                    self?.keyboardHeight = 0
+                }
+            }
+            .store(in: &cancellables)
+    }
+}
 
 // MARK: - ComposeView
 
 struct ComposeView: View {
     @ObservedObject var composeState: NativeComposeState
     @StateObject private var mentionManager = ComposeMentionManager()
+    @StateObject private var keyboardObserver = KeyboardHeightObserver()
 
     // Event callbacks (bridge to JS)
     let onClose: () -> Void
@@ -54,7 +87,8 @@ struct ComposeView: View {
                 singlePostContent
             }
 
-            // Mention suggestions
+            // Mention suggestions — placed above the toolbar so they sit
+            // directly above the keyboard when visible
             if composeState.isShowingMentions && !composeState.mentionSuggestions.isEmpty {
                 ComposeMentionSuggestionsView(
                     suggestions: composeState.mentionSuggestions,
@@ -83,6 +117,10 @@ struct ComposeView: View {
                 onLanguagePicker: onLanguagePicker
             )
         }
+        // Push the toolbar and mention suggestions above the keyboard
+        .padding(.bottom, keyboardObserver.keyboardHeight > 0
+            ? keyboardObserver.keyboardHeight - safeAreaInsets.bottom
+            : 0)
         .background(Color(UIColor.systemBackground))
         .ignoresSafeArea(.keyboard)
         .onAppear {
