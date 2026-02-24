@@ -7,7 +7,6 @@ import {
   StyleSheet,
   RefreshControl,
 } from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useFocusEffect, useScrollToTop} from '@react-navigation/native';
 import {useRouter} from 'expo-router';
 import {
@@ -49,7 +48,6 @@ function getHandleFromUri(uri: string): string {
 
 export function NotificationsScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const {preferences} = usePreferences();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -263,7 +261,7 @@ export function NotificationsScreen() {
   }, []);
 
   return (
-    <View style={[styles.container, {paddingTop: insets.top}]}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Notifications</Text>
       </View>

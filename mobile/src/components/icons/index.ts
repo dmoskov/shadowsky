@@ -20,6 +20,7 @@ export {CheckIcon} from './CheckIcon';
 export {PlusIcon} from './PlusIcon';
 export {ChevronDownIcon} from './ChevronDownIcon';
 export {ChevronUpIcon} from './ChevronUpIcon';
+export {MenuIcon} from './MenuIcon';
 
 // Drawer
 export {ListIcon} from './ListIcon';

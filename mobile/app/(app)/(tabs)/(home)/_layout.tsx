@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { useTheme } from "../../../../src/contexts/ThemeContext";
+import { DrawerMenuButton } from "../../../../src/components/DrawerMenuButton";
 
 export default function HomeLayout() {
   const { colors } = useTheme();
@@ -13,7 +14,15 @@ export default function HomeLayout() {
         headerBackTitle: "Back",
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="index"
+        options={{
+          title: "Home",
+          headerLeft: () => <DrawerMenuButton />,
+          headerStyle: { backgroundColor: colors.background },
+          headerShadowVisible: false,
+        }}
+      />
       <Stack.Screen name="timeline" options={{ title: "Timeline" }} />
       <Stack.Screen
         name="thread/[postId]"

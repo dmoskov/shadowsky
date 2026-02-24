@@ -9,7 +9,6 @@ import {
   View,
   RefreshControl,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScrollToTop } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { Avatar } from "../../components/Avatar";
@@ -44,7 +43,6 @@ export function MyProfileScreen({
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { account, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
   const { data: profile, isLoading: isLoadingProfile, refetch: refetchProfile } = useProfile(
@@ -296,7 +294,7 @@ export function MyProfileScreen({
 
   if (!account) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Not authenticated</Text>
         </View>
@@ -305,7 +303,7 @@ export function MyProfileScreen({
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
       <FlatList
         ref={scrollRef}
         data={posts}

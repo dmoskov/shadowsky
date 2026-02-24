@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { useTheme } from "../../../../src/contexts/ThemeContext";
+import { DrawerMenuButton } from "../../../../src/components/DrawerMenuButton";
 
 export default function SearchLayout() {
   const { colors } = useTheme();
@@ -13,7 +14,15 @@ export default function SearchLayout() {
         headerBackTitle: "Back",
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="index"
+        options={{
+          title: "Search",
+          headerLeft: () => <DrawerMenuButton />,
+          headerStyle: { backgroundColor: colors.background },
+          headerShadowVisible: false,
+        }}
+      />
       <Stack.Screen
         name="thread/[postId]"
         options={{

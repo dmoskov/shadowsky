@@ -10,7 +10,6 @@ import {
   RefreshControl,
   Platform,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useScrollToTop } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -66,13 +65,12 @@ interface SearchFilters {
 
 export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   const { colors } = useTheme();
-  const insets = useSafeAreaInsets();
   const router = useRouter();
 
   // On iOS, render the native SwiftUI search view
   if (USE_NATIVE_SEARCH && NativeSearchComponent) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
         <NativeSearchComponent style={{ flex: 1 }} />
       </View>
     );
@@ -373,7 +371,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   );
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
       <View style={styles.searchBar}>
         <TextInput
           style={styles.input}

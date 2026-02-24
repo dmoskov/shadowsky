@@ -36,8 +36,7 @@ function PhoneAppLayout() {
         },
         drawerType: "front",
         overlayColor: "rgba(0, 0, 0, 0.7)",
-        swipeEnabled: true,
-        swipeEdgeWidth: 50,
+        swipeEnabled: false,
       }}
     >
       <Drawer.Screen name="(tabs)" options={{ headerShown: false }} />
