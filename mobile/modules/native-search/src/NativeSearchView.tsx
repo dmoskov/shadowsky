@@ -21,7 +21,7 @@ import { useSearchActors } from '../../../src/hooks/api/useProfile';
 import { useSearchPosts } from '../../../src/hooks/api/useSearchPosts';
 import { useTrendingData } from '../../../src/hooks/useTrending';
 import { useRouter } from 'expo-router';
-import { setSearchResults, setTrendingData, setSearchHistory, setTypeaheadResults } from '../index';
+import { setSearchResults, setTrendingData, setSearchHistory, setTypeaheadResults } from './NativeSearchModule';
 import { SearchFilterSheet, type SearchFilterValues } from '../../../src/components/SearchFilterSheet';
 
 const SEARCH_HISTORY_KEY = '@search_history';

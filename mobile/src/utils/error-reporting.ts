@@ -20,6 +20,9 @@ import * as Crypto from "expo-crypto";
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('ErrorReporting');
+
+let sentryInitialized = false;
+
 export interface ErrorContext {
   endpoint?: string;
   statusCode?: number;
@@ -117,10 +120,18 @@ export function initializeSentry(dsn?: string): void {
       },
     });
 
+    sentryInitialized = true;
     logger.log('Sentry initialized successfully');
   } catch (error) {
     logger.error('Failed to initialize Sentry:', error);
   }
+}
+
+/**
+ * Check if Sentry was successfully initialized
+ */
+export function isSentryInitialized(): boolean {
+  return sentryInitialized;
 }
 
 /**

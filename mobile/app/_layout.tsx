@@ -35,6 +35,12 @@ LogBox.ignoreLogs([
   "Reduced motion setting is enabled",
   // React Query persistence: dehydrated-as-pending warning (dev-only, expected)
   "A query that was dehydrated as pending",
+  // expo-av deprecation notice (migration to expo-video tracked separately)
+  "Expo AV has been deprecated",
+  // NativeEventEmitter: native module missing removeListeners (harmless)
+  "`new NativeEventEmitter()` was called with a non-null argument without the required `removeListeners` method",
+  // Metro bundler subpath export warnings from @atproto transitive deps
+  'not listed in the "exports"',
 ]);
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ErrorBoundary from "../src/components/ErrorBoundary";
@@ -64,6 +70,7 @@ import {
 import { registerBackgroundFetch } from "../src/services/background-fetch";
 import {
   initializeSentry,
+  isSentryInitialized,
   captureException,
   setTags,
   Sentry,
@@ -302,5 +309,7 @@ function RootLayout() {
   );
 }
 
-// Wrap the root component with Sentry for crash reporting
-export default Sentry.wrap(RootLayout);
+// Wrap the root component with Sentry for crash reporting.
+// Only apply Sentry.wrap when Sentry was actually initialized (requires a DSN).
+// Calling Sentry.wrap without Sentry.init produces a noisy startup warning.
+export default isSentryInitialized() ? Sentry.wrap(RootLayout) : RootLayout;
