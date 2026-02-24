@@ -76,12 +76,14 @@ struct ThreadView: View {
         VStack(spacing: 0) {
             // Thread content area
             ZStack {
-                if isLoading && threadState.rootPost == nil {
-                    loadingView
-                } else if let error = error, threadState.rootPost == nil {
-                    errorView(error)
-                } else if let rootPost = threadState.rootPost {
+                if let rootPost = threadState.rootPost {
                     threadScrollView(rootPost: rootPost)
+                } else if let error = error {
+                    errorView(error)
+                } else if isLoading || !threadState.hasReceivedData {
+                    // Show loading while React Query fetches OR while waiting
+                    // for the NotificationCenter bridge notification to arrive
+                    loadingView
                 } else {
                     emptyView
                 }
@@ -420,6 +422,10 @@ struct ThreadView: View {
 /// Observable object that manages thread data from bridge
 class ThreadState: ObservableObject {
     @Published var rootPost: ThreadNode?
+    /// Tracks whether we've ever received a data notification from the bridge.
+    /// Prevents showing "Thread not found" during the gap between React Query
+    /// finishing (isLoading=false) and the NotificationCenter notification arriving.
+    @Published var hasReceivedData = false
 
     private var threadDataObserver: NSObjectProtocol?
     private var incrementalUpdateObserver: NSObjectProtocol?
@@ -464,6 +470,7 @@ class ThreadState: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] notification in
+            self?.hasReceivedData = true
             if let threadData = notification.userInfo?["threadData"] as? [String: Any] {
                 self?.rootPost = self?.parseThreadNode(from: threadData, depth: 0)
                 // Attempt Spotlight indexing (succeeds only if 2s timer has elapsed)
@@ -491,6 +498,7 @@ class ThreadState: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             self?.rootPost = nil
+            self?.hasReceivedData = false
         }
     }
 

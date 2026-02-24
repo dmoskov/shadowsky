@@ -257,7 +257,8 @@ export const NativeNotificationsList = forwardRef<any, ViewProps>((props, ref) =
 
       if (reason === 'reply' || reason === 'mention' || reason === 'quote') {
         const postId = getPostIdFromUri(uri);
-        navigateToThread(handle, postId, undefined);
+        const did = getHandleFromUri(uri);
+        navigateToThread(handle, postId, did || undefined);
         return;
       }
 

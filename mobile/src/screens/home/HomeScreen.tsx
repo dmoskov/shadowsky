@@ -13,6 +13,9 @@ import { useRouter } from "expo-router";
 import { triggerHaptic } from "../../utils/haptics";
 import { useToast } from "../../contexts/ToastContext";
 import { useDataPrefetch } from "../../hooks/useDataPrefetch";
+import { createLogger } from "../../utils/logger";
+
+const logger = createLogger('HomeScreen');
 
 /**
  * Extract post ID (rkey) from AT Protocol URI
@@ -101,12 +104,17 @@ export function HomeScreen() {
     // Prefetch thread data during navigation animation
     const threadUri = did ? `at://${did}/app.bsky.feed.post/${postId}` : undefined;
     if (threadUri) {
+      const prefetchStart = performance.now();
       queryClient.prefetchQuery({
         queryKey: ['thread', threadUri],
-        queryFn: () => getPostThread(threadUri),
+        queryFn: () => getPostThread(threadUri).then(result => {
+          logger.log(`[perf] prefetch complete: ${(performance.now() - prefetchStart).toFixed(0)}ms`);
+          return result;
+        }),
         staleTime: 2 * 60 * 1000,
       });
     }
+    logger.log(`[perf] navigateToThread: postId=${postId}, did=${did ? 'yes' : 'no'}`);
     navigateToThread(handle, postId, did || undefined);
   };
 

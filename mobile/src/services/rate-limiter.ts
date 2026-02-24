@@ -249,43 +249,47 @@ interface AdaptiveState {
 /**
  * Default rate limit configurations per endpoint type
  *
- * Based on task requirements:
- * - AUTH: 5 req/min (login, refresh)
- * - FEED: 30 req/min (timeline, author feed, search)
- * - RECORD: 20 req/min (like, repost, follow, create post)
- * - UPLOAD: 10 req/min (image upload)
- * - NOTIFICATION: 15 req/min (list notifications, unread count)
+ * Bluesky API allows ~3000 req/5min (~600/min). These client-side limits
+ * act as a safety net, not a throttle. The adaptive circuit breaker will
+ * tighten limits if the server returns 429s.
+ *
+ * - AUTH: 30 req/min (login, refresh — infrequent but bursty on startup)
+ * - FEED: 300 req/min (timeline, author feed, search, threads)
+ * - RECORD: 120 req/min (like, repost, follow, create post)
+ * - UPLOAD: 30 req/min (image upload)
+ * - NOTIFICATION: 60 req/min (list notifications, unread count)
+ * - CHAT: 60 req/min (messages)
  */
 const DEFAULT_CONFIGS: Record<ATProtoEndpointType, RateLimiterConfig> = {
   [ATProtoEndpointType.AUTH]: {
-    capacity: 5,
-    refillRate: 1,
-    refillInterval: 12000, // 5 per minute = 1 per 12 seconds
-  },
-  [ATProtoEndpointType.FEED]: {
     capacity: 30,
     refillRate: 1,
-    refillInterval: 2000, // 30 per minute = 1 per 2 seconds
+    refillInterval: 2000, // 30 per minute
+  },
+  [ATProtoEndpointType.FEED]: {
+    capacity: 300,
+    refillRate: 5,
+    refillInterval: 1000, // 300 per minute
   },
   [ATProtoEndpointType.RECORD]: {
-    capacity: 20,
-    refillRate: 1,
-    refillInterval: 3000, // 20 per minute = 1 per 3 seconds
+    capacity: 120,
+    refillRate: 2,
+    refillInterval: 1000, // 120 per minute
   },
   [ATProtoEndpointType.UPLOAD]: {
-    capacity: 10,
+    capacity: 30,
     refillRate: 1,
-    refillInterval: 6000, // 10 per minute = 1 per 6 seconds
+    refillInterval: 2000, // 30 per minute
   },
   [ATProtoEndpointType.NOTIFICATION]: {
-    capacity: 15,
+    capacity: 60,
     refillRate: 1,
-    refillInterval: 4000, // 15 per minute = 1 per 4 seconds
+    refillInterval: 1000, // 60 per minute
   },
   [ATProtoEndpointType.CHAT]: {
-    capacity: 15,
+    capacity: 60,
     refillRate: 1,
-    refillInterval: 4000, // 15 per minute = 1 per 4 seconds
+    refillInterval: 1000, // 60 per minute
   },
 };
 
@@ -714,8 +718,18 @@ export async function rateLimited<T>(
   const limiter = getGlobalRateLimiter();
 
   try {
+    const waitStart = performance.now();
     await limiter.waitForAllowance(endpointType, timeoutMs);
+    const waitMs = performance.now() - waitStart;
+    if (waitMs > 50) {
+      logger.log(`[perf] rate limiter wait for ${endpointType}: ${waitMs.toFixed(0)}ms`);
+    }
+
+    const apiStart = performance.now();
     const result = await fn();
+    const apiMs = performance.now() - apiStart;
+    logger.log(`[perf] API call ${endpointType}: ${apiMs.toFixed(0)}ms`);
+
     // Report success to circuit breaker for half-open probe recovery
     limiter.trackSuccess();
     return result;

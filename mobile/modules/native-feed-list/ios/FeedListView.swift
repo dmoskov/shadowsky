@@ -98,12 +98,6 @@ struct FeedListView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    // Pull to refresh indicator
-                    if props.isRefreshing {
-                        ProgressView()
-                            .padding()
-                    }
-
                     // Post items - uses pre-computed conversions
                     ForEach(feedState.convertedPosts) { converted in
                         PostCardView(

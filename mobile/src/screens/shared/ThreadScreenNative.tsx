@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   View,
   StyleSheet,
@@ -201,6 +201,15 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
+
+  // Perf tracking
+  const perfRef = useRef({
+    mountedAt: performance.now(),
+    resolveStart: 0,
+    fetchStart: 0,
+    logged: false,
+  });
+
   // If DID is available, construct URI immediately — no API call needed
   const [postUri, setPostUri] = useState<string | null>(
     did ? `at://${did}/app.bsky.feed.post/${postId}` : null
@@ -224,8 +233,10 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
     async function resolveUri() {
       setIsResolvingUri(true);
       setResolveError(null);
+      perfRef.current.resolveStart = performance.now();
       try {
         const resolvedDid = await resolveHandleToDid(handle);
+        logger.log(`[perf] handle→DID resolve: ${(performance.now() - perfRef.current.resolveStart).toFixed(0)}ms`);
         setPostUri(`at://${resolvedDid}/app.bsky.feed.post/${postId}`);
       } catch (error) {
         logger.error('Failed to resolve post URI:', error);
@@ -240,16 +251,39 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
     }
   }, [handle, postId, postUri]);
 
+  // Track when fetch starts
+  useEffect(() => {
+    if (postUri) {
+      perfRef.current.fetchStart = performance.now();
+      logger.log(`[perf] fetch start (${(perfRef.current.fetchStart - perfRef.current.mountedAt).toFixed(0)}ms after mount)`);
+    }
+  }, [postUri]);
+
   // Fetch thread data
   const { data: thread, isLoading, error, refetch } = usePostThread(postUri || "");
 
   // Bridge thread data to native SwiftUI ThreadView
   useEffect(() => {
     if (thread && AppBskyFeedDefs.isThreadViewPost(thread)) {
+      const fetchElapsed = perfRef.current.fetchStart > 0
+        ? (performance.now() - perfRef.current.fetchStart).toFixed(0)
+        : '?';
+      logger.log(`[perf] thread data received: ${fetchElapsed}ms (fetch)`);
+
       try {
+        const serializeStart = performance.now();
         const serialized = serializeThreadNode(thread);
         if (serialized) {
-          setThreadData(JSON.stringify(serialized));
+          const json = JSON.stringify(serialized);
+          const serializeMs = (performance.now() - serializeStart).toFixed(0);
+
+          const bridgeStart = performance.now();
+          setThreadData(json);
+          const bridgeMs = (performance.now() - bridgeStart).toFixed(0);
+
+          const totalMs = (performance.now() - perfRef.current.mountedAt).toFixed(0);
+          logger.log(`[perf] serialize: ${serializeMs}ms, bridge: ${bridgeMs}ms, json: ${(json.length / 1024).toFixed(1)}KB`);
+          logger.log(`[perf] total mount→bridged: ${totalMs}ms`);
         }
       } catch (e) {
         logger.error('Failed to serialize thread data:', e);
@@ -594,16 +628,13 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
     return thread.post.author;
   }, [thread]);
 
+  // Only use skeleton before we have a postUri (handle resolution pending)
   if (isResolvingUri || !postUri) {
     return <ThreadSkeleton />;
   }
 
   if (resolveError) {
     return <ErrorState message={resolveError} onRetry={refetch} />;
-  }
-
-  if (isLoading) {
-    return <ThreadSkeleton />;
   }
 
   if (error) {
@@ -615,17 +646,23 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
     );
   }
 
-  if (!thread) {
-    return <ErrorState message="Thread not found" />;
+  const isValidThread = thread && AppBskyFeedDefs.isThreadViewPost(thread);
+
+  // If query completed but thread is not a valid ThreadViewPost (deleted/blocked)
+  if (!isLoading && thread && !isValidThread) {
+    return <ErrorState message="This post may have been deleted" onRetry={refetch} />;
   }
 
+  // Always render NativeThreadView so its observers are registered before
+  // the useEffect posts thread data via NotificationCenter. Communicate
+  // loading state via the isLoading prop instead of swapping views.
   return (
     <View style={styles.container}>
       <NativeThreadView
         style={styles.threadView}
         isLoading={isLoading}
         isRefreshing={isRefreshing}
-        error={error ? (typeof error === 'object' && error !== null && 'message' in error ? (error as Error).message : "Failed to load thread") : undefined}
+        error={undefined}
         threadUri={postUri}
         focusedReplyUri={focusedReplyUri}
         summaryJson={summaryJson}

@@ -125,8 +125,9 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
     ...eventHandlers
   } = props;
 
-  const { isLoading, isRefetching, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = query;
+  const { isLoading, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = query;
   const [bridgeError, setBridgeError] = useState<string | null>(null);
+  const [isUserRefreshing, setIsUserRefreshing] = useState(false);
 
   // Serialize feed data for Swift
   const { serializedJSON } = useCompleteFeedSerializer(query, {
@@ -167,9 +168,10 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
     };
   }, []);
 
-  // Handle refresh
+  // Handle refresh — only user-initiated pull-to-refresh sets isUserRefreshing
   const handleRefresh = useCallback(() => {
-    refetch();
+    setIsUserRefreshing(true);
+    refetch().finally(() => setIsUserRefreshing(false));
     onRefresh?.();
   }, [refetch, onRefresh]);
 
@@ -193,7 +195,7 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
     <NativeFeedListView
       {...eventHandlers}
       isLoading={isLoading}
-      isRefreshing={isRefetching}
+      isRefreshing={isUserRefreshing}
       isLoadingMore={isFetchingNextPage}
       error={error?.message || bridgeError || null}
       emptyMessage={emptyMessage}
