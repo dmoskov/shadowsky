@@ -42,7 +42,7 @@ jobs:
 
       - name: Run tests
         working-directory: mobile
-        run: npm test -- --coverage --maxWorkers=2
+        run: npm test -- --coverage --coverageReporters=text-summary --coverageReporters=json --coverageReporters=lcov --maxWorkers=2
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
