@@ -1,4 +1,5 @@
-import { NativeEventEmitter, Platform } from "react-native";
+import { Platform } from "react-native";
+import { EventEmitter, type Subscription } from "expo-modules-core";
 
 let VideoCompressorModule: {
   getVideoInfo(uri: string): Promise<VideoInfo>;
@@ -6,18 +7,15 @@ let VideoCompressorModule: {
   cancelCompression(): void;
   cleanupTempFiles(): void;
   isPresetCompatible(uri: string, quality: string): Promise<boolean>;
-  addListener(eventName: string): void;
-  removeListeners(count: number): void;
 } | null = null;
 
-let nativeEventEmitter: NativeEventEmitter | null = null;
+let emitter: EventEmitter | null = null;
 
 try {
   const { requireNativeModule } = require("expo-modules-core");
   VideoCompressorModule = requireNativeModule("VideoCompressor");
-
   if (VideoCompressorModule) {
-    nativeEventEmitter = new NativeEventEmitter(VideoCompressorModule as any);
+    emitter = new EventEmitter(VideoCompressorModule as any);
   }
 } catch {
   // Module not available (web or not built with native modules)
@@ -125,11 +123,11 @@ export async function isPresetCompatible(
 export function onCompressionProgress(
   callback: (progress: CompressionProgress) => void,
 ): () => void {
-  if (!nativeEventEmitter) {
+  if (!emitter) {
     return () => {};
   }
 
-  const subscription = nativeEventEmitter.addListener(
+  const subscription: Subscription = emitter.addListener(
     "onProgress",
     callback,
   );

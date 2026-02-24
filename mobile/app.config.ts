@@ -5,6 +5,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "Asphodel",
   slug: "shadowsky",
   version: "0.7.0",
+  runtimeVersion: {
+    policy: "appVersion",
+  },
   orientation: "default",
   icon: "./assets/icon.png",
   scheme: ["shadowsky", "bsky", "io.shadowsky.app", "io.shadowsky"],

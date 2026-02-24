@@ -16,6 +16,7 @@ i18n
     lng: Localization.getLocales()[0]?.languageCode || "en",
     fallbackLng: "en",
     compatibilityJSON: "v4",
+    logLevel: "error",  // Suppress i18next info/warn messages (Locize ad, etc.)
     interpolation: {
       escapeValue: false,
     },

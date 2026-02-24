@@ -1,22 +1,5 @@
-// Polyfill AbortSignal APIs missing in Hermes (used by @atproto/oauth-client)
-if (typeof AbortSignal.prototype.throwIfAborted !== "function") {
-  AbortSignal.prototype.throwIfAborted = function () {
-    if (this.aborted) {
-      throw this.reason ?? new Error("AbortError");
-    }
-  };
-}
-if (typeof AbortSignal.timeout !== "function") {
-  AbortSignal.timeout = (ms: number) => {
-    const controller = new AbortController();
-    setTimeout(() => {
-      const err = new Error("TimeoutError");
-      err.name = "TimeoutError";
-      controller.abort(err);
-    }, ms);
-    return controller.signal;
-  };
-}
+// Polyfill APIs missing in Hermes (must be first import)
+import "../src/polyfills";
 
 import Constants from "expo-constants";
 import * as Device from "expo-device";
@@ -28,19 +11,12 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // Suppress known harmless warnings from dependencies
 LogBox.ignoreLogs([
-  // @atproto/lex-data polyfill fallbacks (expected in Hermes/RN)
-  "Uint8Array.fromBase64",
-  "Intl.Segmenter is not available",
   // Reanimated reduced motion (simulator setting, dev-only)
   "Reduced motion setting is enabled",
   // React Query persistence: dehydrated-as-pending warning (dev-only, expected)
   "A query that was dehydrated as pending",
   // expo-av deprecation notice (migration to expo-video tracked separately)
   "Expo AV has been deprecated",
-  // NativeEventEmitter: native module missing removeListeners (harmless)
-  "`new NativeEventEmitter()` was called with a non-null argument without the required `removeListeners` method",
-  // Metro bundler subpath export warnings from @atproto transitive deps
-  'not listed in the "exports"',
 ]);
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ErrorBoundary from "../src/components/ErrorBoundary";
