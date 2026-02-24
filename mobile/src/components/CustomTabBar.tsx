@@ -6,6 +6,7 @@ import {
   Pressable,
 } from 'react-native';
 import type {BottomTabBarProps} from '@react-navigation/bottom-tabs';
+import {StackActions} from '@react-navigation/native';
 import {useTheme} from '../contexts/ThemeContext';
 import {usePreferences} from '../contexts/PreferencesContext';
 import {triggerHaptic} from '../utils/haptics';
@@ -91,8 +92,15 @@ export function CustomTabBar({state, navigation}: BottomTabBarProps) {
             canPreventDefault: true,
           });
 
-          if (!event.defaultPrevented && state.index !== routeIndex) {
-            navigation.navigate(state.routes[routeIndex].name);
+          if (!event.defaultPrevented) {
+            if (state.index === routeIndex) {
+              // Already on this tab — pop stack to root and scroll to top.
+              // useScrollToTop in each root screen listens for the tabPress
+              // event emitted above and handles scrolling automatically.
+              navigation.dispatch(StackActions.popToTop());
+            } else {
+              navigation.navigate(state.routes[routeIndex].name);
+            }
           }
         }
         return;
