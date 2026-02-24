@@ -1,11 +1,13 @@
 import { Stack } from "expo-router";
 import { useTheme } from "../../../../src/contexts/ThemeContext";
 import { DrawerMenuButton } from "../../../../src/components/DrawerMenuButton";
+import { ScreenErrorBoundary } from "../../../../src/components/ScreenErrorBoundary";
 
 export default function HomeLayout() {
   const { colors } = useTheme();
 
   return (
+    <ScreenErrorBoundary screenName="Home">
     <Stack
       screenOptions={{
         headerStyle: { backgroundColor: colors.background },
@@ -35,5 +37,6 @@ export default function HomeLayout() {
       <Stack.Screen name="profile/[handle]" options={{ title: "Profile" }} />
       <Stack.Screen name="list/[listId]" options={{ title: "List" }} />
     </Stack>
+    </ScreenErrorBoundary>
   );
 }

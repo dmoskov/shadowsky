@@ -9,6 +9,7 @@ import { NotificationSetup } from "../../src/components/NotificationSetup";
 import { IPadSidebar } from "../../src/components/IPadSidebar";
 import { IPadDetailPanel } from "../../src/components/IPadDetailPanel";
 import { useIPadLayout } from "../../src/contexts/IPadLayoutContext";
+import { ScreenErrorBoundary } from "../../src/components/ScreenErrorBoundary";
 
 function IPadAppLayout() {
   const { detailContent } = useIPadLayout();
@@ -133,9 +134,9 @@ export default function AppLayout() {
   }, []);
 
   return (
-    <>
+    <ScreenErrorBoundary screenName="App">
       <NotificationSetup />
       {isMultiColumn ? <IPadAppLayout /> : <PhoneAppLayout />}
-    </>
+    </ScreenErrorBoundary>
   );
 }
