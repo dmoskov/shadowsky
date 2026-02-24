@@ -1,18 +1,12 @@
-import React, {useState, useCallback} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-} from 'react-native';
-import type {BottomTabBarProps} from '@react-navigation/bottom-tabs';
-import {StackActions} from '@react-navigation/native';
-import {useTheme} from '../contexts/ThemeContext';
-import {usePreferences} from '../contexts/PreferencesContext';
-import {triggerHaptic} from '../utils/haptics';
-import {useUnreadCount} from '../hooks/api/useNotifications';
-import {ALL_NAV_ITEMS} from './TabBarCustomizer';
-import {TabBarCustomizer} from './TabBarCustomizer';
+import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { StackActions } from "@react-navigation/native";
+import React, { useCallback, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { usePreferences } from "../contexts/PreferencesContext";
+import { useTheme } from "../contexts/ThemeContext";
+import { useUnreadCount } from "../hooks/api/useNotifications";
+import { triggerHaptic } from "../utils/haptics";
+import { ALL_NAV_ITEMS, TabBarCustomizer } from "./TabBarCustomizer";
 
 /**
  * Maps nav item IDs to their Expo Router route names.
@@ -20,10 +14,11 @@ import {TabBarCustomizer} from './TabBarCustomizer';
  * navigate via router.push instead of tab switching.
  */
 const TAB_ROUTE_MAP: Record<string, string> = {
-  home: '(home)',
-  search: '(search)',
-  notifications: '(notifications)',
-  profile: '(profile)',
+  home: "(home)",
+  search: "(search)",
+  feeds: "(feeds)",
+  notifications: "(notifications)",
+  profile: "(profile)",
 };
 
 /**
@@ -31,17 +26,16 @@ const TAB_ROUTE_MAP: Record<string, string> = {
  * rather than switching tab groups.
  */
 const PUSH_ROUTE_MAP: Record<string, string> = {
-  messages: '/(app)/messages',
-  bookmarks: '/(app)/(tabs)/(profile)/bookmarks',
-  feeds: '/(app)/feeds/saved',
-  lists: '/(app)/lists',
-  analytics: '/(app)/analytics',
-  settings: '/(app)/settings',
+  messages: "/(app)/messages",
+  bookmarks: "/(app)/(tabs)/(profile)/bookmarks",
+  lists: "/(app)/lists",
+  analytics: "/(app)/analytics",
+  settings: "/(app)/settings",
 };
 
 function NotificationsBadge() {
-  const {data: unreadCount} = useUnreadCount();
-  const {colors} = useTheme();
+  const { data: unreadCount } = useUnreadCount();
+  const { colors } = useTheme();
 
   if (!unreadCount || unreadCount === 0) {
     return null;
@@ -49,45 +43,47 @@ function NotificationsBadge() {
 
   return (
     <View
-      style={[styles.badge, {backgroundColor: colors.danger}]}
+      style={[styles.badge, { backgroundColor: colors.danger }]}
       accessible={true}
       accessibilityLabel={`${unreadCount} unread notifications`}
-      accessibilityRole="text">
+      accessibilityRole="text"
+    >
       <Text style={styles.badgeText}>
-        {unreadCount > 99 ? '99+' : unreadCount}
+        {unreadCount > 99 ? "99+" : unreadCount}
       </Text>
     </View>
   );
 }
 
-export function CustomTabBar({state, navigation}: BottomTabBarProps) {
-  const {colors} = useTheme();
-  const {preferences} = usePreferences();
+export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
+  const { colors } = useTheme();
+  const { preferences } = usePreferences();
   const [customizerVisible, setCustomizerVisible] = useState(false);
 
   const tabBarItems = preferences?.tabBarItems ?? [
-    'home',
-    'search',
-    'notifications',
-    'profile',
+    "home",
+    "search",
+    "feeds",
+    "notifications",
+    "profile",
   ];
 
   const handleLongPress = useCallback(() => {
-    triggerHaptic('medium');
+    triggerHaptic("medium");
     setCustomizerVisible(true);
   }, []);
 
   const handleTabPress = useCallback(
     (itemId: string) => {
-      triggerHaptic('light');
+      triggerHaptic("light");
 
       // If this is a tab-group route, switch tabs
       const routeName = TAB_ROUTE_MAP[itemId];
       if (routeName) {
-        const routeIndex = state.routes.findIndex(r => r.name === routeName);
+        const routeIndex = state.routes.findIndex((r) => r.name === routeName);
         if (routeIndex >= 0) {
           const event = navigation.emit({
-            type: 'tabPress',
+            type: "tabPress",
             target: state.routes[routeIndex].key,
             canPreventDefault: true,
           });
@@ -132,9 +128,10 @@ export function CustomTabBar({state, navigation}: BottomTabBarProps) {
             backgroundColor: colors.background,
             borderTopColor: colors.border,
           },
-        ]}>
-        {tabBarItems.map(itemId => {
-          const def = ALL_NAV_ITEMS.find(n => n.id === itemId);
+        ]}
+      >
+        {tabBarItems.map((itemId) => {
+          const def = ALL_NAV_ITEMS.find((n) => n.id === itemId);
           if (!def) return null;
 
           const isActive = activeTabId === itemId;
@@ -148,18 +145,17 @@ export function CustomTabBar({state, navigation}: BottomTabBarProps) {
               onLongPress={handleLongPress}
               delayLongPress={500}
               accessibilityRole="tab"
-              accessibilityState={{selected: isActive}}
-              accessibilityLabel={`${def.label} tab`}>
+              accessibilityState={{ selected: isActive }}
+              accessibilityLabel={`${def.label} tab`}
+            >
               <View style={tabStyles.iconWrapper}>
-                {def.icon({size: 24, color: iconColor, filled: isActive})}
-                {itemId === 'notifications' && <NotificationsBadge />}
+                {def.icon({ size: 24, color: iconColor, filled: isActive })}
+                {itemId === "notifications" && <NotificationsBadge />}
               </View>
               <Text
-                style={[
-                  tabStyles.label,
-                  {color: iconColor},
-                ]}
-                numberOfLines={1}>
+                style={[tabStyles.label, { color: iconColor }]}
+                numberOfLines={1}
+              >
                 {def.label}
               </Text>
             </Pressable>
@@ -177,43 +173,43 @@ export function CustomTabBar({state, navigation}: BottomTabBarProps) {
 
 const styles = StyleSheet.create({
   badge: {
-    position: 'absolute',
+    position: "absolute",
     right: -6,
     top: -3,
     borderRadius: 10,
     minWidth: 18,
     height: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 4,
   },
   badgeText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });
 
 const createTabStyles = () =>
   StyleSheet.create({
     container: {
-      flexDirection: 'row',
+      flexDirection: "row",
       borderTopWidth: 1,
       paddingBottom: 34,
       paddingTop: 8,
     },
     tab: {
       flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
       paddingVertical: 4,
     },
     iconWrapper: {
-      position: 'relative',
+      position: "relative",
     },
     label: {
       fontSize: 10,
       marginTop: 2,
-      fontWeight: '500',
+      fontWeight: "500",
     },
   });

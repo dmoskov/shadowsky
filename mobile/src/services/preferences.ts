@@ -1,9 +1,9 @@
+import { AppBskyActorDefs, BskyAgent } from "@atproto/api";
 import { MMKV } from "react-native-mmkv";
-import { BskyAgent, AppBskyActorDefs } from "@atproto/api";
 
-import { createLogger } from '../utils/logger';
+import { createLogger } from "../utils/logger";
 
-const logger = createLogger('Preferences');
+const logger = createLogger("Preferences");
 
 const AT_PROTO_PREFERENCES_COLLECTION = "com.shadowsky.preferences";
 const AT_PROTO_PREFERENCES_RKEY = "self";
@@ -14,23 +14,23 @@ const AT_PROTO_PREFERENCES_RKEY = "self";
  * whether the user is on web, iOS, or Android.
  */
 const SYNCABLE_KEYS: ReadonlySet<keyof AppPreferences> = new Set([
-  'theme',
-  'defaultFeed',
-  'showNSFW',
-  'contentLanguages',
-  'postLanguages',
-  'autoPlayVideos',
-  'imageQuality',
-  'autoGenerateAltText',
-  'enableThreadSummaryPreGen',
-  'profileVisibility',
-  'allowMessages',
-  'allowMentions',
-  'hideFromSearch',
-  'filterContent',
-  'defaultPostLanguage',
-  'threadNumberingFormat',
-  'threadNumberingPosition',
+  "theme",
+  "defaultFeed",
+  "showNSFW",
+  "contentLanguages",
+  "postLanguages",
+  "autoPlayVideos",
+  "imageQuality",
+  "autoGenerateAltText",
+  "enableThreadSummaryPreGen",
+  "profileVisibility",
+  "allowMessages",
+  "allowMentions",
+  "hideFromSearch",
+  "filterContent",
+  "defaultPostLanguage",
+  "threadNumberingFormat",
+  "threadNumberingPosition",
 ]);
 
 // Device-specific keys that stay local (MMKV only) and are NOT in SYNCABLE_KEYS:
@@ -186,7 +186,7 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   enableHashtagSuggestions: false,
 
   // Tab Bar Customization
-  tabBarItems: ['home', 'search', 'notifications', 'profile'],
+  tabBarItems: ["home", "search", "feeds", "notifications", "profile"],
 };
 
 /**
@@ -200,7 +200,7 @@ const DEFAULT_PREFERENCES: AppPreferences = {
 let _mmkvPreferences: InstanceType<typeof MMKV> | null = null;
 function getMMKVPreferences() {
   if (!_mmkvPreferences) {
-    _mmkvPreferences = new MMKV({ id: 'shadowsky-preferences' });
+    _mmkvPreferences = new MMKV({ id: "shadowsky-preferences" });
   }
   return _mmkvPreferences;
 }
@@ -228,7 +228,7 @@ class PreferencesService {
         this.cache = DEFAULT_PREFERENCES;
       }
     } catch (error) {
-      logger.error('Failed to load preferences from MMKV:', error);
+      logger.error("Failed to load preferences from MMKV:", error);
       this.cache = DEFAULT_PREFERENCES;
     }
   }
@@ -244,16 +244,18 @@ class PreferencesService {
     }
 
     try {
-      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
-      const stored = await AsyncStorage.getItem('@shadowsky_preferences');
+      const AsyncStorage = (
+        await import("@react-native-async-storage/async-storage")
+      ).default;
+      const stored = await AsyncStorage.getItem("@shadowsky_preferences");
       if (stored) {
         getMMKVPreferences().set(PREFERENCES_KEY, stored);
         this._loadFromMMKV();
         // Clean up old key after successful migration
-        await AsyncStorage.removeItem('@shadowsky_preferences');
+        await AsyncStorage.removeItem("@shadowsky_preferences");
       }
     } catch (error) {
-      logger.error('Failed to migrate preferences from AsyncStorage:', error);
+      logger.error("Failed to migrate preferences from AsyncStorage:", error);
     }
   }
 
@@ -291,7 +293,7 @@ class PreferencesService {
       getMMKVPreferences().set(PREFERENCES_KEY, JSON.stringify(updated));
       this.cache = updated;
     } catch (error) {
-      logger.error('Failed to save preference:', error);
+      logger.error("Failed to save preference:", error);
       throw error;
     }
   }
@@ -306,7 +308,7 @@ class PreferencesService {
       getMMKVPreferences().set(PREFERENCES_KEY, JSON.stringify(updated));
       this.cache = updated;
     } catch (error) {
-      logger.error('Failed to save preferences:', error);
+      logger.error("Failed to save preferences:", error);
       throw error;
     }
   }
@@ -319,7 +321,7 @@ class PreferencesService {
       getMMKVPreferences().delete(PREFERENCES_KEY);
       this.cache = DEFAULT_PREFERENCES;
     } catch (error) {
-      logger.error('Failed to reset preferences:', error);
+      logger.error("Failed to reset preferences:", error);
       throw error;
     }
   }
@@ -379,10 +381,13 @@ class PreferencesService {
             record: record as unknown as Record<string, unknown>,
           });
         } catch (createError) {
-          logger.error('Failed to create preferences record on AT Proto:', createError);
+          logger.error(
+            "Failed to create preferences record on AT Proto:",
+            createError,
+          );
         }
       } else {
-        logger.error('Failed to push preferences to AT Proto:', error);
+        logger.error("Failed to push preferences to AT Proto:", error);
       }
     }
   }
@@ -408,7 +413,8 @@ class PreferencesService {
       });
 
       if (response.data.value) {
-        const record = response.data.value as unknown as SyncablePreferencesRecord;
+        const record = response.data
+          .value as unknown as SyncablePreferencesRecord;
         if (record.mobilePreferences) {
           serverPrefs = record.mobilePreferences;
         }
@@ -417,7 +423,7 @@ class PreferencesService {
       const errObj = error as Record<string, unknown>;
       // 400 = record doesn't exist yet, which is normal for new users
       if (errObj?.status !== 400) {
-        logger.error('Failed to fetch preferences from AT Proto:', error);
+        logger.error("Failed to fetch preferences from AT Proto:", error);
       }
       return null;
     }
@@ -430,8 +436,9 @@ class PreferencesService {
 
     for (const key of SYNCABLE_KEYS) {
       if (key in serverPrefs) {
-        (merged as Record<string, unknown>)[key] =
-          (serverPrefs as Record<string, unknown>)[key];
+        (merged as Record<string, unknown>)[key] = (
+          serverPrefs as Record<string, unknown>
+        )[key];
       }
     }
 
@@ -457,14 +464,17 @@ class PreferencesService {
    */
   private localToServerMutedWord(
     word: MutedWord,
-  ): Pick<AppBskyActorDefs.MutedWord, 'value' | 'targets' | 'actorTarget' | 'expiresAt'> {
+  ): Pick<
+    AppBskyActorDefs.MutedWord,
+    "value" | "targets" | "actorTarget" | "expiresAt"
+  > {
     const targets: AppBskyActorDefs.MutedWordTarget[] =
-      word.appliesTo === 'home' ? ['content'] : ['content', 'tag'];
+      word.appliesTo === "home" ? ["content"] : ["content", "tag"];
 
     return {
       value: word.value,
       targets,
-      actorTarget: 'all',
+      actorTarget: "all",
       expiresAt: word.expiresAt
         ? new Date(word.expiresAt).toISOString()
         : undefined,
@@ -475,10 +485,10 @@ class PreferencesService {
    * Convert an AT Proto muted word to our local MutedWord format.
    */
   private serverToLocalMutedWord(item: AppBskyActorDefs.MutedWord): MutedWord {
-    const hasTag = (item.targets || []).includes('tag');
-    const appliesTo: MutedWord['appliesTo'] = hasTag ? 'all' : 'home';
+    const hasTag = (item.targets || []).includes("tag");
+    const appliesTo: MutedWord["appliesTo"] = hasTag ? "all" : "home";
 
-    let duration: MutedWord['duration'] = 'forever';
+    let duration: MutedWord["duration"] = "forever";
     let expiresAt: number | undefined;
 
     if (item.expiresAt) {
@@ -487,13 +497,13 @@ class PreferencesService {
       const remaining = expiresAt - Date.now();
       if (remaining <= 0) {
         // Already expired — keep the data but mark as expired
-        duration = 'forever';
+        duration = "forever";
       } else if (remaining <= 25 * 60 * 60 * 1000) {
-        duration = '24h';
+        duration = "24h";
       } else if (remaining <= 8 * 24 * 60 * 60 * 1000) {
-        duration = '7d';
+        duration = "7d";
       } else {
-        duration = '30d';
+        duration = "30d";
       }
     }
 
@@ -513,14 +523,17 @@ class PreferencesService {
    * Server words are authoritative. Local-only words (not yet on server)
    * are pushed up. Returns the merged list, or null if fetch failed.
    */
-  async syncMutedWordsFromServer(agent: BskyAgent): Promise<MutedWord[] | null> {
+  async syncMutedWordsFromServer(
+    agent: BskyAgent,
+  ): Promise<MutedWord[] | null> {
     try {
       const response = await agent.app.bsky.actor.getPreferences();
       const preferences = response.data.preferences;
 
       const mutedWordsPref = preferences.find(
         (p: unknown) =>
-          (p as { $type?: string }).$type === 'app.bsky.actor.defs#mutedWordsPref',
+          (p as { $type?: string }).$type ===
+          "app.bsky.actor.defs#mutedWordsPref",
       ) as AppBskyActorDefs.MutedWordsPref | undefined;
 
       const serverWords: MutedWord[] = (mutedWordsPref?.items || []).map(
@@ -541,7 +554,7 @@ class PreferencesService {
         try {
           await agent.addMutedWord(this.localToServerMutedWord(word));
         } catch (err) {
-          logger.error('Failed to push local muted word to server:', err);
+          logger.error("Failed to push local muted word to server:", err);
         }
       }
 
@@ -549,11 +562,11 @@ class PreferencesService {
       const merged = [...serverWords, ...localOnly];
 
       // Persist to MMKV
-      await this.set('mutedWords', merged);
+      await this.set("mutedWords", merged);
 
       return merged;
     } catch (error) {
-      logger.error('Failed to sync muted words from server:', error);
+      logger.error("Failed to sync muted words from server:", error);
       return null;
     }
   }
@@ -568,14 +581,14 @@ class PreferencesService {
     // Save locally first (fast)
     const current = this.getSync();
     const updatedWords = [...(current.mutedWords || []), word];
-    await this.set('mutedWords', updatedWords);
+    await this.set("mutedWords", updatedWords);
 
     // Push to server
     if (agent) {
       try {
         await agent.addMutedWord(this.localToServerMutedWord(word));
       } catch (error) {
-        logger.error('Failed to add muted word to server:', error);
+        logger.error("Failed to add muted word to server:", error);
       }
     }
   }
@@ -588,25 +601,29 @@ class PreferencesService {
     agent: BskyAgent | null,
   ): Promise<void> {
     const current = this.getSync();
-    const wordToRemove = (current.mutedWords || []).find((w) => w.id === wordId);
-    const updatedWords = (current.mutedWords || []).filter((w) => w.id !== wordId);
+    const wordToRemove = (current.mutedWords || []).find(
+      (w) => w.id === wordId,
+    );
+    const updatedWords = (current.mutedWords || []).filter(
+      (w) => w.id !== wordId,
+    );
 
     // Remove locally first
-    await this.set('mutedWords', updatedWords);
+    await this.set("mutedWords", updatedWords);
 
     // Remove from server
     if (agent && wordToRemove) {
       try {
         const targets: AppBskyActorDefs.MutedWordTarget[] =
-          wordToRemove.appliesTo === 'home' ? ['content'] : ['content', 'tag'];
+          wordToRemove.appliesTo === "home" ? ["content"] : ["content", "tag"];
 
         await agent.removeMutedWord({
           value: wordToRemove.value,
           targets,
-          actorTarget: 'all',
+          actorTarget: "all",
         } as AppBskyActorDefs.MutedWord);
       } catch (error) {
-        logger.error('Failed to remove muted word from server:', error);
+        logger.error("Failed to remove muted word from server:", error);
       }
     }
   }
