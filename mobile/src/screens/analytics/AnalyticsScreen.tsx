@@ -392,16 +392,15 @@ export function AnalyticsScreen() {
                           />
                         )}
                       </View>
-                      {showLabel && (
-                        <Text
-                          style={[
-                            styles.barLabel,
-                            { color: colors.textTertiary },
-                          ]}
-                        >
-                          {dateLabel}
-                        </Text>
-                      )}
+                      <Text
+                        style={[
+                          styles.barLabel,
+                          { color: colors.textTertiary },
+                          !showLabel && { opacity: 0 },
+                        ]}
+                      >
+                        {showLabel ? dateLabel : " "}
+                      </Text>
                     </View>
                   );
                 })}
@@ -546,11 +545,15 @@ export function AnalyticsScreen() {
                           />
                         )}
                       </View>
-                      {showLabel && (
-                        <Text style={[styles.barLabel, { color: colors.textTertiary }]}>
-                          {dateLabel}
-                        </Text>
-                      )}
+                      <Text
+                        style={[
+                          styles.barLabel,
+                          { color: colors.textTertiary },
+                          !showLabel && { opacity: 0 },
+                        ]}
+                      >
+                        {showLabel ? dateLabel : " "}
+                      </Text>
                     </View>
                   );
                 })}
@@ -655,11 +658,15 @@ export function AnalyticsScreen() {
                       ]}
                     />
                   </View>
-                  {hour % 6 === 0 && (
-                    <Text style={[styles.hourlyLabel, { color: colors.textTertiary }]}>
-                      {hour}
-                    </Text>
-                  )}
+                  <Text
+                    style={[
+                      styles.hourlyLabel,
+                      { color: colors.textTertiary },
+                      hour % 6 !== 0 && { opacity: 0 },
+                    ]}
+                  >
+                    {hour % 6 === 0 ? hour : " "}
+                  </Text>
                 </View>
               );
             })}
