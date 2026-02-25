@@ -92,6 +92,10 @@ export default function HomeLayout() {
         />
         <Stack.Screen name="profile/[handle]" options={{ title: "Profile" }} />
         <Stack.Screen name="list/[listId]" options={{ title: "List" }} />
+        <Stack.Screen
+          name="starter-pack/[uri]"
+          options={{ title: "Starter Pack" }}
+        />
       </Stack>
     </ScreenErrorBoundary>
   );
