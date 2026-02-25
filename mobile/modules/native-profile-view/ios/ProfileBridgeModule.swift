@@ -32,8 +32,8 @@ public class ProfileBridgeModule: Module {
                 let profileData = try SerializedProfile.decode(from: jsonData)
 
                 self.profileDataLock.lock()
+                defer { self.profileDataLock.unlock() }
                 self.currentProfileData = profileData
-                self.profileDataLock.unlock()
 
                 // Post notification for SwiftUI views to observe
                 NotificationCenter.default.post(
@@ -56,8 +56,8 @@ public class ProfileBridgeModule: Module {
                 let packs = try SerializedStarterPack.decodeArray(from: jsonData)
 
                 self.profileDataLock.lock()
+                defer { self.profileDataLock.unlock() }
                 self.currentStarterPacks = packs
-                self.profileDataLock.unlock()
 
                 NotificationCenter.default.post(
                     name: ProfileBridgeModule.starterPacksUpdatedNotification,
@@ -76,8 +76,8 @@ public class ProfileBridgeModule: Module {
                 let pinnedPost = try SerializedPinnedPost.decode(from: jsonData)
 
                 self.profileDataLock.lock()
+                defer { self.profileDataLock.unlock() }
                 self.currentPinnedPost = pinnedPost
-                self.profileDataLock.unlock()
 
                 NotificationCenter.default.post(
                     name: ProfileBridgeModule.pinnedPostUpdatedNotification,
@@ -93,10 +93,10 @@ public class ProfileBridgeModule: Module {
         // Clear all profile data
         Function("clearProfileData") {
             self.profileDataLock.lock()
+            defer { self.profileDataLock.unlock() }
             self.currentProfileData = nil
             self.currentStarterPacks = nil
             self.currentPinnedPost = nil
-            self.profileDataLock.unlock()
 
             NotificationCenter.default.post(
                 name: ProfileBridgeModule.profileDataClearedNotification,

@@ -461,6 +461,10 @@ class ProfileState: ObservableObject {
         }
     }
 
+    deinit {
+        stopObserving()
+    }
+
     func stopObserving() {
         [profileObserver, clearObserver, starterPacksObserver, pinnedPostObserver].forEach { observer in
             if let observer = observer {

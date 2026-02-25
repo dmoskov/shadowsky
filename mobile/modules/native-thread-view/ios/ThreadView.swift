@@ -502,16 +502,23 @@ class ThreadState: ObservableObject {
         }
     }
 
+    deinit {
+        stopObserving()
+    }
+
     func stopObserving() {
         cancelSpotlightTimer()
         if let observer = threadDataObserver {
             NotificationCenter.default.removeObserver(observer)
+            threadDataObserver = nil
         }
         if let observer = incrementalUpdateObserver {
             NotificationCenter.default.removeObserver(observer)
+            incrementalUpdateObserver = nil
         }
         if let observer = clearDataObserver {
             NotificationCenter.default.removeObserver(observer)
+            clearDataObserver = nil
         }
     }
 

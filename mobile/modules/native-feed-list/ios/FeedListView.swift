@@ -377,18 +377,26 @@ class FeedState: ObservableObject {
         }
     }
 
+    deinit {
+        stopObserving()
+    }
+
     func stopObserving() {
         if let observer = feedDataObserver {
             NotificationCenter.default.removeObserver(observer)
+            feedDataObserver = nil
         }
         if let observer = incrementalUpdateObserver {
             NotificationCenter.default.removeObserver(observer)
+            incrementalUpdateObserver = nil
         }
         if let observer = clearDataObserver {
             NotificationCenter.default.removeObserver(observer)
+            clearDataObserver = nil
         }
         if let observer = decodeErrorObserver {
             NotificationCenter.default.removeObserver(observer)
+            decodeErrorObserver = nil
         }
     }
 

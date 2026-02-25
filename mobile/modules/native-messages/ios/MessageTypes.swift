@@ -127,18 +127,26 @@ class MessagesDataState: ObservableObject {
         }
     }
 
+    deinit {
+        stopObserving()
+    }
+
     func stopObserving() {
         if let observer = conversationsObserver {
             NotificationCenter.default.removeObserver(observer)
+            conversationsObserver = nil
         }
         if let observer = messagesObserver {
             NotificationCenter.default.removeObserver(observer)
+            messagesObserver = nil
         }
         if let observer = searchResultsObserver {
             NotificationCenter.default.removeObserver(observer)
+            searchResultsObserver = nil
         }
         if let observer = clearObserver {
             NotificationCenter.default.removeObserver(observer)
+            clearObserver = nil
         }
     }
 
@@ -208,13 +216,25 @@ class MessagesDataState: ObservableObject {
 // MARK: - Time Formatting
 
 enum MessageTimeFormatter {
-    static func formatRelativeTime(from isoString: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    private static let iso8601WithFractional: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+    private static let iso8601Fallback = ISO8601DateFormatter()
+    private static let dateOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d"
+        return f
+    }()
 
-        guard let date = formatter.date(from: isoString) ?? ISO8601DateFormatter().date(from: isoString) else {
-            return ""
-        }
+    private static func parseDate(from isoString: String) -> Date? {
+        iso8601WithFractional.date(from: isoString)
+            ?? iso8601Fallback.date(from: isoString)
+    }
+
+    static func formatRelativeTime(from isoString: String) -> String {
+        guard let date = parseDate(from: isoString) else { return "" }
 
         let interval = Date().timeIntervalSince(date)
 
@@ -223,18 +243,11 @@ enum MessageTimeFormatter {
         if interval < 86400 { return "\(Int(interval / 3600))h ago" }
         if interval < 604800 { return "\(Int(interval / 86400))d ago" }
 
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMM d"
-        return dateFormatter.string(from: date)
+        return dateOnlyFormatter.string(from: date)
     }
 
     static func formatMessageTime(from isoString: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-        guard let date = formatter.date(from: isoString) ?? ISO8601DateFormatter().date(from: isoString) else {
-            return ""
-        }
+        guard let date = parseDate(from: isoString) else { return "" }
 
         let dateFormatter = DateFormatter()
         let calendar = Calendar.current

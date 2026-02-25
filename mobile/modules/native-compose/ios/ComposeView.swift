@@ -68,7 +68,16 @@ struct ComposeView: View {
     let onMentionSearch: (String) -> Void
     let onThreadImagePicker: (Int) -> Void
 
-    @Environment(\.safeAreaInsets) private var safeAreaInsets
+    /// Bottom safe area inset read from the key window so keyboard offset
+    /// calculations work correctly on devices with a home indicator.
+    private var bottomSafeAreaInset: CGFloat {
+        UIApplication.shared
+            .connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }?
+            .safeAreaInsets.bottom ?? 0
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -119,7 +128,7 @@ struct ComposeView: View {
         }
         // Push the toolbar and mention suggestions above the keyboard
         .padding(.bottom, keyboardObserver.keyboardHeight > 0
-            ? keyboardObserver.keyboardHeight - safeAreaInsets.bottom
+            ? keyboardObserver.keyboardHeight - bottomSafeAreaInset
             : 0)
         .background(Color(UIColor.systemBackground))
         .ignoresSafeArea(.keyboard)
@@ -430,19 +439,6 @@ struct ComposeView: View {
 extension Array {
     subscript(safe index: Int) -> Element? {
         indices.contains(index) ? self[index] : nil
-    }
-}
-
-// MARK: - SafeAreaInsets Environment Key
-
-private struct SafeAreaInsetsKey: EnvironmentKey {
-    static let defaultValue: EdgeInsets = EdgeInsets()
-}
-
-extension EnvironmentValues {
-    var safeAreaInsets: EdgeInsets {
-        get { self[SafeAreaInsetsKey.self] }
-        set { self[SafeAreaInsetsKey.self] = newValue }
     }
 }
 

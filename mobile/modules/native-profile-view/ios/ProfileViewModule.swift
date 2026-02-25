@@ -181,7 +181,7 @@ class ProfileViewWrapper: ExpoView {
         hostingController.view.setNeedsLayout()
         hostingController.view.layoutIfNeeded()
 
-        let width = bounds.width > 0 ? bounds.width : UIScreen.main.bounds.width
+        let width = bounds.width > 0 ? bounds.width : (window?.bounds.width ?? 390)
         let fittingSize = hostingController.sizeThatFits(in: CGSize(width: width, height: .greatestFiniteMagnitude))
 
         if fittingSize.height > 0 && abs(fittingSize.height - currentHeight) > 1 {
@@ -229,7 +229,7 @@ class ProfileViewWrapper: ExpoView {
     }
 
     override var intrinsicContentSize: CGSize {
-        let width = bounds.width > 0 ? bounds.width : UIScreen.main.bounds.width
+        let width = bounds.width > 0 ? bounds.width : (window?.bounds.width ?? 390)
         return CGSize(width: width, height: currentHeight)
     }
 

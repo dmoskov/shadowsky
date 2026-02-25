@@ -76,16 +76,8 @@ class RichTextViewWrapper: ExpoView {
         }
     }
 
-    private func updateView() {
-        // Remove old hosting controller
-        if let oldController = hostingController {
-            oldController.view.removeFromSuperview()
-            oldController.willMove(toParent: nil)
-            oldController.removeFromParent()
-        }
-
-        // Create SwiftUI view
-        let richTextView = RichTextView(
+    private func createRichTextView() -> RichTextView {
+        RichTextView(
             text: text,
             facets: facets,
             onMentionTap: { [weak self] handle, did in
@@ -105,20 +97,43 @@ class RichTextViewWrapper: ExpoView {
                 ])
             }
         )
+    }
 
-        // Create hosting controller
-        let controller = UIHostingController(rootView: richTextView)
-        controller.view.backgroundColor = UIColor.clear
-        self.hostingController = controller
+    private func updateView() {
+        let richTextView = createRichTextView()
 
-        // Add to view hierarchy
-        addSubview(controller.view)
-        controller.view.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            controller.view.topAnchor.constraint(equalTo: topAnchor),
-            controller.view.leadingAnchor.constraint(equalTo: leadingAnchor),
-            controller.view.trailingAnchor.constraint(equalTo: trailingAnchor),
-            controller.view.bottomAnchor.constraint(equalTo: bottomAnchor)
-        ])
+        if let existingController = hostingController {
+            // Reuse existing hosting controller — avoids expensive teardown/rebuild
+            existingController.rootView = richTextView
+        } else {
+            // First-time setup: create hosting controller and add to view hierarchy
+            let controller = UIHostingController(rootView: richTextView)
+            controller.view.backgroundColor = UIColor.clear
+            self.hostingController = controller
+
+            addSubview(controller.view)
+            controller.view.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                controller.view.topAnchor.constraint(equalTo: topAnchor),
+                controller.view.leadingAnchor.constraint(equalTo: leadingAnchor),
+                controller.view.trailingAnchor.constraint(equalTo: trailingAnchor),
+                controller.view.bottomAnchor.constraint(equalTo: bottomAnchor)
+            ])
+
+            // Properly attach as child view controller
+            if let parentVC = findViewController() {
+                parentVC.addChild(controller)
+                controller.didMove(toParent: parentVC)
+            }
+        }
+    }
+
+    private func findViewController() -> UIViewController? {
+        var responder: UIResponder? = self
+        while let next = responder?.next {
+            if let vc = next as? UIViewController { return vc }
+            responder = next
+        }
+        return nil
     }
 }
