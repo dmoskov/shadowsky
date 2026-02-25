@@ -497,8 +497,9 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
           {/* Content */}
           {isLoading && debouncedQuery ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={styles.loadingText}>Searching...</Text>
+              <PostCardSkeleton />
+              <PostCardSkeleton />
+              <PostCardSkeleton />
             </View>
           ) : activeTab === "people" ? (
             <FlatList

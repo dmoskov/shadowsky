@@ -20,6 +20,7 @@ import { useProfile } from "../../hooks/api/useProfile";
 import { useActorStarterPacks } from "../../hooks/api/useStarterPacks";
 import { useBookmarks, useBookmarkCount } from "../../hooks/api/useBookmarks";
 import { useTheme } from "../../contexts/ThemeContext";
+import { ProfileSkeleton } from "../../components/ProfileSkeleton";
 import { AuthorFeedFilter } from "../../services/atproto/feeds";
 import { triggerHaptic } from "../../utils/haptics";
 
@@ -155,11 +156,7 @@ export function MyProfileScreen({
 
   const renderHeader = () => {
     if (isLoadingProfile || !profile) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      );
+      return <ProfileSkeleton />;
     }
 
     return (
@@ -277,11 +274,7 @@ export function MyProfileScreen({
 
   const renderEmpty = () => {
     if (isLoading) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      );
+      return <ProfileSkeleton />;
     }
 
     const emptyMessage = activeTab === "likes" ? "No likes yet" : "No posts yet";

@@ -146,7 +146,16 @@ export function StarterPackDetailScreen({
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <SkeletonShimmer width="100%" height={200} borderRadius={12} />
+        <View style={{ marginTop: 16 }}>
+          <SkeletonShimmer width={200} height={24} borderRadius={6} />
+        </View>
+        <View style={{ marginTop: 12 }}>
+          <SkeletonShimmer width="80%" height={16} borderRadius={4} />
+        </View>
+        <View style={{ marginTop: 16 }}>
+          <SkeletonShimmer width="100%" height={60} borderRadius={8} />
+        </View>
       </View>
     );
   }
