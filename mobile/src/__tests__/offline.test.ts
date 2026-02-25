@@ -241,7 +241,7 @@ describe('Offline behavior', () => {
         details: null,
       });
 
-      let offlineState = await NetInfo.fetch();
+      const offlineState = await NetInfo.fetch();
       expect(offlineState.isConnected).toBe(false);
 
       // Come back online

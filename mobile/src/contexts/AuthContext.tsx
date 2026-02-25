@@ -86,18 +86,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const signOut = useCallback(async () => {
-    try {
-      addBreadcrumb("auth", "User signed out");
-      clearTimers();
-      mutationQueue.destroy();
-      clearQueryCache();
-      preferencesService.clearCache();
-      await authSignOut();
-      setSession(null);
-      clearUser();
-    } catch (error) {
-      throw error;
-    }
+    addBreadcrumb("auth", "User signed out");
+    clearTimers();
+    mutationQueue.destroy();
+    clearQueryCache();
+    preferencesService.clearCache();
+    await authSignOut();
+    setSession(null);
+    clearUser();
   }, [clearTimers]);
 
   const checkSessionValidity = useCallback(async () => {
@@ -300,8 +296,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Set user context for error tracking
       await setUser(newSession.did);
       addBreadcrumb("auth", "User signed in with password");
-    } catch (error) {
-      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -316,8 +310,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       await setUser(newSession.did);
       addBreadcrumb("auth", "User signed in with OAuth");
-    } catch (error) {
-      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -341,24 +333,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Update user context for error tracking
       await setUser(newSession.did);
       addBreadcrumb("auth", "User switched account");
-    } catch (error) {
-      throw error;
     } finally {
       setIsLoading(false);
     }
   }, [accounts]);
 
   const removeAccount = useCallback(async (did: string) => {
-    try {
-      await removeAccountFromStorage(did);
-      await loadAccounts();
+    await removeAccountFromStorage(did);
+    await loadAccounts();
 
-      const currentSession = await getCurrentSession();
-      if (!currentSession || currentSession.did === did) {
-        setSession(null);
-      }
-    } catch (error) {
-      throw error;
+    const currentSession = await getCurrentSession();
+    if (!currentSession || currentSession.did === did) {
+      setSession(null);
     }
   }, [loadAccounts]);
 

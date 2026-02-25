@@ -188,14 +188,10 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
 
   const handleSaveList = useCallback(
     async (updates: {name: string; description: string}) => {
-      try {
-        await updateList({listUri, updates});
-        Alert.alert('Success', 'List updated successfully');
-        // Refetch the list data to show updated info
-        refetch();
-      } catch (error) {
-        throw error; // Let the modal handle the error display
-      }
+      await updateList({listUri, updates});
+      Alert.alert('Success', 'List updated successfully');
+      // Refetch the list data to show updated info
+      refetch();
     },
     [updateList, listUri, refetch]
   );

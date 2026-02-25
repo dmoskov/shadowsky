@@ -29,13 +29,12 @@ export default function ComposeRoute() {
   useEffect(() => {
     if (!hasImages || Platform.OS !== "ios") return;
 
-    let mod: typeof import("../../modules/share-intent") | null = null;
+    let mod: typeof import("../../modules/share-intent");
     try {
       mod = require("../../modules/share-intent");
     } catch {
       return;
     }
-    if (!mod) return;
 
     const content = mod.getSharedContent();
     if (content?.images && content.images.length > 0) {
