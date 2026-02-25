@@ -126,3 +126,55 @@ maestro stop && maestro start
 See `.github/workflows/mobile-tests.yml` for the E2E job configuration.
 Unauthenticated tests run on every PR. Authenticated tests run when
 `MAESTRO_TEST_HANDLE` and `MAESTRO_TEST_APP_PASSWORD` secrets are configured.
+
+### Setting Up Authenticated E2E Tests in CI
+
+The authenticated Maestro tests (feed_scroll, profile_view, tab_navigation) require
+two GitHub repository secrets. Without these, the authenticated test step is skipped.
+
+#### Step 1: Create a Dedicated Test Account
+
+1. Go to [bsky.app](https://bsky.app) and create a new account for testing
+   - Suggested handle: `shadowsky-test.bsky.social`
+   - Use a dedicated email address for the test account
+2. Complete onboarding (follow at least one account so the feed has content)
+
+#### Step 2: Generate an App Password
+
+1. Log in to the test account at [bsky.app](https://bsky.app)
+2. Go to **Settings > App Passwords**
+3. Click **Add App Password**, name it `maestro-ci`
+4. Copy the generated password (format: `xxxx-xxxx-xxxx-xxxx`)
+
+#### Step 3: Add GitHub Repository Secrets
+
+Using the GitHub CLI:
+
+```bash
+gh secret set MAESTRO_TEST_HANDLE --repo dmoskov/shadowsky --body "shadowsky-test.bsky.social"
+gh secret set MAESTRO_TEST_APP_PASSWORD --repo dmoskov/shadowsky --body "xxxx-xxxx-xxxx-xxxx"
+```
+
+Or via the GitHub web UI:
+
+1. Go to [Repository Settings > Secrets and variables > Actions](https://github.com/dmoskov/shadowsky/settings/secrets/actions)
+2. Click **New repository secret**
+3. Add `MAESTRO_TEST_HANDLE` with the test account handle
+4. Add `MAESTRO_TEST_APP_PASSWORD` with the app password
+
+#### Step 4: Verify
+
+Push a commit touching `mobile/` to trigger the workflow. The "Run Maestro E2E tests
+(authenticated)" step should now execute instead of being skipped.
+
+### How the Gating Works
+
+In `mobile-tests.yml`, the authenticated step has this condition:
+
+```yaml
+if: steps.check-devices.outputs.device_count != '0' && env.MAESTRO_TEST_HANDLE != ''
+```
+
+When `MAESTRO_TEST_HANDLE` is not set (empty string), the entire step is skipped.
+The secrets are mapped to environment variables that Maestro reads via `${MAESTRO_TEST_HANDLE}`
+and `${MAESTRO_TEST_APP_PASSWORD}` in each test YAML's `env:` block.

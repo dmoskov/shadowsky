@@ -28,7 +28,8 @@ env:
 # Wait for home feed to load
 - waitForAnimationToEnd:
     timeout: 30000
-- assertVisible: "Home tab"
+- assertVisible:
+    text: "Home tab"
     timeout: 30000
 
 # Verify all 5 tabs are visible in the tab bar
