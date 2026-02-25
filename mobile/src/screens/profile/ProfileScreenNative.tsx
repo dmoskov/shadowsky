@@ -85,6 +85,7 @@ function ProfileScreenNativeIOS({
   const [showAddToList, setShowAddToList] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const handleCloseReportModal = useCallback(() => setShowReportModal(false), []);
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   useSpotlightProfile(
@@ -698,7 +699,7 @@ function ProfileScreenNativeIOS({
       {profile && showReportModal && (
         <ReportModal
           visible={showReportModal}
-          onClose={() => setShowReportModal(false)}
+          onClose={handleCloseReportModal}
           reportType="account"
           subjectUri={`at://${profile.did}/app.bsky.actor.profile/self`}
           subjectDid={profile.did}

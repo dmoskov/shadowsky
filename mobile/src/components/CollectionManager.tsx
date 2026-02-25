@@ -23,7 +23,7 @@ interface CollectionManagerProps {
   onClose?: () => void;
 }
 
-export function CollectionManager({
+function CollectionManagerInner({
   selectedCollectionId,
   onSelectCollection,
   onClose,
@@ -537,3 +537,5 @@ function createStyles(colors: any) {
     },
   });
 }
+
+export const CollectionManager = React.memo(CollectionManagerInner);

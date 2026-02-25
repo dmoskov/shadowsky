@@ -103,7 +103,7 @@ const sidebarItemStyles = StyleSheet.create({
 
 export { SIDEBAR_WIDTH };
 
-export function IPadSidebar() {
+function IPadSidebarInner() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
@@ -310,3 +310,5 @@ function createStyles(colors: any) {
     },
   });
 }
+
+export const IPadSidebar = React.memo(IPadSidebarInner);

@@ -25,7 +25,7 @@ interface LanguagePickerProps {
   multiSelect?: boolean;
 }
 
-export function LanguagePicker({
+function LanguagePickerInner({
   visible,
   onClose,
   selectedLanguages,
@@ -335,3 +335,17 @@ function createStyles(colors: any) {
     },
   });
 }
+
+export const LanguagePicker = React.memo(LanguagePickerInner, (prevProps, nextProps) => {
+  if (prevProps.visible !== nextProps.visible) return false;
+  if (prevProps.multiSelect !== nextProps.multiSelect) return false;
+  if (prevProps.onClose !== nextProps.onClose) return false;
+  if (prevProps.onSelectLanguages !== nextProps.onSelectLanguages) return false;
+  if (prevProps.selectedLanguages !== nextProps.selectedLanguages) {
+    if (prevProps.selectedLanguages.length !== nextProps.selectedLanguages.length) return false;
+    for (let i = 0; i < prevProps.selectedLanguages.length; i++) {
+      if (prevProps.selectedLanguages[i] !== nextProps.selectedLanguages[i]) return false;
+    }
+  }
+  return true;
+});

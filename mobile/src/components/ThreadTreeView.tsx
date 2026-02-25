@@ -103,7 +103,7 @@ function countDescendants(node: ThreadNode): number {
   return count;
 }
 
-export function ThreadTreeView({
+function ThreadTreeViewInner({
   rootPost,
   replies,
   onPressProfile,
@@ -347,3 +347,29 @@ function createStyles(colors: any) {
     },
   });
 }
+
+export const ThreadTreeView = React.memo(ThreadTreeViewInner, (prevProps, nextProps) => {
+  if (prevProps.rootPost !== nextProps.rootPost) {
+    if (prevProps.rootPost.post.uri !== nextProps.rootPost.post.uri) return false;
+    if (prevProps.rootPost.post.likeCount !== nextProps.rootPost.post.likeCount) return false;
+    if (prevProps.rootPost.post.repostCount !== nextProps.rootPost.post.repostCount) return false;
+  }
+  if (prevProps.replies !== nextProps.replies) {
+    if (prevProps.replies.length !== nextProps.replies.length) return false;
+    for (let i = 0; i < prevProps.replies.length; i++) {
+      if (prevProps.replies[i].post.uri !== nextProps.replies[i].post.uri) return false;
+    }
+  }
+  if (prevProps.onPressProfile !== nextProps.onPressProfile) return false;
+  if (prevProps.onLike !== nextProps.onLike) return false;
+  if (prevProps.onRepost !== nextProps.onRepost) return false;
+  if (prevProps.onReply !== nextProps.onReply) return false;
+  if (prevProps.onBookmark !== nextProps.onBookmark) return false;
+  if (prevProps.isBookmarked !== nextProps.isBookmarked) return false;
+  if (prevProps.onMentionPress !== nextProps.onMentionPress) return false;
+  if (prevProps.onHashtagPress !== nextProps.onHashtagPress) return false;
+  if (prevProps.onPressLikeCount !== nextProps.onPressLikeCount) return false;
+  if (prevProps.onPressRepostCount !== nextProps.onPressRepostCount) return false;
+  if (prevProps.onPressQuoteCount !== nextProps.onPressQuoteCount) return false;
+  return true;
+});

@@ -19,42 +19,27 @@ import { useTranslation } from "../../hooks/useTranslation";
 
 type LoginMode = "oauth" | "app-password";
 
-function AuthExplainer({ colors }: { colors: any }) {
+function AuthExplainer({ styles }: { styles: any }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <View style={{ marginBottom: 20 }}>
+    <View style={styles.explainerContainer}>
       <TouchableOpacity
         onPress={() => setIsOpen(!isOpen)}
-        style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+        style={styles.explainerToggle}
       >
-        <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
+        <Text style={styles.explainerToggleText}>
           {isOpen ? "\u25BC" : "\u25B6"} Which sign-in method should I use?
         </Text>
       </TouchableOpacity>
 
       {isOpen && (
-        <View
-          style={{
-            marginTop: 12,
-            backgroundColor: colors.surface,
-            borderRadius: 10,
-            padding: 14,
-            gap: 12,
-          }}
-        >
+        <View style={styles.explainerContent}>
           <View>
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 13,
-                fontWeight: "600",
-                marginBottom: 4,
-              }}
-            >
+            <Text style={styles.explainerMethodTitle}>
               OAuth (Recommended)
             </Text>
-            <Text style={{ color: colors.textSecondary, fontSize: 12, lineHeight: 18 }}>
+            <Text style={styles.explainerMethodDescription}>
               Redirects you to Bluesky to authorize access. More secure because
               you never share your password. However, OAuth does not currently
               support direct messages — granular permission scopes are still
@@ -62,17 +47,10 @@ function AuthExplainer({ colors }: { colors: any }) {
             </Text>
           </View>
           <View>
-            <Text
-              style={{
-                color: colors.text,
-                fontSize: 13,
-                fontWeight: "600",
-                marginBottom: 4,
-              }}
-            >
+            <Text style={styles.explainerMethodTitle}>
               App Password (Required for DMs)
             </Text>
-            <Text style={{ color: colors.textSecondary, fontSize: 12, lineHeight: 18 }}>
+            <Text style={styles.explainerMethodDescription}>
               Use an app password if you need access to direct messages. App
               passwords provide full account access but are separate from your
               main password, so you can revoke them anytime. Create one at
@@ -209,7 +187,7 @@ export function LandingScreen() {
           </View>
 
           {/* Auth Method Explainer */}
-          <AuthExplainer colors={colors} />
+          <AuthExplainer styles={styles} />
 
           {/* OAuth Login Form */}
           {loginMode === "oauth" && (
@@ -538,6 +516,36 @@ function createStyles(colors: any) {
   link: {
     color: colors.info,
     textDecorationLine: "underline",
+  },
+  explainerContainer: {
+    marginBottom: 20,
+  },
+  explainerToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  explainerToggleText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+  },
+  explainerContent: {
+    marginTop: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    padding: 14,
+    gap: 12,
+  },
+  explainerMethodTitle: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  explainerMethodDescription: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    lineHeight: 18,
   },
   });
 }
