@@ -167,7 +167,7 @@ struct NotificationItemView: View {
                     onHashtagTap: { tag in onHashtagPress(tag) },
                     onLinkTap: { uri in onLinkPress(uri) }
                 )
-                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding(12)
@@ -227,7 +227,7 @@ struct NotificationItemView: View {
                     .font(.subheadline)
                     .foregroundColor(Color(UIColor.label))
                     .lineLimit(4)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             // Images

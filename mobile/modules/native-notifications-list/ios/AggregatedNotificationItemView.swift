@@ -149,7 +149,7 @@ struct AggregatedNotificationItemView: View {
                     .font(.subheadline)
                     .foregroundColor(Color(UIColor.label))
                     .lineLimit(3)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             // Images

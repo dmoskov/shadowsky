@@ -259,7 +259,7 @@ struct ProfileHeaderView: View {
             .foregroundColor(.primary)
             .multilineTextAlignment(.center)
             .lineLimit(nil)
-            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .center)
             .accessibilityLabel("Bio: \(description)")
     }
 
