@@ -61,6 +61,8 @@ const restApi = new RestApi(mainStack, 'RestApi', {
       'https://main.shadowsky.io',
       'https://shadowsky.io',
       'https://www.shadowsky.io',
+      'https://asophodel.is',
+      'https://www.asophodel.is',
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:5175',
