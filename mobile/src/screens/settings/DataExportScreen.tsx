@@ -9,7 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
-import { ChevronLeft } from "lucide-react-native";
+import { ChevronLeftIcon } from '../../../components/icons';
 
 interface DataExportScreenProps {
   navigation: {
@@ -48,7 +48,7 @@ export function DataExportScreen({ navigation }: DataExportScreenProps) {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <ChevronLeft size={24} color={colors.text} />
+          <ChevronLeftIcon size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Data Export & Import</Text>
         <View style={styles.headerSpacer} />

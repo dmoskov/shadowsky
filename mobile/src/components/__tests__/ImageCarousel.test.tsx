@@ -30,10 +30,12 @@ jest.mock('../../utils/haptics', () => ({
   triggerHaptic: jest.fn(),
 }));
 
-jest.mock('lucide-react-native', () => {
+jest.mock('../icons', () => {
   const {View} = require('react-native');
+  const actual = jest.requireActual('../icons');
   return {
-    Download: (props: any) => <View testID="download-icon" {...props} />,
+    ...actual,
+    DownloadIcon: (props: any) => <View testID="download-icon" {...props} />,
   };
 });
 

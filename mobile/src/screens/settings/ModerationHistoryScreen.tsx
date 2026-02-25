@@ -10,7 +10,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import {useTheme} from '../../contexts/ThemeContext';
-import {ChevronLeft, Ban, VolumeX, Flag, Trash2} from 'lucide-react-native';
+import { ChevronLeftIcon, BanIcon, VolumeXIcon, FlagIcon, TrashIcon } from '../../../components/icons';
 import {formatDistanceToNow} from 'date-fns';
 import {
   getAllEntries,
@@ -99,7 +99,7 @@ export function ModerationHistoryScreen({
           onPress={() => navigation.goBack()}
           accessibilityRole="button"
           accessibilityLabel="Go back">
-          <ChevronLeft size={24} color={colors.text} />
+          <ChevronLeftIcon size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Moderation History</Text>
         {hasEntries ? (
@@ -108,7 +108,7 @@ export function ModerationHistoryScreen({
             onPress={handleClearAll}
             accessibilityRole="button"
             accessibilityLabel="Clear all history">
-            <Trash2 size={20} color={colors.danger} />
+            <TrashIcon size={20} color={colors.danger} />
           </TouchableOpacity>
         ) : (
           <View style={styles.headerSpacer} />
@@ -232,7 +232,7 @@ function HistoryEntryRow({
     return (
       <View style={styles.row}>
         <View style={[styles.iconContainer, {backgroundColor: '#fee2e2'}]}>
-          <Ban size={16} color="#dc2626" />
+          <BanIcon size={16} color="#dc2626" />
         </View>
         <View style={styles.entryContent}>
           <View style={styles.entryHeader}>
@@ -278,7 +278,7 @@ function HistoryEntryRow({
     return (
       <View style={styles.row}>
         <View style={[styles.iconContainer, {backgroundColor: '#fef3c7'}]}>
-          <VolumeX size={16} color="#d97706" />
+          <VolumeXIcon size={16} color="#d97706" />
         </View>
         <View style={styles.entryContent}>
           <View style={styles.entryHeader}>
@@ -323,7 +323,7 @@ function HistoryEntryRow({
   return (
     <View style={styles.row}>
       <View style={[styles.iconContainer, {backgroundColor: '#dbeafe'}]}>
-        <Flag size={16} color="#2563eb" />
+        <FlagIcon size={16} color="#2563eb" />
       </View>
       <View style={styles.entryContent}>
         <View style={styles.entryHeader}>

@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ViewStyle,
 } from "react-native";
-import { EyeOff, Eye, AlertTriangle } from "lucide-react-native";
+import { EyeOffIcon, EyeIcon, AlertTriangleIcon } from './icons';
 import { useTheme } from "../contexts/ThemeContext";
 
 interface ContentLabelWarningProps {
@@ -42,7 +42,7 @@ export function ContentLabelWarning({
       labelValues.includes("sexual") ||
       labelValues.includes("nudity")
     ) {
-      return <EyeOff size={24} color={colors.text} />;
+      return <EyeOffIcon size={24} color={colors.text} />;
     }
 
     if (
@@ -50,10 +50,10 @@ export function ContentLabelWarning({
       labelValues.includes("gore") ||
       labelValues.includes("nsfl")
     ) {
-      return <AlertTriangle size={24} color={colors.text} />;
+      return <AlertTriangleIcon size={24} color={colors.text} />;
     }
 
-    return <Eye size={24} color={colors.text} />;
+    return <EyeIcon size={24} color={colors.text} />;
   };
 
   // Get background color based on severity
@@ -106,7 +106,7 @@ export function ContentLabelWarning({
             accessibilityLabel={`Show ${warningText}`}
             accessibilityHint="Tap to reveal sensitive content"
           >
-            <Eye size={16} color={colors.text} />
+            <EyeIcon size={16} color={colors.text} />
             <Text style={styles.buttonText}>Show Content</Text>
           </TouchableOpacity>
 

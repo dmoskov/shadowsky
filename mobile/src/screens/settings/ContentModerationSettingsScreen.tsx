@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useModeration, LabelType, LabelPreference } from "../../contexts/ModerationContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { ChevronLeft } from "lucide-react-native";
+import { ChevronLeftIcon } from '../../../components/icons';
 
 
 import { createLogger } from '../../utils/logger';
@@ -154,7 +154,7 @@ export function ContentModerationSettingsScreen({
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <ChevronLeft size={24} color={colors.text} />
+          <ChevronLeftIcon size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Content Moderation</Text>
         <TouchableOpacity

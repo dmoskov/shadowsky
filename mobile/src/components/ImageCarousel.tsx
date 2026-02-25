@@ -13,7 +13,7 @@ import {
   Share,
 } from 'react-native';
 import {Image} from 'expo-image';
-import {Download} from 'lucide-react-native';
+import { DownloadIcon } from './icons';
 import {ImageCarouselItem} from './ImageCarouselItem';
 import Animated, {FadeIn, FadeOut} from 'react-native-reanimated';
 import { useTheme } from "../contexts/ThemeContext";
@@ -228,7 +228,7 @@ export function ImageCarousel({
                 accessibilityRole="button"
                 accessibilityLabel="Save image to gallery"
                 style={[styles.bottomButton, {opacity: isSaving ? 0.5 : 1}]}>
-                <Download size={20} color={colors.text} />
+                <DownloadIcon size={20} color={colors.text} />
               </TouchableOpacity>
 
               {/* Share button */}

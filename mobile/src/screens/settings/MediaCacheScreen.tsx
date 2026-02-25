@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
-import { ChevronLeft } from "lucide-react-native";
+import { ChevronLeftIcon } from '../../../components/icons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface MediaCacheScreenProps {
@@ -176,7 +176,7 @@ export function MediaCacheScreen({ navigation }: MediaCacheScreenProps) {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <ChevronLeft size={24} color={colors.text} />
+          <ChevronLeftIcon size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Media Cache</Text>
         <View style={styles.headerSpacer} />

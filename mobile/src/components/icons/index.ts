@@ -61,3 +61,12 @@ export {TranslateIcon} from './TranslateIcon';
 
 // AI
 export {SparklesIcon} from './SparklesIcon';
+
+// Lucide replacements
+export {ChevronLeftIcon} from './ChevronLeftIcon';
+export {EyeIcon} from './EyeIcon';
+export {EyeOffIcon} from './EyeOffIcon';
+export {BanIcon} from './BanIcon';
+export {VolumeXIcon} from './VolumeXIcon';
+export {FlagIcon} from './FlagIcon';
+export {DownloadIcon} from './DownloadIcon';

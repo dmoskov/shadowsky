@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { usePreferences } from "../../contexts/PreferencesContext";
-import { ChevronLeft } from "lucide-react-native";
+import { ChevronLeftIcon } from '../../../components/icons';
 
 interface NotificationPreferencesScreenProps {
   navigation: {
@@ -70,7 +70,7 @@ export function NotificationPreferencesScreen({
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <ChevronLeft size={24} color={colors.text} />
+          <ChevronLeftIcon size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notification Preferences</Text>
         <View style={styles.headerSpacer} />

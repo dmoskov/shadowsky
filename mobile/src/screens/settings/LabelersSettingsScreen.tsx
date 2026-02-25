@@ -13,7 +13,7 @@ import {
   Image,
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
-import { ChevronLeft, ChevronDown, ChevronUp } from "lucide-react-native";
+import { ChevronLeftIcon, ChevronDownIcon, ChevronUpIcon } from '../../../components/icons';
 import {
   getSubscribedLabelers,
   subscribeToLabeler,
@@ -282,9 +282,9 @@ export function LabelersSettingsScreen({
             </View>
           </View>
           {isExpanded ? (
-            <ChevronUp size={20} color={colors.textSecondary} />
+            <ChevronUpIcon size={20} color={colors.textSecondary} />
           ) : (
-            <ChevronDown size={20} color={colors.textSecondary} />
+            <ChevronDownIcon size={20} color={colors.textSecondary} />
           )}
         </TouchableOpacity>
 
@@ -395,7 +395,7 @@ export function LabelersSettingsScreen({
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <ChevronLeft size={24} color={colors.text} />
+          <ChevronLeftIcon size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Content Labelers</Text>
         <View style={styles.headerSpacer} />
