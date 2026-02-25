@@ -191,6 +191,45 @@ describe('ImageEmbed', () => {
       expect(() => render(<ImageEmbed images={images} />)).not.toThrow();
     });
 
+    it('gives wide single images a shorter container than a square image', () => {
+      // A 3:1 panoramic image should get a shorter container than a 1:1 square
+      const wideImages = [makeImage({aspectRatio: {width: 3000, height: 1000}})];
+      const squareImages = [makeImage({aspectRatio: {width: 1000, height: 1000}})];
+
+      const {toJSON: wideJSON} = render(<ImageEmbed images={wideImages} />);
+      const {toJSON: squareJSON} = render(<ImageEmbed images={squareImages} />);
+
+      // Find the image wrapper (TouchableOpacity with explicit height)
+      const getHeight = (json: any): number => {
+        // Traverse to find the first element with an explicit numeric height
+        const findHeight = (node: any): number | null => {
+          if (!node) return null;
+          const style = Array.isArray(node.props?.style)
+            ? Object.assign({}, ...node.props.style)
+            : node.props?.style;
+          if (style?.height && typeof style.height === 'number') return style.height;
+          if (node.children) {
+            for (const child of node.children) {
+              if (typeof child === 'object') {
+                const h = findHeight(child);
+                if (h !== null) return h;
+              }
+            }
+          }
+          return null;
+        };
+        return findHeight(json) ?? 0;
+      };
+
+      const wideHeight = getHeight(wideJSON());
+      const squareHeight = getHeight(squareJSON());
+
+      // Wide image should be shorter than square image
+      expect(wideHeight).toBeLessThan(squareHeight);
+      // Wide image should still have a minimum height
+      expect(wideHeight).toBeGreaterThanOrEqual(200);
+    });
+
     it('renders without crashing when aspectRatio is missing', () => {
       const images = [makeImage({aspectRatio: undefined})];
       expect(() => render(<ImageEmbed images={images} />)).not.toThrow();
