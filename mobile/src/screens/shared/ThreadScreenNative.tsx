@@ -338,7 +338,12 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
     queryFn: async () => {
       const cacheKeyUri = `${postUri}:${activeFormat}`;
       const cached = await getCachedSummary(cacheKeyUri);
-      if (cached) return cached;
+      // Use cached summary only if it was generated from a comparable number of posts.
+      // Pre-generation sends only the root post, so cached.metadata.postCount may be 1
+      // while the full thread has many more posts — regenerate in that case.
+      if (cached && cached.metadata.postCount >= summaryPosts.length * 0.5) {
+        return cached;
+      }
 
       const result = await generateThreadSummary(summaryPosts, activeFormat);
       await cacheSummary(cacheKeyUri, result);
