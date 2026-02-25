@@ -73,7 +73,15 @@ function EngagementChartInner({
           index === 0 || index === len - 1 || index % labelInterval === 0;
 
         const dateParts = day.date.split("-");
-        const dateLabel = `${parseInt(dateParts[1])}/${parseInt(dateParts[2])}`;
+        const month = parseInt(dateParts[1]);
+        const dayNum = parseInt(dateParts[2]);
+        // Show month/day on first label of each month, day-only otherwise
+        const prevDateParts =
+          index > 0 ? dailyEngagement[index - 1].date.split("-") : null;
+        const isNewMonth =
+          !prevDateParts || parseInt(prevDateParts[1]) !== month;
+        const dateLabel =
+          isNewMonth || index === 0 ? `${month}/${dayNum}` : `${dayNum}`;
 
         return (
           <View
@@ -142,6 +150,8 @@ function EngagementChartInner({
                 { color: colors.textTertiary },
                 !showLabel && { opacity: 0 },
               ]}
+              numberOfLines={1}
+              allowFontScaling={false}
             >
               {showLabel ? dateLabel : " "}
             </Text>
@@ -294,6 +304,7 @@ const styles = StyleSheet.create({
   barContainer: {
     flex: 1,
     alignItems: "center",
+    overflow: "visible",
   },
   barWrapper: {
     width: "100%",
@@ -306,6 +317,7 @@ const styles = StyleSheet.create({
   barLabel: {
     fontSize: 9,
     marginTop: 4,
+    textAlign: "center",
   },
 });
 
