@@ -31,6 +31,7 @@ import { useConversations, useConversation, useSendMessage, useMarkAsRead, useMu
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAppNavigation } from "../../hooks/useNavigation";
 import { InlineErrorBoundary } from "../../components/ui/InlineErrorBoundary";
+import { SkeletonShimmer } from "../../components/SkeletonShimmer";
 
 import { createLogger } from '../../utils/logger';
 
@@ -531,7 +532,21 @@ export function MessagesScreen() {
 
   // Show loading state
   if (loadingConversations) {
-    return <LoadingState />;
+    return (
+      <View style={styles.container}>
+        {[...Array(5)].map((_, i) => (
+          <View key={i} style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.05)' }}>
+            <SkeletonShimmer width={48} height={48} borderRadius={24} />
+            <View style={{ marginLeft: 12, flex: 1 }}>
+              <SkeletonShimmer width={150} height={16} />
+              <View style={{ marginTop: 6 }}>
+                <SkeletonShimmer width={200} height={12} />
+              </View>
+            </View>
+          </View>
+        ))}
+      </View>
+    );
   }
 
   // Show empty state if no conversations

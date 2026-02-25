@@ -13,6 +13,7 @@ import {
 import {useRouter} from 'expo-router';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useTheme} from '../../contexts/ThemeContext';
+import {PostCardSkeleton} from '../../components/PostCardSkeleton';
 import {
   usePopularFeedGenerators,
   useSuggestedFeeds,
@@ -319,7 +320,10 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
       {/* Feed List */}
       {isLoading && feeds.length === 0 ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <PostCardSkeleton />
+          <PostCardSkeleton />
+          <PostCardSkeleton />
+          <PostCardSkeleton />
         </View>
       ) : (
         <FlatList

@@ -122,34 +122,13 @@ export function DraftsScreen() {
 
   const renderEmptyState = () => {
     if (isLoading) {
-      return null;
-    }
-
-    return (
-      <View style={styles.emptyState}>
-        <Text style={styles.emptyStateTitle}>No Drafts</Text>
-        <Text style={styles.emptyStateText}>
-          Drafts you save will appear here.
-        </Text>
-      </View>
-    );
-  };
-
-  const renderFooter = () => {
-    if (!isFetchingNextPage) {
-      return null;
-    }
-
-    return (
-      <View style={styles.footer}>
-        <ActivityIndicator size="small" color={colors.primary} />
-      </View>
-    );
-  };
-
-  const handleLoadMore = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
+      return (
+        <>
+          <PostCardSkeleton />
+          <PostCardSkeleton />
+          <PostCardSkeleton />
+        </>
+      );
     }
   };
 
@@ -167,7 +146,10 @@ export function DraftsScreen() {
       {/* Drafts List */}
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <PostCardSkeleton />
+          <PostCardSkeleton />
+          <PostCardSkeleton />
+          <PostCardSkeleton />
         </View>
       ) : (
         <FlatList

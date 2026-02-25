@@ -13,6 +13,7 @@ import { useBlockedAccounts, useUnblockUser } from '../../hooks/api/useProfile';
 import { Avatar } from '../../components/Avatar';
 import { AppBskyActorDefs } from '@atproto/api';
 import {useTheme} from '../../contexts/ThemeContext';
+import {UserListSkeleton} from '../../components/UserListSkeleton';
 import {recordUnblock} from '../../services/moderation-history';
 
 interface BlockedAccountsScreenProps {
@@ -107,12 +108,7 @@ export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsSc
 
   const renderEmpty = () => {
     if (isLoading) {
-      return (
-        <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={colors.info} />
-        </View>
-      );
-    }
+      return <UserListSkeleton />;\n    }
 
     if (error) {
       return (

@@ -14,6 +14,7 @@ export default function TabsLayout() {
       tabBar={(props) => (isMultiColumn ? null : <CustomTabBar {...props} />)}
       screenOptions={{
         headerShown: false,
+        lazy: true,
         tabBarStyle: isMultiColumn ? { display: "none" } : undefined,
         tabBarActiveTintColor: colors.info,
         tabBarInactiveTintColor: colors.textTertiary,

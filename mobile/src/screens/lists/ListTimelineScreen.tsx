@@ -6,6 +6,7 @@ import {AppBskyFeedDefs} from '@atproto/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {useRouter} from 'expo-router';
 import {useTheme} from '../../contexts/ThemeContext';
+import {PostCardSkeleton} from '../../components/PostCardSkeleton';
 
 interface ListTimelineScreenProps {
   listId: string;
@@ -87,8 +88,10 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
   if (isLoadingList) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator color={colors.primary} size="large" />
-        <Text style={styles.loadingText}>Loading list...</Text>
+        <PostCardSkeleton />
+        <PostCardSkeleton />
+        <PostCardSkeleton />
+        <PostCardSkeleton />
       </View>
     );
   }

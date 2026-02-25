@@ -16,6 +16,7 @@ export default function ProfileLayout() {
         headerTintColor: colors.text,
         contentStyle: { backgroundColor: colors.background },
         headerBackTitle: "Back",
+          freezeOnBlur: true,
       }}
     >
       <Stack.Screen

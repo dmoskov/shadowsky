@@ -13,6 +13,7 @@ import {
 import {useRouter} from 'expo-router';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useTheme} from '../../contexts/ThemeContext';
+import {PostCardSkeleton} from '../../components/PostCardSkeleton';
 import {
   useSavedFeeds,
   useUnsaveFeed,
@@ -173,12 +174,15 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
 
   const renderContent = () => {
     if (isLoading) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      );
-    }
+    return (
+      <>
+        <PostCardSkeleton />
+        <PostCardSkeleton />
+        <PostCardSkeleton />
+        <PostCardSkeleton />
+      </>
+    );
+  }
 
     if (isError) {
       return (

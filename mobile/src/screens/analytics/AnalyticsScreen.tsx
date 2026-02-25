@@ -183,11 +183,12 @@ export function AnalyticsScreen() {
   if (isLoading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-            Loading analytics...
-          </Text>
+        <View style={{ padding: 16, gap: 16 }}>
+          <SkeletonShimmer width="60%" height={24} borderRadius={6} />
+          <SkeletonShimmer width="100%" height={120} borderRadius={12} />
+          <SkeletonShimmer width="100%" height={120} borderRadius={12} />
+          <SkeletonShimmer width="40%" height={20} borderRadius={6} />
+          <SkeletonShimmer width="100%" height={200} borderRadius={12} />
         </View>
       </View>
     );

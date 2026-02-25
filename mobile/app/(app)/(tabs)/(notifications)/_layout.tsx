@@ -16,6 +16,7 @@ export default function NotificationsLayout() {
         headerTintColor: colors.text,
         contentStyle: { backgroundColor: colors.background },
         headerBackTitle: "Back",
+          freezeOnBlur: true,
       }}
     >
       <Stack.Screen

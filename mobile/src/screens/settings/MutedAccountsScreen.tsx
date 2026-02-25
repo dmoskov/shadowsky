@@ -13,6 +13,7 @@ import { useMutedAccounts, useUnmuteUser } from '../../hooks/api/useProfile';
 import { Avatar } from '../../components/Avatar';
 import { AppBskyActorDefs } from '@atproto/api';
 import {useTheme} from '../../contexts/ThemeContext';
+import {UserListSkeleton} from '../../components/UserListSkeleton';
 import {recordUnmute} from '../../services/moderation-history';
 
 interface MutedAccountsScreenProps {
@@ -104,11 +105,7 @@ export function MutedAccountsScreen({ onNavigateToProfile }: MutedAccountsScreen
 
   const renderEmpty = () => {
     if (isLoading) {
-      return (
-        <View style={styles.emptyContainer}>
-          <ActivityIndicator size="large" color={colors.info} />
-        </View>
-      );
+      return <UserListSkeleton />;
     }
 
     if (error) {

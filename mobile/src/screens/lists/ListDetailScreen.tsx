@@ -214,12 +214,7 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
 
   const renderEmpty = () => {
     if (isLoading || isLoadingList) {
-      return (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator color={colors.primary} size="large" />
-          <Text style={styles.loadingText}>Loading members...</Text>
-        </View>
-      );
+      return <UserListSkeleton />;
     }
 
     if (error) {

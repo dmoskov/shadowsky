@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import {UserListSkeleton} from "../../components/UserListSkeleton";
 import {useLists} from '../../hooks/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {AppBskyGraphDefs} from '@atproto/api';
@@ -70,12 +71,7 @@ export function ListsScreen() {
 
   const renderEmpty = () => {
     if (isLoading) {
-      return (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator color={colors.primary} size="large" />
-          <Text style={styles.loadingText}>Loading lists...</Text>
-        </View>
-      );
+      return <UserListSkeleton />;
     }
 
     if (error) {
