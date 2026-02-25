@@ -34,7 +34,7 @@ jobs:
 
       - name: Run lint
         working-directory: mobile
-        run: npm run lint || true
+        run: npm run lint
 
       - name: Run type check
         working-directory: mobile
