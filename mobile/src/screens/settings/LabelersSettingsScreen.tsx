@@ -13,7 +13,7 @@ import {
   Image,
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
-import { ChevronLeftIcon, ChevronDownIcon, ChevronUpIcon } from '../../../components/icons';
+import { ChevronLeftIcon, ChevronDownIcon, ChevronUpIcon } from '../../components/icons';
 import {
   getSubscribedLabelers,
   subscribeToLabeler,

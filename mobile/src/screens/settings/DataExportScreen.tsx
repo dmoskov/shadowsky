@@ -9,7 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
-import { ChevronLeftIcon } from '../../../components/icons';
+import { ChevronLeftIcon } from '../../components/icons';
 
 interface DataExportScreenProps {
   navigation: {

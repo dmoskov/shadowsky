@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useModeration, LabelType, LabelPreference } from "../../contexts/ModerationContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { ChevronLeftIcon } from '../../../components/icons';
+import { ChevronLeftIcon } from '../../components/icons';
 
 
 import { createLogger } from '../../utils/logger';
