@@ -104,7 +104,7 @@ jobs:
       - name: Check for connected devices
         id: check-devices
         run: |
-          DEVICE_COUNT=$(xcrun simctl list devices booted 2>/dev/null | grep -c "Booted" || echo "0")
+          DEVICE_COUNT=$(xcrun simctl list devices booted 2>/dev/null | grep "Booted" | wc -l | tr -d ' ')
           echo "device_count=$DEVICE_COUNT" >> $GITHUB_OUTPUT
           if [ "$DEVICE_COUNT" -eq "0" ]; then
             echo "⚠️ No booted simulators found — skipping Maestro tests"
