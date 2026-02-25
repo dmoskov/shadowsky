@@ -285,6 +285,11 @@ export const ListTimeline: React.FC = () => {
                   <PostCard
                     post={feedItem.post}
                     reason={feedItem.reason}
+                    replyParent={
+                      feedItem.reply?.parent as
+                        | AppBskyFeedDefs.PostView
+                        | undefined
+                    }
                     onLike={() => {}}
                     onRepost={() => {}}
                     onReply={() => {}}

@@ -1820,6 +1820,11 @@ export default function ProfilePage() {
                       <PostCard
                         post={post.post}
                         reason={post.reason}
+                        replyParent={
+                          post.reply?.parent as
+                            | AppBskyFeedDefs.PostView
+                            | undefined
+                        }
                         onClick={() => {
                           setSelectedPost(post.post);
                           setOpenThreadToReply(false);

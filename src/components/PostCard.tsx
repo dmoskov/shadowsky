@@ -7,6 +7,8 @@ import { PostRenderer } from "./PostRenderer";
 interface PostCardProps {
   post: AppBskyFeedDefs.PostView;
   reason?: AppBskyFeedDefs.FeedViewPost["reason"];
+  /** Parent post view from feed data, used to show rich reply context */
+  replyParent?: AppBskyFeedDefs.PostView;
   onLike?: () => void;
   onRepost?: () => void;
   onReply?: () => void;
@@ -61,6 +63,9 @@ function arePostCardPropsEqual(
   const nextReasonType = nextProps.reason?.$type;
   if (prevReasonType !== nextReasonType) return false;
 
+  // Compare reply parent identity
+  if (prevProps.replyParent?.uri !== nextProps.replyParent?.uri) return false;
+
   // Callbacks are expected to be stable (using useCallback in parent)
   // so we skip comparing them to avoid unnecessary re-renders
   return true;
@@ -69,6 +74,7 @@ function arePostCardPropsEqual(
 const PostCardComponent: React.FC<PostCardProps> = ({
   post,
   reason,
+  replyParent,
   onLike,
   onRepost,
   onReply,
@@ -98,6 +104,7 @@ const PostCardComponent: React.FC<PostCardProps> = ({
       <PostRenderer
         post={post}
         reason={reason}
+        replyParent={replyParent}
         showActions={false}
         onClick={onClick}
         onQuoteClick={onQuoteClick}
