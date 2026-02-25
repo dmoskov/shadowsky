@@ -165,19 +165,24 @@ class MessageSentObserver: ObservableObject {
             forName: NSNotification.Name("MessagesBridgeMessageSent"),
             object: nil,
             queue: .main
-        ) { notification in
+        ) { [weak composerState] notification in
             let success = notification.userInfo?["success"] as? Bool ?? false
             if success {
-                composerState.reset()
+                composerState?.reset()
             } else {
-                composerState.isSending = false
+                composerState?.isSending = false
             }
         }
+    }
+
+    deinit {
+        stop()
     }
 
     func stop() {
         if let observer = observer {
             NotificationCenter.default.removeObserver(observer)
+            observer = nil
         }
     }
 }
