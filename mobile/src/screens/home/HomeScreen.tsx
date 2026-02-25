@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from "react";
-import { View, StyleSheet, Alert, ActionSheetIOS, Platform, ScrollView, TouchableOpacity, Text, Linking } from "react-native";
+import { View, StyleSheet, Alert, ActionSheetIOS, Platform, ScrollView, TouchableOpacity, Text } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useScrollToTop } from "@react-navigation/native";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,9 @@ import { useRouter } from "expo-router";
 import { triggerHaptic } from "../../utils/haptics";
 import { useToast } from "../../contexts/ToastContext";
 import { useDataPrefetch } from "../../hooks/useDataPrefetch";
+import { openLink } from "../../utils/browser";
+import { useLightbox } from "../../contexts/LightboxContext";
+import type { LightboxImage } from "../../contexts/LightboxContext";
 import { createLogger } from "../../utils/logger";
 
 const logger = createLogger('HomeScreen');
@@ -46,6 +49,7 @@ export function HomeScreen() {
   const deleteRepost = useDeleteRepost();
   const { toggleBookmark, bookmarks } = useBookmarks();
   const { showToast } = useToast();
+  const { openLightbox } = useLightbox();
   const queryClient = useQueryClient();
   const scrollRef = useRef<any>(null);
 
@@ -125,14 +129,17 @@ export function HomeScreen() {
 
   const handleLinkPress = (event: { nativeEvent: { uri: string } }) => {
     const { uri } = event.nativeEvent;
-    Linking.openURL(uri);
+    openLink(uri, colors);
   };
 
   const handleImagePress = (event: { nativeEvent: { images: Array<{ thumb: string; fullsize: string; alt: string }>; index: number } }) => {
     const { images, index } = event.nativeEvent;
-    if (images[index]) {
-      Linking.openURL(images[index].fullsize);
-    }
+    const lightboxImages: LightboxImage[] = images.map(img => ({
+      thumb: img.thumb,
+      fullsize: img.fullsize,
+      alt: img.alt,
+    }));
+    openLightbox(lightboxImages, index);
   };
 
   const handleQuotePress = (event: { nativeEvent: { uri: string; handle: string } }) => {

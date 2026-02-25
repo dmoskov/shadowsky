@@ -42,10 +42,20 @@ jest.mock('../../../services/atproto/feeds', () => ({
   getPostThread: jest.fn(() => Promise.resolve({})),
 }));
 
-const mockOpenURL = jest.fn(() => Promise.resolve());
-jest.spyOn(require('react-native'), 'Linking', 'get').mockReturnValue({
-  openURL: mockOpenURL,
-});
+const mockOpenLink = jest.fn(() => Promise.resolve());
+jest.mock('../../../utils/browser', () => ({
+  openLink: (...args: any[]) => mockOpenLink(...args),
+}));
+
+const mockOpenLightbox = jest.fn();
+const mockCloseLightbox = jest.fn();
+jest.mock('../../../contexts/LightboxContext', () => ({
+  useLightbox: () => ({
+    openLightbox: mockOpenLightbox,
+    closeLightbox: mockCloseLightbox,
+    state: { visible: false, images: [], index: 0, sourceLayout: null },
+  }),
+}));
 
 // Mock hooks with controllable return values
 const mockNavigateToThread = jest.fn();
@@ -185,18 +195,19 @@ jest.mock('../../../../modules/native-feed-list', () => {
                     <Text>{item.post.embed.external.title}</Text>
                   </TouchableOpacity>
                 )}
-                {item.post.embed?.images && (
+                {item.post.embed?.images && item.post.embed.images.map((img: any, imgIdx: number) => (
                   <TouchableOpacity
-                    testID={`image-press-${item.post.uri}`}
+                    key={imgIdx}
+                    testID={`image-press-${imgIdx}-${item.post.uri}`}
                     onPress={() =>
                       onImagePress?.({
-                        nativeEvent: { images: item.post.embed.images, index: 0 },
+                        nativeEvent: { images: item.post.embed.images, index: imgIdx },
                       })
                     }
                   >
-                    <Text>Image</Text>
+                    <Text>{img.alt || 'Image'}</Text>
                   </TouchableOpacity>
-                )}
+                ))}
                 {item.post.embed?.record && (
                   <TouchableOpacity
                     testID={`quote-press-${item.post.uri}`}
@@ -551,9 +562,9 @@ describe('HomeScreen', () => {
     });
   });
 
-  // ─── Embed press handling ───────────────────────────────
-  describe('embed press handling', () => {
-    it('opens external link when link embed is pressed', () => {
+  // ─── Link embed press ───────────────────────────────────
+  describe('link embed press', () => {
+    it('opens in-app browser for external URL', () => {
       const postUri = 'at://did:plc:alice/app.bsky.feed.post/link1';
       const post = makePost(postUri, 'alice.bsky.social');
       post.post.embed = {
@@ -571,10 +582,55 @@ describe('HomeScreen', () => {
 
       const { getByTestId } = renderWithProviders(<HomeScreen />);
       fireEvent.press(getByTestId(`link-press-${postUri}`));
-      expect(mockOpenURL).toHaveBeenCalledWith('https://example.com/article');
+      expect(mockOpenLink).toHaveBeenCalledWith('https://example.com/article', mockTheme.colors);
     });
 
-    it('opens fullsize image when image embed is pressed', () => {
+    it('does not call openLink when no link embed exists', () => {
+      const postUri = 'at://did:plc:alice/app.bsky.feed.post/nolink';
+      const post = makePost(postUri, 'alice.bsky.social');
+      // No embed at all
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([post]),
+        isLoading: false,
+      };
+
+      const { getByTestId, queryByTestId } = renderWithProviders(<HomeScreen />);
+      // Post body tap navigates to thread, not openLink
+      fireEvent.press(getByTestId(`post-press-${postUri}`));
+      expect(mockOpenLink).not.toHaveBeenCalled();
+      expect(queryByTestId(`link-press-${postUri}`)).toBeNull();
+    });
+
+    it('handles HTTPS and HTTP links', () => {
+      const httpsUri = 'at://did:plc:alice/app.bsky.feed.post/https1';
+      const httpUri = 'at://did:plc:alice/app.bsky.feed.post/http1';
+      const httpsPost = makePost(httpsUri, 'alice.bsky.social');
+      httpsPost.post.embed = {
+        external: { uri: 'https://secure.example.com', title: 'HTTPS', description: '' },
+      };
+      const httpPost = makePost(httpUri, 'bob.bsky.social');
+      httpPost.post.embed = {
+        external: { uri: 'http://legacy.example.com', title: 'HTTP', description: '' },
+      };
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([httpsPost, httpPost]),
+        isLoading: false,
+      };
+
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      fireEvent.press(getByTestId(`link-press-${httpsUri}`));
+      expect(mockOpenLink).toHaveBeenCalledWith('https://secure.example.com', mockTheme.colors);
+
+      fireEvent.press(getByTestId(`link-press-${httpUri}`));
+      expect(mockOpenLink).toHaveBeenCalledWith('http://legacy.example.com', mockTheme.colors);
+    });
+  });
+
+  // ─── Image embed press ─────────────────────────────────
+  describe('image embed press', () => {
+    it('opens lightbox for single image with correct data', () => {
       const postUri = 'at://did:plc:alice/app.bsky.feed.post/img1';
       const post = makePost(postUri, 'alice.bsky.social');
       post.post.embed = {
@@ -589,11 +645,82 @@ describe('HomeScreen', () => {
       };
 
       const { getByTestId } = renderWithProviders(<HomeScreen />);
-      fireEvent.press(getByTestId(`image-press-${postUri}`));
-      expect(mockOpenURL).toHaveBeenCalledWith('https://cdn.example.com/full.jpg');
+      fireEvent.press(getByTestId(`image-press-0-${postUri}`));
+      expect(mockOpenLightbox).toHaveBeenCalledWith(
+        [{ thumb: 'https://cdn.example.com/thumb.jpg', fullsize: 'https://cdn.example.com/full.jpg', alt: 'A photo' }],
+        0,
+      );
     });
 
-    it('navigates to quoted post thread when quote embed is pressed', () => {
+    it('opens lightbox at correct index for multi-image post', () => {
+      const postUri = 'at://did:plc:alice/app.bsky.feed.post/multi';
+      const post = makePost(postUri, 'alice.bsky.social');
+      post.post.embed = {
+        images: [
+          { thumb: 'https://cdn.example.com/t1.jpg', fullsize: 'https://cdn.example.com/f1.jpg', alt: 'First' },
+          { thumb: 'https://cdn.example.com/t2.jpg', fullsize: 'https://cdn.example.com/f2.jpg', alt: 'Second' },
+          { thumb: 'https://cdn.example.com/t3.jpg', fullsize: 'https://cdn.example.com/f3.jpg', alt: 'Third' },
+        ],
+      };
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([post]),
+        isLoading: false,
+      };
+
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      // Tap the 2nd image (index 1)
+      fireEvent.press(getByTestId(`image-press-1-${postUri}`));
+      expect(mockOpenLightbox).toHaveBeenCalledWith(
+        [
+          { thumb: 'https://cdn.example.com/t1.jpg', fullsize: 'https://cdn.example.com/f1.jpg', alt: 'First' },
+          { thumb: 'https://cdn.example.com/t2.jpg', fullsize: 'https://cdn.example.com/f2.jpg', alt: 'Second' },
+          { thumb: 'https://cdn.example.com/t3.jpg', fullsize: 'https://cdn.example.com/f3.jpg', alt: 'Third' },
+        ],
+        1,
+      );
+    });
+
+    it('passes all image metadata (thumb, fullsize, alt) to lightbox', () => {
+      const postUri = 'at://did:plc:alice/app.bsky.feed.post/meta';
+      const post = makePost(postUri, 'alice.bsky.social');
+      post.post.embed = {
+        images: [
+          { thumb: 'https://thumb.url/a', fullsize: 'https://full.url/a', alt: 'Alt text for image A' },
+          { thumb: 'https://thumb.url/b', fullsize: 'https://full.url/b', alt: '' },
+        ],
+      };
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([post]),
+        isLoading: false,
+      };
+
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      fireEvent.press(getByTestId(`image-press-0-${postUri}`));
+      const lightboxImages = mockOpenLightbox.mock.calls[0][0];
+      expect(lightboxImages).toHaveLength(2);
+      expect(lightboxImages[0]).toEqual({ thumb: 'https://thumb.url/a', fullsize: 'https://full.url/a', alt: 'Alt text for image A' });
+      expect(lightboxImages[1]).toEqual({ thumb: 'https://thumb.url/b', fullsize: 'https://full.url/b', alt: '' });
+    });
+
+    it('does not render image press targets when post has no images', () => {
+      const postUri = 'at://did:plc:alice/app.bsky.feed.post/noimgs';
+      const post = makePost(postUri, 'alice.bsky.social');
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([post]),
+        isLoading: false,
+      };
+
+      const { queryByTestId } = renderWithProviders(<HomeScreen />);
+      expect(queryByTestId(`image-press-0-${postUri}`)).toBeNull();
+    });
+  });
+
+  // ─── Quote embed press ─────────────────────────────────
+  describe('quote embed press', () => {
+    it('navigates to quoted post thread with correct handle/postId/DID', () => {
       const postUri = 'at://did:plc:alice/app.bsky.feed.post/qt1';
       const post = makePost(postUri, 'alice.bsky.social');
       post.post.embed = {
@@ -613,8 +740,109 @@ describe('HomeScreen', () => {
       expect(mockNavigateToThread).toHaveBeenCalledWith(
         'carol.bsky.social',
         'quoted456',
-        'did:plc:carol'
+        'did:plc:carol',
       );
+    });
+
+    it('navigates correctly when quoted author differs from parent author', () => {
+      const postUri = 'at://did:plc:alice/app.bsky.feed.post/qt2';
+      const post = makePost(postUri, 'alice.bsky.social');
+      post.post.embed = {
+        record: {
+          uri: 'at://did:plc:dave/app.bsky.feed.post/davepost',
+          author: { handle: 'dave.bsky.social' },
+        },
+      };
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([post]),
+        isLoading: false,
+      };
+
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      fireEvent.press(getByTestId(`quote-press-${postUri}`));
+      // Should navigate to dave's post, not alice's
+      expect(mockNavigateToThread).toHaveBeenCalledWith(
+        'dave.bsky.social',
+        'davepost',
+        'did:plc:dave',
+      );
+    });
+  });
+
+  // ─── Mixed embed interactions ──────────────────────────
+  describe('mixed embed interactions', () => {
+    it('image tap opens lightbox, link tap opens browser on same post', () => {
+      // Post with both images and external link (Bluesky supports this via recordWithMedia)
+      const postUri = 'at://did:plc:alice/app.bsky.feed.post/mixed1';
+      const post = makePost(postUri, 'alice.bsky.social');
+      post.post.embed = {
+        images: [
+          { thumb: 'https://cdn.example.com/t.jpg', fullsize: 'https://cdn.example.com/f.jpg', alt: 'Photo' },
+        ],
+        external: {
+          uri: 'https://blog.example.com',
+          title: 'Blog',
+          description: '',
+        },
+      };
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([post]),
+        isLoading: false,
+      };
+
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+
+      fireEvent.press(getByTestId(`image-press-0-${postUri}`));
+      expect(mockOpenLightbox).toHaveBeenCalledTimes(1);
+      expect(mockOpenLink).not.toHaveBeenCalled();
+
+      fireEvent.press(getByTestId(`link-press-${postUri}`));
+      expect(mockOpenLink).toHaveBeenCalledWith('https://blog.example.com', mockTheme.colors);
+      expect(mockOpenLightbox).toHaveBeenCalledTimes(1); // still 1
+    });
+
+    it('post body tap navigates to thread even when embeds are present', () => {
+      const postUri = 'at://did:plc:alice/app.bsky.feed.post/embedpost';
+      const post = makePost(postUri, 'alice.bsky.social');
+      post.post.embed = {
+        external: {
+          uri: 'https://example.com',
+          title: 'Link',
+          description: '',
+        },
+      };
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([post]),
+        isLoading: false,
+      };
+
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      fireEvent.press(getByTestId(`post-press-${postUri}`));
+      expect(mockNavigateToThread).toHaveBeenCalledWith('alice.bsky.social', 'embedpost', 'did:plc:alice');
+      expect(mockOpenLink).not.toHaveBeenCalled();
+    });
+
+    it('pressing different posts triggers navigation with correct post data', () => {
+      const uri1 = 'at://did:plc:alice/app.bsky.feed.post/p1';
+      const uri2 = 'at://did:plc:bob/app.bsky.feed.post/p2';
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([
+          makePost(uri1, 'alice.bsky.social'),
+          makePost(uri2, 'bob.bsky.social'),
+        ]),
+        isLoading: false,
+      };
+
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      fireEvent.press(getByTestId(`post-press-${uri1}`));
+      expect(mockNavigateToThread).toHaveBeenCalledWith('alice.bsky.social', 'p1', 'did:plc:alice');
+
+      fireEvent.press(getByTestId(`post-press-${uri2}`));
+      expect(mockNavigateToThread).toHaveBeenCalledWith('bob.bsky.social', 'p2', 'did:plc:bob');
     });
   });
 });
