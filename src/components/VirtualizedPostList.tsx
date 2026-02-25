@@ -81,6 +81,7 @@ const PostRow = memo(
         <PostCard
           post={item.post}
           reason={item.reason}
+          replyParent={item.replyParent}
           onClick={onClick}
           onLike={onLike}
           onRepost={onRepost}
@@ -106,7 +107,8 @@ const PostRow = memo(
       prevProps.item.post.viewer?.like === nextProps.item.post.viewer?.like &&
       prevProps.item.post.viewer?.repost ===
         nextProps.item.post.viewer?.repost &&
-      prevProps.item.reason?.$type === nextProps.item.reason?.$type
+      prevProps.item.reason?.$type === nextProps.item.reason?.$type &&
+      prevProps.item.replyParent?.uri === nextProps.item.replyParent?.uri
     );
   },
 );
@@ -116,6 +118,8 @@ PostRow.displayName = "PostRow";
 export interface VirtualizedPostItem {
   post: AppBskyFeedDefs.PostView;
   reason?: AppBskyFeedDefs.FeedViewPost["reason"];
+  /** Parent post view from feed data, used to show rich reply context */
+  replyParent?: AppBskyFeedDefs.PostView;
   key: string;
 }
 

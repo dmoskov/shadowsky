@@ -331,6 +331,8 @@ const ExternalLinkEmbed: React.FC<{
 interface PostRendererProps {
   post: AppBskyFeedDefs.PostView;
   reason?: AppBskyFeedDefs.FeedViewPost["reason"];
+  /** Parent post view from feed data, used to show rich reply context */
+  replyParent?: AppBskyFeedDefs.PostView;
   onLike?: () => void;
   onRepost?: () => void;
   onReply?: () => void;
@@ -385,6 +387,9 @@ function arePostRendererPropsEqual(
   const nextReasonType = nextProps.reason?.$type;
   if (prevReasonType !== nextReasonType) return false;
 
+  // Compare reply parent identity
+  if (prevProps.replyParent?.uri !== nextProps.replyParent?.uri) return false;
+
   // Callbacks are expected to be stable (using useCallback in parent)
   return true;
 }
@@ -392,6 +397,7 @@ function arePostRendererPropsEqual(
 const PostRendererComponent: React.FC<PostRendererProps> = ({
   post,
   reason,
+  replyParent,
   onLike,
   onRepost,
   onReply,
@@ -1219,14 +1225,36 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
           </div>
         )}
 
-        {/* Reply context */}
+        {/* Reply context - show parent author and text when available */}
         {record?.reply?.parent && (
           <div
             className="mb-2 flex items-center gap-2 text-sm"
-            style={{ color: "var(--asph-primary)" }}
+            style={{ color: "var(--asph-text-secondary)" }}
           >
-            <Reply size={16} />
-            <span>Reply</span>
+            <Reply
+              size={14}
+              className="flex-shrink-0"
+              style={{ color: "var(--asph-primary)" }}
+            />
+            {replyParent ? (
+              <span className="min-w-0 truncate">
+                Replying to{" "}
+                <span
+                  className="font-medium"
+                  style={{ color: "var(--asph-primary)" }}
+                >
+                  @{replyParent.author?.handle || "unknown"}
+                </span>
+                {(replyParent.record as { text?: string })?.text && (
+                  <span className="ml-1 opacity-70">
+                    &ldquo;{(replyParent.record as { text?: string }).text}
+                    &rdquo;
+                  </span>
+                )}
+              </span>
+            ) : (
+              <span>Reply</span>
+            )}
           </div>
         )}
 

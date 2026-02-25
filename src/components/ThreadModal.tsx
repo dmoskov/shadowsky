@@ -149,11 +149,12 @@ export function ThreadModal({
       if (!agent) throw new Error("Not authenticated");
 
       try {
-        // Fetch with parent: 3 to get up to 3 levels of ancestors
+        // Fetch with large parentHeight to get the full thread from root
+        // This ensures replies always show in context of the complete thread
         const response = await agent.getPostThread({
           uri: postUri,
           depth: 10,
-          parentHeight: 3,
+          parentHeight: 100,
         });
         debug.log("Thread response:", response);
 
@@ -527,11 +528,11 @@ export function ThreadModal({
       // Invalidate the current query and fetch from the parent
       queryClient.setQueryData(["thread", postUri], undefined);
 
-      // Fetch thread from the parent URI with same parameters
+      // Fetch thread from the parent URI with full parent chain
       const response = await agent.getPostThread({
         uri: parentUri,
         depth: 10,
-        parentHeight: 3,
+        parentHeight: 100,
       });
 
       if (response.data.thread.$type === "app.bsky.feed.defs#threadViewPost") {
