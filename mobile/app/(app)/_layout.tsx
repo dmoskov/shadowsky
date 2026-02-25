@@ -5,6 +5,7 @@ import { Slot } from "expo-router";
 import * as QuickActions from "expo-quick-actions";
 import { useQuickActionRouting } from "expo-quick-actions/router";
 import { CustomDrawerContent } from "../../src/components/CustomDrawerContent";
+import { HeaderBackButton } from "../../src/components/HeaderBackButton";
 import { NotificationSetup } from "../../src/components/NotificationSetup";
 import { IPadSidebar } from "../../src/components/IPadSidebar";
 import { IPadDetailPanel } from "../../src/components/IPadDetailPanel";
@@ -51,10 +52,7 @@ function PhoneAppLayout() {
       <Drawer.Screen
         name="settings"
         options={{
-          headerShown: true,
-          title: "Settings",
-          headerStyle: { backgroundColor: "#0a0a0f" },
-          headerTintColor: "#ffffff",
+          headerShown: false,
         }}
       />
       <Drawer.Screen
@@ -64,6 +62,7 @@ function PhoneAppLayout() {
           title: "Analytics",
           headerStyle: { backgroundColor: "#0a0a0f" },
           headerTintColor: "#ffffff",
+          headerLeft: () => <HeaderBackButton />,
         }}
       />
       <Drawer.Screen
@@ -73,19 +72,45 @@ function PhoneAppLayout() {
           title: "Scheduled Posts",
           headerStyle: { backgroundColor: "#0a0a0f" },
           headerTintColor: "#ffffff",
+          headerLeft: () => <HeaderBackButton />,
         }}
       />
       <Drawer.Screen
         name="lists"
         options={{
-          headerShown: true,
-          title: "Lists",
-          headerStyle: { backgroundColor: "#0a0a0f" },
-          headerTintColor: "#ffffff",
+          headerShown: false,
         }}
       />
       <Drawer.Screen
         name="messages"
+        options={{
+          headerShown: false,
+          drawerItemStyle: { display: "none" },
+        }}
+      />
+      <Drawer.Screen
+        name="drafts"
+        options={{
+          headerShown: false,
+          drawerItemStyle: { display: "none" },
+        }}
+      />
+      <Drawer.Screen
+        name="feeds"
+        options={{
+          headerShown: false,
+          drawerItemStyle: { display: "none" },
+        }}
+      />
+      <Drawer.Screen
+        name="post"
+        options={{
+          headerShown: false,
+          drawerItemStyle: { display: "none" },
+        }}
+      />
+      <Drawer.Screen
+        name="feed"
         options={{
           headerShown: false,
           drawerItemStyle: { display: "none" },

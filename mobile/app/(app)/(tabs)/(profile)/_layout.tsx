@@ -39,6 +39,14 @@ export default function ProfileLayout() {
         }}
       />
       <Stack.Screen name="bookmarks" options={{ title: "Bookmarks" }} />
+      <Stack.Screen
+        name="followers/[actor]"
+        options={{ title: "Followers" }}
+      />
+      <Stack.Screen
+        name="following/[actor]"
+        options={{ title: "Following" }}
+      />
     </Stack>
     </ScreenErrorBoundary>
   );

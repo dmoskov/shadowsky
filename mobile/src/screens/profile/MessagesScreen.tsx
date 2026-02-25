@@ -32,6 +32,8 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useAppNavigation } from "../../hooks/useNavigation";
 import { InlineErrorBoundary } from "../../components/ui/InlineErrorBoundary";
 import { SkeletonShimmer } from "../../components/SkeletonShimmer";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 
 import { createLogger } from '../../utils/logger';
 
@@ -55,6 +57,8 @@ export function MessagesScreen() {
   const { colors } = useTheme();
   const { navigateToProfile } = useAppNavigation();
   const { session } = useAuth();
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [selectedConversation, setSelectedConversation] = useState<
     string | null
   >(null);
@@ -73,6 +77,20 @@ export function MessagesScreen() {
   if (USE_NATIVE_MESSAGES && NativeMessagesComponent) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={{ paddingTop: insets.top, backgroundColor: colors.background, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', height: 44 }}>
+            <TouchableOpacity
+              onPress={() => router.canGoBack() ? router.back() : router.replace('/(app)/(tabs)/(home)')}
+              style={{ paddingLeft: 8, paddingRight: 4, padding: 8 }}
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <ArrowLeftIcon size={24} color={colors.text} />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text, flex: 1, textAlign: 'center', marginRight: 36 }}>Messages</Text>
+          </View>
+        </View>
         <NativeMessagesComponent
           style={{ flex: 1 }}
           onNavigateToProfile={navigateToProfile}
@@ -530,10 +548,30 @@ export function MessagesScreen() {
     );
   }
 
+  const handleGoBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(app)/(tabs)/(home)' as any);
+    }
+  };
+
   // Show loading state
   if (loadingConversations) {
     return (
       <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerTop}>
+            <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+              <View style={styles.backButtonContent}>
+                <ArrowLeftIcon size={20} color={colors.primary} />
+                <Text style={styles.backButtonText}>Back</Text>
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Messages</Text>
+            <View style={{ width: 60 }} />
+          </View>
+        </View>
         {[...Array(5)].map((_, i) => (
           <View key={i} style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.05)' }}>
             <SkeletonShimmer width={48} height={48} borderRadius={24} />
@@ -554,6 +592,12 @@ export function MessagesScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
+          <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+            <View style={styles.backButtonContent}>
+              <ArrowLeftIcon size={20} color={colors.primary} />
+              <Text style={styles.backButtonText}>Back</Text>
+            </View>
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>Messages</Text>
           <TouchableOpacity
             onPress={() => setShowNewConversationModal(true)}
@@ -587,6 +631,12 @@ export function MessagesScreen() {
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
+            <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+              <View style={styles.backButtonContent}>
+                <ArrowLeftIcon size={20} color={colors.primary} />
+                <Text style={styles.backButtonText}>Back</Text>
+              </View>
+            </TouchableOpacity>
             <Text style={styles.headerTitle}>Messages</Text>
             <View style={styles.headerActions}>
               <TouchableOpacity
