@@ -42,6 +42,7 @@ import {
 } from "../../../modules/native-profile-view/src/NativeProfileViewTypes";
 import { ProfileScreen } from "./ProfileScreen";
 import { InlineErrorBoundary } from "../../components/ui/InlineErrorBoundary";
+import { ProfileAIInsights } from "../../components/ProfileAIInsights";
 import { createLogger } from "../../utils/logger";
 
 const logger = createLogger("ProfileScreenNative");
@@ -568,6 +569,11 @@ function ProfileScreenNativeIOS({
             </View>
           </InlineErrorBoundary>
         )}
+        {activeTab === "posts" && posts.length > 0 && (
+          <InlineErrorBoundary silent context="ProfileAIInsights">
+            <ProfileAIInsights handle={handle} posts={posts} />
+          </InlineErrorBoundary>
+        )}
       </>
     );
   }, [
@@ -582,6 +588,8 @@ function ProfileScreenNativeIOS({
     isStartingConversation,
     activeTab,
     pinnedPost,
+    posts,
+    handle,
     styles,
     handleTabChange,
     handleFollowToggle,
