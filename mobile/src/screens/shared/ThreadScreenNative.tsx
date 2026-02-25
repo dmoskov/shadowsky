@@ -17,6 +17,8 @@ import { ErrorState } from "../../components/ErrorState";
 import { getAtProtoClient } from "../../services/atproto/client";
 import { useTheme } from "../../contexts/ThemeContext";
 import { sharePost } from "../../utils/share";
+import { useBookmarks } from "../../hooks/api/useBookmarks";
+import { useToast } from "../../contexts/ToastContext";
 import { triggerHaptic } from "../../utils/haptics";
 import { createLogger } from '../../utils/logger';
 import { NativeThreadView, setTranslationResult, setTranslationError, setMentionSearchResults, setReplySent, setThreadData, clearThreadData } from '../../../modules/native-thread-view';
@@ -225,6 +227,13 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
   const repost = useRepost();
   const deleteRepost = useDeleteRepost();
   const createPost = useCreatePost();
+  const { toggleBookmark, bookmarks } = useBookmarks();
+  const { showToast } = useToast();
+
+  // Compute bookmarked post URIs for quick lookup
+  const bookmarkedPostUris = useMemo(() => {
+    return new Set(bookmarks.map(b => b.postUri));
+  }, [bookmarks]);
 
   // Only resolve handle→DID if DID wasn't provided (e.g. deep links)
   useEffect(() => {
@@ -338,7 +347,12 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
     queryFn: async () => {
       const cacheKeyUri = `${postUri}:${activeFormat}`;
       const cached = await getCachedSummary(cacheKeyUri);
-      if (cached) return cached;
+      // Use cached summary only if it was generated from a comparable number of posts.
+      // Pre-generation sends only the root post, so cached.metadata.postCount may be 1
+      // while the full thread has many more posts — regenerate in that case.
+      if (cached && cached.metadata.postCount >= summaryPosts.length * 0.5) {
+        return cached;
+      }
 
       const result = await generateThreadSummary(summaryPosts, activeFormat);
       await cacheSummary(cacheKeyUri, result);
@@ -510,6 +524,21 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
     // No need to navigate to the JS compose screen.
   }, []);
 
+  const handleBookmark = (event: { nativeEvent: { uri: string } }) => {
+    const { uri } = event.nativeEvent;
+    const postNode = findPostInThread(uri);
+    if (postNode) {
+      const isCurrentlyBookmarked = bookmarkedPostUris.has(uri);
+      triggerHaptic("light");
+      toggleBookmark(postNode.post);
+      if (isCurrentlyBookmarked) {
+        showToast("Post removed from saved", { type: "info" });
+      } else {
+        showToast("Post saved", { type: "success" });
+      }
+    }
+  };
+
   const handleShare = (event: { nativeEvent: { uri: string } }) => {
     // Create a minimal FeedViewPost for sharing
     const feedViewPost: AppBskyFeedDefs.FeedViewPost = {
@@ -674,7 +703,7 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
         onLike={handleLike}
         onRepost={handleRepost}
         onReply={handleReply}
-        onBookmark={() => {}}
+        onBookmark={handleBookmark}
         onMentionPress={handleMentionPress}
         onHashtagPress={handleHashtagPress}
         onShare={handleShare}

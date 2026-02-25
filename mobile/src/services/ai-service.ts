@@ -40,6 +40,7 @@ export interface SubThreadHighlight {
 
 export interface ThreadSummaryMetadata {
   postCount: number;
+  analyzedPostCount?: number;
   authors: string[];
   generatedAt: string;
   cached?: boolean;

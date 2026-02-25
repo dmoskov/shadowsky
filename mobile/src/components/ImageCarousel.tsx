@@ -36,7 +36,7 @@ interface ImageCarouselProps {
   onClose: () => void;
 }
 
-export function ImageCarousel({
+function ImageCarouselInner({
   images,
   initialIndex,
   visible,
@@ -397,3 +397,16 @@ function createStyles(colors: any) {
     },
   });
 }
+
+export const ImageCarousel = React.memo(ImageCarouselInner, (prevProps, nextProps) => {
+  if (prevProps.visible !== nextProps.visible) return false;
+  if (prevProps.initialIndex !== nextProps.initialIndex) return false;
+  if (prevProps.onClose !== nextProps.onClose) return false;
+  if (prevProps.images.length !== nextProps.images.length) return false;
+  if (prevProps.images !== nextProps.images) {
+    for (let i = 0; i < prevProps.images.length; i++) {
+      if (prevProps.images[i].fullsize !== nextProps.images[i].fullsize) return false;
+    }
+  }
+  return true;
+});

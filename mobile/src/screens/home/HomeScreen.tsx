@@ -14,6 +14,7 @@ import { triggerHaptic } from "../../utils/haptics";
 import { useToast } from "../../contexts/ToastContext";
 import { useDataPrefetch } from "../../hooks/useDataPrefetch";
 import { openLink } from "../../utils/browser";
+import { sharePost } from "../../utils/share";
 import { useLightbox } from "../../contexts/LightboxContext";
 import type { LightboxImage } from "../../contexts/LightboxContext";
 import { createLogger } from "../../utils/logger";
@@ -299,9 +300,12 @@ export function HomeScreen() {
     }
   };
 
-  const handleShare = (_event: { nativeEvent: { uri: string } }) => {
-    // Share functionality can be implemented later
-    // TODO: Implement share functionality
+  const handleShare = (event: { nativeEvent: { uri: string } }) => {
+    const { uri } = event.nativeEvent;
+    const postData = postsByUri.get(uri);
+    if (postData) {
+      sharePost(postData);
+    }
   };
 
   // Note: Arrow key navigation disabled for native SwiftUI view

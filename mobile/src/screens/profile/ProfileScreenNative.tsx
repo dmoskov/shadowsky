@@ -42,6 +42,7 @@ import {
 } from "../../../modules/native-profile-view/src/NativeProfileViewTypes";
 import { ProfileScreen } from "./ProfileScreen";
 import { InlineErrorBoundary } from "../../components/ui/InlineErrorBoundary";
+import { ProfileAIInsights } from "../../components/ProfileAIInsights";
 import { createLogger } from "../../utils/logger";
 
 const logger = createLogger("ProfileScreenNative");
@@ -85,6 +86,7 @@ function ProfileScreenNativeIOS({
   const [showAddToList, setShowAddToList] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const handleCloseReportModal = useCallback(() => setShowReportModal(false), []);
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   useSpotlightProfile(
@@ -568,6 +570,11 @@ function ProfileScreenNativeIOS({
             </View>
           </InlineErrorBoundary>
         )}
+        {activeTab === "posts" && posts.length > 0 && (
+          <InlineErrorBoundary silent context="ProfileAIInsights">
+            <ProfileAIInsights handle={handle} posts={posts} />
+          </InlineErrorBoundary>
+        )}
       </>
     );
   }, [
@@ -582,6 +589,8 @@ function ProfileScreenNativeIOS({
     isStartingConversation,
     activeTab,
     pinnedPost,
+    posts,
+    handle,
     styles,
     handleTabChange,
     handleFollowToggle,
@@ -698,7 +707,7 @@ function ProfileScreenNativeIOS({
       {profile && showReportModal && (
         <ReportModal
           visible={showReportModal}
-          onClose={() => setShowReportModal(false)}
+          onClose={handleCloseReportModal}
           reportType="account"
           subjectUri={`at://${profile.did}/app.bsky.actor.profile/self`}
           subjectDid={profile.did}

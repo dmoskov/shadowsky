@@ -110,6 +110,8 @@ function PostCardComponent({
   const [showMenu, setShowMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showSaveToCollection, setShowSaveToCollection] = useState(false);
+  const handleCloseReportModal = useCallback(() => setShowReportModal(false), []);
+  const handleCloseSaveToCollection = useCallback(() => setShowSaveToCollection(false), []);
   const blockMutation = useBlockUser();
   const muteMutation = useMuteUser();
   const {
@@ -659,7 +661,7 @@ function PostCardComponent({
       {/* Report Modal */}
       <ReportModal
         visible={showReportModal}
-        onClose={() => setShowReportModal(false)}
+        onClose={handleCloseReportModal}
         reportType="post"
         subjectUri={postView.uri}
         subjectCid={postView.cid}
@@ -675,7 +677,7 @@ function PostCardComponent({
       <SaveToCollectionModal
         visible={showSaveToCollection}
         postUri={postView.uri}
-        onClose={() => setShowSaveToCollection(false)}
+        onClose={handleCloseSaveToCollection}
       />
     </TouchableOpacity>
   );

@@ -34,7 +34,7 @@ jobs:
 
       - name: Run lint
         working-directory: mobile
-        run: npm run lint || true
+        run: npm run lint
 
       - name: Run type check
         working-directory: mobile
@@ -63,6 +63,9 @@ jobs:
     name: E2E Tests (Maestro)
     runs-on: macos-latest
     continue-on-error: true
+    env:
+      MAESTRO_TEST_HANDLE: ${{ secrets.MAESTRO_TEST_HANDLE }}
+      MAESTRO_TEST_APP_PASSWORD: ${{ secrets.MAESTRO_TEST_APP_PASSWORD }}
 
     steps:
       - name: Checkout code
@@ -119,12 +122,19 @@ jobs:
           maestro test .maestro/auth_input_validation.yaml --format junit --output e2e-results-auth-input.xml
         timeout-minutes: 15
 
+      - name: Check authenticated test credentials
+        if: steps.check-devices.outputs.device_count != '0'
+        run: |
+          if [ -n "$MAESTRO_TEST_HANDLE" ]; then
+            echo "✅ Authenticated E2E tests enabled (MAESTRO_TEST_HANDLE is set)"
+          else
+            echo "⏭️ Authenticated E2E tests skipped — MAESTRO_TEST_HANDLE secret not configured"
+            echo "   See mobile/.maestro/README.md for setup instructions"
+          fi
+
       - name: Run Maestro E2E tests (authenticated)
         if: steps.check-devices.outputs.device_count != '0' && env.MAESTRO_TEST_HANDLE != ''
         working-directory: mobile
-        env:
-          MAESTRO_TEST_HANDLE: ${{ secrets.MAESTRO_TEST_HANDLE }}
-          MAESTRO_TEST_APP_PASSWORD: ${{ secrets.MAESTRO_TEST_APP_PASSWORD }}
         run: |
           maestro test .maestro/feed_scroll.yaml --format junit --output e2e-results-feed.xml
           maestro test .maestro/profile_view.yaml --format junit --output e2e-results-profile.xml
@@ -216,3 +226,46 @@ jobs:
       - name: Check for TypeScript errors
         working-directory: mobile
         run: npx tsc --noEmit
+
+  bundle-size:
+    name: Bundle Size Budget
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci --legacy-peer-deps
+
+      - name: Export iOS bundle
+        working-directory: mobile
+        run: npx expo export --platform ios --no-bytecode --output-dir .bundle-export
+
+      - name: Check bundle size budgets
+        working-directory: mobile
+        run: node scripts/check-bundle-size.js --output-dir .bundle-export --github-summary --pr-comment
+
+      - name: Comment PR with bundle size
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: mobile-bundle-size
+          path: mobile/bundle-size-comment.md
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload bundle export
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mobile-bundle-export
+          path: mobile/.bundle-export/_expo/static/js/
+          retention-days: 14

@@ -186,16 +186,16 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
     setIsEditModalVisible(true);
   }, []);
 
+  const handleCloseEditModal = useCallback(() => {
+    setIsEditModalVisible(false);
+  }, []);
+
   const handleSaveList = useCallback(
     async (updates: {name: string; description: string}) => {
-      try {
-        await updateList({listUri, updates});
-        Alert.alert('Success', 'List updated successfully');
-        // Refetch the list data to show updated info
-        refetch();
-      } catch (error) {
-        throw error; // Let the modal handle the error display
-      }
+      await updateList({listUri, updates});
+      Alert.alert('Success', 'List updated successfully');
+      // Refetch the list data to show updated info
+      refetch();
     },
     [updateList, listUri, refetch]
   );
@@ -336,7 +336,7 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
       <EditListModal
         visible={isEditModalVisible}
         list={listData || null}
-        onClose={() => setIsEditModalVisible(false)}
+        onClose={handleCloseEditModal}
         onSave={handleSaveList}
       />
     </View>

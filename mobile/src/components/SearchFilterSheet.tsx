@@ -59,7 +59,7 @@ function getLanguageName(code: string): string {
   return lang ? lang.name : code.toUpperCase();
 }
 
-export function SearchFilterSheet({
+function SearchFilterSheetInner({
   visible,
   onClose,
   filters,
@@ -635,3 +635,19 @@ function createStyles(colors: any) {
     },
   });
 }
+
+export const SearchFilterSheet = React.memo(SearchFilterSheetInner, (prevProps, nextProps) => {
+  if (prevProps.visible !== nextProps.visible) return false;
+  if (prevProps.onClose !== nextProps.onClose) return false;
+  if (prevProps.onApplyFilters !== nextProps.onApplyFilters) return false;
+  if (prevProps.filters !== nextProps.filters) {
+    if (prevProps.filters.sort !== nextProps.filters.sort) return false;
+    if (prevProps.filters.since !== nextProps.filters.since) return false;
+    if (prevProps.filters.until !== nextProps.filters.until) return false;
+    if (prevProps.filters.lang !== nextProps.filters.lang) return false;
+    if (prevProps.filters.author !== nextProps.filters.author) return false;
+    if (prevProps.filters.domain !== nextProps.filters.domain) return false;
+    if (prevProps.filters.mediaFilter !== nextProps.filters.mediaFilter) return false;
+  }
+  return true;
+});

@@ -127,9 +127,8 @@ export default function PostQuotesRoute() {
     });
   };
 
-  const handleLinkPress = (url: string) => {
+  const handleLinkPress = (_url: string) => {
     // Handle external links - you might want to open in browser
-    console.log('Link pressed:', url);
   };
 
   const handleQuotePress = (quoteUri: string, handle: string) => {

@@ -122,7 +122,7 @@ describe('ImageEmbed', () => {
   describe('image tap to open lightbox', () => {
     it('opens lightbox when image is tapped and no onImagePress provided', () => {
       // Mock measureInWindow on View prototype so the ref callback works
-      const mockMeasureInWindow = jest.fn((cb: Function) => cb(0, 0, 100, 100));
+      const mockMeasureInWindow = jest.fn((cb: (...args: unknown[]) => unknown) => cb(0, 0, 100, 100));
       jest.spyOn(
         require('react-native').View.prototype,
         'measureInWindow',

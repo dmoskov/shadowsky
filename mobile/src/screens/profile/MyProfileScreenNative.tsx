@@ -27,6 +27,8 @@ import {
   ProfileTab,
 } from "../../../modules/native-profile-view/src/NativeProfileViewTypes";
 import { MyProfileScreen } from "./MyProfileScreen";
+import { ProfileAIInsights } from "../../components/ProfileAIInsights";
+import { InlineErrorBoundary } from "../../components/ui/InlineErrorBoundary";
 
 interface MyProfileScreenNativeProps {
   onNavigateToPost?: (uri: string) => void;
@@ -303,26 +305,36 @@ function MyProfileScreenNativeIOS({
 
   const renderHeader = useCallback(() => {
     return (
-      <NativeProfileViewWithData
-        profile={profileData}
-        starterPacks={starterPacksForNative}
-        isOwnProfile={true}
-        isLoading={isLoadingProfile}
-        error={null}
-        onTabChange={handleTabChange}
-        onFollowersPress={handleFollowersPress}
-        onFollowingPress={handleFollowingPress}
-        onEditProfile={handleEditProfile}
-        onStarterPackPress={handleStarterPackPress}
-        onSignOut={handleSignOut}
-        onRefresh={handleRefresh}
-        style={styles.nativeHeader}
-      />
+      <>
+        <NativeProfileViewWithData
+          profile={profileData}
+          starterPacks={starterPacksForNative}
+          isOwnProfile={true}
+          isLoading={isLoadingProfile}
+          error={null}
+          onTabChange={handleTabChange}
+          onFollowersPress={handleFollowersPress}
+          onFollowingPress={handleFollowingPress}
+          onEditProfile={handleEditProfile}
+          onStarterPackPress={handleStarterPackPress}
+          onSignOut={handleSignOut}
+          onRefresh={handleRefresh}
+          style={styles.nativeHeader}
+        />
+        {activeTab === "posts" && posts.length > 0 && account?.handle && (
+          <InlineErrorBoundary silent context="ProfileAIInsights">
+            <ProfileAIInsights handle={account.handle} posts={posts} />
+          </InlineErrorBoundary>
+        )}
+      </>
     );
   }, [
     profileData,
     starterPacksForNative,
     isLoadingProfile,
+    activeTab,
+    posts,
+    account?.handle,
     styles,
     handleTabChange,
     handleFollowersPress,

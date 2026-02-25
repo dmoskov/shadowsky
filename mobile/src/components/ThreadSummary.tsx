@@ -33,7 +33,7 @@ const STALE_TIME_MS = 10 * 60 * 1000; // 10 minutes
  * Mobile ThreadSummary - AI-generated summary for threads with 5+ posts
  * Supports quick (TLDR) and full (adaptive) summary modes
  */
-export function ThreadSummary({
+function ThreadSummaryInner({
   posts,
   threadUri,
   parentUris,
@@ -332,3 +332,17 @@ function createStyles(colors: any) {
     },
   });
 }
+
+export const ThreadSummary = React.memo(ThreadSummaryInner, (prevProps, nextProps) => {
+  if (prevProps.threadUri !== nextProps.threadUri) return false;
+  if (prevProps.parentUris !== nextProps.parentUris) {
+    if (prevProps.parentUris?.size !== nextProps.parentUris?.size) return false;
+  }
+  if (prevProps.posts !== nextProps.posts) {
+    if (prevProps.posts.length !== nextProps.posts.length) return false;
+    for (let i = 0; i < prevProps.posts.length; i++) {
+      if (prevProps.posts[i].uri !== nextProps.posts[i].uri) return false;
+    }
+  }
+  return true;
+});
