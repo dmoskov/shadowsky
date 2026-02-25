@@ -69,15 +69,22 @@ class NotificationListState: ObservableObject {
         }
     }
 
+    deinit {
+        stopObserving()
+    }
+
     func stopObserving() {
         if let observer = notificationDataObserver {
             NotificationCenter.default.removeObserver(observer)
+            notificationDataObserver = nil
         }
         if let observer = clearDataObserver {
             NotificationCenter.default.removeObserver(observer)
+            clearDataObserver = nil
         }
         if let observer = decodeErrorObserver {
             NotificationCenter.default.removeObserver(observer)
+            decodeErrorObserver = nil
         }
     }
 

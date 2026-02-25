@@ -80,18 +80,26 @@ class SearchState: ObservableObject {
         }
     }
 
+    deinit {
+        stopObserving()
+    }
+
     func stopObserving() {
         if let observer = resultsObserver {
             NotificationCenter.default.removeObserver(observer)
+            resultsObserver = nil
         }
         if let observer = trendingObserver {
             NotificationCenter.default.removeObserver(observer)
+            trendingObserver = nil
         }
         if let observer = historyObserver {
             NotificationCenter.default.removeObserver(observer)
+            historyObserver = nil
         }
         if let observer = typeaheadObserver {
             NotificationCenter.default.removeObserver(observer)
+            typeaheadObserver = nil
         }
     }
 

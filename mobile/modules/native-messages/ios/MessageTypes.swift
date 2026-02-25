@@ -127,18 +127,26 @@ class MessagesDataState: ObservableObject {
         }
     }
 
+    deinit {
+        stopObserving()
+    }
+
     func stopObserving() {
         if let observer = conversationsObserver {
             NotificationCenter.default.removeObserver(observer)
+            conversationsObserver = nil
         }
         if let observer = messagesObserver {
             NotificationCenter.default.removeObserver(observer)
+            messagesObserver = nil
         }
         if let observer = searchResultsObserver {
             NotificationCenter.default.removeObserver(observer)
+            searchResultsObserver = nil
         }
         if let observer = clearObserver {
             NotificationCenter.default.removeObserver(observer)
+            clearObserver = nil
         }
     }
 
