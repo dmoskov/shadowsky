@@ -29,29 +29,30 @@ struct ExternalLinkEmbed: View {
             VStack(spacing: 0) {
                 // Thumbnail
                 if let thumbURL = external.thumb, let url = URL(string: thumbURL) {
-                    CachedAsyncImage(url: url) { phase in
-                        switch phase {
-                        case .empty:
-                            Color.gray.opacity(0.2)
-                                .frame(height: 180)
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(height: 180)
-                                .clipped()
-                        case .failure:
-                            Color.gray.opacity(0.2)
-                                .frame(height: 180)
-                                .overlay(
-                                    Image(systemName: "link")
-                                        .foregroundColor(.gray)
-                                )
-                        @unknown default:
-                            Color.gray.opacity(0.2)
-                                .frame(height: 180)
+                    GeometryReader { geo in
+                        CachedAsyncImage(url: url) { phase in
+                            switch phase {
+                            case .empty:
+                                Color.gray.opacity(0.2)
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: geo.size.width, height: 180)
+                                    .clipped()
+                            case .failure:
+                                Color.gray.opacity(0.2)
+                                    .overlay(
+                                        Image(systemName: "link")
+                                            .foregroundColor(.gray)
+                                    )
+                            @unknown default:
+                                Color.gray.opacity(0.2)
+                            }
                         }
+                        .frame(width: geo.size.width, height: 180)
                     }
+                    .frame(height: 180)
                 }
 
                 // Text content

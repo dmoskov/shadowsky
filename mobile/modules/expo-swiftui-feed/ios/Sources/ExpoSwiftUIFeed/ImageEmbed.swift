@@ -168,27 +168,31 @@ struct ImageTile: View {
     var body: some View {
         Button(action: { onPress(index) }) {
             ZStack(alignment: .bottomLeading) {
-                CachedAsyncImage(url: URL(string: imageData.thumb)) { phase in
-                    switch phase {
-                    case .empty:
-                        Color.gray.opacity(0.3)
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .blur(radius: blurImage ? 20 : 0)
-                            .opacity(blurImage ? 0.8 : 1.0)
-                    case .failure:
-                        Color.gray.opacity(0.3)
-                            .overlay(
-                                Image(systemName: "photo")
-                                    .foregroundColor(.gray)
-                            )
-                    @unknown default:
-                        Color.gray.opacity(0.3)
+                GeometryReader { geo in
+                    CachedAsyncImage(url: URL(string: imageData.thumb)) { phase in
+                        switch phase {
+                        case .empty:
+                            Color.gray.opacity(0.3)
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: geo.size.width, height: geo.size.height)
+                                .blur(radius: blurImage ? 20 : 0)
+                                .opacity(blurImage ? 0.8 : 1.0)
+                        case .failure:
+                            Color.gray.opacity(0.3)
+                                .overlay(
+                                    Image(systemName: "photo")
+                                        .foregroundColor(.gray)
+                                )
+                        @unknown default:
+                            Color.gray.opacity(0.3)
+                        }
                     }
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
                 }
-                .clipped()
 
                 // ALT badge / expanded alt text
                 if let alt = imageData.alt, !alt.isEmpty {
