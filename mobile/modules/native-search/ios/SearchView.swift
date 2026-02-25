@@ -694,9 +694,15 @@ struct SearchView: View {
 
     // MARK: - Formatting Helpers
 
+    private static let iso8601Formatter = ISO8601DateFormatter()
+    private static let dateOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d"
+        return f
+    }()
+
     private func formatRelativeTime(_ isoString: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: isoString) else { return "" }
+        guard let date = Self.iso8601Formatter.date(from: isoString) else { return "" }
         let interval = Date().timeIntervalSince(date)
 
         if interval < 60 { return "now" }
@@ -704,9 +710,7 @@ struct SearchView: View {
         if interval < 86400 { return "\(Int(interval / 3600))h" }
         if interval < 604800 { return "\(Int(interval / 86400))d" }
 
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMM d"
-        return dateFormatter.string(from: date)
+        return Self.dateOnlyFormatter.string(from: date)
     }
 
     private func formatCount(_ count: Int) -> String {

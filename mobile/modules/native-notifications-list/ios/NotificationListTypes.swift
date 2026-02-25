@@ -175,9 +175,23 @@ enum ProcessedNotificationUIModel: Identifiable {
 // MARK: - Conversion from Bridge Types
 
 extension NotificationUIModel {
+    fileprivate static let iso8601Formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+    fileprivate static let iso8601FallbackFormatter = ISO8601DateFormatter()
+    fileprivate static let dateOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d"
+        return f
+    }()
+
     static func from(_ serialized: SerializedNotification) -> NotificationUIModel {
         let reason = NotificationReason(rawValue: serialized.reason)
-        let date = ISO8601DateFormatter().date(from: serialized.indexedAt) ?? Date()
+        let date = iso8601Formatter.date(from: serialized.indexedAt)
+            ?? iso8601FallbackFormatter.date(from: serialized.indexedAt)
+            ?? Date()
         let timestamp = Self.formatRelativeTime(from: date)
 
         // Import Facet type from FeedBridge via NotificationBridge's re-export
@@ -209,16 +223,16 @@ extension NotificationUIModel {
         if interval < 86400 { return "\(Int(interval / 3600))h ago" }
         if interval < 604800 { return "\(Int(interval / 86400))d ago" }
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
+        return dateOnlyFormatter.string(from: date)
     }
 }
 
 extension AggregatedNotificationUIModel {
     static func from(_ aggregated: AggregatedNotification) -> AggregatedNotificationUIModel {
         let reason = NotificationReason(rawValue: aggregated.reason)
-        let date = ISO8601DateFormatter().date(from: aggregated.latestTimestamp) ?? Date()
+        let date = NotificationUIModel.iso8601Formatter.date(from: aggregated.latestTimestamp)
+            ?? NotificationUIModel.iso8601FallbackFormatter.date(from: aggregated.latestTimestamp)
+            ?? Date()
         let timestamp = NotificationUIModel.formatRelativeTime(from: date)
         let hasUnread = aggregated.notifications.contains(where: { !$0.isRead })
 
