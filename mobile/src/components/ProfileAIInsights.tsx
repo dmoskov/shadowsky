@@ -1,11 +1,6 @@
 import React, { useState, useMemo } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { SkeletonShimmer } from "./SkeletonShimmer";
 import { useQuery } from "@tanstack/react-query";
 import { AppBskyFeedDefs } from "@atproto/api";
 import {
@@ -166,13 +161,9 @@ export function ProfileAIInsights({ handle, posts }: ProfileAIInsightsProps) {
       {/* Loading state */}
       {isLoadingAnalysis && !analysisData && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={colors.accentPurple} />
-          <View style={styles.loadingTextContainer}>
-            <Text style={styles.loadingTitle}>Analyzing profile...</Text>
-            <Text style={styles.loadingSubtitle}>
-              Reviewing posts for themes, style, and engagement
-            </Text>
-          </View>
+          <SkeletonShimmer width="80%" height={14} />
+          <SkeletonShimmer width="60%" height={14} />
+          <SkeletonShimmer width="70%" height={14} />
         </View>
       )}
 
@@ -360,22 +351,8 @@ function createStyles(colors: any) {
       color: colors.textTertiary,
     },
     loadingContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 12,
+      gap: 10,
       paddingVertical: 8,
-    },
-    loadingTextContainer: {
-      flex: 1,
-    },
-    loadingTitle: {
-      fontSize: 13,
-      color: colors.text,
-    },
-    loadingSubtitle: {
-      fontSize: 11,
-      color: colors.textTertiary,
-      marginTop: 2,
     },
     errorText: {
       fontSize: 13,

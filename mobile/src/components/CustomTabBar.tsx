@@ -73,6 +73,10 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     setCustomizerVisible(true);
   }, []);
 
+  const handleCloseCustomizer = useCallback(() => {
+    setCustomizerVisible(false);
+  }, []);
+
   const handleTabPress = useCallback(
     (itemId: string) => {
       triggerHaptic("light");
@@ -169,7 +173,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
       <TabBarCustomizer
         visible={customizerVisible}
-        onClose={() => setCustomizerVisible(false)}
+        onClose={handleCloseCustomizer}
       />
     </>
   );

@@ -226,3 +226,46 @@ jobs:
       - name: Check for TypeScript errors
         working-directory: mobile
         run: npx tsc --noEmit
+
+  bundle-size:
+    name: Bundle Size Budget
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci --legacy-peer-deps
+
+      - name: Export iOS bundle
+        working-directory: mobile
+        run: npx expo export --platform ios --no-bytecode --output-dir .bundle-export
+
+      - name: Check bundle size budgets
+        working-directory: mobile
+        run: node scripts/check-bundle-size.js --output-dir .bundle-export --github-summary --pr-comment
+
+      - name: Comment PR with bundle size
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: mobile-bundle-size
+          path: mobile/bundle-size-comment.md
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload bundle export
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mobile-bundle-export
+          path: mobile/.bundle-export/_expo/static/js/
+          retention-days: 14

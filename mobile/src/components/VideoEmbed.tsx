@@ -26,7 +26,7 @@ interface VideoEmbedProps {
   onPress?: (url: string) => void;
 }
 
-export function VideoEmbed({video, postUri, isVisible = false}: VideoEmbedProps) {
+function VideoEmbedInner({video, postUri, isVisible = false}: VideoEmbedProps) {
   const {colors} = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const {
@@ -517,3 +517,14 @@ function createStyles(colors: any) {
     },
   });
 }
+
+export const VideoEmbed = React.memo(VideoEmbedInner, (prevProps, nextProps) => {
+  if (prevProps.isVisible !== nextProps.isVisible) return false;
+  if (prevProps.postUri !== nextProps.postUri) return false;
+  if (prevProps.onPress !== nextProps.onPress) return false;
+  if (prevProps.video !== nextProps.video) {
+    if (prevProps.video.cid !== nextProps.video.cid) return false;
+    if (prevProps.video.playlist !== nextProps.video.playlist) return false;
+  }
+  return true;
+});

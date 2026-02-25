@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Modal } from "react-native";
-import { Image } from "expo-image";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as Localization from "expo-localization";
@@ -27,7 +26,7 @@ import type { TenorGif } from "../../services/tenor";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { ImageEditor } from "../../components/ImageEditor";
 import { useTranslation } from "../../hooks/useTranslation";
-import { ComposeToolbar, ComposeMediaPreview, ComposeQuotePreview, TonePickerModal } from "./components";
+import { ComposeToolbar, ComposeMediaPreview, ComposeQuotePreview, TonePickerModal, AltTextModal } from "./components";
 import { generateAltText, adjustTone } from "../../services/ai-service";
 import type { ToneOption } from "../../services/ai-service";
 import { usePreferences } from "../../contexts/PreferencesContext";
@@ -93,7 +92,6 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const [altTextModalVisible, setAltTextModalVisible] = useState(false);
   const [tempAltText, setTempAltText] = useState("");
-  const [isGeneratingAltText, setIsGeneratingAltText] = useState(false);
 
   // AI tone adjustment state
   const [tonePickerVisible, setTonePickerVisible] = useState(false);
@@ -528,24 +526,23 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
     setAltTextModalVisible(true);
   };
 
-  const handleSaveAltText = () => {
+  const handleSaveAltText = (altText: string) => {
     if (selectedImageIndex !== null) {
-      imagePicker.updateAltText(selectedImageIndex, tempAltText);
+      imagePicker.updateAltText(selectedImageIndex, altText);
     }
     setAltTextModalVisible(false);
     setSelectedImageIndex(null);
     setTempAltText("");
   };
 
-  const handleGenerateAltText = async () => {
-    if (selectedImageIndex === null) return;
+  const handleGenerateAltText = async (): Promise<string> => {
+    if (selectedImageIndex === null) return "";
 
-    setIsGeneratingAltText(true);
     try {
       const imageUri = imagePicker.selectedImages[selectedImageIndex].uri;
       const generatedText = await generateAltText(imageUri);
-      setTempAltText(generatedText);
       triggerHaptic('success');
+      return generatedText;
     } catch (error) {
       logger.error('Failed to generate alt text:', error);
       Alert.alert(
@@ -554,8 +551,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
         [{ text: 'OK' }]
       );
       triggerHaptic('error');
-    } finally {
-      setIsGeneratingAltText(false);
+      throw error;
     }
   };
 
@@ -1114,64 +1110,15 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
       />
 
       {/* Alt Text Modal */}
-      <Modal
+      <AltTextModal
         visible={altTextModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setAltTextModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Alt Text</Text>
-              <TouchableOpacity onPress={() => setAltTextModalVisible(false)}>
-                <Text style={styles.modalCloseButton}>×</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.modalDescription}>
-              Describe this image for people who are blind or have low vision.
-            </Text>
-            {selectedImageIndex !== null && (
-              <Image
-                source={{ uri: imagePicker.selectedImages[selectedImageIndex].uri }}
-                style={styles.modalImage}
-                contentFit="cover"
-                cachePolicy="memory-disk"
-              />
-            )}
-            <TouchableOpacity
-              style={[styles.generateAltTextButton, isGeneratingAltText && styles.generateAltTextButtonDisabled]}
-              onPress={handleGenerateAltText}
-              disabled={isGeneratingAltText}
-            >
-              {isGeneratingAltText ? (
-                <>
-                  <ActivityIndicator size="small" color={colors.primary} style={styles.generateButtonSpinner} />
-                  <Text style={styles.generateAltTextButtonText}>Generating...</Text>
-                </>
-              ) : (
-                <Text style={styles.generateAltTextButtonText}>✨ Generate with AI</Text>
-              )}
-            </TouchableOpacity>
-            <TextInput
-              style={styles.altTextInput}
-              placeholder="Describe this image..."
-              placeholderTextColor={colors.textTertiary}
-              multiline
-              value={tempAltText}
-              onChangeText={setTempAltText}
-              maxLength={1000}
-              autoFocus
-            />
-            <TouchableOpacity
-              style={styles.saveAltTextButton}
-              onPress={handleSaveAltText}
-            >
-              <Text style={styles.saveAltTextButtonText}>Save</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setAltTextModalVisible(false)}
+        imageUri={selectedImageIndex !== null ? imagePicker.selectedImages[selectedImageIndex]?.uri : undefined}
+        initialAltText={tempAltText}
+        onSave={handleSaveAltText}
+        onGenerateAltText={handleGenerateAltText}
+        colors={colors}
+      />
 
       {/* Language Picker Modal */}
       <LanguagePicker
@@ -1331,90 +1278,6 @@ function createStyles(colors: any) {
     color: colors.textSecondary,
     fontSize: 14,
     lineHeight: 18,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    justifyContent: "flex-end",
-  },
-  modalContent: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 16,
-    maxHeight: "80%",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  modalTitle: {
-    color: colors.text,
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  modalCloseButton: {
-    color: colors.textSecondary,
-    fontSize: 32,
-    lineHeight: 32,
-  },
-  modalDescription: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    marginBottom: 12,
-  },
-  modalImage: {
-    width: "100%",
-    height: 200,
-    borderRadius: 8,
-    backgroundColor: colors.surfaceElevated,
-    marginBottom: 12,
-    resizeMode: "contain",
-  },
-  generateAltTextButton: {
-    backgroundColor: colors.surfaceElevated,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-    flexDirection: "row",
-  },
-  generateAltTextButtonDisabled: {
-    opacity: 0.6,
-  },
-  generateAltTextButtonText: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  generateButtonSpinner: {
-    marginRight: 8,
-  },
-  altTextInput: {
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.surfaceElevated,
-    borderRadius: 8,
-    padding: 12,
-    color: colors.text,
-    fontSize: 16,
-    minHeight: 100,
-    textAlignVertical: "top",
-    marginBottom: 12,
-  },
-  saveAltTextButton: {
-    backgroundColor: colors.primary,
-    padding: 16,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  saveAltTextButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: "600",
   },
   });
 }
