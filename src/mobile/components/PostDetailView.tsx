@@ -112,51 +112,29 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as ViewStyle,
     parentPost: {
       flexDirection: "row",
-      padding: 16,
-      position: "relative",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 10,
     } as ViewStyle,
     parentPostLast: {
       paddingBottom: 8,
     } as ViewStyle,
     threadLine: {
-      position: "absolute",
-      left: 36,
-      top: 56,
-      bottom: 0,
       width: 2,
+      height: 20,
       backgroundColor: "#e1e1e1",
-    } as ViewStyle,
-    parentContent: {
-      flex: 1,
-      marginLeft: 12,
-      flexShrink: 1,
-    } as ViewStyle,
-    parentHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      flexWrap: "wrap",
+      borderRadius: 1,
+      marginRight: 10,
     } as ViewStyle,
     parentAuthor: {
       fontSize: scaledFont(14),
       fontWeight: "600",
       color: "#0f1419",
-      marginRight: 4,
     } as TextStyle,
-    parentHandle: {
-      fontSize: scaledFont(13),
-      color: "#687684",
-      marginRight: 4,
-      flexShrink: 1,
-    } as TextStyle,
-    parentTime: {
-      fontSize: scaledFont(13),
-      color: "#687684",
-    } as TextStyle,
-    parentText: {
+    parentSnippet: {
       fontSize: scaledFont(14),
-      lineHeight: scaledLineHeight(scaledFont, 14, 18),
-      color: "#0f1419",
-      marginTop: 4,
+      color: "#687684",
+      fontWeight: "400",
     } as TextStyle,
     mainPost: {
       padding: 16,
@@ -1013,12 +991,11 @@ const ReplyItem = memo(function ReplyItem({
 });
 
 /**
- * Parent post item (thread context)
+ * Parent post item (thread context) - single simple line
  */
 const ParentPostItem = memo(function ParentPostItem({
   post,
   onPress,
-  onAuthorPress,
   isLast,
   styles,
 }: {
@@ -1029,17 +1006,7 @@ const ParentPostItem = memo(function ParentPostItem({
   styles: Styles;
 }) {
   const record = post.record as any;
-  const timeAgo = useMemo(
-    () =>
-      formatDistanceToNow(new Date(post.indexedAt), {
-        addSuffix: true,
-      }),
-    [post.indexedAt],
-  );
-
-  const handleAuthorPress = useCallback(() => {
-    onAuthorPress?.(post.author.handle);
-  }, [post.author.handle, onAuthorPress]);
+  const snippet = (record?.text || "").replace(/\n/g, " ");
 
   const handlePress = useCallback(() => {
     onPress?.(post);
@@ -1050,23 +1017,15 @@ const ParentPostItem = memo(function ParentPostItem({
       onPress={handlePress}
       style={[styles.parentPost, isLast && styles.parentPostLast]}
       accessibilityRole="button"
+      accessibilityLabel={`Reply to ${post.author.displayName || post.author.handle}`}
     >
       <View style={styles.threadLine} />
-      <Avatar uri={post.author.avatar} size={40} onPress={handleAuthorPress} />
-      <View style={styles.parentContent}>
-        <View style={styles.parentHeader}>
-          <Pressable onPress={handleAuthorPress}>
-            <Text style={styles.parentAuthor} numberOfLines={1}>
-              {post.author.displayName || post.author.handle}
-            </Text>
-          </Pressable>
-          <Text style={styles.parentHandle}>@{post.author.handle}</Text>
-          <Text style={styles.parentTime}>· {timeAgo}</Text>
-        </View>
-        <Text style={styles.parentText} numberOfLines={3}>
-          {record?.text || ""}
+      <Text numberOfLines={1}>
+        <Text style={styles.parentAuthor}>
+          {post.author.displayName || post.author.handle}
         </Text>
-      </View>
+        {snippet ? <Text style={styles.parentSnippet}> {snippet}</Text> : null}
+      </Text>
     </Pressable>
   );
 });
