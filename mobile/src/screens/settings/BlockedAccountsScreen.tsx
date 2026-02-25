@@ -108,7 +108,8 @@ export function BlockedAccountsScreen({ onNavigateToProfile }: BlockedAccountsSc
 
   const renderEmpty = () => {
     if (isLoading) {
-      return <UserListSkeleton />;\n    }
+      return <UserListSkeleton />;
+    }
 
     if (error) {
       return (

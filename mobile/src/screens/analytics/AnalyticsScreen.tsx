@@ -18,6 +18,7 @@ import { useUserAnalytics } from "../../hooks/api/useAnalytics";
 import { usePostAnalysis } from "../../hooks/api/useAnalytics";
 import { TimeRange } from "../../services/atproto/analytics";
 import { PostCard } from "../../components/PostCard";
+import { SkeletonShimmer } from "../../components/SkeletonShimmer";
 import type { PostAnalysisPost } from "../../services/ai-service";
 
 export function AnalyticsScreen() {

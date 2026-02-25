@@ -22,6 +22,7 @@ import {useAuth} from '../../contexts/AuthContext';
 import {AppBskyGraphDefs} from '@atproto/api';
 import {useTheme} from '../../contexts/ThemeContext';
 import {EditListModal} from '../../components/EditListModal';
+import {UserListSkeleton} from '../../components/UserListSkeleton';
 
 interface ListDetailScreenProps {
   listUri: string;

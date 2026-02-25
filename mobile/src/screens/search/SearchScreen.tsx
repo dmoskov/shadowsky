@@ -6,7 +6,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
   Platform,
 } from "react-native";
@@ -17,6 +16,7 @@ import { useSearchActors } from "../../hooks/api/useProfile";
 import { useSearchPosts } from "../../hooks/api/useSearchPosts";
 import { Avatar } from "../../components/Avatar";
 import { FeedList } from "../../components/FeedList";
+import { PostCardSkeleton } from "../../components/PostCardSkeleton";
 import { TrendingTopics } from "../../components/TrendingTopics";
 import { SearchFilterSheet, type SearchFilterValues } from "../../components/SearchFilterSheet";
 import { AppBskyActorDefs, AppBskyFeedDefs } from "@atproto/api";
@@ -496,7 +496,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
 
           {/* Content */}
           {isLoading && debouncedQuery ? (
-            <View style={styles.loadingContainer}>
+            <View style={styles.loadingContainer} testID="search-loading">
               <PostCardSkeleton />
               <PostCardSkeleton />
               <PostCardSkeleton />

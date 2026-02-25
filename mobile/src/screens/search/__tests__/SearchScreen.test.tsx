@@ -410,10 +410,10 @@ describe('SearchScreen', () => {
 
   // ─── Loading states ─────────────────────────────────────
   describe('loading states', () => {
-    it('shows loading spinner when searching posts', () => {
+    it('shows loading skeleton when searching posts', () => {
       mockIsLoadingPosts = true;
 
-      const { getByPlaceholderText, getByText } = render(<SearchScreen />);
+      const { getByPlaceholderText, getByTestId } = render(<SearchScreen />);
       const input = getByPlaceholderText('Search posts, users, hashtags...');
 
       fireEvent.changeText(input, 'test');
@@ -421,13 +421,13 @@ describe('SearchScreen', () => {
         jest.advanceTimersByTime(300);
       });
 
-      expect(getByText('Searching...')).toBeTruthy();
+      expect(getByTestId('search-loading')).toBeTruthy();
     });
 
-    it('shows loading spinner when searching people', () => {
+    it('shows loading skeleton when searching people', () => {
       mockIsLoadingActors = true;
 
-      const { getByPlaceholderText, getByText } = render(<SearchScreen />);
+      const { getByPlaceholderText, getByText, getByTestId } = render(<SearchScreen />);
 
       fireEvent.press(getByText('People'));
 
@@ -437,7 +437,7 @@ describe('SearchScreen', () => {
         jest.advanceTimersByTime(300);
       });
 
-      expect(getByText('Searching...')).toBeTruthy();
+      expect(getByTestId('search-loading')).toBeTruthy();
     });
 
     it('shows trending topics loading state', () => {

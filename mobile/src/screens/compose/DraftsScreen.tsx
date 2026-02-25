@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, {useCallback, useMemo} from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { useDrafts, useDeleteDraft } from '../../hooks/api';
 import { EnrichedDraft } from '../../services/drafts';
 import { useTheme } from '../../contexts/ThemeContext';
 import { CloseIcon } from '../../components/icons';
+import { PostCardSkeleton } from '../../components/PostCardSkeleton';
 import { triggerHaptic } from '../../utils/haptics';
 
 /**
@@ -117,6 +118,21 @@ export function DraftsScreen() {
           <CloseIcon size={20} color={colors.textSecondary} />
         </TouchableOpacity>
       </TouchableOpacity>
+    );
+  };
+
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const renderFooter = () => {
+    if (!isFetchingNextPage) return null;
+    return (
+      <View style={styles.footer}>
+        <ActivityIndicator size="small" color={colors.textSecondary} />
+      </View>
     );
   };
 

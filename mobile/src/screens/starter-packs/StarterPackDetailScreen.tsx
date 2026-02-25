@@ -15,7 +15,7 @@ import {useAppNavigation} from '../../hooks/useNavigation';
 import {AppBskyGraphDefs} from '@atproto/api';
 import {useTheme} from '../../contexts/ThemeContext';
 import {Avatar} from '../../components/Avatar';
-
+import {SkeletonShimmer} from '../../components/SkeletonShimmer';
 
 import { createLogger } from '../../utils/logger';
 

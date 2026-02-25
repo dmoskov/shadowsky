@@ -1,5 +1,5 @@
 import React, {useCallback, useMemo} from 'react';
-import {View, StyleSheet, Text, ActivityIndicator, TouchableOpacity} from 'react-native';
+import {View, StyleSheet, Text, TouchableOpacity} from 'react-native';
 import {FeedList} from '../../components/FeedList';
 import {useListFeed, useList} from '../../hooks/api';
 import {AppBskyFeedDefs} from '@atproto/api';
