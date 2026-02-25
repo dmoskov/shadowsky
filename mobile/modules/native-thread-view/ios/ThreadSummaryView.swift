@@ -21,6 +21,7 @@ struct SubThreadHighlight: Identifiable {
 /// Metadata about the thread summary
 struct ThreadSummaryMetadata {
     let postCount: Int?
+    let analyzedPostCount: Int?
     let authors: [String]?
     let generatedAt: String?
     let cached: Bool
@@ -74,6 +75,7 @@ extension ThreadSummaryData {
 
         let metadata = ThreadSummaryMetadata(
             postCount: metaDict["postCount"] as? Int,
+            analyzedPostCount: metaDict["analyzedPostCount"] as? Int,
             authors: metaDict["authors"] as? [String],
             generatedAt: metaDict["generatedAt"] as? String,
             cached: metaDict["cached"] as? Bool ?? false,
