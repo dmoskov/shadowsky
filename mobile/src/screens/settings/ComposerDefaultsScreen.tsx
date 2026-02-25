@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { usePreferences } from "../../contexts/PreferencesContext";
-import { ChevronLeftIcon } from '../../../components/icons';
+import { ChevronLeftIcon } from '../../components/icons';
 
 interface ComposerDefaultsScreenProps {
   navigation: {

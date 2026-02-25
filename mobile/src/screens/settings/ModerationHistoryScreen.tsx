@@ -10,7 +10,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import {useTheme} from '../../contexts/ThemeContext';
-import { ChevronLeftIcon, BanIcon, VolumeXIcon, FlagIcon, TrashIcon } from '../../../components/icons';
+import { ChevronLeftIcon, BanIcon, VolumeXIcon, FlagIcon, TrashIcon } from '../../components/icons';
 import {formatDistanceToNow} from 'date-fns';
 import {
   getAllEntries,

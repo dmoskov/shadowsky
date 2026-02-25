@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
-import { ChevronLeftIcon } from '../../../components/icons';
+import { ChevronLeftIcon } from '../../components/icons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface MediaCacheScreenProps {
