@@ -18,7 +18,7 @@ import {
   BookmarkIcon,
 } from "./icons";
 import { useUnreadCount } from "../hooks/api/useNotifications";
-import { useUnreadMessageCount, useDraftCount, useBookmarkCount } from "../hooks/api";
+import { useUnreadMessageCount, useDraftCount } from "../hooks/api";
 
 const SIDEBAR_WIDTH = 260;
 
@@ -113,7 +113,6 @@ export function IPadSidebar() {
   const { data: unreadNotifications } = useUnreadCount();
   const unreadMessages = useUnreadMessageCount();
   const draftCount = useDraftCount();
-  const bookmarkCount = useBookmarkCount();
 
   const isHome = pathname === "/" || pathname.startsWith("/(app)/(tabs)/(home)");
   const isSearch = pathname.includes("/(search)");
@@ -189,7 +188,6 @@ export function IPadSidebar() {
             label="Bookmarks"
             icon={<BookmarkIcon size={22} color={pathname.includes("/bookmarks") ? colors.primary : colors.text} />}
             isActive={pathname.includes("/bookmarks")}
-            badge={bookmarkCount}
             onPress={() => router.push("/(app)/(tabs)/(profile)/bookmarks")}
             colors={colors}
           />

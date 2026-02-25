@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon, ChatBubbleIcon, SearchIcon, ImageIcon, BookmarkIcon } from "./icons";
-import { useUnreadMessageCount, useDraftCount, useBookmarkCount } from "../hooks/api";
+import { useUnreadMessageCount, useDraftCount } from "../hooks/api";
 
 interface DrawerItemProps {
   label: string;
@@ -49,8 +49,6 @@ export function CustomDrawerContent() {
   const { account } = useAuth();
   const unreadCount = useUnreadMessageCount();
   const draftCount = useDraftCount();
-  const bookmarkCount = useBookmarkCount();
-
   return (
     <ScrollView style={[styles.drawerContent, { paddingTop: insets.top }]}>
       <View style={styles.drawerHeader}>
@@ -90,7 +88,6 @@ export function CustomDrawerContent() {
           icon={<BookmarkIcon size={20} color={pathname.includes("/bookmarks") ? colors.primary : colors.text} />}
           isActive={pathname.includes("/bookmarks")}
           onPress={() => router.push("/(app)/(tabs)/(profile)/bookmarks")}
-          badge={bookmarkCount}
           styles={styles}
         />
         <DrawerItem
