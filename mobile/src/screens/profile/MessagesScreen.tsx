@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   TextInput,
   Image,
@@ -11,29 +10,27 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
-  Animated,
 } from "react-native";
-import { formatDistanceToNow } from "date-fns";
-import Swipeable from "react-native-gesture-handler/Swipeable";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   dmService,
   DmConversation,
-  DmMessage,
 } from "../../services/dm-service";
 import { getAtProtoClient } from "../../services/atproto/client";
 import { LoadingState } from "../../components/LoadingState";
 import { ErrorState } from "../../components/ErrorState";
 import { EmptyState } from "../../components/EmptyState";
 import { NewConversationModal } from "../../components/NewConversationModal";
-import { LockIcon, ChatBubbleIcon, ArrowLeftIcon, SearchIcon, CloseIcon, PlusIcon, TrashIcon, BellIcon, BellSlashIcon } from "../../components/icons";
+import { LockIcon, ChatBubbleIcon, ArrowLeftIcon, SearchIcon, CloseIcon, PlusIcon, BellIcon, BellSlashIcon } from "../../components/icons";
 import { useConversations, useConversation, useSendMessage, useMarkAsRead, useMuteConversation, useUnmuteConversation, useLeaveConversation, useDeleteMessage } from "../../hooks/api";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAppNavigation } from "../../hooks/useNavigation";
-import { InlineErrorBoundary } from "../../components/ui/InlineErrorBoundary";
 import { SkeletonShimmer } from "../../components/SkeletonShimmer";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { ConversationListView } from "./components/ConversationListView";
+import { MessageThread } from "./components/MessageThread";
+import { MessageInput } from "./components/MessageInput";
 
 import { createLogger } from '../../utils/logger';
 
@@ -67,7 +64,6 @@ export function MessagesScreen() {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [showNewConversationModal, setShowNewConversationModal] = useState(false);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
-  const flatListRef = useRef<FlatList>(null);
 
   const [showNewConversationModalNative, setShowNewConversationModalNative] = useState(false);
 
@@ -168,15 +164,6 @@ export function MessagesScreen() {
       return () => clearTimeout(timer);
     }
   }, [selectedConversation, conversationData, markAsReadMutation]);
-
-  // Scroll to bottom when messages load
-  useEffect(() => {
-    if (conversationData?.messages.length) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: false });
-      }, 100);
-    }
-  }, [conversationData?.messages.length]);
 
   const handleSendMessage = async () => {
     if (!selectedConversation || !messageText.trim() || sendMessageMutation.isPending) return;
@@ -322,189 +309,6 @@ export function MessagesScreen() {
     return (
       conversation.members.find((member) => member.did !== session?.did) ||
       conversation.members[0]
-    );
-  };
-
-  const formatMessageTime = (timestamp: string) => {
-    try {
-      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
-    } catch {
-      return "";
-    }
-  };
-
-  const renderRightActions = (
-    _progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>,
-    conversationId: string
-  ) => {
-    const trans = dragX.interpolate({
-      inputRange: [-80, 0],
-      outputRange: [0, 80],
-      extrapolate: "clamp",
-    });
-
-    return (
-      <Animated.View
-        style={[
-          styles.swipeActions,
-          {
-            transform: [{ translateX: trans }],
-          },
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.deleteAction}
-          onPress={() => handleDeleteConversation(conversationId)}
-        >
-          <TrashIcon size={24} color={colors.text} />
-          <Text style={styles.actionText}>Delete</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  };
-
-  const renderConversationItem = ({
-    item,
-  }: {
-    item: DmConversation;
-  }) => {
-    const otherMember = getOtherMember(item);
-    const isSelected = selectedConversation === item.id;
-
-    return (
-      <InlineErrorBoundary silent context="ConversationItem">
-      <Swipeable
-        renderRightActions={(progress, dragX) =>
-          renderRightActions(progress, dragX, item.id)
-        }
-        overshootRight={false}
-      >
-        <TouchableOpacity
-          style={[styles.conversationItem, isSelected && styles.selectedConversation]}
-          onPress={() => setSelectedConversation(item.id)}
-        >
-          <View style={styles.conversationContent}>
-            {otherMember.avatar ? (
-              <Image
-                source={{ uri: otherMember.avatar }}
-                style={styles.avatar}
-              />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarText}>
-                  {(
-                    otherMember.displayName ||
-                    otherMember.handle ||
-                    "U"
-                  )[0].toUpperCase()}
-                </Text>
-              </View>
-            )}
-            <View style={styles.conversationDetails}>
-              <View style={styles.conversationHeader}>
-                <View style={styles.conversationNameRow}>
-                  <Text style={styles.displayName} numberOfLines={1}>
-                    {otherMember.displayName ||
-                      otherMember.handle ||
-                      "Unknown User"}
-                  </Text>
-                  {item.muted && (
-                    <BellSlashIcon size={16} color={colors.textSecondary} />
-                  )}
-                </View>
-                {item.unreadCount > 0 && (
-                  <View style={styles.unreadBadge}>
-                    <Text style={styles.unreadCount}>{item.unreadCount}</Text>
-                  </View>
-                )}
-              </View>
-              {otherMember.handle && (
-                <Text style={styles.handle} numberOfLines={1}>
-                  @{otherMember.handle}
-                </Text>
-              )}
-              {item.lastMessage && (
-                <Text style={styles.lastMessage} numberOfLines={1}>
-                  {item.lastMessage.text}
-                </Text>
-              )}
-            </View>
-          </View>
-        </TouchableOpacity>
-      </Swipeable>
-      </InlineErrorBoundary>
-    );
-  };
-
-  const renderMessage = ({ item }: { item: DmMessage }) => {
-    const isOwnMessage = item.sender.did === session?.did;
-
-    // Determine delivery status for own messages
-    // If message exists on server, it's delivered
-    const deliveryStatus = isOwnMessage ? (item.id ? "delivered" : "sent") : null;
-
-    const messageBubbleContent = (
-      <>
-        {item.text && (
-          <Text
-            style={[
-              styles.messageText,
-              isOwnMessage ? styles.ownMessageText : styles.otherMessageText,
-            ]}
-          >
-            {item.text}
-          </Text>
-        )}
-
-        <View style={styles.messageFooter}>
-          <Text
-            style={[
-              styles.messageTime,
-              isOwnMessage ? styles.ownMessageTime : styles.otherMessageTime,
-            ]}
-          >
-            {formatMessageTime(item.sentAt)}
-          </Text>
-          {isOwnMessage && deliveryStatus && (
-            <Text
-              style={[
-                styles.deliveryStatus,
-                isOwnMessage && styles.ownDeliveryStatus,
-              ]}
-            >
-              {deliveryStatus === "delivered" ? "✓✓" : "✓"}
-            </Text>
-          )}
-        </View>
-      </>
-    );
-
-    return (
-      <InlineErrorBoundary silent context="MessageBubble">
-        <View
-          style={[
-            styles.messageContainer,
-            isOwnMessage ? styles.ownMessage : styles.otherMessage,
-          ]}
-        >
-          {isOwnMessage ? (
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onLongPress={() => handleDeleteMessage(item.id)}
-              style={[styles.messageBubble, styles.ownMessageBubble]}
-            >
-              {messageBubbleContent}
-            </TouchableOpacity>
-          ) : (
-            <View
-              style={[styles.messageBubble, styles.otherMessageBubble]}
-            >
-              {messageBubbleContent}
-            </View>
-          )}
-        </View>
-      </InlineErrorBoundary>
     );
   };
 
@@ -679,24 +483,14 @@ export function MessagesScreen() {
             </View>
           )}
         </View>
-        <FlatList
-          data={filteredConversations}
-          renderItem={renderConversationItem}
-          keyExtractor={(item) => item.id}
-          style={styles.conversationsList}
-          removeClippedSubviews={true}
-          windowSize={10}
-          maxToRenderPerBatch={10}
-          initialNumToRender={10}
-          updateCellsBatchingPeriod={50}
-          ListEmptyComponent={
-            searchText.length > 0 ? (
-              <EmptyState
-                icon={<SearchIcon size={64} color={colors.textSecondary} />}
-                message="No conversations found"
-              />
-            ) : null
-          }
+        <ConversationListView
+          conversations={filteredConversations || []}
+          selectedConversation={selectedConversation}
+          onSelectConversation={setSelectedConversation}
+          onDeleteConversation={handleDeleteConversation}
+          searchText={searchText}
+          sessionDid={session?.did}
+          colors={colors}
         />
         <NewConversationModal
           visible={showNewConversationModal}
@@ -783,48 +577,22 @@ export function MessagesScreen() {
       {loadingMessages ? (
         <LoadingState />
       ) : (
-        <FlatList
-          ref={flatListRef}
-          data={conversationData.messages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
-          style={styles.messagesList}
-          contentContainerStyle={styles.messagesContent}
-          onContentSizeChange={() =>
-            flatListRef.current?.scrollToEnd({ animated: false })
-          }
+        <MessageThread
+          messages={conversationData.messages}
+          sessionDid={session?.did}
+          onDeleteMessage={handleDeleteMessage}
+          colors={colors}
         />
       )}
 
       {/* Input */}
-      <View style={styles.inputContainer}>
-        <View style={styles.inputRow}>
-          <TextInput
-            style={styles.input}
-            value={messageText}
-            onChangeText={setMessageText}
-            placeholder="Type a message..."
-            placeholderTextColor={colors.textTertiary}
-            multiline
-            maxLength={1000}
-          />
-
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!messageText.trim() || sendMessageMutation.isPending) && styles.sendButtonDisabled,
-            ]}
-            onPress={handleSendMessage}
-            disabled={!messageText.trim() || sendMessageMutation.isPending}
-          >
-            {sendMessageMutation.isPending ? (
-              <ActivityIndicator color={colors.text} size="small" />
-            ) : (
-              <Text style={styles.sendButtonText}>Send</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
+      <MessageInput
+        messageText={messageText}
+        onChangeText={setMessageText}
+        onSend={handleSendMessage}
+        isSending={sendMessageMutation.isPending}
+        colors={colors}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -877,80 +645,9 @@ function createStyles(colors: any) {
     color: colors.text,
     fontSize: 16,
   },
-  conversationsList: {
-    flex: 1,
-  },
-  conversationItem: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surfaceAlt,
-    padding: 16,
-  },
-  selectedConversation: {
-    backgroundColor: colors.surface,
-  },
-  conversationContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  avatarPlaceholder: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.surface,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   avatarText: {
     color: colors.text,
     fontSize: 20,
-    fontWeight: "600",
-  },
-  conversationDetails: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  conversationHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  conversationNameRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    flex: 1,
-  },
-  displayName: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: "600",
-    flexShrink: 1,
-  },
-  handle: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    marginTop: 2,
-  },
-  lastMessage: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    marginTop: 4,
-  },
-  unreadBadge: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginLeft: 8,
-  },
-  unreadCount: {
-    color: colors.text,
-    fontSize: 12,
     fontWeight: "600",
   },
   chatHeader: {
@@ -1010,101 +707,6 @@ function createStyles(colors: any) {
     color: colors.textSecondary,
     fontSize: 14,
   },
-  messagesList: {
-    flex: 1,
-  },
-  messagesContent: {
-    padding: 16,
-  },
-  messageContainer: {
-    marginVertical: 4,
-    maxWidth: "80%",
-  },
-  ownMessage: {
-    alignSelf: "flex-end",
-  },
-  otherMessage: {
-    alignSelf: "flex-start",
-  },
-  messageBubble: {
-    padding: 12,
-    borderRadius: 16,
-  },
-  ownMessageBubble: {
-    backgroundColor: colors.primary,
-  },
-  otherMessageBubble: {
-    backgroundColor: colors.surfaceAlt,
-  },
-  messageText: {
-    fontSize: 16,
-    lineHeight: 20,
-  },
-  ownMessageText: {
-    color: colors.text,
-  },
-  otherMessageText: {
-    color: colors.text,
-  },
-  messageFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-    gap: 4,
-  },
-  messageTime: {
-    fontSize: 11,
-  },
-  ownMessageTime: {
-    color: "rgba(255, 255, 255, 0.7)",
-  },
-  otherMessageTime: {
-    color: colors.textSecondary,
-  },
-  deliveryStatus: {
-    fontSize: 11,
-  },
-  ownDeliveryStatus: {
-    color: "rgba(255, 255, 255, 0.7)",
-  },
-  inputContainer: {
-    padding: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.surfaceAlt,
-  },
-  inputRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-  },
-  input: {
-    flex: 1,
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    color: colors.text,
-    fontSize: 16,
-    maxHeight: 100,
-  },
-  sendButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginLeft: 8,
-    justifyContent: "center",
-    alignItems: "center",
-    minWidth: 60,
-  },
-  sendButtonDisabled: {
-    backgroundColor: colors.surface,
-    opacity: 0.5,
-  },
-  sendButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: "600",
-  },
   permissionErrorContainer: {
     flex: 1,
     justifyContent: "center",
@@ -1144,23 +746,6 @@ function createStyles(colors: any) {
   creatingText: {
     color: colors.text,
     fontSize: 16,
-  },
-  swipeActions: {
-    flexDirection: "row",
-    width: 80,
-  },
-  deleteAction: {
-    backgroundColor: colors.danger,
-    justifyContent: "center",
-    alignItems: "center",
-    width: 80,
-    height: "100%",
-  },
-  actionText: {
-    color: colors.text,
-    fontSize: 12,
-    fontWeight: "600",
-    marginTop: 4,
   },
   });
 }
