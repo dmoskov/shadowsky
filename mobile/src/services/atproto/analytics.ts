@@ -90,7 +90,7 @@ export async function getUserAnalytics(
 
   // Fetch author's posts to calculate engagement metrics
   let cursor: string | undefined;
-  let allPosts: AppBskyFeedDefs.FeedViewPost[] = [];
+  const allPosts: AppBskyFeedDefs.FeedViewPost[] = [];
   let hasMore = true;
   // Match web analytics data volume: 100 posts per page, up to 10 pages (1,000 posts max)
   const maxPages = timeRange === "today" ? 5 : 10;

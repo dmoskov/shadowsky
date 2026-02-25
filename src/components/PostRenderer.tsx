@@ -1237,7 +1237,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               style={{ color: "var(--asph-primary)" }}
             />
             {replyParent ? (
-              <span className="min-w-0 truncate">
+              <span className="line-clamp-2 min-w-0">
                 Replying to{" "}
                 <span
                   className="font-medium"

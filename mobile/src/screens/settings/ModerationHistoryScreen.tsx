@@ -55,13 +55,11 @@ export function ModerationHistoryScreen({
   // Read data synchronously from MMKV (fast, no async needed)
   const entries = useMemo(
     () => getAllEntries(TAB_TO_FILTER[activeTab]),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [activeTab, refreshKey],
   );
 
   const stats: ModerationHistoryStats = useMemo(
     () => getStats(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [refreshKey],
   );
 
