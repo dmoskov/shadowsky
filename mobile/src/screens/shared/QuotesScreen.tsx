@@ -100,7 +100,7 @@ export function QuotesScreen({
   const renderEmpty = () => {
     if (isLoading) {
       return (
-        <View style={{flex: 1, backgroundColor: colors.background}}>
+        <View style={styles.loadingContainer}>
           <PostCardSkeleton />
           <PostCardSkeleton />
           <PostCardSkeleton />
@@ -183,6 +183,10 @@ function createStyles(colors: any) {
     },
     emptyList: {
       flexGrow: 1,
+    },
+    loadingContainer: {
+      flex: 1,
+      backgroundColor: colors.background,
     },
   });
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -69,7 +69,7 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
     }
   };
 
-  const handleSaveEditedImages = (editedImages: Array<{ originalAsset: ImageAsset; editedAsset: ImageAsset }>) => {
+  const handleSaveEditedImages = useCallback((editedImages: Array<{ originalAsset: ImageAsset; editedAsset: ImageAsset }>) => {
     // Use the first edited image as the avatar
     if (editedImages.length > 0) {
       const editedAsset = editedImages[0].editedAsset;
@@ -80,12 +80,12 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
     }
     setImageEditorVisible(false);
     setImagesToEdit([]);
-  };
+  }, [clearImages, addImages]);
 
-  const handleCancelImageEditor = () => {
+  const handleCancelImageEditor = useCallback(() => {
     setImageEditorVisible(false);
     setImagesToEdit([]);
-  };
+  }, []);
 
   const handleSave = async () => {
     try {

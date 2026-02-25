@@ -67,11 +67,13 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   const { colors } = useTheme();
   const router = useRouter();
 
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   // On iOS, render the native SwiftUI search view
   if (USE_NATIVE_SEARCH && NativeSearchComponent) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
-        <NativeSearchComponent style={{ flex: 1 }} />
+      <View style={styles.nativeSearchContainer}>
+        <NativeSearchComponent style={styles.nativeSearchView} />
       </View>
     );
   }
@@ -80,6 +82,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery || "");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const handleCloseFilters = useCallback(() => setShowFilters(false), []);
   const [filters, setFilters] = useState<SearchFilters>({
     sort: "top",
     mediaFilter: "all",
@@ -290,8 +293,6 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   const handleApplyFilters = useCallback((newFilters: SearchFilterValues) => {
     setFilters(newFilters);
   }, []);
-
-  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -548,7 +549,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
       {/* Advanced Search Filters Sheet */}
       <SearchFilterSheet
         visible={showFilters}
-        onClose={() => setShowFilters(false)}
+        onClose={handleCloseFilters}
         filters={filters}
         onApplyFilters={handleApplyFilters}
       />
@@ -714,6 +715,13 @@ function createStyles(colors: any) {
   },
   filterButtonTextActive: {
     color: colors.primary,
+  },
+  nativeSearchContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  nativeSearchView: {
+    flex: 1,
   },
   });
 }

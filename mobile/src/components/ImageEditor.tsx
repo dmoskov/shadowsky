@@ -65,7 +65,7 @@ const DEFAULT_EDITS: ImageEdits = {
   cropArea: null,
 };
 
-export function ImageEditor({ images, onSave, onCancel, visible }: ImageEditorProps) {
+function ImageEditorInner({ images, onSave, onCancel, visible }: ImageEditorProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -721,3 +721,16 @@ function createStyles(colors: any) {
     },
   });
 }
+
+export const ImageEditor = React.memo(ImageEditorInner, (prevProps, nextProps) => {
+  if (prevProps.visible !== nextProps.visible) return false;
+  if (prevProps.onSave !== nextProps.onSave) return false;
+  if (prevProps.onCancel !== nextProps.onCancel) return false;
+  if (prevProps.images.length !== nextProps.images.length) return false;
+  if (prevProps.images !== nextProps.images) {
+    for (let i = 0; i < prevProps.images.length; i++) {
+      if (prevProps.images[i].uri !== nextProps.images[i].uri) return false;
+    }
+  }
+  return true;
+});

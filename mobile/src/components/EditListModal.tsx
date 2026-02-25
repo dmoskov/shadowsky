@@ -34,7 +34,7 @@ interface EditListModalProps {
   }) => Promise<void>;
 }
 
-export function EditListModal({
+function EditListModalInner({
   visible,
   list,
   onClose,
@@ -359,3 +359,15 @@ function createStyles(colors: any) {
     },
   });
 }
+
+export const EditListModal = React.memo(EditListModalInner, (prevProps, nextProps) => {
+  if (prevProps.visible !== nextProps.visible) return false;
+  if (prevProps.onClose !== nextProps.onClose) return false;
+  if (prevProps.onSave !== nextProps.onSave) return false;
+  if (prevProps.list !== nextProps.list) {
+    if (prevProps.list?.uri !== nextProps.list?.uri) return false;
+    if (prevProps.list?.name !== nextProps.list?.name) return false;
+    if (prevProps.list?.description !== nextProps.list?.description) return false;
+  }
+  return true;
+});

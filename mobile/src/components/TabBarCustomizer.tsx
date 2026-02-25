@@ -79,7 +79,7 @@ interface TabBarCustomizerProps {
   onClose: () => void;
 }
 
-export function TabBarCustomizer({ visible, onClose }: TabBarCustomizerProps) {
+function TabBarCustomizerInner({ visible, onClose }: TabBarCustomizerProps) {
   const { colors } = useTheme();
   const { preferences, updatePreference } = usePreferences();
 
@@ -496,3 +496,5 @@ const createStyles = (colors: Record<string, string>) =>
       fontSize: 10,
     },
   });
+
+export const TabBarCustomizer = React.memo(TabBarCustomizerInner);

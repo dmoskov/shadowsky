@@ -147,13 +147,13 @@ export function StarterPackDetailScreen({
     return (
       <View style={styles.loadingContainer}>
         <SkeletonShimmer width="100%" height={200} borderRadius={12} />
-        <View style={{ marginTop: 16 }}>
+        <View style={styles.skeletonSpacerLarge}>
           <SkeletonShimmer width={200} height={24} borderRadius={6} />
         </View>
-        <View style={{ marginTop: 12 }}>
+        <View style={styles.skeletonSpacerSmall}>
           <SkeletonShimmer width="80%" height={16} borderRadius={4} />
         </View>
-        <View style={{ marginTop: 16 }}>
+        <View style={styles.skeletonSpacerLarge}>
           <SkeletonShimmer width="100%" height={60} borderRadius={8} />
         </View>
       </View>
@@ -457,6 +457,12 @@ function createStyles(colors: any) {
       fontSize: 14,
       color: colors.textSecondary,
       marginTop: 4,
+    },
+    skeletonSpacerLarge: {
+      marginTop: 16,
+    },
+    skeletonSpacerSmall: {
+      marginTop: 12,
     },
   });
 }

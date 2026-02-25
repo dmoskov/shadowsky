@@ -39,7 +39,7 @@ interface GifPickerProps {
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const ITEM_WIDTH = (SCREEN_WIDTH - 48) / 2; // 2 columns with padding
 
-export function GifPicker({
+function GifPickerInner({
   visible,
   onSelectGif,
   onClose,
@@ -389,3 +389,20 @@ function createStyles(colors: any) {
     },
   });
 }
+
+export const GifPicker = React.memo(GifPickerInner, (prevProps, nextProps) => {
+  if (prevProps.visible !== nextProps.visible) return false;
+  if (prevProps.loading !== nextProps.loading) return false;
+  if (prevProps.error !== nextProps.error) return false;
+  if (prevProps.searchQuery !== nextProps.searchQuery) return false;
+  if (prevProps.onSelectGif !== nextProps.onSelectGif) return false;
+  if (prevProps.onClose !== nextProps.onClose) return false;
+  if (prevProps.onSearch !== nextProps.onSearch) return false;
+  if (prevProps.gifs !== nextProps.gifs) {
+    if (prevProps.gifs.length !== nextProps.gifs.length) return false;
+    for (let i = 0; i < prevProps.gifs.length; i++) {
+      if (prevProps.gifs[i].id !== nextProps.gifs[i].id) return false;
+    }
+  }
+  return true;
+});

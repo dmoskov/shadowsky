@@ -186,6 +186,10 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
     setIsEditModalVisible(true);
   }, []);
 
+  const handleCloseEditModal = useCallback(() => {
+    setIsEditModalVisible(false);
+  }, []);
+
   const handleSaveList = useCallback(
     async (updates: {name: string; description: string}) => {
       await updateList({listUri, updates});
@@ -332,7 +336,7 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
       <EditListModal
         visible={isEditModalVisible}
         list={listData || null}
-        onClose={() => setIsEditModalVisible(false)}
+        onClose={handleCloseEditModal}
         onSave={handleSaveList}
       />
     </View>
