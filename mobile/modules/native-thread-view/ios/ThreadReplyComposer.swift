@@ -272,7 +272,7 @@ struct AutoGrowingTextEditor: View {
                         .onAppear {
                             textHeight = min(geometry.size.height, maxHeight)
                         }
-                        .onChange(of: text) { _ in
+                        .onChangeCompat(of: text) { _ in
                             textHeight = min(geometry.size.height, maxHeight)
                         }
                 })
@@ -284,7 +284,7 @@ struct AutoGrowingTextEditor: View {
                 .padding(.vertical, 2)
                 .frame(minHeight: minHeight, maxHeight: max(minHeight, textHeight))
                 .focused(isFocused)
-                .onChange(of: text) { newValue in
+                .onChangeCompat(of: text) { newValue in
                     onTextChange?(newValue)
                 }
                 .modifier(HideScrollContentBackgroundModifier())

@@ -191,7 +191,7 @@ struct FeedListView: View {
             .onAppear {
                 scrollProxy = proxy
             }
-            .onChange(of: feedState.convertedPosts.count) { _ in
+            .onChangeCompat(of: feedState.convertedPosts.count) { _ in
                 restoreScrollPositionIfNeeded()
             }
         }

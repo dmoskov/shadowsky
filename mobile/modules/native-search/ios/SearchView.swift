@@ -85,7 +85,7 @@ struct SearchView: View {
                         .onSubmit {
                             onQueryChange(searchText)
                         }
-                        .onChange(of: searchText) { newValue in
+                        .onChangeCompat(of: searchText) { newValue in
                             onQueryChange(newValue)
                         }
 
