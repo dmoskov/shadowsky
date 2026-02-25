@@ -88,7 +88,7 @@ interface ReportModalProps {
   onMute?: (did: string) => void;
 }
 
-export function ReportModal({
+function ReportModalInner({
   visible,
   onClose,
   reportType,
@@ -593,3 +593,5 @@ function createStyles(colors: any) {
     },
   });
 }
+
+export const ReportModal = React.memo(ReportModalInner);

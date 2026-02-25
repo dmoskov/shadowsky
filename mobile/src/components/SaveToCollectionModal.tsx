@@ -22,7 +22,7 @@ interface SaveToCollectionModalProps {
   onClose: () => void;
 }
 
-export function SaveToCollectionModal({
+function SaveToCollectionModalInner({
   visible,
   postUri,
   onClose,
@@ -319,3 +319,5 @@ function createStyles(colors: any) {
     },
   });
 }
+
+export const SaveToCollectionModal = React.memo(SaveToCollectionModalInner);

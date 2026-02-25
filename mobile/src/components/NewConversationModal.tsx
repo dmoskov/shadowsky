@@ -25,7 +25,7 @@ interface NewConversationModalProps {
   onSelectUser: (did: string) => void;
 }
 
-export function NewConversationModal({
+function NewConversationModalInner({
   visible,
   onClose,
   onSelectUser,
@@ -302,3 +302,5 @@ function createStyles(colors: any) {
     },
   });
 }
+
+export const NewConversationModal = React.memo(NewConversationModalInner);

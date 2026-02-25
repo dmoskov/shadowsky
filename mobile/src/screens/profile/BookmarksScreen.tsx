@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Modal, TextInput } from 'react-native';
 import { FeedList } from '../../components/FeedList';
 import { useBookmarks } from '../../hooks/api';
@@ -22,6 +22,15 @@ export function BookmarksScreen() {
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
   const [showCollectionManager, setShowCollectionManager] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleCloseCollectionManager = useCallback(() => {
+    setShowCollectionManager(false);
+  }, []);
+
+  const handleSelectCollection = useCallback((id: string | null) => {
+    setSelectedCollectionId(id);
+    setShowCollectionManager(false);
+  }, []);
 
   // Use collection-based bookmarks
   const {
@@ -153,11 +162,8 @@ export function BookmarksScreen() {
       >
         <CollectionManager
           selectedCollectionId={selectedCollectionId}
-          onSelectCollection={(id) => {
-            setSelectedCollectionId(id);
-            setShowCollectionManager(false);
-          }}
-          onClose={() => setShowCollectionManager(false)}
+          onSelectCollection={handleSelectCollection}
+          onClose={handleCloseCollectionManager}
         />
       </Modal>
     </View>

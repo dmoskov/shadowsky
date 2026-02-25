@@ -109,6 +109,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   const [showAddToList, setShowAddToList] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const handleCloseReportModal = useCallback(() => setShowReportModal(false), []);
 
   // Fetch starter packs for this actor
   const { data: starterPacksData } = useActorStarterPacks(handle);
@@ -674,7 +675,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
       {profile && showReportModal && (
         <ReportModal
           visible={showReportModal}
-          onClose={() => setShowReportModal(false)}
+          onClose={handleCloseReportModal}
           reportType="account"
           subjectUri={`at://${profile.did}/app.bsky.actor.profile/self`}
           subjectDid={profile.did}
