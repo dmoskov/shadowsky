@@ -218,7 +218,7 @@ struct MessageBubbleView: View {
                 if !message.text.isEmpty {
                     Text(message.text)
                         .font(.body)
-                        .foregroundColor(Color(UIColor.label))
+                        .foregroundColor(isOwnMessage ? .white : Color(UIColor.label))
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
                         .background(
@@ -226,7 +226,6 @@ struct MessageBubbleView: View {
                                 ? MessagesThemeColors.primary
                                 : Color(UIColor.secondarySystemBackground)
                         )
-                        .foregroundColor(isOwnMessage ? .white : Color(UIColor.label))
                         .cornerRadius(16)
                 }
 
