@@ -182,7 +182,7 @@ class MessageSentObserver: ObservableObject {
     func stop() {
         if let observer = observer {
             NotificationCenter.default.removeObserver(observer)
-            observer = nil
+            self.observer = nil
         }
     }
 }

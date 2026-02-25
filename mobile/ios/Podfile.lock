@@ -219,10 +219,6 @@ PODS:
     - JOSESwift (~> 2.3)
   - ExpoBackgroundFetch (14.0.9):
     - ExpoModulesCore
-  - ExpoCamera (17.0.10):
-    - ExpoModulesCore
-    - ZXingObjC/OneD
-    - ZXingObjC/PDF417
   - ExpoCrypto (15.0.8):
     - ExpoModulesCore
   - ExpoDevice (8.0.10):
@@ -296,8 +292,6 @@ PODS:
   - ExpoSwiftUIFeed (1.0.0):
     - ExpoModulesCore
     - SDWebImage (~> 5.21.0)
-  - ExpoSystemUI (6.0.9):
-    - ExpoModulesCore
   - ExpoVideoThumbnails (10.0.8):
     - ExpoModulesCore
   - ExpoWebBrowser (15.0.10):
@@ -2418,11 +2412,6 @@ PODS:
   - WidgetDataBridge (1.0.0):
     - ExpoModulesCore
   - Yoga (0.0.0)
-  - ZXingObjC/Core (3.6.9)
-  - ZXingObjC/OneD (3.6.9):
-    - ZXingObjC/Core
-  - ZXingObjC/PDF417 (3.6.9):
-    - ZXingObjC/Core
 
 DEPENDENCIES:
   - EASClient (from `../node_modules/expo-eas-client/ios`)
@@ -2441,7 +2430,6 @@ DEPENDENCIES:
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
   - "ExpoAtprotoOAuthClient (from `../node_modules/@atproto/oauth-client-expo/ios`)"
   - ExpoBackgroundFetch (from `../node_modules/expo-background-fetch/ios`)
-  - ExpoCamera (from `../node_modules/expo-camera/ios`)
   - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
   - ExpoDevice (from `../node_modules/expo-device/ios`)
   - ExpoDocumentPicker (from `../node_modules/expo-document-picker/ios`)
@@ -2463,7 +2451,6 @@ DEPENDENCIES:
   - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
   - ExpoSharing (from `../node_modules/expo-sharing/ios`)
   - ExpoSwiftUIFeed (from `../modules/expo-swiftui-feed/ios`)
-  - ExpoSystemUI (from `../node_modules/expo-system-ui/ios`)
   - ExpoVideoThumbnails (from `../node_modules/expo-video-thumbnails/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
   - EXStructuredHeaders (from `../node_modules/expo-structured-headers/ios`)
@@ -2575,7 +2562,6 @@ SPEC REPOS:
     - SDWebImageAVIFCoder
     - SDWebImageSVGCoder
     - SDWebImageWebPCoder
-    - ZXingObjC
 
 EXTERNAL SOURCES:
   EASClient:
@@ -2610,8 +2596,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@atproto/oauth-client-expo/ios"
   ExpoBackgroundFetch:
     :path: "../node_modules/expo-background-fetch/ios"
-  ExpoCamera:
-    :path: "../node_modules/expo-camera/ios"
   ExpoCrypto:
     :path: "../node_modules/expo-crypto/ios"
   ExpoDevice:
@@ -2654,8 +2638,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-sharing/ios"
   ExpoSwiftUIFeed:
     :path: "../modules/expo-swiftui-feed/ios"
-  ExpoSystemUI:
-    :path: "../node_modules/expo-system-ui/ios"
   ExpoVideoThumbnails:
     :path: "../node_modules/expo-video-thumbnails/ios"
   ExpoWebBrowser:
@@ -2871,7 +2853,6 @@ SPEC CHECKSUMS:
   ExpoAsset: f867e55ceb428aab99e1e8c082b5aee7c159ea18
   ExpoAtprotoOAuthClient: 87c4b0380dd938fe1a445993478ac6776f519b3a
   ExpoBackgroundFetch: 1631d1fbf59e6ad98ca83b6780ae3a35f678f632
-  ExpoCamera: 6a326deb45ba840749652e4c15198317aa78497e
   ExpoCrypto: b6105ebaa15d6b38a811e71e43b52cd934945322
   ExpoDevice: 6327c3c200816795708885adf540d26ecab83d1a
   ExpoDocumentPicker: 7cd9e71a0f66fb19eb0a586d6f26eee1284692e0
@@ -2893,7 +2874,6 @@ SPEC CHECKSUMS:
   ExpoSecureStore: d32f751874a2ceb5aaeebeb3578e165c1ba2b24a
   ExpoSharing: 0d983394ed4a80334bab5a0d5384f75710feb7e8
   ExpoSwiftUIFeed: b7a362dbca1306a864906369e1d245e3753e844b
-  ExpoSystemUI: 2ad325f361a2fcd96a464e8574e19935c461c9cc
   ExpoVideoThumbnails: 503a79271416c8723f04b55ea4737282513ebe4f
   ExpoWebBrowser: 17b064c621789e41d4816c95c93f429b84971f52
   EXStructuredHeaders: c951e77f2d936f88637421e9588c976da5827368
@@ -3001,7 +2981,6 @@ SPEC CHECKSUMS:
   VideoCompressor: cafd4dd3d28e415104a5687d40beda23fc878857
   WidgetDataBridge: afa1a7cb02957b72691b357aeefb66e7fab37d67
   Yoga: 5934998fbeaef7845dbf698f698518695ab4cd1a
-  ZXingObjC: 8898711ab495761b2dbbdec76d90164a6d7e14c5
 
 PODFILE CHECKSUM: 31419ecccd292df7f85459038328838af9ee0246
 
