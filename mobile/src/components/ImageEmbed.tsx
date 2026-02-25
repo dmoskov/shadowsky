@@ -6,11 +6,13 @@ import { useTheme } from "../contexts/ThemeContext";
 import {getOptimizedUrl} from '../utils/image-cdn';
 import {useLightbox, LightboxImage} from '../contexts/LightboxContext';
 
-// Instagram-style aspect ratio clamping
+// Aspect ratio clamping constants
 const MIN_ASPECT_RATIO = 4 / 5; // portrait (0.8)
-const MAX_ASPECT_RATIO = 1.91; // landscape
+const MAX_ASPECT_RATIO = 1.91; // landscape – used only for grid layouts
 const MAX_SINGLE_HEIGHT = 600;
+const MIN_SINGLE_HEIGHT = 200; // prevent extremely thin strips for panoramas
 
+// For grid layouts: clamp both min and max to keep cells consistent
 function getClampedAspectRatio(
   aspectRatio?: {width: number; height: number},
 ): number {
@@ -19,6 +21,18 @@ function getClampedAspectRatio(
   }
   const ratio = aspectRatio.width / aspectRatio.height;
   return Math.max(MIN_ASPECT_RATIO, Math.min(MAX_ASPECT_RATIO, ratio));
+}
+
+// For single images: only clamp the minimum (portrait) side.
+// Wide images keep their natural aspect ratio so they aren't stretched.
+function getSingleAspectRatio(
+  aspectRatio?: {width: number; height: number},
+): number {
+  if (!aspectRatio || !aspectRatio.width || !aspectRatio.height) {
+    return 1;
+  }
+  const ratio = aspectRatio.width / aspectRatio.height;
+  return Math.max(MIN_ASPECT_RATIO, ratio);
 }
 
 interface ImageEmbedProps {
@@ -73,8 +87,9 @@ export function ImageEmbed({images, onImagePress, blurImages = false}: ImageEmbe
   }, []);
 
   const getSingleImageHeight = (): number => {
-    const ratio = getClampedAspectRatio(images[0]?.aspectRatio);
-    return Math.min(containerWidth / ratio, MAX_SINGLE_HEIGHT);
+    const ratio = getSingleAspectRatio(images[0]?.aspectRatio);
+    const height = containerWidth / ratio;
+    return Math.max(Math.min(height, MAX_SINGLE_HEIGHT), MIN_SINGLE_HEIGHT);
   };
 
   // Compute adaptive grid heights based on actual aspect ratios
