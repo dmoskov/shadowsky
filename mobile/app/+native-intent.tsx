@@ -23,7 +23,7 @@ export default function NativeIntent() {
 
   useEffect(() => {
     const handleUrl = async () => {
-      let url: string | null = null;
+      let url: string | null;
       try {
         url = await Linking.getInitialURL();
       } catch (error) {

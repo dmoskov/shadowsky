@@ -997,7 +997,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                     </span>
                     {item.reply.parent.record?.text && (
                       <div
-                        className="mt-0.5 line-clamp-1 text-xs"
+                        className="mt-0.5 line-clamp-2 text-xs"
                         style={{ color: "var(--asph-text-secondary)" }}
                       >
                         "{item.reply.parent.record.text}"

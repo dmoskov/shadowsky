@@ -34,7 +34,7 @@ jobs:
 
       - name: Run lint
         working-directory: mobile
-        run: npm run lint || true
+        run: npm run lint
 
       - name: Run type check
         working-directory: mobile
@@ -63,6 +63,9 @@ jobs:
     name: E2E Tests (Maestro)
     runs-on: macos-latest
     continue-on-error: true
+    env:
+      MAESTRO_TEST_HANDLE: ${{ secrets.MAESTRO_TEST_HANDLE }}
+      MAESTRO_TEST_APP_PASSWORD: ${{ secrets.MAESTRO_TEST_APP_PASSWORD }}
 
     steps:
       - name: Checkout code
@@ -119,12 +122,19 @@ jobs:
           maestro test .maestro/auth_input_validation.yaml --format junit --output e2e-results-auth-input.xml
         timeout-minutes: 15
 
+      - name: Check authenticated test credentials
+        if: steps.check-devices.outputs.device_count != '0'
+        run: |
+          if [ -n "$MAESTRO_TEST_HANDLE" ]; then
+            echo "✅ Authenticated E2E tests enabled (MAESTRO_TEST_HANDLE is set)"
+          else
+            echo "⏭️ Authenticated E2E tests skipped — MAESTRO_TEST_HANDLE secret not configured"
+            echo "   See mobile/.maestro/README.md for setup instructions"
+          fi
+
       - name: Run Maestro E2E tests (authenticated)
         if: steps.check-devices.outputs.device_count != '0' && env.MAESTRO_TEST_HANDLE != ''
         working-directory: mobile
-        env:
-          MAESTRO_TEST_HANDLE: ${{ secrets.MAESTRO_TEST_HANDLE }}
-          MAESTRO_TEST_APP_PASSWORD: ${{ secrets.MAESTRO_TEST_APP_PASSWORD }}
         run: |
           maestro test .maestro/feed_scroll.yaml --format junit --output e2e-results-feed.xml
           maestro test .maestro/profile_view.yaml --format junit --output e2e-results-profile.xml
