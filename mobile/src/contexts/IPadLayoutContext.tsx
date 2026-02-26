@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from "react";
 import { isIPad } from "../hooks/useIsIPad";
 
 export type DetailPanelContent =
@@ -43,16 +43,19 @@ export function IPadLayoutProvider({ children }: { children: ReactNode }) {
     setDetailContent(null);
   }, []);
 
+  const value = useMemo(
+    () => ({
+      isMultiColumn,
+      detailContent,
+      showThread,
+      showProfile,
+      closeDetail,
+    }),
+    [isMultiColumn, detailContent, showThread, showProfile, closeDetail],
+  );
+
   return (
-    <IPadLayoutContext.Provider
-      value={{
-        isMultiColumn,
-        detailContent,
-        showThread,
-        showProfile,
-        closeDetail,
-      }}
-    >
+    <IPadLayoutContext.Provider value={value}>
       {children}
     </IPadLayoutContext.Provider>
   );

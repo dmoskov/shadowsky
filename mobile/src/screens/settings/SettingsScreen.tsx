@@ -762,7 +762,7 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
         <SettingRow
           label="Add Missing Alt Text"
           description="Review your posts and add alt text to images that don't have it"
-          onPress={() => router.push("/(app)/settings/alt-text-backfill")}
+          onPress={() => router.push("/(app)/settings/alt-text-backfill" as any)}
           showChevron
         />
       </View>

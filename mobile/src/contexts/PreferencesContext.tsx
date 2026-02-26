@@ -108,7 +108,7 @@ export function PreferencesProvider({
     }).finally(() => {
       setSyncingMutedWords(false);
     });
-  });
+  }, []);
 
   const updatePreference = useCallback(
     async (key: keyof AppPreferences, value: unknown) => {

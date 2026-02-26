@@ -11,6 +11,8 @@ import { useCompleteFeedSerializer } from '../../../src/services/feed-bridge';
 import { UseInfiniteQueryResult, InfiniteData } from '@tanstack/react-query';
 import { AppBskyFeedDefs } from '@atproto/api';
 
+const FLEX_STYLE = { flex: 1 } as const;
+
 // Lazy-load native modules (only available on iOS)
 let FeedBridge: any = null;
 let NativeFeedListNative: any = null;
@@ -210,7 +212,7 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
       emptyMessage={emptyMessage}
       onRefresh={handleRefresh}
       onLoadMore={handleLoadMore}
-      style={{ flex: 1 }}
+      style={FLEX_STYLE}
     />
   );
 });

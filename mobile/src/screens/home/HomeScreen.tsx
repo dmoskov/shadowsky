@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useCallback } from "react";
 import { View, StyleSheet, Alert, ActionSheetIOS, Platform, ScrollView, TouchableOpacity, Text } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useScrollToTop } from "@react-navigation/native";
@@ -92,17 +92,17 @@ export function HomeScreen() {
   useScrollToTop(scrollRef);
 
   // Handle feed selection
-  const handleFeedSelect = (feedUri: string | null) => {
+  const handleFeedSelect = useCallback((feedUri: string | null) => {
     triggerHaptic("light");
     setSelectedFeedUri(feedUri);
-  };
+  }, []);
 
-  const handleDiscoverFeeds = () => {
+  const handleDiscoverFeeds = useCallback(() => {
     triggerHaptic("light");
     router.push('/(app)/feeds/discover');
-  };
+  }, [router]);
 
-  const handlePostPress = (event: { nativeEvent: { uri: string; handle: string } }) => {
+  const handlePostPress = useCallback((event: { nativeEvent: { uri: string; handle: string } }) => {
     const { uri, handle } = event.nativeEvent;
     const postId = getPostIdFromUri(uri);
     const did = getDidFromUri(uri);
@@ -121,19 +121,19 @@ export function HomeScreen() {
     }
     logger.log(`[perf] navigateToThread: postId=${postId}, did=${did ? 'yes' : 'no'}`);
     navigateToThread(handle, postId, did || undefined);
-  };
+  }, [queryClient, navigateToThread]);
 
-  const handleProfilePress = (event: { nativeEvent: { handle: string } }) => {
+  const handleProfilePress = useCallback((event: { nativeEvent: { handle: string } }) => {
     const { handle } = event.nativeEvent;
     navigateToProfile(handle);
-  };
+  }, [navigateToProfile]);
 
-  const handleLinkPress = (event: { nativeEvent: { uri: string } }) => {
+  const handleLinkPress = useCallback((event: { nativeEvent: { uri: string } }) => {
     const { uri } = event.nativeEvent;
     openLink(uri, colors);
-  };
+  }, [colors]);
 
-  const handleImagePress = (event: { nativeEvent: { images: Array<{ thumb: string; fullsize: string; alt: string }>; index: number } }) => {
+  const handleImagePress = useCallback((event: { nativeEvent: { images: Array<{ thumb: string; fullsize: string; alt: string }>; index: number } }) => {
     const { images, index } = event.nativeEvent;
     const lightboxImages: LightboxImage[] = images.map(img => ({
       thumb: img.thumb,
@@ -141,16 +141,16 @@ export function HomeScreen() {
       alt: img.alt,
     }));
     openLightbox(lightboxImages, index);
-  };
+  }, [openLightbox]);
 
-  const handleQuotePress = (event: { nativeEvent: { uri: string; handle: string } }) => {
+  const handleQuotePress = useCallback((event: { nativeEvent: { uri: string; handle: string } }) => {
     const { uri, handle } = event.nativeEvent;
     const postId = getPostIdFromUri(uri);
     const did = getDidFromUri(uri);
     navigateToThread(handle, postId, did || undefined);
-  };
+  }, [navigateToThread]);
 
-  const handleLike = (event: { nativeEvent: { uri: string; cid: string; likeUri?: string } }) => {
+  const handleLike = useCallback((event: { nativeEvent: { uri: string; cid: string; likeUri?: string } }) => {
     const { uri, cid, likeUri } = event.nativeEvent;
 
     if (likeUri) {
@@ -162,9 +162,9 @@ export function HomeScreen() {
       triggerHaptic("light");
       likePost.mutate({ uri, cid });
     }
-  };
+  }, [unlikePost, likePost]);
 
-  const handleRepost = (event: { nativeEvent: { uri: string; cid: string; repostUri?: string } }) => {
+  const handleRepost = useCallback((event: { nativeEvent: { uri: string; cid: string; repostUri?: string } }) => {
     const { uri, cid, repostUri } = event.nativeEvent;
 
     // If already reposted, just unrepost
@@ -245,9 +245,9 @@ export function HomeScreen() {
         { cancelable: true }
       );
     }
-  };
+  }, [deleteRepost, postsByUri, repost, navigateToCompose]);
 
-  const handleReply = (event: { nativeEvent: { uri: string; cid: string; handle: string } }) => {
+  const handleReply = useCallback((event: { nativeEvent: { uri: string; cid: string; handle: string } }) => {
     const { uri } = event.nativeEvent;
 
     // Get post data for reply
@@ -268,21 +268,21 @@ export function HomeScreen() {
         },
       });
     }
-  };
+  }, [postsByUri, navigateToCompose]);
 
   // Note: Refresh and load more are handled by NativeFeedList component
 
-  const handleMentionPress = (event: { nativeEvent: { handle: string; did: string } }) => {
+  const handleMentionPress = useCallback((event: { nativeEvent: { handle: string; did: string } }) => {
     const { handle } = event.nativeEvent;
     navigateToProfile(handle);
-  };
+  }, [navigateToProfile]);
 
-  const handleHashtagPress = (event: { nativeEvent: { tag: string } }) => {
+  const handleHashtagPress = useCallback((event: { nativeEvent: { tag: string } }) => {
     const { tag } = event.nativeEvent;
     router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } } as any);
-  };
+  }, [router]);
 
-  const handleBookmark = (event: { nativeEvent: { uri: string } }) => {
+  const handleBookmark = useCallback((event: { nativeEvent: { uri: string } }) => {
     const { uri } = event.nativeEvent;
 
     // Get post data
@@ -298,15 +298,15 @@ export function HomeScreen() {
         showToast("Post saved", { type: "success" });
       }
     }
-  };
+  }, [postsByUri, bookmarkedPostUris, toggleBookmark, showToast]);
 
-  const handleShare = (event: { nativeEvent: { uri: string } }) => {
+  const handleShare = useCallback((event: { nativeEvent: { uri: string } }) => {
     const { uri } = event.nativeEvent;
     const postData = postsByUri.get(uri);
     if (postData) {
       sharePost(postData);
     }
-  };
+  }, [postsByUri]);
 
   // Note: Arrow key navigation disabled for native SwiftUI view
   // Can be re-implemented if needed with native bridge

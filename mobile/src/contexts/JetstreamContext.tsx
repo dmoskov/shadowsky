@@ -82,6 +82,12 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
   );
   const pendingNotificationCount = useRef(0);
 
+  // Debounce timer for timeline cache invalidation
+  const timelineDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const pendingTimelineEvents = useRef(0);
+
   // Connect when authenticated, disconnect when not
   useEffect(() => {
     if (!isAuthenticated || !session?.did) {
@@ -138,13 +144,32 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
       }, 300);
     };
 
-    // Real-time timeline events: invalidate feed cache
+    // Real-time timeline events: batch and debounce cache invalidation
+    const flushTimelineEvents = () => {
+      if (pendingTimelineEvents.current > 0) {
+        logger.log(
+          `Flushing ${pendingTimelineEvents.current} timeline events`,
+        );
+        queryClient.invalidateQueries({ queryKey: ["timeline"] });
+        pendingTimelineEvents.current = 0;
+      }
+      timelineDebounceRef.current = null;
+    };
+
+    const debounceTimelineInvalidation = () => {
+      pendingTimelineEvents.current++;
+      if (timelineDebounceRef.current) {
+        clearTimeout(timelineDebounceRef.current);
+      }
+      timelineDebounceRef.current = setTimeout(flushTimelineEvents, 500);
+    };
+
     const handleNewPost = () => {
-      queryClient.invalidateQueries({ queryKey: ["timeline"] });
+      debounceTimelineInvalidation();
     };
 
     const handleDeletePost = () => {
-      queryClient.invalidateQueries({ queryKey: ["timeline"] });
+      debounceTimelineInvalidation();
     };
 
     const handleError = (event: JetstreamEvent) => {
@@ -174,6 +199,12 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
         notificationDebounceRef.current = null;
       }
       pendingNotificationCount.current = 0;
+
+      if (timelineDebounceRef.current) {
+        clearTimeout(timelineDebounceRef.current);
+        timelineDebounceRef.current = null;
+      }
+      pendingTimelineEvents.current = 0;
 
       const svc = getJetstreamService();
       if (svc) {

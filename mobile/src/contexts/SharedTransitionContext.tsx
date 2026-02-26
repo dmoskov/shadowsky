@@ -1,4 +1,4 @@
-import React, {createContext, useContext, useState, useCallback, useRef} from 'react';
+import React, {createContext, useContext, useState, useCallback, useMemo, useRef} from 'react';
 
 export interface TransitionSourceLayout {
   x: number;
@@ -117,17 +117,21 @@ export function SharedTransitionProvider({children}: {children: React.ReactNode}
     setState({active: false, sourceLayout: null, postData: null});
   }, []);
 
+  const value = useMemo(
+    () => ({
+      state,
+      startTransition,
+      completeTransition,
+      cancelTransition,
+      prepareTransition,
+      activateTransition,
+      consumePending,
+    }),
+    [state, startTransition, completeTransition, cancelTransition, prepareTransition, activateTransition, consumePending],
+  );
+
   return (
-    <SharedTransitionContext.Provider
-      value={{
-        state,
-        startTransition,
-        completeTransition,
-        cancelTransition,
-        prepareTransition,
-        activateTransition,
-        consumePending,
-      }}>
+    <SharedTransitionContext.Provider value={value}>
       {children}
     </SharedTransitionContext.Provider>
   );
