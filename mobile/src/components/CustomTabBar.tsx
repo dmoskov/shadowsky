@@ -2,6 +2,7 @@ import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { StackActions } from "@react-navigation/native";
 import React, { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePreferences } from "../contexts/PreferencesContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { useUnreadCount } from "../hooks/api/useNotifications";
@@ -58,6 +59,7 @@ function NotificationsBadge() {
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const { colors } = useTheme();
   const { preferences } = usePreferences();
+  const insets = useSafeAreaInsets();
   const [customizerVisible, setCustomizerVisible] = useState(false);
 
   const tabBarItems = preferences?.tabBarItems ?? [
@@ -134,6 +136,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           {
             backgroundColor: colors.background,
             borderTopColor: colors.border,
+            paddingBottom: Math.max(insets.bottom, 8),
           },
         ]}
       >
@@ -203,7 +206,6 @@ const createTabStyles = () =>
     container: {
       flexDirection: "row",
       borderTopWidth: 1,
-      paddingBottom: 34,
       paddingTop: 8,
     },
     tab: {

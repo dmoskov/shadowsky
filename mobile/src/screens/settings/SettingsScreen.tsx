@@ -932,6 +932,7 @@ const createStyles = (themeColors: Record<string, string>) => StyleSheet.create(
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    flexShrink: 0,
   },
   settingValue: {
     color: themeColors.textSecondary,
@@ -947,10 +948,11 @@ const createStyles = (themeColors: Record<string, string>) => StyleSheet.create(
   },
   themeSelector: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   themeButton: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 16,
     backgroundColor: themeColors.surface,
@@ -1039,6 +1041,7 @@ const createSettingRowStyles = (themeColors: Record<string, string>) => StyleShe
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    flexShrink: 0,
   },
   settingValue: {
     color: themeColors.textSecondary,
