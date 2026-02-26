@@ -17,6 +17,11 @@ LogBox.ignoreLogs([
   "A query that was dehydrated as pending",
   // expo-av deprecation notice (migration to expo-video tracked separately)
   "Expo AV has been deprecated",
+  // @atproto/lex-data ponyfill fallback notices — polyfills are loaded but these
+  // fire at module-evaluation time before polyfills take effect. Harmless: the
+  // library's built-in ponyfill works correctly.
+  "Uint8Array.fromBase64",
+  "Intl.Segmenter is not available",
 ]);
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ErrorBoundary from "../src/components/ErrorBoundary";
