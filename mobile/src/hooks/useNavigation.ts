@@ -4,22 +4,22 @@ import { useIPadLayout } from "../contexts/IPadLayoutContext";
 
 export function useAppNavigation() {
   const router = useRouter();
-  const { isMultiColumn, showThread, showProfile } = useIPadLayout();
+  const { canShowDetailPanel, showThread, showProfile } = useIPadLayout();
 
   const navigateToProfile = useCallback(
     (handle: string) => {
-      if (isMultiColumn) {
+      if (canShowDetailPanel) {
         showProfile(handle);
       } else {
         router.push(`/(app)/(tabs)/(home)/profile/${handle}`);
       }
     },
-    [router, isMultiColumn, showProfile],
+    [router, canShowDetailPanel, showProfile],
   );
 
   const navigateToThread = useCallback(
     (handle: string, postId: string, did?: string) => {
-      if (isMultiColumn) {
+      if (canShowDetailPanel) {
         showThread(handle, postId);
       } else {
         const params = did
@@ -28,7 +28,7 @@ export function useAppNavigation() {
         router.push(`/(app)/(tabs)/(home)/thread/${postId}?${params}`);
       }
     },
-    [router, isMultiColumn, showThread],
+    [router, canShowDetailPanel, showThread],
   );
 
   const navigateToSearch = useCallback(

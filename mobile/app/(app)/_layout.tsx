@@ -13,7 +13,7 @@ import { useIPadLayout } from "../../src/contexts/IPadLayoutContext";
 import { ScreenErrorBoundary } from "../../src/components/ScreenErrorBoundary";
 
 function IPadAppLayout() {
-  const { detailContent } = useIPadLayout();
+  const { detailContent, canShowDetailPanel } = useIPadLayout();
 
   return (
     <View style={{ flex: 1, flexDirection: "row" }}>
@@ -21,7 +21,7 @@ function IPadAppLayout() {
       <View style={{ flex: 1 }}>
         <Slot />
       </View>
-      {detailContent && <IPadDetailPanel />}
+      {detailContent && canShowDetailPanel && <IPadDetailPanel />}
     </View>
   );
 }
