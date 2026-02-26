@@ -4,7 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Dimensions,
+  useWindowDimensions,
 } from "react-native";
 import type { ThemeColors } from "../../../contexts/ThemeContext";
 import type { DailyEngagement } from "../../../services/atproto/analytics";
@@ -20,6 +20,7 @@ function PostingFrequencyChartInner({
   colors,
   chartHeight = 180,
 }: PostingFrequencyChartProps) {
+  const { width: windowWidth } = useWindowDimensions();
   const FREQ_CHART_HEIGHT = chartHeight;
 
   const maxPostsPerDay = useMemo(() => {
@@ -38,7 +39,7 @@ function PostingFrequencyChartInner({
   const sectionPadding = 32;
   const yAxisWidth = 30;
   const screenWidth =
-    Dimensions.get("window").width - 32 - sectionPadding - yAxisWidth;
+    windowWidth - 32 - sectionPadding - yAxisWidth;
   const fitsInline = len * (MIN_BAR_WIDTH + BAR_GAP) <= screenWidth;
   const chartWidth = fitsInline
     ? undefined

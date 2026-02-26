@@ -15,7 +15,7 @@ import {
   Modal,
   FlatList,
   ActivityIndicator,
-  Dimensions,
+  useWindowDimensions,
 } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -36,9 +36,6 @@ interface GifPickerProps {
   onSearch: (query: string) => void;
 }
 
-const SCREEN_WIDTH = Dimensions.get("window").width;
-const ITEM_WIDTH = (SCREEN_WIDTH - 48) / 2; // 2 columns with padding
-
 function GifPickerInner({
   visible,
   onSelectGif,
@@ -50,7 +47,9 @@ function GifPickerInner({
   onSearch,
 }: GifPickerProps) {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const { width: screenWidth } = useWindowDimensions();
+  const itemWidth = (screenWidth - 48) / 2; // 2 columns with padding
+  const styles = useMemo(() => createStyles(colors, itemWidth), [colors, itemWidth]);
   const insets = useSafeAreaInsets();
   const searchInputRef = useRef<TextInput>(null);
   const [selectedGifId, setSelectedGifId] = useState<string | null>(null);
@@ -257,7 +256,7 @@ function GifPickerInner({
   );
 }
 
-function createStyles(colors: any) {
+function createStyles(colors: any, itemWidth: number) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -306,8 +305,8 @@ function createStyles(colors: any) {
       justifyContent: "space-between",
     },
     gifItem: {
-      width: ITEM_WIDTH,
-      height: ITEM_WIDTH,
+      width: itemWidth,
+      height: itemWidth,
       marginBottom: 12,
       borderRadius: 8,
       overflow: "hidden",

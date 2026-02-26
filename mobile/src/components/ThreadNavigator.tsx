@@ -5,7 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
-  Dimensions,
+  useWindowDimensions,
 } from "react-native";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useTheme } from "../contexts/ThemeContext";
@@ -27,7 +27,8 @@ export function ThreadNavigator({
   onNavigate,
 }: ThreadNavigatorProps) {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const { width } = useWindowDimensions();
+  const styles = useMemo(() => createStyles(colors, width), [colors, width]);
   const [isExpanded, setIsExpanded] = useState(false);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
@@ -139,9 +140,7 @@ export function ThreadNavigator({
   );
 }
 
-const { width } = Dimensions.get("window");
-
-function createStyles(colors: any) {
+function createStyles(colors: any, width: number) {
   return StyleSheet.create({
     container: {
       position: "absolute",

@@ -1,5 +1,5 @@
 import React, {useEffect, useCallback} from 'react';
-import {StyleSheet, Dimensions, View, Text} from 'react-native';
+import {StyleSheet, useWindowDimensions, View, Text} from 'react-native';
 import {Image} from 'expo-image';
 import Animated, {
   useSharedValue,
@@ -13,8 +13,6 @@ import Animated, {
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useSharedTransition} from '../contexts/SharedTransitionContext';
 import {useTheme} from '../contexts/ThemeContext';
-
-const {width: SCREEN_WIDTH} = Dimensions.get('window');
 const TRANSITION_DURATION = 150;
 const TIMING_CONFIG = {
   duration: TRANSITION_DURATION,
@@ -27,6 +25,7 @@ const TARGET_AVATAR_SIZE = 44;
 const HEADER_HEIGHT = 56; // Stack header height
 
 export function SharedTransitionOverlay() {
+  const {width: SCREEN_WIDTH} = useWindowDimensions();
   const {state, completeTransition} = useSharedTransition();
   const {active, sourceLayout, postData} = state;
   const {colors} = useTheme();

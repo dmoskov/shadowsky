@@ -8,7 +8,7 @@ import {
   Text,
   RefreshControl,
   ActivityIndicator,
-  Dimensions,
+  useWindowDimensions,
 } from "react-native";
 import { AppBskyFeedDefs, AppBskyEmbedImages } from "@atproto/api";
 import { useTimeline } from "../../hooks/api/useFeed";
@@ -20,10 +20,8 @@ import { useOfflineFeedEnhancer } from "../../hooks/useOfflineFeed";
 import StaleContentIndicator from "../../components/StaleContentIndicator";
 import { useOfflineFeedStatus } from "../../hooks/useOfflineFeed";
 
-const SCREEN_WIDTH = Dimensions.get("window").width;
 const GRID_COLUMNS = 3;
 const GRID_SPACING = 2;
-const ITEM_SIZE = (SCREEN_WIDTH - GRID_SPACING * (GRID_COLUMNS + 1)) / GRID_COLUMNS;
 
 /**
  * Extract post ID (rkey) from AT Protocol URI
@@ -54,11 +52,12 @@ function getFirstImage(post: AppBskyFeedDefs.FeedViewPost): string | null {
 interface MediaGridItemProps {
   post: AppBskyFeedDefs.FeedViewPost;
   onPress: () => void;
+  itemSize: number;
 }
 
-function MediaGridItem({ post, onPress }: MediaGridItemProps) {
+function MediaGridItem({ post, onPress, itemSize }: MediaGridItemProps) {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors, itemSize), [colors, itemSize]);
   const imageUri = getFirstImage(post);
   const likeCount = post.post.likeCount || 0;
   const replyCount = post.post.replyCount || 0;
@@ -97,13 +96,15 @@ function MediaGridItem({ post, onPress }: MediaGridItemProps) {
 
 export function TimelineScreen() {
   const { colors } = useTheme();
+  const { width: screenWidth } = useWindowDimensions();
+  const itemSize = (screenWidth - GRID_SPACING * (GRID_COLUMNS + 1)) / GRID_COLUMNS;
   const timelineQuery = useTimeline();
   const enhancedQuery = useOfflineFeedEnhancer(timelineQuery, 'timeline', ['timeline']);
   const { data, isLoading, isRefetching, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = enhancedQuery;
   const { isServingCached, isStale, isOnline } = enhancedQuery;
   const offlineStatus = useOfflineFeedStatus();
   const { navigateToThread } = useAppNavigation();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors, itemSize), [colors, itemSize]);
 
   // Flatten paginated data and filter for posts with images
   const postsWithMedia = useMemo(() => {
@@ -131,6 +132,7 @@ export function TimelineScreen() {
     <MediaGridItem
       post={item}
       onPress={() => handlePostPress(item)}
+      itemSize={itemSize}
     />
   );
 
@@ -205,8 +207,8 @@ export function TimelineScreen() {
         initialNumToRender={15}
         updateCellsBatchingPeriod={50}
         getItemLayout={(_data, index) => ({
-          length: ITEM_SIZE + GRID_SPACING,
-          offset: (ITEM_SIZE + GRID_SPACING) * Math.floor(index / GRID_COLUMNS),
+          length: itemSize + GRID_SPACING,
+          offset: (itemSize + GRID_SPACING) * Math.floor(index / GRID_COLUMNS),
           index,
         })}
       />
@@ -214,7 +216,7 @@ export function TimelineScreen() {
   );
 }
 
-function createStyles(colors: any) {
+function createStyles(colors: any, itemSize: number) {
   return StyleSheet.create({
   container: {
     flex: 1,
@@ -230,8 +232,8 @@ function createStyles(colors: any) {
     padding: GRID_SPACING,
   },
   gridItem: {
-    width: ITEM_SIZE,
-    height: ITEM_SIZE,
+    width: itemSize,
+    height: itemSize,
     margin: GRID_SPACING / 2,
     position: "relative",
     borderRadius: 4,

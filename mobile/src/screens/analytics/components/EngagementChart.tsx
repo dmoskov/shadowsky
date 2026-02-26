@@ -4,7 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Dimensions,
+  useWindowDimensions,
 } from "react-native";
 import type { ThemeColors } from "../../../contexts/ThemeContext";
 import type { DailyEngagement } from "../../../services/atproto/analytics";
@@ -20,6 +20,7 @@ function EngagementChartInner({
   colors,
   chartHeight = 200,
 }: EngagementChartProps) {
+  const { width: windowWidth } = useWindowDimensions();
   const CHART_HEIGHT = chartHeight;
 
   const maxDailyEngagement = useMemo(() => {
@@ -38,7 +39,7 @@ function EngagementChartInner({
   const sectionPadding = 32;
   const yAxisWidth = 36;
   const screenWidth =
-    Dimensions.get("window").width - 32 - sectionPadding - yAxisWidth;
+    windowWidth - 32 - sectionPadding - yAxisWidth;
   const fitsInline = len * (MIN_BAR_WIDTH + BAR_GAP) <= screenWidth;
   const chartWidth = fitsInline
     ? undefined
