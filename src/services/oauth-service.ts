@@ -167,6 +167,15 @@ class OAuthService {
         this.client = await BrowserOAuthClient.load({
           clientId,
           handleResolver: "https://bsky.social",
+          onDelete: (sub: string, cause: unknown) => {
+            debug.log("OAuth session deleted:", { sub, cause });
+            this.currentSession = null;
+            this.currentAgent = null;
+            this.emitEvent("deleted", {
+              sub,
+              cause: cause as Error,
+            });
+          },
         });
       } catch (loadError) {
         // Client metadata not available - OAuth won't work but app-password login will
@@ -177,20 +186,6 @@ class OAuthService {
         this.initPromise = null;
         return null;
       }
-
-      // Listen for session deletion events (token revocation, expiry, etc.)
-      this.client.addEventListener(
-        "deleted",
-        (event: CustomEvent<{ sub: string; cause: unknown }>) => {
-          debug.log("OAuth session deleted:", event.detail);
-          this.currentSession = null;
-          this.currentAgent = null;
-          this.emitEvent("deleted", {
-            sub: event.detail.sub,
-            cause: event.detail.cause as Error,
-          });
-        },
-      );
 
       // Try to restore existing session
       const result = await this.client.init();

@@ -291,13 +291,23 @@ mockSession = {
 mockOAuthClient = {
   init: vi.fn().mockResolvedValue({ session: mockSession }),
   authorize: vi.fn().mockResolvedValue(new URL("https://oauth.example.com")),
-  addEventListener: vi.fn(),
 };
+
+// Capture onDelete callback passed to BrowserOAuthClient.load()
+let capturedOnDelete: ((sub: string, cause: unknown) => void) | undefined;
 
 // Mock the OAuth client module
 vi.mock("@atproto/oauth-client-browser", () => ({
   BrowserOAuthClient: {
-    load: vi.fn(() => Promise.resolve(mockOAuthClient)),
+    load: vi.fn((opts: Record<string, unknown>) => {
+      if (opts?.onDelete) {
+        capturedOnDelete = opts.onDelete as (
+          sub: string,
+          cause: unknown,
+        ) => void;
+      }
+      return Promise.resolve(mockOAuthClient);
+    }),
   },
 }));
 
@@ -339,8 +349,10 @@ describe("OAuthService", () => {
       authorize: vi
         .fn()
         .mockResolvedValue(new URL("https://oauth.example.com")),
-      addEventListener: vi.fn(),
     };
+
+    // Reset captured callback
+    capturedOnDelete = undefined;
   });
 
   afterEach(() => {
@@ -425,43 +437,22 @@ describe("OAuthService", () => {
       );
     });
 
-    it("should listen for 'deleted' events from OAuth client", async () => {
-      let deletedEventHandler: ((event: CustomEvent) => void) | undefined;
-
-      mockOAuthClient.addEventListener = vi
-        .fn()
-        .mockImplementation((type, handler) => {
-          if (type === "deleted") {
-            deletedEventHandler = handler;
-          }
-        });
-
+    it("should pass onDelete hook to BrowserOAuthClient.load()", async () => {
       const deletedCallback = vi.fn();
       oauthService.addEventListener("deleted", deletedCallback);
 
       await oauthService.init();
 
-      expect(mockOAuthClient.addEventListener).toHaveBeenCalledWith(
-        "deleted",
-        expect.any(Function),
-      );
+      expect(capturedOnDelete).toBeDefined();
 
-      // Simulate a deletion event
-      if (deletedEventHandler) {
-        const event = new CustomEvent("deleted", {
-          detail: {
-            sub: "did:plc:test123",
-            cause: new Error("Token revoked"),
-          },
-        });
-        deletedEventHandler(event);
+      // Simulate a deletion event via the onDelete hook
+      capturedOnDelete!("did:plc:test123", new Error("Token revoked"));
 
-        expect(deletedCallback).toHaveBeenCalledWith({
-          sub: "did:plc:test123",
-          cause: expect.any(Error),
-        });
-        expect(oauthService.isAuthenticated()).toBe(false);
-      }
+      expect(deletedCallback).toHaveBeenCalledWith({
+        sub: "did:plc:test123",
+        cause: expect.any(Error),
+      });
+      expect(oauthService.isAuthenticated()).toBe(false);
     });
 
     it("should use production client ID for production hostname", async () => {
