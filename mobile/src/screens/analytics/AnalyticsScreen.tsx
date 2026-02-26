@@ -206,7 +206,7 @@ export function AnalyticsScreen() {
       {/* Time Range Selector */}
       {renderTimeRangeSelector()}
 
-      {/* Metrics Grid — 5 cards matching web */}
+      {/* Metrics Grid — 6 cards matching web */}
       <View style={styles.metricsGrid}>
         <View style={styles.metricsRow}>
           {renderMetricCard(
@@ -216,27 +216,33 @@ export function AnalyticsScreen() {
             colors.accentPurple,
           )}
           {renderMetricCard(
+            "Following",
+            analytics.followsCount,
+            undefined,
+            "#f59e0b",
+          )}
+        </View>
+        <View style={styles.metricsRow}>
+          {renderMetricCard(
             "Likes",
             analytics.likesReceived,
             undefined,
             colors.danger,
           )}
-        </View>
-        <View style={styles.metricsRow}>
           {renderMetricCard(
             "Reposts",
             analytics.repostsReceived,
             undefined,
             colors.accentBlue,
           )}
+        </View>
+        <View style={styles.metricsRow}>
           {renderMetricCard(
             "Replies",
             analytics.repliesReceived,
             undefined,
             colors.success,
           )}
-        </View>
-        <View style={styles.metricsRow}>
           {renderMetricCard(
             "Engagement Rate",
             analytics.engagementRate.toFixed(1),
