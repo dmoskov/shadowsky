@@ -59,19 +59,7 @@ async function buildColumnsFromPinnedFeeds(
     const feedGeneratorFeeds = allPinnedFeeds.filter((f) => f.type === "feed");
     const listFeeds = allPinnedFeeds.filter((f) => f.type === "list");
 
-    // Use console.warn so it always shows (logger requires debug mode)
-    console.warn(
-      "[SkyDeck] buildColumnsFromPinnedFeeds:",
-      allPinnedFeeds.length,
-      "pinned feeds found",
-      { feeds: feedGeneratorFeeds.length, lists: listFeeds.length },
-    );
-
     if (allPinnedFeeds.length === 0) {
-      console.warn(
-        "[SkyDeck] No pinned feeds found. All savedFeeds:",
-        prefs.savedFeeds,
-      );
       return [homeColumn];
     }
 
@@ -113,9 +101,6 @@ async function buildColumnsFromPinnedFeeds(
       });
     });
 
-    console.warn(
-      `[SkyDeck] Auto-populated ${columns.length} columns from Bluesky pinned feeds`,
-    );
     return columns;
   } catch (error) {
     console.error(
@@ -405,20 +390,10 @@ export default function SkyDeck() {
       const hasUserConfigured =
         localStorage.getItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED) === "true";
 
-      console.warn("[SkyDeck loadColumns]", {
-        savedColumnsCount: savedColumns?.length ?? 0,
-        isDefaultOnly,
-        hasUserConfigured,
-        savedColumnIds: savedColumns?.map((c: Column) => c.id),
-      });
-
       // If Dexie has only default columns but the flag says "configured",
       // a previous auto-populate set the flag before saving to Dexie completed.
       // Clear the stale flag so auto-populate can retry.
       if (isDefaultOnly && hasUserConfigured) {
-        console.warn(
-          "[SkyDeck] Clearing stale COLUMNS_CONFIGURED flag (Dexie has only default columns)",
-        );
         localStorage.removeItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED);
       }
 
@@ -428,18 +403,12 @@ export default function SkyDeck() {
           agent,
           homeColumn,
         );
-        console.warn(
-          `[SkyDeck] setColumns called with ${initialColumns.length} columns (auto-populate)`,
-        );
         setColumns(initialColumns);
         if (initialColumns.length > 1) {
           // Save immediately to Dexie — don't rely on the debounced save effect,
           // because SkyDeck may remount (route change) before the timer fires
           await columnService.importColumns(initialColumns);
           localStorage.setItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED, "true");
-          console.warn(
-            `[SkyDeck] Saved ${initialColumns.length} columns to Dexie immediately`,
-          );
         }
       } else if (savedColumns && savedColumns.length > 0) {
         // Ensure the first column is always Home
@@ -448,18 +417,11 @@ export default function SkyDeck() {
             homeColumn,
             ...savedColumns.filter((col: Column) => col.id !== "home"),
           ];
-          console.warn(
-            `[SkyDeck] setColumns called with ${restoredColumns.length} columns (restored+home)`,
-          );
           setColumns(restoredColumns);
         } else {
-          console.warn(
-            `[SkyDeck] setColumns called with ${savedColumns.length} columns (restored)`,
-          );
           setColumns(savedColumns);
         }
       } else {
-        console.warn("[SkyDeck] setColumns called with 1 column (fallback)");
         setColumns([homeColumn]);
       }
       // Mark columns as loaded
@@ -589,12 +551,6 @@ export default function SkyDeck() {
     onIndexChange: setMobileColumnIndex,
     containerRef: mobileContainerRef,
   });
-
-  // Render-phase diagnostic: how many columns are in state right now?
-  console.warn(
-    `[SkyDeck RENDER] columns.length=${columns.length}, columnsLoaded=${columnsLoaded}, isNarrowView=${isNarrowView}`,
-    columns.map((c) => c.title),
-  );
 
   // In narrow view, show columns with swipe navigation
   if (isNarrowView && columns.length > 0) {
