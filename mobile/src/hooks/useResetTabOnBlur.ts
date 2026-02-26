@@ -15,8 +15,13 @@ export function useResetTabOnBlur() {
     if (!parent) return;
 
     const unsubscribe = parent.addListener("blur", () => {
-      if (navigation.canGoBack()) {
-        navigation.dispatch(StackActions.popToTop());
+      const state = navigation.getState();
+      if (state && state.index > 0) {
+        try {
+          navigation.dispatch(StackActions.popToTop());
+        } catch {
+          // Silently ignore if no navigator can handle the action
+        }
       }
     });
     return unsubscribe;
