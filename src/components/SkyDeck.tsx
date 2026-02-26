@@ -185,6 +185,7 @@ export default function SkyDeck() {
   const [columnWidth, setColumnWidth] = useState(320); // Default width
   const columnsContainerRef = useRef<HTMLDivElement>(null);
   const columnSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const columnsLoadedRef = useRef(false);
 
   // Fetch user's saved/pinned feeds
   const { data: userPrefs } = useQuery({
@@ -378,7 +379,8 @@ export default function SkyDeck() {
 
     // Initialize column service and load columns
     const loadColumns = async () => {
-      if (!agent) return;
+      if (!agent || columnsLoadedRef.current) return;
+      columnsLoadedRef.current = true;
 
       // Initialize column service with the current storage type from preferences
       appPreferencesService.setAgent(agent);
