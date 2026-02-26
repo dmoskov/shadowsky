@@ -58,7 +58,7 @@ export function QuoteEmbed({record, onPress}: QuoteEmbedProps) {
           text={postRecord.text as string}
           facets={postRecord.facets as AppBskyRichtextFacet.Main[] | undefined}
           style={styles.text}
-          numberOfLines={3}
+          numberOfLines={6}
         />
       )}
     </TouchableOpacity>

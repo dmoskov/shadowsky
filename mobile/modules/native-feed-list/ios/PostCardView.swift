@@ -304,13 +304,12 @@ struct ReplyContextView: View {
                 onProfilePress?(parent.authorHandle)
             }
 
-            // Show a one-line preview of the parent post text
+            // Show a preview of the parent post text
             if let parentText = parent.text {
                 Text(parentText)
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
+                    .lineLimit(2)
             }
         }
         .padding(.horizontal, 12)

@@ -104,12 +104,12 @@ struct QuoteEmbed: View {
                     Spacer()
                 }
 
-                // Post text (truncated to 3 lines)
+                // Post text
                 if let text = record.text {
                     Text(text)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                        .lineLimit(3)
+                        .lineLimit(6)
                         .multilineTextAlignment(.leading)
                 }
             }
