@@ -407,17 +407,22 @@ export default function SkyDeck() {
 
       console.warn("[SkyDeck loadColumns]", {
         savedColumnsCount: savedColumns?.length ?? 0,
-        isDefaultOnly:
-          !savedColumns ||
-          savedColumns.length === 0 ||
-          (savedColumns.length === 1 && savedColumns[0].id === "home"),
-        hasUserConfigured:
-          localStorage.getItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED) ===
-          "true",
+        isDefaultOnly,
+        hasUserConfigured,
         savedColumnIds: savedColumns?.map((c: Column) => c.id),
       });
 
-      if (isDefaultOnly && !hasUserConfigured) {
+      // If Dexie has only default columns but the flag says "configured",
+      // a previous auto-populate set the flag before saving to Dexie completed.
+      // Clear the stale flag so auto-populate can retry.
+      if (isDefaultOnly && hasUserConfigured) {
+        console.warn(
+          "[SkyDeck] Clearing stale COLUMNS_CONFIGURED flag (Dexie has only default columns)",
+        );
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED);
+      }
+
+      if (isDefaultOnly) {
         // Auto-populate from Bluesky pinned feeds
         const initialColumns = await buildColumnsFromPinnedFeeds(
           agent,
@@ -427,10 +432,14 @@ export default function SkyDeck() {
           `[SkyDeck] setColumns called with ${initialColumns.length} columns (auto-populate)`,
         );
         setColumns(initialColumns);
-        // Mark as configured once we've populated more than just the home column
-        // so auto-populate doesn't re-run on every load
         if (initialColumns.length > 1) {
+          // Save immediately to Dexie — don't rely on the debounced save effect,
+          // because SkyDeck may remount (route change) before the timer fires
+          await columnService.importColumns(initialColumns);
           localStorage.setItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED, "true");
+          console.warn(
+            `[SkyDeck] Saved ${initialColumns.length} columns to Dexie immediately`,
+          );
         }
       } else if (savedColumns && savedColumns.length > 0) {
         // Ensure the first column is always Home
