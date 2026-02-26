@@ -52,6 +52,14 @@ jest.mock('react-native-reanimated', () => {
   };
 });
 
+jest.mock('../RetroAltTextModal', () => ({
+  RetroAltTextModal: () => null,
+}));
+
+jest.mock('../../contexts/LightboxContext', () => ({
+  useLightbox: () => ({openLightbox: jest.fn(), closeLightbox: jest.fn(), updateImageAlt: jest.fn(), state: {visible: false, images: [], index: 0, sourceLayout: null, postMeta: null}}),
+}));
+
 jest.mock('../ImageCarouselItem', () => ({
   ImageCarouselItem: ({uri, onDismiss, onSingleTap}: any) => {
     const {View, Text, TouchableOpacity} = require('react-native');

@@ -450,6 +450,7 @@ function PostCardComponent({
         <PostEmbed
           embed={postView.embed}
           postUri={postView.uri}
+          postAuthorDid={author.did}
           isVisible={isVisible}
           onImagePress={onImagePress}
           onLinkPress={onLinkPress}

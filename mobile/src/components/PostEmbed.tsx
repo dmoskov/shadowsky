@@ -13,6 +13,7 @@ const embedFallback = <Text style={embedFallbackStyle}>Content unavailable</Text
 interface PostEmbedProps {
   embed: AppBskyFeedDefs.PostView['embed'];
   postUri?: string;
+  postAuthorDid?: string;
   isVisible?: boolean;
   onImagePress?: (images: Array<{thumb: string; fullsize: string; alt?: string}>, index: number) => void;
   onLinkPress?: (url: string) => void;
@@ -23,6 +24,7 @@ interface PostEmbedProps {
 export function PostEmbed({
   embed,
   postUri,
+  postAuthorDid,
   isVisible = false,
   onImagePress,
   onLinkPress,
@@ -36,7 +38,7 @@ export function PostEmbed({
   if (AppBskyEmbedImages.isView(embed)) {
     return (
       <InlineErrorBoundary fallback={embedFallback} context="ImageEmbed">
-        <ImageEmbed images={embed.images} onImagePress={onImagePress} blurImages={blurImages} />
+        <ImageEmbed images={embed.images} onImagePress={onImagePress} blurImages={blurImages} postUri={postUri} postAuthorDid={postAuthorDid} />
       </InlineErrorBoundary>
     );
   }
@@ -65,6 +67,7 @@ export function PostEmbed({
             <PostEmbed
               embed={embed.media as AppBskyFeedDefs.PostView['embed']}
               postUri={postUri}
+              postAuthorDid={postAuthorDid}
               isVisible={isVisible}
               onImagePress={onImagePress}
               onLinkPress={onLinkPress}

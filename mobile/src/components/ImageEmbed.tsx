@@ -4,7 +4,7 @@ import {Image} from 'expo-image';
 import {AppBskyEmbedImages} from '@atproto/api';
 import { useTheme } from "../contexts/ThemeContext";
 import {getOptimizedUrl} from '../utils/image-cdn';
-import {useLightbox, LightboxImage} from '../contexts/LightboxContext';
+import {useLightbox, LightboxImage, LightboxPostMeta} from '../contexts/LightboxContext';
 
 // Aspect ratio clamping constants
 const MIN_ASPECT_RATIO = 4 / 5; // portrait (0.8)
@@ -39,9 +39,11 @@ interface ImageEmbedProps {
   images: AppBskyEmbedImages.ViewImage[];
   onImagePress?: (images: Array<{thumb: string; fullsize: string; alt?: string}>, index: number) => void;
   blurImages?: boolean;
+  postUri?: string;
+  postAuthorDid?: string;
 }
 
-export function ImageEmbed({images, onImagePress, blurImages = false}: ImageEmbedProps) {
+export function ImageEmbed({images, onImagePress, blurImages = false, postUri, postAuthorDid}: ImageEmbedProps) {
   const { colors } = useTheme();
   const {width: windowWidth} = useWindowDimensions();
   const {openLightbox} = useLightbox();
@@ -58,6 +60,10 @@ export function ImageEmbed({images, onImagePress, blurImages = false}: ImageEmbe
     alt: img.alt,
   }));
 
+  const postMeta: LightboxPostMeta | null = postUri && postAuthorDid
+    ? {postUri, postAuthorDid}
+    : null;
+
   const handleImagePress = useCallback(
     (index: number) => {
       if (onImagePress) {
@@ -73,13 +79,13 @@ export function ImageEmbed({images, onImagePress, blurImages = false}: ImageEmbe
       const ref = imageRefs.current[index];
       if (ref) {
         ref.measureInWindow((x, y, width, height) => {
-          openLightbox(lightboxImages, index, {x, y, width, height});
+          openLightbox(lightboxImages, index, {x, y, width, height}, postMeta);
         });
       } else {
-        openLightbox(lightboxImages, index, null);
+        openLightbox(lightboxImages, index, null, postMeta);
       }
     },
-    [images, onImagePress, openLightbox, lightboxImages],
+    [images, onImagePress, openLightbox, lightboxImages, postMeta],
   );
 
   const setImageRef = useCallback((index: number, ref: View | null) => {

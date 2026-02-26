@@ -19,11 +19,17 @@ export interface SourceLayout {
   height: number;
 }
 
+export interface LightboxPostMeta {
+  postUri: string;
+  postAuthorDid: string;
+}
+
 interface LightboxState {
   visible: boolean;
   images: LightboxImage[];
   index: number;
   sourceLayout: SourceLayout | null;
+  postMeta: LightboxPostMeta | null;
 }
 
 interface LightboxContextType {
@@ -32,14 +38,17 @@ interface LightboxContextType {
     images: LightboxImage[],
     index: number,
     sourceLayout?: SourceLayout | null,
+    postMeta?: LightboxPostMeta | null,
   ) => void;
   closeLightbox: () => void;
+  updateImageAlt: (index: number, alt: string) => void;
 }
 
 const LightboxContext = createContext<LightboxContextType>({
-  state: {visible: false, images: [], index: 0, sourceLayout: null},
+  state: {visible: false, images: [], index: 0, sourceLayout: null, postMeta: null},
   openLightbox: () => {},
   closeLightbox: () => {},
+  updateImageAlt: () => {},
 });
 
 export function LightboxProvider({children}: {children: React.ReactNode}) {
@@ -48,6 +57,7 @@ export function LightboxProvider({children}: {children: React.ReactNode}) {
     images: [],
     index: 0,
     sourceLayout: null,
+    postMeta: null,
   });
 
   const openLightbox = useCallback(
@@ -55,12 +65,14 @@ export function LightboxProvider({children}: {children: React.ReactNode}) {
       images: LightboxImage[],
       index: number,
       sourceLayout?: SourceLayout | null,
+      postMeta?: LightboxPostMeta | null,
     ) => {
       setState({
         visible: true,
         images,
         index,
         sourceLayout: sourceLayout ?? null,
+        postMeta: postMeta ?? null,
       });
     },
     [],
@@ -70,9 +82,19 @@ export function LightboxProvider({children}: {children: React.ReactNode}) {
     setState(prev => ({...prev, visible: false}));
   }, []);
 
+  const updateImageAlt = useCallback((index: number, alt: string) => {
+    setState(prev => {
+      const newImages = [...prev.images];
+      if (index >= 0 && index < newImages.length) {
+        newImages[index] = {...newImages[index], alt};
+      }
+      return {...prev, images: newImages};
+    });
+  }, []);
+
   const value = useMemo(
-    () => ({state, openLightbox, closeLightbox}),
-    [state, openLightbox, closeLightbox],
+    () => ({state, openLightbox, closeLightbox, updateImageAlt}),
+    [state, openLightbox, closeLightbox, updateImageAlt],
   );
 
   return (

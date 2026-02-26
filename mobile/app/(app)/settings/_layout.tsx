@@ -44,6 +44,10 @@ export default function SettingsLayout() {
       />
       <Stack.Screen name="performance" options={{ title: "Performance" }} />
       <Stack.Screen name="privacy" options={{ title: "Privacy" }} />
+      <Stack.Screen
+        name="alt-text-backfill"
+        options={{ title: "Add Missing Alt Text" }}
+      />
     </Stack>
   );
 }

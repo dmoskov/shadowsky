@@ -12,13 +12,15 @@ import Animated, {
 import {useLightbox, SourceLayout} from '../contexts/LightboxContext';
 import {ImageCarousel, CarouselImage} from './ImageCarousel';
 import {getOptimizedUrl} from '../utils/image-cdn';
+import {useAuth} from '../contexts/AuthContext';
 const TRANSITION_DURATION = 300;
 const TIMING_CONFIG = {duration: TRANSITION_DURATION, easing: Easing.out(Easing.cubic)};
 
 export function LightboxOverlay() {
   const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = useWindowDimensions();
-  const {state, closeLightbox} = useLightbox();
-  const {visible, images, index, sourceLayout} = state;
+  const {state, closeLightbox, updateImageAlt} = useLightbox();
+  const {visible, images, index, sourceLayout, postMeta} = state;
+  const {session} = useAuth();
 
   const animProgress = useSharedValue(0);
   const showCarousel = useSharedValue(false);
@@ -136,6 +138,9 @@ export function LightboxOverlay() {
       initialIndex={index}
       visible={carouselReady}
       onClose={handleClose}
+      postMeta={postMeta}
+      currentUserDid={session?.did}
+      onAltTextUpdated={updateImageAlt}
     />
   );
 }

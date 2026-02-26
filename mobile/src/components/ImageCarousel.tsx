@@ -21,6 +21,8 @@ import {getOptimizedUrl} from '../utils/image-cdn';
 import {saveImageToGallery} from '../utils/save-image';
 import {triggerHaptic} from '../utils/haptics';
 import {useMediaOrientation} from '../hooks/useMediaOrientation';
+import {RetroAltTextModal} from './RetroAltTextModal';
+import {LightboxPostMeta} from '../contexts/LightboxContext';
 
 export interface CarouselImage {
   thumb: string;
@@ -33,6 +35,9 @@ interface ImageCarouselProps {
   initialIndex: number;
   visible: boolean;
   onClose: () => void;
+  postMeta?: LightboxPostMeta | null;
+  currentUserDid?: string;
+  onAltTextUpdated?: (index: number, altText: string) => void;
 }
 
 function ImageCarouselInner({
@@ -40,6 +45,9 @@ function ImageCarouselInner({
   initialIndex,
   visible,
   onClose,
+  postMeta,
+  currentUserDid,
+  onAltTextUpdated,
 }: ImageCarouselProps) {
   const { colors } = useTheme();
   const {width: SCREEN_WIDTH} = useWindowDimensions();
@@ -48,6 +56,7 @@ function ImageCarouselInner({
   const [showAlt, setShowAlt] = useState(false);
   const [bgOpacity, setBgOpacity] = useState(1);
   const [controlsVisible, setControlsVisible] = useState(true);
+  const [altTextModalVisible, setAltTextModalVisible] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -57,6 +66,7 @@ function ImageCarouselInner({
       setShowAlt(false);
       setBgOpacity(1);
       setControlsVisible(true);
+      setAltTextModalVisible(false);
 
       // Prefetch all fullsize images when lightbox opens
       const urls = images.map(i => getOptimizedUrl(i.fullsize));
@@ -127,6 +137,14 @@ function ImageCarouselInner({
     }
   }, [currentIndex, images]);
 
+  const handleAddAltText = useCallback(() => {
+    setAltTextModalVisible(true);
+  }, []);
+
+  const handleAltTextSaved = useCallback((index: number, altText: string) => {
+    onAltTextUpdated?.(index, altText);
+  }, [onAltTextUpdated]);
+
   const renderItem = useCallback(
     ({item, index}: {item: CarouselImage; index: number}) => (
       <ImageCarouselItem
@@ -149,6 +167,10 @@ function ImageCarouselInner({
 
   const currentImage = images[currentIndex];
   const hasAlt = currentImage?.alt && currentImage.alt.length > 0;
+
+  // Show "Add ALT" button if: no alt text, user owns the post, and we have post metadata
+  const isOwnPost = postMeta && currentUserDid && postMeta.postAuthorDid === currentUserDid;
+  const showAddAlt = !hasAlt && isOwnPost && postMeta;
 
   if (!visible) {
     return null;
@@ -222,6 +244,18 @@ function ImageCarouselInner({
               entering={FadeIn.duration(150)}
               exiting={FadeOut.duration(150)}
               style={styles.bottomControls}>
+              {/* Add ALT button for own posts without alt text */}
+              {showAddAlt && (
+                <TouchableOpacity
+                  onPress={handleAddAltText}
+                  hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add alt text to this image"
+                  style={styles.addAltButton}>
+                  <Text style={styles.addAltButtonText}>+ ALT</Text>
+                </TouchableOpacity>
+              )}
+
               {/* Save button */}
               <TouchableOpacity
                 onPress={handleSave}
@@ -289,6 +323,19 @@ function ImageCarouselInner({
           </>
         )}
       </View>
+
+      {/* Retro Alt Text Modal */}
+      {showAddAlt && postMeta && (
+        <RetroAltTextModal
+          visible={altTextModalVisible}
+          onClose={() => setAltTextModalVisible(false)}
+          imageUrl={currentImage.fullsize}
+          imageIndex={currentIndex}
+          postUri={postMeta.postUri}
+          initialAltText={currentImage?.alt || ''}
+          onAltTextSaved={handleAltTextSaved}
+        />
+      )}
     </Modal>
   );
 }
@@ -342,6 +389,19 @@ function createStyles(colors: any) {
       borderRadius: 18,
       justifyContent: 'center',
       alignItems: 'center',
+    },
+    addAltButton: {
+      backgroundColor: 'rgba(0, 120, 215, 0.8)',
+      paddingHorizontal: 12,
+      height: 36,
+      borderRadius: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    addAltButtonText: {
+      color: '#ffffff',
+      fontSize: 13,
+      fontWeight: '700',
     },
     shareIcon: {
       color: colors.text,
@@ -405,9 +465,12 @@ export const ImageCarousel = React.memo(ImageCarouselInner, (prevProps, nextProp
   if (prevProps.initialIndex !== nextProps.initialIndex) return false;
   if (prevProps.onClose !== nextProps.onClose) return false;
   if (prevProps.images.length !== nextProps.images.length) return false;
+  if (prevProps.postMeta !== nextProps.postMeta) return false;
+  if (prevProps.currentUserDid !== nextProps.currentUserDid) return false;
   if (prevProps.images !== nextProps.images) {
     for (let i = 0; i < prevProps.images.length; i++) {
       if (prevProps.images[i].fullsize !== nextProps.images[i].fullsize) return false;
+      if (prevProps.images[i].alt !== nextProps.images[i].alt) return false;
     }
   }
   return true;

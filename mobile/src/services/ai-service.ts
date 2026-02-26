@@ -464,6 +464,73 @@ export interface LinkMetadata {
 /**
  * Fetch link metadata (title, description, image) for a URL
  */
+/**
+ * Generate alt text for an image using its URL (for existing posts with CDN URLs)
+ * @param imageUrl - HTTP URL of the image (e.g., CDN URL from Bluesky)
+ * @returns Generated alt text description
+ */
+export async function generateAltTextFromUrl(imageUrl: string): Promise<string> {
+  try {
+    const apiUrl = getVersionedApiUrl();
+    const endpoint = `${apiUrl}/generate-alt-text`;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getApiAuthHeaders(),
+        },
+        body: JSON.stringify({ imageUrl }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const status = response.status;
+        if (status === 401) {
+          throw new Error("Alt text generation failed: Invalid API key");
+        } else if (status === 429) {
+          throw new Error("Alt text generation failed: Rate limit exceeded");
+        } else if (status === 503) {
+          throw new Error("Alt text generation service is temporarily unavailable");
+        } else {
+          throw new Error(
+            `Alt text generation failed: ${response.statusText || "Unknown error"}`,
+          );
+        }
+      }
+
+      const data = await response.json();
+      return data.altText?.trim() || "";
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        throw new Error("Alt text generation timed out. Please try again.");
+      }
+      throw fetchError;
+    }
+  } catch (error) {
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      throw new Error("Alt text generation unavailable: API server not reachable");
+    }
+    if (error instanceof Error && error.message.includes("Alt text generation")) {
+      throw error;
+    }
+    logger.error('Error generating alt text from URL:', error);
+    throw new Error(
+      `Alt text generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+}
+
 export async function fetchLinkMetadata(url: string): Promise<LinkMetadata> {
   const apiUrl = getVersionedApiUrl();
   const endpoint = `${apiUrl}/fetch-link-metadata`;
