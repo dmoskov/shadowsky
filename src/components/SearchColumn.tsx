@@ -484,8 +484,10 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                               key={`trending-${index}`}
                               type="button"
                               onClick={() => {
-                                setQuery(trend.topic);
-                                executeSearch(trend.topic);
+                                const searchText =
+                                  trend.displayName || trend.topic;
+                                setQuery(searchText);
+                                executeSearch(searchText);
                                 setShowDropdown(false);
                               }}
                               className="rounded-full border px-2.5 py-1 text-xs transition-all hover:border-blue-400"

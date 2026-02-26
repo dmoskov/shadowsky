@@ -1004,7 +1004,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                       topic.displayName || topic.topic || topic;
                                     setFilters((prev) => ({
                                       ...prev,
-                                      query: `#${topicText}`,
+                                      query: topicText,
                                     }));
                                     setShowMainTypeahead(false);
                                     setTimeout(() => handleSearch(), 100);
