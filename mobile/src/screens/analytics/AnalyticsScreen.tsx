@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -36,8 +36,13 @@ export function AnalyticsScreen() {
     isLoading,
     error,
     refetch,
-    isRefetching,
   } = useUserAnalytics(account?.did || "", timeRange);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    refetch().finally(() => setIsRefreshing(false));
+  }, [refetch]);
 
   const postsForAI = useMemo<PostAnalysisPost[] | undefined>(() => {
     if (!analytics?.postsForAnalysis) return undefined;
@@ -197,8 +202,8 @@ export function AnalyticsScreen() {
       keyboardDismissMode="on-drag"
       refreshControl={
         <RefreshControl
-          refreshing={isRefetching}
-          onRefresh={() => refetch()}
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
           tintColor={colors.primary}
         />
       }

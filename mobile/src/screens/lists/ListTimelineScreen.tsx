@@ -1,4 +1,4 @@
-import React, {useCallback, useMemo} from 'react';
+import React, {useCallback, useMemo, useState} from 'react';
 import {View, StyleSheet, Text, TouchableOpacity} from 'react-native';
 import {FeedList} from '../../components/FeedList';
 import {useListFeed, useList} from '../../hooks/api';
@@ -39,8 +39,13 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isRefetching,
   } = useListFeed(decodedListId);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    refetch().finally(() => setIsRefreshing(false));
+  }, [refetch]);
 
   // Flatten paginated feed data
   const posts = useMemo(() => {
@@ -117,10 +122,10 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
       <FeedList
         posts={posts}
         isLoading={isLoading}
-        isRefreshing={isRefetching}
+        isRefreshing={isRefreshing}
         isLoadingMore={isFetchingNextPage}
         error={error instanceof Error ? error : null}
-        onRefresh={refetch}
+        onRefresh={handleRefresh}
         onLoadMore={handleLoadMore}
         onPostPress={handlePostPress}
         onProfilePress={handleProfilePress}
