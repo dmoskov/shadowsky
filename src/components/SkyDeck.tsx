@@ -1,4 +1,8 @@
-import type { AppBskyActorDefs, AppBskyGraphDefs } from "@atproto/api";
+import type {
+  AppBskyActorDefs,
+  AppBskyGraphDefs,
+  BskyAgent,
+} from "@atproto/api";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
@@ -18,6 +22,7 @@ import { useModal } from "../contexts/ModalContext";
 import { useColumnSwipe } from "../hooks/useColumnSwipe";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { columnService } from "../services/column-service";
+import { LOCAL_STORAGE_KEYS } from "../services/storage/storage-constants";
 import type { Column, ColumnType } from "../types/column";
 import { createLogger } from "../utils/logger";
 import SkyColumn from "./SkyColumn";
@@ -32,6 +37,61 @@ interface FeedGenerator {
   displayName: string;
   description?: string;
   avatar?: string;
+}
+
+/**
+ * Build initial columns from the user's Bluesky pinned feeds.
+ * Called when no saved column layout exists (first use or data loss).
+ */
+async function buildColumnsFromPinnedFeeds(
+  agent: BskyAgent,
+  homeColumn: Column,
+): Promise<Column[]> {
+  try {
+    const prefs = await agent.getPreferences();
+    const pinnedFeeds =
+      prefs.savedFeeds?.filter(
+        (f: AppBskyActorDefs.SavedFeed) => f.pinned && f.type === "feed",
+      ) || [];
+
+    if (pinnedFeeds.length === 0) {
+      return [homeColumn];
+    }
+
+    const feedUris = pinnedFeeds.map(
+      (f: AppBskyActorDefs.SavedFeed) => f.value,
+    );
+    const feedResponse = await agent.app.bsky.feed.getFeedGenerators({
+      feeds: feedUris,
+    });
+
+    const columns: Column[] = [homeColumn];
+    const now = Date.now();
+
+    pinnedFeeds.forEach(
+      (pinnedFeed: AppBskyActorDefs.SavedFeed, index: number) => {
+        const generator = feedResponse.data.feeds.find(
+          (g: FeedGenerator) => g.uri === pinnedFeed.value,
+        );
+        if (generator) {
+          columns.push({
+            id: `feed-${now}-${index}`,
+            type: "feed",
+            title: generator.displayName,
+            data: pinnedFeed.value,
+          });
+        }
+      },
+    );
+
+    logger.log(
+      `Auto-populated ${columns.length} columns from Bluesky pinned feeds`,
+    );
+    return columns;
+  } catch (error) {
+    logger.error("Failed to build columns from pinned feeds:", error);
+    return [homeColumn];
+  }
 }
 
 const columnOptions = [
@@ -302,7 +362,28 @@ export default function SkyDeck() {
       // Load columns from service
       const savedColumns = await columnService.getColumns();
 
-      if (savedColumns && savedColumns.length > 0) {
+      // Detect if this is a default-only layout (empty or just the auto-created home column)
+      // that should be auto-populated from the user's Bluesky pinned feeds
+      const isDefaultOnly =
+        !savedColumns ||
+        savedColumns.length === 0 ||
+        (savedColumns.length === 1 && savedColumns[0].id === "home");
+      const hasUserConfigured =
+        localStorage.getItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED) === "true";
+
+      if (isDefaultOnly && !hasUserConfigured) {
+        // Auto-populate from Bluesky pinned feeds
+        const initialColumns = await buildColumnsFromPinnedFeeds(
+          agent,
+          homeColumn,
+        );
+        setColumns(initialColumns);
+        // Mark as configured once we've populated more than just the home column
+        // so auto-populate doesn't re-run on every load
+        if (initialColumns.length > 1) {
+          localStorage.setItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED, "true");
+        }
+      } else if (savedColumns && savedColumns.length > 0) {
         // Ensure the first column is always Home
         if (savedColumns[0].id !== "home") {
           const restoredColumns = [
@@ -314,7 +395,6 @@ export default function SkyDeck() {
           setColumns(savedColumns);
         }
       } else {
-        // First time - just home column
         setColumns([homeColumn]);
       }
       // Mark columns as loaded
@@ -356,6 +436,9 @@ export default function SkyDeck() {
         data: feedUri || (type === "feed" ? "following" : undefined),
       };
 
+      // Mark deck as manually configured so auto-populate doesn't override
+      localStorage.setItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED, "true");
+
       setColumns((prev) => {
         // Focus the newly added column (index = prev.length, which is the last position)
         setTimeout(() => {
@@ -387,6 +470,9 @@ export default function SkyDeck() {
   const handleRemoveColumn = useCallback((id: string) => {
     // Don't allow removing the home column
     if (id === "home") return;
+
+    // Mark deck as manually configured so auto-populate doesn't override
+    localStorage.setItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED, "true");
 
     setColumns((prev) => {
       const columnToRemove = prev.find((col) => col.id === id);
