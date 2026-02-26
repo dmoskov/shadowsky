@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import ExpoSwiftUIFeed
 
 // MARK: - Search View
 
@@ -345,11 +346,7 @@ struct SearchView: View {
                 }
 
                 // Post text
-                Text(post.text)
-                    .font(.subheadline)
-                    .foregroundColor(Color(UIColor.label))
-                    .lineLimit(4)
-                    .multilineTextAlignment(.leading)
+                TruncatedText(post.text, lineLimit: 4, color: Color(UIColor.label))
 
                 // Engagement metrics
                 HStack(spacing: 16) {

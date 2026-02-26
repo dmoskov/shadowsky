@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, {useMemo, useState, useCallback} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {AppBskyEmbedRecord, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
 import {Avatar} from './Avatar';
@@ -13,6 +13,8 @@ interface QuoteEmbedProps {
 export function QuoteEmbed({record, onPress}: QuoteEmbedProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const [isTruncated, setIsTruncated] = useState(false);
+  const handleTruncation = useCallback((truncated: boolean) => setIsTruncated(truncated), []);
 
   // Handle deleted/blocked/not-found posts
   if (!record || record.$type !== 'app.bsky.embed.record#viewRecord') {
@@ -54,12 +56,18 @@ export function QuoteEmbed({record, onPress}: QuoteEmbedProps) {
         </View>
       </View>
       {postRecord && (
-        <RichText
-          text={postRecord.text as string}
-          facets={postRecord.facets as AppBskyRichtextFacet.Main[] | undefined}
-          style={styles.text}
-          numberOfLines={6}
-        />
+        <View>
+          <RichText
+            text={postRecord.text as string}
+            facets={postRecord.facets as AppBskyRichtextFacet.Main[] | undefined}
+            style={styles.text}
+            numberOfLines={6}
+            onTruncation={handleTruncation}
+          />
+          {isTruncated && (
+            <Text style={styles.showMore}>Show more</Text>
+          )}
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -111,6 +119,11 @@ function createStyles(colors: any) {
       color: colors.textMuted,
       fontSize: 14,
       lineHeight: 18,
+    },
+    showMore: {
+      color: colors.textTertiary,
+      fontSize: 12,
+      marginTop: 2,
     },
   });
 }

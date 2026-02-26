@@ -1,5 +1,5 @@
-import React from 'react';
-import {Text, Alert, TextStyle} from 'react-native';
+import React, {useCallback} from 'react';
+import {Text, Alert, TextStyle, NativeSyntheticEvent, TextLayoutEventData} from 'react-native';
 import {RichText as AtpRichText, AppBskyRichtextFacet} from '@atproto/api';
 import {useTheme} from '../contexts/ThemeContext';
 import {openLink} from './browser';
@@ -12,6 +12,7 @@ interface RichTextProps {
   onHashtagPress?: (tag: string) => void;
   style?: TextStyle;
   numberOfLines?: number;
+  onTruncation?: (isTruncated: boolean) => void;
 }
 
 export function RichText({
@@ -21,12 +22,20 @@ export function RichText({
   onHashtagPress,
   style,
   numberOfLines,
+  onTruncation,
 }: RichTextProps) {
   const {colors} = useTheme();
 
+  const handleTextLayout = useCallback((e: NativeSyntheticEvent<TextLayoutEventData>) => {
+    if (onTruncation && numberOfLines) {
+      const lines = (e.nativeEvent as any).lines as any[] | undefined;
+      onTruncation(!!lines && lines.length >= numberOfLines);
+    }
+  }, [onTruncation, numberOfLines]);
+
   // If no facets, just render plain text
   if (!facets || facets.length === 0) {
-    return <Text style={style} numberOfLines={numberOfLines}>{text}</Text>;
+    return <Text style={style} numberOfLines={numberOfLines} onTextLayout={onTruncation ? handleTextLayout : undefined}>{text}</Text>;
   }
 
   // Create RichText instance to properly parse facets
@@ -112,5 +121,5 @@ export function RichText({
     }
   }
 
-  return <Text style={style} numberOfLines={numberOfLines}>{segments}</Text>;
+  return <Text style={style} numberOfLines={numberOfLines} onTextLayout={onTruncation ? handleTextLayout : undefined}>{segments}</Text>;
 }

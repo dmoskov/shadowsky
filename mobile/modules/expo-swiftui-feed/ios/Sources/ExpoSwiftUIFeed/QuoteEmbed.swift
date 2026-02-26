@@ -106,11 +106,7 @@ struct QuoteEmbed: View {
 
                 // Post text
                 if let text = record.text {
-                    Text(text)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .lineLimit(6)
-                        .multilineTextAlignment(.leading)
+                    TruncatedText(text, lineLimit: 6, color: .secondary)
                 }
             }
             .padding(12)

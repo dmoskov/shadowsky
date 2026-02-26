@@ -155,10 +155,7 @@ struct NotificationItemView: View {
     private func postPreviewView(text: String, facets: [Facet]) -> some View {
         VStack(alignment: .leading) {
             if facets.isEmpty {
-                Text(text)
-                    .font(.subheadline)
-                    .foregroundColor(Color(UIColor.secondaryLabel))
-                    .lineLimit(4)
+                TruncatedText(text, lineLimit: 4, color: Color(UIColor.secondaryLabel))
             } else {
                 RichTextView(
                     text: text,
@@ -223,10 +220,7 @@ struct NotificationItemView: View {
 
             // Post text
             if let text = preview.text, !text.isEmpty {
-                Text(text)
-                    .font(.subheadline)
-                    .foregroundColor(Color(UIColor.label))
-                    .lineLimit(4)
+                TruncatedText(text, lineLimit: 4, color: Color(UIColor.label))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 

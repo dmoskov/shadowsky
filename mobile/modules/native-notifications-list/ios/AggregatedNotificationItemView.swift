@@ -145,10 +145,7 @@ struct AggregatedNotificationItemView: View {
 
             // Post text
             if let text = preview.text, !text.isEmpty {
-                Text(text)
-                    .font(.subheadline)
-                    .foregroundColor(Color(UIColor.label))
-                    .lineLimit(3)
+                TruncatedText(text, lineLimit: 3, color: Color(UIColor.label))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 

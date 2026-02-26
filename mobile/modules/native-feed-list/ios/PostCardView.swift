@@ -306,10 +306,7 @@ struct ReplyContextView: View {
 
             // Show a preview of the parent post text
             if let parentText = parent.text {
-                Text(parentText)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
+                TruncatedText(parentText, lineLimit: 2, font: .caption, color: .secondary)
             }
         }
         .padding(.horizontal, 12)
