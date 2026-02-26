@@ -247,6 +247,7 @@ private struct WrappingRichText: UIViewRepresentable {
         }
 
         textView.attributedText = attributedString
+        textView.invalidateIntrinsicContentSize()
         context.coordinator.onMentionTap = onMentionTap
         context.coordinator.onHashtagTap = onHashtagTap
         context.coordinator.onLinkTap = onLinkTap
@@ -347,6 +348,23 @@ private struct WrappingRichText: UIViewRepresentable {
 /// non-optional URL parameter, causing a fatal crash. This subclass
 /// intercepts the accessibility action to prevent that.
 private class SafeLinkTextView: UITextView {
+    override var intrinsicContentSize: CGSize {
+        // UITextView in SwiftUI's UIViewRepresentable can compute its
+        // intrinsic height before knowing its actual container width,
+        // causing multi-line text to be clipped. Re-derive the height
+        // from the current bounds width so SwiftUI allocates enough space.
+        let width = bounds.width > 0 ? bounds.width : UIScreen.main.bounds.width - 64
+        let size = sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        return CGSize(width: UIView.noIntrinsicMetric, height: size.height)
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // After layout assigns a concrete width, recalculate height
+        // so SwiftUI can update the parent frame if it changed.
+        invalidateIntrinsicContentSize()
+    }
+
     override func accessibilityActivate() -> Bool {
         // Let the delegate handle link activation through the normal tap path.
         // Returning true prevents UIKit from calling _accessibilityActivateLink
