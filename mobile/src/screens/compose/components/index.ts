@@ -3,3 +3,4 @@ export { ComposeMediaPreview, type ComposeMediaPreviewProps } from './ComposeMed
 export { ComposeQuotePreview, type ComposeQuotePreviewProps, type QuoteToPost } from './ComposeQuotePreview';
 export { TonePickerModal, type TonePickerModalProps } from './TonePickerModal';
 export { AltTextModal, type AltTextModalProps } from './AltTextModal';
+export { ComposeAIPanel, type ComposeAIPanelProps } from './ComposeAIPanel';
