@@ -107,7 +107,7 @@ struct AltTextSheet: View {
         .onAppear {
             editText = altText
         }
-        .onChange(of: altText) { newValue in
+        .onChangeCompat(of: altText) { newValue in
             // Update from external source (e.g., AI generation)
             if newValue != editText {
                 editText = newValue

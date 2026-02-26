@@ -107,7 +107,7 @@ struct ConversationListView: View {
                     .foregroundColor(Color(UIColor.label))
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
-                    .onChange(of: localSearchText) { newValue in
+                    .onChangeCompat(of: localSearchText) { newValue in
                         onSearchTextChange?(newValue)
                     }
 

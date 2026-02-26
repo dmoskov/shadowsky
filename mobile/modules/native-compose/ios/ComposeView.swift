@@ -138,7 +138,7 @@ struct ComposeView: View {
         .onDisappear {
             mentionManager.stopObserving()
         }
-        .onChange(of: mentionManager.suggestions) { newSuggestions in
+        .onChangeCompat(of: mentionManager.suggestions) { newSuggestions in
             composeState.mentionSuggestions = newSuggestions
         }
         // Alt text sheet

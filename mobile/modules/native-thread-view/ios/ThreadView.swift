@@ -119,7 +119,7 @@ struct ThreadView: View {
             threadState.stopObserving()
             mentionManager.stopObserving()
         }
-        .onChange(of: threadState.rootPost?.post.uri) { _ in
+        .onChangeCompat(of: threadState.rootPost?.post.uri) { _ in
             // Update reply target when root post changes
             if let rootPost = threadState.rootPost {
                 if composerState.replyToUri == nil {
@@ -129,7 +129,7 @@ struct ThreadView: View {
                 }
             }
         }
-        .onChange(of: mentionManager.suggestions) { newSuggestions in
+        .onChangeCompat(of: mentionManager.suggestions) { newSuggestions in
             composerState.mentionSuggestions = newSuggestions
         }
     }
@@ -252,7 +252,7 @@ struct ThreadView: View {
             .refreshable {
                 onRefresh?()
             }
-            .onChange(of: threadState.rootPost?.post.uri) { _ in
+            .onChangeCompat(of: threadState.rootPost?.post.uri) { _ in
                 scrollToFocusedReplyIfNeeded(proxy: proxy)
             }
             .onAppear {

@@ -165,7 +165,7 @@ struct MessageThreadView: View {
                 .padding(.vertical, 8)
             }
             .scrollDismissesKeyboard(.interactively)
-            .onChange(of: dataState.messages.count) { _ in
+            .onChangeCompat(of: dataState.messages.count) { _ in
                 // Scroll to bottom when new messages arrive
                 if let lastMessage = dataState.messages.last {
                     if reduceMotion {

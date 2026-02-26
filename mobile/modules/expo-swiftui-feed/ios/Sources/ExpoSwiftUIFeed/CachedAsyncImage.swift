@@ -61,7 +61,7 @@ public struct CachedAsyncImage<Content: View>: View {
     public var body: some View {
         content(phase)
             .onAppear { loadImage() }
-            .onChange(of: url) { newURL in
+            .onChangeCompat(of: url) { newURL in
                 phase = .empty
                 loadImage(for: newURL)
             }

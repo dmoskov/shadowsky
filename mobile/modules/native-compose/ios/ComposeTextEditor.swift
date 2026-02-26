@@ -39,7 +39,7 @@ struct ComposeTextEditor: View {
                 .focused($isFocused)
                 .disabled(!isEnabled)
                 .modifier(HideScrollContentBackground())
-                .onChange(of: text) { newValue in
+                .onChangeCompat(of: text) { newValue in
                     onTextChange?(newValue)
                 }
                 .onAppear {
@@ -96,7 +96,7 @@ struct ThreadPostEditor: View {
                     .padding(.vertical, 2)
                     .disabled(!isEnabled)
                     .modifier(HideScrollContentBackground())
-                    .onChange(of: text) { newValue in
+                    .onChangeCompat(of: text) { newValue in
                         onTextChange?(newValue)
                     }
             }
