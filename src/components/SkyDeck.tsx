@@ -49,65 +49,79 @@ async function buildColumnsFromPinnedFeeds(
 ): Promise<Column[]> {
   try {
     const prefs = await agent.getPreferences();
-    logger.log("buildColumnsFromPinnedFeeds: savedFeeds:", prefs.savedFeeds);
 
-    const pinnedFeeds =
-      prefs.savedFeeds?.filter(
-        (f: AppBskyActorDefs.SavedFeed) => f.pinned && f.type === "feed",
-      ) || [];
+    // Get all pinned feeds (feed generators, lists, and timelines)
+    const allPinnedFeeds =
+      prefs.savedFeeds?.filter((f: AppBskyActorDefs.SavedFeed) => f.pinned) ||
+      [];
 
-    logger.log(
-      `buildColumnsFromPinnedFeeds: found ${pinnedFeeds.length} pinned feeds of type "feed"`,
+    // Separate feed generators (need API lookup) from other types
+    const feedGeneratorFeeds = allPinnedFeeds.filter((f) => f.type === "feed");
+    const listFeeds = allPinnedFeeds.filter((f) => f.type === "list");
+
+    // Use console.warn so it always shows (logger requires debug mode)
+    console.warn(
+      "[SkyDeck] buildColumnsFromPinnedFeeds:",
+      allPinnedFeeds.length,
+      "pinned feeds found",
+      { feeds: feedGeneratorFeeds.length, lists: listFeeds.length },
     );
 
-    if (pinnedFeeds.length === 0) {
-      // Also log all saved feed types so we can diagnose filter issues
-      const allTypes = prefs.savedFeeds?.map(
-        (f: AppBskyActorDefs.SavedFeed) => ({
-          type: f.type,
-          pinned: f.pinned,
-          value: f.value,
-        }),
-      );
-      logger.log(
-        "buildColumnsFromPinnedFeeds: all savedFeeds entries:",
-        allTypes,
+    if (allPinnedFeeds.length === 0) {
+      console.warn(
+        "[SkyDeck] No pinned feeds found. All savedFeeds:",
+        prefs.savedFeeds,
       );
       return [homeColumn];
     }
 
-    const feedUris = pinnedFeeds.map(
-      (f: AppBskyActorDefs.SavedFeed) => f.value,
-    );
-    const feedResponse = await agent.app.bsky.feed.getFeedGenerators({
-      feeds: feedUris,
-    });
-
     const columns: Column[] = [homeColumn];
     const now = Date.now();
+    let colIndex = 0;
 
-    pinnedFeeds.forEach(
-      (pinnedFeed: AppBskyActorDefs.SavedFeed, index: number) => {
+    // Add feed generator columns (need display names from API)
+    if (feedGeneratorFeeds.length > 0) {
+      const feedUris = feedGeneratorFeeds.map(
+        (f: AppBskyActorDefs.SavedFeed) => f.value,
+      );
+      const feedResponse = await agent.app.bsky.feed.getFeedGenerators({
+        feeds: feedUris,
+      });
+
+      feedGeneratorFeeds.forEach((pinnedFeed: AppBskyActorDefs.SavedFeed) => {
         const generator = feedResponse.data.feeds.find(
           (g: FeedGenerator) => g.uri === pinnedFeed.value,
         );
         if (generator) {
           columns.push({
-            id: `feed-${now}-${index}`,
+            id: `feed-${now}-${colIndex++}`,
             type: "feed",
             title: generator.displayName,
             data: pinnedFeed.value,
           });
         }
-      },
-    );
+      });
+    }
 
-    logger.log(
-      `Auto-populated ${columns.length} columns from Bluesky pinned feeds`,
+    // Add list-based feed columns
+    listFeeds.forEach((listFeed: AppBskyActorDefs.SavedFeed) => {
+      columns.push({
+        id: `feed-${now}-${colIndex++}`,
+        type: "feed",
+        title: "List",
+        data: listFeed.value,
+      });
+    });
+
+    console.warn(
+      `[SkyDeck] Auto-populated ${columns.length} columns from Bluesky pinned feeds`,
     );
     return columns;
   } catch (error) {
-    logger.error("Failed to build columns from pinned feeds:", error);
+    console.error(
+      "[SkyDeck] Failed to build columns from pinned feeds:",
+      error,
+    );
     return [homeColumn];
   }
 }
