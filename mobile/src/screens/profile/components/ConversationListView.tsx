@@ -8,7 +8,6 @@ import {
   Image,
   Animated,
 } from "react-native";
-import { formatDistanceToNow } from "date-fns";
 import Swipeable from "react-native-gesture-handler/Swipeable";
 import { DmConversation } from "../../../services/dm-service";
 import { TrashIcon, BellSlashIcon, SearchIcon } from "../../../components/icons";
@@ -30,14 +29,6 @@ function getOtherMember(conversation: DmConversation, sessionDid: string | undef
     conversation.members.find((member) => member.did !== sessionDid) ||
     conversation.members[0]
   );
-}
-
-function formatMessageTime(timestamp: string) {
-  try {
-    return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
-  } catch {
-    return "";
-  }
 }
 
 function ConversationListViewInner({
