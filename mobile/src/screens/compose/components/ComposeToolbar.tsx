@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from "react-native";
 import { ImageIcon, VideoIcon, GifIcon, EmojiIcon, ThreadIcon, GlobeIcon, SparklesIcon } from "../../../components/icons";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { getLanguageShortName } from "../../../constants/languages";
@@ -66,7 +66,9 @@ export function ComposeToolbar({
   bottomInset,
 }: ComposeToolbarProps) {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const { width: screenWidth } = useWindowDimensions();
+  const isNarrow = screenWidth < 390;
+  const styles = useMemo(() => createStyles(colors, isNarrow), [colors, isNarrow]);
   const isOverLimit = charCount > maxLength;
 
   if (isThreadMode) {
@@ -169,28 +171,30 @@ export function ComposeToolbar({
   );
 }
 
-function createStyles(colors: any) {
+function createStyles(colors: any, isNarrow: boolean) {
   return StyleSheet.create({
   toolbar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 16,
+    paddingHorizontal: isNarrow ? 12 : 16,
+    paddingVertical: 16,
     borderTopWidth: 1,
     borderTopColor: colors.surfaceElevated,
   },
   toolbarIcons: {
     flexDirection: "row",
-    gap: 16,
+    gap: isNarrow ? 10 : 16,
+    flexShrink: 1,
   },
   toolbarButton: {
-    padding: 4,
+    padding: isNarrow ? 2 : 4,
   },
   languageButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
+    gap: isNarrow ? 2 : 4,
+    paddingHorizontal: isNarrow ? 6 : 8,
     paddingVertical: 4,
     borderRadius: 12,
     backgroundColor: colors.background,

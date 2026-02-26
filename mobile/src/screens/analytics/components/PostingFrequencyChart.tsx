@@ -9,6 +9,8 @@ import {
 import type { ThemeColors } from "../../../contexts/ThemeContext";
 import type { DailyEngagement } from "../../../services/atproto/analytics";
 
+const SMALL_SCREEN_WIDTH = 390;
+
 interface PostingFrequencyChartProps {
   dailyEngagement: DailyEngagement[];
   colors: ThemeColors;
@@ -20,8 +22,9 @@ function PostingFrequencyChartInner({
   colors,
   chartHeight = 180,
 }: PostingFrequencyChartProps) {
-  const { width: windowWidth } = useWindowDimensions();
-  const FREQ_CHART_HEIGHT = chartHeight;
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  // Scale chart height for small screens (iPhone SE = 667pt)
+  const FREQ_CHART_HEIGHT = windowHeight < 700 ? Math.min(chartHeight, 140) : chartHeight;
 
   const maxPostsPerDay = useMemo(() => {
     if (!dailyEngagement || dailyEngagement.length === 0) return 1;
@@ -136,9 +139,11 @@ function PostingFrequencyChartInner({
     </View>
   );
 
+  const isNarrow = windowWidth < SMALL_SCREEN_WIDTH;
+
   return (
     <View style={[styles.section, { backgroundColor: colors.surfaceElevated }]}>
-      <View style={styles.freqHeader}>
+      <View style={[styles.freqHeader, isNarrow && styles.freqHeaderNarrow]}>
         <Text
           style={[
             styles.sectionTitle,
@@ -147,7 +152,7 @@ function PostingFrequencyChartInner({
         >
           Posting Frequency
         </Text>
-        <View style={styles.chartLegend}>
+        <View style={[styles.chartLegend, isNarrow && styles.chartLegendNarrow]}>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: "#f97316" }]} />
             <Text style={[styles.legendText, { color: colors.textSecondary }]}>
@@ -233,10 +238,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 4,
   },
+  freqHeaderNarrow: {
+    flexDirection: "column",
+    alignItems: "flex-start",
+    gap: 6,
+  },
   chartLegend: {
     flexDirection: "row",
     gap: 16,
     marginBottom: 12,
+  },
+  chartLegendNarrow: {
+    marginBottom: 0,
+    gap: 12,
   },
   legendItem: {
     flexDirection: "row",

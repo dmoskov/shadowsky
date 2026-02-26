@@ -10,7 +10,6 @@ import {useLightbox, LightboxImage, LightboxPostMeta} from '../contexts/Lightbox
 const MIN_ASPECT_RATIO = 4 / 5; // portrait (0.8)
 const MAX_ASPECT_RATIO = 1.91; // landscape – used only for grid layouts
 const MAX_SINGLE_HEIGHT = 600;
-const MIN_SINGLE_HEIGHT = 200; // prevent extremely thin strips for panoramas
 
 // For grid layouts: clamp both min and max to keep cells consistent
 function getClampedAspectRatio(
@@ -45,7 +44,7 @@ interface ImageEmbedProps {
 
 export function ImageEmbed({images, onImagePress, blurImages = false, postUri, postAuthorDid}: ImageEmbedProps) {
   const { colors } = useTheme();
-  const {width: windowWidth} = useWindowDimensions();
+  const {width: windowWidth, height: windowHeight} = useWindowDimensions();
   const {openLightbox} = useLightbox();
   const imageRefs = useRef<Record<number, View | null>>({});
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -92,11 +91,18 @@ export function ImageEmbed({images, onImagePress, blurImages = false, postUri, p
     imageRefs.current[index] = ref;
   }, []);
 
+  // Scale minimum image height with screen height (cap at 200 for large screens,
+  // ~150 on iPhone SE's 667pt screen) to avoid panoramas dominating small displays
+  const minSingleHeight = Math.min(200, Math.round(windowHeight * 0.22));
+
   const getSingleImageHeight = (): number => {
     const ratio = getSingleAspectRatio(images[0]?.aspectRatio);
     const height = containerWidth / ratio;
-    return Math.max(Math.min(height, MAX_SINGLE_HEIGHT), MIN_SINGLE_HEIGHT);
+    return Math.max(Math.min(height, MAX_SINGLE_HEIGHT), minSingleHeight);
   };
+
+  // Scale grid height bounds for small screens (iPhone SE = 667pt)
+  const isSmallScreen = windowHeight < 700;
 
   // Compute adaptive grid heights based on actual aspect ratios
   const getDoubleGridHeight = (): number => {
@@ -105,21 +111,27 @@ export function ImageEmbed({images, onImagePress, blurImages = false, postUri, p
     const avgRatio = (r1 + r2) / 2;
     // Each image gets ~half the width (minus gap)
     const halfWidth = (containerWidth - 4) / 2;
-    return Math.min(Math.max(halfWidth / avgRatio, 160), 300);
+    const minH = isSmallScreen ? 130 : 160;
+    const maxH = isSmallScreen ? 240 : 300;
+    return Math.min(Math.max(halfWidth / avgRatio, minH), maxH);
   };
 
   const getTripleGridHeight = (): number => {
     const r0 = getClampedAspectRatio(images[0]?.aspectRatio);
     // Large image gets 2/3 width
     const largeWidth = (containerWidth - 4) * 2 / 3;
-    return Math.min(Math.max(largeWidth / r0, 200), 320);
+    const minH = isSmallScreen ? 160 : 200;
+    const maxH = isSmallScreen ? 260 : 320;
+    return Math.min(Math.max(largeWidth / r0, minH), maxH);
   };
 
   const getQuadGridHeight = (): number => {
     const ratios = images.map(img => getClampedAspectRatio(img?.aspectRatio));
     const avgRatio = ratios.reduce((a, b) => a + b, 0) / ratios.length;
     const halfWidth = (containerWidth - 4) / 2;
-    return Math.min(Math.max(halfWidth / avgRatio, 130), 200);
+    const minH = isSmallScreen ? 100 : 130;
+    const maxH = isSmallScreen ? 160 : 200;
+    return Math.min(Math.max(halfWidth / avgRatio, minH), maxH);
   };
 
   const getContainerStyle = () => {

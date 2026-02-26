@@ -20,8 +20,9 @@ function EngagementChartInner({
   colors,
   chartHeight = 200,
 }: EngagementChartProps) {
-  const { width: windowWidth } = useWindowDimensions();
-  const CHART_HEIGHT = chartHeight;
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  // Scale chart height for small screens (iPhone SE = 667pt)
+  const CHART_HEIGHT = windowHeight < 700 ? Math.min(chartHeight, 160) : chartHeight;
 
   const maxDailyEngagement = useMemo(() => {
     if (!dailyEngagement || dailyEngagement.length === 0) return 1;
