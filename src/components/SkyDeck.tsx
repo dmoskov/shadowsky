@@ -405,11 +405,26 @@ export default function SkyDeck() {
       const hasUserConfigured =
         localStorage.getItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED) === "true";
 
+      console.warn("[SkyDeck loadColumns]", {
+        savedColumnsCount: savedColumns?.length ?? 0,
+        isDefaultOnly:
+          !savedColumns ||
+          savedColumns.length === 0 ||
+          (savedColumns.length === 1 && savedColumns[0].id === "home"),
+        hasUserConfigured:
+          localStorage.getItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED) ===
+          "true",
+        savedColumnIds: savedColumns?.map((c: Column) => c.id),
+      });
+
       if (isDefaultOnly && !hasUserConfigured) {
         // Auto-populate from Bluesky pinned feeds
         const initialColumns = await buildColumnsFromPinnedFeeds(
           agent,
           homeColumn,
+        );
+        console.warn(
+          `[SkyDeck] setColumns called with ${initialColumns.length} columns (auto-populate)`,
         );
         setColumns(initialColumns);
         // Mark as configured once we've populated more than just the home column
@@ -424,11 +439,18 @@ export default function SkyDeck() {
             homeColumn,
             ...savedColumns.filter((col: Column) => col.id !== "home"),
           ];
+          console.warn(
+            `[SkyDeck] setColumns called with ${restoredColumns.length} columns (restored+home)`,
+          );
           setColumns(restoredColumns);
         } else {
+          console.warn(
+            `[SkyDeck] setColumns called with ${savedColumns.length} columns (restored)`,
+          );
           setColumns(savedColumns);
         }
       } else {
+        console.warn("[SkyDeck] setColumns called with 1 column (fallback)");
         setColumns([homeColumn]);
       }
       // Mark columns as loaded
@@ -559,6 +581,12 @@ export default function SkyDeck() {
     containerRef: mobileContainerRef,
   });
 
+  // Render-phase diagnostic: how many columns are in state right now?
+  console.warn(
+    `[SkyDeck RENDER] columns.length=${columns.length}, columnsLoaded=${columnsLoaded}, isNarrowView=${isNarrowView}`,
+    columns.map((c) => c.title),
+  );
+
   // In narrow view, show columns with swipe navigation
   if (isNarrowView && columns.length > 0) {
     const currentColumn = columns[mobileColumnIndex] || columns[0];
@@ -620,7 +648,7 @@ export default function SkyDeck() {
           {columns.map((column, index) => (
             <div
               key={column.id}
-              className={`h-full rounded-lg border border-gray-200 bg-white shadow-md transition-all duration-300 ease-out dark:border-gray-700 dark:bg-gray-900 ${
+              className={`h-full shrink-0 rounded-lg border border-gray-200 bg-white shadow-md transition-all duration-300 ease-out dark:border-gray-700 dark:bg-gray-900 ${
                 focusedColumnIndex === index
                   ? "shadow-xl ring-2 ring-blue-500/30"
                   : "hover:shadow-lg dark:hover:shadow-black/30"
@@ -674,7 +702,10 @@ export default function SkyDeck() {
             </div>
           ))}
 
-          <div className="h-full" style={{ width: `${columnWidth}px` }}>
+          <div
+            className="h-full shrink-0"
+            style={{ width: `${columnWidth}px` }}
+          >
             {isAddingColumn ? (
               <div className="flex h-full animate-fade-in flex-col rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
                 <div className="asph-scrollbar flex-1 overflow-y-auto p-3">
