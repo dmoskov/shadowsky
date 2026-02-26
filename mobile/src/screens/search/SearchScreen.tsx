@@ -278,7 +278,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
     // Remove # prefix if present
     const cleanTopic = topic.startsWith("#") ? topic.slice(1) : topic;
     setSearchQuery(cleanTopic);
-    setActiveTab("hashtags");
+    setActiveTab("posts");
     setShowHistory(false);
   };
 

@@ -139,7 +139,9 @@ const TrendingColumnComponent: React.FC<TrendingColumnProps> = ({
                     postCount={trend.postCount}
                     status={trend.status}
                     category={trend.category}
-                    onClick={() => handleTopicClick(trend.topic)}
+                    onClick={() =>
+                      handleTopicClick(trend.displayName || trend.topic)
+                    }
                   />
                 ))}
               </div>
