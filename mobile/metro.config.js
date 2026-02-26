@@ -7,8 +7,15 @@ const config = getDefaultConfig(__dirname);
 
 // Fix package exports resolution for @atproto dependencies.
 // multiformats and uint8arrays use "exports" field with ESM/CJS conditions.
-// Without this, Metro tries CJS internal paths not listed in "exports",
-// triggering "not listed in the exports" warnings at runtime.
+// Metro's legacy "browser" field processing in redirectModulePath() conflicts
+// with the modern "exports" field: it rewrites e.g. "multiformats/cid" →
+// "multiformats/cjs/src/cid.js" via the browser field, then the exports check
+// fails on that rewritten path, producing "not listed in the exports" warnings.
+// Metro uses context.unstable_logWarning (reporter system), not console.warn,
+// so console.warn patching cannot suppress them.
+//
+// Fix: resolve these packages' subpath imports directly via their exports map
+// (using the "browser" condition), bypassing the browser field redirect entirely.
 config.resolver.unstable_conditionNames = ['browser', 'require', 'import'];
 
 // Some @atproto deps need .mjs extension resolution
@@ -16,11 +23,51 @@ if (!config.resolver.sourceExts.includes('mjs')) {
   config.resolver.sourceExts.push('mjs');
 }
 
+// Build exports resolution maps at config load time.
+// Reads the "exports" field from each package and picks the "browser" condition
+// target for every subpath, giving us a direct file path for each specifier.
+function buildExportsMap(packageName) {
+  const pkgJson = require(path.join(
+    __dirname,
+    'node_modules',
+    packageName,
+    'package.json'
+  ));
+  const exportsField = pkgJson.exports;
+  if (!exportsField || typeof exportsField !== 'object') return {};
+
+  const map = {};
+  for (const [subpath, conditions] of Object.entries(exportsField)) {
+    if (typeof conditions === 'object' && conditions !== null) {
+      // Prefer browser → import → require → default
+      const target =
+        conditions.browser || conditions.import || conditions.require || conditions.default;
+      if (target) {
+        // Normalize subpath: "./cid" → "cid", "." → ""
+        const normalizedSubpath = subpath === '.' ? '' : subpath.replace(/^\.\//, '');
+        map[normalizedSubpath] = path.resolve(
+          __dirname,
+          'node_modules',
+          packageName,
+          target
+        );
+      }
+    }
+  }
+  return map;
+}
+
+const exportsResolutionMaps = {
+  multiformats: buildExportsMap('multiformats'),
+  uint8arrays: buildExportsMap('uint8arrays'),
+};
+
 // Redirect core-js polyfills that fail to resolve under Metro.
 // core-js 3.48+ has internal module references (../internals/*) that Metro's
 // resolver cannot follow. We replace the problematic entry points with a
 // lightweight local shim that provides the same runtime polyfills.
 const coreJsShim = path.resolve(__dirname, 'src/polyfills/explicit-resource-management.js');
+
 const originalResolveRequest = config.resolver.resolveRequest;
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   // Redirect all core-js imports to our local shim
@@ -30,30 +77,28 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   ) {
     return { type: 'sourceFile', filePath: coreJsShim };
   }
+
+  // Resolve multiformats and uint8arrays via their exports map directly.
+  // This prevents Metro's browser field redirect from rewriting the specifier
+  // to an internal CJS path that isn't in the exports map.
+  for (const [packageName, exportsMap] of Object.entries(exportsResolutionMaps)) {
+    if (moduleName === packageName) {
+      // Root import: e.g. require("multiformats")
+      const filePath = exportsMap[''];
+      if (filePath) return { type: 'sourceFile', filePath };
+    } else if (moduleName.startsWith(packageName + '/')) {
+      // Subpath import: e.g. require("multiformats/cid")
+      const subpath = moduleName.slice(packageName.length + 1);
+      const filePath = exportsMap[subpath];
+      if (filePath) return { type: 'sourceFile', filePath };
+    }
+  }
+
   // Default resolution
   if (originalResolveRequest) {
     return originalResolveRequest(context, moduleName, platform);
   }
   return context.resolveRequest(context, moduleName, platform);
-};
-
-// Suppress spurious package exports warnings from Metro bundler
-// These occur when @atproto/api dependencies (multiformats, uint8arrays) are resolved.
-// Metro warns about accessing internal CJS paths not listed in "exports" field,
-// but successfully falls back to file-based resolution. The warnings are harmless noise.
-// See: https://github.com/facebook/metro/issues/670
-const originalWarn = console.warn;
-console.warn = function (...args) {
-  const message = args[0];
-  if (
-    typeof message === 'string' &&
-    message.includes('not listed in the "exports"') &&
-    (message.includes('multiformats') || message.includes('uint8arrays'))
-  ) {
-    // Suppress these specific warnings - packages resolve correctly via fallback
-    return;
-  }
-  originalWarn.apply(console, args);
 };
 
 module.exports = config;
