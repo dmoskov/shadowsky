@@ -191,6 +191,10 @@ jest.mock('../../../services/preferences', () => ({
 jest.mock('../../../services/ai-service', () => ({
   generateAltText: jest.fn(() => Promise.resolve('Generated alt text')),
   adjustTone: jest.fn(() => Promise.resolve({ adjustedText: 'Adjusted text', originalText: 'Original text', tone: 'professional' })),
+  suggestHashtags: jest.fn(() => Promise.resolve({ hashtags: [], category: 'general' })),
+  getWritingFeedback: jest.fn(() => Promise.resolve({ assessment: { summary: 'Good', hasIssues: false }, correctedVersion: { text: '', changes: [] }, enhancedVersion: { text: '', improvements: [] } })),
+  analyzeWritingStyle: jest.fn(() => Promise.resolve({ userStyleSummary: '', matchesStyle: true, styleNotes: [] })),
+  optimizeThread: jest.fn(() => Promise.resolve({ segments: [], summary: '', suggestedFormat: 'simple', totalPosts: 0 })),
 }));
 
 // Mock compose sub-components
@@ -234,6 +238,7 @@ jest.mock('../components', () => {
     ),
     TonePickerModal: () => <View testID="tone-picker-modal" />,
     AltTextModal: () => <View testID="alt-text-modal" />,
+    ComposeAIPanel: () => <View testID="compose-ai-panel" />,
   };
 });
 

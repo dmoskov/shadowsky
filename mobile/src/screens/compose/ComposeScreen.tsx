@@ -26,9 +26,9 @@ import type { TenorGif } from "../../services/tenor";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { ImageEditor } from "../../components/ImageEditor";
 import { useTranslation } from "../../hooks/useTranslation";
-import { ComposeToolbar, ComposeMediaPreview, ComposeQuotePreview, TonePickerModal, AltTextModal } from "./components";
-import { generateAltText, adjustTone } from "../../services/ai-service";
-import type { ToneOption } from "../../services/ai-service";
+import { ComposeToolbar, ComposeMediaPreview, ComposeQuotePreview, TonePickerModal, AltTextModal, ComposeAIPanel } from "./components";
+import { generateAltText, adjustTone, suggestHashtags, getWritingFeedback, analyzeWritingStyle, optimizeThread } from "../../services/ai-service";
+import type { ToneOption, HashtagSuggestion, WritingFeedback, StyleAnalysisResult, ThreadOptimizationResult } from "../../services/ai-service";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { useLinkPreview } from "../../hooks/useLinkPreview";
 import { LinkPreviewCard } from "../../components/LinkPreviewCard";
@@ -98,6 +98,17 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
   const [isAdjustingTone, setIsAdjustingTone] = useState(false);
   const [selectedTone, setSelectedTone] = useState<ToneOption | null>(null);
   const [tonePreviewText, setTonePreviewText] = useState<string | null>(null);
+
+  // AI panel state
+  const [aiPanelVisible, setAiPanelVisible] = useState(false);
+  const [hashtagResult, setHashtagResult] = useState<HashtagSuggestion[] | null>(null);
+  const [isLoadingHashtags, setIsLoadingHashtags] = useState(false);
+  const [writingFeedback, setWritingFeedback] = useState<WritingFeedback | null>(null);
+  const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
+  const [styleAnalysis, setStyleAnalysis] = useState<StyleAnalysisResult | null>(null);
+  const [isLoadingStyle, setIsLoadingStyle] = useState(false);
+  const [threadResult, setThreadResult] = useState<ThreadOptimizationResult | null>(null);
+  const [isLoadingThread, setIsLoadingThread] = useState(false);
 
   // Auto-save compose text to MMKV when the app backgrounds
   useComposeAutoSave(text);
@@ -620,12 +631,121 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
     triggerHaptic('selection');
   }, []);
 
-  // AI tone adjustment handlers
-  const handleTonePicker = () => {
+  // AI panel handlers
+  const handleAIPanel = () => {
     if (!text.trim()) return;
-    setTonePickerVisible(true);
+    setAiPanelVisible(true);
   };
 
+  const handleRequestHashtags = async () => {
+    setIsLoadingHashtags(true);
+    try {
+      const existingTags = text.match(/#(\w+)/g)?.map(t => t.slice(1)) || undefined;
+      const result = await suggestHashtags(text, existingTags);
+      setHashtagResult(result.hashtags);
+    } catch (error) {
+      logger.error('Failed to suggest hashtags:', error);
+      Alert.alert('Hashtag Suggestions Failed', error instanceof Error ? error.message : 'Please try again.');
+      triggerHaptic('error');
+    } finally {
+      setIsLoadingHashtags(false);
+    }
+  };
+
+  const handleInsertHashtag = (tag: string) => {
+    const hashtag = `#${tag}`;
+    const newText = text.endsWith(' ') || text.length === 0
+      ? `${text}${hashtag}`
+      : `${text} ${hashtag}`;
+    setText(newText);
+    triggerHaptic('selection');
+  };
+
+  const handleRequestFeedback = async () => {
+    setIsLoadingFeedback(true);
+    try {
+      const result = await getWritingFeedback(text);
+      setWritingFeedback(result);
+    } catch (error) {
+      logger.error('Failed to get writing feedback:', error);
+      Alert.alert('Writing Feedback Failed', error instanceof Error ? error.message : 'Please try again.');
+      triggerHaptic('error');
+    } finally {
+      setIsLoadingFeedback(false);
+    }
+  };
+
+  const handleApplyCorrected = () => {
+    if (writingFeedback?.correctedVersion.text) {
+      setText(writingFeedback.correctedVersion.text);
+      triggerHaptic('success');
+      showToast("Corrected version applied", { type: "success" });
+      setAiPanelVisible(false);
+    }
+  };
+
+  const handleApplyEnhanced = () => {
+    if (writingFeedback?.enhancedVersion.text) {
+      setText(writingFeedback.enhancedVersion.text);
+      triggerHaptic('success');
+      showToast("Enhanced version applied", { type: "success" });
+      setAiPanelVisible(false);
+    }
+  };
+
+  const handleRequestStyleAnalysis = async () => {
+    setIsLoadingStyle(true);
+    try {
+      // Use empty array for historical posts - the backend handles the case
+      // where no history is available
+      const result = await analyzeWritingStyle(text, []);
+      setStyleAnalysis(result);
+    } catch (error) {
+      logger.error('Failed to analyze style:', error);
+      Alert.alert('Style Analysis Failed', error instanceof Error ? error.message : 'Please try again.');
+      triggerHaptic('error');
+    } finally {
+      setIsLoadingStyle(false);
+    }
+  };
+
+  const handleRequestThreadOptimization = async () => {
+    setIsLoadingThread(true);
+    try {
+      const result = await optimizeThread(text);
+      setThreadResult(result);
+    } catch (error) {
+      logger.error('Failed to optimize thread:', error);
+      Alert.alert('Thread Optimization Failed', error instanceof Error ? error.message : 'Please try again.');
+      triggerHaptic('error');
+    } finally {
+      setIsLoadingThread(false);
+    }
+  };
+
+  const handleApplyThreadOptimization = () => {
+    if (threadResult) {
+      // Convert optimized segments into thread mode
+      const posts: ThreadPost[] = threadResult.segments.map(seg => ({
+        text: seg.text,
+        images: [],
+      }));
+      setThreadPosts(posts);
+      setText("");
+      imagePicker.clearImages();
+      setIsThreadMode(true);
+      triggerHaptic('success');
+      showToast("Thread optimization applied", { type: "success" });
+      setAiPanelVisible(false);
+      setThreadResult(null);
+    }
+  };
+
+  const handleCloseAIPanel = () => {
+    setAiPanelVisible(false);
+  };
+
+  // AI tone adjustment handlers
   const handleSelectTone = async (tone: ToneOption) => {
     setSelectedTone(tone);
     setIsAdjustingTone(true);
@@ -1093,7 +1213,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
         onEmojiPicker={handleEmojiPicker}
         onToggleThreadMode={handleToggleThreadMode}
         onLanguagePickerOpen={() => setLanguagePickerVisible(true)}
-        onTonePicker={handleTonePicker}
+        onTonePicker={handleAIPanel}
         selectedImages={imagePicker.selectedImages}
         selectedVideo={videoPicker.selectedVideo}
         selectedGif={gifPicker.selectedGif}
@@ -1167,6 +1287,30 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
         originalText={text}
         onApplyTone={handleApplyTone}
         onCancelPreview={handleCancelTonePreview}
+      />
+
+      {/* AI Features Panel */}
+      <ComposeAIPanel
+        visible={aiPanelVisible}
+        onClose={handleCloseAIPanel}
+        text={text}
+        onTextChange={setText}
+        hashtagResult={hashtagResult}
+        isLoadingHashtags={isLoadingHashtags}
+        onRequestHashtags={handleRequestHashtags}
+        onInsertHashtag={handleInsertHashtag}
+        writingFeedback={writingFeedback}
+        isLoadingFeedback={isLoadingFeedback}
+        onRequestFeedback={handleRequestFeedback}
+        onApplyCorrected={handleApplyCorrected}
+        onApplyEnhanced={handleApplyEnhanced}
+        styleAnalysis={styleAnalysis}
+        isLoadingStyle={isLoadingStyle}
+        onRequestStyleAnalysis={handleRequestStyleAnalysis}
+        threadResult={threadResult}
+        isLoadingThread={isLoadingThread}
+        onRequestThreadOptimization={handleRequestThreadOptimization}
+        onApplyThreadOptimization={handleApplyThreadOptimization}
       />
     </View>
   );

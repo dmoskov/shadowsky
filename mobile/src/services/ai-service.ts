@@ -488,3 +488,267 @@ export async function fetchLinkMetadata(url: string): Promise<LinkMetadata> {
     imageUrl: data.imageUrl,
   };
 }
+
+// Hashtag suggestion types
+export interface HashtagSuggestion {
+  tag: string;
+  relevance: number;
+  isTrending: boolean;
+}
+
+export interface HashtagResult {
+  hashtags: HashtagSuggestion[];
+  category: string;
+}
+
+/**
+ * Suggest relevant hashtags for post text
+ */
+export async function suggestHashtags(
+  text: string,
+  existingTags?: string[],
+): Promise<HashtagResult> {
+  try {
+    const apiUrl = getVersionedApiUrl();
+    const endpoint = `${apiUrl}/suggest-hashtags`;
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getApiAuthHeaders(),
+      },
+      body: JSON.stringify({ text, existingTags }),
+    });
+
+    if (!response.ok) {
+      const status = response.status;
+      if (status === 401) {
+        throw new Error("Hashtag suggestions failed: Invalid API key");
+      } else if (status === 429) {
+        throw new Error("Hashtag suggestions failed: Rate limit exceeded");
+      } else {
+        throw new Error(
+          `Hashtag suggestions failed: ${response.statusText || "Unknown error"}`,
+        );
+      }
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      throw new Error("Hashtag suggestions unavailable: API server not reachable");
+    }
+
+    if (error instanceof Error && error.message.includes("Hashtag suggestions")) {
+      throw error;
+    }
+
+    logger.error('Error suggesting hashtags:', error);
+    throw new Error(
+      `Hashtag suggestions failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+}
+
+// Writing feedback types
+export interface WritingFeedback {
+  assessment: {
+    summary: string;
+    hasIssues: boolean;
+  };
+  correctedVersion: {
+    text: string;
+    changes: string[];
+  };
+  enhancedVersion: {
+    text: string;
+    improvements: string[];
+  };
+}
+
+/**
+ * Get writing feedback for post text
+ */
+export async function getWritingFeedback(
+  text: string,
+): Promise<WritingFeedback> {
+  try {
+    const apiUrl = getVersionedApiUrl();
+    const endpoint = `${apiUrl}/writing-feedback`;
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getApiAuthHeaders(),
+      },
+      body: JSON.stringify({ text }),
+    });
+
+    if (!response.ok) {
+      const status = response.status;
+      if (status === 401) {
+        throw new Error("Writing feedback failed: Invalid API key");
+      } else if (status === 429) {
+        throw new Error("Writing feedback failed: Rate limit exceeded");
+      } else {
+        throw new Error(
+          `Writing feedback failed: ${response.statusText || "Unknown error"}`,
+        );
+      }
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      throw new Error("Writing feedback unavailable: API server not reachable");
+    }
+
+    if (error instanceof Error && error.message.includes("Writing feedback")) {
+      throw error;
+    }
+
+    logger.error('Error getting writing feedback:', error);
+    throw new Error(
+      `Writing feedback failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+}
+
+// Style analysis types
+export interface StyleAnalysisResult {
+  userStyleSummary: string;
+  matchesStyle: boolean;
+  styleNotes: string[];
+}
+
+/**
+ * Analyze writing style by comparing current text against historical posts
+ */
+export async function analyzeWritingStyle(
+  currentText: string,
+  historicalPosts: string[],
+): Promise<StyleAnalysisResult> {
+  try {
+    const apiUrl = getVersionedApiUrl();
+    const endpoint = `${apiUrl}/style-analysis`;
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getApiAuthHeaders(),
+      },
+      body: JSON.stringify({ currentText, historicalPosts }),
+    });
+
+    if (!response.ok) {
+      const status = response.status;
+      if (status === 401) {
+        throw new Error("Style analysis failed: Invalid API key");
+      } else if (status === 429) {
+        throw new Error("Style analysis failed: Rate limit exceeded");
+      } else {
+        throw new Error(
+          `Style analysis failed: ${response.statusText || "Unknown error"}`,
+        );
+      }
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      throw new Error("Style analysis unavailable: API server not reachable");
+    }
+
+    if (error instanceof Error && error.message.includes("Style analysis")) {
+      throw error;
+    }
+
+    logger.error('Error analyzing writing style:', error);
+    throw new Error(
+      `Style analysis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+}
+
+// Thread optimization types
+export interface ThreadSegment {
+  text: string;
+  number: number;
+  isStandalone: boolean;
+}
+
+export interface ThreadOptimizationResult {
+  segments: ThreadSegment[];
+  summary: string;
+  suggestedFormat: "simple" | "brackets" | "thread" | "dots";
+  totalPosts: number;
+}
+
+/**
+ * Optimize text for thread posting
+ */
+export async function optimizeThread(
+  text: string,
+  maxCharsPerPost: number = 300,
+): Promise<ThreadOptimizationResult> {
+  try {
+    const apiUrl = getVersionedApiUrl();
+    const endpoint = `${apiUrl}/optimize-thread`;
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getApiAuthHeaders(),
+      },
+      body: JSON.stringify({ text, maxCharsPerPost }),
+    });
+
+    if (!response.ok) {
+      const status = response.status;
+      if (status === 401) {
+        throw new Error("Thread optimization failed: Invalid API key");
+      } else if (status === 429) {
+        throw new Error("Thread optimization failed: Rate limit exceeded");
+      } else {
+        throw new Error(
+          `Thread optimization failed: ${response.statusText || "Unknown error"}`,
+        );
+      }
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    if (
+      error instanceof TypeError &&
+      error.message === "Network request failed"
+    ) {
+      throw new Error("Thread optimization unavailable: API server not reachable");
+    }
+
+    if (error instanceof Error && error.message.includes("Thread optimization")) {
+      throw error;
+    }
+
+    logger.error('Error optimizing thread:', error);
+    throw new Error(
+      `Thread optimization failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+}
