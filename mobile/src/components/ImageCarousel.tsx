@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Text,
   FlatList,
-  Dimensions,
+  useWindowDimensions,
   Platform,
   Alert,
   Share,
@@ -21,8 +21,6 @@ import {getOptimizedUrl} from '../utils/image-cdn';
 import {saveImageToGallery} from '../utils/save-image';
 import {triggerHaptic} from '../utils/haptics';
 import {useMediaOrientation} from '../hooks/useMediaOrientation';
-
-const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
 export interface CarouselImage {
   thumb: string;
@@ -44,6 +42,7 @@ function ImageCarouselInner({
   onClose,
 }: ImageCarouselProps) {
   const { colors } = useTheme();
+  const {width: SCREEN_WIDTH} = useWindowDimensions();
   useMediaOrientation(visible);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [showAlt, setShowAlt] = useState(false);
@@ -87,7 +86,7 @@ function ImageCarouselInner({
       offset: SCREEN_WIDTH * index,
       index,
     }),
-    []
+    [SCREEN_WIDTH]
   );
 
   const handleBgOpacityChange = useCallback((opacity: number) => {

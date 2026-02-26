@@ -1,5 +1,5 @@
-import React, {useCallback} from 'react';
-import {StyleSheet, Dimensions} from 'react-native';
+import React, {useCallback, useMemo} from 'react';
+import {StyleSheet, useWindowDimensions} from 'react-native';
 import {Image} from 'expo-image';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import Animated, {
@@ -11,8 +11,6 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import {getOptimizedUrl} from '../utils/image-cdn';
-
-const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = Dimensions.get('window');
 const MIN_SCALE = 1;
 const MAX_SCALE = 5;
 const RUBBER_BAND_FACTOR = 0.3;
@@ -38,6 +36,7 @@ export function ImageCarouselItem({
   onSingleTap,
   isActive,
 }: ImageCarouselItemProps) {
+  const {width: SCREEN_WIDTH, height: SCREEN_HEIGHT} = useWindowDimensions();
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
   const translateX = useSharedValue(0);
@@ -61,7 +60,7 @@ export function ImageCarouselItem({
     const maxX = ((SCREEN_WIDTH * currentScale - SCREEN_WIDTH) / 2) / currentScale;
     const maxY = ((SCREEN_HEIGHT * currentScale - SCREEN_HEIGHT) / 2) / currentScale;
     return {maxX, maxY};
-  }, []);
+  }, [SCREEN_WIDTH, SCREEN_HEIGHT]);
 
   const rubberBand = useCallback((value: number, limit: number) => {
     'worklet';
@@ -222,14 +221,27 @@ export function ImageCarouselItem({
     ],
   }));
 
+  const dynamicStyles = useMemo(() => StyleSheet.create({
+    container: {
+      width: SCREEN_WIDTH,
+      height: SCREEN_HEIGHT,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    image: {
+      width: SCREEN_WIDTH,
+      height: SCREEN_HEIGHT,
+    },
+  }), [SCREEN_WIDTH, SCREEN_HEIGHT]);
+
   return (
     <GestureDetector gesture={composedGesture}>
-      <Animated.View style={[styles.container, animatedStyle]}>
+      <Animated.View style={[dynamicStyles.container, animatedStyle]}>
         <Image
           source={{uri: getOptimizedUrl(uri)}}
           placeholder={thumb ? {uri: thumb} : undefined}
           placeholderContentFit="contain"
-          style={styles.image}
+          style={dynamicStyles.image}
           contentFit="contain"
           cachePolicy="memory-disk"
           transition={300}
@@ -239,16 +251,3 @@ export function ImageCarouselItem({
     </GestureDetector>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  image: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
-  },
-});

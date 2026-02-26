@@ -5,7 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Dimensions,
+  useWindowDimensions,
   Modal,
   StatusBar,
 } from 'react-native';
@@ -28,7 +28,8 @@ interface VideoEmbedProps {
 
 function VideoEmbedInner({video, postUri, isVisible = false}: VideoEmbedProps) {
   const {colors} = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const {width: screenWidth, height: screenHeight} = useWindowDimensions();
+  const styles = useMemo(() => createStyles(colors, screenWidth, screenHeight), [colors, screenWidth, screenHeight]);
   const {
     activeVideoUri,
     isAutoplayEnabled,
@@ -351,9 +352,7 @@ function VideoEmbedInner({video, postUri, isVisible = false}: VideoEmbedProps) {
   );
 }
 
-const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
-
-function createStyles(colors: any) {
+function createStyles(colors: any, screenWidth: number, screenHeight: number) {
   return StyleSheet.create({
     container: {
       marginTop: 8,
