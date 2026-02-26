@@ -49,12 +49,30 @@ async function buildColumnsFromPinnedFeeds(
 ): Promise<Column[]> {
   try {
     const prefs = await agent.getPreferences();
+    logger.log("buildColumnsFromPinnedFeeds: savedFeeds:", prefs.savedFeeds);
+
     const pinnedFeeds =
       prefs.savedFeeds?.filter(
         (f: AppBskyActorDefs.SavedFeed) => f.pinned && f.type === "feed",
       ) || [];
 
+    logger.log(
+      `buildColumnsFromPinnedFeeds: found ${pinnedFeeds.length} pinned feeds of type "feed"`,
+    );
+
     if (pinnedFeeds.length === 0) {
+      // Also log all saved feed types so we can diagnose filter issues
+      const allTypes = prefs.savedFeeds?.map(
+        (f: AppBskyActorDefs.SavedFeed) => ({
+          type: f.type,
+          pinned: f.pinned,
+          value: f.value,
+        }),
+      );
+      logger.log(
+        "buildColumnsFromPinnedFeeds: all savedFeeds entries:",
+        allTypes,
+      );
       return [homeColumn];
     }
 
