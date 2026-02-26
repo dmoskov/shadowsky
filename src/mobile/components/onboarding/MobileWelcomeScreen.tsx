@@ -119,11 +119,6 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontWeight: "500",
       color: "#8a8a9a",
     } as TextStyle,
-    footerText: {
-      fontSize: scaledFont(13),
-      color: "#555566",
-      textAlign: "center",
-    } as TextStyle,
   });
 }
 
@@ -199,15 +194,11 @@ export const MobileWelcomeScreen = memo(function MobileWelcomeScreen({
             onPress={onSkip}
             style={styles.secondaryButton}
             accessibilityRole="button"
-            accessibilityLabel="Skip for now"
+            accessibilityLabel="Skip setup"
           >
-            <Text style={styles.secondaryButtonText}>Skip for now</Text>
+            <Text style={styles.secondaryButtonText}>Skip setup</Text>
           </Pressable>
         </View>
-
-        <Text style={styles.footerText}>
-          You can always change these settings later in preferences
-        </Text>
       </View>
     </View>
   );

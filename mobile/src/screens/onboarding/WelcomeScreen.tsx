@@ -89,7 +89,7 @@ export const WelcomeScreen = memo(function WelcomeScreen({
               { borderColor: colors.border },
             ]}
             accessibilityRole="button"
-            accessibilityLabel="Skip for now"
+            accessibilityLabel="Skip setup"
           >
             <Text
               style={[
@@ -97,14 +97,10 @@ export const WelcomeScreen = memo(function WelcomeScreen({
                 { color: colors.textSecondary },
               ]}
             >
-              Skip for now
+              Skip setup
             </Text>
           </Pressable>
         </View>
-
-        <Text style={[styles.footerText, { color: colors.textTertiary }]}>
-          You can always change these settings later in preferences
-        </Text>
       </View>
     </View>
   );
@@ -198,9 +194,5 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     fontSize: 17,
     fontWeight: "500",
-  },
-  footerText: {
-    fontSize: 13,
-    textAlign: "center",
   },
 });

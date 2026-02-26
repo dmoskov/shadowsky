@@ -97,17 +97,9 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               border: "1px solid var(--asph-border-primary)",
             }}
           >
-            Skip for now
+            Skip setup
           </button>
         </div>
-
-        {/* Footer note */}
-        <p
-          className="mt-6 text-sm"
-          style={{ color: "var(--asph-text-tertiary)" }}
-        >
-          You can always change these settings later in preferences
-        </p>
       </div>
     </div>
   );
