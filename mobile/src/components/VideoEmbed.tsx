@@ -15,6 +15,7 @@ import {AppBskyEmbedVideo} from '@atproto/api';
 import {useTheme} from '../contexts/ThemeContext';
 import {useVideoAutoplay} from '../contexts/VideoAutoplayContext';
 import {createLogger} from '../utils/logger';
+import {useMediaOrientation} from '../hooks/useMediaOrientation';
 
 const logger = createLogger('VideoEmbed');
 
@@ -40,6 +41,7 @@ function VideoEmbedInner({video, postUri, isVisible = false}: VideoEmbedProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [hasStartedPlaying, setHasStartedPlaying] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  useMediaOrientation(isFullscreen);
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
   const videoRef = useRef<Video>(null);

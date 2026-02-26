@@ -20,6 +20,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import {getOptimizedUrl} from '../utils/image-cdn';
 import {saveImageToGallery} from '../utils/save-image';
 import {triggerHaptic} from '../utils/haptics';
+import {useMediaOrientation} from '../hooks/useMediaOrientation';
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
@@ -43,6 +44,7 @@ function ImageCarouselInner({
   onClose,
 }: ImageCarouselProps) {
   const { colors } = useTheme();
+  useMediaOrientation(visible);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [showAlt, setShowAlt] = useState(false);
   const [bgOpacity, setBgOpacity] = useState(1);
@@ -159,6 +161,7 @@ function ImageCarouselInner({
       transparent={true}
       animationType="fade"
       onRequestClose={onClose}
+      supportedOrientations={['portrait', 'landscape']}
       statusBarTranslucent={true}>
       {Platform.OS === 'android' && <StatusBar hidden />}
 
