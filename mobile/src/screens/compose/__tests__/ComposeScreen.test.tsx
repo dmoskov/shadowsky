@@ -233,8 +233,16 @@ jest.mock('../components', () => {
       </View>
     ),
     TonePickerModal: () => <View testID="tone-picker-modal" />,
+    AltTextModal: () => <View testID="alt-text-modal" />,
   };
 });
+
+// Mock compose auto-save hook
+jest.mock('../../../hooks/useComposeAutoSave', () => ({
+  useComposeAutoSave: jest.fn(),
+  consumeAutoSavedCompose: jest.fn(() => null),
+  clearAutoSavedCompose: jest.fn(),
+}));
 
 // Mock other sub-components
 jest.mock('../../../components/Avatar', () => {
