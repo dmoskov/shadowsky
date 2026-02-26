@@ -758,6 +758,13 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
             thumbColor={themeColors.text}
           />
         </SettingRow>
+
+        <SettingRow
+          label="Add Missing Alt Text"
+          description="Review your posts and add alt text to images that don't have it"
+          onPress={() => router.push("/(app)/settings/alt-text-backfill")}
+          showChevron
+        />
       </View>
 
       {/* About Section */}
