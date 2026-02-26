@@ -74,10 +74,10 @@ describe('QuoteEmbed', () => {
       expect(getByTestId('expo-image')).toBeTruthy();
     });
 
-    it('limits text to 3 lines', () => {
+    it('limits text to 6 lines', () => {
       const record = makeViewRecord();
       const {getByTestId} = render(<QuoteEmbed record={record} />);
-      expect(getByTestId('rich-text').props.numberOfLines).toBe(3);
+      expect(getByTestId('rich-text').props.numberOfLines).toBe(6);
     });
   });
 
