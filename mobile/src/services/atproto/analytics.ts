@@ -39,6 +39,7 @@ export interface AnalyticsMetrics {
   repostsReceived: number;
   repliesReceived: number;
   followersCount: number;
+  followsCount: number;
   postsCount: number;
   impressions: number;
   engagementRate: number;
@@ -239,6 +240,7 @@ export async function getUserAnalytics(
     repostsReceived,
     repliesReceived,
     followersCount: profile.followersCount || 0,
+    followsCount: profile.followsCount || 0,
     postsCount: allPosts.length,
     impressions,
     engagementRate,

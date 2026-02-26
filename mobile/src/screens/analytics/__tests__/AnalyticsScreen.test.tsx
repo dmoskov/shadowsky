@@ -81,6 +81,7 @@ import { AnalyticsScreen } from "../AnalyticsScreen";
 function makeAnalytics(overrides: Record<string, any> = {}) {
   return {
     followersCount: 1234,
+    followsCount: 567,
     newFollowers: 56,
     likesReceived: 789,
     repostsReceived: 234,
@@ -279,6 +280,16 @@ describe("AnalyticsScreen", () => {
       const { getByText } = render(<AnalyticsScreen />);
       expect(getByText("Followers")).toBeTruthy();
       expect(getByText("1,234")).toBeTruthy();
+    });
+
+    it("renders following count", () => {
+      mockIsLoading = false;
+      mockError = null;
+      mockAnalytics = makeAnalytics({ followsCount: 567 });
+
+      const { getByText } = render(<AnalyticsScreen />);
+      expect(getByText("Following")).toBeTruthy();
+      expect(getByText("567")).toBeTruthy();
     });
 
     it("renders likes count", () => {
