@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, {useMemo, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -44,8 +44,14 @@ function ListItem({list, onPress, colors}: ListItemProps) {
 }
 
 export function ListsScreen() {
-  const {data, isLoading, error, refetch, isRefetching, fetchNextPage, hasNextPage, isFetchingNextPage} = useLists();
+  const {data, isLoading, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage} = useLists();
   const {navigateToList, router} = useAppNavigation();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    refetch().finally(() => setIsRefreshing(false));
+  }, [refetch]);
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -133,8 +139,8 @@ export function ListsScreen() {
         onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
           />

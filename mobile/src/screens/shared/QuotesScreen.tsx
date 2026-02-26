@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, {useMemo, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -56,10 +56,15 @@ export function QuotesScreen({
     hasNextPage,
     isFetchingNextPage,
     refetch,
-    isRefetching,
   } = usePostQuotes(postUri);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const quotes = data?.pages.flatMap((page) => page.posts) ?? [];
+
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    refetch().finally(() => setIsRefreshing(false));
+  }, [refetch]);
 
   const renderQuote = ({item}: {item: AppBskyFeedDefs.PostView}) => {
     // Convert PostView to FeedViewPost format for PostCard
@@ -145,8 +150,8 @@ export function QuotesScreen({
         updateCellsBatchingPeriod={50}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching && !isLoading}
-            onRefresh={refetch}
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
           />

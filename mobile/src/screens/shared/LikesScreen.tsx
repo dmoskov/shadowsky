@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, {useMemo, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -33,10 +33,15 @@ export function LikesScreen({postUri, onNavigateToProfile}: LikesScreenProps) {
     hasNextPage,
     isFetchingNextPage,
     refetch,
-    isRefetching,
   } = usePostLikes(postUri);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const likes = data?.pages.flatMap((page) => page.likes) ?? [];
+
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    refetch().finally(() => setIsRefreshing(false));
+  }, [refetch]);
 
   const renderLike = ({item}: {item: AppBskyFeedGetLikes.Like}) => {
     const isOwnProfile = account?.did === item.actor.did;
@@ -131,8 +136,8 @@ export function LikesScreen({postUri, onNavigateToProfile}: LikesScreenProps) {
         })}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching && !isLoading}
-            onRefresh={refetch}
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
           />

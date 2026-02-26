@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -100,11 +100,12 @@ export function TimelineScreen() {
   const itemSize = (screenWidth - GRID_SPACING * (GRID_COLUMNS + 1)) / GRID_COLUMNS;
   const timelineQuery = useTimeline();
   const enhancedQuery = useOfflineFeedEnhancer(timelineQuery, 'timeline', ['timeline']);
-  const { data, isLoading, isRefetching, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = enhancedQuery;
+  const { data, isLoading, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = enhancedQuery;
   const { isServingCached, isStale, isOnline } = enhancedQuery;
   const offlineStatus = useOfflineFeedStatus();
   const { navigateToThread } = useAppNavigation();
   const styles = useMemo(() => createStyles(colors, itemSize), [colors, itemSize]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Flatten paginated data and filter for posts with images
   const postsWithMedia = useMemo(() => {
@@ -118,9 +119,10 @@ export function TimelineScreen() {
     navigateToThread(handle, postId, post.post.author.did);
   };
 
-  const handleRefresh = () => {
-    refetch();
-  };
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    refetch().finally(() => setIsRefreshing(false));
+  }, [refetch]);
 
   const handleLoadMore = () => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -192,7 +194,7 @@ export function TimelineScreen() {
         contentContainerStyle={styles.gridContainer}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
+            refreshing={isRefreshing}
             onRefresh={handleRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}

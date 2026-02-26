@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, {useMemo, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -33,10 +33,15 @@ export function FollowingScreen({actor, onNavigateToProfile}: FollowingScreenPro
     hasNextPage,
     isFetchingNextPage,
     refetch,
-    isRefetching,
   } = useFollows(actor);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const following = data?.pages.flatMap((page) => page.follows) ?? [];
+
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    refetch().finally(() => setIsRefreshing(false));
+  }, [refetch]);
 
   const renderFollowing = ({item}: {item: AppBskyActorDefs.ProfileView}) => {
     const isOwnProfile = account?.did === item.did;
@@ -131,8 +136,8 @@ export function FollowingScreen({actor, onNavigateToProfile}: FollowingScreenPro
         })}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching && !isLoading}
-            onRefresh={refetch}
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
           />

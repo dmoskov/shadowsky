@@ -87,8 +87,8 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isRefetching,
   } = useListMembers(listUri);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const {mutateAsync: removeFromList} = useRemoveFromList();
   const {mutateAsync: deleteList} = useDeleteList();
   const {mutateAsync: updateList} = useUpdateList();
@@ -99,6 +99,11 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+
+  const handleUserRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    refetch().finally(() => setIsRefreshing(false));
+  }, [refetch]);
 
   // Extract creator DID from list URI (format: at://did:plc:xxx/app.bsky.graph.list/rkey)
   const listCreatorDid = useMemo(() => {
@@ -307,8 +312,8 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
         contentContainerStyle={members.length === 0 ? styles.emptyContainer : undefined}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
+            refreshing={isRefreshing}
+            onRefresh={handleUserRefresh}
             tintColor={colors.primary}
             colors={[colors.primary]}
           />
