@@ -79,7 +79,7 @@ struct ConversationListView: View {
 
     var body: some View {
         ZStack {
-            if isLoading && dataState.conversations.isEmpty {
+            if dataState.conversations.isEmpty && (isLoading || !dataState.hasReceivedConversations) {
                 loadingView
             } else if dataState.conversations.isEmpty && !isSearchActive {
                 emptyView

@@ -210,7 +210,7 @@ struct SearchView: View {
 
     private var resultsList: some View {
         Group {
-            if state.isLoading && state.actors.isEmpty && state.posts.isEmpty {
+            if (state.isLoading || !state.hasReceivedResults) && state.actors.isEmpty && state.posts.isEmpty {
                 loadingView
             } else if state.activeTab == .people {
                 peopleResultsList
@@ -225,7 +225,7 @@ struct SearchView: View {
     private var peopleResultsList: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                if state.actors.isEmpty && !state.isLoading {
+                if state.actors.isEmpty && !state.isLoading && state.hasReceivedResults {
                     emptyResultsView
                 } else {
                     ForEach(state.actors) { actor in
@@ -281,7 +281,7 @@ struct SearchView: View {
     private var postsResultsList: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                if state.posts.isEmpty && !state.isLoading {
+                if state.posts.isEmpty && !state.isLoading && state.hasReceivedResults {
                     emptyResultsView
                 } else {
                     ForEach(state.posts) { post in

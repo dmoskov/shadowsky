@@ -75,6 +75,7 @@ class MessagesDataState: ObservableObject {
     @Published var currentConversation: Conversation?
     @Published var messages: [Message] = []
     @Published var searchResults: [SearchResult] = []
+    @Published var hasReceivedConversations: Bool = false
 
     private var conversationsObserver: NSObjectProtocol?
     private var messagesObserver: NSObjectProtocol?
@@ -89,6 +90,7 @@ class MessagesDataState: ObservableObject {
         ) { [weak self] notification in
             if let data = notification.userInfo?["conversations"] as? [[String: Any]] {
                 self?.conversations = data.compactMap { Self.parseConversation(from: $0) }
+                self?.hasReceivedConversations = true
             }
         }
 
@@ -124,6 +126,7 @@ class MessagesDataState: ObservableObject {
             self?.currentConversation = nil
             self?.messages = []
             self?.searchResults = []
+            self?.hasReceivedConversations = false
         }
     }
 

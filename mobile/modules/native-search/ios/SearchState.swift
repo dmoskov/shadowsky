@@ -9,7 +9,13 @@ import Foundation
 import Combine
 
 class SearchState: ObservableObject {
-    @Published var query: String = ""
+    @Published var query: String = "" {
+        didSet {
+            if query != oldValue {
+                hasReceivedResults = false
+            }
+        }
+    }
     @Published var activeTab: SearchTab = .posts
     @Published var isLoading: Bool = false
     @Published var isRefreshing: Bool = false
@@ -21,6 +27,7 @@ class SearchState: ObservableObject {
     @Published var actors: [SearchActorResult] = []
     @Published var posts: [SearchPostResult] = []
     @Published var hasMore: Bool = false
+    @Published var hasReceivedResults: Bool = false
 
     // Trending
     @Published var trendingTopics: [TrendingTopic] = []
@@ -126,6 +133,7 @@ class SearchState: ObservableObject {
         }
 
         self.hasMore = hasMore
+        self.hasReceivedResults = true
     }
 
     private func handleTrendingData(_ notification: Notification) {

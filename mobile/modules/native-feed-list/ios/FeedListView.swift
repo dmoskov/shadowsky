@@ -28,7 +28,7 @@ struct ConvertedFeedPost: Identifiable {
 /// Using an observable object allows SwiftUI to diff individual property
 /// changes instead of replacing the entire rootView on every prop update.
 class FeedListProps: ObservableObject {
-    @Published var isLoading: Bool = false
+    @Published var isLoading: Bool = true  // Default true so skeletons show before first prop update
     @Published var isRefreshing: Bool = false
     @Published var isLoadingMore: Bool = false
     @Published var error: String? = nil
@@ -73,7 +73,7 @@ struct FeedListView: View {
 
     var body: some View {
         ZStack {
-            if props.isLoading && feedState.convertedPosts.isEmpty {
+            if feedState.convertedPosts.isEmpty && (props.isLoading || !feedState.hasReceivedData) {
                 loadingView
             } else if let error = props.error ?? feedState.decodeError, feedState.convertedPosts.isEmpty {
                 errorView(error)
@@ -286,6 +286,7 @@ class FeedState: ObservableObject {
     @Published var posts: [SerializedFeedViewPost] = []
     @Published var convertedPosts: [ConvertedFeedPost] = []
     @Published var decodeError: String? = nil
+    @Published var hasReceivedData: Bool = false
 
     private var feedDataObserver: NSObjectProtocol?
     private var incrementalUpdateObserver: NSObjectProtocol?
@@ -374,6 +375,7 @@ class FeedState: ObservableObject {
         ) { [weak self] _ in
             self?.posts = []
             self?.convertedPosts = []
+            self?.hasReceivedData = false
         }
     }
 
@@ -441,6 +443,7 @@ class FeedState: ObservableObject {
 
         posts = newPosts
         convertedPosts = newConverted
+        hasReceivedData = true
     }
 
     /// Convert a single SerializedFeedViewPost to ConvertedFeedPost.

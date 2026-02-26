@@ -228,19 +228,45 @@ struct NotificationListView: View {
     private var notificationScrollView: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                ForEach(filteredNotifications) { item in
-                    notificationRow(for: item)
-                    Divider()
+                if filteredNotifications.isEmpty && activeFilter != .all {
+                    // Empty filtered results — auto-load more if possible
+                    VStack(spacing: 12) {
+                        if props.isLoadingMore {
+                            ProgressView()
+                            Text("Loading \(activeFilter.label.lowercased())...")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Image(systemName: "bell.slash")
+                                .font(.largeTitle)
+                                .foregroundColor(.secondary)
+                            Text("No \(activeFilter.label.lowercased()) yet")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 60)
+                    .onAppear {
+                        if !props.isLoadingMore {
+                            onLoadMore?()
+                        }
+                    }
+                } else {
+                    ForEach(filteredNotifications) { item in
+                        notificationRow(for: item)
+                        Divider()
 
-                    // Load more trigger
-                    if item.id == filteredNotifications.dropLast(min(3, filteredNotifications.count)).last?.id {
-                        Color.clear
-                            .frame(height: 1)
-                            .onAppear {
-                                if !props.isLoadingMore {
-                                    onLoadMore?()
+                        // Load more trigger
+                        if item.id == filteredNotifications.dropLast(min(3, filteredNotifications.count)).last?.id {
+                            Color.clear
+                                .frame(height: 1)
+                                .onAppear {
+                                    if !props.isLoadingMore {
+                                        onLoadMore?()
+                                    }
                                 }
-                            }
+                        }
                     }
                 }
 

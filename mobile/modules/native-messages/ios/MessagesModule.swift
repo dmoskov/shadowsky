@@ -131,7 +131,7 @@ public class MessagesModule: Module {
 
 class MessagesViewWrapper: ExpoView {
     // Props
-    var isLoading: Bool = false {
+    var isLoading: Bool = true {
         didSet { updateView() }
     }
 
