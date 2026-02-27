@@ -1,6 +1,7 @@
 import {useInfiniteQuery, useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
 import {getNotifications, getUnreadCount, updateSeenNotifications} from '../../services/atproto/notifications';
 import {useAdaptivePolling} from '../useAdaptivePolling';
+import {cancelMany, invalidateMany} from '../../utils/query-helpers';
 import {subDays} from 'date-fns';
 
 // Polling intervals for notifications
@@ -96,10 +97,29 @@ export function useMarkNotificationsSeen() {
 
   return useMutation({
     mutationFn: updateSeenNotifications,
+    onMutate: async () => {
+      await cancelMany(queryClient, [
+        {queryKey: ['unreadCount']},
+        {queryKey: ['notifications']},
+      ]);
+
+      const previousUnreadCount = queryClient.getQueryData<number>(['unreadCount']);
+
+      // Optimistically set unread count to 0
+      queryClient.setQueryData<number>(['unreadCount'], 0);
+
+      return {previousUnreadCount};
+    },
     onSuccess: () => {
-      // Invalidate queries to refetch with updated seen status
-      queryClient.invalidateQueries({queryKey: ['notifications']});
-      queryClient.invalidateQueries({queryKey: ['unreadCount']});
+      invalidateMany(queryClient, [
+        {queryKey: ['notifications']},
+        {queryKey: ['unreadCount']},
+      ]);
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousUnreadCount !== undefined) {
+        queryClient.setQueryData(['unreadCount'], context.previousUnreadCount);
+      }
     },
   });
 }
