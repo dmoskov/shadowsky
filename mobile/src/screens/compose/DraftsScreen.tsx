@@ -1,4 +1,4 @@
-import React, {useCallback, useMemo} from 'react';
+import React, {useCallback, useMemo, useState} from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -23,7 +24,8 @@ import { triggerHaptic } from '../../utils/haptics';
 export function DraftsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useDrafts();
+  const { data, isLoading, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useDrafts();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const deleteDraft = useDeleteDraft();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -121,6 +123,13 @@ export function DraftsScreen() {
     );
   };
 
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    triggerHaptic('selection');
+    await refetch();
+    setIsRefreshing(false);
+  }, [refetch]);
+
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -178,6 +187,14 @@ export function DraftsScreen() {
           ListFooterComponent={renderFooter}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
           removeClippedSubviews={true}
           maxToRenderPerBatch={10}
           windowSize={5}
