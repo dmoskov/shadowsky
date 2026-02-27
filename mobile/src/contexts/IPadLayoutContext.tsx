@@ -19,6 +19,11 @@ const DETAIL_PANEL_MIN_WINDOW_WIDTH = 1000;
 export type DetailPanelContent =
   | { type: "thread"; handle: string; postId: string }
   | { type: "profile"; handle: string }
+  | { type: "compose"; replyTo?: any; quoteTo?: any }
+  | { type: "settings" }
+  | { type: "list-detail"; listUri: string }
+  | { type: "analytics" }
+  | { type: "messages"; conversationId?: string }
   | null;
 
 interface IPadLayoutContextValue {
@@ -36,6 +41,16 @@ interface IPadLayoutContextValue {
   showThread: (handle: string, postId: string) => void;
   /** Show a profile in the detail panel */
   showProfile: (handle: string) => void;
+  /** Show the compose screen in the detail panel */
+  showCompose: (params?: { replyTo?: any; quoteTo?: any }) => void;
+  /** Show settings in the detail panel */
+  showSettings: () => void;
+  /** Show a list detail in the detail panel */
+  showListDetail: (listUri: string) => void;
+  /** Show analytics in the detail panel */
+  showAnalytics: () => void;
+  /** Show messages in the detail panel */
+  showMessages: (conversationId?: string) => void;
   /** Close the detail panel */
   closeDetail: () => void;
 }
@@ -48,6 +63,11 @@ const IPadLayoutContext = createContext<IPadLayoutContextValue>({
   detailContent: null,
   showThread: () => {},
   showProfile: () => {},
+  showCompose: () => {},
+  showSettings: () => {},
+  showListDetail: () => {},
+  showAnalytics: () => {},
+  showMessages: () => {},
   closeDetail: () => {},
 });
 
@@ -69,6 +89,26 @@ export function IPadLayoutProvider({ children }: { children: ReactNode }) {
     setDetailContent({ type: "profile", handle });
   }, []);
 
+  const showCompose = useCallback((params?: { replyTo?: any; quoteTo?: any }) => {
+    setDetailContent({ type: "compose", replyTo: params?.replyTo, quoteTo: params?.quoteTo });
+  }, []);
+
+  const showSettings = useCallback(() => {
+    setDetailContent({ type: "settings" });
+  }, []);
+
+  const showListDetail = useCallback((listUri: string) => {
+    setDetailContent({ type: "list-detail", listUri });
+  }, []);
+
+  const showAnalytics = useCallback(() => {
+    setDetailContent({ type: "analytics" });
+  }, []);
+
+  const showMessages = useCallback((conversationId?: string) => {
+    setDetailContent({ type: "messages", conversationId });
+  }, []);
+
   const closeDetail = useCallback(() => {
     setDetailContent(null);
   }, []);
@@ -82,9 +122,14 @@ export function IPadLayoutProvider({ children }: { children: ReactNode }) {
       detailContent,
       showThread,
       showProfile,
+      showCompose,
+      showSettings,
+      showListDetail,
+      showAnalytics,
+      showMessages,
       closeDetail,
     }),
-    [isMultiColumn, canShowDetailPanel, windowWidth, windowHeight, detailContent, showThread, showProfile, closeDetail],
+    [isMultiColumn, canShowDetailPanel, windowWidth, windowHeight, detailContent, showThread, showProfile, showCompose, showSettings, showListDetail, showAnalytics, showMessages, closeDetail],
   );
 
   return (
