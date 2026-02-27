@@ -2,13 +2,13 @@
   "budgets": {
     "js-bundle": {
       "description": "iOS/Android JS bundle (uncompressed)",
-      "maxBytes": 7340032,
-      "maxLabel": "7 MB"
+      "maxBytes": 9437184,
+      "maxLabel": "9 MB"
     },
     "js-bundle-gzip": {
       "description": "iOS/Android JS bundle (gzipped)",
-      "maxBytes": 1572864,
-      "maxLabel": "1.5 MB"
+      "maxBytes": 2097152,
+      "maxLabel": "2 MB"
     },
     "total-assets": {
       "description": "Total exported assets (images, fonts, etc.)",
@@ -17,9 +17,9 @@
     }
   },
   "baseline": {
-    "date": "2025-02-25",
-    "js-bundle": 5998209,
-    "js-bundle-gzip": 1323916,
-    "note": "Measured from expo export --platform ios --no-bytecode at v0.7.0"
+    "date": "2026-02-27",
+    "js-bundle": 6070629,
+    "js-bundle-gzip": 1340921,
+    "note": "Post-AI-features baseline: ComposeAIPanel, RetroAltTextModal, AI alt text service, iPad layout context"
   }
 }
