@@ -3,7 +3,7 @@
 //  NativeThreadView
 //
 //  Inline reply composer bar at the bottom of the thread view.
-//  Text input auto-grows up to ~4 lines, then scrolls. Character count (300 limit).
+//  Single-row text input (scrolls horizontally). Character count (300 limit).
 //  Sends bridge events back to JS for actual post creation and media picker modals.
 //
 
@@ -154,7 +154,7 @@ struct ThreadReplyComposer: View {
                     placeholder: state.replyToHandle != nil
                         ? "Reply to @\(state.replyToHandle!)..."
                         : "Write a reply...",
-                    maxLines: 4,
+                    maxLines: 1,
                     isFocused: $isTextFieldFocused,
                     onTextChange: { newText in
                         state.detectMention(in: newText)
@@ -167,7 +167,7 @@ struct ThreadReplyComposer: View {
                 .accessibilityHint("Type your reply here")
 
                 // Character count + Send
-                VStack(alignment: .trailing, spacing: 4) {
+                HStack(spacing: 6) {
                     // Character count
                     if !state.text.isEmpty {
                         Text("\(state.text.count)/\(ComposerState.maxCharacters)")
