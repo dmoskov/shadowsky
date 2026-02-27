@@ -14,7 +14,6 @@
 import type { AppBskyActorDefs } from "@atproto/api";
 import { memo, useCallback, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   Pressable,
@@ -33,6 +32,7 @@ import {
 } from "../hooks/useDynamicType";
 import type { MobilePostData } from "../types";
 import { PostCard } from "./PostCard";
+import { PostShimmer } from "./SkeletonShimmer";
 
 /**
  * Props for ProfileView component
@@ -522,7 +522,7 @@ const LoadingFooter = memo(function LoadingFooter({
 
   return (
     <View style={styles.loadingFooter}>
-      <ActivityIndicator size="small" color="#1d9bf0" />
+      <PostShimmer />
     </View>
   );
 });
