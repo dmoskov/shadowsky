@@ -2218,3 +2218,68 @@ html[data-reduce-motion="true"] .ios-press:active,
 html[data-reduce-motion="true"] .ios-press-light:active {
   transform: none !important;
 }
+
+/* ==========================================
+ * Pointer/Hover Interaction Support
+ * ==========================================
+ * Provides hover feedback for devices with a fine pointer
+ * (trackpad, mouse, Apple Pencil hover). Only activates when
+ * the device actually supports hover — no effect on pure touch.
+ * Used primarily for iPadOS Magic Keyboard / trackpad support.
+ */
+
+/* spring-icon: subtle scale-up on hover for icon buttons (e.g. PostActionBar) */
+@media (hover: hover) and (pointer: fine) {
+  .spring-icon {
+    transition:
+      transform var(--transition-fast) var(--ease-spring-soft),
+      color var(--transition-fast) var(--ease-default),
+      background-color var(--transition-fast) var(--ease-default);
+  }
+
+  .spring-icon:hover {
+    transform: scale(1.12);
+  }
+
+  .spring-icon:active {
+    transform: scale(0.95);
+  }
+
+  /* Pointer highlight: subtle background tint on hover */
+  .pointer-highlight {
+    transition:
+      background-color var(--transition-fast) var(--ease-default),
+      color var(--transition-fast) var(--ease-default);
+  }
+
+  .pointer-highlight:hover {
+    background-color: var(--asph-bg-hover);
+  }
+
+  /* Pointer lift: slight elevation on hover for cards/buttons */
+  .pointer-lift {
+    transition:
+      transform var(--transition-fast) var(--ease-spring-soft),
+      box-shadow var(--transition-fast) var(--ease-out);
+  }
+
+  .pointer-lift:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--asph-shadow-sm);
+  }
+}
+
+/* Reduced motion: disable pointer hover transforms */
+@media (prefers-reduced-motion: reduce) {
+  .spring-icon:hover,
+  .spring-icon:active,
+  .pointer-lift:hover {
+    transform: none !important;
+  }
+}
+
+html[data-reduce-motion="true"] .spring-icon:hover,
+html[data-reduce-motion="true"] .spring-icon:active,
+html[data-reduce-motion="true"] .pointer-lift:hover {
+  transform: none !important;
+}
