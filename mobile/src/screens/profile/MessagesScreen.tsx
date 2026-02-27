@@ -64,6 +64,7 @@ export function MessagesScreen() {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [showNewConversationModal, setShowNewConversationModal] = useState(false);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
+  const [isRefreshingConversations, setIsRefreshingConversations] = useState(false);
 
   const [showNewConversationModalNative, setShowNewConversationModalNative] = useState(false);
 
@@ -186,6 +187,12 @@ export function MessagesScreen() {
       Alert.alert("Error", "Failed to send message. Please try again.");
       setMessageText(text); // Restore message on error
     }
+  };
+
+  const handleRefreshConversations = async () => {
+    setIsRefreshingConversations(true);
+    await refetchConversations();
+    setIsRefreshingConversations(false);
   };
 
   const handleStartNewConversation = async (userDid: string) => {
@@ -491,6 +498,8 @@ export function MessagesScreen() {
           searchText={searchText}
           sessionDid={session?.did}
           colors={colors}
+          onRefresh={handleRefreshConversations}
+          isRefreshing={isRefreshingConversations}
         />
         <NewConversationModal
           visible={showNewConversationModal}
