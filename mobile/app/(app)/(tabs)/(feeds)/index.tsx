@@ -1,5 +1,5 @@
-import { SavedFeedsScreen } from "../../../../src/screens/feeds/SavedFeedsScreen";
+import { FeedsScreen } from "../../../../src/screens/feeds/FeedsScreen";
 
 export default function FeedsRoute() {
-  return <SavedFeedsScreen />;
+  return <FeedsScreen />;
 }

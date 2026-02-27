@@ -1,63 +1,67 @@
-import React, {useState, useEffect, useMemo} from 'react';
+import { AppBskyFeedDefs } from "@atproto/api";
+import { useRouter } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  RefreshControl,
+  StyleSheet,
   Text,
   TextInput,
-  StyleSheet,
-  FlatList,
   TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-  Image,
-} from 'react-native';
-import {useRouter} from 'expo-router';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {useTheme} from '../../contexts/ThemeContext';
-import {PostCardSkeleton} from '../../components/PostCardSkeleton';
-import {CloseIcon, SearchIcon} from '../../components/icons';
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PostCardSkeleton } from "../../components/PostCardSkeleton";
+import { CloseIcon, SearchIcon } from "../../components/icons";
+import { useTheme } from "../../contexts/ThemeContext";
 import {
+  usePinFeed,
+  usePinnedFeeds,
   usePopularFeedGenerators,
-  useSuggestedFeeds,
-  useSearchFeedGenerators,
   useSavedFeeds,
   useSaveFeed,
-  useUnsaveFeed,
-  usePinFeed,
+  useSearchFeedGenerators,
+  useSuggestedFeeds,
   useUnpinFeed,
-  usePinnedFeeds,
-} from '../../hooks/api';
-import {AppBskyFeedDefs} from '@atproto/api';
+  useUnsaveFeed,
+} from "../../hooks/api";
 
-type TabType = 'popular' | 'suggested' | 'search';
+type TabType = "popular" | "suggested" | "search";
 
 interface FeedDiscoveryScreenProps {
   initialTab?: TabType;
+  embedded?: boolean;
 }
 
-export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScreenProps) {
+export function FeedDiscoveryScreen({
+  initialTab = "popular",
+  embedded = false,
+}: FeedDiscoveryScreenProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const {data: savedFeedsData} = useSavedFeeds();
+  const { data: savedFeedsData } = useSavedFeeds();
   const savedFeedUris = useMemo(() => {
     return new Set(savedFeedsData?.map((feed) => feed.uri) || []);
   }, [savedFeedsData]);
 
-  const {data: pinnedFeedUris} = usePinnedFeeds();
+  const { data: pinnedFeedUris } = usePinnedFeeds();
   const pinnedFeedUrisSet = useMemo(() => {
     return new Set(pinnedFeedUris || []);
   }, [pinnedFeedUris]);
 
-  const {mutate: saveFeed} = useSaveFeed();
-  const {mutate: unsaveFeed} = useUnsaveFeed();
-  const {mutate: pinFeed} = usePinFeed();
-  const {mutate: unpinFeed} = useUnpinFeed();
+  const { mutate: saveFeed } = useSaveFeed();
+  const { mutate: unsaveFeed } = useUnsaveFeed();
+  const { mutate: pinFeed } = usePinFeed();
+  const { mutate: unpinFeed } = useUnpinFeed();
 
   // Debounce search query
   useEffect(() => {
@@ -99,13 +103,13 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
   const feeds = useMemo(() => {
     let data;
     switch (activeTab) {
-      case 'popular':
+      case "popular":
         data = popularData;
         break;
-      case 'suggested':
+      case "suggested":
         data = suggestedData;
         break;
-      case 'search':
+      case "search":
         data = searchData;
         break;
     }
@@ -113,22 +117,22 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
   }, [activeTab, popularData, suggestedData, searchData]);
 
   const isLoading =
-    activeTab === 'popular'
+    activeTab === "popular"
       ? isLoadingPopular
-      : activeTab === 'suggested'
+      : activeTab === "suggested"
         ? isLoadingSuggested
         : isLoadingSearch;
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     switch (activeTab) {
-      case 'popular':
+      case "popular":
         await refetchPopular();
         break;
-      case 'suggested':
+      case "suggested":
         await refetchSuggested();
         break;
-      case 'search':
+      case "search":
         await refetchSearch();
         break;
     }
@@ -138,17 +142,17 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
   const handleLoadMore = () => {
     let hasNext, isFetching, fetchNext;
     switch (activeTab) {
-      case 'popular':
+      case "popular":
         hasNext = hasNextPopular;
         isFetching = isFetchingNextPopular;
         fetchNext = fetchNextPopular;
         break;
-      case 'suggested':
+      case "suggested":
         hasNext = hasNextSuggested;
         isFetching = isFetchingNextSuggested;
         fetchNext = fetchNextSuggested;
         break;
-      case 'search':
+      case "search":
         hasNext = hasNextSearch;
         isFetching = isFetchingNextSearch;
         fetchNext = fetchNextSearch;
@@ -161,8 +165,8 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
 
   const handleFeedPress = (feedUri: string) => {
     router.push({
-      pathname: '/(app)/(tabs)/(home)' as any,
-      params: {feedUri},
+      pathname: "/(app)/(tabs)/(home)" as any,
+      params: { feedUri },
     });
   };
 
@@ -182,7 +186,11 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
     }
   };
 
-  const renderFeedCard = ({item}: {item: AppBskyFeedDefs.GeneratorView}) => {
+  const renderFeedCard = ({
+    item,
+  }: {
+    item: AppBskyFeedDefs.GeneratorView;
+  }) => {
     const isSaved = savedFeedUris.has(item.uri);
     const isPinned = pinnedFeedUrisSet.has(item.uri);
     const likeCount = item.likeCount || 0;
@@ -191,13 +199,16 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
       <TouchableOpacity
         style={styles.feedCard}
         onPress={() => handleFeedPress(item.uri)}
-        activeOpacity={0.7}>
+        activeOpacity={0.7}
+      >
         <View style={styles.feedHeader}>
           {item.avatar ? (
-            <Image source={{uri: item.avatar}} style={styles.feedAvatar} />
+            <Image source={{ uri: item.avatar }} style={styles.feedAvatar} />
           ) : (
             <View style={[styles.feedAvatar, styles.feedAvatarPlaceholder]}>
-              <Text style={styles.feedAvatarText}>{item.displayName?.[0] || '📰'}</Text>
+              <Text style={styles.feedAvatarText}>
+                {item.displayName?.[0] || "📰"}
+              </Text>
             </View>
           )}
           <View style={styles.feedInfo}>
@@ -212,17 +223,29 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
             <TouchableOpacity
               style={[styles.saveButton, isSaved && styles.saveButtonActive]}
               onPress={() => handleToggleSave(item.uri)}
-              activeOpacity={0.7}>
-              <Text style={[styles.saveButtonText, isSaved && styles.saveButtonTextActive]}>
-                {isSaved ? '✓' : '+'}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.saveButtonText,
+                  isSaved && styles.saveButtonTextActive,
+                ]}
+              >
+                {isSaved ? "✓" : "+"}
               </Text>
             </TouchableOpacity>
             {isSaved && (
               <TouchableOpacity
                 style={[styles.pinButton, isPinned && styles.pinButtonActive]}
                 onPress={() => handleTogglePin(item.uri)}
-                activeOpacity={0.7}>
-                <Text style={[styles.pinButtonText, isPinned && styles.pinButtonTextActive]}>
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.pinButtonText,
+                    isPinned && styles.pinButtonTextActive,
+                  ]}
+                >
                   📌
                 </Text>
               </TouchableOpacity>
@@ -235,7 +258,9 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
           </Text>
         )}
         <View style={styles.feedFooter}>
-          <Text style={styles.feedLikes}>❤️ {likeCount.toLocaleString()} likes</Text>
+          <Text style={styles.feedLikes}>
+            ❤️ {likeCount.toLocaleString()} likes
+          </Text>
           {isPinned && <Text style={styles.pinnedBadge}>📌 Pinned</Text>}
         </View>
       </TouchableOpacity>
@@ -247,11 +272,13 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
       return null;
     }
 
-    if (activeTab === 'search' && !debouncedQuery) {
+    if (activeTab === "search" && !debouncedQuery) {
       return (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>Search for custom feeds</Text>
-          <Text style={styles.emptyStateSubtext}>Enter a search term to discover feeds</Text>
+          <Text style={styles.emptyStateSubtext}>
+            Enter a search term to discover feeds
+          </Text>
         </View>
       );
     }
@@ -259,13 +286,19 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
     return (
       <View style={styles.emptyState}>
         <Text style={styles.emptyStateText}>No feeds found</Text>
-        <Text style={styles.emptyStateSubtext}>Try a different search or check back later</Text>
+        <Text style={styles.emptyStateSubtext}>
+          Try a different search or check back later
+        </Text>
       </View>
     );
   };
 
   const renderFooter = () => {
-    if (!isFetchingNextPopular && !isFetchingNextSuggested && !isFetchingNextSearch) {
+    if (
+      !isFetchingNextPopular &&
+      !isFetchingNextSuggested &&
+      !isFetchingNextSearch
+    ) {
       return null;
     }
     return (
@@ -276,35 +309,55 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
   };
 
   return (
-    <View style={[styles.container, {paddingTop: insets.top}]}>
+    <View style={[styles.container, !embedded && { paddingTop: insets.top }]}>
       {/* Tabs */}
       <View style={styles.tabs}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'popular' && styles.tabActive]}
-          onPress={() => setActiveTab('popular')}
-          activeOpacity={0.7}>
-          <Text style={[styles.tabText, activeTab === 'popular' && styles.tabTextActive]}>
+          style={[styles.tab, activeTab === "popular" && styles.tabActive]}
+          onPress={() => setActiveTab("popular")}
+          activeOpacity={0.7}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "popular" && styles.tabTextActive,
+            ]}
+          >
             Popular
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'suggested' && styles.tabActive]}
-          onPress={() => setActiveTab('suggested')}
-          activeOpacity={0.7}>
-          <Text style={[styles.tabText, activeTab === 'suggested' && styles.tabTextActive]}>
+          style={[styles.tab, activeTab === "suggested" && styles.tabActive]}
+          onPress={() => setActiveTab("suggested")}
+          activeOpacity={0.7}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "suggested" && styles.tabTextActive,
+            ]}
+          >
             Suggested
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'search' && styles.tabActive]}
-          onPress={() => setActiveTab('search')}
-          activeOpacity={0.7}>
-          <Text style={[styles.tabText, activeTab === 'search' && styles.tabTextActive]}>Search</Text>
+          style={[styles.tab, activeTab === "search" && styles.tabActive]}
+          onPress={() => setActiveTab("search")}
+          activeOpacity={0.7}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "search" && styles.tabTextActive,
+            ]}
+          >
+            Search
+          </Text>
         </TouchableOpacity>
       </View>
 
       {/* Search Bar (only visible in search tab) */}
-      {activeTab === 'search' && (
+      {activeTab === "search" && (
         <View style={styles.searchContainer}>
           <View style={styles.searchInputWrapper}>
             <SearchIcon size={18} color={colors.textSecondary} />
@@ -323,10 +376,10 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
             {searchQuery.length > 0 && (
               <TouchableOpacity
                 onPress={() => {
-                  setSearchQuery('');
-                  setDebouncedQuery('');
+                  setSearchQuery("");
+                  setDebouncedQuery("");
                 }}
-                hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 accessibilityLabel="Clear search"
                 accessibilityRole="button"
               >
@@ -356,7 +409,12 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
           ListFooterComponent={renderFooter}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
-          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+            />
+          }
           removeClippedSubviews={true}
           maxToRenderPerBatch={8}
           windowSize={5}
@@ -380,7 +438,7 @@ function createStyles(colors: any) {
       backgroundColor: colors.surface,
     },
     tabs: {
-      flexDirection: 'row',
+      flexDirection: "row",
       borderBottomWidth: 1,
       borderBottomColor: colors.surface,
       backgroundColor: colors.surface,
@@ -388,7 +446,7 @@ function createStyles(colors: any) {
     tab: {
       flex: 1,
       paddingVertical: 16,
-      alignItems: 'center',
+      alignItems: "center",
     },
     tabActive: {
       borderBottomWidth: 2,
@@ -396,7 +454,7 @@ function createStyles(colors: any) {
     },
     tabText: {
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: "600",
       color: colors.textSecondary,
     },
     tabTextActive: {
@@ -409,8 +467,8 @@ function createStyles(colors: any) {
       borderBottomColor: colors.surface,
     },
     searchInputWrapper: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       backgroundColor: colors.surface,
       borderRadius: 20,
       paddingHorizontal: 12,
@@ -434,8 +492,8 @@ function createStyles(colors: any) {
       borderColor: colors.surface,
     },
     feedHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       marginBottom: 12,
     },
     feedAvatar: {
@@ -446,8 +504,8 @@ function createStyles(colors: any) {
     },
     feedAvatarPlaceholder: {
       backgroundColor: colors.surface,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
     },
     feedAvatarText: {
       fontSize: 24,
@@ -458,7 +516,7 @@ function createStyles(colors: any) {
     },
     feedName: {
       fontSize: 16,
-      fontWeight: '700',
+      fontWeight: "700",
       color: colors.text,
       marginBottom: 2,
     },
@@ -467,7 +525,7 @@ function createStyles(colors: any) {
       color: colors.textSecondary,
     },
     actionButtons: {
-      flexDirection: 'row',
+      flexDirection: "row",
       gap: 8,
     },
     saveButton: {
@@ -476,8 +534,8 @@ function createStyles(colors: any) {
       borderRadius: 20,
       backgroundColor: colors.primary,
       minWidth: 36,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
     },
     saveButtonActive: {
       backgroundColor: colors.surface,
@@ -486,7 +544,7 @@ function createStyles(colors: any) {
     },
     saveButtonText: {
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: "600",
       color: colors.text,
     },
     saveButtonTextActive: {
@@ -500,8 +558,8 @@ function createStyles(colors: any) {
       borderWidth: 1,
       borderColor: colors.surface,
       minWidth: 36,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
     },
     pinButtonActive: {
       backgroundColor: colors.primary,
@@ -520,9 +578,9 @@ function createStyles(colors: any) {
       marginBottom: 12,
     },
     feedFooter: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
     },
     feedLikes: {
       fontSize: 14,
@@ -531,35 +589,35 @@ function createStyles(colors: any) {
     pinnedBadge: {
       fontSize: 12,
       color: colors.primary,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     loadingContainer: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
     },
     emptyState: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
       paddingHorizontal: 32,
       paddingVertical: 64,
     },
     emptyStateText: {
       fontSize: 18,
-      fontWeight: '600',
+      fontWeight: "600",
       color: colors.text,
       marginBottom: 8,
-      textAlign: 'center',
+      textAlign: "center",
     },
     emptyStateSubtext: {
       fontSize: 14,
       color: colors.textSecondary,
-      textAlign: 'center',
+      textAlign: "center",
     },
     footerLoader: {
       paddingVertical: 20,
-      alignItems: 'center',
+      alignItems: "center",
     },
   });
 }
