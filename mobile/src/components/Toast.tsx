@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import {
   Animated,
-  Dimensions,
+
+  useWindowDimensions,
   PanResponder,
   StyleSheet,
   Text,
@@ -54,6 +55,9 @@ function ToastItem({
   index: number;
 }) {
   const { colors } = useTheme();
+  const { width: screenWidth } = useWindowDimensions();
+  const screenWidthRef = useRef(screenWidth);
+  screenWidthRef.current = screenWidth;
   const styles = useMemo(() => createStyles(colors), [colors]);
   const translateY = useRef(new Animated.Value(100)).current;
   const translateX = useRef(new Animated.Value(0)).current;
@@ -142,12 +146,12 @@ function ToastItem({
       },
       onPanResponderRelease: (_, gestureState) => {
         if (toast.dismissible) {
-          const screenWidth = Dimensions.get("window").width;
-          if (Math.abs(gestureState.dx) > screenWidth * 0.3) {
+          const currentWidth = screenWidthRef.current;
+          if (Math.abs(gestureState.dx) > currentWidth * 0.3) {
             // Swipe threshold reached, dismiss
             Animated.parallel([
               Animated.timing(translateX, {
-                toValue: gestureState.dx > 0 ? screenWidth : -screenWidth,
+                toValue: gestureState.dx > 0 ? currentWidth : -currentWidth,
                 duration: 200,
                 useNativeDriver: true,
               }),

@@ -6,9 +6,30 @@ import { useIPadLayout, DetailPanelContent } from "../contexts/IPadLayoutContext
 import { ThreadScreenNative } from "../screens/shared/ThreadScreenNative";
 import { ProfileScreenNative } from "../screens/profile/ProfileScreenNative";
 
+/** Maximum detail panel width on very wide screens */
+const DETAIL_PANEL_MAX_WIDTH = 420;
+/** Minimum detail panel width */
+const DETAIL_PANEL_MIN_WIDTH = 320;
+/** Default sidebar width — must stay in sync with IPadSidebar */
+const DEFAULT_SIDEBAR_WIDTH = 260;
+
+/**
+ * Compute the detail panel width based on available window space.
+ * The panel takes roughly 35% of the space after the sidebar, clamped between min/max.
+ */
+function computeDetailWidth(windowWidth: number, sidebarWidth: number): number {
+  const available = windowWidth - sidebarWidth;
+  const desired = Math.round(available * 0.35);
+  return Math.max(DETAIL_PANEL_MIN_WIDTH, Math.min(DETAIL_PANEL_MAX_WIDTH, desired));
+}
+
+/**
+ * Legacy constant for any code that previously imported a fixed width.
+ * Prefer using `computeDetailWidth()` for responsive layouts.
+ */
 const DETAIL_PANEL_WIDTH = 380;
 
-export { DETAIL_PANEL_WIDTH };
+export { DETAIL_PANEL_WIDTH, computeDetailWidth };
 
 function DetailPanelHeader({
   title,
@@ -61,10 +82,8 @@ function DetailContent({ content }: { content: DetailPanelContent }) {
       <ProfileScreenNative
         handle={content.handle}
         onNavigateToPost={(uri: string) => {
-          // Extract handle and postId from URI to show in detail panel
           const parts = uri.split("/");
           const postId = parts[parts.length - 1];
-          // For AT URIs, the DID is in position 2
           showThread(content.handle, postId);
         }}
         onNavigateToProfile={(handle: string) => {
@@ -80,10 +99,13 @@ function DetailContent({ content }: { content: DetailPanelContent }) {
 export function IPadDetailPanel() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { detailContent, closeDetail } = useIPadLayout();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const { detailContent, closeDetail, canShowDetailPanel, windowWidth } = useIPadLayout();
 
-  if (!detailContent) {
+  const panelWidth = computeDetailWidth(windowWidth, DEFAULT_SIDEBAR_WIDTH);
+  const styles = useMemo(() => createStyles(colors, panelWidth), [colors, panelWidth]);
+
+  // Don't render if there's no content or the window is too narrow
+  if (!detailContent || !canShowDetailPanel) {
     return null;
   }
 
@@ -99,10 +121,10 @@ export function IPadDetailPanel() {
   );
 }
 
-function createStyles(colors: any) {
+function createStyles(colors: any, panelWidth: number = DETAIL_PANEL_WIDTH) {
   return StyleSheet.create({
     container: {
-      width: DETAIL_PANEL_WIDTH,
+      width: panelWidth,
       backgroundColor: colors.background,
       borderLeftWidth: 1,
       borderLeftColor: colors.border,

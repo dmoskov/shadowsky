@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, usePathname } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
+import { useIPadLayout } from "../contexts/IPadLayoutContext";
 import {
   HomeIcon,
   SearchIcon,
@@ -20,7 +21,15 @@ import {
 import { useUnreadCount } from "../hooks/api/useNotifications";
 import { useUnreadMessageCount, useDraftCount } from "../hooks/api";
 
-const SIDEBAR_WIDTH = 260;
+/** Full sidebar width when there is plenty of room */
+const SIDEBAR_WIDTH_FULL = 260;
+/** Narrow sidebar width for compact Split View windows */
+const SIDEBAR_WIDTH_COMPACT = 200;
+/** Window width below which the sidebar uses compact mode */
+const COMPACT_THRESHOLD = 800;
+
+// Legacy export — matches SIDEBAR_WIDTH_FULL for backwards compat
+const SIDEBAR_WIDTH = SIDEBAR_WIDTH_FULL;
 
 interface SidebarItemProps {
   label: string;
@@ -104,8 +113,11 @@ const sidebarItemStyles = StyleSheet.create({
 export { SIDEBAR_WIDTH };
 
 function IPadSidebarInner() {
+  const { windowWidth } = useIPadLayout();
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const isCompact = windowWidth < COMPACT_THRESHOLD;
+  const sidebarWidth = isCompact ? SIDEBAR_WIDTH_COMPACT : SIDEBAR_WIDTH_FULL;
+  const styles = useMemo(() => createStyles(colors, sidebarWidth), [colors, sidebarWidth]);
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const pathname = usePathname();
@@ -249,10 +261,10 @@ function IPadSidebarInner() {
   );
 }
 
-function createStyles(colors: any) {
+function createStyles(colors: any, width: number = SIDEBAR_WIDTH_FULL) {
   return StyleSheet.create({
     container: {
-      width: SIDEBAR_WIDTH,
+      width,
       backgroundColor: colors.background,
       borderRightWidth: 1,
       borderRightColor: colors.border,
