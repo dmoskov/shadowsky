@@ -13,11 +13,15 @@ jest.mock('react-native-safe-area-context', () => ({
 }));
 
 const mockRouterPush = jest.fn();
+const mockSetOptions = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({
     push: mockRouterPush,
     back: jest.fn(),
     canGoBack: jest.fn(() => true),
+  }),
+  useNavigation: () => ({
+    setOptions: mockSetOptions,
   }),
 }));
 
@@ -229,26 +233,26 @@ describe('SavedFeedsScreen', () => {
 
   // ─── Header ────────────────────────────────────────────
   describe('header', () => {
-    it('shows "My Feeds" title', () => {
+    it('configures navigation header options', () => {
       mockIsLoading = false;
       mockSavedFeeds = [];
 
-      const {getByText} = render(<SavedFeedsScreen />);
-      expect(getByText('My Feeds')).toBeTruthy();
+      render(<SavedFeedsScreen />);
+      expect(mockSetOptions).toHaveBeenCalled();
     });
 
-    it('shows "My Feeds" title during loading', () => {
+    it('configures navigation header during loading', () => {
       mockIsLoading = true;
       mockSavedFeeds = undefined;
 
-      const {getByText} = render(<SavedFeedsScreen />);
-      expect(getByText('My Feeds')).toBeTruthy();
+      render(<SavedFeedsScreen />);
+      expect(mockSetOptions).toHaveBeenCalled();
     });
   });
 
   // ─── Reorder button ────────────────────────────────────
   describe('reorder button', () => {
-    it('shows Reorder button when feeds exist', () => {
+    it('sets headerRight with Reorder button when feeds exist', () => {
       mockIsLoading = false;
       mockSavedFeeds = [
         makeFeed(
@@ -257,7 +261,13 @@ describe('SavedFeedsScreen', () => {
         ),
       ];
 
-      const {getByText} = render(<SavedFeedsScreen />);
+      render(<SavedFeedsScreen />);
+      // The component sets headerRight via navigation.setOptions
+      const lastCall = mockSetOptions.mock.calls[mockSetOptions.mock.calls.length - 1][0];
+      const headerRight = lastCall.headerRight;
+      expect(headerRight).toBeDefined();
+      // Render the headerRight component and check for Reorder text
+      const {getByText} = render(headerRight());
       expect(getByText('Reorder')).toBeTruthy();
     });
 
@@ -265,8 +275,12 @@ describe('SavedFeedsScreen', () => {
       mockIsLoading = false;
       mockSavedFeeds = [];
 
-      const {queryByText} = render(<SavedFeedsScreen />);
-      expect(queryByText('Reorder')).toBeNull();
+      render(<SavedFeedsScreen />);
+      const lastCall = mockSetOptions.mock.calls[mockSetOptions.mock.calls.length - 1][0];
+      const headerRight = lastCall.headerRight;
+      // headerRight returns null when there are no feeds
+      const result = headerRight();
+      expect(result).toBeNull();
     });
 
     it('toggles to "Done" when Reorder is pressed', () => {
@@ -278,10 +292,16 @@ describe('SavedFeedsScreen', () => {
         ),
       ];
 
-      const {getByText, queryByText} = render(<SavedFeedsScreen />);
-      fireEvent.press(getByText('Reorder'));
+      render(<SavedFeedsScreen />);
+      // Get the headerRight renderer and press Reorder
+      const firstCall = mockSetOptions.mock.calls[mockSetOptions.mock.calls.length - 1][0];
+      const {getByText: getByTextFirst} = render(firstCall.headerRight());
+      fireEvent.press(getByTextFirst('Reorder'));
+
+      // After pressing, setOptions should be called again with "Done"
+      const lastCall = mockSetOptions.mock.calls[mockSetOptions.mock.calls.length - 1][0];
+      const {getByText} = render(lastCall.headerRight());
       expect(getByText('Done')).toBeTruthy();
-      expect(queryByText('Reorder')).toBeNull();
     });
 
     it('calls reorderFeeds mutation when Done is pressed', () => {
@@ -293,11 +313,17 @@ describe('SavedFeedsScreen', () => {
         ),
       ];
 
-      const {getByText} = render(<SavedFeedsScreen />);
+      render(<SavedFeedsScreen />);
       // Enter reorder mode
-      fireEvent.press(getByText('Reorder'));
+      const firstCall = mockSetOptions.mock.calls[mockSetOptions.mock.calls.length - 1][0];
+      const {getByText: getByTextFirst} = render(firstCall.headerRight());
+      fireEvent.press(getByTextFirst('Reorder'));
+
       // Exit reorder mode (saves order)
-      fireEvent.press(getByText('Done'));
+      const secondCall = mockSetOptions.mock.calls[mockSetOptions.mock.calls.length - 1][0];
+      const {getByText: getByTextSecond} = render(secondCall.headerRight());
+      fireEvent.press(getByTextSecond('Done'));
+
       expect(mockReorderFeeds).toHaveBeenCalledWith([
         'at://did:plc:feed/app.bsky.feed.generator/tech',
       ]);
@@ -358,28 +384,29 @@ describe('SavedFeedsScreen', () => {
     });
   });
 
-  // ─── Close button ──────────────────────────────────────
+  // ─── Close / remove button ──────────────────────────────
   describe('close button', () => {
-    it('calls onClose when close button is pressed', () => {
+    it('shows remove button on feed cards', () => {
       mockIsLoading = false;
-      mockSavedFeeds = [];
-      const mockOnClose = jest.fn();
+      mockSavedFeeds = [
+        makeFeed(
+          'Tech News',
+          'at://did:plc:feed/app.bsky.feed.generator/tech',
+        ),
+      ];
 
-      const {getAllByText} = render(
-        <SavedFeedsScreen onClose={mockOnClose} />,
-      );
-      // The close button in the header uses the "✕" character
-      const closeButtons = getAllByText('\u2715');
-      fireEvent.press(closeButtons[0]);
-      expect(mockOnClose).toHaveBeenCalledTimes(1);
+      const {getAllByText} = render(<SavedFeedsScreen />);
+      // Feed cards have a "✕" remove button
+      const removeButtons = getAllByText('\u2715');
+      expect(removeButtons.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('does not render close button when onClose is not provided', () => {
+    it('does not render remove button when no feeds exist', () => {
       mockIsLoading = false;
       mockSavedFeeds = [];
 
       const {queryByText} = render(<SavedFeedsScreen />);
-      // Without feeds, there are no remove buttons either, so no "✕" at all
+      // Without feeds, there are no remove buttons, so no "✕" at all
       expect(queryByText('\u2715')).toBeNull();
     });
   });
