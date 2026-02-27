@@ -1,5 +1,5 @@
 import React from "react";
-import { Switch, Text, TouchableOpacity, View } from "react-native";
+import { Switch, Text, View } from "react-native";
 import { usePreferences } from "../../../contexts/PreferencesContext";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { SettingRow } from "./SettingRow";
@@ -15,31 +15,6 @@ export function ContentSection() {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>CONTENT</Text>
-
-      <SettingRow label="Default Feed">
-        <View style={styles.themeSelector}>
-          {(["following", "discover"] as const).map((feed) => (
-            <TouchableOpacity
-              key={feed}
-              style={[
-                styles.themeButton,
-                preferences.defaultFeed === feed && styles.themeButtonActive,
-              ]}
-              onPress={() => updatePreference("defaultFeed", feed)}
-            >
-              <Text
-                style={[
-                  styles.themeButtonText,
-                  preferences.defaultFeed === feed &&
-                    styles.themeButtonTextActive,
-                ]}
-              >
-                {feed.charAt(0).toUpperCase() + feed.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </SettingRow>
 
       <SettingRow
         label="Show NSFW Content"

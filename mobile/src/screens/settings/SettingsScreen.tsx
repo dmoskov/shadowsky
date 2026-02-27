@@ -12,7 +12,6 @@ import { ArrowLeftIcon } from "../../components/icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { useTranslation } from "../../hooks/useTranslation";
 import {
   AIFeaturesSection,
   AboutSection,
@@ -42,7 +41,6 @@ export function SettingsScreen({
   const { signOut } = useAuth();
   const { preferences } = usePreferences();
   const { colors: themeColors } = useTheme();
-  const { t } = useTranslation();
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
 
   const styles = createStyles(themeColors);
@@ -106,7 +104,6 @@ export function SettingsScreen({
 
   return (
     <ScrollView style={styles.container} keyboardDismissMode="on-drag">
-      <Text style={styles.header}>{t("settings.header")}</Text>
       <AccountSection
         onShowAccountSwitcher={() => setShowAccountSwitcher(true)}
       />

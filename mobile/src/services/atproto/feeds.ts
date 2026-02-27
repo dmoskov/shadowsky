@@ -569,14 +569,17 @@ export async function reorderSavedFeeds(feedUris: string[]): Promise<void> {
         saved?: string[];
         pinned?: string[];
       };
-      const pinnedFeeds = savedFeedsPref.pinned || [];
+      const currentSaved = savedFeedsPref.saved || [];
 
-      // Update preferences with new order
+      // Preserve any saved feeds that weren't in the reorder list
+      const remainingSaved = currentSaved.filter((u) => !feedUris.includes(u));
+
+      // Update preferences with new order for both saved and pinned
       const updatedPreferences = [...preferences];
       updatedPreferences[savedFeedsIndex] = {
         $type: "app.bsky.actor.defs#savedFeedsPref",
-        saved: feedUris,
-        pinned: pinnedFeeds,
+        saved: [...feedUris, ...remainingSaved],
+        pinned: feedUris,
       };
 
       await agent.app.bsky.actor.putPreferences({

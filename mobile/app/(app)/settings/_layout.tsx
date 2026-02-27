@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import { HeaderBackButton } from "../../../src/components/HeaderBackButton";
 import { useTheme } from "../../../src/contexts/ThemeContext";
 
 export default function SettingsLayout() {
@@ -17,6 +18,7 @@ export default function SettingsLayout() {
         name="index"
         options={{
           title: "Settings",
+          headerLeft: () => <HeaderBackButton />,
         }}
       />
       <Stack.Screen name="accessibility" options={{ title: "Accessibility" }} />

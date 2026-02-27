@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from "react";
+import React, { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { View, StyleSheet, Alert, ActionSheetIOS, Platform, ScrollView, TouchableOpacity, Text } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useScrollToTop } from "@react-navigation/native";
@@ -61,6 +61,15 @@ export function HomeScreen() {
 
   // Fetch saved feeds
   const { data: savedFeeds } = useSavedFeeds();
+
+  // Default to the first pinned feed (e.g. "For You") once loaded
+  const hasInitializedFeed = useRef(false);
+  useEffect(() => {
+    if (!hasInitializedFeed.current && savedFeeds && savedFeeds.length > 0) {
+      hasInitializedFeed.current = true;
+      setSelectedFeedUri(savedFeeds[0].uri);
+    }
+  }, [savedFeeds]);
 
   // Fetch timeline or custom feed based on selection
   const timelineQuery = useTimeline();
