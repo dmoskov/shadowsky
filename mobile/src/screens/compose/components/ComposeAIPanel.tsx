@@ -1,21 +1,24 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
-  View,
+  Modal,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  Modal,
-  ActivityIndicator,
-  ScrollView,
+  View,
 } from "react-native";
+import { CloseIcon } from "../../../components/icons";
 import { useTheme } from "../../../contexts/ThemeContext";
-import { CloseIcon, CheckIcon } from "../../../components/icons";
 import type {
   HashtagSuggestion,
-  WritingFeedback,
   StyleAnalysisResult,
   ThreadOptimizationResult,
+  WritingFeedback,
 } from "../../../services/ai-service";
+import { FeedbackPanel } from "./ai-panels/FeedbackPanel";
+import { HashtagsPanel } from "./ai-panels/HashtagsPanel";
+import { StylePanel } from "./ai-panels/StylePanel";
+import { ThreadOptPanel } from "./ai-panels/ThreadOptPanel";
 
 type AIFeatureTab = "hashtags" | "feedback" | "style" | "thread";
 
@@ -111,9 +114,7 @@ export function ComposeAIPanel({
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [activeTab, setActiveTab] = useState<AIFeatureTab>("hashtags");
 
-  const handleTabPress = (tab: AIFeatureTab) => {
-    setActiveTab(tab);
-  };
+  const hasText = text.trim().length > 0;
 
   return (
     <Modal
@@ -147,7 +148,7 @@ export function ComposeAIPanel({
                   activeTab === feature.id && styles.tabActive,
                 ]}
                 activeOpacity={0.7}
-                onPress={() => handleTabPress(feature.id)}
+                onPress={() => setActiveTab(feature.id)}
               >
                 <Text style={styles.tabIcon}>{feature.icon}</Text>
                 <Text
@@ -174,7 +175,7 @@ export function ComposeAIPanel({
                 isLoading={isLoadingHashtags}
                 onRequest={onRequestHashtags}
                 onInsert={onInsertHashtag}
-                hasText={text.trim().length > 0}
+                hasText={hasText}
                 colors={colors}
                 styles={styles}
               />
@@ -186,7 +187,7 @@ export function ComposeAIPanel({
                 onRequest={onRequestFeedback}
                 onApplyCorrected={onApplyCorrected}
                 onApplyEnhanced={onApplyEnhanced}
-                hasText={text.trim().length > 0}
+                hasText={hasText}
                 originalText={text}
                 colors={colors}
                 styles={styles}
@@ -197,18 +198,18 @@ export function ComposeAIPanel({
                 analysis={styleAnalysis}
                 isLoading={isLoadingStyle}
                 onRequest={onRequestStyleAnalysis}
-                hasText={text.trim().length > 0}
+                hasText={hasText}
                 colors={colors}
                 styles={styles}
               />
             )}
             {activeTab === "thread" && (
-              <ThreadPanel
+              <ThreadOptPanel
                 result={threadResult}
                 isLoading={isLoadingThread}
                 onRequest={onRequestThreadOptimization}
                 onApply={onApplyThreadOptimization}
-                hasText={text.trim().length > 0}
+                hasText={hasText}
                 colors={colors}
                 styles={styles}
               />
@@ -217,418 +218,6 @@ export function ComposeAIPanel({
         </View>
       </View>
     </Modal>
-  );
-}
-
-// Hashtags sub-panel
-function HashtagsPanel({
-  hashtags,
-  isLoading,
-  onRequest,
-  onInsert,
-  hasText,
-  colors,
-  styles,
-}: {
-  hashtags: HashtagSuggestion[] | null;
-  isLoading: boolean;
-  onRequest: () => void;
-  onInsert: (tag: string) => void;
-  hasText: boolean;
-  colors: any;
-  styles: any;
-}) {
-  return (
-    <View>
-      <Text style={styles.sectionDesc}>
-        Get AI-suggested hashtags to increase your post's reach.
-      </Text>
-
-      {!hashtags && (
-        <TouchableOpacity
-          style={[styles.actionButton, (!hasText || isLoading) && styles.actionButtonDisabled]}
-          onPress={onRequest}
-          disabled={!hasText || isLoading}
-          activeOpacity={0.7}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color={colors.text} />
-          ) : (
-            <Text style={styles.actionButtonText}>Suggest Hashtags</Text>
-          )}
-        </TouchableOpacity>
-      )}
-
-      {hashtags && hashtags.length > 0 && (
-        <View style={styles.hashtagGrid}>
-          {hashtags.map((ht) => (
-            <TouchableOpacity
-              key={ht.tag}
-              style={[
-                styles.hashtagChip,
-                ht.isTrending && styles.hashtagChipTrending,
-              ]}
-              activeOpacity={0.7}
-              onPress={() => onInsert(ht.tag)}
-            >
-              <Text style={styles.hashtagText}>#{ht.tag}</Text>
-              {ht.isTrending && (
-                <Text style={styles.trendingBadge}>trending</Text>
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-
-      {hashtags && hashtags.length > 0 && (
-        <TouchableOpacity
-          style={styles.refreshButton}
-          onPress={onRequest}
-          disabled={isLoading}
-          activeOpacity={0.7}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color={colors.primary} />
-          ) : (
-            <Text style={styles.refreshButtonText}>Refresh Suggestions</Text>
-          )}
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-}
-
-// Writing feedback sub-panel
-function FeedbackPanel({
-  feedback,
-  isLoading,
-  onRequest,
-  onApplyCorrected,
-  onApplyEnhanced,
-  hasText,
-  originalText,
-  colors,
-  styles,
-}: {
-  feedback: WritingFeedback | null;
-  isLoading: boolean;
-  onRequest: () => void;
-  onApplyCorrected: () => void;
-  onApplyEnhanced: () => void;
-  hasText: boolean;
-  originalText: string;
-  colors: any;
-  styles: any;
-}) {
-  return (
-    <View>
-      <Text style={styles.sectionDesc}>
-        Get AI feedback on clarity, grammar, and engagement potential.
-      </Text>
-
-      {!feedback && (
-        <TouchableOpacity
-          style={[styles.actionButton, (!hasText || isLoading) && styles.actionButtonDisabled]}
-          onPress={onRequest}
-          disabled={!hasText || isLoading}
-          activeOpacity={0.7}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color={colors.text} />
-          ) : (
-            <Text style={styles.actionButtonText}>Get Feedback</Text>
-          )}
-        </TouchableOpacity>
-      )}
-
-      {feedback && (
-        <View style={styles.feedbackContainer}>
-          {/* Assessment */}
-          <View
-            style={[
-              styles.assessmentBox,
-              !feedback.assessment.hasIssues
-                ? styles.assessmentGood
-                : styles.assessmentWarning,
-            ]}
-          >
-            <Text style={styles.assessmentTitle}>
-              {!feedback.assessment.hasIssues ? "\u2705 " : "\u26A0\uFE0F "}
-              Quality Assessment
-            </Text>
-            <Text style={styles.assessmentText}>
-              {feedback.assessment.summary}
-            </Text>
-          </View>
-
-          {/* Original */}
-          <View style={styles.versionBox}>
-            <Text style={styles.versionLabel}>Original</Text>
-            <View style={styles.versionTextBox}>
-              <Text style={styles.versionText}>{originalText}</Text>
-            </View>
-          </View>
-
-          {/* Corrected Version */}
-          <View style={styles.versionBox}>
-            <View style={styles.versionHeader}>
-              <Text style={styles.versionLabel}>Corrected</Text>
-              <TouchableOpacity
-                style={styles.useButton}
-                onPress={onApplyCorrected}
-                activeOpacity={0.7}
-              >
-                <CheckIcon size={14} color={colors.primary} />
-                <Text style={styles.useButtonText}>Use This</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={[styles.versionTextBox, styles.versionTextBoxHighlight]}>
-              <Text style={styles.versionText}>
-                {feedback.correctedVersion.text}
-              </Text>
-            </View>
-            {feedback.correctedVersion.changes.length > 0 && (
-              <View style={styles.changesList}>
-                {feedback.correctedVersion.changes.map((change, i) => (
-                  <Text key={`change-${i}`} style={styles.changeItem}>
-                    {"\u2022"} {change}
-                  </Text>
-                ))}
-              </View>
-            )}
-          </View>
-
-          {/* Enhanced Version */}
-          <View style={styles.versionBox}>
-            <View style={styles.versionHeader}>
-              <Text style={styles.versionLabel}>Enhanced</Text>
-              <TouchableOpacity
-                style={[styles.useButton, styles.useButtonPrimary]}
-                onPress={onApplyEnhanced}
-                activeOpacity={0.7}
-              >
-                <CheckIcon size={14} color={colors.text} />
-                <Text style={[styles.useButtonText, styles.useButtonTextPrimary]}>
-                  Use This
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View style={[styles.versionTextBox, styles.versionTextBoxHighlight]}>
-              <Text style={styles.versionText}>
-                {feedback.enhancedVersion.text}
-              </Text>
-            </View>
-            {feedback.enhancedVersion.improvements.length > 0 && (
-              <View style={styles.changesList}>
-                {feedback.enhancedVersion.improvements.map((improvement, i) => (
-                  <Text key={`improvement-${i}`} style={styles.changeItem}>
-                    {"\u2022"} {improvement}
-                  </Text>
-                ))}
-              </View>
-            )}
-          </View>
-
-          {/* Refresh */}
-          <TouchableOpacity
-            style={styles.refreshButton}
-            onPress={onRequest}
-            disabled={isLoading}
-            activeOpacity={0.7}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <Text style={styles.refreshButtonText}>Refresh Feedback</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  );
-}
-
-// Style analysis sub-panel
-function StylePanel({
-  analysis,
-  isLoading,
-  onRequest,
-  hasText,
-  colors,
-  styles,
-}: {
-  analysis: StyleAnalysisResult | null;
-  isLoading: boolean;
-  onRequest: () => void;
-  hasText: boolean;
-  colors: any;
-  styles: any;
-}) {
-  return (
-    <View>
-      <Text style={styles.sectionDesc}>
-        Compare your draft against your historical writing style.
-      </Text>
-
-      {!analysis && (
-        <TouchableOpacity
-          style={[styles.actionButton, (!hasText || isLoading) && styles.actionButtonDisabled]}
-          onPress={onRequest}
-          disabled={!hasText || isLoading}
-          activeOpacity={0.7}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color={colors.text} />
-          ) : (
-            <Text style={styles.actionButtonText}>Analyze Style</Text>
-          )}
-        </TouchableOpacity>
-      )}
-
-      {analysis && (
-        <View style={styles.styleContainer}>
-          <View style={styles.styleMatchBadge}>
-            <Text style={styles.styleMatchText}>
-              {analysis.matchesStyle
-                ? "\u2705 Matches your style"
-                : "\u26A1 Differs from your usual style"}
-            </Text>
-          </View>
-
-          <Text style={styles.styleSummary}>
-            {analysis.userStyleSummary}
-          </Text>
-
-          {analysis.styleNotes.length > 0 && (
-            <View style={styles.styleNotes}>
-              <Text style={styles.styleNotesTitle}>Notes:</Text>
-              {analysis.styleNotes.map((note, i) => (
-                <Text key={`note-${i}`} style={styles.changeItem}>
-                  {"\u2022"} {note}
-                </Text>
-              ))}
-            </View>
-          )}
-
-          <TouchableOpacity
-            style={styles.refreshButton}
-            onPress={onRequest}
-            disabled={isLoading}
-            activeOpacity={0.7}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <Text style={styles.refreshButtonText}>Re-analyze</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  );
-}
-
-// Thread optimization sub-panel
-function ThreadPanel({
-  result,
-  isLoading,
-  onRequest,
-  onApply,
-  hasText,
-  colors,
-  styles,
-}: {
-  result: ThreadOptimizationResult | null;
-  isLoading: boolean;
-  onRequest: () => void;
-  onApply: () => void;
-  hasText: boolean;
-  colors: any;
-  styles: any;
-}) {
-  return (
-    <View>
-      <Text style={styles.sectionDesc}>
-        Split long text into an optimized thread with smart segmentation.
-      </Text>
-
-      {!result && (
-        <TouchableOpacity
-          style={[styles.actionButton, (!hasText || isLoading) && styles.actionButtonDisabled]}
-          onPress={onRequest}
-          disabled={!hasText || isLoading}
-          activeOpacity={0.7}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color={colors.text} />
-          ) : (
-            <Text style={styles.actionButtonText}>Optimize Thread</Text>
-          )}
-        </TouchableOpacity>
-      )}
-
-      {result && (
-        <View style={styles.threadContainer}>
-          <Text style={styles.threadSummary}>{result.summary}</Text>
-          <Text style={styles.threadMeta}>
-            {result.totalPosts} posts {"\u2022"} Format:{" "}
-            {result.suggestedFormat === "simple"
-              ? "1/n"
-              : result.suggestedFormat === "brackets"
-                ? "[1/n]"
-                : result.suggestedFormat === "thread"
-                  ? "\uD83E\uDDF5 1/n"
-                  : "1\u2022n"}
-          </Text>
-
-          {result.segments.map((segment, index) => (
-            <View
-              key={`segment-${index}`}
-              style={[
-                styles.segmentBox,
-                segment.isStandalone && styles.segmentBoxStandalone,
-              ]}
-            >
-              <View style={styles.segmentHeader}>
-                <Text style={styles.segmentNumber}>
-                  Post {index + 1} {"\u2022"} {segment.text.length} chars
-                </Text>
-                {segment.isStandalone && (
-                  <View style={styles.standaloneBadge}>
-                    <Text style={styles.standaloneBadgeText}>Standalone</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.segmentText}>{segment.text}</Text>
-            </View>
-          ))}
-
-          <View style={styles.threadActions}>
-            <TouchableOpacity
-              style={styles.refreshButton}
-              onPress={onRequest}
-              disabled={isLoading}
-              activeOpacity={0.7}
-            >
-              {isLoading ? (
-                <ActivityIndicator size="small" color={colors.primary} />
-              ) : (
-                <Text style={styles.refreshButtonText}>Re-optimize</Text>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.applyButton}
-              onPress={onApply}
-              activeOpacity={0.7}
-            >
-              <CheckIcon size={16} color={colors.text} />
-              <Text style={styles.applyButtonText}>Apply as Thread</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-    </View>
   );
 }
 
@@ -658,7 +247,6 @@ function createStyles(colors: any) {
       fontSize: 18,
       fontWeight: "600",
     },
-    // Tab bar
     tabBar: {
       borderBottomWidth: 1,
       borderBottomColor: colors.surfaceElevated,
@@ -691,7 +279,6 @@ function createStyles(colors: any) {
       color: colors.primary,
       fontWeight: "600",
     },
-    // Body
     body: {
       padding: 16,
       maxHeight: 500,
@@ -702,7 +289,6 @@ function createStyles(colors: any) {
       lineHeight: 20,
       marginBottom: 16,
     },
-    // Action button
     actionButton: {
       backgroundColor: colors.primary,
       borderRadius: 10,
@@ -717,7 +303,6 @@ function createStyles(colors: any) {
       fontSize: 16,
       fontWeight: "600",
     },
-    // Hashtag chips
     hashtagGrid: {
       flexDirection: "row",
       flexWrap: "wrap",
@@ -748,7 +333,6 @@ function createStyles(colors: any) {
       fontWeight: "700",
       textTransform: "uppercase",
     },
-    // Refresh button
     refreshButton: {
       alignItems: "center",
       paddingVertical: 12,
@@ -758,7 +342,6 @@ function createStyles(colors: any) {
       fontSize: 14,
       fontWeight: "600",
     },
-    // Feedback
     feedbackContainer: {
       gap: 12,
     },
@@ -786,7 +369,6 @@ function createStyles(colors: any) {
       fontSize: 14,
       lineHeight: 20,
     },
-    // Versions
     versionBox: {
       marginBottom: 4,
     },
@@ -825,7 +407,6 @@ function createStyles(colors: any) {
       fontSize: 12,
       lineHeight: 18,
     },
-    // Use button
     useButton: {
       flexDirection: "row",
       alignItems: "center",
@@ -846,7 +427,6 @@ function createStyles(colors: any) {
     useButtonTextPrimary: {
       color: colors.text,
     },
-    // Style analysis
     styleContainer: {
       gap: 12,
     },
@@ -875,7 +455,6 @@ function createStyles(colors: any) {
       fontWeight: "600",
       marginBottom: 4,
     },
-    // Thread optimization
     threadContainer: {
       gap: 12,
     },
