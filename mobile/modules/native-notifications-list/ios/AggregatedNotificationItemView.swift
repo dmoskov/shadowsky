@@ -119,7 +119,7 @@ struct AggregatedNotificationItemView: View {
 
                 avatarView(url: preview.author.avatar, size: 18)
 
-                Text(preview.author.displayName ?? preview.author.handle)
+                Text(preview.author.displayName.orIfEmpty(preview.author.handle))
                     .font(.caption.weight(.medium))
                     .foregroundColor(Color(UIColor.secondaryLabel))
                     .lineLimit(1)
@@ -215,14 +215,14 @@ struct AggregatedNotificationItemView: View {
 
     private var userSummary: String {
         if model.count == 1 {
-            return model.users.first?.displayName ?? "@\(model.users.first?.handle ?? "")"
+            return model.users.first?.displayName.orIfEmpty("@\(model.users.first?.handle ?? "")") ?? ""
         }
         if model.count == 2, model.users.count == 2 {
-            let name1 = model.users[0].displayName ?? "@\(model.users[0].handle)"
-            let name2 = model.users[1].displayName ?? "@\(model.users[1].handle)"
+            let name1 = model.users[0].displayName.orIfEmpty("@\(model.users[0].handle)")
+            let name2 = model.users[1].displayName.orIfEmpty("@\(model.users[1].handle)")
             return "\(name1) and \(name2)"
         }
-        let firstName = model.users.first?.displayName ?? "@\(model.users.first?.handle ?? "")"
+        let firstName = model.users.first?.displayName.orIfEmpty("@\(model.users.first?.handle ?? "")") ?? ""
         let othersCount = model.count - 1
         return "\(firstName) and \(othersCount) \(othersCount == 1 ? "other" : "others")"
     }

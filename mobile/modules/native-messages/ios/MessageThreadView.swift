@@ -89,7 +89,11 @@ struct MessageThreadView: View {
                     headerAvatarView
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(otherMember.displayName ?? otherMember.handle ?? "Unknown User")
+                        Text({
+                            if let name = otherMember.displayName, !name.isEmpty { return name }
+                            if let handle = otherMember.handle, !handle.isEmpty { return handle }
+                            return "Unknown User"
+                        }())
                             .font(.body.weight(.semibold))
                             .foregroundColor(Color(UIColor.label))
                             .lineLimit(1)
@@ -139,7 +143,11 @@ struct MessageThreadView: View {
             .fill(Color(UIColor.secondarySystemBackground))
             .frame(width: 40, height: 40)
             .overlay(
-                Text(String((otherMember.displayName ?? otherMember.handle ?? "U").prefix(1)).uppercased())
+                Text(String(({
+                    if let name = otherMember.displayName, !name.isEmpty { return name }
+                    if let handle = otherMember.handle, !handle.isEmpty { return handle }
+                    return "U"
+                }() as String).prefix(1)).uppercased())
                     .font(.title3.weight(.semibold))
                     .foregroundColor(Color(UIColor.label))
             )
