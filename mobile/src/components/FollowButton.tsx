@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import {TouchableOpacity, Text, StyleSheet, ActivityIndicator} from 'react-native';
+import {TouchableOpacity, Text, StyleSheet, ActivityIndicator, Alert} from 'react-native';
 import {useFollowUser, useUnfollowUser} from '../hooks/api/useProfile';
 import { useTheme } from "../contexts/ThemeContext";
 
@@ -7,6 +7,7 @@ interface FollowButtonProps {
   did: string;
   followUri?: string;
   isFollowing: boolean;
+  handle?: string;
   size?: 'small' | 'medium' | 'large';
   style?: any;
 }
@@ -15,6 +16,7 @@ export function FollowButton({
   did,
   followUri,
   isFollowing,
+  handle,
   size = 'medium',
   style,
 }: FollowButtonProps) {
@@ -25,7 +27,23 @@ export function FollowButton({
 
   const handlePress = () => {
     if (isFollowing && followUri) {
-      unfollowMutation.mutate(followUri);
+      const message = handle
+        ? `Are you sure you want to unfollow @${handle}?`
+        : 'Are you sure you want to unfollow this user?';
+      Alert.alert(
+        'Unfollow',
+        message,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Unfollow',
+            style: 'destructive',
+            onPress: () => {
+              unfollowMutation.mutate(followUri);
+            },
+          },
+        ]
+      );
     } else {
       followMutation.mutate(did);
     }
