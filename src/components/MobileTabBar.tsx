@@ -1,9 +1,37 @@
 import { Bell, Home, Mail, Search, User } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useUnreadNotificationCount } from "../hooks/useNotifications";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
+
+/**
+ * Scroll all visible scroll containers to the top.
+ * Handles: window scroll, main content area, SkyColumn .asph-scrollbar containers,
+ * and dispatches a custom event for specialized containers (react-window lists, etc.).
+ */
+function scrollPageToTop() {
+  // 1. Scroll the window (handles route-based views on mobile)
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+
+  // 2. Scroll the main content area (desktop scroll container)
+  const mainElement = document.getElementById("main-content");
+  if (mainElement && mainElement.scrollTop > 0) {
+    mainElement.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // 3. Scroll any SkyColumn scroll containers
+  document.querySelectorAll(".asph-scrollbar").forEach((el) => {
+    if ((el as HTMLElement).scrollTop > 0) {
+      el.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
+
+  // 4. Dispatch event for specialized scroll containers (react-window, etc.)
+  window.dispatchEvent(new CustomEvent("tabScrollToTop"));
+}
 
 export const MobileTabBar: React.FC = () => {
   const { session } = useAuth();
@@ -33,46 +61,41 @@ export const MobileTabBar: React.FC = () => {
     setTimeout(() => setBouncingTab(null), 400);
   }, []);
 
-  const handleHomeClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    triggerBounce("/");
-
-    const now = Date.now();
-    const timeSinceLastTap = now - lastTapRef.current;
-
-    if (location.pathname === "/") {
-      // We're already on the home page
-      if (timeSinceLastTap < 300) {
-        // Double tap - refresh the feed
-        window.dispatchEvent(new CustomEvent("refreshFeed"));
-      } else {
-        // Single tap - scroll to top
-        // Try multiple scroll methods to ensure it works
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-
-        // Also try to find the main scrollable container
-        const mainElement = document.querySelector("main");
-        if (mainElement) {
-          mainElement.scrollTop = 0;
-        }
-
-        // Try to find the feed container specifically
-        const feedContainer =
-          document.querySelector(".asph-scrollbar") ||
-          document.querySelector('[role="feed"]')?.closest(".overflow-y-auto");
-        if (feedContainer) {
-          feedContainer.scrollTop = 0;
-        }
+  // Check if a tab is currently active
+  const isTabActive = useCallback(
+    (tabPath: string) => {
+      if (tabPath === "/") {
+        return location.pathname === "/" || location.pathname === "/home";
       }
-    } else {
-      // Not on home page - navigate to home
-      navigate("/");
-    }
+      return location.pathname === tabPath;
+    },
+    [location.pathname],
+  );
 
-    lastTapRef.current = now;
-  };
+  const handleTabClick = useCallback(
+    (e: React.MouseEvent, tabPath: string) => {
+      e.preventDefault();
+      triggerBounce(tabPath);
+
+      if (isTabActive(tabPath)) {
+        // Already on this tab — scroll to top
+        scrollPageToTop();
+
+        // Home tab: double-tap refreshes the feed
+        if (tabPath === "/") {
+          const now = Date.now();
+          if (now - lastTapRef.current < 300) {
+            window.dispatchEvent(new CustomEvent("refreshFeed"));
+          }
+          lastTapRef.current = now;
+        }
+      } else {
+        // Navigate to the tab
+        navigate(tabPath);
+      }
+    },
+    [isTabActive, triggerBounce, navigate],
+  );
 
   return (
     <nav
@@ -85,62 +108,30 @@ export const MobileTabBar: React.FC = () => {
     >
       <div className="flex h-16 items-center justify-around">
         {tabs.map((tab) => {
-          const isActive = location.pathname === tab.path;
+          const isActive = isTabActive(tab.path);
           const isBouncing = bouncingTab === tab.path;
 
-          if (tab.path === "/") {
-            // Special handling for Home tab
-            return (
-              <button
-                key={tab.path}
-                onClick={handleHomeClick}
-                aria-label={`${tab.label}${isActive ? " (current)" : ""}`}
-                aria-current={isActive ? "page" : undefined}
-                className={`touch-target relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 transition-all ${
-                  isActive ? "scale-105" : "opacity-70 hover:opacity-100"
-                }`}
-                style={{
-                  color: isActive
-                    ? "var(--asph-primary)"
-                    : "var(--asph-text-secondary)",
-                }}
-              >
-                <div
-                  className={`relative ${isBouncing ? "animate-tab-icon-bounce" : ""}`}
-                >
-                  {React.createElement(tab.icon, {
-                    size: 20,
-                    "aria-hidden": true,
-                  })}
-                </div>
-              </button>
-            );
-          }
-
-          // Regular NavLink for other tabs with prefetching
-          // Profile links get profile-specific prefetching
-          // Other links get route chunk prefetching
-          const prefetchHandlers =
-            "profileHandle" in tab && tab.profileHandle
+          // Prefetch handlers for non-active tabs
+          const prefetchHandlers = !isActive
+            ? "profileHandle" in tab && tab.profileHandle
               ? getProfilePrefetchHandlers(tab.profileHandle)
-              : getRoutePrefetchHandlers(tab.path);
+              : getRoutePrefetchHandlers(tab.path)
+            : {};
 
           return (
-            <NavLink
+            <button
               key={tab.path}
-              to={tab.path}
-              aria-label={tab.label}
-              onClick={() => triggerBounce(tab.path)}
-              className={({ isActive }) =>
-                `touch-target relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 transition-all ${
-                  isActive ? "scale-105" : "opacity-70 hover:opacity-100"
-                }`
-              }
-              style={({ isActive }) => ({
+              onClick={(e) => handleTabClick(e, tab.path)}
+              aria-label={`${tab.label}${isActive ? " (current)" : ""}`}
+              aria-current={isActive ? "page" : undefined}
+              className={`touch-target relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 transition-all ${
+                isActive ? "scale-105" : "opacity-70 hover:opacity-100"
+              }`}
+              style={{
                 color: isActive
                   ? "var(--asph-primary)"
                   : "var(--asph-text-secondary)",
-              })}
+              }}
               {...prefetchHandlers}
             >
               <div
@@ -163,7 +154,7 @@ export const MobileTabBar: React.FC = () => {
                     />
                   )}
               </div>
-            </NavLink>
+            </button>
           );
         })}
       </div>

@@ -730,6 +730,22 @@ export const VirtualizedPostList = React.forwardRef<
       }
     }, [onNewPostsClick]);
 
+    // Listen for tab scroll-to-top events (e.g. re-tapping the active tab on iOS)
+    useEffect(() => {
+      const handleScrollToTop = () => {
+        if (listRef.current) {
+          listRef.current.scrollToRow({
+            index: 0,
+            behavior: "smooth",
+          });
+        }
+      };
+
+      window.addEventListener("tabScrollToTop", handleScrollToTop);
+      return () =>
+        window.removeEventListener("tabScrollToTop", handleScrollToTop);
+    }, []);
+
     if (items.length === 0 && !isLoading) {
       return (
         <div ref={containerRef} className="flex-1 overflow-hidden">
