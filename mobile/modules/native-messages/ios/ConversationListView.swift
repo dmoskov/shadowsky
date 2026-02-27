@@ -304,7 +304,11 @@ struct ConversationRowView: View {
                     HStack {
                         HStack(spacing: 6) {
                             HighlightedText(
-                                text: otherMember.displayName ?? otherMember.handle ?? "Unknown User",
+                                text: {
+                                    if let name = otherMember.displayName, !name.isEmpty { return name }
+                                    if let handle = otherMember.handle, !handle.isEmpty { return handle }
+                                    return "Unknown User"
+                                }(),
                                 highlight: searchText
                             )
                                 .font(.body.weight(.semibold))
@@ -408,7 +412,11 @@ struct ConversationRowView: View {
             .fill(Color(UIColor.secondarySystemBackground))
             .frame(width: 48, height: 48)
             .overlay(
-                Text(String((otherMember.displayName ?? otherMember.handle ?? "U").prefix(1)).uppercased())
+                Text(String(({
+                    if let name = otherMember.displayName, !name.isEmpty { return name }
+                    if let handle = otherMember.handle, !handle.isEmpty { return handle }
+                    return "U"
+                }() as String).prefix(1)).uppercased())
                     .font(.title3.weight(.semibold))
                     .foregroundColor(Color(UIColor.label))
             )

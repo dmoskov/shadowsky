@@ -78,7 +78,7 @@ private struct MentionSuggestionRow: View {
                 onSelect(suggestion)
             }
         )
-        .accessibilityLabel(suggestion.displayName ?? suggestion.handle)
+        .accessibilityLabel(suggestion.displayName?.isEmpty == false ? suggestion.displayName! : suggestion.handle)
         .accessibilityHint("Double tap to mention @\(suggestion.handle)")
         .accessibilityAddTraits(.isButton)
     }

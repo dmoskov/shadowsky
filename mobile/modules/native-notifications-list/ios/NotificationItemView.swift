@@ -193,7 +193,7 @@ struct NotificationItemView: View {
 
                 avatarView(url: preview.author.avatar, size: 18)
 
-                Text(preview.author.displayName ?? preview.author.handle)
+                Text(preview.author.displayName.orIfEmpty(preview.author.handle))
                     .font(.caption.weight(.medium))
                     .foregroundColor(Color(UIColor.secondaryLabel))
                     .lineLimit(1)

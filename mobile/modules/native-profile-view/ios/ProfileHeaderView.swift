@@ -146,12 +146,12 @@ struct ProfileHeaderView: View {
 
             // Display Name and Handle
             VStack(spacing: 4) {
-                Text(profile.displayName ?? profile.handle)
+                Text(profile.displayName.orIfEmpty(profile.handle))
                     .font(.title2.weight(.bold))
                     .foregroundColor(.primary)
                     .accessibilityIdentifier("profile-display-name")
                     .accessibilityAddTraits(.isHeader)
-                    .accessibilityLabel("Display name: \(profile.displayName ?? profile.handle)")
+                    .accessibilityLabel("Display name: \(profile.displayName.orIfEmpty(profile.handle))")
 
                 Text("@\(profile.handle)")
                     .font(.body)
@@ -216,7 +216,7 @@ struct ProfileHeaderView: View {
             Circle()
                 .stroke(Color(UIColor.systemBackground), lineWidth: 3)
         )
-        .accessibilityLabel("Profile photo for \(profile.displayName ?? profile.handle)")
+        .accessibilityLabel("Profile photo for \(profile.displayName.orIfEmpty(profile.handle))")
     }
 
     // MARK: - Labels Section
@@ -298,7 +298,7 @@ struct ProfileHeaderView: View {
                 }
             }
 
-            let names = knownFollowers.followers.prefix(3).compactMap { $0.displayName ?? $0.handle }
+            let names = knownFollowers.followers.prefix(3).compactMap { $0.displayName.orIfEmpty($0.handle) }
             let remaining = knownFollowers.count - names.count
 
             Text(knownFollowersText(names: Array(names), remaining: remaining))
@@ -605,7 +605,7 @@ struct ProfileHeaderView: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Pinned post: \(pinnedPost.text ?? "No text")")
+        .accessibilityLabel("Pinned post: \(pinnedPost.text.orIfEmpty("No text"))")
         .accessibilityHint("Double tap to view pinned post")
     }
 
