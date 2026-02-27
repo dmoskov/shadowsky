@@ -7,7 +7,6 @@
 
 import { memo, useCallback, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   Pressable,
@@ -24,6 +23,7 @@ import {
   useDynamicType,
   type ScaledFontFn,
 } from "../../hooks/useDynamicType";
+import { FeedCardsShimmer, InlineLoadingShimmer } from "../SkeletonShimmer";
 
 interface FeedGenerator {
   uri: string;
@@ -297,7 +297,7 @@ const FeedCard = memo(function FeedCard({
           }
         >
           {isInProgress ? (
-            <ActivityIndicator size="small" color="#ffffff" />
+            <InlineLoadingShimmer width={20} height={20} color="#9ca3af" />
           ) : (
             <Text
               style={[
@@ -407,8 +407,7 @@ export const MobileFeedsScreen = memo(function MobileFeedsScreen({
       {/* Feed list */}
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366f1" />
-          <Text style={styles.loadingText}>Loading feed suggestions...</Text>
+          <FeedCardsShimmer count={5} color="#333344" />
         </View>
       ) : suggestedFeeds.length > 0 ? (
         <FlatList

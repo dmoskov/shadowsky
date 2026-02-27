@@ -8,7 +8,6 @@
 
 import { memo, useCallback, useMemo } from "react";
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   ScrollView,
@@ -31,6 +30,7 @@ import {
   useDynamicType,
   type ScaledFontFn,
 } from "../hooks/useDynamicType";
+import { InlineLoadingShimmer } from "./SkeletonShimmer";
 
 // ─── Props ───────────────────────────────────────────────────────────
 
@@ -423,9 +423,10 @@ const ToneOptionRow = memo<ToneOptionRowProps>(
           <Text style={styles.toneDesc}>{option.description}</Text>
         </View>
         {isLoading && (
-          <ActivityIndicator
-            size="small"
-            color="#4f46e5"
+          <InlineLoadingShimmer
+            width={20}
+            height={20}
+            color="#c7d2fe"
             style={styles.toneSpinner}
           />
         )}
@@ -724,7 +725,7 @@ export const MobileAIToolbar = memo<MobileAIToolbarProps>(
             <Text style={styles.toolbarIcon}>{"\uD83C\uDFA8"}</Text>
             <Text style={styles.toolbarButtonText}>Tone</Text>
             {isAdjustingTone && (
-              <ActivityIndicator size="small" color="#4f46e5" />
+              <InlineLoadingShimmer width={20} height={20} color="#c7d2fe" />
             )}
           </Pressable>
 
@@ -742,7 +743,7 @@ export const MobileAIToolbar = memo<MobileAIToolbarProps>(
             <Text style={styles.toolbarIcon}>{"\uD83D\uDCAC"}</Text>
             <Text style={styles.toolbarButtonText}>Feedback</Text>
             {isLoadingFeedback && (
-              <ActivityIndicator size="small" color="#4f46e5" />
+              <InlineLoadingShimmer width={20} height={20} color="#c7d2fe" />
             )}
           </Pressable>
         </View>

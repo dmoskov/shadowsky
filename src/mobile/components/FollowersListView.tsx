@@ -19,7 +19,6 @@ import React, {
   useState,
 } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
@@ -46,6 +45,7 @@ import {
   MobileBatchProgressIndicator,
   MobileUserSelectableRow,
 } from "./batch";
+import { LoadingFooterShimmer, LoadingOverlayShimmer } from "./SkeletonShimmer";
 
 interface FollowersListViewProps {
   /** Bluesky agent for API calls */
@@ -370,7 +370,7 @@ function FollowersListViewInner({
     if (!loadingMore) return null;
     return (
       <View style={styles.loadingFooter}>
-        <ActivityIndicator size="small" color="#1d9bf0" />
+        <LoadingFooterShimmer variant="user" />
       </View>
     );
   }, [loadingMore, styles]);
@@ -453,11 +453,7 @@ function FollowersListViewInner({
       )}
 
       {/* Loading overlay */}
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#1d9bf0" />
-        </View>
-      )}
+      {loading && <LoadingOverlayShimmer rows={6} variant="user" />}
     </View>
   );
 }

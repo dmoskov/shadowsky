@@ -17,7 +17,6 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { memo, useCallback, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -36,6 +35,7 @@ import {
   type MobilePostData,
 } from "../types";
 import { PostCard } from "./PostCard";
+import { PostShimmer } from "./SkeletonShimmer";
 
 /**
  * Calculate estimated item height based on post content
@@ -179,7 +179,7 @@ const LoadingFooter = memo(function LoadingFooter({
 
   return (
     <View style={styles.loadingFooter}>
-      <ActivityIndicator size="small" color="#1d9bf0" />
+      <PostShimmer />
     </View>
   );
 });

@@ -15,7 +15,6 @@ import type { AppBskyFeedDefs } from "@atproto/api";
 import { formatDistanceToNow } from "date-fns";
 import React, { memo, useCallback, useMemo } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   Pressable,
@@ -34,6 +33,7 @@ import {
   type ScaledFontFn,
 } from "../hooks/useDynamicType";
 import type { MobilePostData, PostImage } from "../types";
+import { InlineLoadingShimmer } from "./SkeletonShimmer";
 
 /**
  * Props for PostDetailView component
@@ -1240,7 +1240,7 @@ function PostDetailViewComponent({
             accessibilityRole="button"
           >
             {isLoadingReplies ? (
-              <ActivityIndicator size="small" color="#1d9bf0" />
+              <InlineLoadingShimmer width={100} height={14} color="#d1d5db" />
             ) : (
               <Text style={styles.loadMoreText}>Load more replies</Text>
             )}
