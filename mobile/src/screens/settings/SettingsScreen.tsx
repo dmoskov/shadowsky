@@ -1,117 +1,51 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
   Alert,
-  Switch,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { AccountSwitcher } from "../../components";
+import { ArrowLeftIcon } from "../../components/icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { ArrowLeftIcon } from "../../components/icons";
-import { useQueryClient } from "@tanstack/react-query";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  registerBackgroundFetch,
-  unregisterBackgroundFetch,
-} from "../../services/background-fetch";
-import { openLink } from "../../utils/browser";
-import { useRouter } from "expo-router";
-import { appLockService } from "../../services/app-lock";
 import { useTranslation } from "../../hooks/useTranslation";
+import {
+  AIFeaturesSection,
+  AboutSection,
+  AccountSection,
+  AppearanceSection,
+  ComposerSection,
+  ContentSection,
+  DataStorageSection,
+  InteractionSection,
+  ModerationSection,
+  NotificationsSection,
+  PrivacySection,
+  SecuritySection,
+} from "./components";
 
-
-import { createLogger } from '../../utils/logger';
-
-const logger = createLogger('SettingsScreen');
 interface SettingsScreenProps {
   section?: string;
   onNavigateToBlockedAccounts?: () => void;
   onNavigateToMutedAccounts?: () => void;
 }
 
-const APP_VERSION = "0.7.0";
-
-export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts: _onNavigateToBlockedAccounts, onNavigateToMutedAccounts: _onNavigateToMutedAccounts }: SettingsScreenProps) {
-  const { signOut, accounts, account } = useAuth();
-  const { preferences, updatePreference } = usePreferences();
+export function SettingsScreen({
+  section: _section,
+  onNavigateToBlockedAccounts: _onNavigateToBlockedAccounts,
+  onNavigateToMutedAccounts: _onNavigateToMutedAccounts,
+}: SettingsScreenProps) {
+  const { signOut } = useAuth();
+  const { preferences } = usePreferences();
   const { colors: themeColors } = useTheme();
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const router = useRouter();
   const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
-  const [cacheSize, setCacheSize] = useState<string>("calculating...");
-  const [biometricsSupported, setBiometricsSupported] = useState(false);
-  const [biometricType, setBiometricType] = useState<string>("Biometric");
 
-  // Calculate cache size and check biometric support on mount
-  useEffect(() => {
-    calculateCacheSize();
-    checkBiometricSupport();
-  }, []);
-
-  const checkBiometricSupport = async () => {
-    const capability = await appLockService.isSupported();
-    setBiometricsSupported(capability.isSupported);
-    if (capability.biometricType) {
-      setBiometricType(
-        appLockService.getBiometricTypeName(capability.biometricType),
-      );
-    }
-  };
-
-  const calculateCacheSize = async () => {
-    try {
-      // Get all AsyncStorage keys
-      const keys = await AsyncStorage.getAllKeys();
-      let totalSize = 0;
-
-      // Calculate approximate size of stored data
-      for (const key of keys) {
-        const value = await AsyncStorage.getItem(key);
-        if (value) {
-          totalSize += value.length;
-        }
-      }
-
-      // Convert to KB or MB
-      if (totalSize < 1024) {
-        setCacheSize(`${totalSize} B`);
-      } else if (totalSize < 1024 * 1024) {
-        setCacheSize(`${(totalSize / 1024).toFixed(2)} KB`);
-      } else {
-        setCacheSize(`${(totalSize / (1024 * 1024)).toFixed(2)} MB`);
-      }
-    } catch (error) {
-      logger.error('Failed to calculate cache size:', error);
-      setCacheSize("unknown");
-    }
-  };
-
-  const handleSignOut = () => {
-    Alert.alert(
-      "Sign Out",
-      "Are you sure you want to sign out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Sign Out",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await signOut();
-            } catch {
-              Alert.alert("Error", "Failed to sign out. Please try again.");
-            }
-          },
-        },
-      ],
-    );
-  };
+  const styles = createStyles(themeColors);
 
   const handleAddAccount = () => {
     setShowAccountSwitcher(false);
@@ -134,95 +68,6 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
     );
   };
 
-  const handleClearCache = () => {
-    Alert.alert(
-      "Clear Cache",
-      "This will clear all cached data including posts, profiles, and images. Your settings and bookmarks will be preserved.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              // Clear React Query cache
-              queryClient.clear();
-
-              // Calculate new size
-              await calculateCacheSize();
-
-              Alert.alert("Success", "Cache cleared successfully");
-            } catch (error) {
-              Alert.alert("Error", "Failed to clear cache");
-            }
-          },
-        },
-      ],
-    );
-  };
-
-  const handleClearSearchHistory = () => {
-    Alert.alert(
-      "Clear Search History",
-      "This will delete all your search history.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await AsyncStorage.removeItem("@shadowsky_search_history");
-              Alert.alert("Success", "Search history cleared");
-            } catch (error) {
-              Alert.alert("Error", "Failed to clear search history");
-            }
-          },
-        },
-      ],
-    );
-  };
-
-  const handleClearBookmarks = () => {
-    Alert.alert(
-      "Clear Bookmarks",
-      "This will delete all your bookmarks. This action cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Clear",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await AsyncStorage.removeItem("shadowsky_bookmarks");
-              Alert.alert("Success", "Bookmarks cleared");
-            } catch (error) {
-              Alert.alert("Error", "Failed to clear bookmarks");
-            }
-          },
-        },
-      ],
-    );
-  };
-
-  const handleOpenBluesky = async () => {
-    try {
-      await openLink("https://bsky.app");
-    } catch (error) {
-      Alert.alert("Error", "Cannot open Bluesky");
-    }
-  };
-
-  const handleOpenGitHub = async () => {
-    try {
-      await openLink("https://github.com/yourusername/shadowsky");
-    } catch (error) {
-      Alert.alert("Error", "Cannot open GitHub");
-    }
-  };
-
-  const styles = createStyles(themeColors);
-
   if (showAccountSwitcher) {
     return (
       <View style={styles.container}>
@@ -240,7 +85,10 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
         <AccountSwitcher
           onAccountSwitch={() => {
             setShowAccountSwitcher(false);
-            Alert.alert("Account Switched", "Successfully switched to the selected account.");
+            Alert.alert(
+              "Account Switched",
+              "Successfully switched to the selected account.",
+            );
           }}
           onAddAccount={handleAddAccount}
         />
@@ -259,804 +107,59 @@ export function SettingsScreen({ section: _section, onNavigateToBlockedAccounts:
   return (
     <ScrollView style={styles.container} keyboardDismissMode="on-drag">
       <Text style={styles.header}>{t("settings.header")}</Text>
-
-      {/* Account Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("settings.section_account")}</Text>
-
-        {account && (
-          <View style={styles.accountInfo}>
-            <View style={styles.accountAvatar}>
-              <Text style={styles.accountAvatarText}>
-                {account.handle.charAt(0).toUpperCase()}
-              </Text>
-            </View>
-            <View style={styles.accountDetails}>
-              <Text style={styles.accountName}>
-                {account.displayName || account.handle}
-              </Text>
-              <Text style={styles.accountHandle}>@{account.handle}</Text>
-            </View>
-          </View>
-        )}
-
-        {accounts.length > 1 && (
-          <SettingRow
-            label="Switch Account"
-            description={`Manage ${accounts.length} accounts`}
-            onPress={() => setShowAccountSwitcher(true)}
-            showChevron
-          />
-        )}
-
-        <SettingRow
-          label="Sign Out"
-          onPress={handleSignOut}
-          labelStyle={styles.dangerText}
-        />
-      </View>
-
-      {/* Appearance Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>APPEARANCE</Text>
-
-        <SettingRow label="Theme">
-          <View style={styles.themeSelector}>
-            {(["dark", "light", "system"] as const).map((theme) => (
-              <TouchableOpacity
-                key={theme}
-                style={[
-                  styles.themeButton,
-                  preferences.theme === theme && styles.themeButtonActive,
-                ]}
-                onPress={() => updatePreference("theme", theme)}
-              >
-                <Text
-                  style={[
-                    styles.themeButtonText,
-                    preferences.theme === theme && styles.themeButtonTextActive,
-                  ]}
-                >
-                  {theme.charAt(0).toUpperCase() + theme.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </SettingRow>
-      </View>
-
-      {/* Content Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>CONTENT</Text>
-
-        <SettingRow label="Default Feed">
-          <View style={styles.themeSelector}>
-            {(["following", "discover"] as const).map((feed) => (
-              <TouchableOpacity
-                key={feed}
-                style={[
-                  styles.themeButton,
-                  preferences.defaultFeed === feed && styles.themeButtonActive,
-                ]}
-                onPress={() => updatePreference("defaultFeed", feed)}
-              >
-                <Text
-                  style={[
-                    styles.themeButtonText,
-                    preferences.defaultFeed === feed &&
-                      styles.themeButtonTextActive,
-                  ]}
-                >
-                  {feed.charAt(0).toUpperCase() + feed.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </SettingRow>
-
-        <SettingRow
-          label="Show NSFW Content"
-          description="Display posts marked as sensitive"
-        >
-          <Switch
-            value={preferences.showNSFW}
-            onValueChange={(value) => updatePreference("showNSFW", value)}
-            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor={themeColors.text}
-          />
-        </SettingRow>
-      </View>
-
-      {/* Notifications Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
-
-        <SettingRow
-          label="Notification Preferences"
-          description="Choose which notifications to receive"
-          onPress={() => router.push("/(app)/settings/notification-preferences")}
-          showChevron
-        />
-
-        <SettingRow
-          label="Enable Notifications"
-          description="Master toggle for all notifications"
-        >
-          <Switch
-            value={preferences.notificationsEnabled}
-            onValueChange={(value) =>
-              updatePreference("notificationsEnabled", value)
-            }
-            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor={themeColors.text}
-          />
-        </SettingRow>
-
-        {preferences.notificationsEnabled && (
-          <>
-            <SettingRow label="Likes">
-              <Switch
-                value={preferences.notifyOnLikes}
-                onValueChange={(value) =>
-                  updatePreference("notifyOnLikes", value)
-                }
-                trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor={themeColors.text}
-              />
-            </SettingRow>
-
-            <SettingRow label="Replies">
-              <Switch
-                value={preferences.notifyOnReplies}
-                onValueChange={(value) =>
-                  updatePreference("notifyOnReplies", value)
-                }
-                trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor={themeColors.text}
-              />
-            </SettingRow>
-
-            <SettingRow label="Follows">
-              <Switch
-                value={preferences.notifyOnFollows}
-                onValueChange={(value) =>
-                  updatePreference("notifyOnFollows", value)
-                }
-                trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor={themeColors.text}
-              />
-            </SettingRow>
-
-            <SettingRow label="Mentions">
-              <Switch
-                value={preferences.notifyOnMentions}
-                onValueChange={(value) =>
-                  updatePreference("notifyOnMentions", value)
-                }
-                trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor={themeColors.text}
-              />
-            </SettingRow>
-
-            <SettingRow label="Quotes">
-              <Switch
-                value={preferences.notifyOnQuotes}
-                onValueChange={(value) =>
-                  updatePreference("notifyOnQuotes", value)
-                }
-                trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-                thumbColor={themeColors.text}
-              />
-            </SettingRow>
-          </>
-        )}
-      </View>
-
-      {/* Privacy & Accessibility Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>PRIVACY & ACCESSIBILITY</Text>
-
-        <SettingRow
-          label="Privacy & Safety"
-          description="Control who can interact with you"
-          onPress={() => router.push("/(app)/settings/privacy")}
-          showChevron
-        />
-
-        <SettingRow
-          label="Accessibility"
-          description="Display, motion, and screen reader settings"
-          onPress={() => router.push("/(app)/settings/accessibility")}
-          showChevron
-        />
-      </View>
-
-      {/* Interaction Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>INTERACTION</Text>
-
-        <SettingRow
-          label="Haptic Feedback"
-          description="Vibrate on interactions like likes and posts"
-        >
-          <Switch
-            value={preferences.hapticsEnabled}
-            onValueChange={(value) =>
-              updatePreference("hapticsEnabled", value)
-            }
-            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor={themeColors.text}
-          />
-        </SettingRow>
-
-        <SettingRow
-          label="Swipe Actions"
-          description="Swipe posts to reply, like, bookmark, or repost"
-        >
-          <Switch
-            value={preferences.swipeActionsEnabled}
-            onValueChange={(value) =>
-              updatePreference("swipeActionsEnabled", value)
-            }
-            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor={themeColors.text}
-          />
-        </SettingRow>
-      </View>
-
-      {/* Security Section */}
-      {biometricsSupported && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>SECURITY</Text>
-
-          <SettingRow
-            label="App Lock"
-            description={`Require ${biometricType} to open the app`}
-          >
-            <Switch
-              value={preferences.appLockEnabled}
-              onValueChange={async (value) => {
-                try {
-                  if (value) {
-                    // Test authentication before enabling
-                    const result = await appLockService.authenticate();
-                    if (result.success) {
-                      await appLockService.setEnabled(true);
-                      await updatePreference("appLockEnabled", true);
-                      Alert.alert(
-                        "App Lock Enabled",
-                        `${biometricType} will be required to unlock the app after 30 seconds of inactivity.`,
-                      );
-                    } else {
-                      Alert.alert(
-                        "Authentication Failed",
-                        result.error || "Could not verify your identity",
-                      );
-                    }
-                  } else {
-                    await appLockService.setEnabled(false);
-                    await updatePreference("appLockEnabled", false);
-                  }
-                } catch (error) {
-                  Alert.alert(
-                    "Error",
-                    "Failed to update app lock setting. Please try again.",
-                  );
-                }
-              }}
-              trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-              thumbColor={themeColors.text}
-            />
-          </SettingRow>
-        </View>
-      )}
-
-      {/* Moderation Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>MODERATION</Text>
-
-        <SettingRow
-          label="Content Moderation"
-          description="Control how labeled content is displayed"
-          onPress={() => router.push("/(app)/settings/content-moderation")}
-          showChevron
-        />
-
-        <SettingRow
-          label="Labelers"
-          description="Manage content labeling services"
-          onPress={() => router.push("/(app)/settings/labelers")}
-          showChevron
-        />
-
-        <SettingRow
-          label="Moderation History"
-          description="View your block, mute, and report actions"
-          onPress={() => router.push("/(app)/settings/moderation-history")}
-          showChevron
-        />
-
-        <SettingRow
-          label="Blocked Accounts"
-          description="Manage accounts you've blocked"
-          onPress={() => router.push("/(app)/settings/blocked")}
-          showChevron
-        />
-
-        <SettingRow
-          label="Muted Accounts"
-          description="Manage accounts you've muted"
-          onPress={() => router.push("/(app)/settings/muted")}
-          showChevron
-        />
-
-        <SettingRow
-          label="Muted Words"
-          description="Hide posts with specific words or phrases"
-          onPress={() => router.push("/(app)/settings/muted-words")}
-          showChevron
-        />
-      </View>
-
-      {/* Composer Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>COMPOSER</Text>
-
-        <SettingRow
-          label="Composer Defaults"
-          description="Thread numbering, post delay, and AI features"
-          onPress={() => router.push("/(app)/settings/composer-defaults")}
-          showChevron
-        />
-      </View>
-
-      {/* Data & Storage Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>DATA & STORAGE</Text>
-
-        <SettingRow
-          label="Data Export & Import"
-          description="Export your data or import from a backup"
-          onPress={() => router.push("/(app)/settings/data-export")}
-          showChevron
-        />
-
-        <SettingRow
-          label="Media Cache"
-          description="Manage cached media files"
-          onPress={() => router.push("/(app)/settings/media-cache")}
-          showChevron
-        />
-
-        <SettingRow
-          label="Performance"
-          description="Optimize data usage and app performance"
-          onPress={() => router.push("/(app)/settings/performance")}
-          showChevron
-        />
-
-        <SettingRow
-          label="Background Fetch"
-          description="Pre-load fresh content when app is closed"
-        >
-          <Switch
-            value={preferences.backgroundFetchEnabled}
-            onValueChange={async (value) => {
-              await updatePreference("backgroundFetchEnabled", value);
-              if (value) {
-                await registerBackgroundFetch();
-              } else {
-                await unregisterBackgroundFetch();
-              }
-            }}
-            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor={themeColors.text}
-          />
-        </SettingRow>
-
-        <SettingRow label="Auto-play Videos">
-          <View style={styles.themeSelector}>
-            {(["always", "wifi", "never"] as const).map((option) => (
-              <TouchableOpacity
-                key={option}
-                style={[
-                  styles.themeButton,
-                  styles.smallButton,
-                  preferences.autoPlayVideos === option &&
-                    styles.themeButtonActive,
-                ]}
-                onPress={() => updatePreference("autoPlayVideos", option)}
-              >
-                <Text
-                  style={[
-                    styles.themeButtonText,
-                    styles.smallButtonText,
-                    preferences.autoPlayVideos === option &&
-                      styles.themeButtonTextActive,
-                  ]}
-                >
-                  {option.charAt(0).toUpperCase() + option.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </SettingRow>
-
-        <SettingRow label="Image Quality">
-          <View style={styles.themeSelector}>
-            {(["high", "medium", "low"] as const).map((quality) => (
-              <TouchableOpacity
-                key={quality}
-                style={[
-                  styles.themeButton,
-                  styles.smallButton,
-                  preferences.imageQuality === quality &&
-                    styles.themeButtonActive,
-                ]}
-                onPress={() => updatePreference("imageQuality", quality)}
-              >
-                <Text
-                  style={[
-                    styles.themeButtonText,
-                    styles.smallButtonText,
-                    preferences.imageQuality === quality &&
-                      styles.themeButtonTextActive,
-                  ]}
-                >
-                  {quality.charAt(0).toUpperCase() + quality.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </SettingRow>
-
-        <SettingRow
-          label="Cache Size"
-          description={cacheSize}
-          onPress={handleClearCache}
-          showChevron
-        />
-
-        <SettingRow
-          label="Clear Search History"
-          onPress={handleClearSearchHistory}
-          showChevron
-        />
-
-        <SettingRow
-          label="Clear Bookmarks"
-          onPress={handleClearBookmarks}
-          labelStyle={styles.dangerText}
-          showChevron
-        />
-      </View>
-
-      {/* AI Features Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>AI FEATURES</Text>
-
-        <SettingRow
-          label="Auto-Generate Alt Text"
-          description="Automatically generate descriptive alt text when you attach images"
-        >
-          <Switch
-            value={preferences.autoGenerateAltText}
-            onValueChange={(value) => updatePreference("autoGenerateAltText", value)}
-            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor={themeColors.text}
-          />
-        </SettingRow>
-
-        <SettingRow
-          label="Pre-Generate Thread Summaries"
-          description="Cache summaries for bookmarked threads for faster loading"
-        >
-          <Switch
-            value={preferences.enableThreadSummaryPreGen}
-            onValueChange={(value) => updatePreference("enableThreadSummaryPreGen", value)}
-            trackColor={{ false: themeColors.borderLight, true: themeColors.primary }}
-            thumbColor={themeColors.text}
-          />
-        </SettingRow>
-
-        <SettingRow
-          label="Add Missing Alt Text"
-          description="Review your posts and add alt text to images that don't have it"
-          onPress={() => router.push("/(app)/settings/alt-text-backfill" as any)}
-          showChevron
-        />
-      </View>
-
-      {/* About Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>ABOUT</Text>
-
-        <SettingRow label="App Name" value="Asphodel" />
-
-        <SettingRow label="Version" value={APP_VERSION} />
-
-        <SettingRow
-          label="View on Bluesky"
-          onPress={handleOpenBluesky}
-          showChevron
-        />
-
-        <SettingRow
-          label="Report a Bug"
-          onPress={handleOpenGitHub}
-          showChevron
-        />
-      </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Asphodel v{APP_VERSION}</Text>
-        <Text style={styles.footerSubtext}>
-          A third-party Bluesky client
-        </Text>
-      </View>
+      <AccountSection
+        onShowAccountSwitcher={() => setShowAccountSwitcher(true)}
+      />
+      <AppearanceSection />
+      <ContentSection />
+      <NotificationsSection />
+      <PrivacySection />
+      <InteractionSection />
+      <SecuritySection />
+      <ModerationSection />
+      <ComposerSection />
+      <DataStorageSection />
+      <AIFeaturesSection />
+      <AboutSection />
     </ScrollView>
   );
 }
 
-interface SettingRowProps {
-  label: string;
-  description?: string;
-  value?: string;
-  onPress?: () => void;
-  children?: React.ReactNode;
-  labelStyle?: object;
-  showChevron?: boolean;
-}
-
-function SettingRow({
-  label,
-  description,
-  value,
-  onPress,
-  children,
-  labelStyle,
-  showChevron,
-}: SettingRowProps) {
-  const { colors: themeColors } = useTheme();
-  const rowStyles = createSettingRowStyles(themeColors);
-  const content = (
-    <View style={rowStyles.settingRow}>
-      <View style={rowStyles.settingLeft}>
-        <Text style={[rowStyles.settingLabel, labelStyle]}>{label}</Text>
-        {description && (
-          <Text style={rowStyles.settingDescription}>{description}</Text>
-        )}
-      </View>
-      <View style={rowStyles.settingRight}>
-        {value && <Text style={rowStyles.settingValue}>{value}</Text>}
-        {children}
-        {showChevron && <Text style={rowStyles.chevron}>›</Text>}
-      </View>
-    </View>
-  );
-
-  if (onPress) {
-    return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-        {content}
-      </TouchableOpacity>
-    );
-  }
-
-  return content;
-}
-
-const createStyles = (themeColors: Record<string, string>) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: themeColors.background,
-  },
-  loadingText: {
-    color: themeColors.textSecondary,
-    fontSize: 16,
-    textAlign: "center",
-    marginTop: 24,
-  },
-  header: {
-    color: themeColors.text,
-    fontSize: 32,
-    fontWeight: "bold",
-    padding: 16,
-    paddingTop: 24,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    color: themeColors.textTertiary,
-    fontSize: 12,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginBottom: 4,
-  },
-  accountInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
-  },
-  accountAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: themeColors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  accountAvatarText: {
-    color: themeColors.text,
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  accountDetails: {
-    flex: 1,
-  },
-  accountName: {
-    color: themeColors.text,
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 2,
-  },
-  accountHandle: {
-    color: themeColors.textSecondary,
-    fontSize: 14,
-  },
-  settingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
-    minHeight: 48,
-  },
-  settingLeft: {
-    flex: 1,
-    marginRight: 12,
-  },
-  settingLabel: {
-    color: themeColors.text,
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  settingDescription: {
-    color: themeColors.textTertiary,
-    fontSize: 13,
-    marginTop: 2,
-  },
-  settingRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flexShrink: 0,
-  },
-  settingValue: {
-    color: themeColors.textSecondary,
-    fontSize: 14,
-  },
-  chevron: {
-    color: themeColors.textTertiary,
-    fontSize: 24,
-    fontWeight: "300",
-  },
-  dangerText: {
-    color: themeColors.danger,
-  },
-  themeSelector: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  themeButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: themeColors.surface,
-    borderWidth: 1,
-    borderColor: themeColors.borderLight,
-  },
-  themeButtonActive: {
-    backgroundColor: themeColors.primary,
-    borderColor: themeColors.primary,
-  },
-  themeButtonText: {
-    color: themeColors.textSecondary,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  themeButtonTextActive: {
-    color: themeColors.text,
-  },
-  smallButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  smallButtonText: {
-    fontSize: 12,
-  },
-  footer: {
-    padding: 24,
-    alignItems: "center",
-  },
-  footerText: {
-    color: themeColors.textTertiary,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  footerSubtext: {
-    color: themeColors.textTertiary,
-    fontSize: 12,
-    marginTop: 4,
-  },
-  accountSwitcherHeader: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
-    backgroundColor: themeColors.background,
-  },
-  backButton: {
-    padding: 8,
-  },
-  backButtonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  backButtonText: {
-    color: themeColors.info,
-    fontSize: 16,
-  },
-});
-
-const createSettingRowStyles = (themeColors: Record<string, string>) => StyleSheet.create({
-  settingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: themeColors.border,
-    minHeight: 48,
-  },
-  settingLeft: {
-    flex: 1,
-    marginRight: 12,
-  },
-  settingLabel: {
-    color: themeColors.text,
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  settingDescription: {
-    color: themeColors.textTertiary,
-    fontSize: 13,
-    marginTop: 2,
-  },
-  settingRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flexShrink: 0,
-  },
-  settingValue: {
-    color: themeColors.textSecondary,
-    fontSize: 14,
-  },
-  chevron: {
-    color: themeColors.textTertiary,
-    fontSize: 24,
-    fontWeight: "300",
-  },
-});
+const createStyles = (themeColors: Record<string, string>) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: themeColors.background,
+    },
+    loadingText: {
+      color: themeColors.textSecondary,
+      fontSize: 16,
+      textAlign: "center",
+      marginTop: 24,
+    },
+    header: {
+      color: themeColors.text,
+      fontSize: 32,
+      fontWeight: "bold",
+      padding: 16,
+      paddingTop: 24,
+    },
+    accountSwitcherHeader: {
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: themeColors.border,
+      backgroundColor: themeColors.background,
+    },
+    backButton: {
+      padding: 8,
+    },
+    backButtonContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    backButtonText: {
+      color: themeColors.info,
+      fontSize: 16,
+    },
+  });
