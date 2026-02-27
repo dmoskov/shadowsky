@@ -57,6 +57,22 @@ export function useFollowAllFromStarterPack() {
         failedDids: failed,
       };
     },
+    onMutate: async (dids: string[]) => {
+      await queryClient.cancelQueries({queryKey: ['profile']});
+
+      const previousProfiles = queryClient.getQueriesData({queryKey: ['profile']});
+
+      // Optimistically mark all target profiles as followed
+      queryClient.setQueriesData({queryKey: ['profile']}, (old: any) => {
+        if (!old || !dids.includes(old.did)) return old;
+        return {
+          ...old,
+          viewer: {...old.viewer, following: 'pending'},
+        };
+      });
+
+      return {previousProfiles};
+    },
     onSuccess: (data) => {
       // Invalidate profile queries to refetch updated follow status
       queryClient.invalidateQueries({queryKey: ['profile']});
@@ -70,6 +86,14 @@ export function useFollowAllFromStarterPack() {
             targetUri: did,
             maxRetries: 3,
           });
+        });
+      }
+    },
+    onError: (_error, _dids, context) => {
+      // Rollback optimistic updates
+      if (context?.previousProfiles) {
+        context.previousProfiles.forEach(([key, data]: [any, any]) => {
+          queryClient.setQueryData(key, data);
         });
       }
     },
