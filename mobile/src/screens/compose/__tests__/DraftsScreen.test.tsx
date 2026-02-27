@@ -45,6 +45,7 @@ jest.mock('../../../utils/haptics', () => ({
 let mockDraftsData: any = undefined;
 let mockIsLoading = true;
 const mockFetchNextPage = jest.fn();
+const mockRefetch = jest.fn().mockResolvedValue(undefined);
 let mockHasNextPage = false;
 let mockIsFetchingNextPage = false;
 const mockDeleteMutate = jest.fn();
@@ -53,6 +54,7 @@ jest.mock('../../../hooks/api', () => ({
   useDrafts: () => ({
     data: mockDraftsData,
     isLoading: mockIsLoading,
+    refetch: mockRefetch,
     fetchNextPage: mockFetchNextPage,
     hasNextPage: mockHasNextPage,
     isFetchingNextPage: mockIsFetchingNextPage,

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Image,
   Animated,
+  RefreshControl,
 } from "react-native";
 import Swipeable from "react-native-gesture-handler/Swipeable";
 import { DmConversation } from "../../../services/dm-service";
@@ -22,6 +23,8 @@ interface ConversationListViewProps {
   searchText: string;
   sessionDid: string | undefined;
   colors: any;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 function getOtherMember(conversation: DmConversation, sessionDid: string | undefined) {
@@ -39,6 +42,8 @@ function ConversationListViewInner({
   searchText,
   sessionDid,
   colors,
+  onRefresh,
+  isRefreshing = false,
 }: ConversationListViewProps) {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -157,6 +162,16 @@ function ConversationListViewInner({
       maxToRenderPerBatch={10}
       initialNumToRender={10}
       updateCellsBatchingPeriod={50}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        ) : undefined
+      }
       ListEmptyComponent={
         searchText.length > 0 ? (
           <EmptyState
