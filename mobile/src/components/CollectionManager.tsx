@@ -86,9 +86,18 @@ function CollectionManagerInner({
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            await deleteCollection(collection.id);
-            if (selectedCollectionId === collection.id) {
-              onSelectCollection(null);
+            try {
+              await deleteCollection(collection.id);
+              if (selectedCollectionId === collection.id) {
+                onSelectCollection(null);
+              }
+            } catch (error) {
+              Alert.alert(
+                'Error',
+                error instanceof Error
+                  ? error.message
+                  : 'Failed to delete collection'
+              );
             }
           },
         },
