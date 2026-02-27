@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as Localization from "expo-localization";
@@ -1086,7 +1086,10 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { paddingTop: insets.top }]}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <View style={styles.header}>
         <TouchableOpacity
           onPress={handleClose}
@@ -1312,7 +1315,7 @@ export function ComposeScreen({ replyTo, quoteTo, draftId, sharedUrl, sharedText
         onRequestThreadOptimization={handleRequestThreadOptimization}
         onApplyThreadOptimization={handleApplyThreadOptimization}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
