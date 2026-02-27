@@ -26,7 +26,6 @@ import { useActorStarterPacks } from "../../hooks/api/useStarterPacks";
 import { PostCard } from "../../components/PostCard";
 import { AddToListModal } from "../../components/AddToListModal";
 import { ReportModal } from "../../components/ReportModal";
-import { ProfileSkeleton } from "../../components/ProfileSkeleton";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -609,10 +608,6 @@ function ProfileScreenNativeIOS({
     handleMentionPress,
     handleHashtagPress,
   ]);
-
-  if (isLoadingProfile) {
-    return <ProfileSkeleton />;
-  }
 
   return (
     <View style={styles.container}>
