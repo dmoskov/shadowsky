@@ -1,4 +1,4 @@
-import React, {useState, useMemo} from 'react';
+import React, {useState, useMemo, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,7 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import {useRouter} from 'expo-router';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useRouter, useNavigation} from 'expo-router';
 import {useTheme} from '../../contexts/ThemeContext';
 import {PostCardSkeleton} from '../../components/PostCardSkeleton';
 import {
@@ -24,13 +23,9 @@ import {
 import {AppBskyFeedDefs} from '@atproto/api';
 import DraggableFlatList, {RenderItemParams, ScaleDecorator} from 'react-native-draggable-flatlist';
 
-interface SavedFeedsScreenProps {
-  onClose?: () => void;
-}
-
-export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
-  const insets = useSafeAreaInsets();
+export function SavedFeedsScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isReorderMode, setIsReorderMode] = useState(false);
   const { colors } = useTheme();
@@ -93,14 +88,27 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
     }
   };
 
-  const handleToggleReorderMode = () => {
+  const handleToggleReorderMode = useCallback(() => {
     if (isReorderMode) {
-      // Save the new order
       const feedUris = localFeeds.map((feed) => feed.uri);
       reorderFeeds(feedUris);
     }
     setIsReorderMode(!isReorderMode);
-  };
+  }, [isReorderMode, localFeeds, reorderFeeds]);
+
+  // Put Reorder/Done button in the Stack header
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () =>
+        hasFeeds ? (
+          <TouchableOpacity onPress={handleToggleReorderMode} style={styles.reorderButton}>
+            <Text style={[styles.reorderButtonText, isReorderMode && styles.reorderButtonTextActive]}>
+              {isReorderMode ? 'Done' : 'Reorder'}
+            </Text>
+          </TouchableOpacity>
+        ) : null,
+    });
+  }, [navigation, hasFeeds, isReorderMode, handleToggleReorderMode, styles]);
 
   const renderFeedCardContent = (item: AppBskyFeedDefs.GeneratorView, isActive = false, drag?: () => void) => {
     const isPinned = pinnedFeedUrisSet.has(item.uri);
@@ -230,24 +238,7 @@ export function SavedFeedsScreen({onClose}: SavedFeedsScreenProps) {
   };
 
   return (
-    <View style={[styles.container, {paddingTop: insets.top}]}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Feeds</Text>
-        <View style={styles.headerActions}>
-          {hasFeeds && (
-            <TouchableOpacity onPress={handleToggleReorderMode} style={styles.reorderButton}>
-              <Text style={[styles.reorderButtonText, isReorderMode && styles.reorderButtonTextActive]}>
-                {isReorderMode ? 'Done' : 'Reorder'}
-              </Text>
-            </TouchableOpacity>
-          )}
-          {onClose && (
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>✕</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
+    <View style={styles.container}>
       {renderContent()}
     </View>
   );
@@ -269,10 +260,17 @@ function createStyles(colors: any) {
       borderBottomColor: colors.surface,
       backgroundColor: colors.surface,
     },
+    backButtonText: {
+      fontSize: 32,
+      color: colors.text,
+      lineHeight: 34,
+      marginRight: 8,
+    },
     headerTitle: {
       fontSize: 20,
       fontWeight: '700',
       color: colors.text,
+      flex: 1,
     },
     headerActions: {
       flexDirection: 'row',
