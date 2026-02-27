@@ -7,7 +7,6 @@
 
 import { memo, useCallback, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   Pressable,
@@ -24,6 +23,7 @@ import {
   useDynamicType,
   type ScaledFontFn,
 } from "../../hooks/useDynamicType";
+import { InlineLoadingShimmer, UserCardsShimmer } from "../SkeletonShimmer";
 
 interface SuggestedUser {
   did: string;
@@ -276,7 +276,7 @@ const UserCard = memo(function UserCard({
         }
       >
         {isInProgress ? (
-          <ActivityIndicator size="small" color="#ffffff" />
+          <InlineLoadingShimmer width={20} height={20} color="#9ca3af" />
         ) : (
           <Text
             style={[
@@ -385,8 +385,7 @@ export const MobileFollowsScreen = memo(function MobileFollowsScreen({
       {/* User list */}
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6366f1" />
-          <Text style={styles.loadingText}>Loading suggestions...</Text>
+          <UserCardsShimmer count={5} color="#333344" />
         </View>
       ) : suggestedUsers.length > 0 ? (
         <FlatList

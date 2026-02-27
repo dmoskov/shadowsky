@@ -16,7 +16,6 @@ import type { AppBskyFeedDefs } from "@atproto/api";
 import { useQuery } from "@tanstack/react-query";
 import { memo, useCallback, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
@@ -35,6 +34,7 @@ import {
   useDynamicType,
   type ScaledFontFn,
 } from "../hooks/useDynamicType";
+import { SummaryShimmer } from "./SkeletonShimmer";
 
 const logger = createLogger("MobileThreadSummary");
 
@@ -442,12 +442,7 @@ function MobileThreadSummaryContent({
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <View style={styles.loadingRow}>
-          <ActivityIndicator size="small" color="#687684" />
-          <Text style={styles.loadingText}>
-            Generating {config.description.toLowerCase()}...
-          </Text>
-        </View>
+        <SummaryShimmer lines={2} color="#d1d5db" />
       </View>
     );
   }

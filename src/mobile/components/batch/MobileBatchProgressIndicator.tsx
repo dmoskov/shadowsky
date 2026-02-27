@@ -10,7 +10,6 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
@@ -21,6 +20,7 @@ import {
 import { useBatchSelection } from "../../../contexts/BatchSelectionContext";
 import { getActionDescription } from "../../../services/batch-operation-executor";
 import { useDynamicType, type ScaledFontFn } from "../../hooks/useDynamicType";
+import { StatusIconShimmer } from "../SkeletonShimmer";
 
 interface MobileBatchProgressIndicatorProps {
   /** Callback when pause is clicked */
@@ -246,7 +246,7 @@ export const MobileBatchProgressIndicator: React.FC<
   const getStatusIcon = () => {
     switch (operation.status) {
       case "running":
-        return <ActivityIndicator size="small" color="#1d9bf0" />;
+        return <StatusIconShimmer size={20} color="#1d9bf0" />;
       case "paused":
         return <Text style={styles.statusIcon}>⏸️</Text>;
       case "completed":
@@ -256,7 +256,7 @@ export const MobileBatchProgressIndicator: React.FC<
       case "failed":
         return <Text style={styles.statusIcon}>⚠️</Text>;
       default:
-        return <ActivityIndicator size="small" color="#687684" />;
+        return <StatusIconShimmer size={20} color="#687684" />;
     }
   };
 
