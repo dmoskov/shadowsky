@@ -71,6 +71,7 @@ export function FollowingScreen({actor, onNavigateToProfile}: FollowingScreenPro
               did={item.did}
               followUri={item.viewer?.following}
               isFollowing={!!item.viewer?.following}
+              handle={item.handle}
               size="small"
             />
           </View>
