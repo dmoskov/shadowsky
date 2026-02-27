@@ -124,7 +124,7 @@ export const MobileTabBar: React.FC = () => {
               onClick={(e) => handleTabClick(e, tab.path)}
               aria-label={`${tab.label}${isActive ? " (current)" : ""}`}
               aria-current={isActive ? "page" : undefined}
-              className={`touch-target relative flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 transition-all ${
+              className={`touch-target pointer-highlight relative flex flex-col items-center justify-center gap-0.5 rounded-lg px-3 py-1.5 transition-all ${
                 isActive ? "scale-105" : "opacity-70 hover:opacity-100"
               }`}
               style={{
