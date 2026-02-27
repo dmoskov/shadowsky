@@ -41,16 +41,17 @@ export function MentionSuggestions({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} accessibilityRole="list" accessibilityLabel="Mention suggestions">
       <FlatList
         data={suggestions.slice(0, 5)} // Max 5 suggestions
-        keyboardDismissMode="on-drag"
         keyExtractor={(item) => item.did}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.suggestionItem}
             onPress={() => onSelectMention(item.handle)}
             activeOpacity={0.7}
+            accessibilityLabel={`Mention ${item.displayName || item.handle}, @${item.handle}`}
+            accessibilityRole="button"
           >
             <Avatar uri={item.avatar} size={36} />
             <View style={styles.suggestionContent}>

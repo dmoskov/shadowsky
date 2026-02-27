@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -38,13 +38,21 @@ function NewConversationModalInner({
   >([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    setSearchError(null);
+  // Cleanup debounce timer
+  useEffect(() => {
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, []);
 
+  const performSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
+      setIsSearching(false);
       return;
     }
 
@@ -59,7 +67,26 @@ function NewConversationModalInner({
     } finally {
       setIsSearching(false);
     }
-  };
+  }, []);
+
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    setSearchError(null);
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    debounceTimer.current = setTimeout(() => {
+      performSearch(query);
+    }, 250);
+  }, [performSearch]);
 
   const handleSelectUser = (user: AppBskyActorDefs.ProfileView) => {
     onSelectUser(user.did);
@@ -166,9 +193,19 @@ function NewConversationModalInner({
             autoFocus
             autoCapitalize="none"
             autoCorrect={false}
+            spellCheck={false}
+            returnKeyType="search"
+            enablesReturnKeyAutomatically
+            accessibilityLabel="Search users"
+            accessibilityHint="Type a name or handle to find users"
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => handleSearch("")}>
+            <TouchableOpacity
+              onPress={() => handleSearch("")}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityLabel="Clear search"
+              accessibilityRole="button"
+            >
               <CloseIcon size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           )}

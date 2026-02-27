@@ -147,7 +147,26 @@ function GifPickerInner({
           onChangeText={handleSearchChange}
           autoCapitalize="none"
           autoCorrect={false}
+          spellCheck={false}
+          returnKeyType="search"
+          accessibilityLabel="Search GIFs"
         />
+        {localSearchQuery.length > 0 && (
+          <TouchableOpacity
+            onPress={() => {
+              setLocalSearchQuery("");
+              onSearch("");
+              if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+              }
+            }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityLabel="Clear search"
+            accessibilityRole="button"
+          >
+            <CloseIcon size={18} color={colors.textTertiary} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Error message */}
