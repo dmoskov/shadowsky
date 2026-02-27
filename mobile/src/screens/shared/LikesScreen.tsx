@@ -71,6 +71,7 @@ export function LikesScreen({postUri, onNavigateToProfile}: LikesScreenProps) {
               did={item.actor.did}
               followUri={item.actor.viewer?.following}
               isFollowing={!!item.actor.viewer?.following}
+              handle={item.actor.handle}
               size="small"
             />
           </View>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import { mockTheme } from '../../../components/__tests__/test-utils';
 
 // ─── Module mocks ──────────────────────────────────────────
@@ -61,7 +62,31 @@ describe('FollowButton interactions', () => {
   // ─── Unfollow action ───────────────────────────────────
 
   describe('unfollow action', () => {
-    it('calls unfollowUser.mutate with followUri when pressed in following state', () => {
+    it('shows confirmation dialog when pressing Following', () => {
+      const alertSpy = jest.spyOn(Alert, 'alert');
+      const followUri = 'at://did:plc:me/app.bsky.graph.follow/xyz123';
+      const { getByText } = render(
+        <FollowButton
+          did="did:plc:target"
+          followUri={followUri}
+          isFollowing={true}
+          handle="testuser"
+        />
+      );
+
+      fireEvent.press(getByText('Following'));
+      expect(alertSpy).toHaveBeenCalledWith(
+        'Unfollow',
+        'Are you sure you want to unfollow @testuser?',
+        expect.any(Array)
+      );
+      // Mutate should NOT be called yet (waiting for confirmation)
+      expect(mockUnfollowMutate).not.toHaveBeenCalled();
+      alertSpy.mockRestore();
+    });
+
+    it('calls unfollowUser.mutate with followUri after confirming', () => {
+      const alertSpy = jest.spyOn(Alert, 'alert');
       const followUri = 'at://did:plc:me/app.bsky.graph.follow/xyz123';
       const { getByText } = render(
         <FollowButton
@@ -72,11 +97,18 @@ describe('FollowButton interactions', () => {
       );
 
       fireEvent.press(getByText('Following'));
+      // Simulate pressing "Unfollow" in the alert dialog
+      const alertButtons = alertSpy.mock.calls[0][2] as any[];
+      const unfollowButton = alertButtons.find((b: any) => b.text === 'Unfollow');
+      unfollowButton.onPress();
+
       expect(mockUnfollowMutate).toHaveBeenCalledWith(followUri);
       expect(mockUnfollowMutate).toHaveBeenCalledTimes(1);
+      alertSpy.mockRestore();
     });
 
-    it('does not call follow when pressing Following', () => {
+    it('does not call unfollow when cancelling confirmation', () => {
+      const alertSpy = jest.spyOn(Alert, 'alert');
       const { getByText } = render(
         <FollowButton
           did="did:plc:target"
@@ -86,7 +118,10 @@ describe('FollowButton interactions', () => {
       );
 
       fireEvent.press(getByText('Following'));
+      // Do not press any button (Cancel has style: 'cancel')
+      expect(mockUnfollowMutate).not.toHaveBeenCalled();
       expect(mockFollowMutate).not.toHaveBeenCalled();
+      alertSpy.mockRestore();
     });
 
     it('calls follow (not unfollow) when isFollowing=true but no followUri', () => {
