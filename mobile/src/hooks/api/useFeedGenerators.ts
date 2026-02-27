@@ -1,5 +1,7 @@
 import {useInfiniteQuery, useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {AppBskyFeedDefs} from '@atproto/api';
 import {useAuth} from '../../contexts/AuthContext';
+import {useToast} from '../../contexts/ToastContext';
 import {
   getPopularFeedGenerators,
   getSuggestedFeeds,
@@ -13,7 +15,40 @@ import {
   reorderSavedFeeds,
   createFeedGenerator,
   CreateFeedGeneratorParams,
+  FeedGeneratorResponse,
 } from '../../services/atproto/feeds';
+import {cancelMany, invalidateMany} from '../../utils/query-helpers';
+
+type GeneratorView = AppBskyFeedDefs.GeneratorView;
+
+interface InfiniteData<T> {
+  pages: T[];
+  pageParams: unknown[];
+}
+
+/**
+ * Search all feed discovery caches to find a GeneratorView by URI.
+ * Used for optimistic updates when saving a feed — the feed data
+ * is already in the popular/suggested/search caches.
+ */
+function findFeedInCaches(
+  queryClient: ReturnType<typeof useQueryClient>,
+  feedUri: string,
+): GeneratorView | undefined {
+  const cacheKeys = ['popularFeedGenerators', 'suggestedFeeds', 'searchFeedGenerators'];
+
+  for (const key of cacheKeys) {
+    const queries = queryClient.getQueriesData<InfiniteData<FeedGeneratorResponse>>({queryKey: [key]});
+    for (const [, data] of queries) {
+      if (!data?.pages) continue;
+      for (const page of data.pages) {
+        const found = page.feeds?.find((f) => f.uri === feedUri);
+        if (found) return found;
+      }
+    }
+  }
+  return undefined;
+}
 
 /**
  * Hook to fetch popular feed generators with infinite scroll
@@ -72,12 +107,39 @@ export function useSavedFeeds() {
  */
 export function useSaveFeed() {
   const queryClient = useQueryClient();
+  const {showToast} = useToast();
 
   return useMutation({
     mutationFn: (feedUri: string) => saveFeed(feedUri),
+    onMutate: async (feedUri) => {
+      await cancelMany(queryClient, [
+        {queryKey: ['savedFeeds']},
+        {queryKey: ['pinnedFeeds']},
+      ]);
+
+      const previousSavedFeeds = queryClient.getQueryData<GeneratorView[]>(['savedFeeds']);
+
+      // Find the full GeneratorView from discovery caches
+      const feedView = findFeedInCaches(queryClient, feedUri);
+      if (feedView && previousSavedFeeds) {
+        queryClient.setQueryData<GeneratorView[]>(
+          ['savedFeeds'],
+          [...previousSavedFeeds, feedView],
+        );
+      }
+
+      return {previousSavedFeeds};
+    },
     onSuccess: () => {
-      // Invalidate saved feeds query to refetch
-      queryClient.invalidateQueries({queryKey: ['savedFeeds']});
+      invalidateMany(queryClient, [
+        {queryKey: ['savedFeeds']},
+      ]);
+    },
+    onError: (_error, _feedUri, context) => {
+      if (context?.previousSavedFeeds) {
+        queryClient.setQueryData(['savedFeeds'], context.previousSavedFeeds);
+      }
+      showToast('Failed to save feed', {type: 'error'});
     },
   });
 }
@@ -87,13 +149,51 @@ export function useSaveFeed() {
  */
 export function useUnsaveFeed() {
   const queryClient = useQueryClient();
+  const {showToast} = useToast();
 
   return useMutation({
     mutationFn: (feedUri: string) => unsaveFeed(feedUri),
+    onMutate: async (feedUri) => {
+      await cancelMany(queryClient, [
+        {queryKey: ['savedFeeds']},
+        {queryKey: ['pinnedFeeds']},
+      ]);
+
+      const previousSavedFeeds = queryClient.getQueryData<GeneratorView[]>(['savedFeeds']);
+      const previousPinnedFeeds = queryClient.getQueryData<string[]>(['pinnedFeeds']);
+
+      // Optimistically remove from saved feeds
+      if (previousSavedFeeds) {
+        queryClient.setQueryData<GeneratorView[]>(
+          ['savedFeeds'],
+          previousSavedFeeds.filter((f) => f.uri !== feedUri),
+        );
+      }
+
+      // Also remove from pinned if present
+      if (previousPinnedFeeds) {
+        queryClient.setQueryData<string[]>(
+          ['pinnedFeeds'],
+          previousPinnedFeeds.filter((uri) => uri !== feedUri),
+        );
+      }
+
+      return {previousSavedFeeds, previousPinnedFeeds};
+    },
     onSuccess: () => {
-      // Invalidate saved feeds query to refetch
-      queryClient.invalidateQueries({queryKey: ['savedFeeds']});
-      queryClient.invalidateQueries({queryKey: ['pinnedFeeds']});
+      invalidateMany(queryClient, [
+        {queryKey: ['savedFeeds']},
+        {queryKey: ['pinnedFeeds']},
+      ]);
+    },
+    onError: (_error, _feedUri, context) => {
+      if (context?.previousSavedFeeds) {
+        queryClient.setQueryData(['savedFeeds'], context.previousSavedFeeds);
+      }
+      if (context?.previousPinnedFeeds) {
+        queryClient.setQueryData(['pinnedFeeds'], context.previousPinnedFeeds);
+      }
+      showToast('Failed to remove feed', {type: 'error'});
     },
   });
 }
@@ -103,13 +203,52 @@ export function useUnsaveFeed() {
  */
 export function usePinFeed() {
   const queryClient = useQueryClient();
+  const {showToast} = useToast();
 
   return useMutation({
     mutationFn: (feedUri: string) => pinFeed(feedUri),
+    onMutate: async (feedUri) => {
+      await cancelMany(queryClient, [
+        {queryKey: ['savedFeeds']},
+        {queryKey: ['pinnedFeeds']},
+      ]);
+
+      const previousSavedFeeds = queryClient.getQueryData<GeneratorView[]>(['savedFeeds']);
+      const previousPinnedFeeds = queryClient.getQueryData<string[]>(['pinnedFeeds']);
+
+      // Optimistically add to pinned feeds
+      if (previousPinnedFeeds && !previousPinnedFeeds.includes(feedUri)) {
+        queryClient.setQueryData<string[]>(
+          ['pinnedFeeds'],
+          [...previousPinnedFeeds, feedUri],
+        );
+      }
+
+      // Also ensure it appears in saved feeds
+      const feedView = findFeedInCaches(queryClient, feedUri);
+      if (feedView && previousSavedFeeds && !previousSavedFeeds.some((f) => f.uri === feedUri)) {
+        queryClient.setQueryData<GeneratorView[]>(
+          ['savedFeeds'],
+          [...previousSavedFeeds, feedView],
+        );
+      }
+
+      return {previousSavedFeeds, previousPinnedFeeds};
+    },
     onSuccess: () => {
-      // Invalidate queries to refetch
-      queryClient.invalidateQueries({queryKey: ['savedFeeds']});
-      queryClient.invalidateQueries({queryKey: ['pinnedFeeds']});
+      invalidateMany(queryClient, [
+        {queryKey: ['savedFeeds']},
+        {queryKey: ['pinnedFeeds']},
+      ]);
+    },
+    onError: (_error, _feedUri, context) => {
+      if (context?.previousSavedFeeds) {
+        queryClient.setQueryData(['savedFeeds'], context.previousSavedFeeds);
+      }
+      if (context?.previousPinnedFeeds) {
+        queryClient.setQueryData(['pinnedFeeds'], context.previousPinnedFeeds);
+      }
+      showToast('Failed to pin feed', {type: 'error'});
     },
   });
 }
@@ -119,12 +258,33 @@ export function usePinFeed() {
  */
 export function useUnpinFeed() {
   const queryClient = useQueryClient();
+  const {showToast} = useToast();
 
   return useMutation({
     mutationFn: (feedUri: string) => unpinFeed(feedUri),
+    onMutate: async (feedUri) => {
+      await queryClient.cancelQueries({queryKey: ['pinnedFeeds']});
+
+      const previousPinnedFeeds = queryClient.getQueryData<string[]>(['pinnedFeeds']);
+
+      // Optimistically remove from pinned feeds
+      if (previousPinnedFeeds) {
+        queryClient.setQueryData<string[]>(
+          ['pinnedFeeds'],
+          previousPinnedFeeds.filter((uri) => uri !== feedUri),
+        );
+      }
+
+      return {previousPinnedFeeds};
+    },
     onSuccess: () => {
-      // Invalidate pinned feeds query to refetch
       queryClient.invalidateQueries({queryKey: ['pinnedFeeds']});
+    },
+    onError: (_error, _feedUri, context) => {
+      if (context?.previousPinnedFeeds) {
+        queryClient.setQueryData(['pinnedFeeds'], context.previousPinnedFeeds);
+      }
+      showToast('Failed to unpin feed', {type: 'error'});
     },
   });
 }
@@ -149,9 +309,44 @@ export function useReorderSavedFeeds() {
 
   return useMutation({
     mutationFn: (feedUris: string[]) => reorderSavedFeeds(feedUris),
+    onMutate: async (feedUris) => {
+      await cancelMany(queryClient, [
+        {queryKey: ['savedFeeds']},
+        {queryKey: ['pinnedFeeds']},
+      ]);
+
+      const previousSavedFeeds = queryClient.getQueryData<GeneratorView[]>(['savedFeeds']);
+      const previousPinnedFeeds = queryClient.getQueryData<string[]>(['pinnedFeeds']);
+
+      // Optimistically reorder saved feeds
+      if (previousSavedFeeds) {
+        const feedMap = new Map(previousSavedFeeds.map((f) => [f.uri, f]));
+        const reordered = feedUris
+          .map((uri) => feedMap.get(uri))
+          .filter((f): f is GeneratorView => f != null);
+        // Append any feeds not in the reorder list
+        const remaining = previousSavedFeeds.filter((f) => !feedUris.includes(f.uri));
+        queryClient.setQueryData<GeneratorView[]>(['savedFeeds'], [...reordered, ...remaining]);
+      }
+
+      // Update pinned feeds to match the new order
+      queryClient.setQueryData<string[]>(['pinnedFeeds'], feedUris);
+
+      return {previousSavedFeeds, previousPinnedFeeds};
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ['savedFeeds']});
-      queryClient.invalidateQueries({queryKey: ['pinnedFeeds']});
+      invalidateMany(queryClient, [
+        {queryKey: ['savedFeeds']},
+        {queryKey: ['pinnedFeeds']},
+      ]);
+    },
+    onError: (_error, _feedUris, context) => {
+      if (context?.previousSavedFeeds) {
+        queryClient.setQueryData(['savedFeeds'], context.previousSavedFeeds);
+      }
+      if (context?.previousPinnedFeeds) {
+        queryClient.setQueryData(['pinnedFeeds'], context.previousPinnedFeeds);
+      }
     },
   });
 }
@@ -166,8 +361,10 @@ export function useCreateFeedGenerator() {
     mutationFn: (params: CreateFeedGeneratorParams) => createFeedGenerator(params),
     onSuccess: () => {
       // Invalidate feed generator queries to refetch
-      queryClient.invalidateQueries({queryKey: ['popularFeedGenerators']});
-      queryClient.invalidateQueries({queryKey: ['suggestedFeeds']});
+      invalidateMany(queryClient, [
+        {queryKey: ['popularFeedGenerators']},
+        {queryKey: ['suggestedFeeds']},
+      ]);
     },
   });
 }

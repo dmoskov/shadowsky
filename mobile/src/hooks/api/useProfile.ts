@@ -17,6 +17,7 @@ import {
   getBlocks,
 } from '../../services/atproto/profiles';
 import {mutationQueue} from '../../services/mutation-queue';
+import {useToast} from '../../contexts/ToastContext';
 import {invalidateMany} from '../../utils/query-helpers';
 
 import { createLogger } from '../../utils/logger';
@@ -60,14 +61,39 @@ export function useSearchActors(query: string) {
  */
 export function useFollowUser() {
   const queryClient = useQueryClient();
+  const {showToast} = useToast();
 
   return useMutation({
     mutationFn: followUser,
+    onMutate: async (did: string) => {
+      await queryClient.cancelQueries({queryKey: ['profile']});
+
+      const previousProfiles = queryClient.getQueriesData({queryKey: ['profile']});
+
+      // Optimistically update the target profile's viewer.following
+      queryClient.setQueriesData({queryKey: ['profile']}, (old: any) => {
+        if (!old || old.did !== did) return old;
+        return {
+          ...old,
+          viewer: {...old.viewer, following: 'pending'},
+        };
+      });
+
+      return {previousProfiles};
+    },
     onSuccess: () => {
-      // Invalidate profile query to refetch updated follow status
       queryClient.invalidateQueries({queryKey: ['profile']});
     },
-    onError: async (_error, did: string) => {
+    onError: async (_error, did: string, context) => {
+      // Rollback optimistic update
+      if (context?.previousProfiles) {
+        context.previousProfiles.forEach(([key, data]: [any, any]) => {
+          queryClient.setQueryData(key, data);
+        });
+      }
+
+      showToast('Failed to follow user', {type: 'error'});
+
       // Queue the mutation for retry
       logger.log('Failed to follow user, queueing for retry');
       await mutationQueue.enqueue({
@@ -84,13 +110,39 @@ export function useFollowUser() {
  */
 export function useUnfollowUser() {
   const queryClient = useQueryClient();
+  const {showToast} = useToast();
 
   return useMutation({
     mutationFn: unfollowUser,
+    onMutate: async (followUri: string) => {
+      await queryClient.cancelQueries({queryKey: ['profile']});
+
+      const previousProfiles = queryClient.getQueriesData({queryKey: ['profile']});
+
+      // Find the profile whose viewer.following matches this URI and clear it
+      queryClient.setQueriesData({queryKey: ['profile']}, (old: any) => {
+        if (!old || old.viewer?.following !== followUri) return old;
+        return {
+          ...old,
+          viewer: {...old.viewer, following: undefined},
+        };
+      });
+
+      return {previousProfiles};
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: ['profile']});
     },
-    onError: async (_error, followUri: string) => {
+    onError: async (_error, followUri: string, context) => {
+      // Rollback optimistic update
+      if (context?.previousProfiles) {
+        context.previousProfiles.forEach(([key, data]: [any, any]) => {
+          queryClient.setQueryData(key, data);
+        });
+      }
+
+      showToast('Failed to unfollow user', {type: 'error'});
+
       // Queue the mutation for retry
       logger.log('Failed to unfollow user, queueing for retry');
       await mutationQueue.enqueue({
@@ -135,15 +187,40 @@ export function useFollows(actor: string) {
  */
 export function useMuteUser() {
   const queryClient = useQueryClient();
+  const {showToast} = useToast();
 
   return useMutation({
     mutationFn: muteUser,
+    onMutate: async (did: string) => {
+      await queryClient.cancelQueries({queryKey: ['profile']});
+
+      const previousProfiles = queryClient.getQueriesData({queryKey: ['profile']});
+
+      // Optimistically set muted on the target profile
+      queryClient.setQueriesData({queryKey: ['profile']}, (old: any) => {
+        if (!old || old.did !== did) return old;
+        return {
+          ...old,
+          viewer: {...old.viewer, muted: true},
+        };
+      });
+
+      return {previousProfiles};
+    },
     onSuccess: () => {
       invalidateMany(queryClient, [
         {queryKey: ['profile']},
         {queryKey: ['mutes']},
         {queryKey: ['mutedAccounts']},
       ]);
+    },
+    onError: (_error, _did, context) => {
+      if (context?.previousProfiles) {
+        context.previousProfiles.forEach(([key, data]: [any, any]) => {
+          queryClient.setQueryData(key, data);
+        });
+      }
+      showToast('Failed to mute user', {type: 'error'});
     },
   });
 }
@@ -153,15 +230,40 @@ export function useMuteUser() {
  */
 export function useUnmuteUser() {
   const queryClient = useQueryClient();
+  const {showToast} = useToast();
 
   return useMutation({
     mutationFn: unmuteUser,
+    onMutate: async (did: string) => {
+      await queryClient.cancelQueries({queryKey: ['profile']});
+
+      const previousProfiles = queryClient.getQueriesData({queryKey: ['profile']});
+
+      // Optimistically clear muted on the target profile
+      queryClient.setQueriesData({queryKey: ['profile']}, (old: any) => {
+        if (!old || old.did !== did) return old;
+        return {
+          ...old,
+          viewer: {...old.viewer, muted: false},
+        };
+      });
+
+      return {previousProfiles};
+    },
     onSuccess: () => {
       invalidateMany(queryClient, [
         {queryKey: ['profile']},
         {queryKey: ['mutes']},
         {queryKey: ['mutedAccounts']},
       ]);
+    },
+    onError: (_error, _did, context) => {
+      if (context?.previousProfiles) {
+        context.previousProfiles.forEach(([key, data]: [any, any]) => {
+          queryClient.setQueryData(key, data);
+        });
+      }
+      showToast('Failed to unmute user', {type: 'error'});
     },
   });
 }
@@ -171,15 +273,40 @@ export function useUnmuteUser() {
  */
 export function useBlockUser() {
   const queryClient = useQueryClient();
+  const {showToast} = useToast();
 
   return useMutation({
     mutationFn: blockUser,
+    onMutate: async (did: string) => {
+      await queryClient.cancelQueries({queryKey: ['profile']});
+
+      const previousProfiles = queryClient.getQueriesData({queryKey: ['profile']});
+
+      // Optimistically set blocking on the target profile
+      queryClient.setQueriesData({queryKey: ['profile']}, (old: any) => {
+        if (!old || old.did !== did) return old;
+        return {
+          ...old,
+          viewer: {...old.viewer, blocking: 'pending'},
+        };
+      });
+
+      return {previousProfiles};
+    },
     onSuccess: () => {
       invalidateMany(queryClient, [
         {queryKey: ['profile']},
         {queryKey: ['blocks']},
         {queryKey: ['blockedAccounts']},
       ]);
+    },
+    onError: (_error, _did, context) => {
+      if (context?.previousProfiles) {
+        context.previousProfiles.forEach(([key, data]: [any, any]) => {
+          queryClient.setQueryData(key, data);
+        });
+      }
+      showToast('Failed to block user', {type: 'error'});
     },
   });
 }
@@ -189,15 +316,40 @@ export function useBlockUser() {
  */
 export function useUnblockUser() {
   const queryClient = useQueryClient();
+  const {showToast} = useToast();
 
   return useMutation({
     mutationFn: unblockUser,
+    onMutate: async (blockUri: string) => {
+      await queryClient.cancelQueries({queryKey: ['profile']});
+
+      const previousProfiles = queryClient.getQueriesData({queryKey: ['profile']});
+
+      // Find the profile whose viewer.blocking matches this URI and clear it
+      queryClient.setQueriesData({queryKey: ['profile']}, (old: any) => {
+        if (!old || old.viewer?.blocking !== blockUri) return old;
+        return {
+          ...old,
+          viewer: {...old.viewer, blocking: undefined},
+        };
+      });
+
+      return {previousProfiles};
+    },
     onSuccess: () => {
       invalidateMany(queryClient, [
         {queryKey: ['profile']},
         {queryKey: ['blocks']},
         {queryKey: ['blockedAccounts']},
       ]);
+    },
+    onError: (_error, _blockUri, context) => {
+      if (context?.previousProfiles) {
+        context.previousProfiles.forEach(([key, data]: [any, any]) => {
+          queryClient.setQueryData(key, data);
+        });
+      }
+      showToast('Failed to unblock user', {type: 'error'});
     },
   });
 }
@@ -233,7 +385,7 @@ export function useUpdateProfile() {
     onError: (_error, _variables, context) => {
       // Rollback to previous profile data on error
       if (context?.previousProfiles) {
-        context.previousProfiles.forEach(([queryKey, data]) => {
+        context.previousProfiles.forEach(([queryKey, data]: [any, any]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
