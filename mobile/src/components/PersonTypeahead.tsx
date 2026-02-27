@@ -113,7 +113,11 @@ export function PersonTypeahead({
           }}
           autoCapitalize="none"
           autoCorrect={false}
+          spellCheck={false}
+          returnKeyType="search"
           keyboardType="default"
+          accessibilityLabel="Search users"
+          accessibilityHint="Type a name or handle to find users"
         />
         {value ? (
           <TouchableOpacity
@@ -126,16 +130,23 @@ export function PersonTypeahead({
         ) : null}
       </View>
 
-      {showSuggestions && (suggestions.length > 0 || isLoading) && (
+      {showSuggestions && (suggestions.length > 0 || isLoading || (query.length >= 2 && !isLoading)) && (
         <ScrollView
           style={styles.suggestionsContainer}
           keyboardShouldPersistTaps="always"
           nestedScrollEnabled
+          accessibilityRole="list"
+          accessibilityLabel="User suggestions"
         >
           {isLoading && suggestions.length === 0 && (
             <View style={styles.loadingRow}>
               <ActivityIndicator size="small" color={colors.primary} />
               <Text style={styles.loadingText}>Searching...</Text>
+            </View>
+          )}
+          {!isLoading && suggestions.length === 0 && query.length >= 2 && (
+            <View style={styles.loadingRow}>
+              <Text style={styles.loadingText}>No users found</Text>
             </View>
           )}
           {suggestions.map((actor) => (
@@ -144,6 +155,8 @@ export function PersonTypeahead({
               style={styles.suggestionRow}
               onPress={() => handleSelect(actor)}
               activeOpacity={0.7}
+              accessibilityLabel={`${actor.displayName || actor.handle}, @${actor.handle}`}
+              accessibilityRole="button"
             >
               <Avatar uri={actor.avatar} size={32} />
               <View style={styles.suggestionInfo}>

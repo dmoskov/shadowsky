@@ -19,6 +19,7 @@ import { FeedList } from "../../components/FeedList";
 import { PostCardSkeleton } from "../../components/PostCardSkeleton";
 import { TrendingTopics } from "../../components/TrendingTopics";
 import { SearchFilterSheet, type SearchFilterValues } from "../../components/SearchFilterSheet";
+import { CloseIcon, SearchIcon } from "../../components/icons";
 import { AppBskyActorDefs, AppBskyFeedDefs } from "@atproto/api";
 import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useTrendingData } from "../../hooks/useTrending";
@@ -374,16 +375,44 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   return (
     <View style={styles.container}>
       <View style={styles.searchBar}>
-        <TextInput
-          style={styles.input}
-          placeholder="Search posts, users, hashtags..."
-          placeholderTextColor={colors.textTertiary}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          onFocus={() => setShowHistory(searchHistory.length > 0 && !searchQuery)}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+        <View style={styles.searchInputContainer}>
+          <SearchIcon size={18} color={colors.textTertiary} />
+          <TextInput
+            style={styles.input}
+            placeholder="Search posts, users, hashtags..."
+            placeholderTextColor={colors.textTertiary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onFocus={() => setShowHistory(searchHistory.length > 0 && !searchQuery)}
+            onSubmitEditing={() => {
+              if (searchQuery.trim()) {
+                setDebouncedQuery(searchQuery);
+                setShowHistory(false);
+              }
+            }}
+            autoCapitalize="none"
+            autoCorrect={false}
+            spellCheck={false}
+            returnKeyType="search"
+            enablesReturnKeyAutomatically
+            accessibilityLabel="Search"
+            accessibilityHint="Search posts, users, and hashtags"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => {
+                setSearchQuery("");
+                setDebouncedQuery("");
+                setShowHistory(false);
+              }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityLabel="Clear search"
+              accessibilityRole="button"
+            >
+              <CloseIcon size={18} color={colors.textTertiary} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Trending Topics */}
@@ -410,6 +439,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
             keyExtractor={(item, index) => `${item}-${index}`}
             renderItem={renderHistoryItem}
             style={styles.historyList}
+            keyboardShouldPersistTaps="handled"
           />
         </View>
       )}
@@ -568,10 +598,16 @@ function createStyles(colors: any) {
     borderBottomWidth: 1,
     borderBottomColor: colors.surfaceElevated,
   },
-  input: {
+  searchInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.surfaceElevated,
     borderRadius: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
+    gap: 8,
+  },
+  input: {
+    flex: 1,
     paddingVertical: 12,
     color: colors.text,
     fontSize: 16,

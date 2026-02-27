@@ -14,6 +14,7 @@ import {useRouter} from 'expo-router';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useTheme} from '../../contexts/ThemeContext';
 import {PostCardSkeleton} from '../../components/PostCardSkeleton';
+import {CloseIcon, SearchIcon} from '../../components/icons';
 import {
   usePopularFeedGenerators,
   useSuggestedFeeds,
@@ -305,15 +306,34 @@ export function FeedDiscoveryScreen({initialTab = 'popular'}: FeedDiscoveryScree
       {/* Search Bar (only visible in search tab) */}
       {activeTab === 'search' && (
         <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search for feeds..."
-            placeholderTextColor={colors.textSecondary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
+          <View style={styles.searchInputWrapper}>
+            <SearchIcon size={18} color={colors.textSecondary} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search for feeds..."
+              placeholderTextColor={colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCapitalize="none"
+              autoCorrect={false}
+              spellCheck={false}
+              returnKeyType="search"
+              accessibilityLabel="Search feeds"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => {
+                  setSearchQuery('');
+                  setDebouncedQuery('');
+                }}
+                hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+                accessibilityLabel="Clear search"
+                accessibilityRole="button"
+              >
+                <CloseIcon size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       )}
 
@@ -388,10 +408,16 @@ function createStyles(colors: any) {
       borderBottomWidth: 1,
       borderBottomColor: colors.surface,
     },
-    searchInput: {
+    searchInputWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
       backgroundColor: colors.surface,
       borderRadius: 20,
-      paddingHorizontal: 16,
+      paddingHorizontal: 12,
+      gap: 8,
+    },
+    searchInput: {
+      flex: 1,
       paddingVertical: 10,
       fontSize: 16,
       color: colors.text,
