@@ -150,8 +150,8 @@ export function useReorderSavedFeeds() {
   return useMutation({
     mutationFn: (feedUris: string[]) => reorderSavedFeeds(feedUris),
     onSuccess: () => {
-      // Invalidate saved feeds query to refetch
       queryClient.invalidateQueries({queryKey: ['savedFeeds']});
+      queryClient.invalidateQueries({queryKey: ['pinnedFeeds']});
     },
   });
 }

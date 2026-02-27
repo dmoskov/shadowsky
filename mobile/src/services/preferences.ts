@@ -15,7 +15,6 @@ const AT_PROTO_PREFERENCES_RKEY = "self";
  */
 const SYNCABLE_KEYS: ReadonlySet<keyof AppPreferences> = new Set([
   "theme",
-  "defaultFeed",
   "showNSFW",
   "contentLanguages",
   "postLanguages",
@@ -61,7 +60,6 @@ export interface AppPreferences {
   theme: "dark" | "light" | "system";
 
   // Content
-  defaultFeed: "following" | "discover";
   showNSFW: boolean;
   contentLanguages: string[];
 
@@ -129,7 +127,6 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   theme: "dark",
 
   // Content
-  defaultFeed: "following",
   showNSFW: false,
   contentLanguages: ["en"],
 
