@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import { mockTheme, makeFeedViewPost } from '../../../components/__tests__/test-utils';
 
 // ─── Module mocks ──────────────────────────────────────────
@@ -337,7 +338,8 @@ describe('ProfileScreen', () => {
       expect(mockFollowMutate).toHaveBeenCalledWith('did:plc:testuser');
     });
 
-    it('calls unfollow mutation when Following button is pressed', () => {
+    it('shows confirmation dialog and calls unfollow mutation when confirmed', () => {
+      const alertSpy = jest.spyOn(Alert, 'alert');
       const followUri = 'at://did:plc:me/app.bsky.graph.follow/abc';
       mockProfileData = {
         ...mockProfile,
@@ -351,7 +353,22 @@ describe('ProfileScreen', () => {
       // "Following" appears as both stat label (first) and button text (second)
       const followingTexts = getAllByText('Following');
       fireEvent.press(followingTexts[followingTexts.length - 1]);
+
+      // Should show confirmation dialog, not call mutate directly
+      expect(alertSpy).toHaveBeenCalledWith(
+        'Unfollow',
+        expect.stringContaining('unfollow'),
+        expect.any(Array)
+      );
+      expect(mockUnfollowMutate).not.toHaveBeenCalled();
+
+      // Simulate pressing "Unfollow" in the alert
+      const alertButtons = alertSpy.mock.calls[0][2] as any[];
+      const unfollowButton = alertButtons.find((b: any) => b.text === 'Unfollow');
+      unfollowButton.onPress();
       expect(mockUnfollowMutate).toHaveBeenCalledWith(followUri);
+
+      alertSpy.mockRestore();
     });
 
     it('does not show follow button on own profile', () => {

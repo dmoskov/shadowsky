@@ -125,7 +125,20 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
     if (!profile) return;
 
     if (profile.viewer?.following) {
-      unfollowMutation.mutate(profile.viewer.following);
+      Alert.alert(
+        'Unfollow',
+        `Are you sure you want to unfollow @${profile.handle}?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Unfollow',
+            style: 'destructive',
+            onPress: () => {
+              unfollowMutation.mutate(profile.viewer!.following!);
+            },
+          },
+        ]
+      );
     } else {
       followMutation.mutate(profile.did);
     }
