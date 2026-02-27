@@ -110,23 +110,43 @@ export function SavedFeedsScreen() {
     });
   }, [navigation, hasFeeds, isReorderMode, handleToggleReorderMode, styles]);
 
-  const renderFeedCardContent = (item: AppBskyFeedDefs.GeneratorView, isActive = false, drag?: () => void) => {
+  const renderCompactReorderItem = (item: AppBskyFeedDefs.GeneratorView, isActive = false, drag?: () => void) => {
+    const isPinned = pinnedFeedUrisSet.has(item.uri);
+
+    return (
+      <TouchableOpacity
+        style={[styles.compactRow, isActive && styles.compactRowDragging]}
+        onLongPress={drag}
+        disabled={isActive}
+        activeOpacity={0.7}>
+        <View style={styles.dragHandle}>
+          <Text style={styles.dragHandleText}>☰</Text>
+        </View>
+        {item.avatar ? (
+          <Image source={{uri: item.avatar}} style={styles.compactAvatar} />
+        ) : (
+          <View style={[styles.compactAvatar, styles.compactAvatarPlaceholder]}>
+            <Text style={styles.compactAvatarText}>{item.displayName?.[0] || '📰'}</Text>
+          </View>
+        )}
+        <Text style={styles.compactName} numberOfLines={1}>
+          {item.displayName}
+        </Text>
+        {isPinned && <Text style={styles.compactPinned}>📌</Text>}
+      </TouchableOpacity>
+    );
+  };
+
+  const renderFeedCardContent = (item: AppBskyFeedDefs.GeneratorView) => {
     const isPinned = pinnedFeedUrisSet.has(item.uri);
     const likeCount = item.likeCount || 0;
 
     return (
       <TouchableOpacity
-        style={[styles.feedCard, isActive && styles.feedCardDragging]}
-        onPress={() => !isReorderMode && handleFeedPress(item.uri)}
-        onLongPress={isReorderMode ? drag : undefined}
-        disabled={isActive}
+        style={styles.feedCard}
+        onPress={() => handleFeedPress(item.uri)}
         activeOpacity={0.7}>
         <View style={styles.feedHeader}>
-          {isReorderMode && (
-            <View style={styles.dragHandle}>
-              <Text style={styles.dragHandleText}>☰</Text>
-            </View>
-          )}
           {item.avatar ? (
             <Image source={{uri: item.avatar}} style={styles.feedAvatar} />
           ) : (
@@ -142,22 +162,20 @@ export function SavedFeedsScreen() {
               by @{item.creator.handle}
             </Text>
           </View>
-          {!isReorderMode && (
-            <View style={styles.actionButtons}>
-              <TouchableOpacity
-                style={[styles.pinButton, isPinned && styles.pinButtonActive]}
-                onPress={() => handleTogglePin(item.uri)}
-                activeOpacity={0.7}>
-                <Text style={styles.pinButtonText}>📌</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => handleRemoveFeed(item.uri, item.displayName)}
-                activeOpacity={0.7}>
-                <Text style={styles.removeButtonText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={[styles.pinButton, isPinned && styles.pinButtonActive]}
+              onPress={() => handleTogglePin(item.uri)}
+              activeOpacity={0.7}>
+              <Text style={styles.pinButtonText}>📌</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.removeButton}
+              onPress={() => handleRemoveFeed(item.uri, item.displayName)}
+              activeOpacity={0.7}>
+              <Text style={styles.removeButtonText}>✕</Text>
+            </TouchableOpacity>
+          </View>
         </View>
         {item.description && (
           <Text style={styles.feedDescription} numberOfLines={2}>
@@ -173,11 +191,10 @@ export function SavedFeedsScreen() {
   };
 
   const renderDraggableItem = ({item, drag, isActive}: RenderItemParams<AppBskyFeedDefs.GeneratorView>) => (
-    <ScaleDecorator>{renderFeedCardContent(item, isActive, drag)}</ScaleDecorator>
+    <ScaleDecorator>{renderCompactReorderItem(item, isActive, drag)}</ScaleDecorator>
   );
 
-  const renderStaticItem = ({item}: {item: AppBskyFeedDefs.GeneratorView}) =>
-    renderFeedCardContent(item);
+  const renderStaticItem = ({item}: {item: AppBskyFeedDefs.GeneratorView}) => renderFeedCardContent(item);
 
   const renderContent = () => {
     if (isLoading) {
@@ -220,7 +237,7 @@ export function SavedFeedsScreen() {
           renderItem={renderDraggableItem}
           keyExtractor={(item) => item.uri}
           onDragEnd={({data}) => setLocalFeeds(data)}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={styles.compactListContent}
         />
       );
     }
@@ -307,6 +324,51 @@ function createStyles(colors: any) {
     },
     listContent: {
       padding: 12,
+    },
+    compactListContent: {
+      paddingVertical: 4,
+    },
+    compactRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      marginBottom: 1,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
+    compactRowDragging: {
+      opacity: 0.7,
+      elevation: 5,
+      shadowColor: colors.borderDark,
+      shadowOffset: {width: 0, height: 2},
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+    compactAvatar: {
+      width: 28,
+      height: 28,
+      borderRadius: 6,
+      marginRight: 10,
+    },
+    compactAvatarPlaceholder: {
+      backgroundColor: colors.background,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    compactAvatarText: {
+      fontSize: 14,
+    },
+    compactName: {
+      flex: 1,
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    compactPinned: {
+      fontSize: 12,
+      marginLeft: 8,
     },
     feedCard: {
       backgroundColor: colors.surface,
