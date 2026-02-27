@@ -7,6 +7,7 @@ import { Platform } from "react-native";
 import * as FileSystem from 'expo-file-system';
 
 import { createLogger } from '../utils/logger';
+import { getAtProtoClient } from './atproto/client';
 
 const logger = createLogger('AiService');
 export interface ThreadSummaryPost {
@@ -100,17 +101,21 @@ function getVersionedApiUrl(): string {
 
 /**
  * Get API auth headers
- * Mobile version that works without Vite/import.meta
+ * Sends the user's Bluesky DID for server-side authentication,
+ * matching the web app's auth pattern (X-User-DID / X-Bluesky-DID).
  */
 function getApiAuthHeaders(): Record<string, string> {
-  // The API key should be stored securely
-  // In production, consider using secure storage for the key
-  const apiKey = process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY;
-
-  if (apiKey) {
-    return {
-      "X-API-Key": apiKey,
-    };
+  try {
+    const client = getAtProtoClient();
+    const session = client.getSession();
+    if (session?.did) {
+      return {
+        "X-User-DID": session.did,
+        "X-Bluesky-DID": session.did,
+      };
+    }
+  } catch {
+    // Client not initialized yet (user not logged in)
   }
 
   return {};
