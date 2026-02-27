@@ -1,14 +1,16 @@
+import { Image } from "expo-image";
 import React, { useState } from "react";
 import {
-  View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  Modal,
-  ActivityIndicator,
-  StyleSheet,
+  View,
 } from "react-native";
-import { Image } from "expo-image";
 
 export interface AltTextModalProps {
   visible: boolean;
@@ -63,21 +65,40 @@ function AltTextModalInner({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View style={[styles.modalOverlay]}>
-        <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+      <KeyboardAvoidingView
+        style={styles.modalOverlay}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <View
+          style={[styles.modalContent, { backgroundColor: colors.background }]}
+        >
           <View style={styles.modalHeader}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Add Alt Text</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Add Alt Text
+            </Text>
             <TouchableOpacity onPress={onClose}>
-              <Text style={[styles.modalCloseButton, { color: colors.textSecondary }]}>×</Text>
+              <Text
+                style={[
+                  styles.modalCloseButton,
+                  { color: colors.textSecondary },
+                ]}
+              >
+                ×
+              </Text>
             </TouchableOpacity>
           </View>
-          <Text style={[styles.modalDescription, { color: colors.textSecondary }]}>
+          <Text
+            style={[styles.modalDescription, { color: colors.textSecondary }]}
+          >
             Describe this image for people who are blind or have low vision.
           </Text>
           {imageUri && (
             <Image
               source={{ uri: imageUri }}
-              style={[styles.modalImage, { backgroundColor: colors.surfaceElevated }]}
+              style={[
+                styles.modalImage,
+                { backgroundColor: colors.surfaceElevated },
+              ]}
               contentFit="cover"
               cachePolicy="memory-disk"
             />
@@ -93,15 +114,40 @@ function AltTextModalInner({
           >
             {isGenerating ? (
               <>
-                <ActivityIndicator size="small" color={colors.primary} style={styles.generateButtonSpinner} />
-                <Text style={[styles.generateAltTextButtonText, { color: colors.text }]}>Generating...</Text>
+                <ActivityIndicator
+                  size="small"
+                  color={colors.primary}
+                  style={styles.generateButtonSpinner}
+                />
+                <Text
+                  style={[
+                    styles.generateAltTextButtonText,
+                    { color: colors.text },
+                  ]}
+                >
+                  Generating...
+                </Text>
               </>
             ) : (
-              <Text style={[styles.generateAltTextButtonText, { color: colors.text }]}>✨ Generate with AI</Text>
+              <Text
+                style={[
+                  styles.generateAltTextButtonText,
+                  { color: colors.text },
+                ]}
+              >
+                ✨ Generate with AI
+              </Text>
             )}
           </TouchableOpacity>
           <TextInput
-            style={[styles.altTextInput, { backgroundColor: colors.background, borderColor: colors.surfaceElevated, color: colors.text }]}
+            style={[
+              styles.altTextInput,
+              {
+                backgroundColor: colors.background,
+                borderColor: colors.surfaceElevated,
+                color: colors.text,
+              },
+            ]}
             placeholder="Describe this image..."
             placeholderTextColor={colors.textTertiary}
             multiline
@@ -111,13 +157,20 @@ function AltTextModalInner({
             autoFocus
           />
           <TouchableOpacity
-            style={[styles.saveAltTextButton, { backgroundColor: colors.primary }]}
+            style={[
+              styles.saveAltTextButton,
+              { backgroundColor: colors.primary },
+            ]}
             onPress={handleSave}
           >
-            <Text style={[styles.saveAltTextButtonText, { color: colors.text }]}>Save</Text>
+            <Text
+              style={[styles.saveAltTextButtonText, { color: colors.text }]}
+            >
+              Save
+            </Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
