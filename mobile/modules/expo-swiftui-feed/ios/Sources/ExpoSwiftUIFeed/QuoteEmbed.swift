@@ -90,7 +90,7 @@ struct QuoteEmbed: View {
 
                     // Author info
                     HStack(spacing: 6) {
-                        Text(record.author.displayName ?? record.author.handle)
+                        Text(record.author.displayName.orIfEmpty(record.author.handle))
                             .font(.subheadline.weight(.semibold))
                             .foregroundColor(.primary)
                             .lineLimit(1)

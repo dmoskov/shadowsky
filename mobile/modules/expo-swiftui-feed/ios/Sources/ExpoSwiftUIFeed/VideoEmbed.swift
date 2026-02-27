@@ -33,17 +33,25 @@ struct VideoEmbed: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ZStack {
-                if showThumbnail {
-                    thumbnailView
-                } else {
-                    videoPlayerView
+            GeometryReader { geo in
+                ZStack {
+                    if showThumbnail {
+                        thumbnailView
+                            .frame(width: geo.size.width, height: geo.size.height)
+                    } else {
+                        videoPlayerView
+                            .frame(width: geo.size.width, height: geo.size.height)
+                    }
                 }
+                .frame(width: geo.size.width, height: geo.size.height)
+                .clipped()
             }
         }
+        .frame(maxWidth: .infinity)
         .frame(height: 240)
         .background(Color.gray.opacity(0.2))
         .cornerRadius(12)
+        .clipped()
         .padding(.vertical, 8)
         .onAppear {
             setupPlayer()
@@ -58,25 +66,29 @@ struct VideoEmbed: View {
             ZStack {
                 // Thumbnail image
                 if let thumbnailURL = video.thumbnail, let url = URL(string: thumbnailURL) {
-                    CachedAsyncImage(url: url) { phase in
-                        switch phase {
-                        case .empty:
-                            Color.gray.opacity(0.3)
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        case .failure:
-                            Color.gray.opacity(0.3)
-                                .overlay(
-                                    Image(systemName: "video")
-                                        .foregroundColor(.gray)
-                                )
-                        @unknown default:
-                            Color.gray.opacity(0.3)
+                    GeometryReader { geo in
+                        CachedAsyncImage(url: url) { phase in
+                            switch phase {
+                            case .empty:
+                                Color.gray.opacity(0.3)
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: geo.size.width, height: geo.size.height)
+                            case .failure:
+                                Color.gray.opacity(0.3)
+                                    .overlay(
+                                        Image(systemName: "video")
+                                            .foregroundColor(.gray)
+                                    )
+                            @unknown default:
+                                Color.gray.opacity(0.3)
+                            }
                         }
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .clipped()
                     }
-                    .clipped()
                 } else {
                     Color.gray.opacity(0.3)
                         .overlay(

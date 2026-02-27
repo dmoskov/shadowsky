@@ -16,12 +16,23 @@ jest.mock('expo-image', () => {
 });
 
 jest.mock('../../utils/rich-text', () => ({
-  RichText: ({text, numberOfLines, style}: any) => {
-    const {Text} = require('react-native');
+  RichText: ({text, numberOfLines, style, onTruncation}: any) => {
+    const {Text, useEffect} = require('react');
+    const {Text: RNText} = require('react-native');
+
+    // Simulate truncation detection: if text is longer than 200 chars and
+    // numberOfLines is set, report as truncated
+    const React = require('react');
+    React.useEffect(() => {
+      if (onTruncation && numberOfLines) {
+        onTruncation(text && text.length > 200);
+      }
+    }, [text, numberOfLines, onTruncation]);
+
     return (
-      <Text testID="rich-text" numberOfLines={numberOfLines} style={style}>
+      <RNText testID="rich-text" numberOfLines={numberOfLines} style={style}>
         {text}
-      </Text>
+      </RNText>
     );
   },
 }));
@@ -133,6 +144,38 @@ describe('QuoteEmbed', () => {
     it('renders "[Post not found]" when record is undefined', () => {
       const {getByText} = render(<QuoteEmbed record={undefined} />);
       expect(getByText('[Post not found]')).toBeTruthy();
+    });
+  });
+
+  describe('truncation indicator', () => {
+    it('shows "Show more" when text is truncated', () => {
+      const longText = 'A'.repeat(300);
+      const record = makeViewRecord({value: {text: longText}});
+      const {getByText} = render(<QuoteEmbed record={record} />);
+      expect(getByText('Show more')).toBeTruthy();
+    });
+
+    it('does not show "Show more" for short text', () => {
+      const record = makeViewRecord({value: {text: 'Short post'}});
+      const {queryByText} = render(<QuoteEmbed record={record} />);
+      expect(queryByText('Show more')).toBeNull();
+    });
+
+    it('does not show "Show more" for not-found records', () => {
+      const record = {
+        $type: 'app.bsky.embed.record#viewNotFound',
+        uri: 'at://did:plc:deleted/app.bsky.feed.post/deleted1',
+      };
+      const {queryByText} = render(<QuoteEmbed record={record} />);
+      expect(queryByText('Show more')).toBeNull();
+    });
+
+    it('does not show "Show more" when post type is not a valid feed post', () => {
+      const record = makeViewRecord({
+        value: {$type: 'some.other.type', text: 'A'.repeat(300)},
+      });
+      const {queryByText} = render(<QuoteEmbed record={record} />);
+      expect(queryByText('Show more')).toBeNull();
     });
   });
 

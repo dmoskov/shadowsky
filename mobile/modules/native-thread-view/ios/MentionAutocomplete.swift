@@ -67,7 +67,7 @@ struct MentionSuggestionsView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(suggestion.displayName ?? suggestion.handle)
+                .accessibilityLabel(suggestion.displayName.orIfEmpty(suggestion.handle))
                 .accessibilityHint("Double tap to mention @\(suggestion.handle)")
 
                 if suggestion.id != suggestions.prefix(5).last?.id {

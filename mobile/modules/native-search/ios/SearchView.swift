@@ -251,7 +251,7 @@ struct SearchView: View {
                 avatarView(url: actor.avatar, size: 48)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(actor.displayName ?? actor.handle)
+                    Text(actor.displayName.orIfEmpty(actor.handle))
                         .font(.body.weight(.semibold))
                         .foregroundColor(Color(UIColor.label))
                         .lineLimit(1)
@@ -594,7 +594,7 @@ struct SearchView: View {
                         avatarView(url: actor.avatar, size: 36)
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(actor.displayName ?? actor.handle)
+                            Text(actor.displayName.orIfEmpty(actor.handle))
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundColor(Color(UIColor.label))
                                 .lineLimit(1)

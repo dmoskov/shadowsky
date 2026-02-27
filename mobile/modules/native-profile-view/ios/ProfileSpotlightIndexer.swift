@@ -26,7 +26,7 @@ final class ProfileSpotlightIndexer {
     func indexProfile(_ profile: SerializedProfile) {
         guard CSSearchableIndex.isIndexingAvailable() else { return }
 
-        let displayName = profile.displayName ?? profile.handle
+        let displayName = profile.displayName.orIfEmpty(profile.handle)
         let uniqueIdentifier = "bsky-profile-\(profile.did)"
 
         let attributeSet = CSSearchableItemAttributeSet(contentType: UTType.contact)

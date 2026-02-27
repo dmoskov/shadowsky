@@ -25,7 +25,7 @@ final class ThreadSpotlightIndexer {
     func indexThread(rootPost: ThreadPost) {
         guard CSSearchableIndex.isIndexingAvailable() else { return }
 
-        let authorName = rootPost.author.displayName ?? rootPost.author.handle
+        let authorName = rootPost.author.displayName.orIfEmpty(rootPost.author.handle)
         let postText = rootPost.record.text
         let uniqueIdentifier = "bsky-thread-\(rootPost.uri)"
 

@@ -101,7 +101,7 @@ struct ThreadPostCard: View {
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(node.post.author.displayName ?? node.post.author.handle)
+                        Text(node.post.author.displayName.orIfEmpty(node.post.author.handle))
                             .font(.body.weight(.semibold))
                             .foregroundColor(.primary)
 

@@ -285,6 +285,29 @@ PODS:
     - Yoga
   - ExpoQuickActions (6.0.1):
     - ExpoModulesCore
+  - ExpoScreenOrientation (55.0.8):
+    - ExpoModulesCore
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - ExpoSecureStore (15.0.8):
     - ExpoModulesCore
   - ExpoSharing (14.0.8):
@@ -376,6 +399,7 @@ PODS:
     - ExpoSwiftUIFeed
   - NativeSearch (1.0.0):
     - ExpoModulesCore
+    - ExpoSwiftUIFeed
   - NativeThreadView (1.0.0):
     - ExpoModulesCore
     - ExpoSwiftUIFeed
@@ -2448,6 +2472,7 @@ DEPENDENCIES:
   - ExpoMediaLibrary (from `../node_modules/expo-media-library/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoQuickActions (from `../node_modules/expo-quick-actions/ios`)
+  - ExpoScreenOrientation (from `../node_modules/expo-screen-orientation/ios`)
   - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
   - ExpoSharing (from `../node_modules/expo-sharing/ios`)
   - ExpoSwiftUIFeed (from `../modules/expo-swiftui-feed/ios`)
@@ -2632,6 +2657,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-modules-core"
   ExpoQuickActions:
     :path: "../node_modules/expo-quick-actions/ios"
+  ExpoScreenOrientation:
+    :path: "../node_modules/expo-screen-orientation/ios"
   ExpoSecureStore:
     :path: "../node_modules/expo-secure-store/ios"
   ExpoSharing:
@@ -2871,6 +2898,7 @@ SPEC CHECKSUMS:
   ExpoMediaLibrary: a3093b04365b245bb23b25b6eba84eb6ab55fecb
   ExpoModulesCore: f3da4f1ab5a8375d0beafab763739dbee8446583
   ExpoQuickActions: 61e27ec458e4e06b854ddc6967c2b57aa6a772d5
+  ExpoScreenOrientation: c61e6181dd81b55a7e65a542e9fc43af8e9eea87
   ExpoSecureStore: d32f751874a2ceb5aaeebeb3578e165c1ba2b24a
   ExpoSharing: 0d983394ed4a80334bab5a0d5384f75710feb7e8
   ExpoSwiftUIFeed: b7a362dbca1306a864906369e1d245e3753e844b
@@ -2893,7 +2921,7 @@ SPEC CHECKSUMS:
   NativeMessages: 5f8dc1ea49db758a9b5f6d5dcb036099530e9114
   NativeNotificationsList: f28486a4e690e1b53371fe5524148fc8132134cb
   NativeProfileView: aab8865f3dd1ac2532bb6fd74eaebe7efca107b9
-  NativeSearch: fe5112908fa1d515c64f42a9dc87276e15267687
+  NativeSearch: 7800a36d2c3d43a573f3b8d79ea3f3a540bee77c
   NativeThreadView: c3f43ccf5364b06cba7c40871612d22e8e62bc96
   NotificationBridge: 69a83c558960ce20e262985486f16b07a981789b
   RCTDeprecation: 943572d4be82d480a48f4884f670135ae30bf990
