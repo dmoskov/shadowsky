@@ -55,11 +55,13 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
 
   const handlePostPress = useCallback(
     (post: AppBskyFeedDefs.FeedViewPost) => {
-      // Navigate to thread
+      // Navigate to thread - parse AT URI: at://did/collection/rkey
+      const parts = post.post.uri.split('/');
+      const postId = parts[parts.length - 1];
+      const did = parts[2] || '';
       const authorHandle = post.post.author.handle;
-      const postId = post.post.uri.split('/').pop() || '';
       router.push(
-        `/(app)/(tabs)/(home)/thread/${postId}?handle=${authorHandle}`
+        `/(app)/(tabs)/(home)/thread/${postId}?handle=${authorHandle}&did=${encodeURIComponent(did)}`
       );
     },
     [router]

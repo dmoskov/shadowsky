@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { useCallback } from "react";
 import { ErrorState } from "../../../../../src/components/ErrorState";
 import { useRequiredParam } from "../../../../../src/hooks/useRequiredParam";
 import { ProfileScreenNative } from "../../../../../src/screens/profile/ProfileScreenNative";
@@ -23,12 +24,35 @@ export default function ProfileRoute() {
     router.push("/(app)/messages");
   };
 
+  const handleNavigateToPost = useCallback(
+    (uri: string) => {
+      const parts = uri.split("/");
+      const postId = parts[parts.length - 1];
+      const did = parts[2] || "";
+      if (postId) {
+        router.push(
+          `/(app)/(tabs)/(feeds)/thread/${postId}?handle=${did}&did=${encodeURIComponent(did)}`,
+        );
+      }
+    },
+    [router],
+  );
+
+  const handleNavigateToProfile = useCallback(
+    (profileHandle: string) => {
+      router.push(`/(app)/(tabs)/(feeds)/profile/${profileHandle}`);
+    },
+    [router],
+  );
+
   return (
     <ProfileScreenNative
       handle={handle}
       onNavigateToFollowers={handleNavigateToFollowers}
       onNavigateToFollowing={handleNavigateToFollowing}
       onNavigateToMessages={handleNavigateToMessages}
+      onNavigateToPost={handleNavigateToPost}
+      onNavigateToProfile={handleNavigateToProfile}
     />
   );
 }

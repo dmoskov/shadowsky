@@ -82,19 +82,20 @@ export function BookmarksScreen() {
     }));
 
   const handlePostPress = (post: AppBskyFeedDefs.FeedViewPost) => {
-    // Navigate to post detail
-    router.push({
-      pathname: "/post/[uri]" as never,
-      params: { uri: encodeURIComponent(post.post.uri) },
-    } as never);
+    // Navigate to thread detail - parse AT URI: at://did/collection/rkey
+    const parts = post.post.uri.split("/");
+    const postId = parts[parts.length - 1];
+    const did = parts[2] || "";
+    const authorHandle = post.post.author.handle;
+    if (postId) {
+      router.push(
+        `/(app)/(tabs)/(profile)/thread/${postId}?handle=${authorHandle}&did=${encodeURIComponent(did)}`,
+      );
+    }
   };
 
   const handleProfilePress = (handle: string) => {
-    // Navigate to profile
-    router.push({
-      pathname: "/profile/[handle]" as never,
-      params: { handle },
-    } as never);
+    router.push(`/(app)/(tabs)/(profile)/user/${handle}`);
   };
 
   const handleBookmark = (post: AppBskyFeedDefs.FeedViewPost) => {
