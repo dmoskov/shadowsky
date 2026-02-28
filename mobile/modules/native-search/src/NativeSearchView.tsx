@@ -66,6 +66,7 @@ export interface NativeSearchViewProps
   error?: string | null;
   showHistory?: boolean;
   activeFilterCount?: number;
+  scrollToTopTrigger?: number;
 }
 
 // MARK: - Low-level Native View
@@ -87,8 +88,13 @@ export interface NativeSearchHandle {
   scrollToTop: () => void;
 }
 
-const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
+interface NativeSearchOuterProps extends ViewProps {
+  scrollToTopTrigger?: number;
+}
+
+const NativeSearchView = forwardRef<NativeSearchHandle, NativeSearchOuterProps>(
   (props, ref) => {
+    const { scrollToTopTrigger = 0, ...viewProps } = props;
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -467,14 +473,14 @@ const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
 
     useImperativeHandle(ref, () => ({
       scrollToTop: () => {
-        // SwiftUI handles scroll-to-top natively
+        // Scroll-to-top is triggered via the scrollToTopTrigger prop
       },
     }));
 
     return (
       <View style={{ flex: 1 }}>
         <NativeSearchViewRaw
-          {...props}
+          {...viewProps}
           query={searchQuery}
           activeTab={activeTab}
           isLoading={isLoading && !!debouncedQuery}
@@ -483,6 +489,7 @@ const NativeSearchView = forwardRef<NativeSearchHandle, ViewProps>(
           isLoadingTrending={isLoadingTrending}
           showHistory={showHistory}
           activeFilterCount={activeFilterCount}
+          scrollToTopTrigger={scrollToTopTrigger}
           onQueryChange={handleQueryChange}
           onTabChange={handleTabChange}
           onRefresh={handleRefresh}

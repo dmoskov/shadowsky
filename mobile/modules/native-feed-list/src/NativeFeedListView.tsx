@@ -47,6 +47,7 @@ export interface NativeFeedListProps extends ViewProps, FeedListEvents {
   isLoadingMore?: boolean;
   error?: string | null;
   emptyMessage?: string;
+  scrollToTopTrigger?: number;
 }
 
 // Feed query type (matching useTimeline/useCustomFeed)
@@ -71,6 +72,7 @@ export const NativeFeedListView = forwardRef<any, NativeFeedListProps>((props, _
     isLoadingMore = false,
     error = null,
     emptyMessage = 'No posts yet',
+    scrollToTopTrigger = 0,
     onRefresh,
     onLoadMore,
     onPostPress,
@@ -101,6 +103,7 @@ export const NativeFeedListView = forwardRef<any, NativeFeedListProps>((props, _
       isLoadingMore={isLoadingMore}
       error={error}
       emptyMessage={emptyMessage}
+      scrollToTopTrigger={scrollToTopTrigger}
       onRefresh={onRefresh}
       onLoadMore={onLoadMore}
       onPostPress={onPostPress}
@@ -139,6 +142,7 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
   const { isLoading, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = query;
   const [bridgeError, setBridgeError] = useState<string | null>(null);
   const [isUserRefreshing, setIsUserRefreshing] = useState(false);
+  const [scrollToTopTrigger, setScrollToTopTrigger] = useState(0);
 
   // Serialize feed data for Swift
   const { serializedJSON } = useCompleteFeedSerializer(query, {
@@ -197,8 +201,7 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
   // Expose imperative handle for scroll-to-top
   useImperativeHandle(ref, () => ({
     scrollToTop: () => {
-      // SwiftUI ScrollView will handle this automatically with scroll-to-top gesture
-      // Or we can add a native method if needed
+      setScrollToTopTrigger(prev => prev + 1);
     },
   }));
 
@@ -210,6 +213,7 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
       isLoadingMore={isFetchingNextPage}
       error={error?.message || bridgeError || null}
       emptyMessage={emptyMessage}
+      scrollToTopTrigger={scrollToTopTrigger}
       onRefresh={handleRefresh}
       onLoadMore={handleLoadMore}
       style={FLEX_STYLE}

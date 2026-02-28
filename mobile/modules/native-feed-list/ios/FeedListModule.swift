@@ -38,6 +38,10 @@ public class FeedListModule: Module {
                 view.feedListProps.emptyMessage = emptyMessage
             }
 
+            Prop("scrollToTopTrigger") { (view: FeedListViewWrapper, trigger: Int) in
+                view.feedListProps.scrollToTopTrigger = trigger
+            }
+
             // Events
             Events("onRefresh", "onLoadMore", "onPostPress", "onProfilePress",
                    "onLike", "onRepost", "onReply", "onBookmark",

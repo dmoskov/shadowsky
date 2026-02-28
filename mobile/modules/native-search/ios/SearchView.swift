@@ -224,21 +224,31 @@ struct SearchView: View {
     // MARK: - People Results
 
     private var peopleResultsList: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                if state.actors.isEmpty && !state.isLoading && state.hasReceivedResults {
-                    emptyResultsView
-                } else {
-                    ForEach(state.actors) { actor in
-                        actorRow(actor)
-                        Divider()
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    if state.actors.isEmpty && !state.isLoading && state.hasReceivedResults {
+                        emptyResultsView
+                    } else {
+                        ForEach(state.actors) { actor in
+                            actorRow(actor)
+                            Divider()
+                        }
                     }
                 }
             }
-        }
-        .scrollDismissesKeyboard(.interactively)
-        .refreshable {
-            onRefresh()
+            .scrollDismissesKeyboard(.interactively)
+            .refreshable {
+                onRefresh()
+            }
+            .onChangeCompat(of: state.scrollToTopTrigger) { _ in
+                guard state.scrollToTopTrigger > 0 else { return }
+                if let firstId = state.actors.first?.id {
+                    withAnimation {
+                        proxy.scrollTo(firstId, anchor: .top)
+                    }
+                }
+            }
         }
     }
 
@@ -280,37 +290,47 @@ struct SearchView: View {
     // MARK: - Posts Results
 
     private var postsResultsList: some View {
-        ScrollView {
-            LazyVStack(spacing: 0) {
-                if state.posts.isEmpty && !state.isLoading && state.hasReceivedResults {
-                    emptyResultsView
-                } else {
-                    ForEach(state.posts) { post in
-                        postRow(post)
-                        Divider()
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    if state.posts.isEmpty && !state.isLoading && state.hasReceivedResults {
+                        emptyResultsView
+                    } else {
+                        ForEach(state.posts) { post in
+                            postRow(post)
+                            Divider()
 
-                        // Load more trigger
-                        if post.id == state.posts.dropLast(min(3, state.posts.count)).last?.id {
-                            Color.clear
-                                .frame(height: 1)
-                                .onAppear {
-                                    if state.hasMore && !state.isLoadingMore {
-                                        onLoadMore()
+                            // Load more trigger
+                            if post.id == state.posts.dropLast(min(3, state.posts.count)).last?.id {
+                                Color.clear
+                                    .frame(height: 1)
+                                    .onAppear {
+                                        if state.hasMore && !state.isLoadingMore {
+                                            onLoadMore()
+                                        }
                                     }
-                                }
+                            }
                         }
-                    }
 
-                    if state.isLoadingMore {
-                        ProgressView()
-                            .padding(20)
+                        if state.isLoadingMore {
+                            ProgressView()
+                                .padding(20)
+                        }
                     }
                 }
             }
-        }
-        .scrollDismissesKeyboard(.interactively)
-        .refreshable {
-            onRefresh()
+            .scrollDismissesKeyboard(.interactively)
+            .refreshable {
+                onRefresh()
+            }
+            .onChangeCompat(of: state.scrollToTopTrigger) { _ in
+                guard state.scrollToTopTrigger > 0 else { return }
+                if let firstId = state.posts.first?.id {
+                    withAnimation {
+                        proxy.scrollTo(firstId, anchor: .top)
+                    }
+                }
+            }
         }
     }
 
