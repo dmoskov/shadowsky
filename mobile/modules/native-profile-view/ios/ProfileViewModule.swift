@@ -9,39 +9,55 @@
 import ExpoModulesCore
 import SwiftUI
 
+// MARK: - Profile Props
+
+/// ObservableObject for props passed from React Native.
+/// Using an observable object allows SwiftUI to diff individual property
+/// changes instead of replacing the entire rootView on every prop update.
+class ProfileProps: ObservableObject {
+    @Published var isOwnProfile: Bool = false
+    @Published var isLoadingProfile: Bool = false
+    @Published var isRefreshing: Bool = false
+    @Published var isFollowPending: Bool = false
+    @Published var isMessagePending: Bool = false
+    @Published var error: String? = nil
+    @Published var errorType: String? = nil
+}
+
 public class ProfileViewModule: Module {
     public func definition() -> ModuleDefinition {
         Name("NativeProfileView")
 
         // View component that can be used in React Native
         View(ProfileViewWrapper.self) {
-            // Props
+            // Props - update the shared ProfileProps object directly
+            // instead of replacing the entire SwiftUI rootView
             Prop("isOwnProfile") { (view: ProfileViewWrapper, isOwnProfile: Bool) in
-                view.isOwnProfile = isOwnProfile
+                view.profileProps.isOwnProfile = isOwnProfile
             }
 
             Prop("isLoadingProfile") { (view: ProfileViewWrapper, isLoadingProfile: Bool) in
-                view.isLoadingProfile = isLoadingProfile
+                view.profileProps.isLoadingProfile = isLoadingProfile
             }
 
             Prop("isRefreshing") { (view: ProfileViewWrapper, isRefreshing: Bool) in
-                view.isRefreshing = isRefreshing
+                view.profileProps.isRefreshing = isRefreshing
             }
 
             Prop("isFollowPending") { (view: ProfileViewWrapper, isFollowPending: Bool) in
-                view.isFollowPending = isFollowPending
+                view.profileProps.isFollowPending = isFollowPending
             }
 
             Prop("isMessagePending") { (view: ProfileViewWrapper, isMessagePending: Bool) in
-                view.isMessagePending = isMessagePending
+                view.profileProps.isMessagePending = isMessagePending
             }
 
             Prop("error") { (view: ProfileViewWrapper, error: String?) in
-                view.error = error
+                view.profileProps.error = error
             }
 
             Prop("errorType") { (view: ProfileViewWrapper, errorType: String?) in
-                view.errorType = errorType
+                view.profileProps.errorType = errorType
             }
 
             // Events
@@ -67,36 +83,13 @@ public class ProfileViewModule: Module {
 
 // MARK: - View Wrapper
 
-/// UIKit wrapper for SwiftUI ProfileView
+/// UIKit wrapper for SwiftUI ProfileView.
+/// Props are stored in a shared ProfileProps ObservableObject so that
+/// SwiftUI can diff individual property changes without replacing the
+/// entire rootView (which would destroy state and cause flickering).
 class ProfileViewWrapper: ExpoView {
-    // Props
-    var isOwnProfile: Bool = false {
-        didSet { updateView() }
-    }
-
-    var isLoadingProfile: Bool = false {
-        didSet { updateView() }
-    }
-
-    var isRefreshing: Bool = false {
-        didSet { updateView() }
-    }
-
-    var isFollowPending: Bool = false {
-        didSet { updateView() }
-    }
-
-    var isMessagePending: Bool = false {
-        didSet { updateView() }
-    }
-
-    var error: String? = nil {
-        didSet { updateView() }
-    }
-
-    var errorType: String? = nil {
-        didSet { updateView() }
-    }
+    // Shared props object - mutated by Expo prop setters, observed by SwiftUI
+    let profileProps = ProfileProps()
 
     // Event handlers
     private let onRefresh = EventDispatcher()
@@ -249,24 +242,9 @@ class ProfileViewWrapper: ExpoView {
         return nil
     }
 
-    private func updateView() {
-        guard let hostingController = hostingController else { return }
-        hostingController.rootView = createProfileView()
-        // After updating the SwiftUI root view, recalculate height
-        DispatchQueue.main.async { [weak self] in
-            self?.recalculateHeight()
-        }
-    }
-
     private func createProfileView() -> ProfileView {
         ProfileView(
-            isOwnProfile: isOwnProfile,
-            isLoadingProfile: isLoadingProfile,
-            isRefreshing: isRefreshing,
-            isFollowPending: isFollowPending,
-            isMessagePending: isMessagePending,
-            error: error,
-            errorType: errorType,
+            props: profileProps,
             onRefresh: { [weak self] in
                 self?.onRefresh([:])
             },

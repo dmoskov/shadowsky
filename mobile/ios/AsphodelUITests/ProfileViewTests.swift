@@ -309,14 +309,10 @@ class ProfileViewTests: XCTestCase {
     // MARK: - Test: Loading state shows skeleton
 
     func testLoadingStateShowsSkeleton() throws {
+        let props = ProfileProps()
+        props.isLoadingProfile = true
         let view = ProfileView(
-            isOwnProfile: false,
-            isLoadingProfile: true,
-            isRefreshing: false,
-            isFollowPending: false,
-            isMessagePending: false,
-            error: nil,
-            errorType: nil,
+            props: props,
             onRefresh: nil,
             onTabChange: nil,
             onFollowToggle: nil,
@@ -358,13 +354,7 @@ class ProfileViewTests: XCTestCase {
         )
 
         let view = ProfileView(
-            isOwnProfile: false,
-            isLoadingProfile: false,
-            isRefreshing: false,
-            isFollowPending: false,
-            isMessagePending: false,
-            error: nil,
-            errorType: nil,
+            props: ProfileProps(),
             onRefresh: nil,
             onTabChange: nil,
             onFollowToggle: nil,
@@ -395,14 +385,10 @@ class ProfileViewTests: XCTestCase {
     // MARK: - Test: Error state shows error message
 
     func testErrorStateShowsErrorMessage() throws {
+        let props = ProfileProps()
+        props.error = "Network error occurred"
         let view = ProfileView(
-            isOwnProfile: false,
-            isLoadingProfile: false,
-            isRefreshing: false,
-            isFollowPending: false,
-            isMessagePending: false,
-            error: "Network error occurred",
-            errorType: nil,
+            props: props,
             onRefresh: nil,
             onTabChange: nil,
             onFollowToggle: nil,
@@ -431,14 +417,11 @@ class ProfileViewTests: XCTestCase {
     // MARK: - Test: Deleted account error shows specific message
 
     func testDeletedAccountErrorShowsSpecificMessage() throws {
+        let props = ProfileProps()
+        props.error = "Account deleted"
+        props.errorType = "deleted"
         let view = ProfileView(
-            isOwnProfile: false,
-            isLoadingProfile: false,
-            isRefreshing: false,
-            isFollowPending: false,
-            isMessagePending: false,
-            error: "Account deleted",
-            errorType: "deleted",
+            props: props,
             onRefresh: nil,
             onTabChange: nil,
             onFollowToggle: nil,
@@ -466,14 +449,11 @@ class ProfileViewTests: XCTestCase {
     // MARK: - Test: Suspended account error shows specific message
 
     func testSuspendedAccountErrorShowsSpecificMessage() throws {
+        let props = ProfileProps()
+        props.error = "Account suspended"
+        props.errorType = "suspended"
         let view = ProfileView(
-            isOwnProfile: false,
-            isLoadingProfile: false,
-            isRefreshing: false,
-            isFollowPending: false,
-            isMessagePending: false,
-            error: "Account suspended",
-            errorType: "suspended",
+            props: props,
             onRefresh: nil,
             onTabChange: nil,
             onFollowToggle: nil,
