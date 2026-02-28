@@ -58,11 +58,7 @@ function PhoneAppLayout() {
       <Drawer.Screen
         name="analytics"
         options={{
-          headerShown: true,
-          title: "Analytics",
-          headerStyle: { backgroundColor: "#0a0a0f" },
-          headerTintColor: "#ffffff",
-          headerLeft: () => <HeaderBackButton />,
+          headerShown: false,
         }}
       />
       <Drawer.Screen
