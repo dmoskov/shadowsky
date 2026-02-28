@@ -42,6 +42,9 @@ class SearchState: ObservableObject {
     @Published var typeaheadActors: [SearchActorResult] = []
     @Published var isLoadingTypeahead: Bool = false
 
+    // Scroll-to-top trigger (incremented by RN when tab is re-tapped)
+    @Published var scrollToTopTrigger: Int = 0
+
     // Notifications for search results
     static let searchResultsNotification = NSNotification.Name("NativeSearchResultsUpdated")
     static let trendingDataNotification = NSNotification.Name("NativeSearchTrendingUpdated")

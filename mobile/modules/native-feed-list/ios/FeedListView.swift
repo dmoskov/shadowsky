@@ -33,6 +33,7 @@ class FeedListProps: ObservableObject {
     @Published var isLoadingMore: Bool = false
     @Published var error: String? = nil
     @Published var emptyMessage: String = "No posts yet"
+    @Published var scrollToTopTrigger: Int = 0
 }
 
 // MARK: - FeedListView
@@ -193,6 +194,14 @@ struct FeedListView: View {
             }
             .onChangeCompat(of: feedState.convertedPosts.count) { _ in
                 restoreScrollPositionIfNeeded()
+            }
+            .onChangeCompat(of: props.scrollToTopTrigger) { _ in
+                guard props.scrollToTopTrigger > 0 else { return }
+                if let firstId = feedState.convertedPosts.first?.id {
+                    withAnimation {
+                        proxy.scrollTo(firstId, anchor: .top)
+                    }
+                }
             }
         }
     }

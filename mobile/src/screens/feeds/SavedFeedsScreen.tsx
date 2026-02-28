@@ -1,4 +1,4 @@
-import React, {useState, useMemo, useEffect, useCallback} from 'react';
+import React, {useState, useMemo, useEffect, useCallback, useRef} from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import {useRouter, useNavigation} from 'expo-router';
+import {useScrollToTop} from '@react-navigation/native';
 import {useTheme} from '../../contexts/ThemeContext';
 import {PostCardSkeleton} from '../../components/PostCardSkeleton';
 import {
@@ -30,6 +31,10 @@ export function SavedFeedsScreen() {
   const [isReorderMode, setIsReorderMode] = useState(false);
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const scrollRef = useRef<FlatList>(null);
+
+  // Enable scroll-to-top on tab press
+  useScrollToTop(scrollRef);
 
   const {data: savedFeedsData, isLoading, isError, refetch} = useSavedFeeds();
   const {data: pinnedFeedUris} = usePinnedFeeds();
@@ -244,6 +249,7 @@ export function SavedFeedsScreen() {
 
     return (
       <FlatList
+        ref={scrollRef}
         data={feeds}
         keyboardDismissMode="on-drag"
         renderItem={renderStaticItem}

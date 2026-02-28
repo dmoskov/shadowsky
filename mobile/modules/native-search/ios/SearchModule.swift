@@ -56,6 +56,10 @@ public class SearchModule: Module {
                 view.searchState.showHistory = show
             }
 
+            Prop("scrollToTopTrigger") { (view: SearchViewWrapper, trigger: Int) in
+                view.searchState.scrollToTopTrigger = trigger
+            }
+
             // Events (native -> JS)
             Events(
                 "onQueryChange",

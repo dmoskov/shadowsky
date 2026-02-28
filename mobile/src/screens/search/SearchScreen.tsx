@@ -70,11 +70,26 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
 
   const styles = useMemo(() => createStyles(colors), [colors]);
 
+  // Scroll-to-top support: must run before conditional return (rules of hooks)
+  const [nativeScrollTrigger, setNativeScrollTrigger] = useState(0);
+  const nativeScrollRef = useRef<any>({
+    scrollToTop: () => setNativeScrollTrigger(prev => prev + 1),
+  });
+  const scrollRef = useRef<FlatList>(null);
+
+  // Register scroll-to-top for this screen (handles tab re-tap)
+  useScrollToTop(
+    USE_NATIVE_SEARCH && NativeSearchComponent ? nativeScrollRef : scrollRef
+  );
+
   // On iOS, render the native SwiftUI search view
   if (USE_NATIVE_SEARCH && NativeSearchComponent) {
     return (
       <View style={styles.nativeSearchContainer}>
-        <NativeSearchComponent style={styles.nativeSearchView} />
+        <NativeSearchComponent
+          scrollToTopTrigger={nativeScrollTrigger}
+          style={styles.nativeSearchView}
+        />
       </View>
     );
   }
@@ -90,13 +105,9 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   });
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [showHistory, setShowHistory] = useState(false);
-  const scrollRef = useRef<FlatList>(null);
 
   const { toggleBookmark, isBookmarked: checkIsBookmarked } = useBookmarks();
   const { topics, trends, isLoading: isLoadingTrending } = useTrendingData();
-
-  // Enable scroll-to-top on tab press
-  useScrollToTop(scrollRef);
 
   // Load search history on mount
   useEffect(() => {
