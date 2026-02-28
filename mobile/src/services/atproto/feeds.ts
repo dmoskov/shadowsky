@@ -276,6 +276,13 @@ export async function searchFeedGenerators(
   }, ATProtoEndpointType.FEED);
 }
 
+interface SavedFeedItemV2 {
+  id: string;
+  type: string;
+  value: string;
+  pinned: boolean;
+}
+
 /**
  * Extract pinned feed URIs from preferences, supporting both v1 and v2 formats.
  */
@@ -284,7 +291,7 @@ function extractPinnedFeedUris(preferences: any[]): string[] {
   const v2Pref = preferences.find(
     (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPrefV2",
   ) as
-    | { items?: Array<{ type: string; value: string; pinned: boolean }> }
+    | { items?: SavedFeedItemV2[] }
     | undefined;
 
   if (v2Pref?.items && v2Pref.items.length > 0) {
@@ -299,6 +306,29 @@ function extractPinnedFeedUris(preferences: any[]): string[] {
   ) as { saved?: string[]; pinned?: string[] } | undefined;
 
   return v1Pref?.pinned || [];
+}
+
+/**
+ * Find a v2 saved feed item by its feed URI.
+ */
+function findV2Item(
+  preferences: any[],
+  feedUri: string,
+): { index: number; item: SavedFeedItemV2; prefIndex: number } | undefined {
+  const prefIndex = preferences.findIndex(
+    (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPrefV2",
+  );
+  if (prefIndex < 0) return undefined;
+
+  const v2Pref = preferences[prefIndex] as { items?: SavedFeedItemV2[] };
+  if (!v2Pref.items) return undefined;
+
+  const itemIndex = v2Pref.items.findIndex(
+    (item) => item.value === feedUri && item.type === "feed",
+  );
+  if (itemIndex < 0) return undefined;
+
+  return { index: itemIndex, item: v2Pref.items[itemIndex], prefIndex };
 }
 
 /**
@@ -331,205 +361,262 @@ export async function getSavedFeeds(): Promise<FeedDefs.GeneratorView[]> {
 }
 
 /**
- * Save a feed to the user's preferences
+ * Save a feed to the user's preferences.
+ * Supports both v2 (savedFeedsPrefV2) and v1 (savedFeedsPref) formats.
+ * Saving a feed also pins it so it appears on the home feed bar.
  */
 export async function saveFeed(feedUri: string): Promise<void> {
   return rateLimited(async () => {
     const client = getAtProtoClient();
     const agent = client.getAgent();
 
-    // Get current preferences
     const response = await agent.app.bsky.actor.getPreferences();
-    const preferences = response.data.preferences;
+    const preferences = [...response.data.preferences];
 
-    // Find saved feeds preference
-    const savedFeedsIndex = preferences.findIndex(
+    // Try v2 format first
+    const v2Index = preferences.findIndex(
+      (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPrefV2",
+    );
+
+    if (v2Index >= 0) {
+      const v2Pref = preferences[v2Index] as { items?: SavedFeedItemV2[] };
+      const items = [...(v2Pref.items || [])];
+
+      // Already saved — nothing to do
+      if (items.some((item) => item.value === feedUri && item.type === "feed")) {
+        return;
+      }
+
+      items.push({
+        id: `feed-${Date.now()}`,
+        type: "feed",
+        value: feedUri,
+        pinned: true,
+      });
+
+      (preferences as any[])[v2Index] = {
+        ...preferences[v2Index],
+        items,
+      };
+
+      await agent.app.bsky.actor.putPreferences({ preferences });
+      return;
+    }
+
+    // Fall back to v1 format
+    const v1Index = preferences.findIndex(
       (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPref",
     );
 
     let savedFeeds: string[] = [];
     let pinnedFeeds: string[] = [];
 
-    if (savedFeedsIndex >= 0) {
-      const savedFeedsPref = preferences[savedFeedsIndex] as {
+    if (v1Index >= 0) {
+      const v1Pref = preferences[v1Index] as {
         saved?: string[];
         pinned?: string[];
       };
-      savedFeeds = savedFeedsPref.saved || [];
-      pinnedFeeds = savedFeedsPref.pinned || [];
+      savedFeeds = [...(v1Pref.saved || [])];
+      pinnedFeeds = [...(v1Pref.pinned || [])];
     }
 
-    // Add feed if not already saved
     if (!savedFeeds.includes(feedUri)) {
       savedFeeds.push(feedUri);
+      pinnedFeeds.push(feedUri);
 
-      // Update preferences
-      const updatedPreferences = [...preferences];
-      if (savedFeedsIndex >= 0) {
-        updatedPreferences[savedFeedsIndex] = {
+      if (v1Index >= 0) {
+        preferences[v1Index] = {
           $type: "app.bsky.actor.defs#savedFeedsPref",
           saved: savedFeeds,
           pinned: pinnedFeeds,
         };
       } else {
-        updatedPreferences.push({
+        preferences.push({
           $type: "app.bsky.actor.defs#savedFeedsPref",
           saved: savedFeeds,
           pinned: pinnedFeeds,
         });
       }
 
-      await agent.app.bsky.actor.putPreferences({
-        preferences: updatedPreferences,
-      });
+      await agent.app.bsky.actor.putPreferences({ preferences });
     }
   }, ATProtoEndpointType.FEED);
 }
 
 /**
- * Remove a feed from the user's preferences
+ * Remove a feed from the user's preferences.
+ * Supports both v2 and v1 formats.
  */
 export async function unsaveFeed(feedUri: string): Promise<void> {
   return rateLimited(async () => {
     const client = getAtProtoClient();
     const agent = client.getAgent();
 
-    // Get current preferences
     const response = await agent.app.bsky.actor.getPreferences();
-    const preferences = response.data.preferences;
+    const preferences = [...response.data.preferences];
 
-    // Find saved feeds preference
-    const savedFeedsIndex = preferences.findIndex(
+    // Try v2 format first
+    const found = findV2Item(preferences, feedUri);
+    if (found) {
+      const v2Pref = preferences[found.prefIndex] as { items: SavedFeedItemV2[] };
+      (preferences as any[])[found.prefIndex] = {
+        ...preferences[found.prefIndex],
+        items: v2Pref.items.filter((_, i) => i !== found.index),
+      };
+
+      await agent.app.bsky.actor.putPreferences({ preferences });
+      return;
+    }
+
+    // Fall back to v1 format
+    const v1Index = preferences.findIndex(
       (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPref",
     );
 
-    if (savedFeedsIndex >= 0) {
-      const savedFeedsPref = preferences[savedFeedsIndex] as {
+    if (v1Index >= 0) {
+      const v1Pref = preferences[v1Index] as {
         saved?: string[];
         pinned?: string[];
       };
-      const savedFeeds = savedFeedsPref.saved || [];
-      const pinnedFeeds = savedFeedsPref.pinned || [];
 
-      // Remove feed from saved and pinned
-      const updatedSavedFeeds = savedFeeds.filter((uri) => uri !== feedUri);
-      const updatedPinnedFeeds = pinnedFeeds.filter((uri) => uri !== feedUri);
-
-      // Update preferences
-      const updatedPreferences = [...preferences];
-      updatedPreferences[savedFeedsIndex] = {
+      preferences[v1Index] = {
         $type: "app.bsky.actor.defs#savedFeedsPref",
-        saved: updatedSavedFeeds,
-        pinned: updatedPinnedFeeds,
+        saved: (v1Pref.saved || []).filter((uri) => uri !== feedUri),
+        pinned: (v1Pref.pinned || []).filter((uri) => uri !== feedUri),
       };
 
-      await agent.app.bsky.actor.putPreferences({
-        preferences: updatedPreferences,
-      });
+      await agent.app.bsky.actor.putPreferences({ preferences });
     }
   }, ATProtoEndpointType.FEED);
 }
 
 /**
- * Pin a feed to the home screen
+ * Pin a feed to the home screen.
+ * Supports both v2 and v1 formats.
  */
 export async function pinFeed(feedUri: string): Promise<void> {
   return rateLimited(async () => {
     const client = getAtProtoClient();
     const agent = client.getAgent();
 
-    // Get current preferences
     const response = await agent.app.bsky.actor.getPreferences();
-    const preferences = response.data.preferences;
+    const preferences = [...response.data.preferences];
 
-    // Find saved feeds preference
-    const savedFeedsIndex = preferences.findIndex(
+    // Try v2 format first
+    const v2Index = preferences.findIndex(
+      (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPrefV2",
+    );
+
+    if (v2Index >= 0) {
+      const v2Pref = preferences[v2Index] as { items?: SavedFeedItemV2[] };
+      const items = [...(v2Pref.items || [])];
+      const existingIndex = items.findIndex(
+        (item) => item.value === feedUri && item.type === "feed",
+      );
+
+      if (existingIndex >= 0) {
+        if (items[existingIndex].pinned) return; // Already pinned
+        items[existingIndex] = { ...items[existingIndex], pinned: true };
+      } else {
+        // Feed not saved yet — save and pin
+        items.push({
+          id: `feed-${Date.now()}`,
+          type: "feed",
+          value: feedUri,
+          pinned: true,
+        });
+      }
+
+      (preferences as any[])[v2Index] = { ...preferences[v2Index], items };
+      await agent.app.bsky.actor.putPreferences({ preferences });
+      return;
+    }
+
+    // Fall back to v1 format
+    const v1Index = preferences.findIndex(
       (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPref",
     );
 
     let savedFeeds: string[] = [];
     let pinnedFeeds: string[] = [];
 
-    if (savedFeedsIndex >= 0) {
-      const savedFeedsPref = preferences[savedFeedsIndex] as {
+    if (v1Index >= 0) {
+      const v1Pref = preferences[v1Index] as {
         saved?: string[];
         pinned?: string[];
       };
-      savedFeeds = savedFeedsPref.saved || [];
-      pinnedFeeds = savedFeedsPref.pinned || [];
+      savedFeeds = [...(v1Pref.saved || [])];
+      pinnedFeeds = [...(v1Pref.pinned || [])];
     }
 
-    // Add feed to pinned if not already pinned
     if (!pinnedFeeds.includes(feedUri)) {
       pinnedFeeds.push(feedUri);
-
-      // Also ensure it's saved
       if (!savedFeeds.includes(feedUri)) {
         savedFeeds.push(feedUri);
       }
 
-      // Update preferences
-      const updatedPreferences = [...preferences];
-      if (savedFeedsIndex >= 0) {
-        updatedPreferences[savedFeedsIndex] = {
+      if (v1Index >= 0) {
+        preferences[v1Index] = {
           $type: "app.bsky.actor.defs#savedFeedsPref",
           saved: savedFeeds,
           pinned: pinnedFeeds,
         };
       } else {
-        updatedPreferences.push({
+        preferences.push({
           $type: "app.bsky.actor.defs#savedFeedsPref",
           saved: savedFeeds,
           pinned: pinnedFeeds,
         });
       }
 
-      await agent.app.bsky.actor.putPreferences({
-        preferences: updatedPreferences,
-      });
+      await agent.app.bsky.actor.putPreferences({ preferences });
     }
   }, ATProtoEndpointType.FEED);
 }
 
 /**
- * Unpin a feed from the home screen
+ * Unpin a feed from the home screen.
+ * Supports both v2 and v1 formats.
  */
 export async function unpinFeed(feedUri: string): Promise<void> {
   return rateLimited(async () => {
     const client = getAtProtoClient();
     const agent = client.getAgent();
 
-    // Get current preferences
     const response = await agent.app.bsky.actor.getPreferences();
-    const preferences = response.data.preferences;
+    const preferences = [...response.data.preferences];
 
-    // Find saved feeds preference
-    const savedFeedsIndex = preferences.findIndex(
+    // Try v2 format first
+    const found = findV2Item(preferences, feedUri);
+    if (found) {
+      if (!found.item.pinned) return; // Already unpinned
+      const v2Pref = preferences[found.prefIndex] as { items: SavedFeedItemV2[] };
+      const items = [...v2Pref.items];
+      items[found.index] = { ...found.item, pinned: false };
+
+      (preferences as any[])[found.prefIndex] = { ...preferences[found.prefIndex], items };
+      await agent.app.bsky.actor.putPreferences({ preferences });
+      return;
+    }
+
+    // Fall back to v1 format
+    const v1Index = preferences.findIndex(
       (pref) => pref.$type === "app.bsky.actor.defs#savedFeedsPref",
     );
 
-    if (savedFeedsIndex >= 0) {
-      const savedFeedsPref = preferences[savedFeedsIndex] as {
+    if (v1Index >= 0) {
+      const v1Pref = preferences[v1Index] as {
         saved?: string[];
         pinned?: string[];
       };
-      const savedFeeds = savedFeedsPref.saved || [];
-      const pinnedFeeds = savedFeedsPref.pinned || [];
 
-      // Remove feed from pinned
-      const updatedPinnedFeeds = pinnedFeeds.filter((uri) => uri !== feedUri);
-
-      // Update preferences
-      const updatedPreferences = [...preferences];
-      updatedPreferences[savedFeedsIndex] = {
+      preferences[v1Index] = {
         $type: "app.bsky.actor.defs#savedFeedsPref",
-        saved: savedFeeds,
-        pinned: updatedPinnedFeeds,
+        saved: v1Pref.saved || [],
+        pinned: (v1Pref.pinned || []).filter((uri) => uri !== feedUri),
       };
 
-      await agent.app.bsky.actor.putPreferences({
-        preferences: updatedPreferences,
-      });
+      await agent.app.bsky.actor.putPreferences({ preferences });
     }
   }, ATProtoEndpointType.FEED);
 }
