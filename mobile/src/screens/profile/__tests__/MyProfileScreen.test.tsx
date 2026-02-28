@@ -64,6 +64,10 @@ const mockFeedPages = [
   },
 ];
 
+jest.mock('../../../hooks/api/usePosts', () => ({
+  useDeletePost: () => ({ mutateAsync: jest.fn() }),
+}));
+
 jest.mock('../../../hooks/api/useFeed', () => ({
   useAuthorFeed: () => ({
     data: { pages: mockFeedPages },
