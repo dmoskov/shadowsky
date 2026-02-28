@@ -7,21 +7,30 @@ import {
   useWindowDimensions,
 } from "react-native";
 import type { ThemeColors } from "../../../contexts/ThemeContext";
-import type { DailyEngagement } from "../../../services/atproto/analytics";
+import type { DailyEngagement, TimeRange } from "../../../services/atproto/analytics";
 
 const SMALL_SCREEN_WIDTH = 390;
+
+function formatHourLabel(hour: number): string {
+  if (hour === 0) return "12a";
+  if (hour === 12) return "12p";
+  return hour < 12 ? `${hour}a` : `${hour - 12}p`;
+}
 
 interface PostingFrequencyChartProps {
   dailyEngagement: DailyEngagement[];
   colors: ThemeColors;
   chartHeight?: number;
+  timeRange?: TimeRange;
 }
 
 function PostingFrequencyChartInner({
   dailyEngagement,
   colors,
   chartHeight = 180,
+  timeRange,
 }: PostingFrequencyChartProps) {
+  const isHourly = timeRange === "today";
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   // Scale chart height for small screens (iPhone SE = 667pt)
   const FREQ_CHART_HEIGHT = windowHeight < 700 ? Math.min(chartHeight, 140) : chartHeight;
@@ -66,13 +75,20 @@ function PostingFrequencyChartInner({
             ? ((day.replyPosts || 0) / maxPostsPerDay) * FREQ_CHART_HEIGHT
             : 0;
 
-        const labelInterval =
-          len <= 7 ? 1 : len <= 14 ? 2 : len <= 30 ? 5 : 10;
-        const showLabel =
-          index === 0 || index === len - 1 || index % labelInterval === 0;
+        const labelInterval = isHourly
+          ? 3 // Every 3 hours for 24h view
+          : len <= 7 ? 1 : len <= 14 ? 2 : len <= 30 ? 5 : 10;
+        const showLabel = isHourly
+          ? index % labelInterval === 0
+          : index === 0 || index === len - 1 || index % labelInterval === 0;
 
         const dateParts = day.date.split("-");
-        const dateLabel = `${parseInt(dateParts[1])}/${parseInt(dateParts[2])}`;
+        let dateLabel: string;
+        if (isHourly && dateParts.length >= 4) {
+          dateLabel = formatHourLabel(parseInt(dateParts[3]));
+        } else {
+          dateLabel = `${parseInt(dateParts[1])}/${parseInt(dateParts[2])}`;
+        }
 
         return (
           <View
@@ -150,7 +166,7 @@ function PostingFrequencyChartInner({
             { color: colors.text, marginBottom: 0 },
           ]}
         >
-          Posting Frequency
+          {isHourly ? "Hourly Posts" : "Posting Frequency"}
         </Text>
         <View style={[styles.chartLegend, isNarrow && styles.chartLegendNarrow]}>
           <View style={styles.legendItem}>
