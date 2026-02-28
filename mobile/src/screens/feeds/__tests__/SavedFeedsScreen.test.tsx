@@ -12,6 +12,10 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({top: 44, bottom: 34, left: 0, right: 0}),
 }));
 
+jest.mock('@react-navigation/native', () => ({
+  useScrollToTop: jest.fn(),
+}));
+
 const mockRouterPush = jest.fn();
 const mockSetOptions = jest.fn();
 jest.mock('expo-router', () => ({
