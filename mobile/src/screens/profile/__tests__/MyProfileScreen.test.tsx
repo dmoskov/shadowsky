@@ -83,6 +83,10 @@ jest.mock('../../../hooks/api/useFeed', () => ({
   }),
 }));
 
+jest.mock('../../../hooks/api/usePosts', () => ({
+  useDeletePost: () => ({ mutateAsync: jest.fn() }),
+}));
+
 jest.mock('../../../hooks/api/useStarterPacks', () => ({
   useActorStarterPacks: () => ({ data: null }),
 }));
