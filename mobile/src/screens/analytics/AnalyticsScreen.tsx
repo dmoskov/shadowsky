@@ -87,11 +87,18 @@ export function AnalyticsScreen() {
       const parts = d.split("-");
       return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
     };
+    if (timeRange === "today") {
+      // For 24h view, show "Last 24 hours" instead of date range
+      return {
+        start: "Last 24 hours",
+        end: "",
+      };
+    }
     return {
       start: format(parseDate(first.date), "MMM d, yyyy"),
       end: format(parseDate(last.date), "MMM d, yyyy"),
     };
-  }, [analytics?.dailyEngagement]);
+  }, [analytics?.dailyEngagement, timeRange]);
 
   const renderMetricCard = (
     title: string,
@@ -257,16 +264,18 @@ export function AnalyticsScreen() {
         </View>
       </View>
 
-      {/* Engagement Over Time Chart */}
+      {/* Engagement Over Time Chart (hourly for 24h, daily otherwise) */}
       <EngagementChart
         dailyEngagement={analytics.dailyEngagement}
         colors={colors}
+        timeRange={timeRange}
       />
 
-      {/* Posting Frequency Chart */}
+      {/* Posting Frequency Chart (hourly for 24h, daily otherwise) */}
       <PostingFrequencyChart
         dailyEngagement={analytics.dailyEngagement}
         colors={colors}
+        timeRange={timeRange}
       />
 
       {/* Best Posting Times */}
@@ -336,7 +345,9 @@ export function AnalyticsScreen() {
       {analytics.postsCount > 0 && dateRangeDisplay && (
         <View style={[styles.summaryBar, { backgroundColor: colors.surfaceElevated }]}>
           <Text style={[styles.summaryText, { color: colors.textSecondary }]}>
-            Showing {analytics.postsCount.toLocaleString()} posts from {dateRangeDisplay.start} to {dateRangeDisplay.end}
+            {timeRange === "today"
+              ? `Showing ${analytics.postsCount.toLocaleString()} posts from the last 24 hours`
+              : `Showing ${analytics.postsCount.toLocaleString()} posts from ${dateRangeDisplay.start} to ${dateRangeDisplay.end}`}
           </Text>
           <View style={styles.summaryStats}>
             <View style={styles.summaryStat}>

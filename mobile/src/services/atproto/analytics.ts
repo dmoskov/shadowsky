@@ -193,14 +193,46 @@ export async function getUserAnalytics(
     });
   }
 
-  // Build sorted daily engagement array
-  const days = timeRange === "today" ? 1 : timeRange === "week" ? 7 : timeRange === "month" ? 30 : 90;
+  // Build sorted engagement array (hourly for "today", daily for others)
   const dailyEngagement: DailyEngagement[] = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const key = formatDateKey(d);
-    dailyEngagement.push(dailyMap[key] || { date: key, likes: 0, reposts: 0, replies: 0, posts: 0, originalPosts: 0, replyPosts: 0 });
+  if (timeRange === "today") {
+    // Build hourly engagement for the last 24 hours (matching web behavior)
+    const hourlyMap: Record<string, DailyEngagement> = {};
+    for (const post of allPosts) {
+      const postDate = new Date(post.post.indexedAt);
+      const hourKey = `${formatDateKey(postDate)}-${String(postDate.getHours()).padStart(2, '0')}`;
+      if (!hourlyMap[hourKey]) {
+        hourlyMap[hourKey] = { date: hourKey, likes: 0, reposts: 0, replies: 0, posts: 0, originalPosts: 0, replyPosts: 0 };
+      }
+      const likes = post.post.likeCount || 0;
+      const reposts = post.post.repostCount || 0;
+      const replies = post.post.replyCount || 0;
+      hourlyMap[hourKey].likes += likes;
+      hourlyMap[hourKey].reposts += reposts;
+      hourlyMap[hourKey].replies += replies;
+      hourlyMap[hourKey].posts += 1;
+      const isReply = !!(post.post.record as { reply?: unknown })?.reply;
+      if (isReply) {
+        hourlyMap[hourKey].replyPosts += 1;
+      } else {
+        hourlyMap[hourKey].originalPosts += 1;
+      }
+    }
+    // Generate 24 hourly entries from 23 hours ago to now
+    for (let i = 23; i >= 0; i--) {
+      const d = new Date();
+      d.setHours(d.getHours() - i, 0, 0, 0);
+      const key = `${formatDateKey(d)}-${String(d.getHours()).padStart(2, '0')}`;
+      dailyEngagement.push(hourlyMap[key] || { date: key, likes: 0, reposts: 0, replies: 0, posts: 0, originalPosts: 0, replyPosts: 0 });
+    }
+  } else {
+    const days = timeRange === "week" ? 7 : timeRange === "month" ? 30 : 90;
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = formatDateKey(d);
+      dailyEngagement.push(dailyMap[key] || { date: key, likes: 0, reposts: 0, replies: 0, posts: 0, originalPosts: 0, replyPosts: 0 });
+    }
   }
 
   // Calculate best posting times

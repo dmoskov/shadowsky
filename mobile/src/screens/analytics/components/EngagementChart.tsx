@@ -7,19 +7,28 @@ import {
   useWindowDimensions,
 } from "react-native";
 import type { ThemeColors } from "../../../contexts/ThemeContext";
-import type { DailyEngagement } from "../../../services/atproto/analytics";
+import type { DailyEngagement, TimeRange } from "../../../services/atproto/analytics";
+
+function formatHourLabel(hour: number): string {
+  if (hour === 0) return "12a";
+  if (hour === 12) return "12p";
+  return hour < 12 ? `${hour}a` : `${hour - 12}p`;
+}
 
 interface EngagementChartProps {
   dailyEngagement: DailyEngagement[];
   colors: ThemeColors;
   chartHeight?: number;
+  timeRange?: TimeRange;
 }
 
 function EngagementChartInner({
   dailyEngagement,
   colors,
   chartHeight = 200,
+  timeRange,
 }: EngagementChartProps) {
+  const isHourly = timeRange === "today";
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   // Scale chart height for small screens (iPhone SE = 667pt)
   const CHART_HEIGHT = windowHeight < 700 ? Math.min(chartHeight, 160) : chartHeight;
@@ -69,21 +78,29 @@ function EngagementChartInner({
             ? (day.replies / maxDailyEngagement) * CHART_HEIGHT
             : 0;
 
-        const labelInterval =
-          len <= 7 ? 1 : len <= 14 ? 2 : len <= 30 ? 5 : 10;
-        const showLabel =
-          index === 0 || index === len - 1 || index % labelInterval === 0;
+        const labelInterval = isHourly
+          ? 3 // Every 3 hours for 24h view
+          : len <= 7 ? 1 : len <= 14 ? 2 : len <= 30 ? 5 : 10;
+        const showLabel = isHourly
+          ? index % labelInterval === 0
+          : index === 0 || index === len - 1 || index % labelInterval === 0;
 
         const dateParts = day.date.split("-");
-        const month = parseInt(dateParts[1]);
-        const dayNum = parseInt(dateParts[2]);
-        // Show month/day on first label of each month, day-only otherwise
-        const prevDateParts =
-          index > 0 ? dailyEngagement[index - 1].date.split("-") : null;
-        const isNewMonth =
-          !prevDateParts || parseInt(prevDateParts[1]) !== month;
-        const dateLabel =
-          isNewMonth || index === 0 ? `${month}/${dayNum}` : `${dayNum}`;
+        let dateLabel: string;
+        if (isHourly && dateParts.length >= 4) {
+          const hour = parseInt(dateParts[3]);
+          dateLabel = formatHourLabel(hour);
+        } else {
+          const month = parseInt(dateParts[1]);
+          const dayNum = parseInt(dateParts[2]);
+          // Show month/day on first label of each month, day-only otherwise
+          const prevDateParts =
+            index > 0 ? dailyEngagement[index - 1].date.split("-") : null;
+          const isNewMonth =
+            !prevDateParts || parseInt(prevDateParts[1]) !== month;
+          dateLabel =
+            isNewMonth || index === 0 ? `${month}/${dayNum}` : `${dayNum}`;
+        }
 
         return (
           <View
@@ -166,7 +183,7 @@ function EngagementChartInner({
   return (
     <View style={[styles.section, { backgroundColor: colors.surfaceElevated }]}>
       <Text style={[styles.sectionTitle, { color: colors.text }]}>
-        Engagement Over Time
+        {isHourly ? "Hourly Engagement" : "Engagement Over Time"}
       </Text>
       <View style={styles.chartLegend}>
         <View style={styles.legendItem}>
