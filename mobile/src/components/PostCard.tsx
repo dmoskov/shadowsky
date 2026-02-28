@@ -17,6 +17,7 @@ import {sharePost} from '../utils/share';
 import {PostEmbed} from './PostEmbed';
 import {InlineErrorBoundary} from './ui/InlineErrorBoundary';
 import {useBlockUser, useMuteUser} from '../hooks/api/useProfile';
+import {useDeletePost} from '../hooks/api/usePosts';
 import {recordBlock, recordMute} from '../services/moderation-history';
 import {useTheme} from '../contexts/ThemeContext';
 import {triggerHaptic} from '../utils/haptics';
@@ -114,6 +115,7 @@ function PostCardComponent({
   const handleCloseSaveToCollection = useCallback(() => setShowSaveToCollection(false), []);
   const blockMutation = useBlockUser();
   const muteMutation = useMuteUser();
+  const deleteMutation = useDeletePost();
   const {
     shouldHideContent,
     shouldWarnContent,
@@ -195,6 +197,29 @@ function PostCardComponent({
     setShowMenu(false);
     setShowReportModal(true);
   }, []);
+
+  const handleDeletePost = useCallback(() => {
+    setShowMenu(false);
+    Alert.alert(
+      'Delete Post',
+      'Are you sure you want to delete this post? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteMutation.mutateAsync(postView.uri);
+              showToast("Post deleted", { type: "success" });
+            } catch {
+              Alert.alert('Error', 'Failed to delete post. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  }, [postView.uri, deleteMutation, showToast]);
 
   const handleBlockAfterReport = useCallback(async (did: string) => {
     try {
@@ -380,14 +405,14 @@ function PostCardComponent({
           </TouchableOpacity>
           <View style={styles.headerRight}>
             <Text style={styles.timestamp}>{timestamp}</Text>
-            {!isOwnPost && isOnline && (
+            {isOnline && (
               <TouchableOpacity
                 style={styles.moreButton}
                 onPress={handleMenuOpen}
                 activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel="More options"
-                accessibilityHint="Double tap to open menu with mute, block, and report options">
+                accessibilityHint={isOwnPost ? "Double tap to open menu with delete option" : "Double tap to open menu with mute, block, and report options"}>
                 <MoreIcon size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             )}
@@ -620,41 +645,65 @@ function PostCardComponent({
           activeOpacity={1}
           onPress={handleMenuClose}>
           <View style={styles.menuContainer}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={handleMuteUser}
-              accessibilityRole="button"
-              accessibilityLabel={`Mute @${author.handle}`}
-              accessibilityHint="Double tap to mute this user">
-              <Text style={styles.menuItemText}>Mute @{author.handle}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={handleBlockUser}
-              accessibilityRole="button"
-              accessibilityLabel={`Block @${author.handle}`}
-              accessibilityHint="Double tap to block this user">
-              <Text style={[styles.menuItemText, styles.menuItemDanger]}>
-                Block @{author.handle}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={handleReport}
-              accessibilityRole="button"
-              accessibilityLabel="Report post"
-              accessibilityHint="Double tap to report this post">
-              <Text style={[styles.menuItemText, styles.menuItemDanger]}>
-                Report Post
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.menuItem, styles.menuItemLast]}
-              onPress={handleMenuClose}
-              accessibilityRole="button"
-              accessibilityLabel="Cancel">
-              <Text style={styles.menuItemText}>Cancel</Text>
-            </TouchableOpacity>
+            {isOwnPost ? (
+              <>
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={handleDeletePost}
+                  accessibilityRole="button"
+                  accessibilityLabel="Delete post"
+                  accessibilityHint="Double tap to delete this post">
+                  <Text style={[styles.menuItemText, styles.menuItemDanger]}>
+                    Delete Post
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.menuItem, styles.menuItemLast]}
+                  onPress={handleMenuClose}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel">
+                  <Text style={styles.menuItemText}>Cancel</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={handleMuteUser}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Mute @${author.handle}`}
+                  accessibilityHint="Double tap to mute this user">
+                  <Text style={styles.menuItemText}>Mute @{author.handle}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={handleBlockUser}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Block @${author.handle}`}
+                  accessibilityHint="Double tap to block this user">
+                  <Text style={[styles.menuItemText, styles.menuItemDanger]}>
+                    Block @{author.handle}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={handleReport}
+                  accessibilityRole="button"
+                  accessibilityLabel="Report post"
+                  accessibilityHint="Double tap to report this post">
+                  <Text style={[styles.menuItemText, styles.menuItemDanger]}>
+                    Report Post
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.menuItem, styles.menuItemLast]}
+                  onPress={handleMenuClose}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel">
+                  <Text style={styles.menuItemText}>Cancel</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </TouchableOpacity>
       </Modal>
