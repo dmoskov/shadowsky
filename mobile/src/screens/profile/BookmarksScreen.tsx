@@ -1,15 +1,24 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text, Modal, TextInput } from 'react-native';
-import { FeedList } from '../../components/FeedList';
-import { useBookmarks } from '../../hooks/api';
-import { AppBskyFeedDefs } from '@atproto/api';
-import { useRouter } from 'expo-router';
-import { triggerHaptic } from '../../../src/utils/haptics';
-import { useCollectionBookmarks } from '../../hooks/useBookmarkCollections';
-import { CollectionManager } from '../../components/CollectionManager';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useThreadSummaryPreGeneration } from '../../hooks/useThreadSummaryPreGeneration';
-import { usePreferences } from '../../contexts/PreferencesContext';
+import { AppBskyFeedDefs } from "@atproto/api";
+import { useRouter } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { triggerHaptic } from "../../../src/utils/haptics";
+import { CollectionManager } from "../../components/CollectionManager";
+import { FeedList } from "../../components/FeedList";
+import { usePreferences } from "../../contexts/PreferencesContext";
+import { useTheme } from "../../contexts/ThemeContext";
+import { useBookmarks } from "../../hooks/api";
+import { useCollectionBookmarks } from "../../hooks/useBookmarkCollections";
+import { useThreadSummaryPreGeneration } from "../../hooks/useThreadSummaryPreGeneration";
 
 export function BookmarksScreen() {
   const router = useRouter();
@@ -17,11 +26,15 @@ export function BookmarksScreen() {
   const { preferences } = usePreferences();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  useThreadSummaryPreGeneration({ enabled: preferences?.enableThreadSummaryPreGen });
+  useThreadSummaryPreGeneration({
+    enabled: preferences?.enableThreadSummaryPreGen,
+  });
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(null);
+  const [selectedCollectionId, setSelectedCollectionId] = useState<
+    string | null
+  >(null);
   const [showCollectionManager, setShowCollectionManager] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleCloseCollectionManager = useCallback(() => {
     setShowCollectionManager(false);
@@ -49,8 +62,10 @@ export function BookmarksScreen() {
       // Search in post text and author
       const post = bookmark.post;
       const searchLower = searchQuery.toLowerCase();
-      const postText = ('text' in post.record ? (post.record.text as string) : '').toLowerCase();
-      const authorName = post.author.displayName?.toLowerCase() || '';
+      const postText = (
+        "text" in post.record ? (post.record.text as string) : ""
+      ).toLowerCase();
+      const authorName = post.author.displayName?.toLowerCase() || "";
       const authorHandle = post.author.handle.toLowerCase();
 
       return (
@@ -69,7 +84,7 @@ export function BookmarksScreen() {
   const handlePostPress = (post: AppBskyFeedDefs.FeedViewPost) => {
     // Navigate to post detail
     router.push({
-      pathname: '/post/[uri]' as never,
+      pathname: "/post/[uri]" as never,
       params: { uri: encodeURIComponent(post.post.uri) },
     } as never);
   };
@@ -77,7 +92,7 @@ export function BookmarksScreen() {
   const handleProfilePress = (handle: string) => {
     // Navigate to profile
     router.push({
-      pathname: '/profile/[handle]' as never,
+      pathname: "/profile/[handle]" as never,
       params: { handle },
     } as never);
   };
@@ -92,7 +107,10 @@ export function BookmarksScreen() {
   };
 
   const handleHashtagPress = (tag: string) => {
-    router.push({ pathname: '/(app)/(tabs)/(search)' as any, params: { q: '#' + tag } });
+    router.push({
+      pathname: "/(app)/(tabs)/(search)" as any,
+      params: { q: "#" + tag },
+    });
   };
 
   const handleRefresh = async () => {
@@ -102,7 +120,10 @@ export function BookmarksScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       {/* Collection Toolbar */}
       <View style={styles.toolbar}>
         <TouchableOpacity
@@ -111,10 +132,10 @@ export function BookmarksScreen() {
         >
           <Text style={styles.collectionButtonText}>
             {selectedCollectionId === null
-              ? '📁 All Bookmarks'
-              : selectedCollectionId === '__uncategorized__'
-              ? '📁 Uncategorized'
-              : '📁 Collection'}
+              ? "📁 All Bookmarks"
+              : selectedCollectionId === "__uncategorized__"
+                ? "📁 Uncategorized"
+                : "📁 Collection"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -129,7 +150,10 @@ export function BookmarksScreen() {
           placeholderTextColor={colors.textSecondary}
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+          <TouchableOpacity
+            onPress={() => setSearchQuery("")}
+            style={styles.clearButton}
+          >
             <Text style={styles.clearButtonText}>✕</Text>
           </TouchableOpacity>
         )}
@@ -149,8 +173,8 @@ export function BookmarksScreen() {
         onHashtagPress={handleHashtagPress}
         emptyMessage={
           searchQuery
-            ? 'No bookmarks match your search.'
-            : 'No bookmarks yet. Bookmark posts to see them here.'
+            ? "No bookmarks match your search."
+            : "No bookmarks yet. Bookmark posts to see them here."
         }
       />
 
@@ -166,7 +190,7 @@ export function BookmarksScreen() {
           onClose={handleCloseCollectionManager}
         />
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -177,8 +201,8 @@ function createStyles(colors: any) {
       backgroundColor: colors.background,
     },
     toolbar: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       paddingHorizontal: 16,
       paddingVertical: 8,
       borderBottomWidth: 1,
@@ -199,8 +223,8 @@ function createStyles(colors: any) {
       color: colors.text,
     },
     searchContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       paddingHorizontal: 16,
       paddingVertical: 8,
       backgroundColor: colors.background,
@@ -217,7 +241,7 @@ function createStyles(colors: any) {
       color: colors.text,
     },
     clearButton: {
-      position: 'absolute',
+      position: "absolute",
       right: 24,
       padding: 4,
     },
