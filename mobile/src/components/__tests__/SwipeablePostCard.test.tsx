@@ -50,6 +50,10 @@ jest.mock('../../hooks/api/useProfile', () => ({
   useUnfollowUser: () => ({mutate: jest.fn(), isPending: false}),
 }));
 
+jest.mock('../../hooks/api/usePosts', () => ({
+  useDeletePost: () => ({mutateAsync: jest.fn()}),
+}));
+
 jest.mock('../../hooks/usePostTranslation', () => ({
   usePostTranslation: () => ({
     showTranslateButton: false,
