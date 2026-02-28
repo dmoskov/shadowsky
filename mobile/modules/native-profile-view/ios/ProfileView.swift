@@ -18,19 +18,11 @@ struct ProfileView: View {
     // Profile data
     @StateObject private var profileState = ProfileState()
 
-    // Configuration
-    let isOwnProfile: Bool
+    // Configuration (observable to avoid full rootView replacement)
+    @ObservedObject var props: ProfileProps
 
     // Current tab
     @State private var activeTab: ProfileTab = .posts
-
-    // Loading states
-    let isLoadingProfile: Bool
-    let isRefreshing: Bool
-    let isFollowPending: Bool
-    let isMessagePending: Bool
-    let error: String?
-    let errorType: String?  // "deleted", "suspended", "blocked", or nil for generic
 
     // Event handlers
     let onRefresh: (() -> Void)?
@@ -51,13 +43,13 @@ struct ProfileView: View {
 
     var body: some View {
         ZStack {
-            if isLoadingProfile && profileState.profile == nil {
+            if props.isLoadingProfile && profileState.profile == nil {
                 // Loading skeleton
                 profileSkeleton
-            } else if let errorType = errorType, profileState.profile == nil {
+            } else if let errorType = props.errorType, profileState.profile == nil {
                 // Typed error states (deleted, suspended, blocked)
                 typedErrorView(errorType)
-            } else if let error = error, profileState.profile == nil {
+            } else if let error = props.error, profileState.profile == nil {
                 // Generic error state
                 errorView(error)
             } else if let profile = profileState.profile {
@@ -82,15 +74,15 @@ struct ProfileView: View {
             // Profile Header
             ProfileHeaderView(
                 profile: profile,
-                isOwnProfile: isOwnProfile,
+                isOwnProfile: props.isOwnProfile,
                 isFollowing: profile.viewer?.following != nil,
                 isBlocked: profile.viewer?.blocking != nil,
                 isMuted: profile.viewer?.muted ?? false,
                 isBlockedBy: profile.viewer?.blockedBy ?? false,
                 starterPacks: profileState.starterPacks,
                 pinnedPost: profileState.pinnedPost,
-                isFollowPending: isFollowPending,
-                isMessagePending: isMessagePending,
+                isFollowPending: props.isFollowPending,
+                isMessagePending: props.isMessagePending,
                 onFollowToggle: onFollowToggle,
                 onMessagePress: onMessagePress,
                 onMenuPress: onMenuPress,
@@ -486,13 +478,11 @@ struct ProfileView_Previews: PreviewProvider {
         Group {
             // Loading state
             ProfileView(
-                isOwnProfile: false,
-                isLoadingProfile: true,
-                isRefreshing: false,
-                isFollowPending: false,
-                isMessagePending: false,
-                error: nil,
-                errorType: nil,
+                props: {
+                    let p = ProfileProps()
+                    p.isLoadingProfile = true
+                    return p
+                }(),
                 onRefresh: {},
                 onTabChange: { _ in },
                 onFollowToggle: {},
@@ -511,13 +501,12 @@ struct ProfileView_Previews: PreviewProvider {
 
             // Deleted account
             ProfileView(
-                isOwnProfile: false,
-                isLoadingProfile: false,
-                isRefreshing: false,
-                isFollowPending: false,
-                isMessagePending: false,
-                error: "Account deleted",
-                errorType: "deleted",
+                props: {
+                    let p = ProfileProps()
+                    p.error = "Account deleted"
+                    p.errorType = "deleted"
+                    return p
+                }(),
                 onRefresh: {},
                 onTabChange: { _ in },
                 onFollowToggle: {},
@@ -536,13 +525,12 @@ struct ProfileView_Previews: PreviewProvider {
 
             // Suspended account
             ProfileView(
-                isOwnProfile: false,
-                isLoadingProfile: false,
-                isRefreshing: false,
-                isFollowPending: false,
-                isMessagePending: false,
-                error: "Account suspended",
-                errorType: "suspended",
+                props: {
+                    let p = ProfileProps()
+                    p.error = "Account suspended"
+                    p.errorType = "suspended"
+                    return p
+                }(),
                 onRefresh: {},
                 onTabChange: { _ in },
                 onFollowToggle: {},
