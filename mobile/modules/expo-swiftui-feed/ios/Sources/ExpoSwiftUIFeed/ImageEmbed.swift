@@ -1,8 +1,13 @@
 import SwiftUI
 
 /// Model for image embed data
-public struct ImageEmbedData: Identifiable {
-    public let id = UUID()
+///
+/// Uses `fullsize` URL as stable identity so SwiftUI's `ForEach` can diff
+/// correctly across data updates. The previous `UUID()` default caused every
+/// data refresh to mint new IDs, defeating identity-based diffing and
+/// triggering unnecessary image reloads during feed scrolling.
+public struct ImageEmbedData: Identifiable, Equatable {
+    public var id: String { fullsize }
     public let thumb: String
     public let fullsize: String
     public let alt: String?

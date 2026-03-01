@@ -12,7 +12,7 @@ import ExpoSwiftUIFeed
 // MARK: - Thread Node (for nested structure)
 
 /// Represents a post in a thread with its nested replies
-struct ThreadNode: Identifiable {
+struct ThreadNode: Identifiable, Equatable {
     let id: String // Use post URI as ID
     let post: ThreadPost
     let parent: ThreadReplyRef?
@@ -29,7 +29,7 @@ struct ThreadNode: Identifiable {
 }
 
 /// Simplified post structure for thread display
-struct ThreadPost {
+struct ThreadPost: Equatable {
     let uri: String
     let cid: String
     let author: ThreadAuthor
@@ -44,31 +44,31 @@ struct ThreadPost {
     let labels: [ThreadLabel]?
 }
 
-struct ThreadAuthor {
+struct ThreadAuthor: Equatable {
     let did: String
     let handle: String
     let displayName: String?
     let avatar: String?
 }
 
-struct ThreadRecord {
+struct ThreadRecord: Equatable {
     let text: String
     let facets: [Facet]?
     let createdAt: String
     let langs: [String]?
 }
 
-struct ThreadViewer {
+struct ThreadViewer: Equatable {
     let like: String?
     let repost: String?
 }
 
-struct ThreadLabel {
+struct ThreadLabel: Equatable {
     let val: String
     let src: String
 }
 
-struct ThreadReplyRef {
+struct ThreadReplyRef: Equatable {
     let uri: String
     let cid: String
 }

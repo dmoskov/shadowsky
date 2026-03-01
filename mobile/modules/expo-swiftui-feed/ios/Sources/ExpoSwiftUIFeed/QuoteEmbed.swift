@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Model for author data in quoted posts
-public struct AuthorData {
+public struct AuthorData: Equatable {
     public let handle: String
     public let displayName: String?
     public let avatar: String?
@@ -13,7 +13,7 @@ public struct AuthorData {
 }
 
 /// Model for quoted post embed data
-public struct QuoteEmbedData {
+public struct QuoteEmbedData: Equatable {
     public let uri: String
     public let author: AuthorData
     public let text: String?
