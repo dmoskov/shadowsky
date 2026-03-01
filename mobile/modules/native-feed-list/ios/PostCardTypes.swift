@@ -12,7 +12,7 @@ import ExpoSwiftUIFeed
 
 // MARK: - Reply Parent (UI Model)
 
-struct ReplyParent {
+struct ReplyParent: Equatable {
     let uri: String
     let authorHandle: String
     let authorDisplayName: String?
@@ -22,7 +22,7 @@ struct ReplyParent {
 
 // MARK: - Feed View Post (UI Model)
 
-struct FeedViewPost {
+struct FeedViewPost: Equatable {
     let post: PostView
     let replyParent: ReplyParent?
 
@@ -32,7 +32,7 @@ struct FeedViewPost {
     }
 }
 
-struct PostView {
+struct PostView: Equatable {
     let uri: String
     let cid: String
     let author: PostAuthor
@@ -45,43 +45,43 @@ struct PostView {
     let labels: [ContentLabel]?
 }
 
-struct PostAuthor {
+struct PostAuthor: Equatable {
     let did: String
     let handle: String
     let displayName: String?
     let avatar: String?
 }
 
-struct PostRecord {
+struct PostRecord: Equatable {
     let text: String
     let facets: [PostFacet]?
     let createdAt: String
     let embed: PostEmbedData?
 }
 
-struct PostViewer {
+struct PostViewer: Equatable {
     let like: String?
     let repost: String?
 }
 
-struct ContentLabel {
+struct ContentLabel: Equatable {
     let val: String
     let src: String
 }
 
 // MARK: - Facets (UI Model)
 
-struct PostFacet {
+struct PostFacet: Equatable {
     let index: PostFacetIndex
     let features: [PostFacetFeature]
 }
 
-struct PostFacetIndex {
+struct PostFacetIndex: Equatable {
     let byteStart: Int
     let byteEnd: Int
 }
 
-enum PostFacetFeature {
+enum PostFacetFeature: Equatable {
     case mention(did: String)
     case link(uri: String)
     case hashtag(tag: String)

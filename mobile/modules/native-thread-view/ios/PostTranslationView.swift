@@ -12,20 +12,24 @@ import SwiftUI
 
 /// Inline translation UI shown below post text when the post language
 /// differs from the device locale.
+///
+/// Uses a per-post `PostTranslationObserver` instead of subscribing to the
+/// global `PostTranslationManager` singleton, so only this view re-renders
+/// when its specific post's translation state changes.
 struct PostTranslationView: View {
     let postUri: String
     let postText: String
     let postLangs: [String]?
     let onTranslate: ((String, String, String) -> Void)? // (uri, text, sourceLang)
 
-    @ObservedObject private var manager = PostTranslationManager.shared
+    @StateObject private var observer: PostTranslationObserver
 
-    private var translationState: TranslationState {
-        manager.state(for: postUri)
-    }
-
-    private var isShowing: Bool {
-        manager.isShowingTranslation(for: postUri)
+    init(postUri: String, postText: String, postLangs: [String]?, onTranslate: ((String, String, String) -> Void)?) {
+        self.postUri = postUri
+        self.postText = postText
+        self.postLangs = postLangs
+        self.onTranslate = onTranslate
+        self._observer = StateObject(wrappedValue: PostTranslationObserver(postUri: postUri))
     }
 
     private var sourceLanguageName: String {
@@ -41,12 +45,12 @@ struct PostTranslationView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             // Translated text (shown inline below original)
-            if isShowing, case .translated(let text, _) = translationState {
+            if observer.isShowing, case .translated(let text, _) = observer.translationState {
                 translatedTextView(text)
             }
 
             // Error message
-            if case .error(let message) = translationState {
+            if case .error(let message) = observer.translationState {
                 Text(message)
                     .font(.caption)
                     .foregroundColor(.red)
@@ -88,7 +92,7 @@ struct PostTranslationView: View {
 
     @ViewBuilder
     private var translateButton: some View {
-        switch translationState {
+        switch observer.translationState {
         case .loading:
             HStack(spacing: 6) {
                 ProgressView()
@@ -102,19 +106,19 @@ struct PostTranslationView: View {
 
         case .translated:
             Button(action: {
-                manager.toggleTranslation(for: postUri)
+                PostTranslationManager.shared.toggleTranslation(for: postUri)
             }) {
                 HStack(spacing: 4) {
                     Image(systemName: "globe")
                         .font(.footnote)
-                    Text(isShowing ? "Show original" : "Show translation")
+                    Text(observer.isShowing ? "Show original" : "Show translation")
                         .font(.footnote.weight(.medium))
                 }
                 .foregroundColor(.accentColor)
             }
             .buttonStyle(.plain)
             .padding(.top, 2)
-            .accessibilityLabel(isShowing ? "Show original text" : "Show translated text")
+            .accessibilityLabel(observer.isShowing ? "Show original text" : "Show translated text")
             .accessibilityHint("Double tap to toggle between original and translated text")
 
         case .error:
@@ -155,7 +159,7 @@ struct PostTranslationView: View {
     // MARK: - Actions
 
     private func requestTranslation() {
-        manager.requestTranslation(for: postUri)
+        PostTranslationManager.shared.requestTranslation(for: postUri)
         onTranslate?(postUri, postText, sourceLangCode)
     }
 }

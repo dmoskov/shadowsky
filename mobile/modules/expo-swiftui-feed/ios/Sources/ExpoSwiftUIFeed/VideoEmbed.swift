@@ -2,7 +2,7 @@ import SwiftUI
 import AVKit
 
 /// Model for video embed data
-public struct VideoEmbedData {
+public struct VideoEmbedData: Equatable {
     public let playlist: String
     public let thumbnail: String?
     public let alt: String?
