@@ -166,8 +166,12 @@ class MobileOnboardingService {
     this.updateState({ completed: true, currentStep: -1 });
   }
 
+  /**
+   * Always returns true — NUX is disabled until the bug causing it to
+   * re-appear unexpectedly is resolved.
+   */
   isCompleted(): boolean {
-    return this.getState().completed;
+    return true;
   }
 
   reset(): void {
