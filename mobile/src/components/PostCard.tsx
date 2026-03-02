@@ -4,7 +4,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSequence,
-  withTiming,
+  withSpring,
   SharedValue,
 } from 'react-native-reanimated';
 import {AppBskyFeedDefs, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
@@ -100,9 +100,8 @@ function PostCardComponent({
 
   function triggerBounce(scale: SharedValue<number>) {
     scale.value = withSequence(
-      withTiming(0.7, { duration: 50 }),
-      withTiming(1.15, { duration: 120 }),
-      withTiming(1, { duration: 80 }),
+      withSpring(0.7, { damping: 20, stiffness: 400, mass: 0.5 }),
+      withSpring(1, { damping: 12, stiffness: 200, mass: 0.8 }),
     );
   }
 
