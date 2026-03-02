@@ -39,6 +39,11 @@ export const RateLimitStatus: React.FC = () => {
         },
         { name: "Posts", stats: limiterStats.post, color: "var(--asph-blue)" },
         {
+          name: "Feeds",
+          stats: limiterStats.feed,
+          color: "var(--asph-orange, #f97316)",
+        },
+        {
           name: "Notifications",
           stats: limiterStats.notification,
           color: "var(--asph-purple)",
