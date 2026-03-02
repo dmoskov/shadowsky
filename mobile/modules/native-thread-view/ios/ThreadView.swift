@@ -150,6 +150,7 @@ struct ThreadView: View {
                     ThreadPostCard(
                         node: rootPost,
                         isRoot: true,
+                        currentUserDid: nil,
                         onPress: {
                             onPostPress?(rootPost.post.uri, rootPost.post.author.handle)
                         },
@@ -193,6 +194,10 @@ struct ThreadView: View {
                         onShare: {
                             onShare?(rootPost.post.uri)
                         },
+                        onMute: nil,
+                        onBlock: nil,
+                        onDelete: nil,
+                        onReport: nil,
                         onPressLikeCount: {
                             onPressLikeCount?(rootPost.post.uri)
                         },
@@ -266,6 +271,7 @@ struct ThreadView: View {
     private func threadReplyWithHighlight(replyNode: ThreadNode) -> some View {
         ThreadReplyView(
             node: replyNode,
+            currentUserDid: nil,
             onPress: { uri, handle in
                 onPostPress?(uri, handle)
             },
@@ -297,6 +303,10 @@ struct ThreadView: View {
             onShare: { uri in
                 onShare?(uri)
             },
+            onMute: nil,
+            onBlock: nil,
+            onDelete: nil,
+            onReport: nil,
             onPressLikeCount: { uri in
                 onPressLikeCount?(uri)
             },
