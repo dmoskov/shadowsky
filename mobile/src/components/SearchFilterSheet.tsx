@@ -231,7 +231,7 @@ function SearchFilterSheetInner({
               <Text style={styles.title}>Search Filters</Text>
               <TouchableOpacity
                 onPress={onClose}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={styles.closeButton}
               >
                 <CloseIcon size={24} color={colors.textSecondary} />
               </TouchableOpacity>
@@ -251,7 +251,7 @@ function SearchFilterSheetInner({
                       <Text style={styles.chipText}>{chip.label}</Text>
                       <TouchableOpacity
                         onPress={chip.onRemove}
-                        hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                       >
                         <CloseIcon size={14} color="#ffffff" />
                       </TouchableOpacity>
@@ -503,6 +503,12 @@ function createStyles(colors: any) {
       fontWeight: "600",
       color: colors.text,
     },
+    closeButton: {
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: "center",
+      justifyContent: "center",
+    },
     content: {
       paddingHorizontal: 16,
       paddingTop: 8,
@@ -587,7 +593,10 @@ function createStyles(colors: any) {
       color: colors.text,
     },
     clearFieldButton: {
-      padding: 4,
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: "center",
+      justifyContent: "center",
     },
     textInputContainer: {
       flexDirection: "row",

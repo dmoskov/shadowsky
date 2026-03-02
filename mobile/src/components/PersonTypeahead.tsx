@@ -195,7 +195,10 @@ function createStyles(colors: any) {
       color: colors.text,
     },
     clearButton: {
-      padding: 4,
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: "center",
+      justifyContent: "center",
     },
     suggestionsContainer: {
       backgroundColor: colors.surface,

@@ -101,6 +101,7 @@ export function ThreadPostItem({
                   style={styles.removeImageButton}
                   onPress={() => handleRemoveImage(imageIndex)}
                   disabled={isUploading}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
                   <Text style={styles.removeImageText}>{"\u00D7"}</Text>
                 </TouchableOpacity>
@@ -108,6 +109,7 @@ export function ThreadPostItem({
                   style={styles.altTextButton}
                   onPress={() => setAltTextModalImage(imageIndex)}
                   disabled={isUploading}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
                   <Text style={styles.altTextButtonText}>
                     {image.altText ? "\u2713 ALT" : "ALT"}
@@ -163,7 +165,10 @@ function createStyles(colors: any) {
       fontWeight: "600",
     },
     removeButton: {
-      padding: 4,
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: "center",
+      justifyContent: "center",
     },
     input: {
       color: colors.text,
@@ -229,7 +234,10 @@ function createStyles(colors: any) {
       borderTopColor: colors.surfaceElevated,
     },
     imageButton: {
-      padding: 4,
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: "center",
+      justifyContent: "center",
     },
     imageButtonDisabled: {
       opacity: 0.5,
