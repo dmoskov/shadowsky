@@ -193,6 +193,14 @@ export const notificationRateLimiter = new RateLimiter({
   slowdownAfter: 20, // Start slowing down after 20 requests
 });
 
+// Feed fetch rate limiter - Prevents 429s when multiple columns load simultaneously
+// Allows 2 concurrent requests with 200ms minimum spacing, so 5 columns load in ~1s
+export const feedRateLimiter = new RateLimiter({
+  maxTokens: 3,
+  refillRate: 2, // 2 tokens/sec — sustains steady scrolling/pagination
+  minDelay: 200, // 200ms minimum between feed requests
+});
+
 // Report submission rate limiter - 10 reports per hour max
 export const reportRateLimiter = new RateLimiter({
   maxTokens: 10,
@@ -206,6 +214,7 @@ export function getRateLimiterStats() {
     api: apiRateLimiter.getStats(),
     profile: profileRateLimiter.getStats(),
     post: postRateLimiter.getStats(),
+    feed: feedRateLimiter.getStats(),
     notification: notificationRateLimiter.getStats(),
     report: reportRateLimiter.getStats(),
   };
@@ -239,6 +248,13 @@ export async function rateLimitedNotificationFetch<T>(
   fn: () => Promise<T>,
 ): Promise<T> {
   await notificationRateLimiter.acquire();
+  return fn();
+}
+
+export async function rateLimitedFeedFetch<T>(
+  fn: () => Promise<T>,
+): Promise<T> {
+  await feedRateLimiter.acquire();
   return fn();
 }
 
