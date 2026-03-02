@@ -25,6 +25,7 @@ class ThreadPostCardTests: XCTestCase {
     private func makeCard(
         node: ThreadNode? = nil,
         isRoot: Bool = true,
+        currentUserDid: String? = nil,
         onPress: (() -> Void)? = nil,
         onPressProfile: ((String) -> Void)? = nil,
         onLike: (() -> Void)? = nil,
@@ -34,6 +35,10 @@ class ThreadPostCardTests: XCTestCase {
         onMentionPress: ((String, String) -> Void)? = nil,
         onHashtagPress: ((String) -> Void)? = nil,
         onShare: (() -> Void)? = nil,
+        onMute: (() -> Void)? = nil,
+        onBlock: (() -> Void)? = nil,
+        onDelete: (() -> Void)? = nil,
+        onReport: (() -> Void)? = nil,
         onPressLikeCount: (() -> Void)? = nil,
         onPressRepostCount: (() -> Void)? = nil,
         onPressQuoteCount: (() -> Void)? = nil,
@@ -45,6 +50,7 @@ class ThreadPostCardTests: XCTestCase {
         ThreadPostCard(
             node: node ?? MockThread.sampleRootNode,
             isRoot: isRoot,
+            currentUserDid: currentUserDid,
             onPress: onPress,
             onPressProfile: onPressProfile,
             onLike: onLike,
@@ -54,6 +60,10 @@ class ThreadPostCardTests: XCTestCase {
             onMentionPress: onMentionPress,
             onHashtagPress: onHashtagPress,
             onShare: onShare,
+            onMute: onMute,
+            onBlock: onBlock,
+            onDelete: onDelete,
+            onReport: onReport,
             onPressLikeCount: onPressLikeCount,
             onPressRepostCount: onPressRepostCount,
             onPressQuoteCount: onPressQuoteCount,
@@ -356,6 +366,7 @@ class ThreadReplyViewTests: XCTestCase {
 
         let view = ThreadReplyView(
             node: replyNode,
+            currentUserDid: nil,
             onPress: nil,
             onPressProfile: nil,
             onLike: nil,
@@ -365,6 +376,10 @@ class ThreadReplyViewTests: XCTestCase {
             onMentionPress: nil,
             onHashtagPress: nil,
             onShare: nil,
+            onMute: nil,
+            onBlock: nil,
+            onDelete: nil,
+            onReport: nil,
             onPressLikeCount: nil,
             onPressRepostCount: nil,
             onPressQuoteCount: nil,
@@ -391,6 +406,7 @@ class ThreadReplyViewTests: XCTestCase {
 
         let view = ThreadReplyView(
             node: replyNode,
+            currentUserDid: nil,
             onPress: { uri, handle in
                 pressedUri = uri
                 pressedHandle = handle
@@ -404,6 +420,10 @@ class ThreadReplyViewTests: XCTestCase {
             onMentionPress: nil,
             onHashtagPress: nil,
             onShare: nil,
+            onMute: nil,
+            onBlock: nil,
+            onDelete: nil,
+            onReport: nil,
             onPressLikeCount: nil,
             onPressRepostCount: nil,
             onPressQuoteCount: nil,

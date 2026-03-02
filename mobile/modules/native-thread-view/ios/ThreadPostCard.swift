@@ -51,6 +51,7 @@ private enum ThreadDateFormatting {
 struct ThreadPostCard: View {
     let node: ThreadNode
     let isRoot: Bool
+    let currentUserDid: String?
 
     // Event handlers
     let onPress: (() -> Void)?
@@ -62,6 +63,10 @@ struct ThreadPostCard: View {
     let onMentionPress: ((String, String) -> Void)?
     let onHashtagPress: ((String) -> Void)?
     let onShare: (() -> Void)?
+    let onMute: (() -> Void)?
+    let onBlock: (() -> Void)?
+    let onDelete: (() -> Void)?
+    let onReport: (() -> Void)?
     let onPressLikeCount: (() -> Void)?
     let onPressRepostCount: (() -> Void)?
     let onPressQuoteCount: (() -> Void)?
@@ -69,6 +74,12 @@ struct ThreadPostCard: View {
     let onLinkPress: ((String) -> Void)?
     let onImagePress: (([ImageEmbedData], Int) -> Void)?
     let onQuotePress: ((String, String) -> Void)?
+
+    /// Whether the current user authored this post
+    private var isOwnPost: Bool {
+        guard let currentUserDid = currentUserDid else { return false }
+        return currentUserDid == node.post.author.did
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -200,6 +211,36 @@ struct ThreadPostCard: View {
         }
         .padding(16)
         .background(isRoot ? Color(UIColor.systemBackground) : Color.clear)
+        .contextMenu {
+            Button { onReply?() } label: {
+                Label("Reply", systemImage: "bubble.left")
+            }
+            Button { onRepost?() } label: {
+                Label(node.post.viewer?.repost != nil ? "Undo Repost" : "Repost", systemImage: "arrow.2.squarepath")
+            }
+            Button { onLike?() } label: {
+                Label(node.post.viewer?.like != nil ? "Unlike" : "Like", systemImage: node.post.viewer?.like != nil ? "heart.fill" : "heart")
+            }
+            Button { onShare?() } label: {
+                Label("Share", systemImage: "square.and.arrow.up")
+            }
+            Divider()
+            if isOwnPost {
+                Button(role: .destructive) { onDelete?() } label: {
+                    Label("Delete Post", systemImage: "trash")
+                }
+            } else {
+                Button { onMute?() } label: {
+                    Label("Mute User", systemImage: "speaker.slash")
+                }
+                Button(role: .destructive) { onBlock?() } label: {
+                    Label("Block User", systemImage: "hand.raised")
+                }
+                Button(role: .destructive) { onReport?() } label: {
+                    Label("Report Post", systemImage: "exclamationmark.triangle")
+                }
+            }
+        }
     }
 
     // MARK: - Rich Text Rendering
@@ -280,6 +321,7 @@ struct ActionButton: View {
 /// View for a reply with indentation and nested children
 struct ThreadReplyView: View {
     let node: ThreadNode
+    let currentUserDid: String?
     @State private var isCollapsed: Bool = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -293,6 +335,10 @@ struct ThreadReplyView: View {
     let onMentionPress: ((String, String) -> Void)?
     let onHashtagPress: ((String) -> Void)?
     let onShare: ((String) -> Void)?
+    let onMute: ((String) -> Void)?
+    let onBlock: ((String) -> Void)?
+    let onDelete: ((String) -> Void)?
+    let onReport: ((String) -> Void)?
     let onPressLikeCount: ((String) -> Void)?
     let onPressRepostCount: ((String) -> Void)?
     let onPressQuoteCount: ((String) -> Void)?
@@ -348,6 +394,7 @@ struct ThreadReplyView: View {
                     ThreadPostCard(
                         node: node,
                         isRoot: false,
+                        currentUserDid: currentUserDid,
                         onPress: {
                             onPress?(node.post.uri, node.post.author.handle)
                         },
@@ -374,6 +421,18 @@ struct ThreadReplyView: View {
                         },
                         onShare: {
                             onShare?(node.post.uri)
+                        },
+                        onMute: {
+                            onMute?(node.post.author.handle)
+                        },
+                        onBlock: {
+                            onBlock?(node.post.author.handle)
+                        },
+                        onDelete: {
+                            onDelete?(node.post.uri)
+                        },
+                        onReport: {
+                            onReport?(node.post.uri)
                         },
                         onPressLikeCount: {
                             onPressLikeCount?(node.post.uri)
@@ -403,6 +462,7 @@ struct ThreadReplyView: View {
                 ForEach(node.replies) { childNode in
                     ThreadReplyView(
                         node: childNode,
+                        currentUserDid: currentUserDid,
                         onPress: onPress,
                         onPressProfile: onPressProfile,
                         onLike: onLike,
@@ -412,6 +472,10 @@ struct ThreadReplyView: View {
                         onMentionPress: onMentionPress,
                         onHashtagPress: onHashtagPress,
                         onShare: onShare,
+                        onMute: onMute,
+                        onBlock: onBlock,
+                        onDelete: onDelete,
+                        onReport: onReport,
                         onPressLikeCount: onPressLikeCount,
                         onPressRepostCount: onPressRepostCount,
                         onPressQuoteCount: onPressQuoteCount,

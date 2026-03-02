@@ -40,6 +40,8 @@ class PostCardViewTests: XCTestCase {
         onShare: (() -> Void)? = nil,
         onMute: (() -> Void)? = nil,
         onBlock: (() -> Void)? = nil,
+        onDelete: (() -> Void)? = nil,
+        onReport: (() -> Void)? = nil,
         onImagePress: (([ImageEmbedData], Int) -> Void)? = nil,
         onLinkPress: ((String) -> Void)? = nil,
         onQuotePress: ((String, String) -> Void)? = nil
@@ -60,6 +62,8 @@ class PostCardViewTests: XCTestCase {
             onShare: onShare,
             onMute: onMute,
             onBlock: onBlock,
+            onDelete: onDelete,
+            onReport: onReport,
             onImagePress: onImagePress,
             onLinkPress: onLinkPress,
             onQuotePress: onQuotePress
