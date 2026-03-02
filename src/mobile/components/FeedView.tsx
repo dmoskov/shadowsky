@@ -25,6 +25,7 @@ import { useDynamicType, type ScaledFontFn } from "../hooks/useDynamicType";
 import type { MobilePostData } from "../types";
 import { FeedList } from "./FeedList";
 
+import { spacing } from "../../theme/spacing";
 /**
  * Feed type options
  */
@@ -88,8 +89,8 @@ function createStyles(scaledFont: ScaledFontFn) {
       minHeight: 48,
       justifyContent: "center",
       alignItems: "center",
-      paddingVertical: 12,
-      paddingHorizontal: 8,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.sm,
     } as ViewStyle,
     tabActive: {
       borderBottomWidth: 3,

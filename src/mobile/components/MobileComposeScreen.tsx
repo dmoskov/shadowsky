@@ -27,6 +27,7 @@ import {
 import { useMobileComposerAI } from "../hooks/useMobileComposerAI";
 import { MobileAIToolbar } from "./MobileAIToolbar";
 
+import { spacing } from "../../theme/spacing";
 const MAX_POST_LENGTH = 300;
 
 // ─── Props ───────────────────────────────────────────────────────────
@@ -61,8 +62,8 @@ function createStyles(scaledFont: ScaledFontFn) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
-      paddingVertical: 10,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: "#e5e7eb",
       minHeight: 54,
@@ -71,13 +72,13 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(16),
       color: "#6b7280",
       minHeight: 44,
-      paddingVertical: 10,
+      paddingVertical: spacing.md,
     } as TextStyle,
     postButton: {
       backgroundColor: "#4f46e5",
       borderRadius: 20,
-      paddingHorizontal: 20,
-      paddingVertical: 8,
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.sm,
       minHeight: 36,
       justifyContent: "center",
     } as ViewStyle,
@@ -90,8 +91,8 @@ function createStyles(scaledFont: ScaledFontFn) {
       color: "#ffffff",
     } as TextStyle,
     replyContext: {
-      paddingHorizontal: 16,
-      paddingVertical: 10,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
       backgroundColor: "#f9fafb",
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: "#e5e7eb",
@@ -101,7 +102,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       lineHeight: scaledLineHeight(scaledFont, 13, 18),
       fontWeight: "600",
       color: "#4f46e5",
-      marginBottom: 2,
+      marginBottom: spacing.xxs,
     } as TextStyle,
     replyText: {
       fontSize: scaledFont(13),
@@ -110,8 +111,8 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as TextStyle,
     inputArea: {
       flex: 1,
-      paddingHorizontal: 16,
-      paddingTop: 12,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
     } as ViewStyle,
     textInput: {
       fontSize: scaledFont(17),
@@ -128,8 +129,8 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(13),
       color: "#9ca3af",
       textAlign: "right",
-      paddingHorizontal: 16,
-      paddingVertical: 6,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
     } as TextStyle,
     charCountWarning: {
       color: "#f59e0b",

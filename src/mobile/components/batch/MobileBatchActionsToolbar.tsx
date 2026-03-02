@@ -18,6 +18,7 @@ import type { BatchActionType } from "../../../contexts/BatchSelectionContext";
 import { useBatchSelection } from "../../../contexts/BatchSelectionContext";
 import { useDynamicType, type ScaledFontFn } from "../../hooks/useDynamicType";
 
+import { spacing } from "../../../theme/spacing";
 interface MobileBatchActionsToolbarProps {
   /** Available actions for this context */
   availableActions: BatchActionType[];
@@ -94,23 +95,23 @@ function createStyles(scaledFont: ScaledFontFn) {
       alignItems: "center",
       backgroundColor: "rgba(255, 255, 255, 0.98)",
       borderRadius: 16,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
       shadowRadius: 8,
       elevation: 8,
       flexWrap: "wrap",
-      gap: 8,
+      gap: spacing.sm,
     } as ViewStyle,
     selectionInfo: {
       flexDirection: "row",
       alignItems: "center",
-      paddingRight: 8,
+      paddingRight: spacing.sm,
       borderRightWidth: 1,
       borderRightColor: "#e1e1e1",
-      gap: 4,
+      gap: spacing.xs,
     } as ViewStyle,
     selectionIcon: {
       fontSize: scaledFont(16),
@@ -121,8 +122,8 @@ function createStyles(scaledFont: ScaledFontFn) {
       color: "#0f1419",
     } as TextStyle,
     selectAllButton: {
-      paddingHorizontal: 8,
-      paddingVertical: 6,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.sm,
       borderRadius: 8,
       backgroundColor: "#f0f0f0",
     } as ViewStyle,
@@ -134,17 +135,17 @@ function createStyles(scaledFont: ScaledFontFn) {
     actionsContainer: {
       flexDirection: "row",
       flex: 1,
-      gap: 6,
+      gap: spacing.sm,
       justifyContent: "center",
     } as ViewStyle,
     actionButton: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 10,
-      paddingVertical: 6,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
       borderRadius: 8,
       backgroundColor: "#f0f0f0",
-      gap: 4,
+      gap: spacing.xs,
     } as ViewStyle,
     dangerButton: {
       backgroundColor: "#fee",
@@ -167,8 +168,8 @@ function createStyles(scaledFont: ScaledFontFn) {
       color: "#d97706",
     } as TextStyle,
     undoButton: {
-      paddingHorizontal: 8,
-      paddingVertical: 6,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.sm,
       borderRadius: 8,
       backgroundColor: "#dbeafe",
     } as ViewStyle,
@@ -179,11 +180,11 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as TextStyle,
     controlButtons: {
       flexDirection: "row",
-      gap: 6,
+      gap: spacing.sm,
     } as ViewStyle,
     clearButton: {
-      paddingHorizontal: 10,
-      paddingVertical: 6,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
       borderRadius: 8,
       backgroundColor: "#f0f0f0",
     } as ViewStyle,
@@ -193,8 +194,8 @@ function createStyles(scaledFont: ScaledFontFn) {
       color: "#687684",
     } as TextStyle,
     doneButton: {
-      paddingHorizontal: 12,
-      paddingVertical: 6,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
       borderRadius: 8,
       backgroundColor: "#0f1419",
     } as ViewStyle,

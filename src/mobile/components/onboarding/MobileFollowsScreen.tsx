@@ -25,6 +25,7 @@ import {
 } from "../../hooks/useDynamicType";
 import { InlineLoadingShimmer, UserCardsShimmer } from "../SkeletonShimmer";
 
+import { spacing } from "../../../theme/spacing";
 interface SuggestedUser {
   did: string;
   handle: string;
@@ -55,9 +56,9 @@ function createStyles(scaledFont: ScaledFontFn) {
       backgroundColor: "#000000",
     } as ViewStyle,
     header: {
-      paddingHorizontal: 20,
+      paddingHorizontal: spacing.xl,
       paddingTop: 60,
-      paddingBottom: 16,
+      paddingBottom: spacing.lg,
       alignItems: "center",
     } as ViewStyle,
     headerIcon: {
@@ -67,7 +68,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       backgroundColor: "rgba(99, 102, 241, 0.15)",
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     } as ViewStyle,
     headerIconText: {
       fontSize: scaledFont(28),
@@ -77,13 +78,13 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontWeight: "700",
       color: "#ffffff",
       textAlign: "center",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     } as TextStyle,
     subtitle: {
       fontSize: scaledFont(15),
       color: "#8a8a9a",
       textAlign: "center",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     } as TextStyle,
     counter: {
       fontSize: scaledFont(13),
@@ -97,22 +98,22 @@ function createStyles(scaledFont: ScaledFontFn) {
     loadingText: {
       fontSize: scaledFont(14),
       color: "#8a8a9a",
-      marginTop: 12,
+      marginTop: spacing.md,
     } as TextStyle,
     listContent: {
-      paddingHorizontal: 16,
-      paddingBottom: 16,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.lg,
     } as ViewStyle,
     userCard: {
       backgroundColor: "#111122",
       borderRadius: 12,
-      padding: 14,
+      padding: spacing.lg,
     } as ViewStyle,
     userInfo: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
-      marginBottom: 8,
+      gap: spacing.md,
+      marginBottom: spacing.sm,
     } as ViewStyle,
     avatar: {
       width: 44,
@@ -134,13 +135,13 @@ function createStyles(scaledFont: ScaledFontFn) {
     description: {
       fontSize: scaledFont(13),
       color: "#8a8a9a",
-      marginBottom: 10,
+      marginBottom: spacing.md,
       lineHeight: scaledLineHeight(scaledFont, 13, 18),
     } as TextStyle,
     followButton: {
       backgroundColor: "#6366f1",
       borderRadius: 8,
-      paddingVertical: 8,
+      paddingVertical: spacing.sm,
       alignItems: "center",
     } as ViewStyle,
     followButtonFollowed: {
@@ -161,7 +162,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      paddingHorizontal: 32,
+      paddingHorizontal: spacing.xxl,
     } as ViewStyle,
     emptyText: {
       fontSize: scaledFont(15),
@@ -175,14 +176,14 @@ function createStyles(scaledFont: ScaledFontFn) {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 16,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
       borderTopWidth: 1,
       borderTopColor: "#1a1a2e",
     } as ViewStyle,
     backButton: {
-      paddingVertical: 12,
-      paddingHorizontal: 20,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
       borderRadius: 10,
       borderWidth: 1,
       borderColor: "#333344",
@@ -194,11 +195,11 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as TextStyle,
     rightButtons: {
       flexDirection: "row",
-      gap: 10,
+      gap: spacing.md,
     } as ViewStyle,
     skipButton: {
-      paddingVertical: 12,
-      paddingHorizontal: 20,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
       borderRadius: 10,
       borderWidth: 1,
       borderColor: "#333344",
@@ -210,8 +211,8 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as TextStyle,
     continueButton: {
       backgroundColor: "#6366f1",
-      paddingVertical: 12,
-      paddingHorizontal: 24,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
       borderRadius: 10,
     } as ViewStyle,
     continueButtonText: {

@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { useDynamicType, type ScaledFontFn } from "../../hooks/useDynamicType";
 
+import { spacing } from "../../../theme/spacing";
 function createStyles(scaledFont: ScaledFontFn) {
   return StyleSheet.create({
     container: {
@@ -23,7 +24,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       backgroundColor: "#000000",
       justifyContent: "center",
       alignItems: "center",
-      paddingHorizontal: 20,
+      paddingHorizontal: spacing.xl,
     } as ViewStyle,
     content: {
       width: "100%" as unknown as number,
@@ -37,7 +38,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       backgroundColor: "#1a1a2e",
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 24,
+      marginBottom: spacing.xl,
     } as ViewStyle,
     iconText: {
       fontSize: scaledFont(40),
@@ -47,39 +48,39 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontWeight: "700",
       color: "#ffffff",
       textAlign: "center",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     } as TextStyle,
     subtitle: {
       fontSize: scaledFont(16),
       color: "#8a8a9a",
       textAlign: "center",
-      marginBottom: 32,
+      marginBottom: spacing.xxl,
     } as TextStyle,
     stepsCard: {
       width: "100%" as unknown as number,
       backgroundColor: "#111122",
       borderRadius: 16,
-      padding: 20,
-      marginBottom: 32,
+      padding: spacing.xl,
+      marginBottom: spacing.xxl,
     } as ViewStyle,
     stepsTitle: {
       fontSize: scaledFont(18),
       fontWeight: "600",
       color: "#ffffff",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     } as TextStyle,
     stepsDescription: {
       fontSize: scaledFont(14),
       color: "#8a8a9a",
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     } as TextStyle,
     stepsList: {
-      gap: 8,
+      gap: spacing.sm,
     } as ViewStyle,
     stepRow: {
       flexDirection: "row",
       alignItems: "flex-start",
-      gap: 8,
+      gap: spacing.sm,
     } as ViewStyle,
     stepNumber: {
       fontSize: scaledFont(14),
@@ -93,13 +94,13 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as TextStyle,
     buttonsContainer: {
       width: "100%" as unknown as number,
-      gap: 12,
-      marginBottom: 20,
+      gap: spacing.md,
+      marginBottom: spacing.xl,
     } as ViewStyle,
     primaryButton: {
       backgroundColor: "#6366f1",
       borderRadius: 12,
-      paddingVertical: 16,
+      paddingVertical: spacing.lg,
       alignItems: "center",
     } as ViewStyle,
     primaryButtonText: {
@@ -109,7 +110,7 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as TextStyle,
     secondaryButton: {
       borderRadius: 12,
-      paddingVertical: 16,
+      paddingVertical: spacing.lg,
       alignItems: "center",
       borderWidth: 1,
       borderColor: "#333344",

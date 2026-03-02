@@ -34,6 +34,7 @@ import type { MobilePostData } from "../types";
 import { PostCard } from "./PostCard";
 import { PostShimmer } from "./SkeletonShimmer";
 
+import { spacing } from "../../theme/spacing";
 /**
  * Props for ProfileView component
  */
@@ -78,8 +79,8 @@ function createStyles(scaledFont: ScaledFontFn) {
     header: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: "#e1e1e1",
       backgroundColor: "#ffffff",
@@ -89,7 +90,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       minHeight: 44,
       justifyContent: "center",
       alignItems: "center",
-      marginRight: 12,
+      marginRight: spacing.md,
     } as ViewStyle,
     backIcon: {
       fontSize: scaledFont(24),
@@ -120,7 +121,7 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as ImageStyle,
     avatarContainer: {
       marginTop: -40,
-      marginLeft: 16,
+      marginLeft: spacing.lg,
       width: 80,
       height: 80,
       borderRadius: 40,
@@ -134,16 +135,16 @@ function createStyles(scaledFont: ScaledFontFn) {
       height: "100%",
     } as ImageStyle,
     infoSection: {
-      padding: 16,
+      padding: spacing.lg,
     } as ViewStyle,
     nameSection: {
-      marginBottom: 12,
+      marginBottom: spacing.md,
     } as ViewStyle,
     displayName: {
       fontSize: scaledFont(22),
       fontWeight: "700",
       color: "#0f1419",
-      marginBottom: 2,
+      marginBottom: spacing.xxs,
     } as TextStyle,
     handle: {
       fontSize: scaledFont(14),
@@ -152,8 +153,8 @@ function createStyles(scaledFont: ScaledFontFn) {
     actionButtons: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
-      marginBottom: 12,
+      gap: spacing.md,
+      marginBottom: spacing.md,
     } as ViewStyle,
     messageButton: {
       minWidth: 44,
@@ -175,7 +176,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       alignItems: "center",
       borderRadius: 22,
       backgroundColor: "#0f1419",
-      paddingHorizontal: 24,
+      paddingHorizontal: spacing.xl,
     } as ViewStyle,
     followButtonFollowing: {
       backgroundColor: "#ffffff",
@@ -194,11 +195,11 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(15),
       lineHeight: scaledLineHeight(scaledFont, 15, 20),
       color: "#0f1419",
-      marginBottom: 12,
+      marginBottom: spacing.md,
     } as TextStyle,
     stats: {
       flexDirection: "row",
-      gap: 24,
+      gap: spacing.xl,
     } as ViewStyle,
     statItem: {
       flexDirection: "row",
@@ -208,7 +209,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(16),
       fontWeight: "700",
       color: "#0f1419",
-      marginRight: 4,
+      marginRight: spacing.xs,
     } as TextStyle,
     statLabel: {
       fontSize: scaledFont(14),
@@ -225,7 +226,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       minHeight: 48,
       justifyContent: "center",
       alignItems: "center",
-      paddingVertical: 12,
+      paddingVertical: spacing.md,
     } as ViewStyle,
     tabActive: {
       borderBottomWidth: 3,
@@ -243,14 +244,14 @@ function createStyles(scaledFont: ScaledFontFn) {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      padding: 32,
+      padding: spacing.xxl,
       minHeight: 300,
     } as ViewStyle,
     emptyText: {
       fontSize: scaledFont(18),
       fontWeight: "600",
       color: "#0f1419",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     } as TextStyle,
     emptySubtext: {
       fontSize: scaledFont(14),
@@ -258,7 +259,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       textAlign: "center",
     } as TextStyle,
     loadingFooter: {
-      paddingVertical: 20,
+      paddingVertical: spacing.xl,
       alignItems: "center",
     } as ViewStyle,
   });
