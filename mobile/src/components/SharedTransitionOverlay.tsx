@@ -4,19 +4,18 @@ import {Image} from 'expo-image';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withTiming,
+  withSpring,
   runOnJS,
-  Easing,
   interpolate,
   interpolateColor,
 } from 'react-native-reanimated';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useSharedTransition} from '../contexts/SharedTransitionContext';
 import {useTheme} from '../contexts/ThemeContext';
-const TRANSITION_DURATION = 150;
-const TIMING_CONFIG = {
-  duration: TRANSITION_DURATION,
-  easing: Easing.out(Easing.cubic),
+const SPRING_CONFIG = {
+  damping: 20,
+  stiffness: 200,
+  mass: 1,
 };
 
 // Target layout for the post card at the top of the thread screen
@@ -40,7 +39,7 @@ export function SharedTransitionOverlay() {
   useEffect(() => {
     if (active && sourceLayout) {
       progress.value = 0;
-      progress.value = withTiming(1, TIMING_CONFIG, finished => {
+      progress.value = withSpring(1, SPRING_CONFIG, finished => {
         if (finished) {
           runOnJS(onAnimationComplete)();
         }
