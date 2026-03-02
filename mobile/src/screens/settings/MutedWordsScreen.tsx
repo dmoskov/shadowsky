@@ -14,6 +14,7 @@ import { usePreferences } from "../../contexts/PreferencesContext";
 import { MutedWord } from "../../services/preferences";
 import { calculateExpirationTime, getActiveMutedWords } from "../../utils/content-filter";
 import { useTheme } from "../../contexts/ThemeContext";
+import { BlurOverlay } from "../../components/BlurOverlay";
 import { triggerHaptic } from "../../utils/haptics";
 
 export function MutedWordsScreen() {
@@ -210,6 +211,7 @@ export function MutedWordsScreen() {
         onRequestClose={() => setShowAddModal(false)}
       >
         <View style={styles.modalOverlay}>
+          <BlurOverlay intensity={25} />
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add Muted Word</Text>
 
@@ -404,7 +406,6 @@ function createStyles(colors: any) {
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
     justifyContent: "center",
     alignItems: "center",
     padding: 20,

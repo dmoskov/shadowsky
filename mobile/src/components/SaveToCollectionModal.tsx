@@ -15,6 +15,7 @@ import {
 } from '../hooks/useBookmarkCollections';
 import { COLLECTION_COLORS } from '../services/bookmark-collections';
 import { useTheme } from '../contexts/ThemeContext';
+import { BlurOverlay } from './BlurOverlay';
 
 interface SaveToCollectionModalProps {
   visible: boolean;
@@ -78,6 +79,7 @@ function SaveToCollectionModalInner({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
+        <BlurOverlay intensity={25} />
         <View style={styles.modal}>
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Save to collection</Text>
@@ -178,7 +180,6 @@ function createStyles(colors: any) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
       justifyContent: 'flex-end',
     },
     modal: {

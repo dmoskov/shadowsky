@@ -1,7 +1,14 @@
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { StackActions } from "@react-navigation/native";
+import { BlurView } from "expo-blur";
 import React, { useCallback, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  useColorScheme,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePreferences } from "../contexts/PreferencesContext";
 import { useTheme } from "../contexts/ThemeContext";
@@ -60,6 +67,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const { colors } = useTheme();
   const { preferences } = usePreferences();
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
   const [customizerVisible, setCustomizerVisible] = useState(false);
 
   const tabBarItems = preferences?.tabBarItems ?? [
@@ -134,12 +142,17 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         style={[
           tabStyles.container,
           {
-            backgroundColor: colors.background,
             borderTopColor: colors.border,
             paddingBottom: Math.max(insets.bottom, 8),
+            overflow: "hidden",
           },
         ]}
       >
+        <BlurView
+          intensity={80}
+          tint={colorScheme === "dark" ? "dark" : "light"}
+          style={StyleSheet.absoluteFill}
+        />
         {tabBarItems.map((itemId) => {
           const def = ALL_NAV_ITEMS.find((n) => n.id === itemId);
           if (!def) return null;

@@ -28,6 +28,7 @@ import {SaveToCollectionModal} from './SaveToCollectionModal';
 import {usePostTranslation} from '../hooks/usePostTranslation';
 import {useSharedTransition} from '../contexts/SharedTransitionContext';
 import {useToast} from '../contexts/ToastContext';
+import {BlurOverlay} from './BlurOverlay';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -643,6 +644,7 @@ function PostCardComponent({
           style={styles.menuOverlay}
           activeOpacity={1}
           onPress={handleMenuClose}>
+          <BlurOverlay intensity={25} />
           <View style={styles.menuContainer}>
             {isOwnPost ? (
               <>
@@ -870,7 +872,6 @@ function createStyles(colors: any) {
   },
   menuOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,

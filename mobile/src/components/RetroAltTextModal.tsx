@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import {Image} from 'expo-image';
 import {useTheme} from '../contexts/ThemeContext';
+import {BlurOverlay} from './BlurOverlay';
 import {generateAltTextFromUrl} from '../services/ai-service';
 import {updatePostAltText} from '../services/atproto/post-editor';
 import {createLogger} from '../utils/logger';
@@ -98,6 +99,7 @@ function RetroAltTextModalInner({
       <KeyboardAvoidingView
         style={styles.overlay}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <BlurOverlay intensity={25} />
         <View style={[styles.content, {backgroundColor: colors.background}]}>
           <View style={styles.header}>
             <Text style={[styles.title, {color: colors.text}]}>
@@ -208,7 +210,6 @@ function RetroAltTextModalInner({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'flex-end',
   },
   content: {

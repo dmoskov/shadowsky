@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { ScheduledPost } from '../services/scheduled-posts';
 import { useTheme } from "../contexts/ThemeContext";
+import { BlurOverlay } from "./BlurOverlay";
 
 
 import { createLogger } from '../utils/logger';
@@ -87,6 +88,7 @@ export function EditScheduledPostModal({
         style={styles.overlay}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+        <BlurOverlay intensity={25} />
         <View style={styles.modalContainer}>
           <View style={styles.header}>
             <Text style={styles.title}>Edit Scheduled Post</Text>
@@ -146,7 +148,6 @@ function createStyles(colors: any) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
       justifyContent: 'flex-end',
     },
     modalContainer: {
