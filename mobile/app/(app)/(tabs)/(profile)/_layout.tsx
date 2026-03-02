@@ -23,6 +23,7 @@ export default function ProfileLayout() {
         name="index"
         options={{
           title: "Profile",
+          headerLargeTitle: true,
           headerLeft: () => <DrawerMenuButton />,
           headerStyle: { backgroundColor: colors.background },
           headerShadowVisible: false,
