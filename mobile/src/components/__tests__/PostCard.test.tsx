@@ -370,7 +370,7 @@ describe('PostCard', () => {
 
       const card = getByLabelText(/Post by Alice/);
       expect(card).toBeTruthy();
-      expect(card.props.accessibilityHint).toBe('Double tap to view full post');
+      expect(card.props.accessibilityHint).toBe('Double tap to view full post. Long press for more options');
     });
 
     it('calls onPressProfile when author section is pressed', () => {
@@ -397,6 +397,55 @@ describe('PostCard', () => {
       fireEvent.press(bookmarkButton);
 
       expect(onBookmark).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows context menu on long press (iOS)', () => {
+      const RN = require('react-native');
+      const originalOS = RN.Platform.OS;
+      RN.Platform.OS = 'ios';
+      const mockShowActionSheet = jest.fn();
+      RN.ActionSheetIOS.showActionSheetWithOptions = mockShowActionSheet;
+
+      const post = makeFeedViewPost();
+      const { getByLabelText } = render(
+        <PostCard post={post as any} currentUserDid="did:plc:other" />
+      );
+
+      const card = getByLabelText(/Post by Alice/);
+      fireEvent(card, 'longPress');
+
+      expect(mockShowActionSheet).toHaveBeenCalledTimes(1);
+      const [opts] = mockShowActionSheet.mock.calls[0];
+      expect(opts.options).toContain('Reply');
+      expect(opts.options).toContain('Share');
+      expect(opts.options).toContain('Report Post');
+      expect(opts.cancelButtonIndex).toBe(0);
+
+      RN.Platform.OS = originalOS;
+    });
+
+    it('shows delete option in context menu for own posts', () => {
+      const RN = require('react-native');
+      const originalOS = RN.Platform.OS;
+      RN.Platform.OS = 'ios';
+      const mockShowActionSheet = jest.fn();
+      RN.ActionSheetIOS.showActionSheetWithOptions = mockShowActionSheet;
+
+      const post = makeFeedViewPost();
+      const { getByLabelText } = render(
+        <PostCard post={post as any} currentUserDid="did:plc:test123" />
+      );
+
+      const card = getByLabelText(/Post by Alice/);
+      fireEvent(card, 'longPress');
+
+      expect(mockShowActionSheet).toHaveBeenCalledTimes(1);
+      const [opts] = mockShowActionSheet.mock.calls[0];
+      expect(opts.options).toContain('Delete Post');
+      expect(opts.options).not.toContain('Report Post');
+      expect(opts.destructiveButtonIndex).toBe(6);
+
+      RN.Platform.OS = originalOS;
     });
   });
 
