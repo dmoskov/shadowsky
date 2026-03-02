@@ -363,7 +363,9 @@ function createStyles(colors: any) {
     },
     headerButton: {
       paddingHorizontal: 12,
-      paddingVertical: 6,
+      paddingVertical: 12,
+      minHeight: 44,
+      justifyContent: 'center',
       backgroundColor: colors.surface,
       borderRadius: 6,
     },
@@ -372,7 +374,10 @@ function createStyles(colors: any) {
       color: colors.text,
     },
     closeButton: {
-      padding: 8,
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     closeButtonText: {
       fontSize: 20,
@@ -423,7 +428,10 @@ function createStyles(colors: any) {
       marginRight: 8,
     },
     editButton: {
-      padding: 4,
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     editButtonText: {
       fontSize: 16,

@@ -871,7 +871,10 @@ function createStyles(colors: any) {
     gap: 8,
   },
   moreButton: {
-    padding: 4,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   displayName: {
     color: colors.text,
@@ -909,7 +912,10 @@ function createStyles(colors: any) {
     // Add subtle background for tap target
   },
   iconButton: {
-    padding: 0,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   engagementCount: {
     color: colors.textSecondary,

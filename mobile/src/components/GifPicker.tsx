@@ -160,7 +160,8 @@ function GifPickerInner({
                 clearTimeout(debounceTimerRef.current);
               }
             }}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={{ minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}
             accessibilityLabel="Clear search"
             accessibilityRole="button"
           >
@@ -296,7 +297,10 @@ function createStyles(colors: any, itemWidth: number) {
       fontWeight: "600",
     },
     closeButton: {
-      padding: 4,
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: "center",
+      justifyContent: "center",
     },
     searchContainer: {
       flexDirection: "row",
