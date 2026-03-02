@@ -47,6 +47,7 @@ import {
 } from "./batch";
 import { LoadingFooterShimmer, LoadingOverlayShimmer } from "./SkeletonShimmer";
 
+import { spacing } from "../../theme/spacing";
 interface FollowersListViewProps {
   /** Bluesky agent for API calls */
   agent: BskyAgent;
@@ -70,8 +71,8 @@ function createStyles(scaledFont: ScaledFontFn) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: "#e1e1e1",
       backgroundColor: "#ffffff",
@@ -96,7 +97,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       minHeight: 44,
       justifyContent: "center",
       alignItems: "center",
-      paddingHorizontal: 12,
+      paddingHorizontal: spacing.md,
     } as ViewStyle,
     selectButtonText: {
       fontSize: scaledFont(15),
@@ -110,14 +111,14 @@ function createStyles(scaledFont: ScaledFontFn) {
       flexGrow: 1,
     } as ViewStyle,
     loadingFooter: {
-      paddingVertical: 20,
+      paddingVertical: spacing.xl,
       alignItems: "center",
     } as ViewStyle,
     emptyContainer: {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      padding: 32,
+      padding: spacing.xxl,
       minHeight: 300,
     } as ViewStyle,
     emptyText: {

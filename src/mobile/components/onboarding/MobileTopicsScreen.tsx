@@ -21,6 +21,7 @@ import {
 } from "../../../services/onboarding-service";
 import { useDynamicType, type ScaledFontFn } from "../../hooks/useDynamicType";
 
+import { spacing } from "../../../theme/spacing";
 function createStyles(scaledFont: ScaledFontFn) {
   return StyleSheet.create({
     container: {
@@ -28,9 +29,9 @@ function createStyles(scaledFont: ScaledFontFn) {
       backgroundColor: "#000000",
     } as ViewStyle,
     header: {
-      paddingHorizontal: 20,
+      paddingHorizontal: spacing.xl,
       paddingTop: 60,
-      paddingBottom: 16,
+      paddingBottom: spacing.lg,
       alignItems: "center",
     } as ViewStyle,
     title: {
@@ -38,13 +39,13 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontWeight: "700",
       color: "#ffffff",
       textAlign: "center",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     } as TextStyle,
     subtitle: {
       fontSize: scaledFont(15),
       color: "#8a8a9a",
       textAlign: "center",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     } as TextStyle,
     counter: {
       fontSize: scaledFont(13),
@@ -54,14 +55,14 @@ function createStyles(scaledFont: ScaledFontFn) {
       flex: 1,
     } as ViewStyle,
     scrollContent: {
-      paddingHorizontal: 16,
-      paddingBottom: 16,
-      gap: 10,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.lg,
+      gap: spacing.md,
     } as ViewStyle,
     topicCard: {
       backgroundColor: "#111122",
       borderRadius: 12,
-      padding: 14,
+      padding: spacing.lg,
       borderWidth: 2,
       borderColor: "transparent",
     } as ViewStyle,
@@ -72,7 +73,7 @@ function createStyles(scaledFont: ScaledFontFn) {
     topicCardContent: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
+      gap: spacing.md,
     } as ViewStyle,
     topicIcon: {
       fontSize: scaledFont(28),
@@ -84,7 +85,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(16),
       fontWeight: "600",
       color: "#ffffff",
-      marginBottom: 2,
+      marginBottom: spacing.xxs,
     } as TextStyle,
     topicDescription: {
       fontSize: scaledFont(13),
@@ -107,14 +108,14 @@ function createStyles(scaledFont: ScaledFontFn) {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 16,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
       borderTopWidth: 1,
       borderTopColor: "#1a1a2e",
     } as ViewStyle,
     backButton: {
-      paddingVertical: 12,
-      paddingHorizontal: 20,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
       borderRadius: 10,
       borderWidth: 1,
       borderColor: "#333344",
@@ -126,11 +127,11 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as TextStyle,
     rightButtons: {
       flexDirection: "row",
-      gap: 10,
+      gap: spacing.md,
     } as ViewStyle,
     skipButton: {
-      paddingVertical: 12,
-      paddingHorizontal: 20,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
       borderRadius: 10,
       borderWidth: 1,
       borderColor: "#333344",
@@ -142,8 +143,8 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as TextStyle,
     continueButton: {
       backgroundColor: "#6366f1",
-      paddingVertical: 12,
-      paddingHorizontal: 24,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
       borderRadius: 10,
     } as ViewStyle,
     continueButtonDisabled: {

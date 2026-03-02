@@ -22,6 +22,7 @@ import {
   profileToSelectableUser,
   useBatchSelection,
 } from "../../../contexts/BatchSelectionContext";
+import { spacing } from "../../../theme/spacing";
 import {
   scaledLineHeight,
   useDynamicType,
@@ -45,11 +46,11 @@ function createStyles(scaledFont: ScaledFontFn) {
     container: {
       flexDirection: "row",
       alignItems: "center",
-      padding: 16,
+      padding: spacing.lg,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: "#e1e1e1",
       backgroundColor: "#ffffff",
-      gap: 12,
+      gap: spacing.md,
     } as ViewStyle,
     containerSelected: {
       backgroundColor: "#eff6ff",
@@ -87,12 +88,12 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(16),
       fontWeight: "600",
       color: "#0f1419",
-      marginBottom: 2,
+      marginBottom: spacing.xxs,
     } as TextStyle,
     handle: {
       fontSize: scaledFont(14),
       color: "#687684",
-      marginBottom: 4,
+      marginBottom: spacing.xs,
     } as TextStyle,
     bio: {
       fontSize: scaledFont(13),

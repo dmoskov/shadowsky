@@ -36,6 +36,7 @@ import {
 } from "../hooks/useDynamicType";
 import { SummaryShimmer } from "./SkeletonShimmer";
 
+import { spacing } from "../../theme/spacing";
 const logger = createLogger("MobileThreadSummary");
 
 type Post = AppBskyFeedDefs.PostView;
@@ -97,15 +98,15 @@ function createStyles(scaledFont: ScaledFontFn) {
     container: {
       backgroundColor: "#f7f9fa",
       borderRadius: 8,
-      marginTop: 12,
+      marginTop: spacing.md,
       overflow: "hidden",
     } as ViewStyle,
     loadingRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
+      gap: spacing.sm,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
     } as ViewStyle,
     loadingText: {
       fontSize: scaledFont(13),
@@ -118,9 +119,9 @@ function createStyles(scaledFont: ScaledFontFn) {
     header: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      gap: 8,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.md,
+      gap: spacing.sm,
     } as ViewStyle,
     sparkleIcon: {
       fontSize: scaledFont(14),
@@ -143,12 +144,12 @@ function createStyles(scaledFont: ScaledFontFn) {
       color: "#687684",
     } as TextStyle,
     content: {
-      paddingHorizontal: 12,
-      paddingBottom: 12,
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.md,
     } as ViewStyle,
     highlightsSection: {
-      marginTop: 12,
-      paddingTop: 12,
+      marginTop: spacing.md,
+      paddingTop: spacing.md,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: "#e1e1e1",
     } as ViewStyle,
@@ -156,20 +157,20 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(11),
       fontWeight: "500",
       color: "#687684",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     } as TextStyle,
     highlightsRow: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 8,
+      gap: spacing.sm,
     } as ViewStyle,
     highlightChip: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 4,
+      gap: spacing.xs,
       backgroundColor: "#ffffff",
-      paddingHorizontal: 8,
-      paddingVertical: 4,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
       borderRadius: 4,
     } as ViewStyle,
     highlightHandle: {
@@ -181,7 +182,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       color: "#687684",
     } as TextStyle,
     engagementText: {
-      marginTop: 8,
+      marginTop: spacing.sm,
       fontSize: scaledFont(11),
       color: "#687684",
     } as TextStyle,
@@ -198,7 +199,7 @@ function createSummaryStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(14),
       lineHeight: scaledLineHeight(scaledFont, 14, 20),
       color: "#536471",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     } as TextStyle,
     bold: {
       fontWeight: "700",
@@ -210,19 +211,19 @@ function createSummaryStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(14),
       fontWeight: "600",
       color: "#536471",
-      marginBottom: 4,
-      marginTop: 8,
+      marginBottom: spacing.xs,
+      marginTop: spacing.sm,
     } as TextStyle,
     listItem: {
       flexDirection: "row",
       alignItems: "flex-start",
-      marginBottom: 4,
-      paddingLeft: 4,
+      marginBottom: spacing.xs,
+      paddingLeft: spacing.xs,
     } as ViewStyle,
     bullet: {
       fontSize: scaledFont(14),
       color: "#536471",
-      marginRight: 8,
+      marginRight: spacing.sm,
       lineHeight: scaledLineHeight(scaledFont, 14, 20),
     } as TextStyle,
     listItemText: {
