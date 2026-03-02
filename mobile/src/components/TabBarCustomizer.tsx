@@ -10,6 +10,7 @@ import {
 import { usePreferences } from "../contexts/PreferencesContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { triggerHaptic } from "../utils/haptics";
+import { BlurOverlay } from "./BlurOverlay";
 import type { IconProps } from "./icons";
 import {
   BellIcon,
@@ -156,6 +157,7 @@ function TabBarCustomizerInner({ visible, onClose }: TabBarCustomizerProps) {
       onRequestClose={handleCancel}
     >
       <View style={styles.overlay}>
+        <BlurOverlay intensity={30} />
         <View style={styles.sheet}>
           <View style={styles.handle} />
 
@@ -296,7 +298,6 @@ const createStyles = (colors: Record<string, string>) =>
   StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: "rgba(0,0,0,0.6)",
       justifyContent: "flex-end",
     },
     sheet: {

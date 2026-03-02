@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { BlurOverlay } from "../../../components/BlurOverlay";
 
 export interface AltTextModalProps {
   visible: boolean;
@@ -69,6 +70,7 @@ function AltTextModalInner({
         style={styles.modalOverlay}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
+        <BlurOverlay intensity={25} />
         <View
           style={[styles.modalContent, { backgroundColor: colors.background }]}
         >
@@ -178,7 +180,6 @@ function AltTextModalInner({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
     justifyContent: "flex-end",
   },
   modalContent: {

@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PINNED_LANGUAGES } from "../constants/languages";
 import { useTheme } from "../contexts/ThemeContext";
+import { BlurOverlay } from "./BlurOverlay";
 import { LanguagePicker } from "./LanguagePicker";
 import { PersonTypeahead } from "./PersonTypeahead";
 import {
@@ -208,6 +209,7 @@ function SearchFilterSheetInner({
         onRequestClose={onClose}
       >
         <View style={styles.overlay}>
+          <BlurOverlay intensity={25} />
           <TouchableOpacity
             style={styles.overlayBackground}
             activeOpacity={1}
@@ -468,7 +470,6 @@ function createStyles(colors: any) {
     },
     overlayBackground: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: colors.modalOverlay,
     },
     sheet: {
       backgroundColor: colors.background,

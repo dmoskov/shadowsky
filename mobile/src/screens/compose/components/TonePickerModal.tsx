@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useTheme } from "../../../contexts/ThemeContext";
+import { BlurOverlay } from "../../../components/BlurOverlay";
 import { CloseIcon, CheckIcon } from "../../../components/icons";
 import type { ToneOption } from "../../../services/ai-service";
 
@@ -89,6 +90,7 @@ export function TonePickerModal({
         onRequestClose={onCancelPreview}
       >
         <View style={styles.overlay}>
+          <BlurOverlay intensity={25} />
           <View style={styles.content}>
             <View style={styles.header}>
               <Text style={styles.title}>
@@ -140,6 +142,7 @@ export function TonePickerModal({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
+        <BlurOverlay intensity={25} />
         <View style={styles.content}>
           <View style={styles.header}>
             <Text style={styles.title}>Choose a Tone</Text>
@@ -182,7 +185,6 @@ function createStyles(colors: any) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
       justifyContent: "flex-end",
     },
     content: {
