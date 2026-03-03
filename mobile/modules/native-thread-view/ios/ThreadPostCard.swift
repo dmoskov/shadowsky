@@ -166,7 +166,7 @@ struct ThreadPostCard: View {
             // Action buttons — kept outside the content tap area so Button
             // actions (like, repost, reply, share) fire correctly on iOS.
             // A parent .onTapGesture intercepts Button taps in SwiftUI.
-            HStack(spacing: 24) {
+            HStack(spacing: 4) {
                 // Reply
                 ActionButton(
                     iconName: "bubble.left",
@@ -203,11 +203,15 @@ struct ThreadPostCard: View {
                     onShare?()
                 }) {
                     Image(systemName: "square.and.arrow.up")
-                        .font(.body)
+                        .font(.system(size: 18))
                         .foregroundColor(.secondary)
+                        .frame(minWidth: 48, minHeight: 48)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
             .padding(.top, 4)
+            .contentShape(Rectangle())
         }
         .padding(16)
         .background(isRoot ? Color(UIColor.systemBackground) : Color.clear)
@@ -295,24 +299,25 @@ struct ActionButton: View {
     }
 
     var body: some View {
-        HStack(spacing: 6) {
-            Button(action: {
-                action?()
-            }) {
+        Button(action: {
+            action?()
+        }) {
+            HStack(spacing: 4) {
                 Image(systemName: iconName)
-                    .font(.body)
-                    .foregroundColor(isActive ? color : .secondary)
+                    .font(.system(size: 18))
+                if count > 0 {
+                    Text("\(count)")
+                        .font(.subheadline)
+                        .onTapGesture {
+                            onPressCount?()
+                        }
+                }
             }
-
-            if count > 0 {
-                Text("\(count)")
-                    .font(.subheadline)
-                    .foregroundColor(isActive ? color : .secondary)
-                    .onTapGesture {
-                        onPressCount?()
-                    }
-            }
+            .foregroundColor(isActive ? color : .secondary)
+            .frame(minWidth: 48, minHeight: 48)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
     }
 }
 

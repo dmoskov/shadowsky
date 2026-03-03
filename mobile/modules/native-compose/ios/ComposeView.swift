@@ -224,50 +224,21 @@ struct ComposeView: View {
     // MARK: - Reply Context
 
     private func replyContextView(_ context: ReplyContext) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Replying to @\(context.authorHandle)")
-                .font(.subheadline.weight(.medium))
-                .foregroundColor(.secondary)
-
-            HStack(alignment: .top, spacing: 8) {
-                // Avatar
-                if let avatarUrl = context.authorAvatar, let url = URL(string: avatarUrl) {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image.resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 36, height: 36)
-                                .clipShape(Circle())
-                        default:
-                            defaultAvatarSmall
-                        }
-                    }
-                    .frame(width: 36, height: 36)
-                } else {
-                    defaultAvatarSmall
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Text(context.authorDisplayName ?? context.authorHandle)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
-                        Text("@\(context.authorHandle)")
-                            .font(.footnote)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                    }
-                    Text(context.text)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                }
+        Button(action: {
+            // TODO: navigate to parent post if needed
+        }) {
+            HStack(spacing: 6) {
+                Text("Replying to")
+                    .foregroundColor(.secondary)
+                Text("@\(context.authorHandle)")
+                    .foregroundColor(.accentColor)
             }
+            .font(.subheadline.weight(.medium))
+            .lineLimit(1)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
         .overlay(
             Divider(), alignment: .bottom
         )
@@ -426,12 +397,6 @@ struct ComposeView: View {
         return "What's happening?"
     }
 
-    private var defaultAvatarSmall: some View {
-        Image(systemName: "person.circle.fill")
-            .resizable()
-            .frame(width: 36, height: 36)
-            .foregroundColor(.secondary)
-    }
 }
 
 // MARK: - Safe Array Access

@@ -107,58 +107,65 @@ function MyProfileScreenNativeIOS({
 
   useScrollToTop(scrollRef);
 
-  // --- Data mapping for native header ---
+  // --- Data mapping for native header (memoized to prevent header re-renders) ---
 
-  const profileData: ProfileData | null = profile
-    ? {
-        did: profile.did,
-        handle: profile.handle,
-        displayName: profile.displayName,
-        description: profile.description,
-        avatar: profile.avatar,
-        banner: profile.banner,
-        followersCount: profile.followersCount,
-        followsCount: profile.followsCount,
-        postsCount: profile.postsCount,
-        indexedAt: profile.indexedAt,
-        viewer: profile.viewer
-          ? {
-              muted: profile.viewer.muted,
-              blockedBy: profile.viewer.blockedBy,
-              blocking: profile.viewer.blocking,
-              following: profile.viewer.following,
-              followedBy: profile.viewer.followedBy,
-            }
-          : undefined,
-        labels: profile.labels?.map((l) => ({ val: l.val, src: l.src })),
-        pinnedPost: profile.pinnedPost
-          ? { uri: profile.pinnedPost.uri }
-          : undefined,
-        associated: profile.associated
-          ? {
-              lists: profile.associated.lists,
-              feedgens: profile.associated.feedgens,
-              starterPacks: profile.associated.starterPacks,
-              labeler: profile.associated.labeler,
-              chat: profile.associated.chat
-                ? { allowIncoming: profile.associated.chat.allowIncoming }
-                : undefined,
-            }
-          : undefined,
-      }
-    : null;
+  const profileData: ProfileData | null = useMemo(
+    () =>
+      profile
+        ? {
+            did: profile.did,
+            handle: profile.handle,
+            displayName: profile.displayName,
+            description: profile.description,
+            avatar: profile.avatar,
+            banner: profile.banner,
+            followersCount: profile.followersCount,
+            followsCount: profile.followsCount,
+            postsCount: profile.postsCount,
+            indexedAt: profile.indexedAt,
+            viewer: profile.viewer
+              ? {
+                  muted: profile.viewer.muted,
+                  blockedBy: profile.viewer.blockedBy,
+                  blocking: profile.viewer.blocking,
+                  following: profile.viewer.following,
+                  followedBy: profile.viewer.followedBy,
+                }
+              : undefined,
+            labels: profile.labels?.map((l) => ({ val: l.val, src: l.src })),
+            pinnedPost: profile.pinnedPost
+              ? { uri: profile.pinnedPost.uri }
+              : undefined,
+            associated: profile.associated
+              ? {
+                  lists: profile.associated.lists,
+                  feedgens: profile.associated.feedgens,
+                  starterPacks: profile.associated.starterPacks,
+                  labeler: profile.associated.labeler,
+                  chat: profile.associated.chat
+                    ? { allowIncoming: profile.associated.chat.allowIncoming }
+                    : undefined,
+                }
+              : undefined,
+          }
+        : null,
+    [profile],
+  );
 
-  const starterPacksForNative: StarterPackData[] =
-    starterPacksData?.starterPacks?.map((pack) => {
-      const record = pack.record as any;
-      return {
-        uri: pack.uri,
-        cid: pack.cid,
-        name: record?.name || "Starter Pack",
-        listItemCount: pack.listItemCount,
-        joinedAllTimeCount: pack.joinedAllTimeCount,
-      };
-    }) ?? [];
+  const starterPacksForNative: StarterPackData[] = useMemo(
+    () =>
+      starterPacksData?.starterPacks?.map((pack) => {
+        const record = pack.record as any;
+        return {
+          uri: pack.uri,
+          cid: pack.cid,
+          name: record?.name || "Starter Pack",
+          listItemCount: pack.listItemCount,
+          joinedAllTimeCount: pack.joinedAllTimeCount,
+        };
+      }) ?? [],
+    [starterPacksData],
+  );
 
   // --- Event handlers ---
 
@@ -321,9 +328,9 @@ function MyProfileScreenNativeIOS({
           onRefresh={handleRefresh}
           style={styles.nativeHeader}
         />
-        {activeTab === "posts" && posts.length > 0 && account?.handle && (
+        {activeTab === "posts" && account?.handle && (
           <InlineErrorBoundary silent context="ProfileAIInsights">
-            <ProfileAIInsights handle={account.handle} posts={posts} />
+            <ProfileAIInsights handle={account.handle} />
           </InlineErrorBoundary>
         )}
       </>
@@ -333,7 +340,6 @@ function MyProfileScreenNativeIOS({
     starterPacksForNative,
     isLoadingProfile,
     activeTab,
-    posts,
     account?.handle,
     styles,
     handleTabChange,

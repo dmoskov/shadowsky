@@ -169,9 +169,9 @@ struct PostCardView: View {
             // Action bar — kept outside the content tap area so button taps
             // are not intercepted by the parent .onTapGesture.
             // Uses .buttonStyle(.plain) to ensure reliable tap detection
-            // inside ScrollView, and .frame(minHeight: 44) for Apple HIG
-            // minimum tap target compliance.
-            HStack(spacing: 0) {
+            // inside ScrollView, and .frame(minHeight: 48) for comfortable
+            // tap targets.
+            HStack(spacing: 4) {
                 // Reply
                 actionButton(
                     icon: "bubble.left",
@@ -217,15 +217,16 @@ struct PostCardView: View {
                 // Share
                 Button(action: { onShare?() }) {
                     Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 14))
+                        .font(.system(size: 18))
                         .foregroundColor(.secondary)
-                        .frame(minWidth: 44, minHeight: 44)
+                        .frame(minWidth: 48, minHeight: 48)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("share-button")
             }
-            .padding(.top, 2)
+            .padding(.top, 4)
+            .contentShape(Rectangle())
             .accessibilityIdentifier("post-actions")
         }
         .padding(.horizontal, 16)
@@ -307,21 +308,21 @@ struct PostCardView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// Action button with 44pt minimum tap target (Apple HIG compliance).
+    /// Action button with 48pt minimum tap target.
     /// Uses .buttonStyle(.plain) to prevent SwiftUI's default button style
     /// from interfering with tap detection inside ScrollView.
     private func actionButton(icon: String, count: Int, isActive: Bool, activeColor: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 15))
+                    .font(.system(size: 18))
                 if count > 0 {
                     Text(formatCount(count))
-                        .font(.caption)
+                        .font(.subheadline)
                 }
             }
             .foregroundColor(isActive ? activeColor : .secondary)
-            .frame(minWidth: 44, minHeight: 44)
+            .frame(minWidth: 48, minHeight: 48)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

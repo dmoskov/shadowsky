@@ -140,13 +140,16 @@ export const NativeProfileViewWithData = forwardRef<
       const serialized = JSON.stringify(profile);
       ProfileBridge.updateProfileData(serialized);
     }
+  }, [profile]);
 
+  // Only clear profile data on unmount
+  useEffect(() => {
     return () => {
       if (ProfileBridge) {
         ProfileBridge.clearProfileData();
       }
     };
-  }, [profile]);
+  }, []);
 
   // Serialize and send starter packs data to Swift
   useEffect(() => {

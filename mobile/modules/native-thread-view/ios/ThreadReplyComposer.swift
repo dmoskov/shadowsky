@@ -134,20 +134,8 @@ struct ThreadReplyComposer: View {
 
             Divider()
 
-            // Reply context indicator
-            if let handle = state.replyToHandle {
-                replyContextBar(handle: handle)
-            }
-
             // Composer bar
             HStack(alignment: .bottom, spacing: 8) {
-                // Toolbar buttons
-                ComposerToolbarView(
-                    onImagePicker: { onOpenImagePicker?() },
-                    onGifPicker: { onOpenGifPicker?() },
-                    onEmojiPicker: { onOpenEmojiPicker?() }
-                )
-
                 // Text input
                 AutoGrowingTextEditor(
                     text: $state.text,
@@ -196,25 +184,6 @@ struct ThreadReplyComposer: View {
             .padding(.vertical, 8)
             .background(Color(UIColor.systemBackground))
         }
-    }
-
-    // MARK: - Reply Context Bar
-
-    private func replyContextBar(handle: String) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: "arrowshape.turn.up.left.fill")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-            Text("Replying to @\(handle)")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            Spacer()
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 4)
-        .background(Color(UIColor.secondarySystemBackground))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Replying to @\(handle)")
     }
 
     // MARK: - Actions

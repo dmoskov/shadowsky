@@ -16,7 +16,7 @@
   
   dispatch_once(&onceToken, ^{
     classNames = @[
-      
+      @"MediaLibraryImageLoader"
     ];
   });
   

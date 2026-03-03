@@ -2,45 +2,41 @@ import React, { useState, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { SkeletonShimmer } from "./SkeletonShimmer";
 import { useQuery } from "@tanstack/react-query";
-import { AppBskyFeedDefs } from "@atproto/api";
-import {
-  analyzePosts,
-  type PostAnalysisPost,
-  type PostAnalysisResult,
-} from "../services/ai-service";
+import { analyzePosts, type PostAnalysisResult } from "../services/ai-service";
 import { getAuthorFeed } from "../services/atproto/feeds";
 import { useTheme } from "../contexts/ThemeContext";
 
 interface ProfileAIInsightsProps {
   handle: string;
-  posts: AppBskyFeedDefs.FeedViewPost[];
 }
 
-export function ProfileAIInsights({ handle, posts }: ProfileAIInsightsProps) {
+export function ProfileAIInsights({ handle }: ProfileAIInsightsProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [expanded, setExpanded] = useState(false);
 
-  // Transform posts already in memory for quick haiku analysis
-  const postsInMemory: PostAnalysisPost[] = useMemo(
-    () =>
-      posts
-        .filter((item) => {
-          const isRepost =
-            item.reason?.$type === "app.bsky.feed.defs#reasonRepost";
-          return !isRepost;
-        })
+  // Fetch initial page of posts for quick haiku analysis
+  const { data: initialPosts } = useQuery({
+    queryKey: ["profile-posts-for-haiku", handle],
+    queryFn: async () => {
+      const response = await getAuthorFeed(handle, { limit: 30 });
+      return response.feed
+        .filter(
+          (item) => item.reason?.$type !== "app.bsky.feed.defs#reasonRepost",
+        )
         .map((item) => ({
           text: (item.post.record as { text?: string })?.text || "",
           createdAt: item.post.indexedAt,
           likes: item.post.likeCount || 0,
           reposts: item.post.repostCount || 0,
           replies: item.post.replyCount || 0,
-        })),
-    [posts],
-  );
+        }));
+    },
+    staleTime: 30 * 60 * 1000,
+    enabled: !!handle,
+  });
 
-  // Quick haiku analysis using posts already in memory
+  // Quick haiku analysis using initial posts
   const {
     data: haikuAnalysis,
     isLoading: isLoadingHaiku,
@@ -48,11 +44,12 @@ export function ProfileAIInsights({ handle, posts }: ProfileAIInsightsProps) {
   } = useQuery<PostAnalysisResult>({
     queryKey: ["profile-analysis-haiku", handle],
     queryFn: async () => {
-      if (postsInMemory.length === 0) throw new Error("No posts in memory");
-      return await analyzePosts(postsInMemory, "haiku");
+      if (!initialPosts || initialPosts.length === 0)
+        throw new Error("No posts available");
+      return await analyzePosts(initialPosts, "haiku");
     },
     staleTime: 30 * 60 * 1000,
-    enabled: postsInMemory.length > 0,
+    enabled: !!initialPosts && initialPosts.length > 0,
   });
 
   // Fetch more posts for deeper Sonnet analysis
@@ -62,7 +59,7 @@ export function ProfileAIInsights({ handle, posts }: ProfileAIInsightsProps) {
       queryFn: async () => {
         if (!handle) throw new Error("No handle to analyze");
 
-        const allPosts: AppBskyFeedDefs.FeedViewPost[] = [];
+        const allPosts: Array<{ post: any; reason?: any }> = [];
         let fetchCursor: string | undefined;
         const maxPages = 4; // Fetch up to 200 posts
 
@@ -121,8 +118,8 @@ export function ProfileAIInsights({ handle, posts }: ProfileAIInsightsProps) {
     (isLoadingPostsForSonnet && isLoadingSonnet && !haikuAnalysis);
   const analysisError = sonnetError || haikuError;
 
-  // Don't render anything if no posts to analyze
-  if (postsInMemory.length === 0) {
+  // Don't render anything until we know if there are posts
+  if (!initialPosts || initialPosts.length === 0) {
     return null;
   }
 

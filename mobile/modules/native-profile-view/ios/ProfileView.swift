@@ -58,12 +58,6 @@ struct ProfileView: View {
             }
         }
         .background(Color(UIColor.systemBackground))
-        .onAppear {
-            profileState.startObserving()
-        }
-        .onDisappear {
-            profileState.stopObserving()
-        }
     }
 
     // MARK: - Profile Content
@@ -411,7 +405,22 @@ class ProfileState: ObservableObject {
     private var starterPacksObserver: NSObjectProtocol?
     private var pinnedPostObserver: NSObjectProtocol?
 
+    init() {
+        startObserving()
+    }
+
     func startObserving() {
+        // Read any existing data that was set before we started observing
+        if let existingProfile = ProfileBridgeModule.getSharedProfileData() {
+            self.profile = existingProfile
+        }
+        if let existingPacks = ProfileBridgeModule.getSharedStarterPacks() {
+            self.starterPacks = existingPacks
+        }
+        if let existingPinnedPost = ProfileBridgeModule.getSharedPinnedPost() {
+            self.pinnedPost = existingPinnedPost
+        }
+
         profileObserver = NotificationCenter.default.addObserver(
             forName: ProfileBridgeModule.profileDataUpdatedNotification,
             object: nil,

@@ -150,84 +150,97 @@ function ProfileScreenNativeIOS({
 
   const isOwnProfile = account?.handle === handle;
 
-  // --- Data mapping for native header ---
+  // --- Data mapping for native header (memoized to prevent header re-renders) ---
 
-  const profileData: ProfileData | null = profile
-    ? {
-        did: profile.did,
-        handle: profile.handle,
-        displayName: profile.displayName,
-        description: profile.description,
-        avatar: profile.avatar,
-        banner: profile.banner,
-        followersCount: profile.followersCount,
-        followsCount: profile.followsCount,
-        postsCount: profile.postsCount,
-        indexedAt: profile.indexedAt,
-        viewer: profile.viewer
-          ? {
-              muted: profile.viewer.muted,
-              blockedBy: profile.viewer.blockedBy,
-              blocking: profile.viewer.blocking,
-              following: profile.viewer.following,
-              followedBy: profile.viewer.followedBy,
-            }
-          : undefined,
-        labels: profile.labels?.map((l) => ({ val: l.val, src: l.src })),
-        pinnedPost: profile.pinnedPost
-          ? { uri: profile.pinnedPost.uri }
-          : undefined,
-        associated: profile.associated
-          ? {
-              lists: profile.associated.lists,
-              feedgens: profile.associated.feedgens,
-              starterPacks: profile.associated.starterPacks,
-              labeler: profile.associated.labeler,
-              chat: profile.associated.chat
-                ? { allowIncoming: profile.associated.chat.allowIncoming }
-                : undefined,
-            }
-          : undefined,
-        knownFollowers: (profile as any).knownFollowers
-          ? {
-              count: (profile as any).knownFollowers.count,
-              followers:
-                (profile as any).knownFollowers.followers?.map((f: any) => ({
-                  did: f.did,
-                  handle: f.handle,
-                  displayName: f.displayName,
-                  avatar: f.avatar,
-                })) ?? [],
-            }
-          : undefined,
-      }
-    : null;
+  const profileData: ProfileData | null = useMemo(
+    () =>
+      profile
+        ? {
+            did: profile.did,
+            handle: profile.handle,
+            displayName: profile.displayName,
+            description: profile.description,
+            avatar: profile.avatar,
+            banner: profile.banner,
+            followersCount: profile.followersCount,
+            followsCount: profile.followsCount,
+            postsCount: profile.postsCount,
+            indexedAt: profile.indexedAt,
+            viewer: profile.viewer
+              ? {
+                  muted: profile.viewer.muted,
+                  blockedBy: profile.viewer.blockedBy,
+                  blocking: profile.viewer.blocking,
+                  following: profile.viewer.following,
+                  followedBy: profile.viewer.followedBy,
+                }
+              : undefined,
+            labels: profile.labels?.map((l) => ({ val: l.val, src: l.src })),
+            pinnedPost: profile.pinnedPost
+              ? { uri: profile.pinnedPost.uri }
+              : undefined,
+            associated: profile.associated
+              ? {
+                  lists: profile.associated.lists,
+                  feedgens: profile.associated.feedgens,
+                  starterPacks: profile.associated.starterPacks,
+                  labeler: profile.associated.labeler,
+                  chat: profile.associated.chat
+                    ? { allowIncoming: profile.associated.chat.allowIncoming }
+                    : undefined,
+                }
+              : undefined,
+            knownFollowers: (profile as any).knownFollowers
+              ? {
+                  count: (profile as any).knownFollowers.count,
+                  followers:
+                    (profile as any).knownFollowers.followers?.map(
+                      (f: any) => ({
+                        did: f.did,
+                        handle: f.handle,
+                        displayName: f.displayName,
+                        avatar: f.avatar,
+                      }),
+                    ) ?? [],
+                }
+              : undefined,
+          }
+        : null,
+    [profile],
+  );
 
-  const starterPacksForNative: StarterPackData[] =
-    starterPacksData?.starterPacks?.map((pack) => {
-      const record = pack.record as any;
-      return {
-        uri: pack.uri,
-        cid: pack.cid,
-        name: record?.name || "Starter Pack",
-        listItemCount: pack.listItemCount,
-        joinedAllTimeCount: pack.joinedAllTimeCount,
-      };
-    }) ?? [];
+  const starterPacksForNative: StarterPackData[] = useMemo(
+    () =>
+      starterPacksData?.starterPacks?.map((pack) => {
+        const record = pack.record as any;
+        return {
+          uri: pack.uri,
+          cid: pack.cid,
+          name: record?.name || "Starter Pack",
+          listItemCount: pack.listItemCount,
+          joinedAllTimeCount: pack.joinedAllTimeCount,
+        };
+      }) ?? [],
+    [starterPacksData],
+  );
 
-  const pinnedPostForNative: PinnedPostData | null = pinnedPost
-    ? {
-        uri: pinnedPost.uri,
-        authorHandle: (pinnedPost.author as any)?.handle || "",
-        authorDisplayName: (pinnedPost.author as any)?.displayName,
-        authorAvatar: (pinnedPost.author as any)?.avatar,
-        text: (pinnedPost.record as any)?.text,
-        indexedAt: pinnedPost.indexedAt,
-        likeCount: pinnedPost.likeCount,
-        repostCount: pinnedPost.repostCount,
-        replyCount: pinnedPost.replyCount,
-      }
-    : null;
+  const pinnedPostForNative: PinnedPostData | null = useMemo(
+    () =>
+      pinnedPost
+        ? {
+            uri: pinnedPost.uri,
+            authorHandle: (pinnedPost.author as any)?.handle || "",
+            authorDisplayName: (pinnedPost.author as any)?.displayName,
+            authorAvatar: (pinnedPost.author as any)?.avatar,
+            text: (pinnedPost.record as any)?.text,
+            indexedAt: pinnedPost.indexedAt,
+            likeCount: pinnedPost.likeCount,
+            repostCount: pinnedPost.repostCount,
+            replyCount: pinnedPost.replyCount,
+          }
+        : null,
+    [pinnedPost],
+  );
 
   // --- Event handlers ---
 
@@ -569,9 +582,9 @@ function ProfileScreenNativeIOS({
             </View>
           </InlineErrorBoundary>
         )}
-        {activeTab === "posts" && posts.length > 0 && (
+        {activeTab === "posts" && (
           <InlineErrorBoundary silent context="ProfileAIInsights">
-            <ProfileAIInsights handle={handle} posts={posts} />
+            <ProfileAIInsights handle={handle} />
           </InlineErrorBoundary>
         )}
       </>
@@ -588,7 +601,6 @@ function ProfileScreenNativeIOS({
     isStartingConversation,
     activeTab,
     pinnedPost,
-    posts,
     handle,
     styles,
     handleTabChange,

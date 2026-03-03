@@ -1,5 +1,6 @@
 import { getProfile } from "./profiles";
 import { getAuthorFeed } from "./feeds";
+import { getNotifications } from "./notifications";
 import { AppBskyFeedDefs } from "@atproto/api";
 
 // Note: getProfile and getAuthorFeed are already rate-limited,
@@ -62,6 +63,82 @@ function formatDateKey(date: Date): string {
 }
 
 /**
+ * Format a date as YYYY-MM-DD-HH for hourly bucketing
+ */
+function formatHourKey(date: Date): string {
+  return `${formatDateKey(date)}-${String(date.getHours()).padStart(2, '0')}`;
+}
+
+interface EngagementFromNotifications {
+  engagementMap: Record<string, { likes: number; reposts: number; replies: number }>;
+  totalLikes: number;
+  totalReposts: number;
+  totalReplies: number;
+}
+
+/**
+ * Fetch engagement received from notifications API.
+ * Pages through notifications until reaching startDate, bucketing
+ * by hour (today) or day (week/month/quarter).
+ */
+async function fetchEngagementFromNotifications(
+  startDate: Date,
+  timeRange: TimeRange,
+): Promise<EngagementFromNotifications> {
+  const engagementMap: Record<string, { likes: number; reposts: number; replies: number }> = {};
+  let totalLikes = 0;
+  let totalReposts = 0;
+  let totalReplies = 0;
+
+  const useHourlyBuckets = timeRange === "today";
+  const maxPages = timeRange === "today" ? 5 : timeRange === "week" ? 10 : timeRange === "month" ? 15 : 20;
+
+  let cursor: string | undefined;
+  let pageCount = 0;
+  let reachedStart = false;
+
+  while (pageCount < maxPages && !reachedStart) {
+    const response = await getNotifications({ limit: 100, cursor });
+
+    for (const notif of response.notifications) {
+      const indexedAt = new Date(notif.indexedAt);
+
+      if (indexedAt < startDate) {
+        reachedStart = true;
+        break;
+      }
+
+      const reason = notif.reason;
+      if (reason !== "like" && reason !== "repost" && reason !== "reply") {
+        continue;
+      }
+
+      const bucketKey = useHourlyBuckets ? formatHourKey(indexedAt) : formatDateKey(indexedAt);
+      if (!engagementMap[bucketKey]) {
+        engagementMap[bucketKey] = { likes: 0, reposts: 0, replies: 0 };
+      }
+
+      if (reason === "like") {
+        engagementMap[bucketKey].likes++;
+        totalLikes++;
+      } else if (reason === "repost") {
+        engagementMap[bucketKey].reposts++;
+        totalReposts++;
+      } else if (reason === "reply") {
+        engagementMap[bucketKey].replies++;
+        totalReplies++;
+      }
+    }
+
+    cursor = response.cursor;
+    if (!cursor) break;
+    pageCount++;
+  }
+
+  return { engagementMap, totalLikes, totalReposts, totalReplies };
+}
+
+/**
  * Get user analytics for a specific time range
  */
 export async function getUserAnalytics(
@@ -76,7 +153,7 @@ export async function getUserAnalytics(
   const startDate = new Date();
   switch (timeRange) {
     case "today":
-      startDate.setHours(0, 0, 0, 0);
+      startDate.setTime(now.getTime() - 24 * 60 * 60 * 1000);
       break;
     case "week":
       startDate.setDate(now.getDate() - 7);
@@ -131,20 +208,15 @@ export async function getUserAnalytics(
     pageCount++;
   }
 
-  // Calculate metrics from posts
-  let likesReceived = 0;
-  let repostsReceived = 0;
-  let repliesReceived = 0;
-  let impressions = 0;
+  // Fetch engagement received from notifications
+  const notifData = await fetchEngagementFromNotifications(startDate, timeRange);
+  const { totalLikes: likesReceived, totalReposts: repostsReceived, totalReplies: repliesReceived } = notifData;
+  const impressions = likesReceived + repostsReceived + repliesReceived;
 
-  // Daily engagement aggregation
-  const dailyMap: Record<string, DailyEngagement> = {};
-
-  // Posting time analysis
+  // Post-based aggregation for posting frequency and posting times
+  const postDailyMap: Record<string, { posts: number; originalPosts: number; replyPosts: number }> = {};
   const hourCounts = new Array(24).fill(0);
   const hourEngagement = new Array(24).fill(0);
-
-  // Posts for AI analysis
   const postsForAnalysis: PostEngagementData[] = [];
 
   for (const post of allPosts) {
@@ -153,26 +225,18 @@ export async function getUserAnalytics(
     const replies = post.post.replyCount || 0;
     const total = likes + reposts + replies;
 
-    likesReceived += likes;
-    repostsReceived += reposts;
-    repliesReceived += replies;
-    impressions += total;
-
-    // Aggregate daily engagement
     const postDate = new Date(post.post.indexedAt);
-    const dateKey = formatDateKey(postDate);
-    if (!dailyMap[dateKey]) {
-      dailyMap[dateKey] = { date: dateKey, likes: 0, reposts: 0, replies: 0, posts: 0, originalPosts: 0, replyPosts: 0 };
+    const dateKey = timeRange === "today" ? formatHourKey(postDate) : formatDateKey(postDate);
+
+    if (!postDailyMap[dateKey]) {
+      postDailyMap[dateKey] = { posts: 0, originalPosts: 0, replyPosts: 0 };
     }
-    dailyMap[dateKey].likes += likes;
-    dailyMap[dateKey].reposts += reposts;
-    dailyMap[dateKey].replies += replies;
-    dailyMap[dateKey].posts += 1;
+    postDailyMap[dateKey].posts += 1;
     const isReply = !!(post.post.record as { reply?: unknown })?.reply;
     if (isReply) {
-      dailyMap[dateKey].replyPosts += 1;
+      postDailyMap[dateKey].replyPosts += 1;
     } else {
-      dailyMap[dateKey].originalPosts += 1;
+      postDailyMap[dateKey].originalPosts += 1;
     }
 
     // Posting time analysis
@@ -193,37 +257,16 @@ export async function getUserAnalytics(
     });
   }
 
-  // Build sorted engagement array (hourly for "today", daily for others)
+  // Build sorted engagement array merging notification engagement + post frequency
   const dailyEngagement: DailyEngagement[] = [];
   if (timeRange === "today") {
-    // Build hourly engagement for the last 24 hours (matching web behavior)
-    const hourlyMap: Record<string, DailyEngagement> = {};
-    for (const post of allPosts) {
-      const postDate = new Date(post.post.indexedAt);
-      const hourKey = `${formatDateKey(postDate)}-${String(postDate.getHours()).padStart(2, '0')}`;
-      if (!hourlyMap[hourKey]) {
-        hourlyMap[hourKey] = { date: hourKey, likes: 0, reposts: 0, replies: 0, posts: 0, originalPosts: 0, replyPosts: 0 };
-      }
-      const likes = post.post.likeCount || 0;
-      const reposts = post.post.repostCount || 0;
-      const replies = post.post.replyCount || 0;
-      hourlyMap[hourKey].likes += likes;
-      hourlyMap[hourKey].reposts += reposts;
-      hourlyMap[hourKey].replies += replies;
-      hourlyMap[hourKey].posts += 1;
-      const isReply = !!(post.post.record as { reply?: unknown })?.reply;
-      if (isReply) {
-        hourlyMap[hourKey].replyPosts += 1;
-      } else {
-        hourlyMap[hourKey].originalPosts += 1;
-      }
-    }
-    // Generate 24 hourly entries from 23 hours ago to now
     for (let i = 23; i >= 0; i--) {
       const d = new Date();
       d.setHours(d.getHours() - i, 0, 0, 0);
-      const key = `${formatDateKey(d)}-${String(d.getHours()).padStart(2, '0')}`;
-      dailyEngagement.push(hourlyMap[key] || { date: key, likes: 0, reposts: 0, replies: 0, posts: 0, originalPosts: 0, replyPosts: 0 });
+      const key = formatHourKey(d);
+      const eng = notifData.engagementMap[key] || { likes: 0, reposts: 0, replies: 0 };
+      const postData = postDailyMap[key] || { posts: 0, originalPosts: 0, replyPosts: 0 };
+      dailyEngagement.push({ date: key, ...eng, ...postData });
     }
   } else {
     const days = timeRange === "week" ? 7 : timeRange === "month" ? 30 : 90;
@@ -231,7 +274,9 @@ export async function getUserAnalytics(
       const d = new Date();
       d.setDate(d.getDate() - i);
       const key = formatDateKey(d);
-      dailyEngagement.push(dailyMap[key] || { date: key, likes: 0, reposts: 0, replies: 0, posts: 0, originalPosts: 0, replyPosts: 0 });
+      const eng = notifData.engagementMap[key] || { likes: 0, reposts: 0, replies: 0 };
+      const postData = postDailyMap[key] || { posts: 0, originalPosts: 0, replyPosts: 0 };
+      dailyEngagement.push({ date: key, ...eng, ...postData });
     }
   }
 
