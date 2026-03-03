@@ -70,9 +70,17 @@ struct PostCardView: View {
     let onShare: (() -> Void)?
     let onMute: (() -> Void)?
     let onBlock: (() -> Void)?
+    let onDelete: (() -> Void)?
+    let onReport: (() -> Void)?
     let onImagePress: (([ImageEmbedData], Int) -> Void)?
     let onLinkPress: ((String) -> Void)?
     let onQuotePress: ((String, String) -> Void)?
+
+    /// Whether the current user authored this post
+    private var isOwnPost: Bool {
+        guard let currentUserDid = currentUserDid else { return false }
+        return currentUserDid == post.post.author.did
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -222,6 +230,39 @@ struct PostCardView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        .contextMenu {
+            Button { onReply?() } label: {
+                Label("Reply", systemImage: "bubble.left")
+            }
+            Button { onRepost?() } label: {
+                Label(post.post.viewer?.repost != nil ? "Undo Repost" : "Repost", systemImage: "arrow.2.squarepath")
+            }
+            Button { onLike?() } label: {
+                Label(post.post.viewer?.like != nil ? "Unlike" : "Like", systemImage: post.post.viewer?.like != nil ? "heart.fill" : "heart")
+            }
+            Button { onBookmark?() } label: {
+                Label(isBookmarked ? "Remove Bookmark" : "Bookmark", systemImage: isBookmarked ? "bookmark.fill" : "bookmark")
+            }
+            Button { onShare?() } label: {
+                Label("Share", systemImage: "square.and.arrow.up")
+            }
+            Divider()
+            if isOwnPost {
+                Button(role: .destructive) { onDelete?() } label: {
+                    Label("Delete Post", systemImage: "trash")
+                }
+            } else {
+                Button { onMute?() } label: {
+                    Label("Mute User", systemImage: "speaker.slash")
+                }
+                Button(role: .destructive) { onBlock?() } label: {
+                    Label("Block User", systemImage: "hand.raised")
+                }
+                Button(role: .destructive) { onReport?() } label: {
+                    Label("Report Post", systemImage: "exclamationmark.triangle")
+                }
+            }
+        }
 
         Divider()
             .padding(.leading, 64)

@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PINNED_LANGUAGES } from "../constants/languages";
 import { useTheme } from "../contexts/ThemeContext";
+import { BlurOverlay } from "./BlurOverlay";
 import { LanguagePicker } from "./LanguagePicker";
 import { PersonTypeahead } from "./PersonTypeahead";
 import {
@@ -208,6 +209,7 @@ function SearchFilterSheetInner({
         onRequestClose={onClose}
       >
         <View style={styles.overlay}>
+          <BlurOverlay intensity={25} />
           <TouchableOpacity
             style={styles.overlayBackground}
             activeOpacity={1}
@@ -229,7 +231,7 @@ function SearchFilterSheetInner({
               <Text style={styles.title}>Search Filters</Text>
               <TouchableOpacity
                 onPress={onClose}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={styles.closeButton}
               >
                 <CloseIcon size={24} color={colors.textSecondary} />
               </TouchableOpacity>
@@ -249,7 +251,7 @@ function SearchFilterSheetInner({
                       <Text style={styles.chipText}>{chip.label}</Text>
                       <TouchableOpacity
                         onPress={chip.onRemove}
-                        hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                       >
                         <CloseIcon size={14} color="#ffffff" />
                       </TouchableOpacity>
@@ -468,7 +470,6 @@ function createStyles(colors: any) {
     },
     overlayBackground: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: colors.modalOverlay,
     },
     sheet: {
       backgroundColor: colors.background,
@@ -501,6 +502,12 @@ function createStyles(colors: any) {
       fontSize: 18,
       fontWeight: "600",
       color: colors.text,
+    },
+    closeButton: {
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: "center",
+      justifyContent: "center",
     },
     content: {
       paddingHorizontal: 16,
@@ -586,7 +593,10 @@ function createStyles(colors: any) {
       color: colors.text,
     },
     clearFieldButton: {
-      padding: 4,
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: "center",
+      justifyContent: "center",
     },
     textInputContainer: {
       flexDirection: "row",

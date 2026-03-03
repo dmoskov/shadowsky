@@ -11,7 +11,7 @@ import Foundation
 
 // MARK: - Rich Text Facets
 
-public struct FacetFeatureMention: Codable {
+public struct FacetFeatureMention: Codable, Equatable {
     public let type: String
     public let did: String
 
@@ -26,7 +26,7 @@ public struct FacetFeatureMention: Codable {
     }
 }
 
-public struct FacetFeatureLink: Codable {
+public struct FacetFeatureLink: Codable, Equatable {
     public let type: String
     public let uri: String
 
@@ -41,7 +41,7 @@ public struct FacetFeatureLink: Codable {
     }
 }
 
-public struct FacetFeatureTag: Codable {
+public struct FacetFeatureTag: Codable, Equatable {
     public let type: String
     public let tag: String
 
@@ -56,7 +56,7 @@ public struct FacetFeatureTag: Codable {
     }
 }
 
-public enum FacetFeature: Codable {
+public enum FacetFeature: Codable, Equatable {
     case mention(FacetFeatureMention)
     case link(FacetFeatureLink)
     case tag(FacetFeatureTag)
@@ -100,7 +100,7 @@ public enum FacetFeature: Codable {
     }
 }
 
-public struct FacetIndex: Codable {
+public struct FacetIndex: Codable, Equatable {
     public let byteStart: Int
     public let byteEnd: Int
 
@@ -110,7 +110,7 @@ public struct FacetIndex: Codable {
     }
 }
 
-public struct Facet: Codable {
+public struct Facet: Codable, Equatable {
     public let index: FacetIndex
     public let features: [FacetFeature]
 

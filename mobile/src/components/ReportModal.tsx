@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {useTheme} from '../contexts/ThemeContext';
+import {BlurOverlay} from './BlurOverlay';
 import {getAtProtoClient} from '../services/atproto/client';
 import {recordReport} from '../services/moderation-history';
 
@@ -213,6 +214,7 @@ function ReportModalInner({
       animationType="slide"
       onRequestClose={handleClose}>
       <View style={styles.backdrop}>
+        <BlurOverlay intensity={25} />
         <View style={styles.container}>
           {isSubmitted ? (
             <>
@@ -390,7 +392,6 @@ function createStyles(colors: any) {
   return StyleSheet.create({
     backdrop: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
       justifyContent: 'flex-end',
     },
     container: {

@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 import {AppBskyGraphDefs} from '@atproto/api';
 import { useTheme } from "../contexts/ThemeContext";
+import { BlurOverlay } from "./BlurOverlay";
 
 const MAX_NAME_LENGTH = 64;
 const MAX_DESCRIPTION_LENGTH = 300;
@@ -103,6 +104,7 @@ function EditListModalInner({
       <KeyboardAvoidingView
         style={styles.overlay}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <BlurOverlay intensity={25} />
         <View style={styles.modalContainer}>
           <View style={styles.header}>
             <Text style={styles.title}>Edit List</Text>
@@ -222,7 +224,6 @@ function createStyles(colors: any) {
   return StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
       justifyContent: 'flex-end',
     },
     modalContainer: {

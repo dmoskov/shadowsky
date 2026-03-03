@@ -73,14 +73,21 @@ enum LanguageUtils {
 /// Singleton manager that caches translation results and manages per-post state.
 /// Translation requests are sent to JS via bridge events; results arrive via
 /// NotificationCenter and are cached here.
-class PostTranslationManager: ObservableObject {
+///
+/// Note: This is NOT an ObservableObject. Views should use `PostTranslationObserver`
+/// to subscribe to changes for a specific post URI, avoiding global re-renders.
+class PostTranslationManager {
     static let shared = PostTranslationManager()
 
     /// Cached translations keyed by post URI
-    @Published private(set) var translations: [String: TranslationState] = [:]
+    private(set) var translations: [String: TranslationState] = [:]
 
     /// Whether the user is viewing translation (vs. original) per post URI
-    @Published private(set) var showingTranslation: [String: Bool] = [:]
+    private(set) var showingTranslation: [String: Bool] = [:]
+
+    /// Posted when a specific post's translation state changes.
+    /// `userInfo` contains `"postUri"` key.
+    static let stateDidChangeNotification = NSNotification.Name("PostTranslationStateDidChange")
 
     private var translationObserver: NSObjectProtocol?
 
@@ -109,12 +116,24 @@ class PostTranslationManager: ObservableObject {
     /// Mark a post as loading translation (user tapped Translate).
     func requestTranslation(for postUri: String) {
         translations[postUri] = .loading
+        notifyChange(for: postUri)
     }
 
     /// Toggle between showing translated/original text.
     func toggleTranslation(for postUri: String) {
         let current = showingTranslation[postUri] ?? false
         showingTranslation[postUri] = !current
+        notifyChange(for: postUri)
+    }
+
+    // MARK: - Internal
+
+    private func notifyChange(for postUri: String) {
+        NotificationCenter.default.post(
+            name: Self.stateDidChangeNotification,
+            object: nil,
+            userInfo: ["postUri": postUri]
+        )
     }
 
     // MARK: - Observation
@@ -136,6 +155,49 @@ class PostTranslationManager: ObservableObject {
             } else if let errorMessage = info["error"] as? String {
                 self?.translations[postUri] = .error(message: errorMessage)
             }
+            self?.notifyChange(for: postUri)
+        }
+    }
+}
+
+// MARK: - Per-Post Translation Observer
+
+/// Lightweight per-post observer that only triggers SwiftUI re-renders when
+/// the translation state for its specific post URI changes. This replaces
+/// the previous pattern of using `@ObservedObject` on the shared singleton,
+/// which caused every `PostTranslationView` in the thread to re-render
+/// whenever *any* post's translation state changed.
+class PostTranslationObserver: ObservableObject {
+    let postUri: String
+    @Published private(set) var translationState: TranslationState = .idle
+    @Published private(set) var isShowing: Bool = false
+
+    private var observer: NSObjectProtocol?
+
+    init(postUri: String) {
+        self.postUri = postUri
+        // Read initial state
+        let manager = PostTranslationManager.shared
+        self.translationState = manager.state(for: postUri)
+        self.isShowing = manager.isShowingTranslation(for: postUri)
+
+        // Subscribe to changes for this post only
+        observer = NotificationCenter.default.addObserver(
+            forName: PostTranslationManager.stateDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self = self,
+                  let changedUri = notification.userInfo?["postUri"] as? String,
+                  changedUri == self.postUri else { return }
+            self.translationState = manager.state(for: self.postUri)
+            self.isShowing = manager.isShowingTranslation(for: self.postUri)
+        }
+    }
+
+    deinit {
+        if let observer = observer {
+            NotificationCenter.default.removeObserver(observer)
         }
     }
 }

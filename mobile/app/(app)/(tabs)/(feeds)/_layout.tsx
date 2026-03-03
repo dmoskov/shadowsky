@@ -22,6 +22,7 @@ export default function FeedsLayout() {
           name="index"
           options={{
             title: "Feeds",
+            headerLargeTitle: true,
           }}
         />
         <Stack.Screen name="discover" options={{ title: "Discover Feeds" }} />

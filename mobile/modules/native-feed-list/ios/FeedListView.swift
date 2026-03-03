@@ -148,6 +148,8 @@ struct FeedListView: View {
                             },
                             onMute: nil,
                             onBlock: nil,
+                            onDelete: nil,
+                            onReport: nil,
                             onImagePress: onImagePress,
                             onLinkPress: onLinkPress,
                             onQuotePress: onQuotePress

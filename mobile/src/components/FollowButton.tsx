@@ -55,7 +55,7 @@ export function FollowButton({
     switch (size) {
       case 'small':
         return {
-          paddingVertical: 6,
+          paddingVertical: 12,
           paddingHorizontal: 12,
           fontSize: 12,
         };

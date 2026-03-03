@@ -44,6 +44,8 @@ struct NotificationItemView: View {
     let onMentionPress: (String, String) -> Void
     let onHashtagPress: (String) -> Void
     let onLinkPress: (String) -> Void
+    var onMuteUser: ((String) -> Void)? = nil
+    var onBlockUser: ((String) -> Void)? = nil
 
     @ScaledMetric(relativeTo: .body) private var iconCircleSize: CGFloat = 32
 
@@ -95,6 +97,21 @@ struct NotificationItemView: View {
         .accessibilityLabel(accessibilityLabelText)
         .accessibilityHint("Double tap to view notification details")
         .accessibilityAddTraits(.isButton)
+        .contextMenu {
+            Button { onProfilePress(notification.authorHandle) } label: {
+                Label("View Profile", systemImage: "person.circle")
+            }
+            Button { onPress() } label: {
+                Label("View Notification", systemImage: "bell")
+            }
+            Divider()
+            Button { onMuteUser?(notification.authorHandle) } label: {
+                Label("Mute User", systemImage: "speaker.slash")
+            }
+            Button(role: .destructive) { onBlockUser?(notification.authorHandle) } label: {
+                Label("Block User", systemImage: "hand.raised")
+            }
+        }
     }
 
     // MARK: - Icon View

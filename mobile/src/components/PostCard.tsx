@@ -1,10 +1,10 @@
 import React, {useState, useCallback, useMemo, useRef} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Modal, Alert, ActivityIndicator} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity, Modal, Alert, ActivityIndicator, ActionSheetIOS, Platform} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSequence,
-  withTiming,
+  withSpring,
   SharedValue,
 } from 'react-native-reanimated';
 import {AppBskyFeedDefs, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
@@ -28,6 +28,7 @@ import {SaveToCollectionModal} from './SaveToCollectionModal';
 import {usePostTranslation} from '../hooks/usePostTranslation';
 import {useSharedTransition} from '../contexts/SharedTransitionContext';
 import {useToast} from '../contexts/ToastContext';
+import {BlurOverlay} from './BlurOverlay';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -100,9 +101,8 @@ function PostCardComponent({
 
   function triggerBounce(scale: SharedValue<number>) {
     scale.value = withSequence(
-      withTiming(0.7, { duration: 50 }),
-      withTiming(1.15, { duration: 120 }),
-      withTiming(1, { duration: 80 }),
+      withSpring(0.7, { damping: 20, stiffness: 400, mass: 0.5 }),
+      withSpring(1, { damping: 12, stiffness: 200, mass: 0.8 }),
     );
   }
 
@@ -128,6 +128,10 @@ function PostCardComponent({
     () => (AppBskyFeedPost.isRecord(postView.record) ? postView.record : undefined),
     [postView.record]
   );
+
+  const isLiked = useMemo(() => !!postView.viewer?.like, [postView.viewer?.like]);
+
+  const isOwnPost = useMemo(() => currentUserDid === author.did, [currentUserDid, author.did]);
 
   // Memoized event handlers
   const handleProfilePress = useCallback(() => {
@@ -289,15 +293,58 @@ function PostCardComponent({
     setShowSaveToCollection(true);
   }, [isBookmarked, onBookmark]);
 
+  const handleLongPress = useCallback(() => {
+    if (Platform.OS !== 'ios') return;
+    triggerHaptic('medium');
+
+    if (isOwnPost) {
+      const options = ['Cancel', 'Reply', 'Repost', isLiked ? 'Unlike' : 'Like', 'Bookmark', 'Share', 'Delete Post'];
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex: 0,
+          destructiveButtonIndex: 6,
+        },
+        (buttonIndex) => {
+          switch (buttonIndex) {
+            case 1: onReply?.(); break;
+            case 2: handleRepostPress(); break;
+            case 3: handleLikePress(); break;
+            case 4: handleBookmarkPress(); break;
+            case 5: handleShare(); break;
+            case 6: handleDeletePost(); break;
+          }
+        },
+      );
+    } else {
+      const options = ['Cancel', 'Reply', 'Repost', isLiked ? 'Unlike' : 'Like', 'Bookmark', 'Share', `Mute @${author.handle}`, `Block @${author.handle}`, 'Report Post'];
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex: 0,
+          destructiveButtonIndex: [7, 8],
+        },
+        (buttonIndex) => {
+          switch (buttonIndex) {
+            case 1: onReply?.(); break;
+            case 2: handleRepostPress(); break;
+            case 3: handleLikePress(); break;
+            case 4: handleBookmarkPress(); break;
+            case 5: handleShare(); break;
+            case 6: handleMuteUser(); break;
+            case 7: handleBlockUser(); break;
+            case 8: handleReport(); break;
+          }
+        },
+      );
+    }
+  }, [isOwnPost, isLiked, author.handle, onReply, handleRepostPress, handleLikePress, handleBookmarkPress, handleShare, handleDeletePost, handleMuteUser, handleBlockUser, handleReport]);
+
   // Memoized computed values
   const timestamp = useMemo(
     () => formatDistanceToNow(new Date(postView.indexedAt), { addSuffix: true }),
     [postView.indexedAt]
   );
-
-  const isLiked = useMemo(() => !!postView.viewer?.like, [postView.viewer?.like]);
-
-  const isOwnPost = useMemo(() => currentUserDid === author.did, [currentUserDid, author.did]);
 
   const postText = useMemo(
     () => (record && typeof record.text === 'string' ? record.text : ''),
@@ -618,11 +665,13 @@ function PostCardComponent({
       ref={cardRef}
       style={styles.container}
       onPress={handleCardPress}
+      onLongPress={handleLongPress}
+      delayLongPress={400}
       activeOpacity={0.9}
       accessible={true}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      accessibilityHint="Double tap to view full post">
+      accessibilityHint="Double tap to view full post. Long press for more options">
       {warnContent ? (
         <ContentLabelWarning
           labels={labels}
@@ -644,6 +693,7 @@ function PostCardComponent({
           style={styles.menuOverlay}
           activeOpacity={1}
           onPress={handleMenuClose}>
+          <BlurOverlay intensity={25} />
           <View style={styles.menuContainer}>
             {isOwnPost ? (
               <>
@@ -821,7 +871,10 @@ function createStyles(colors: any) {
     gap: 8,
   },
   moreButton: {
-    padding: 4,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   displayName: {
     color: colors.text,
@@ -859,7 +912,10 @@ function createStyles(colors: any) {
     // Add subtle background for tap target
   },
   iconButton: {
-    padding: 0,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   engagementCount: {
     color: colors.textSecondary,
@@ -871,7 +927,6 @@ function createStyles(colors: any) {
   },
   menuOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,

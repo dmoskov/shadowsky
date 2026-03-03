@@ -32,6 +32,7 @@ import {
 } from "../hooks/useDynamicType";
 import { InlineLoadingShimmer } from "./SkeletonShimmer";
 
+import { spacing } from "../../theme/spacing";
 // ─── Props ───────────────────────────────────────────────────────────
 
 export interface MobileAIToolbarProps {
@@ -74,18 +75,18 @@ function createStyles(scaledFont: ScaledFontFn) {
     toolbar: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      gap: 8,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      gap: spacing.sm,
     } as ViewStyle,
     toolbarButton: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: "#f0f0f0",
       borderRadius: 20,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      gap: 6,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      gap: spacing.sm,
       minHeight: 44,
     } as ViewStyle,
     toolbarButtonActive: {
@@ -123,15 +124,15 @@ function createStyles(scaledFont: ScaledFontFn) {
       backgroundColor: "#d1d5db",
       borderRadius: 3,
       alignSelf: "center",
-      marginTop: 8,
-      marginBottom: 4,
+      marginTop: spacing.sm,
+      marginBottom: spacing.xs,
     } as ViewStyle,
     sheetHeader: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 20,
-      paddingVertical: 12,
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: "#e5e7eb",
     } as ViewStyle,
@@ -145,11 +146,11 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(16),
       color: "#6b7280",
       minHeight: 44,
-      paddingVertical: 10,
+      paddingVertical: spacing.md,
     } as TextStyle,
     sheetBody: {
-      paddingHorizontal: 20,
-      paddingTop: 12,
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.md,
     } as ViewStyle,
 
     // Tone option card
@@ -158,8 +159,8 @@ function createStyles(scaledFont: ScaledFontFn) {
       alignItems: "center",
       backgroundColor: "#f9fafb",
       borderRadius: 12,
-      padding: 14,
-      marginBottom: 8,
+      padding: spacing.lg,
+      marginBottom: spacing.sm,
       borderWidth: 1,
       borderColor: "#e5e7eb",
       minHeight: 44,
@@ -170,7 +171,7 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as ViewStyle,
     toneIcon: {
       fontSize: scaledFont(24),
-      marginRight: 12,
+      marginRight: spacing.md,
     } as TextStyle,
     toneLabel: {
       fontSize: scaledFont(16),
@@ -189,19 +190,19 @@ function createStyles(scaledFont: ScaledFontFn) {
 
     // Tone preview
     previewSection: {
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     } as ViewStyle,
     previewLabel: {
       fontSize: scaledFont(13),
       lineHeight: scaledLineHeight(scaledFont, 13, 18),
       fontWeight: "600",
       color: "#6b7280",
-      marginBottom: 6,
+      marginBottom: spacing.sm,
     } as TextStyle,
     previewBox: {
       backgroundColor: "#f9fafb",
       borderRadius: 10,
-      padding: 14,
+      padding: spacing.lg,
       borderWidth: 1,
       borderColor: "#e5e7eb",
     } as ViewStyle,
@@ -216,16 +217,16 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as TextStyle,
     actionRow: {
       flexDirection: "row",
-      gap: 10,
-      paddingHorizontal: 20,
-      paddingVertical: 12,
+      gap: spacing.md,
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.md,
     } as ViewStyle,
     actionButton: {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
       borderRadius: 10,
-      paddingVertical: 12,
+      paddingVertical: spacing.md,
       minHeight: 44,
     } as ViewStyle,
     primaryButton: {
@@ -249,16 +250,16 @@ function createStyles(scaledFont: ScaledFontFn) {
     assessmentGood: {
       backgroundColor: "#ecfdf5",
       borderRadius: 10,
-      padding: 14,
-      marginBottom: 12,
+      padding: spacing.lg,
+      marginBottom: spacing.md,
       borderWidth: 1,
       borderColor: "#6ee7b7",
     } as ViewStyle,
     assessmentIssues: {
       backgroundColor: "#fffbeb",
       borderRadius: 10,
-      padding: 14,
-      marginBottom: 12,
+      padding: spacing.lg,
+      marginBottom: spacing.md,
       borderWidth: 1,
       borderColor: "#fcd34d",
     } as ViewStyle,
@@ -270,8 +271,8 @@ function createStyles(scaledFont: ScaledFontFn) {
     feedbackVersionCard: {
       backgroundColor: "#f9fafb",
       borderRadius: 10,
-      padding: 14,
-      marginBottom: 12,
+      padding: spacing.lg,
+      marginBottom: spacing.md,
       borderWidth: 1,
       borderColor: "#e5e7eb",
     } as ViewStyle,
@@ -279,7 +280,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     } as ViewStyle,
     feedbackVersionTitle: {
       fontSize: scaledFont(15),
@@ -290,8 +291,8 @@ function createStyles(scaledFont: ScaledFontFn) {
     feedbackUseButton: {
       backgroundColor: "#4f46e5",
       borderRadius: 8,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
       minHeight: 34,
       justifyContent: "center",
     } as ViewStyle,
@@ -304,16 +305,16 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(13),
       lineHeight: scaledLineHeight(scaledFont, 13, 18),
       color: "#6b7280",
-      marginTop: 4,
+      marginTop: spacing.xs,
     } as TextStyle,
 
     // Error banner
     errorBanner: {
       backgroundColor: "#fef2f2",
       borderRadius: 8,
-      padding: 12,
-      marginHorizontal: 12,
-      marginBottom: 4,
+      padding: spacing.md,
+      marginHorizontal: spacing.md,
+      marginBottom: spacing.xs,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
@@ -329,9 +330,9 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(13),
       color: "#991b1b",
       fontWeight: "700",
-      paddingLeft: 12,
+      paddingLeft: spacing.md,
       minHeight: 44,
-      paddingVertical: 12,
+      paddingVertical: spacing.md,
     } as TextStyle,
   });
 }

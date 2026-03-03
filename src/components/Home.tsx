@@ -42,6 +42,7 @@ import { usePostDeepLink } from "../hooks/usePostDeepLink";
 import { useMinDuration } from "../hooks/useTiming";
 import { columnService } from "../services/column-service";
 import { offlineStorageDB } from "../services/offline-storage-db";
+import { rateLimitedFeedFetch } from "../services/rate-limiter";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { lazyWithRetry } from "../utils/lazyWithRetry";
 import { createLogger } from "../utils/logger";
@@ -215,6 +216,7 @@ interface Embed {
 interface ApiError {
   message?: string;
   status?: number;
+  headers?: Record<string, string>;
 }
 
 interface HomeProps {
@@ -608,58 +610,59 @@ export const Home: React.FC<HomeProps> = React.memo(
         let response;
 
         try {
-          switch (selectedFeed) {
-            case "following":
-            case "recent":
-              response = await agent.getTimeline({
-                cursor: pageParam,
-                limit: MOBILE_CONFIG.PAGE_SIZE,
-              });
-              break;
+          // Wrap all feed API calls in rate limiter to prevent 429s
+          // when multiple columns load simultaneously
+          response = await rateLimitedFeedFetch(async () => {
+            switch (selectedFeed) {
+              case "following":
+              case "recent":
+                return agent.getTimeline({
+                  cursor: pageParam,
+                  limit: MOBILE_CONFIG.PAGE_SIZE,
+                });
 
-            default:
-              // Handle custom feed URIs
-              if (selectedFeed.startsWith("at://")) {
-                // Check if it's a list feed or a regular feed
-                if (selectedFeed.includes("/app.bsky.graph.list/")) {
-                  // It's a list feed
-                  response = await agent.app.bsky.feed.getListFeed({
-                    list: selectedFeed,
-                    cursor: pageParam,
-                    limit: MOBILE_CONFIG.PAGE_SIZE,
-                  });
+              default:
+                // Handle custom feed URIs
+                if (selectedFeed.startsWith("at://")) {
+                  // Check if it's a list feed or a regular feed
+                  if (selectedFeed.includes("/app.bsky.graph.list/")) {
+                    // It's a list feed
+                    return agent.app.bsky.feed.getListFeed({
+                      list: selectedFeed,
+                      cursor: pageParam,
+                      limit: MOBILE_CONFIG.PAGE_SIZE,
+                    });
+                  } else {
+                    // It's a regular feed
+                    return agent.app.bsky.feed.getFeed({
+                      feed: selectedFeed,
+                      cursor: pageParam,
+                      limit: MOBILE_CONFIG.PAGE_SIZE,
+                    });
+                  }
                 } else {
-                  // It's a regular feed
-                  response = await agent.app.bsky.feed.getFeed({
-                    feed: selectedFeed,
-                    cursor: pageParam,
-                    limit: MOBILE_CONFIG.PAGE_SIZE,
-                  });
-                }
-              } else {
-                // Handle known feed types
-                switch (selectedFeed) {
-                  case "whats-hot":
-                    response = await agent.app.bsky.feed.getFeed({
-                      feed: "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot",
-                      cursor: pageParam,
-                      limit: MOBILE_CONFIG.PAGE_SIZE,
-                    });
-                    break;
+                  // Handle known feed types
+                  switch (selectedFeed) {
+                    case "whats-hot":
+                      return agent.app.bsky.feed.getFeed({
+                        feed: "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot",
+                        cursor: pageParam,
+                        limit: MOBILE_CONFIG.PAGE_SIZE,
+                      });
 
-                  case "popular-with-friends":
-                    response = await agent.app.bsky.feed.getFeed({
-                      feed: "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/with-friends",
-                      cursor: pageParam,
-                      limit: MOBILE_CONFIG.PAGE_SIZE,
-                    });
-                    break;
+                    case "popular-with-friends":
+                      return agent.app.bsky.feed.getFeed({
+                        feed: "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/with-friends",
+                        cursor: pageParam,
+                        limit: MOBILE_CONFIG.PAGE_SIZE,
+                      });
 
-                  default:
-                    throw new Error(`Unknown feed type: ${selectedFeed}`);
+                    default:
+                      throw new Error(`Unknown feed type: ${selectedFeed}`);
+                  }
                 }
-              }
-          }
+            }
+          });
 
           // Cache timeline feed items for offline access (only first page)
           if (
@@ -733,6 +736,9 @@ export const Home: React.FC<HomeProps> = React.memo(
             throw new Error("You do not have permission to view this feed.");
           } else if (error?.status === 404) {
             throw new Error("Feed not found. It may have been deleted.");
+          } else if (error?.status === 429) {
+            // Preserve the original error so retry logic can read status/headers
+            throw err;
           } else if (error?.status && error.status >= 500) {
             throw new Error("Server error. Please try again later.");
           } else {
@@ -752,11 +758,33 @@ export const Home: React.FC<HomeProps> = React.memo(
       staleTime: MOBILE_CONFIG.STALE_TIME,
       gcTime: MOBILE_CONFIG.GC_TIME,
       refetchOnMount: false, // Don't automatically refetch
-      retry: (failureCount, _error) => {
+      retry: (failureCount, error) => {
         // Don't retry if offline
         if (!navigator.onLine) return false;
-        // Otherwise retry up to 3 times
+        const status = (error as ApiError)?.status;
+        // Retry 429s up to 3 times (retryDelay handles backoff)
+        if (status === 429) return failureCount < 3;
+        // Don't retry client errors (except 429)
+        if (status && status >= 400 && status < 500) return false;
+        // Retry server errors and network errors up to 3 times
         return failureCount < 3;
+      },
+      retryDelay: (attemptIndex, error) => {
+        const apiError = error as ApiError;
+        if (apiError?.status === 429) {
+          // Respect Retry-After header if present
+          const retryAfter =
+            apiError?.headers?.["retry-after"] ||
+            apiError?.headers?.["Retry-After"];
+          if (retryAfter) {
+            const seconds = parseInt(retryAfter, 10);
+            if (!isNaN(seconds)) return seconds * 1000;
+          }
+          // Default: aggressive backoff for 429 (2s, 4s, 8s)
+          return Math.min(2000 * Math.pow(2, attemptIndex), 10000);
+        }
+        // Standard exponential backoff for other errors
+        return Math.min(1000 * Math.pow(2, attemptIndex), 8000);
       },
     });
 

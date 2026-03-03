@@ -46,10 +46,10 @@ export function ImageCarouselItem({
 
   React.useEffect(() => {
     if (!isActive) {
-      scale.value = withTiming(1, {duration: 200});
+      scale.value = withSpring(1, {damping: 20, stiffness: 200});
       savedScale.value = 1;
-      translateX.value = withTiming(0, {duration: 200});
-      translateY.value = withTiming(0, {duration: 200});
+      translateX.value = withSpring(0, {damping: 20, stiffness: 200});
+      translateY.value = withSpring(0, {damping: 20, stiffness: 200});
       savedTranslateX.value = 0;
       savedTranslateY.value = 0;
     }
@@ -190,7 +190,7 @@ export function ImageCarouselItem({
         const tapX = e.x - SCREEN_WIDTH / 2;
         const tapY = e.y - SCREEN_HEIGHT / 2;
 
-        scale.value = withTiming(newScale, {duration: 300});
+        scale.value = withSpring(newScale, springConfig);
         savedScale.value = newScale;
 
         const newTranslateX = -tapX / newScale;
@@ -199,8 +199,8 @@ export function ImageCarouselItem({
         const clampedX = Math.max(-maxX, Math.min(maxX, newTranslateX));
         const clampedY = Math.max(-maxY, Math.min(maxY, newTranslateY));
 
-        translateX.value = withTiming(clampedX, {duration: 300});
-        translateY.value = withTiming(clampedY, {duration: 300});
+        translateX.value = withSpring(clampedX, springConfig);
+        translateY.value = withSpring(clampedY, springConfig);
         savedTranslateX.value = clampedX;
         savedTranslateY.value = clampedY;
       }

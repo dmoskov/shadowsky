@@ -15,6 +15,7 @@ import {
   type TextStyle,
   type ViewStyle,
 } from "react-native";
+import { spacing } from "../../../theme/spacing";
 import {
   scaledLineHeight,
   useDynamicType,
@@ -66,9 +67,9 @@ function createStyles(scaledFont: ScaledFontFn) {
       backgroundColor: "#000000",
     } as ViewStyle,
     header: {
-      paddingHorizontal: 20,
+      paddingHorizontal: spacing.xl,
       paddingTop: 60,
-      paddingBottom: 16,
+      paddingBottom: spacing.lg,
       alignItems: "center",
     } as ViewStyle,
     headerIcon: {
@@ -78,7 +79,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       backgroundColor: "rgba(99, 102, 241, 0.15)",
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     } as ViewStyle,
     headerIconText: {
       fontSize: scaledFont(28),
@@ -88,7 +89,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontWeight: "700",
       color: "#ffffff",
       textAlign: "center",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     } as TextStyle,
     subtitle: {
       fontSize: scaledFont(15),
@@ -99,19 +100,19 @@ function createStyles(scaledFont: ScaledFontFn) {
       flex: 1,
     } as ViewStyle,
     scrollContent: {
-      paddingHorizontal: 16,
-      paddingBottom: 16,
-      gap: 10,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.lg,
+      gap: spacing.md,
     } as ViewStyle,
     preferenceCard: {
       backgroundColor: "#111122",
       borderRadius: 12,
-      padding: 16,
+      padding: spacing.lg,
     } as ViewStyle,
     preferenceContent: {
       flexDirection: "row",
       alignItems: "flex-start",
-      gap: 14,
+      gap: spacing.lg,
     } as ViewStyle,
     preferenceIcon: {
       width: 40,
@@ -134,7 +135,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(16),
       fontWeight: "600",
       color: "#ffffff",
-      marginBottom: 4,
+      marginBottom: spacing.xs,
     } as TextStyle,
     preferenceDescription: {
       fontSize: scaledFont(13),
@@ -148,7 +149,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       backgroundColor: "#22c55e",
       justifyContent: "center",
       alignItems: "center",
-      marginTop: 4,
+      marginTop: spacing.xs,
     } as ViewStyle,
     checkText: {
       fontSize: scaledFont(14),
@@ -158,10 +159,10 @@ function createStyles(scaledFont: ScaledFontFn) {
     infoBox: {
       backgroundColor: "#111122",
       borderRadius: 12,
-      padding: 14,
+      padding: spacing.lg,
       borderWidth: 1,
       borderColor: "#1a1a2e",
-      marginTop: 4,
+      marginTop: spacing.xs,
     } as ViewStyle,
     infoText: {
       fontSize: scaledFont(13),
@@ -172,14 +173,14 @@ function createStyles(scaledFont: ScaledFontFn) {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 16,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.lg,
       borderTopWidth: 1,
       borderTopColor: "#1a1a2e",
     } as ViewStyle,
     backButton: {
-      paddingVertical: 12,
-      paddingHorizontal: 20,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
       borderRadius: 10,
       borderWidth: 1,
       borderColor: "#333344",
@@ -191,8 +192,8 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as TextStyle,
     completeButton: {
       backgroundColor: "#6366f1",
-      paddingVertical: 12,
-      paddingHorizontal: 28,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xxl,
       borderRadius: 10,
     } as ViewStyle,
     completeButtonText: {

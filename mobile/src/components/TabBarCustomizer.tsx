@@ -10,6 +10,7 @@ import {
 import { usePreferences } from "../contexts/PreferencesContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { triggerHaptic } from "../utils/haptics";
+import { BlurOverlay } from "./BlurOverlay";
 import type { IconProps } from "./icons";
 import {
   BellIcon,
@@ -156,6 +157,7 @@ function TabBarCustomizerInner({ visible, onClose }: TabBarCustomizerProps) {
       onRequestClose={handleCancel}
     >
       <View style={styles.overlay}>
+        <BlurOverlay intensity={30} />
         <View style={styles.sheet}>
           <View style={styles.handle} />
 
@@ -296,7 +298,6 @@ const createStyles = (colors: Record<string, string>) =>
   StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: "rgba(0,0,0,0.6)",
       justifyContent: "flex-end",
     },
     sheet: {
@@ -323,7 +324,8 @@ const createStyles = (colors: Record<string, string>) =>
       paddingVertical: 12,
     },
     headerBtn: {
-      padding: 4,
+      minHeight: 44,
+      justifyContent: "center",
       minWidth: 60,
     },
     title: {
@@ -419,9 +421,9 @@ const createStyles = (colors: Record<string, string>) =>
       fontSize: 16,
     },
     reorderBtn: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: colors.background,
       alignItems: "center",
       justifyContent: "center",
@@ -435,9 +437,9 @@ const createStyles = (colors: Record<string, string>) =>
       transform: [{ rotate: "180deg" }],
     },
     removeBtn: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: colors.danger + "20",
       alignItems: "center",
       justifyContent: "center",
@@ -449,9 +451,9 @@ const createStyles = (colors: Record<string, string>) =>
       lineHeight: 20,
     },
     addBtn: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: colors.info + "20",
       alignItems: "center",
       justifyContent: "center",

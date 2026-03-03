@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Model for external link embed data
-public struct ExternalLinkEmbedData {
+public struct ExternalLinkEmbedData: Equatable {
     public let uri: String
     public let title: String?
     public let description: String?

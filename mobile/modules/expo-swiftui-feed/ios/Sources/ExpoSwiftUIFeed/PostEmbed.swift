@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Enum representing different embed types from AT Protocol
-public indirect enum EmbedType {
+public indirect enum EmbedType: Equatable {
     case images([ImageEmbedData])
     case video(VideoEmbedData)
     case external(ExternalLinkEmbedData)
@@ -10,7 +10,7 @@ public indirect enum EmbedType {
 }
 
 /// Model for post embed data that includes type information
-public struct PostEmbedData {
+public struct PostEmbedData: Equatable {
     public let embedType: EmbedType
     public init(embedType: EmbedType) {
         self.embedType = embedType

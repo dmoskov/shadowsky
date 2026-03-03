@@ -41,6 +41,7 @@ import {
 } from "../hooks/useDynamicType";
 import type { PostCardProps, PostImage } from "../types";
 
+import { spacing } from "../../theme/spacing";
 // Placeholder for expo-image - will be used when available
 // import { Image as ExpoImage } from 'expo-image';
 
@@ -58,8 +59,8 @@ function createStyles(scaledFont: ScaledFontFn) {
   return StyleSheet.create({
     container: {
       backgroundColor: "#ffffff",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
     } as ViewStyle,
     containerBorder: {
       borderBottomWidth: StyleSheet.hairlineWidth,
@@ -68,15 +69,15 @@ function createStyles(scaledFont: ScaledFontFn) {
     repostReason: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
       marginLeft: 60,
       minHeight: 44,
-      paddingVertical: 8,
+      paddingVertical: spacing.sm,
     } as ViewStyle,
     repostIcon: {
       fontSize: scaledFont(14),
       color: "#687684",
-      marginRight: 4,
+      marginRight: spacing.xs,
     } as TextStyle,
     repostText: {
       fontSize: scaledFont(13),
@@ -87,7 +88,7 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as ViewStyle,
     mainContent: {
       flex: 1,
-      marginLeft: 12,
+      marginLeft: spacing.md,
     } as ViewStyle,
     authorContainer: {
       flexDirection: "row",
@@ -99,13 +100,13 @@ function createStyles(scaledFont: ScaledFontFn) {
       alignItems: "center",
       flexShrink: 1,
       minHeight: 44,
-      paddingVertical: 8,
+      paddingVertical: spacing.sm,
     } as ViewStyle,
     displayName: {
       fontSize: scaledFont(15),
       fontWeight: "600",
       color: "#0f1419",
-      marginRight: 4,
+      marginRight: spacing.xs,
     } as TextStyle,
     handle: {
       fontSize: scaledFont(14),
@@ -115,18 +116,18 @@ function createStyles(scaledFont: ScaledFontFn) {
     timestamp: {
       fontSize: scaledFont(14),
       color: "#687684",
-      marginLeft: 4,
+      marginLeft: spacing.xs,
     } as TextStyle,
     postText: {
       fontSize: scaledFont(15),
       lineHeight: scaledLineHeight(scaledFont, 15, 20),
       color: "#0f1419",
-      marginTop: 4,
+      marginTop: spacing.xs,
     } as TextStyle,
     actionBar: {
       flexDirection: "row",
       alignItems: "center",
-      marginTop: 12,
+      marginTop: spacing.md,
       justifyContent: "space-between",
       maxWidth: 280,
     } as ViewStyle,
@@ -136,12 +137,12 @@ function createStyles(scaledFont: ScaledFontFn) {
       justifyContent: "center",
       minWidth: 44,
       minHeight: 44,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
     } as ViewStyle,
     actionIcon: {
       fontSize: scaledFont(16),
-      marginRight: 4,
+      marginRight: spacing.xs,
     } as TextStyle,
     actionCount: {
       fontSize: scaledFont(13),
@@ -160,7 +161,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       color: "#f91880",
     } as TextStyle,
     imageContainer: {
-      marginTop: 12,
+      marginTop: spacing.md,
       borderRadius: 12,
       overflow: "hidden",
     } as ViewStyle,
@@ -169,19 +170,19 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as ViewStyle,
     twoImages: {
       flexDirection: "row",
-      gap: 2,
+      gap: spacing.xxs,
       aspectRatio: 2,
     } as ViewStyle,
     threeImages: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 2,
+      gap: spacing.xxs,
       aspectRatio: 1.5,
     } as ViewStyle,
     fourImages: {
       flexDirection: "row",
       flexWrap: "wrap",
-      gap: 2,
+      gap: spacing.xxs,
       aspectRatio: 1,
     } as ViewStyle,
     imageWrapper: {
@@ -203,8 +204,8 @@ function createStyles(scaledFont: ScaledFontFn) {
       bottom: 8,
       left: 8,
       backgroundColor: "rgba(0, 0, 0, 0.7)",
-      paddingHorizontal: 6,
-      paddingVertical: 2,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xxs,
       borderRadius: 4,
     } as ViewStyle,
     altText: {
@@ -213,7 +214,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       color: "#ffffff",
     } as TextStyle,
     quotedPost: {
-      marginTop: 12,
+      marginTop: spacing.md,
       borderWidth: 1,
       borderColor: "#e1e1e1",
       borderRadius: 12,
@@ -222,33 +223,33 @@ function createStyles(scaledFont: ScaledFontFn) {
     quotedPostHeader: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 12,
-      paddingVertical: 8,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
       backgroundColor: "#f7f9fa",
       borderBottomWidth: 1,
       borderBottomColor: "#e1e1e1",
     } as ViewStyle,
     quotedPostIcon: {
       fontSize: scaledFont(12),
-      marginRight: 6,
+      marginRight: spacing.sm,
     } as TextStyle,
     quotedPostLabel: {
       fontSize: scaledFont(12),
       color: "#687684",
     } as TextStyle,
     quotedPostContent: {
-      padding: 12,
+      padding: spacing.md,
     } as ViewStyle,
     quotedAuthor: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 4,
+      marginBottom: spacing.xs,
     } as ViewStyle,
     quotedAvatar: {
       width: 20,
       height: 20,
       borderRadius: 10,
-      marginRight: 8,
+      marginRight: spacing.sm,
       backgroundColor: "#e1e1e1",
     } as ImageStyle,
     quotedAuthorName: {
@@ -262,8 +263,8 @@ function createStyles(scaledFont: ScaledFontFn) {
       color: "#0f1419",
     } as TextStyle,
     quotedPostDeleted: {
-      marginTop: 12,
-      padding: 16,
+      marginTop: spacing.md,
+      padding: spacing.lg,
       borderWidth: 1,
       borderColor: "#e1e1e1",
       borderRadius: 12,
@@ -275,7 +276,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontStyle: "italic",
     } as TextStyle,
     externalEmbed: {
-      marginTop: 12,
+      marginTop: spacing.md,
       borderWidth: 1,
       borderColor: "#e1e1e1",
       borderRadius: 12,
@@ -287,13 +288,13 @@ function createStyles(scaledFont: ScaledFontFn) {
       backgroundColor: "#e1e1e1",
     } as ImageStyle,
     externalContent: {
-      padding: 12,
+      padding: spacing.md,
     } as ViewStyle,
     externalTitle: {
       fontSize: scaledFont(15),
       fontWeight: "600",
       color: "#0f1419",
-      marginBottom: 4,
+      marginBottom: spacing.xs,
     } as TextStyle,
     externalDescription: {
       fontSize: scaledFont(13),
@@ -301,8 +302,8 @@ function createStyles(scaledFont: ScaledFontFn) {
       lineHeight: scaledLineHeight(scaledFont, 13, 18),
     } as TextStyle,
     contentWarningOverlay: {
-      marginTop: 12,
-      padding: 24,
+      marginTop: spacing.md,
+      padding: spacing.xl,
       backgroundColor: "#f7f9fa",
       borderRadius: 12,
       borderWidth: 1,
@@ -317,25 +318,25 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as ViewStyle,
     contentWarningIcon: {
       fontSize: scaledFont(32),
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     } as TextStyle,
     contentWarningTitle: {
       fontSize: scaledFont(16),
       fontWeight: "600",
       color: "#0f1419",
-      marginBottom: 4,
+      marginBottom: spacing.xs,
       textAlign: "center",
     } as TextStyle,
     contentWarningDescription: {
       fontSize: scaledFont(14),
       color: "#687684",
-      marginBottom: 16,
+      marginBottom: spacing.lg,
       textAlign: "center",
     } as TextStyle,
     contentWarningButton: {
       backgroundColor: "#0085ff",
-      paddingHorizontal: 24,
-      paddingVertical: 10,
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.md,
       borderRadius: 20,
       minWidth: 100,
       alignItems: "center",
@@ -365,8 +366,8 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontWeight: "600",
       color: "#ffffff",
       backgroundColor: "rgba(0, 0, 0, 0.7)",
-      paddingHorizontal: 12,
-      paddingVertical: 6,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
       borderRadius: 16,
     } as TextStyle,
   });
@@ -973,7 +974,7 @@ function PostCardComponent({
     // Record with media (quoted post + images/video)
     if (embed.$type === "app.bsky.embed.recordWithMedia#view") {
       return (
-        <View style={{ gap: 8 }}>
+        <View style={{ gap: spacing.sm }}>
           {images.length > 0 && (
             <PostImages
               images={images}

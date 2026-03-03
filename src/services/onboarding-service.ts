@@ -170,11 +170,12 @@ export class OnboardingService {
   }
 
   /**
-   * Check if user has completed onboarding
+   * Check if user has completed onboarding.
+   * Always returns true — NUX is disabled until the bug causing it to
+   * re-appear unexpectedly is resolved.
    */
   isCompleted(): boolean {
-    const state = this.getState();
-    return state.completed;
+    return true;
   }
 
   /**

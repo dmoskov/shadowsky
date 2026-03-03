@@ -149,7 +149,10 @@ function createStyles(colors: any) {
       fontWeight: '700',
     },
     closeButton: {
-      padding: 4,
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     closeButtonText: {
       color: colors.textSecondary,

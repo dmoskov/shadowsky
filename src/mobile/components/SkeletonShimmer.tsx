@@ -20,6 +20,7 @@
 import { memo, useMemo } from "react";
 import { StyleSheet, View, type ViewStyle } from "react-native";
 
+import { spacing } from "../../theme/spacing";
 // ─── Pulse animation hook (opacity cycle) ─────────────────────────────
 // In a real RN environment this would use Animated.loop + Animated.timing.
 // For the web-stub typecheck build we just provide a static 0.4 opacity;
@@ -137,13 +138,13 @@ const userRowStyles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   } as ViewStyle,
   textArea: {
     flex: 1,
-    gap: 6,
+    gap: spacing.sm,
   } as ViewStyle,
 });
 
@@ -177,21 +178,21 @@ const userCardStyles = StyleSheet.create({
   card: {
     backgroundColor: "#111122",
     borderRadius: 12,
-    padding: 14,
+    padding: spacing.lg,
   } as ViewStyle,
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginBottom: 8,
+    gap: spacing.md,
+    marginBottom: spacing.sm,
   } as ViewStyle,
   textArea: {
     flex: 1,
-    gap: 4,
+    gap: spacing.xs,
   } as ViewStyle,
   descriptionArea: {
-    gap: 4,
-    marginBottom: 10,
+    gap: spacing.xs,
+    marginBottom: spacing.md,
   } as ViewStyle,
   button: {
     height: 36,
@@ -239,21 +240,21 @@ const feedCardStyles = StyleSheet.create({
   card: {
     backgroundColor: "#111122",
     borderRadius: 12,
-    padding: 14,
+    padding: spacing.lg,
   } as ViewStyle,
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginBottom: 8,
+    gap: spacing.md,
+    marginBottom: spacing.sm,
   } as ViewStyle,
   textArea: {
     flex: 1,
-    gap: 4,
+    gap: spacing.xs,
   } as ViewStyle,
   descriptionArea: {
-    gap: 4,
-    marginBottom: 10,
+    gap: spacing.xs,
+    marginBottom: spacing.md,
   } as ViewStyle,
   footer: {
     flexDirection: "row",
@@ -304,27 +305,27 @@ export const FeedCardShimmer = memo(function FeedCardShimmer({
 const postStyles = StyleSheet.create({
   post: {
     flexDirection: "row",
-    gap: 12,
-    padding: 16,
+    gap: spacing.md,
+    padding: spacing.lg,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#e1e1e1",
   } as ViewStyle,
   content: {
     flex: 1,
-    gap: 8,
+    gap: spacing.sm,
   } as ViewStyle,
   authorRow: {
     flexDirection: "row",
-    gap: 6,
+    gap: spacing.sm,
     alignItems: "center",
   } as ViewStyle,
   textArea: {
-    gap: 5,
+    gap: spacing.xs,
   } as ViewStyle,
   actions: {
     flexDirection: "row",
-    gap: 24,
-    marginTop: 4,
+    gap: spacing.xl,
+    marginTop: spacing.xs,
   } as ViewStyle,
 });
 
@@ -383,7 +384,7 @@ const overlayStyles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     justifyContent: "flex-start",
-    paddingTop: 24,
+    paddingTop: spacing.xl,
   } as ViewStyle,
   darkOverlay: {
     backgroundColor: "rgba(0, 0, 0, 0.85)",
@@ -418,9 +419,9 @@ export const LoadingOverlayShimmer = memo(function LoadingOverlayShimmer({
 const listShimmerStyles = StyleSheet.create({
   container: {
     flex: 1,
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
   } as ViewStyle,
   separator: {
     height: 10,
@@ -464,8 +465,8 @@ export const FeedCardsShimmer = memo(function FeedCardsShimmer({
 /** Shimmer for loading more content (list footer) */
 const footerStyles = StyleSheet.create({
   footer: {
-    paddingVertical: 16,
-    gap: 8,
+    paddingVertical: spacing.lg,
+    gap: spacing.sm,
   } as ViewStyle,
 });
 
@@ -490,8 +491,8 @@ export const LoadingFooterShimmer = memo(function LoadingFooterShimmer({
 /** Summary text shimmer for thread summaries */
 const summaryStyles = StyleSheet.create({
   container: {
-    gap: 6,
-    paddingVertical: 4,
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
   } as ViewStyle,
 });
 

@@ -22,6 +22,7 @@ import { getActionDescription } from "../../../services/batch-operation-executor
 import { useDynamicType, type ScaledFontFn } from "../../hooks/useDynamicType";
 import { StatusIconShimmer } from "../SkeletonShimmer";
 
+import { spacing } from "../../../theme/spacing";
 interface MobileBatchProgressIndicatorProps {
   /** Callback when pause is clicked */
   onPause?: () => void;
@@ -53,14 +54,14 @@ function createStyles(scaledFont: ScaledFontFn) {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      padding: 16,
+      padding: spacing.lg,
       borderBottomWidth: 1,
       borderBottomColor: "#e1e1e1",
     } as ViewStyle,
     titleRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
+      gap: spacing.md,
       flex: 1,
     } as ViewStyle,
     titleContent: {
@@ -73,7 +74,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(16),
       fontWeight: "600",
       color: "#0f1419",
-      marginBottom: 2,
+      marginBottom: spacing.xxs,
     } as TextStyle,
     subtitle: {
       fontSize: scaledFont(12),
@@ -81,7 +82,7 @@ function createStyles(scaledFont: ScaledFontFn) {
     } as TextStyle,
     controls: {
       flexDirection: "row",
-      gap: 8,
+      gap: spacing.sm,
     } as ViewStyle,
     controlButton: {
       width: 36,
@@ -107,21 +108,21 @@ function createStyles(scaledFont: ScaledFontFn) {
       color: "#dc2626",
     } as TextStyle,
     progressSection: {
-      padding: 16,
+      padding: spacing.lg,
     } as ViewStyle,
     progressTrack: {
       height: 8,
       backgroundColor: "#e5e7eb",
       borderRadius: 4,
       overflow: "hidden",
-      marginBottom: 12,
+      marginBottom: spacing.md,
     } as ViewStyle,
     progressBar: {
       height: "100%",
       borderRadius: 4,
     } as ViewStyle,
     stats: {
-      gap: 8,
+      gap: spacing.sm,
     } as ViewStyle,
     statRow: {
       flexDirection: "row",
@@ -148,7 +149,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       color: "#0f1419",
     } as TextStyle,
     errorSection: {
-      padding: 16,
+      padding: spacing.lg,
       borderTopWidth: 1,
       borderTopColor: "#e1e1e1",
       backgroundColor: "#fef2f2",
@@ -157,10 +158,10 @@ function createStyles(scaledFont: ScaledFontFn) {
       fontSize: scaledFont(13),
       fontWeight: "600",
       color: "#dc2626",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     } as TextStyle,
     errorList: {
-      gap: 4,
+      gap: spacing.xs,
     } as ViewStyle,
     errorItem: {
       fontSize: scaledFont(11),

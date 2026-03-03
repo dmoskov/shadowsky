@@ -37,6 +37,7 @@ import {
 import { PostCard } from "./PostCard";
 import { PostShimmer } from "./SkeletonShimmer";
 
+import { spacing } from "../../theme/spacing";
 /**
  * Calculate estimated item height based on post content
  */
@@ -124,14 +125,14 @@ function createStyles(scaledFont: ScaledFontFn) {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      padding: 32,
+      padding: spacing.xxl,
       minHeight: 300,
     } as ViewStyle,
     emptyText: {
       fontSize: scaledFont(18),
       fontWeight: "600",
       color: "#0f1419",
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     },
     emptySubtext: {
       fontSize: scaledFont(14),
@@ -139,7 +140,7 @@ function createStyles(scaledFont: ScaledFontFn) {
       textAlign: "center",
     },
     loadingFooter: {
-      paddingVertical: 20,
+      paddingVertical: spacing.xl,
       alignItems: "center",
     } as ViewStyle,
   });

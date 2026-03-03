@@ -2,6 +2,7 @@ import eslint from "@eslint/js";
 import reactHooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+import spacingPlugin from "./eslint-plugin-spacing.js";
 
 export default tseslint.config(
   eslint.configs.recommended,
@@ -41,6 +42,15 @@ export default tseslint.config(
     ],
     rules: {
       "no-console": "off",
+    },
+  },
+  {
+    files: ["src/mobile/**/*.{ts,tsx}"],
+    plugins: {
+      spacing: spacingPlugin,
+    },
+    rules: {
+      "spacing/no-raw-spacing": "warn",
     },
   },
 );
