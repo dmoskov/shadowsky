@@ -67,7 +67,7 @@ export function getApiBaseUrl(): string {
  */
 export function getVersionedApiUrl(): string {
   const baseUrl = getApiBaseUrl();
-  return `${baseUrl}/api/${API_VERSION}`;
+  return `${baseUrl}/api`;
 }
 
 export { outputs };
