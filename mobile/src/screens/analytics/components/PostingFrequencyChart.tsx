@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   useWindowDimensions,
 } from "react-native";
 import type { ThemeColors } from "../../../contexts/ThemeContext";
@@ -46,23 +45,12 @@ function PostingFrequencyChartInner({
   if (dailyEngagement.length <= 1) return null;
 
   const len = dailyEngagement.length;
-  const MIN_BAR_WIDTH = 16;
-  const BAR_GAP = 2;
-  const sectionPadding = 32;
-  const yAxisWidth = 30;
-  const screenWidth =
-    windowWidth - 32 - sectionPadding - yAxisWidth;
-  const fitsInline = len * (MIN_BAR_WIDTH + BAR_GAP) <= screenWidth;
-  const chartWidth = fitsInline
-    ? undefined
-    : len * (MIN_BAR_WIDTH + BAR_GAP);
 
   const freqContent = (
     <View
       style={[
         styles.chartContainer,
         { height: FREQ_CHART_HEIGHT + 20 },
-        chartWidth ? { width: chartWidth } : undefined,
       ]}
     >
       {dailyEngagement.map((day, index) => {
@@ -93,7 +81,7 @@ function PostingFrequencyChartInner({
         return (
           <View
             key={day.date}
-            style={[styles.barContainer, { minWidth: MIN_BAR_WIDTH }]}
+            style={styles.barContainer}
           >
             <View style={[styles.barWrapper, { height: FREQ_CHART_HEIGHT }]}>
               {(day.replyPosts || 0) > 0 && (
@@ -219,17 +207,7 @@ function PostingFrequencyChartInner({
               />
             ))}
           </View>
-          {!fitsInline ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.chartScrollContent}
-            >
-              {freqContent}
-            </ScrollView>
-          ) : (
-            freqContent
-          )}
+          {freqContent}
         </View>
       </View>
     </View>
@@ -308,9 +286,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     gap: 2,
-  },
-  chartScrollContent: {
-    paddingRight: 8,
   },
   barContainer: {
     flex: 1,

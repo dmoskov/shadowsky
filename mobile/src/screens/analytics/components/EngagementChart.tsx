@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   useWindowDimensions,
 } from "react-native";
 import type { ThemeColors } from "../../../contexts/ThemeContext";
@@ -29,7 +28,7 @@ function EngagementChartInner({
   timeRange,
 }: EngagementChartProps) {
   const isHourly = timeRange === "today";
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const { height: windowHeight } = useWindowDimensions();
   // Scale chart height for small screens (iPhone SE = 667pt)
   const CHART_HEIGHT = windowHeight < 700 ? Math.min(chartHeight, 160) : chartHeight;
 
@@ -44,23 +43,12 @@ function EngagementChartInner({
   if (dailyEngagement.length <= 1) return null;
 
   const len = dailyEngagement.length;
-  const MIN_BAR_WIDTH = 16;
-  const BAR_GAP = 2;
-  const sectionPadding = 32;
-  const yAxisWidth = 36;
-  const screenWidth =
-    windowWidth - 32 - sectionPadding - yAxisWidth;
-  const fitsInline = len * (MIN_BAR_WIDTH + BAR_GAP) <= screenWidth;
-  const chartWidth = fitsInline
-    ? undefined
-    : len * (MIN_BAR_WIDTH + BAR_GAP);
 
   const chartContent = (
     <View
       style={[
         styles.chartContainer,
         { height: CHART_HEIGHT + 20 },
-        chartWidth ? { width: chartWidth } : undefined,
       ]}
     >
       {dailyEngagement.map((day, index) => {
@@ -105,7 +93,7 @@ function EngagementChartInner({
         return (
           <View
             key={day.date}
-            style={[styles.barContainer, { minWidth: MIN_BAR_WIDTH }]}
+            style={styles.barContainer}
           >
             <View style={[styles.barWrapper, { height: CHART_HEIGHT }]}>
               {day.replies > 0 && (
@@ -242,17 +230,7 @@ function EngagementChartInner({
               />
             ))}
           </View>
-          {!fitsInline ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.chartScrollContent}
-            >
-              {chartContent}
-            </ScrollView>
-          ) : (
-            chartContent
-          )}
+          {chartContent}
         </View>
       </View>
     </View>
@@ -316,9 +294,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     gap: 2,
-  },
-  chartScrollContent: {
-    paddingRight: 8,
   },
   barContainer: {
     flex: 1,
