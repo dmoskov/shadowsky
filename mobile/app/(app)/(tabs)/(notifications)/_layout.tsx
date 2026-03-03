@@ -23,7 +23,6 @@ export default function NotificationsLayout() {
         name="index"
         options={{
           title: "Notifications",
-          headerLargeTitle: true,
           headerLeft: () => <DrawerMenuButton />,
           headerStyle: { backgroundColor: colors.background },
           headerShadowVisible: false,
