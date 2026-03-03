@@ -1,13 +1,7 @@
-name: Build Server
+name: Build Server (PR Check)
 
+# Build-only check for PRs. Actual deployment happens in deploy-server.yml.
 on:
-  push:
-    branches:
-      - main
-      - prod
-      - "task/*"
-    paths:
-      - "server/**"
   pull_request:
     branches:
       - main
