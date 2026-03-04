@@ -1859,7 +1859,7 @@ html[data-reduce-motion="true"] .animate-skeleton-reveal {
  * prefers-reduced-motion preferences.
  * ============================================ */
 
-/* --- Like heart animation (iOS-style pop + scale) --- */
+/* --- Like heart animation (pop + burst ring + particle dots) --- */
 @media (prefers-reduced-motion: no-preference) {
   .animate-like-pop {
     animation: like-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
@@ -1870,94 +1870,247 @@ html[data-reduce-motion="true"] .animate-skeleton-reveal {
       transform: scale(1);
     }
     15% {
-      transform: scale(0.8);
+      transform: scale(0.75);
     }
     40% {
-      transform: scale(1.25);
+      transform: scale(1.28);
     }
-    70% {
-      transform: scale(0.95);
+    65% {
+      transform: scale(0.92);
+    }
+    85% {
+      transform: scale(1.04);
     }
     100% {
       transform: scale(1);
     }
   }
 
-  /* Like heart particle burst effect */
+  /* Like heart burst ring + particle dots */
   .like-burst {
     position: relative;
   }
 
-  .like-burst::before,
+  /* Expanding ring */
+  .like-burst::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0);
+  }
+
+  .like-burst.active::before {
+    animation: like-ring 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  @keyframes like-ring {
+    0% {
+      opacity: 0.9;
+      transform: translate(-50%, -50%) scale(0.3);
+    }
+    50% {
+      opacity: 0.5;
+      transform: translate(-50%, -50%) scale(1.8);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(2.4);
+    }
+  }
+
+  /* Particle dots via box-shadow burst */
   .like-burst::after {
     content: "";
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 4px;
-    height: 4px;
+    width: 3px;
+    height: 3px;
     border-radius: 50%;
     opacity: 0;
     pointer-events: none;
-  }
-
-  .like-burst.active::before {
-    animation: like-particle-1 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    background-color: currentColor;
+    background: currentColor;
   }
 
   .like-burst.active::after {
-    animation: like-particle-2 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-    background-color: currentColor;
+    animation: like-particles 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
-  @keyframes like-particle-1 {
+  @keyframes like-particles {
     0% {
       opacity: 1;
+      box-shadow:
+        0 0 0 0 currentColor,
+        0 0 0 0 currentColor,
+        0 0 0 0 currentColor,
+        0 0 0 0 currentColor,
+        0 0 0 0 currentColor,
+        0 0 0 0 currentColor;
       transform: translate(-50%, -50%) scale(0);
     }
-    50% {
-      opacity: 0.8;
-      transform: translate(calc(-50% - 8px), calc(-50% - 10px)) scale(1);
+    30% {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
     }
     100% {
       opacity: 0;
-      transform: translate(calc(-50% - 12px), calc(-50% - 16px)) scale(0);
+      box-shadow:
+        -10px -10px 0 -1px currentColor,
+        10px -10px 0 -1px currentColor,
+        12px 2px 0 -1px currentColor,
+        -12px 2px 0 -1px currentColor,
+        6px 10px 0 -1px currentColor,
+        -6px 10px 0 -1px currentColor;
+      transform: translate(-50%, -50%) scale(1);
     }
   }
 
-  @keyframes like-particle-2 {
-    0% {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(0);
-    }
-    50% {
-      opacity: 0.8;
-      transform: translate(calc(-50% + 8px), calc(-50% - 8px)) scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: translate(calc(-50% + 14px), calc(-50% - 14px)) scale(0);
-    }
-  }
-
-  /* --- Repost spin animation --- */
+  /* --- Repost 360° spin + ripple --- */
   .animate-repost-spin {
-    animation: repost-spin 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation: repost-spin 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
   @keyframes repost-spin {
     0% {
       transform: scale(1) rotate(0deg);
     }
-    30% {
-      transform: scale(0.85) rotate(-30deg);
-    }
-    60% {
-      transform: scale(1.15) rotate(15deg);
+    50% {
+      transform: scale(0.85) rotate(180deg);
     }
     100% {
-      transform: scale(1) rotate(0deg);
+      transform: scale(1) rotate(360deg);
+    }
+  }
+
+  /* Repost ripple ring on the count text */
+  .repost-ripple {
+    position: relative;
+  }
+
+  .repost-ripple::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 6px;
+    border: 1.5px solid currentColor;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .repost-ripple.active::after {
+    animation: repost-ripple-ring 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  @keyframes repost-ripple-ring {
+    0% {
+      opacity: 0.6;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 0.3;
+      transform: scale(1.15);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.3);
+    }
+  }
+
+  /* --- Bookmark fold animation --- */
+  .animate-bookmark-fold {
+    animation: bookmark-fold 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    transform-origin: top center;
+  }
+
+  @keyframes bookmark-fold {
+    0% {
+      transform: scaleY(1) perspective(100px) rotateX(0deg);
+    }
+    30% {
+      transform: scaleY(0.85) perspective(100px) rotateX(15deg);
+    }
+    60% {
+      transform: scaleY(1.1) perspective(100px) rotateX(-3deg);
+    }
+    100% {
+      transform: scaleY(1) perspective(100px) rotateX(0deg);
+    }
+  }
+
+  /* --- Reply count flip animation --- */
+  .count-flip-enter {
+    animation: count-flip-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    display: inline-block;
+  }
+
+  @keyframes count-flip-in {
+    0% {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* --- Share checkmark flash --- */
+  .share-copied {
+    position: relative;
+  }
+
+  .share-copied::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .share-copied.active::after {
+    animation: share-flash 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  @keyframes share-flash {
+    0% {
+      opacity: 0.25;
+      transform: scale(0.8);
+    }
+    40% {
+      opacity: 0.15;
+      transform: scale(1.3);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.5);
+    }
+  }
+
+  .animate-share-check {
+    animation: share-check-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes share-check-pop {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
     }
   }
 }
@@ -2177,6 +2330,9 @@ html[data-reduce-motion="true"] .animate-skeleton-reveal {
 @media (prefers-reduced-motion: reduce) {
   .animate-like-pop,
   .animate-repost-spin,
+  .animate-bookmark-fold,
+  .animate-share-check,
+  .count-flip-enter,
   .animate-dropdown-in,
   .animate-dropdown-in-left,
   .animate-dropdown-out,
@@ -2191,6 +2347,13 @@ html[data-reduce-motion="true"] .animate-skeleton-reveal {
     animation: none !important;
   }
 
+  .like-burst.active::before,
+  .like-burst.active::after,
+  .repost-ripple.active::after,
+  .share-copied.active::after {
+    animation: none !important;
+  }
+
   .ios-press:active,
   .ios-press-light:active {
     transform: none !important;
@@ -2200,6 +2363,9 @@ html[data-reduce-motion="true"] .animate-skeleton-reveal {
 /* User-toggled reduced motion for new animations */
 html[data-reduce-motion="true"] .animate-like-pop,
 html[data-reduce-motion="true"] .animate-repost-spin,
+html[data-reduce-motion="true"] .animate-bookmark-fold,
+html[data-reduce-motion="true"] .animate-share-check,
+html[data-reduce-motion="true"] .count-flip-enter,
 html[data-reduce-motion="true"] .animate-dropdown-in,
 html[data-reduce-motion="true"] .animate-dropdown-in-left,
 html[data-reduce-motion="true"] .animate-dropdown-out,
@@ -2211,6 +2377,13 @@ html[data-reduce-motion="true"] .animate-badge-pulse,
 html[data-reduce-motion="true"] .animate-badge-in,
 html[data-reduce-motion="true"] .animate-toast-spring-in,
 html[data-reduce-motion="true"] .animate-toast-spring-out {
+  animation: none !important;
+}
+
+html[data-reduce-motion="true"] .like-burst.active::before,
+html[data-reduce-motion="true"] .like-burst.active::after,
+html[data-reduce-motion="true"] .repost-ripple.active::after,
+html[data-reduce-motion="true"] .share-copied.active::after {
   animation: none !important;
 }
 
