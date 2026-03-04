@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { ThreadModal } from "../components/ThreadModal";
 import { useAuth } from "../contexts/AuthContext";
+import { ThreadSkeleton } from "../components/ui/SkeletonLoader";
 import { constructAtUri } from "../utils/url-helpers";
 
 export default function ThreadPage() {
@@ -48,7 +49,9 @@ export default function ThreadPage() {
   if (loading || !postUri) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
+        <div className="w-full max-w-2xl">
+          <ThreadSkeleton showParent replyCount={3} aria-label="Loading thread" />
+        </div>
       </div>
     );
   }

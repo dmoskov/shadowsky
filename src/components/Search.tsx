@@ -27,6 +27,7 @@ import { proxifyBskyImage } from "../utils/image-proxy";
 import { constructAtUri, parseBskyUrl } from "../utils/url-helpers";
 import { ThreadViewer } from "./ThreadViewer";
 import { EmptyState } from "./ui/EmptyState";
+import { SearchResultSkeleton, ThreadSkeleton } from "./ui/SkeletonLoader";
 
 interface SearchFilters {
   query: string;
@@ -747,17 +748,8 @@ export const Search: React.FC = () => {
             )}
           </div>
           {isLoadingThread ? (
-            <div className="py-8 text-center">
-              <div
-                className="mx-auto h-10 w-10 animate-spin rounded-full border-b-2"
-                style={{ borderColor: "var(--asph-primary)" }}
-              ></div>
-              <p
-                className="mt-3 text-sm"
-                style={{ color: "var(--asph-text-secondary)" }}
-              >
-                Loading thread...
-              </p>
+            <div className="skeleton-stagger" role="status" aria-label="Loading thread">
+              <ThreadSkeleton />
             </div>
           ) : (
             <ThreadViewer
@@ -1845,17 +1837,10 @@ export const Search: React.FC = () => {
             )}
 
             {isLoading && (
-              <div className="py-6 text-center">
-                <div
-                  className="mx-auto h-10 w-10 animate-spin rounded-full border-b-2"
-                  style={{ borderColor: "var(--asph-primary)" }}
-                ></div>
-                <p
-                  className="mt-3 text-sm"
-                  style={{ color: "var(--asph-text-secondary)" }}
-                >
-                  Searching...
-                </p>
+              <div className="skeleton-stagger" role="status" aria-label="Searching">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <SearchResultSkeleton key={`search-skel-${i}`} aria-label={`Loading result ${i + 1}`} />
+                ))}
               </div>
             )}
 
