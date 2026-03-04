@@ -1,6 +1,6 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
-import { Lock, Share } from "lucide-react";
-import React, { memo, useCallback, useRef, useState } from "react";
+import { Check, Lock, Share } from "lucide-react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useActionSyncOptional } from "../contexts/ActionSyncContext";
 import { useBookmarks } from "../hooks/useBookmarks";
@@ -88,6 +88,10 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
   const repostButtonRef = useRef<HTMLButtonElement>(null);
   const [likeAnimating, setLikeAnimating] = useState(false);
   const [repostAnimating, setRepostAnimating] = useState(false);
+  const [bookmarkAnimating, setBookmarkAnimating] = useState(false);
+  const [shareShowCheck, setShareShowCheck] = useState(false);
+  const [replyCountFlip, setReplyCountFlip] = useState(false);
+  const prevReplyCount = useRef(post.replyCount);
 
   const iconSize = size === "small" ? 14 : size === "medium" ? 16 : 18;
   const isLiked = !!post.viewer?.like;
@@ -95,6 +99,20 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
   const bookmarked = isBookmarked(post.uri);
   const replyDisabled = !!post.viewer?.replyDisabled;
   const embeddingDisabled = !!post.viewer?.embeddingDisabled;
+
+  // Flip animation when reply count changes
+  useEffect(() => {
+    if (
+      prevReplyCount.current !== undefined &&
+      post.replyCount !== prevReplyCount.current
+    ) {
+      setReplyCountFlip(true);
+      const timer = setTimeout(() => setReplyCountFlip(false), 300);
+      prevReplyCount.current = post.replyCount;
+      return () => clearTimeout(timer);
+    }
+    prevReplyCount.current = post.replyCount;
+  }, [post.replyCount]);
 
   // Get sync statuses for each action
   const likeStatus = actionSync?.getActionStatus("like", post.uri) ?? "idle";
@@ -120,13 +138,28 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      if (!bookmarked) {
+        setBookmarkAnimating(true);
+        setTimeout(() => setBookmarkAnimating(false), 350);
+      }
       if (onBookmark) {
         onBookmark();
       } else {
         toggleBookmark(post);
       }
     },
-    [onBookmark, toggleBookmark, post],
+    [onBookmark, toggleBookmark, post, bookmarked],
+  );
+
+  const handleShare = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setShareShowCheck(true);
+      setTimeout(() => setShareShowCheck(false), 800);
+      onShare?.();
+    },
+    [onShare],
   );
 
   return (
@@ -172,7 +205,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
         )}
         {showCounts && (
           <span
-            className="min-w-[1rem] text-left text-xs font-medium"
+            className={`min-w-[1rem] text-left text-xs font-medium ${replyCountFlip ? "count-flip-enter" : ""}`}
             aria-hidden="true"
           >
             {post.replyCount || 0}
@@ -228,7 +261,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
           </span>
           {showCounts && (
             <span
-              className="min-w-[1rem] text-left text-xs font-medium"
+              className={`repost-ripple min-w-[1rem] text-left text-xs font-medium ${repostAnimating ? "active" : ""}`}
               aria-hidden="true"
             >
               {post.repostCount || 0}
@@ -296,7 +329,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
           e.stopPropagation();
           if (!isLiked) {
             setLikeAnimating(true);
-            setTimeout(() => setLikeAnimating(false), 450);
+            setTimeout(() => setLikeAnimating(false), 550);
           }
           onLike?.();
         }}
@@ -341,7 +374,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
           <BookmarkIcon
             size={iconSize}
             filled={bookmarked}
-            className={`transition-all duration-200 ease-out ${bookmarked ? "animate-bookmark-fill" : ""}`}
+            className={`transition-all duration-200 ease-out ${bookmarkAnimating ? "animate-bookmark-fold" : ""}`}
             aria-hidden="true"
           />
           <SyncStatusBadge
@@ -355,11 +388,23 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
       {/* Share */}
       {onShare && (
         <button
-          className="touch-target-sm flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-asph-text-secondary spring-icon hover:text-blue-600"
-          onClick={(e) => handleAction(e, onShare)}
+          className="touch-target-sm relative flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-asph-text-secondary spring-icon hover:text-blue-600"
+          onClick={handleShare}
           aria-label="Share post"
         >
-          <Share size={iconSize} aria-hidden="true" />
+          <span
+            className={`share-copied relative ${shareShowCheck ? "active" : ""}`}
+          >
+            {shareShowCheck ? (
+              <Check
+                size={iconSize}
+                className="animate-share-check text-green-500"
+                aria-hidden="true"
+              />
+            ) : (
+              <Share size={iconSize} aria-hidden="true" />
+            )}
+          </span>
         </button>
       )}
 
