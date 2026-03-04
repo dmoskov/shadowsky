@@ -38,6 +38,7 @@ export interface FeedListEvents {
   onImagePress?: (event: { nativeEvent: { images: Array<{ thumb: string; fullsize: string; alt: string }>; index: number } }) => void;
   onLinkPress?: (event: { nativeEvent: { uri: string } }) => void;
   onQuotePress?: (event: { nativeEvent: { uri: string; handle: string } }) => void;
+  onScroll?: (event: { nativeEvent: { y: number } }) => void;
 }
 
 // Props type
@@ -87,6 +88,7 @@ export const NativeFeedListView = forwardRef<any, NativeFeedListProps>((props, _
     onImagePress,
     onLinkPress,
     onQuotePress,
+    onScroll,
     ...viewProps
   } = props;
 
@@ -118,6 +120,7 @@ export const NativeFeedListView = forwardRef<any, NativeFeedListProps>((props, _
       onImagePress={onImagePress}
       onLinkPress={onLinkPress}
       onQuotePress={onQuotePress}
+      onScroll={onScroll}
     />
   );
 });

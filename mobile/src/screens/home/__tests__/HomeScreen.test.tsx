@@ -24,6 +24,12 @@ jest.mock('react-native-safe-area-context', () => ({
 
 jest.mock('@react-navigation/native', () => ({
   useScrollToTop: jest.fn(),
+  useNavigation: () => ({ dispatch: jest.fn() }),
+  DrawerActions: { openDrawer: jest.fn() },
+}));
+
+jest.mock('../../../hooks/api/useMessages', () => ({
+  useUnreadMessageCount: () => 0,
 }));
 
 jest.mock('../../../utils/haptics', () => ({

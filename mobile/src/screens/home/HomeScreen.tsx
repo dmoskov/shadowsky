@@ -1,7 +1,10 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from "react";
-import { View, StyleSheet, Alert, ActionSheetIOS, Platform, ScrollView, TouchableOpacity, Text } from "react-native";
+import { View, StyleSheet, Alert, ActionSheetIOS, Platform, ScrollView, TouchableOpacity, Text, Animated } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
-import { useScrollToTop } from "@react-navigation/native";
+import { useScrollToTop, DrawerActions, useNavigation } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ChatBubbleIcon, MenuIcon } from "../../components/icons";
+import { useUnreadMessageCount } from "../../hooks/api/useMessages";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTimeline, useCustomFeed, useSavedFeeds } from "../../hooks/api";
 import { getPostThread } from "../../services/atproto/feeds";
@@ -20,6 +23,10 @@ import type { LightboxImage } from "../../contexts/LightboxContext";
 import { createLogger } from "../../utils/logger";
 
 const logger = createLogger('HomeScreen');
+
+const NAV_BAR_HEIGHT = 44;
+const FEED_PICKER_HEIGHT = 52;
+const SCROLL_THRESHOLD = 10;
 
 /**
  * Extract post ID (rkey) from AT Protocol URI
@@ -42,6 +49,9 @@ function getDidFromUri(uri: string): string {
 export function HomeScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const unreadCount = useUnreadMessageCount();
   const [selectedFeedUri, setSelectedFeedUri] = useState<string | null>(null);
   const { navigateToThread, navigateToProfile, navigateToCompose } = useAppNavigation();
   const likePost = useLikePost();
@@ -53,6 +63,52 @@ export function HomeScreen() {
   const { openLightbox } = useLightbox();
   const queryClient = useQueryClient();
   const scrollRef = useRef<any>(null);
+
+  // Collapsible header animation
+  const totalHeaderHeight = insets.top + NAV_BAR_HEIGHT + FEED_PICKER_HEIGHT;
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
+  const lastScrollY = useRef(0);
+  const isHeaderHidden = useRef(false);
+
+  const showHeader = useCallback(() => {
+    if (isHeaderHidden.current) {
+      isHeaderHidden.current = false;
+      Animated.timing(headerTranslateY, {
+        toValue: 0,
+        duration: 220,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [headerTranslateY]);
+
+  const hideHeader = useCallback(() => {
+    if (!isHeaderHidden.current) {
+      isHeaderHidden.current = true;
+      Animated.timing(headerTranslateY, {
+        toValue: -totalHeaderHeight,
+        duration: 220,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [headerTranslateY, totalHeaderHeight]);
+
+  const handleScroll = useCallback((event: { nativeEvent: { y: number } }) => {
+    const y = event.nativeEvent.y;
+    const diff = y - lastScrollY.current;
+    lastScrollY.current = y;
+
+    // Always show header when near top
+    if (y <= SCROLL_THRESHOLD) {
+      showHeader();
+      return;
+    }
+
+    if (diff > SCROLL_THRESHOLD) {
+      hideHeader();
+    } else if (diff < -SCROLL_THRESHOLD) {
+      showHeader();
+    }
+  }, [showHeader, hideHeader]);
 
   // Compute bookmarked post URIs for the native feed list
   const bookmarkedPostUris = useMemo(() => {
@@ -120,11 +176,13 @@ export function HomeScreen() {
         triggerHaptic("medium");
         scrollRef.current?.scrollToTop();
         scrollRef.current?.refresh();
+        showHeader();
         lastFeedTapRef.current = null;
       } else {
         // Single tap on active feed: scroll to top
         triggerHaptic("light");
         scrollRef.current?.scrollToTop();
+        showHeader();
         lastFeedTapRef.current = { feedUri, time: now };
       }
     } else {
@@ -353,119 +411,203 @@ export function HomeScreen() {
 
   return (
     <View testID="home-screen" style={styles.container}>
-      {/* Feed Picker Chips */}
-      {savedFeeds && savedFeeds.length > 0 && (
-        <ScrollView
-          testID="feed-picker"
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.feedPickerContainer}
-          contentContainerStyle={styles.feedPickerContent}>
-          <TouchableOpacity
-            testID="feed-chip-following"
-            style={[styles.feedChip, !selectedFeedUri && styles.feedChipActive]}
-            onPress={() => handleFeedSelect(null)}
-            activeOpacity={0.7}>
-            <Text style={[styles.feedChipText, !selectedFeedUri && styles.feedChipTextActive]}>
-              🏠 Following
-            </Text>
-          </TouchableOpacity>
-          {savedFeeds.map((feed) => (
+      <Animated.View
+        style={[
+          styles.collapsibleWrapper,
+          { bottom: -totalHeaderHeight, transform: [{ translateY: headerTranslateY }] },
+        ]}
+      >
+        {/* Custom collapsible header */}
+        <View style={[styles.header, { height: totalHeaderHeight, paddingTop: insets.top }]}>
+          {/* Nav bar */}
+          <View style={styles.navBar}>
             <TouchableOpacity
-              key={feed.uri}
-              style={[styles.feedChip, selectedFeedUri === feed.uri && styles.feedChipActive]}
-              onPress={() => handleFeedSelect(feed.uri)}
-              activeOpacity={0.7}>
-              <Text style={[styles.feedChipText, selectedFeedUri === feed.uri && styles.feedChipTextActive]}>
-                {feed.displayName}
-              </Text>
+              onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+              style={styles.navBarButton}
+              accessibilityLabel="Open menu"
+              accessibilityRole="button"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <MenuIcon size={24} color={colors.text} />
             </TouchableOpacity>
-          ))}
-          <TouchableOpacity
-            style={styles.feedChipDiscover}
-            onPress={handleDiscoverFeeds}
-            activeOpacity={0.7}>
-            <Text style={styles.feedChipDiscoverText}>+ Discover</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      )}
+            <Text style={[styles.navBarTitle, { color: colors.text }]}>Home</Text>
+            <TouchableOpacity
+              onPress={() => router.push("/(app)/messages")}
+              style={styles.navBarButton}
+              accessibilityLabel={unreadCount > 0 ? `Messages, ${unreadCount} unread` : "Messages"}
+              accessibilityRole="button"
+            >
+              <ChatBubbleIcon size={24} color={colors.text} />
+              {unreadCount > 0 && (
+                <View style={[styles.badge, { backgroundColor: colors.danger }]}>
+                  <Text style={styles.badgeText}>
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
 
-      <NativeFeedList
-        ref={scrollRef}
-        query={selectedFeedUri ? customFeedQuery : timelineQuery}
-        bookmarkedPostUris={bookmarkedPostUris}
-        isOnline={true}
-        onPostPress={handlePostPress}
-        onProfilePress={handleProfilePress}
-        onLike={handleLike}
-        onRepost={handleRepost}
-        onReply={handleReply}
-        onBookmark={handleBookmark}
-        onMentionPress={handleMentionPress}
-        onHashtagPress={handleHashtagPress}
-        onShare={handleShare}
-        onLinkPress={handleLinkPress}
-        onImagePress={handleImagePress}
-        onQuotePress={handleQuotePress}
-        emptyMessage="No posts in your timeline yet"
-      />
+          {/* Feed Picker Chips */}
+          {savedFeeds && savedFeeds.length > 0 && (
+            <ScrollView
+              testID="feed-picker"
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.feedPickerContainer}
+              contentContainerStyle={styles.feedPickerContent}
+            >
+              <TouchableOpacity
+                testID="feed-chip-following"
+                style={[styles.feedChip, !selectedFeedUri && styles.feedChipActive]}
+                onPress={() => handleFeedSelect(null)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.feedChipText, !selectedFeedUri && styles.feedChipTextActive]}>
+                  Following
+                </Text>
+              </TouchableOpacity>
+              {savedFeeds.map((feed) => (
+                <TouchableOpacity
+                  key={feed.uri}
+                  style={[styles.feedChip, selectedFeedUri === feed.uri && styles.feedChipActive]}
+                  onPress={() => handleFeedSelect(feed.uri)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.feedChipText, selectedFeedUri === feed.uri && styles.feedChipTextActive]}>
+                    {feed.displayName}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                style={styles.feedChipDiscover}
+                onPress={handleDiscoverFeeds}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.feedChipDiscoverText}>+ Discover</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          )}
+        </View>
+
+        {/* Feed list */}
+        <NativeFeedList
+          ref={scrollRef}
+          query={selectedFeedUri ? customFeedQuery : timelineQuery}
+          bookmarkedPostUris={bookmarkedPostUris}
+          isOnline={true}
+          onPostPress={handlePostPress}
+          onProfilePress={handleProfilePress}
+          onLike={handleLike}
+          onRepost={handleRepost}
+          onReply={handleReply}
+          onBookmark={handleBookmark}
+          onMentionPress={handleMentionPress}
+          onHashtagPress={handleHashtagPress}
+          onShare={handleShare}
+          onLinkPress={handleLinkPress}
+          onImagePress={handleImagePress}
+          onQuotePress={handleQuotePress}
+          onScroll={handleScroll}
+          emptyMessage="No posts in your timeline yet"
+        />
+      </Animated.View>
     </View>
   );
 }
 
 function createStyles(colors: any) {
   return StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  feedPickerContainer: {
-    flexGrow: 0,
-    flexShrink: 0,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
-    maxHeight: 56,
-  },
-  feedPickerContent: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 8,
-  },
-  feedChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surface,
-    marginRight: 8,
-  },
-  feedChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  feedChipText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.textSecondary,
-  },
-  feedChipTextActive: {
-    color: colors.text,
-  },
-  feedChipDiscover: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    marginRight: 8,
-  },
-  feedChipDiscoverText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: colors.primary,
-  },
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      overflow: 'hidden',
+    },
+    collapsibleWrapper: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+    },
+    header: {
+      backgroundColor: colors.background,
+      zIndex: 1,
+    },
+    navBar: {
+      height: NAV_BAR_HEIGHT,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 4,
+    },
+    navBarButton: {
+      padding: 8,
+      position: 'relative',
+    },
+    navBarTitle: {
+      fontSize: 17,
+      fontWeight: '600',
+    },
+    badge: {
+      position: 'absolute',
+      right: 2,
+      top: 2,
+      borderRadius: 9,
+      minWidth: 18,
+      height: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 4,
+    },
+    badgeText: {
+      color: '#ffffff',
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    feedPickerContainer: {
+      flexGrow: 0,
+      flexShrink: 0,
+      maxHeight: FEED_PICKER_HEIGHT,
+    },
+    feedPickerContent: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      gap: 8,
+    },
+    feedChip: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.surface,
+      marginRight: 8,
+    },
+    feedChipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    feedChipText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.textSecondary,
+    },
+    feedChipTextActive: {
+      color: colors.text,
+    },
+    feedChipDiscover: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.primary,
+      marginRight: 8,
+    },
+    feedChipDiscoverText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.primary,
+    },
   });
 }
