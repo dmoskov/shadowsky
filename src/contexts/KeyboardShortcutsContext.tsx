@@ -32,6 +32,7 @@ export interface KeyboardShortcutsContextType {
   bookmarkPost: () => void;
   sharePost: () => void;
   openPost: () => void;
+  moreMenuPost: () => void;
 
   // Navigation
   navigateNext: () => void;
@@ -52,6 +53,7 @@ export interface PostActionCallbacks {
   onBookmark?: (post: AppBskyFeedDefs.PostView) => void;
   onShare?: (post: AppBskyFeedDefs.PostView) => void;
   onOpen?: (post: AppBskyFeedDefs.PostView) => void;
+  onMoreMenu?: (post: AppBskyFeedDefs.PostView) => void;
   onNavigateNext?: () => void;
   onNavigatePrev?: () => void;
 }
@@ -153,6 +155,12 @@ export function KeyboardShortcutsProvider({
     if (!focusedPost) return;
     const callbacks = getCurrentCallbacks();
     callbacks?.onOpen?.(focusedPost.post);
+  }, [focusedPost, getCurrentCallbacks]);
+
+  const moreMenuPost = useCallback(() => {
+    if (!focusedPost) return;
+    const callbacks = getCurrentCallbacks();
+    callbacks?.onMoreMenu?.(focusedPost.post);
   }, [focusedPost, getCurrentCallbacks]);
 
   const navigateNext = useCallback(() => {
@@ -321,6 +329,14 @@ export function KeyboardShortcutsProvider({
           }
           break;
 
+        case "m":
+          // Open more menu on focused post
+          if (focusedPost) {
+            moreMenuPost();
+            handled = true;
+          }
+          break;
+
         case "o":
         case "enter":
           // Open focused post details
@@ -371,6 +387,7 @@ export function KeyboardShortcutsProvider({
     bookmarkPost,
     sharePost,
     openPost,
+    moreMenuPost,
     navigateNext,
     navigatePrev,
     clearGKeyPending,
@@ -389,6 +406,7 @@ export function KeyboardShortcutsProvider({
       bookmarkPost,
       sharePost,
       openPost,
+      moreMenuPost,
       navigateNext,
       navigatePrev,
       isShortcutsHelpOpen,
@@ -405,6 +423,7 @@ export function KeyboardShortcutsProvider({
       bookmarkPost,
       sharePost,
       openPost,
+      moreMenuPost,
       navigateNext,
       navigatePrev,
       isShortcutsHelpOpen,

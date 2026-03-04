@@ -196,7 +196,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
         }
         aria-pressed={isReplying}
         aria-disabled={replyDisabled}
-        title={replyDisabled ? "Replies are restricted" : undefined}
+        title={replyDisabled ? "Replies are restricted" : "Reply (R)"}
       >
         {replyDisabled ? (
           <Lock size={iconSize} aria-hidden="true" />
@@ -246,6 +246,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
           }
           aria-expanded={embeddingDisabled ? undefined : showRepostMenu}
           aria-haspopup={embeddingDisabled ? undefined : "menu"}
+          title="Repost (T)"
         >
           <span className="relative">
             <RepostIcon
@@ -335,6 +336,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
         }}
         aria-label={`${isLiked ? "Unlike" : "Like"} post${post.likeCount ? `, ${post.likeCount} likes` : ""}`}
         aria-pressed={isLiked}
+        title={`${isLiked ? "Unlike" : "Like"} (L)`}
       >
         <span
           className={`like-burst relative ${likeAnimating ? "active" : ""}`}
@@ -369,6 +371,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
         onClick={handleBookmark}
         aria-label={bookmarked ? "Remove bookmark" : "Bookmark post"}
         aria-pressed={bookmarked}
+        title={`${bookmarked ? "Remove bookmark" : "Bookmark"} (B)`}
       >
         <span className="relative">
           <BookmarkIcon
@@ -391,6 +394,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
           className="touch-target-sm relative flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent p-2 text-asph-text-secondary spring-icon hover:text-blue-600"
           onClick={handleShare}
           aria-label="Share post"
+          title="Share (S)"
         >
           <span
             className={`share-copied relative ${shareShowCheck ? "active" : ""}`}

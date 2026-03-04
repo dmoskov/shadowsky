@@ -100,6 +100,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
           }}
           className="touch-target-sm flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full p-2 transition-opacity hover:opacity-70"
           aria-label="More options"
+          title="More (M)"
           aria-haspopup="menu"
           aria-expanded={isOpen}
           aria-controls={isOpen ? menuId : undefined}

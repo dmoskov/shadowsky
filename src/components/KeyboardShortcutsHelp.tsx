@@ -44,6 +44,7 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ["T"], description: "Repost (when focused)" },
       { keys: ["S"], description: "Share post (when focused)" },
       { keys: ["B"], description: "Bookmark post (when focused)" },
+      { keys: ["M"], description: "More options menu (when focused)" },
       { keys: ["O"], description: "Open post details (when focused)" },
       { keys: ["Enter"], description: "Open post details (when focused)" },
     ],
