@@ -1,7 +1,8 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useRef, useSyncExternalStore } from "react";
 import type { SyncStatus } from "../components/SyncStatusBadge";
+import { useToast } from "../contexts/ToastContext";
 import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 
 // Sync state tracking for bookmarks
@@ -134,6 +135,21 @@ export async function initializeBookmarkStore() {
 
 export function useBookmarks() {
   const queryClient = useQueryClient();
+  const { showUndoToast, showToast, dismissToast } = useToast();
+  const pendingUndoRef = useRef<{
+    timeoutId: ReturnType<typeof setTimeout>;
+    toastId: string;
+  } | null>(null);
+
+  // Refs for stable callbacks
+  const showUndoToastRef = useRef(showUndoToast);
+  showUndoToastRef.current = showUndoToast;
+  const showToastRef = useRef(showToast);
+  showToastRef.current = showToast;
+  const dismissToastRef = useRef(dismissToast);
+  dismissToastRef.current = dismissToast;
+  const queryClientRef = useRef(queryClient);
+  queryClientRef.current = queryClient;
 
   // Subscribe to bookmark store changes
   const bookmarkMap = useSyncExternalStore(
@@ -214,7 +230,72 @@ export function useBookmarks() {
 
   const toggleBookmark = useCallback(
     (post: AppBskyFeedDefs.PostView) => {
-      toggleBookmarkMutation.mutate(post);
+      const wasBookmarked = bookmarkStore.isBookmarked(post.uri);
+
+      if (wasBookmarked) {
+        // Unbookmarking — use undo pattern
+        // Cancel any existing pending undo
+        if (pendingUndoRef.current) {
+          clearTimeout(pendingUndoRef.current.timeoutId);
+          dismissToastRef.current(pendingUndoRef.current.toastId);
+          pendingUndoRef.current = null;
+        }
+
+        // Optimistic update (remove bookmark from UI)
+        bookmarkStore.setBookmarked(post.uri, false);
+
+        let resolved = false;
+
+        const commit = async () => {
+          if (resolved) return;
+          resolved = true;
+          pendingUndoRef.current = null;
+          try {
+            bookmarkSyncStore.setPending(post.uri);
+            const isNowBookmarked =
+              await bookmarkServiceV2.toggleBookmark(post);
+            bookmarkSyncStore.setSynced(post.uri);
+            bookmarkStore.setBookmarked(post.uri, isNowBookmarked);
+            queryClientRef.current.invalidateQueries({
+              queryKey: ["bookmarks"],
+            });
+            queryClientRef.current.invalidateQueries({
+              queryKey: ["bookmarkCount"],
+              exact: true,
+            });
+          } catch (_error) {
+            bookmarkSyncStore.setFailed(post.uri, () =>
+              toggleBookmarkMutation.mutate(post),
+            );
+            bookmarkStore.setBookmarked(post.uri, true);
+            showToastRef.current("Failed to remove bookmark", {
+              type: "error",
+            });
+          }
+        };
+
+        const undo = () => {
+          if (resolved) return;
+          resolved = true;
+          if (pendingUndoRef.current) {
+            clearTimeout(pendingUndoRef.current.timeoutId);
+          }
+          pendingUndoRef.current = null;
+          bookmarkStore.setBookmarked(post.uri, true);
+        };
+
+        const toastId = showUndoToastRef.current(
+          "Bookmark removed",
+          undo,
+          commit,
+          5000,
+        );
+        const timeoutId = setTimeout(commit, 5000);
+        pendingUndoRef.current = { timeoutId, toastId };
+      } else {
+        // Adding bookmark — fire immediately (not destructive)
+        toggleBookmarkMutation.mutate(post);
+      }
     },
     [toggleBookmarkMutation],
   );

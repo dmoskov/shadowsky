@@ -13,6 +13,17 @@ vi.mock("../services/bookmark-service-v2", () => ({
   },
 }));
 
+vi.mock("../contexts/ToastContext", () => ({
+  useToast: () => ({
+    showToast: vi.fn().mockReturnValue("toast-1"),
+    showUndoToast: vi.fn().mockReturnValue("toast-1"),
+    dismissToast: vi.fn(),
+    dismissAllToasts: vi.fn(),
+    getQueueStats: vi.fn().mockReturnValue({ visible: 0, queued: 0, total: 0 }),
+    updateQueueConfig: vi.fn(),
+  }),
+}));
+
 import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
 import { useBookmarks } from "./useBookmarks";
 
