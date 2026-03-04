@@ -56,13 +56,6 @@ export interface ThreadSummaryResult {
 }
 
 /**
- * API version prefix for all endpoints.
- * When updating the API version, change this constant.
- * The server also supports unversioned /api/ paths for backward compatibility.
- */
-const API_VERSION = "v1";
-
-/**
  * Amplify API Gateway production URL.
  * Must match the endpoint in amplify_outputs.json → custom.API.shadowsky-api.endpoint.
  * EAS builds can override via EXPO_PUBLIC_API_URL if needed.
