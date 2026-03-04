@@ -127,12 +127,20 @@ jest.mock('../../../hooks/api', () => ({
   useSavedFeeds: () => ({ data: mockSavedFeeds }),
 }));
 
+// Mock NativeFeedList imperative methods
+const mockScrollToTop = jest.fn();
+const mockRefresh = jest.fn();
+
 // Mock NativeFeedList as a simple View that exposes key props for testing
 jest.mock('../../../../modules/native-feed-list', () => {
   const { View, Text, TouchableOpacity } = require('react-native');
   const React = require('react');
 
-  const NativeFeedList = React.forwardRef((props: any, _ref: any) => {
+  const NativeFeedList = React.forwardRef((props: any, ref: any) => {
+    React.useImperativeHandle(ref, () => ({
+      scrollToTop: mockScrollToTop,
+      refresh: mockRefresh,
+    }));
     const { query, emptyMessage, onPostPress, onProfilePress, onLinkPress, onImagePress, onQuotePress } = props;
     const isLoading = query?.isLoading;
     const isError = query?.isError;
@@ -299,6 +307,8 @@ function makePost(uri: string, handle = 'alice.bsky.social') {
 describe('HomeScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockScrollToTop.mockClear();
+    mockRefresh.mockClear();
     mockTimelineQuery = {
       data: undefined,
       isLoading: true,
@@ -489,6 +499,57 @@ describe('HomeScreen', () => {
       const { getByText } = renderWithProviders(<HomeScreen />);
       fireEvent.press(getByText('+ Discover'));
       expect(mockRouterPush).toHaveBeenCalledWith('/(app)/feeds/discover');
+    });
+  });
+
+  // ─── Feed chip tap-to-scroll / double-tap-to-refresh ────
+  describe('feed chip tap-to-scroll and double-tap-to-refresh', () => {
+    beforeEach(() => {
+      mockSavedFeeds = [
+        { uri: 'at://feed/hot', displayName: 'Hot Posts' },
+      ];
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([
+          makePost('at://did:plc:test/app.bsky.feed.post/1'),
+        ]),
+        isLoading: false,
+      };
+    });
+
+    it('scrolls to top when tapping the already-selected feed chip', () => {
+      // useEffect auto-selects first saved feed (Hot Posts), so it's already active
+      const { getByText } = renderWithProviders(<HomeScreen />);
+
+      // Tap Hot Posts — already active, so scrolls to top
+      fireEvent.press(getByText('Hot Posts'));
+      expect(mockScrollToTop).toHaveBeenCalledTimes(1);
+      expect(mockRefresh).not.toHaveBeenCalled();
+    });
+
+    it('refreshes feed on double-tap of active feed chip', () => {
+      jest.spyOn(Date, 'now')
+        .mockReturnValueOnce(1000)  // first tap on active → scroll to top
+        .mockReturnValueOnce(1200); // second tap within 400ms → double tap → refresh
+
+      const { getByText } = renderWithProviders(<HomeScreen />);
+      // First tap on already-active Hot Posts → scroll to top
+      fireEvent.press(getByText('Hot Posts'));
+      // Second tap within 400ms → double tap → scroll to top + refresh
+      fireEvent.press(getByText('Hot Posts'));
+
+      expect(mockScrollToTop).toHaveBeenCalledTimes(2);
+      expect(mockRefresh).toHaveBeenCalledTimes(1);
+
+      jest.restoreAllMocks();
+    });
+
+    it('does not scroll/refresh when switching to a different feed', () => {
+      // Hot Posts is auto-selected; switch to Following (null)
+      const { getByText } = renderWithProviders(<HomeScreen />);
+      fireEvent.press(getByText(/Following/));
+      expect(mockScrollToTop).not.toHaveBeenCalled();
+      expect(mockRefresh).not.toHaveBeenCalled();
     });
   });
 

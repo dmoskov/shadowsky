@@ -206,10 +206,14 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
     onLoadMore?.();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage, onLoadMore]);
 
-  // Expose imperative handle for scroll-to-top
+  // Expose imperative handle for scroll-to-top and programmatic refresh
   useImperativeHandle(ref, () => ({
     scrollToTop: () => {
       setScrollToTopTrigger(prev => prev + 1);
+    },
+    refresh: () => {
+      setIsUserRefreshing(true);
+      refetch().finally(() => setIsUserRefreshing(false));
     },
   }));
 

@@ -100,11 +100,40 @@ export function HomeScreen() {
   // Enable scroll-to-top on tab press
   useScrollToTop(scrollRef);
 
-  // Handle feed selection
+  // Track last tap for scroll-to-top / double-tap-to-refresh
+  const lastFeedTapRef = useRef<{ feedUri: string | null; time: number } | null>(null);
+
+  // Handle feed chip tap:
+  // - Tap already-selected feed → scroll to top
+  // - Double-tap already-selected feed → scroll to top + refresh
+  // - Tap different feed → switch feeds
   const handleFeedSelect = useCallback((feedUri: string | null) => {
-    triggerHaptic("light");
-    setSelectedFeedUri(feedUri);
-  }, []);
+    const isAlreadySelected = feedUri === selectedFeedUri;
+
+    if (isAlreadySelected) {
+      const now = Date.now();
+      const lastTap = lastFeedTapRef.current;
+      const isDoubleTap = lastTap && lastTap.feedUri === feedUri && (now - lastTap.time) < 400;
+
+      if (isDoubleTap) {
+        // Double tap: scroll to top + refresh
+        triggerHaptic("medium");
+        scrollRef.current?.scrollToTop();
+        scrollRef.current?.refresh();
+        lastFeedTapRef.current = null;
+      } else {
+        // Single tap on active feed: scroll to top
+        triggerHaptic("light");
+        scrollRef.current?.scrollToTop();
+        lastFeedTapRef.current = { feedUri, time: now };
+      }
+    } else {
+      // Switching to a different feed
+      triggerHaptic("light");
+      setSelectedFeedUri(feedUri);
+      lastFeedTapRef.current = { feedUri, time: Date.now() };
+    }
+  }, [selectedFeedUri]);
 
   const handleDiscoverFeeds = useCallback(() => {
     triggerHaptic("light");
