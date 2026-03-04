@@ -358,7 +358,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
           {onClose && (
             <button
               onClick={onClose}
-              className="rounded-full p-1.5 transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="touch-target-icon rounded-full p-1.5 transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
               style={{ color: "var(--asph-text-secondary)" }}
               aria-label="Close column"
             >
@@ -405,7 +405,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                 <button
                   type="button"
                   onClick={handleClearSearch}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 transform rounded-full p-1 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  className="touch-target-icon absolute right-3 top-1/2 -translate-y-1/2 transform rounded-full p-1 hover:bg-gray-200 dark:hover:bg-gray-600"
                   aria-label="Clear search"
                 >
                   <X
@@ -419,7 +419,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
             <button
               type="button"
               onClick={() => setShowFilters(!showFilters)}
-              className={`relative rounded-lg border p-2 transition-all ${showFilters ? "ring-2" : ""}`}
+              className={`touch-target relative rounded-lg border p-2 transition-all ${showFilters ? "ring-2" : ""}`}
               style={{
                 backgroundColor: hasActiveFilters
                   ? "var(--asph-primary)"
@@ -490,7 +490,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                                 executeSearch(searchText);
                                 setShowDropdown(false);
                               }}
-                              className="rounded-full border px-2.5 py-1 text-xs transition-all hover:border-blue-400"
+                              className="touch-target rounded-full border px-2.5 py-1 text-xs transition-all hover:border-blue-400"
                               style={{
                                 backgroundColor: "var(--asph-bg-secondary)",
                                 borderColor: "var(--asph-border-primary)",
@@ -509,7 +509,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                                 executeSearch(topic.topic);
                                 setShowDropdown(false);
                               }}
-                              className="rounded-full border px-2.5 py-1 text-xs transition-all hover:border-blue-400"
+                              className="touch-target-sm rounded-full border px-2.5 py-1 text-xs transition-all hover:border-blue-400"
                               style={{
                                 backgroundColor: "var(--asph-bg-secondary)",
                                 borderColor: "var(--asph-border-primary)",
@@ -543,7 +543,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                           e.stopPropagation();
                           clearHistory();
                         }}
-                        className="flex items-center gap-1 text-xs transition-colors hover:text-red-500"
+                        className="touch-target-sm flex items-center gap-1 text-xs transition-colors hover:text-red-500"
                         style={{ color: "var(--asph-text-tertiary)" }}
                         aria-label="Clear search history"
                       >
@@ -561,7 +561,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                           role="option"
                           aria-selected={selectedSuggestionIndex === index}
                           onClick={() => handleSelectSuggestion(entry)}
-                          className={`group flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors ${
+                          className={`touch-target group flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors ${
                             selectedSuggestionIndex === index
                               ? "bg-blue-50 dark:bg-blue-900/20"
                               : "hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -595,7 +595,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                               e.stopPropagation();
                               removeFromHistory(entry.id);
                             }}
-                            className="shrink-0 rounded p-1 opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
+                            className="touch-target-icon shrink-0 rounded p-1 opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
                             style={{ color: "var(--asph-text-tertiary)" }}
                             aria-label={`Remove "${entry.query}" from search history`}
                           >
@@ -656,7 +656,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
             <div className="flex gap-1">
               <button
                 onClick={() => setSortOrder("latest")}
-                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition-colors ${
+                className={`touch-target flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition-colors ${
                   sortOrder === "latest"
                     ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
                     : "hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -674,7 +674,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
               </button>
               <button
                 onClick={() => setSortOrder("top")}
-                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition-colors ${
+                className={`touch-target flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition-colors ${
                   sortOrder === "top"
                     ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
                     : "hover:bg-gray-100 dark:hover:bg-gray-800"

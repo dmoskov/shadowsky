@@ -253,7 +253,7 @@ export function GiphySearch({ onSelectGif, onClose }: GiphySearchProps) {
                     handleSelectGif(gif);
                     onClose(); // Close the modal after selecting
                   }}
-                  className="relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-80"
+                  className="touch-target relative cursor-pointer overflow-hidden rounded-lg transition-opacity hover:opacity-80"
                   style={{
                     background: "var(--asph-bg-secondary)",
                     opacity: selectedGifId === gif.id ? 0.5 : 1,

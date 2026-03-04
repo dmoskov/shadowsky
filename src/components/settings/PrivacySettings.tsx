@@ -212,7 +212,7 @@ export const PrivacySettings: React.FC = () => {
           onClick={() =>
             setPrivacy({ ...privacy, hideFromSearch: !privacy.hideFromSearch })
           }
-          className={`relative h-6 w-11 rounded-full transition-colors ${
+          className={`touch-target relative h-6 w-11 rounded-full transition-colors ${
             privacy.hideFromSearch ? "bg-blue-500" : "bg-gray-300"
           }`}
         >
@@ -249,7 +249,7 @@ export const PrivacySettings: React.FC = () => {
           onClick={() =>
             setPrivacy({ ...privacy, filterContent: !privacy.filterContent })
           }
-          className={`relative h-6 w-11 rounded-full transition-colors ${
+          className={`touch-target relative h-6 w-11 rounded-full transition-colors ${
             privacy.filterContent ? "bg-blue-500" : "bg-gray-300"
           }`}
         >
@@ -277,7 +277,7 @@ export const PrivacySettings: React.FC = () => {
         <button
           onClick={handleSave}
           disabled={isLoading}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
+          className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
           style={{
             backgroundColor: "var(--asph-primary)",
           }}

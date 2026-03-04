@@ -170,7 +170,7 @@ export const BatchProgressIndicator: React.FC<BatchProgressIndicatorProps> = ({
           {operation.status === "running" && onPause && (
             <button
               onClick={onPause}
-              className="rounded-lg p-2 text-asph-text-tertiary hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-icon rounded-lg p-2 text-asph-text-tertiary hover:bg-gray-100 dark:hover:bg-gray-800"
               title="Pause"
               aria-label="Pause operation"
             >
@@ -180,7 +180,7 @@ export const BatchProgressIndicator: React.FC<BatchProgressIndicatorProps> = ({
           {operation.status === "paused" && onResume && (
             <button
               onClick={onResume}
-              className="rounded-lg p-2 text-asph-text-tertiary hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-icon rounded-lg p-2 text-asph-text-tertiary hover:bg-gray-100 dark:hover:bg-gray-800"
               title="Resume"
               aria-label="Resume operation"
             >
@@ -190,7 +190,7 @@ export const BatchProgressIndicator: React.FC<BatchProgressIndicatorProps> = ({
           {isActive && onCancel && (
             <button
               onClick={onCancel}
-              className="rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+              className="touch-target-icon rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
               title="Cancel"
               aria-label="Cancel operation"
             >
@@ -200,7 +200,7 @@ export const BatchProgressIndicator: React.FC<BatchProgressIndicatorProps> = ({
           {isComplete && onClose && (
             <button
               onClick={onClose}
-              className="rounded-lg p-2 text-asph-text-tertiary hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-icon rounded-lg p-2 text-asph-text-tertiary hover:bg-gray-100 dark:hover:bg-gray-800"
               title="Close"
               aria-label="Close"
             >

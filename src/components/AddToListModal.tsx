@@ -95,7 +95,7 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
           </h3>
           <button
             onClick={onClose}
-            className="cursor-pointer rounded-md border-none bg-transparent p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-secondary"
+            className="touch-target-icon cursor-pointer rounded-md border-none bg-transparent p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-secondary"
           >
             <X className="h-4 w-4" />
           </button>
@@ -125,7 +125,7 @@ export const AddToListModal: React.FC<AddToListModalProps> = ({
                     key={list.uri}
                     onClick={() => handleToggleList(list.uri)}
                     disabled={isUpdating}
-                    className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-asph-border-primary bg-asph-bg-secondary p-3 text-left transition-all duration-200 hover:border-asph-primary disabled:cursor-not-allowed disabled:opacity-50"
+                    className="touch-target-list-item flex w-full cursor-pointer items-center justify-between rounded-lg border border-asph-border-primary bg-asph-bg-secondary p-3 text-left transition-all duration-200 hover:border-asph-primary disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <div className="flex-1">
                       <div className="font-medium text-asph-text-primary">

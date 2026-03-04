@@ -97,7 +97,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
           e.stopPropagation();
           onClose();
         }}
-        className="fixed right-4 top-4 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-all hover:bg-white/20"
+        className="touch-target fixed right-4 top-4 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-all hover:bg-white/20"
         style={{ zIndex: 1000000 }}
         aria-label="Close lightbox"
       >
@@ -110,7 +110,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
           <button
             onClick={handlePrevious}
             disabled={currentIndex === 0}
-            className="fixed left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-all hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
+            className="touch-target fixed left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-all hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
             style={{ zIndex: 1000000 }}
             aria-label="Previous image"
           >
@@ -119,7 +119,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
           <button
             onClick={handleNext}
             disabled={currentIndex === images.length - 1}
-            className="fixed right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-all hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
+            className="touch-target fixed right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-3 text-white backdrop-blur-sm transition-all hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-30"
             style={{ zIndex: 1000000 }}
             aria-label="Next image"
           >
@@ -172,7 +172,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
                 e.stopPropagation();
                 onNavigate(idx);
               }}
-              className={`h-2 w-8 rounded-full transition-all ${
+              className={`touch-target h-2 w-8 rounded-full transition-all ${
                 idx === currentIndex
                   ? "bg-white"
                   : "bg-white/40 hover:bg-white/60"

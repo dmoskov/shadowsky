@@ -43,7 +43,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   return (
     <button
       onClick={handleClick}
-      className={`ios-press fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg lg:hidden ${prefersReducedMotion ? "" : "transition-all duration-300"} ${className}`}
+      className={`touch-target ios-press fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full shadow-lg lg:hidden ${prefersReducedMotion ? "" : "transition-all duration-300"} ${className}`}
       style={{
         backgroundColor: "var(--asph-primary)",
         color: "white",

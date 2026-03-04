@@ -418,7 +418,7 @@ function ProgressiveThreadSummaryContent({
     >
       {/* Header - collapsible for detailed/comprehensive */}
       <button
-        className="flex w-full items-center gap-2 px-3 py-2"
+        className="touch-target-list-item flex w-full items-center gap-2 px-3 py-2"
         onClick={() => setIsExpanded(!isExpanded)}
         style={{ cursor: isComprehensive ? "pointer" : "default" }}
         disabled={!isComprehensive}

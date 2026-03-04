@@ -576,7 +576,7 @@ export default function ProfilePage() {
         <p className="text-red-500">{error || "Profile not found"}</p>
         <button
           onClick={() => navigate(-1)}
-          className="mt-4 text-blue-500 hover:underline"
+          className="touch-target mt-4 text-blue-500 hover:underline"
         >
           Go back
         </button>
@@ -802,7 +802,7 @@ export default function ProfilePage() {
               {!isOwnProfile && (
                 <button
                   onClick={handleFollow}
-                  className={`rounded-full px-6 py-2.5 font-medium transition-all ${
+                  className={`touch-target rounded-full px-6 py-2.5 font-medium transition-all ${
                     profile.viewer?.following
                       ? "asph-button-secondary hover:scale-105"
                       : "asph-button-primary hover:scale-105"
@@ -825,7 +825,7 @@ export default function ProfilePage() {
                     }
                     setShowProfileMenu(!showProfileMenu);
                   }}
-                  className="rounded-full p-2 transition-all hover:scale-110"
+                  className="touch-target rounded-full p-2 transition-all hover:scale-110"
                   style={{
                     color: "var(--asph-text-secondary)",
                   }}
@@ -862,7 +862,7 @@ export default function ProfilePage() {
                               setShowProfileMenu(false);
                               navigate("/settings/account");
                             }}
-                            className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-all"
+                            className="touch-target-sm flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -882,7 +882,7 @@ export default function ProfilePage() {
                               setAnalysisRequested(true);
                               setAiInsightsExpanded(true);
                             }}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            className="touch-target-sm flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -901,7 +901,7 @@ export default function ProfilePage() {
                         <>
                           <button
                             onClick={handleShare}
-                            className="flex w-full items-center gap-3 rounded-t-lg px-4 py-2.5 text-sm transition-all"
+                            className="touch-target-sm flex w-full items-center gap-3 rounded-t-lg px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -917,7 +917,7 @@ export default function ProfilePage() {
                           </button>
                           <button
                             onClick={handleOpenInBluesky}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            className="touch-target-sm flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -933,7 +933,7 @@ export default function ProfilePage() {
                           </button>
                           <button
                             onClick={handleOpenAddToListModal}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            className="touch-target-sm flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -953,7 +953,7 @@ export default function ProfilePage() {
                               setAnalysisRequested(true);
                               setAiInsightsExpanded(true);
                             }}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            className="touch-target-sm flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -969,7 +969,7 @@ export default function ProfilePage() {
                           </button>
                           <button
                             onClick={handleMute}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            className="touch-target-sm flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -988,7 +988,7 @@ export default function ProfilePage() {
                           </button>
                           <button
                             onClick={handleOpenReportModal}
-                            className="flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            className="touch-target-sm flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
                             style={{ color: "var(--asph-text-primary)" }}
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
@@ -1006,7 +1006,7 @@ export default function ProfilePage() {
                           </button>
                           <button
                             onClick={handleBlock}
-                            className="flex w-full items-center gap-3 rounded-b-lg px-4 py-2.5 text-sm text-red-600 transition-all"
+                            className="touch-target-sm flex w-full items-center gap-3 rounded-b-lg px-4 py-2.5 text-sm text-red-600 transition-all"
                             onMouseEnter={(e) =>
                               (e.currentTarget.style.backgroundColor =
                                 "var(--asph-bg-hover)")
@@ -1161,7 +1161,7 @@ export default function ProfilePage() {
             </div>
             <button
               onClick={() => setShowFollowersModal(true)}
-              className="transition-all hover:scale-105 hover:underline"
+              className="touch-target transition-all hover:scale-105 hover:underline"
             >
               <span
                 className="font-semibold"
@@ -1178,7 +1178,7 @@ export default function ProfilePage() {
             </button>
             <button
               onClick={() => setShowFollowingModal(true)}
-              className="transition-all hover:scale-105 hover:underline"
+              className="touch-target transition-all hover:scale-105 hover:underline"
             >
               <span
                 className="font-semibold"
@@ -1273,7 +1273,7 @@ export default function ProfilePage() {
                 </div>
                 <button
                   onClick={() => setShowTopPostsShowcase(false)}
-                  className="rounded px-2 py-1 text-xs transition-all hover:opacity-80"
+                  className="touch-target-sm rounded px-2 py-1 text-xs transition-all hover:opacity-80"
                   style={{
                     color: "var(--asph-text-tertiary)",
                   }}
@@ -1294,7 +1294,7 @@ export default function ProfilePage() {
                         setOpenThreadToQuote(false);
                         setShowThread(true);
                       }}
-                      className="group flex-shrink-0 rounded-lg p-3 text-left transition-all hover:scale-[1.02]"
+                      className="touch-target group flex-shrink-0 rounded-lg p-3 text-left transition-all hover:scale-[1.02]"
                       style={{
                         backgroundColor: "var(--asph-bg-tertiary)",
                         width: "220px",
@@ -1416,7 +1416,7 @@ export default function ProfilePage() {
               {analysisData && (
                 <button
                   onClick={() => setAiInsightsExpanded(!aiInsightsExpanded)}
-                  className="flex items-center gap-1 rounded px-2 py-1 text-xs transition-all hover:opacity-80"
+                  className="touch-target-sm flex items-center gap-1 rounded px-2 py-1 text-xs transition-all hover:opacity-80"
                   style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   {aiInsightsExpanded ? "Less" : "More"}
@@ -1620,7 +1620,7 @@ export default function ProfilePage() {
         <div className="flex">
           <button
             onClick={() => setActiveTab("posts")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+            className={`touch-target relative flex-1 px-4 py-4 text-center font-medium transition-all ${
               activeTab === "posts" ? "" : "hover:scale-105"
             }`}
             style={{
@@ -1640,7 +1640,7 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setActiveTab("replies")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+            className={`touch-target relative flex-1 px-4 py-4 text-center font-medium transition-all ${
               activeTab === "replies" ? "" : "hover:scale-105"
             }`}
             style={{
@@ -1660,7 +1660,7 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setActiveTab("media")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+            className={`touch-target relative flex-1 px-4 py-4 text-center font-medium transition-all ${
               activeTab === "media" ? "" : "hover:scale-105"
             }`}
             style={{
@@ -1680,7 +1680,7 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setActiveTab("likes")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+            className={`touch-target relative flex-1 px-4 py-4 text-center font-medium transition-all ${
               activeTab === "likes" ? "" : "hover:scale-105"
             }`}
             style={{
@@ -1700,7 +1700,7 @@ export default function ProfilePage() {
           </button>
           <button
             onClick={() => setActiveTab("top")}
-            className={`relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+            className={`touch-target relative flex-1 px-4 py-4 text-center font-medium transition-all ${
               activeTab === "top" ? "" : "hover:scale-105"
             }`}
             style={{

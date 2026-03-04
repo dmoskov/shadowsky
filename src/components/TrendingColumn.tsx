@@ -74,7 +74,7 @@ const TrendingColumnComponent: React.FC<TrendingColumnProps> = ({
             <button
               onClick={handleRefresh}
               disabled={isLoading}
-              className={`rounded-full p-1.5 transition-all hover:bg-gray-200 dark:hover:bg-gray-700 ${
+              className={`touch-target rounded-full p-1.5 transition-all hover:bg-gray-200 dark:hover:bg-gray-700 ${
                 isLoading ? "animate-spin" : ""
               }`}
               style={{ color: "var(--asph-text-secondary)" }}
@@ -107,7 +107,7 @@ const TrendingColumnComponent: React.FC<TrendingColumnProps> = ({
             </p>
             <button
               onClick={handleRefresh}
-              className="mt-2 text-sm text-blue-500 hover:underline"
+              className="touch-target-sm mt-2 text-sm text-blue-500 hover:underline"
             >
               Try again
             </button>
@@ -245,7 +245,7 @@ const TrendingItem: React.FC<TrendingItemProps> = ({
   return (
     <button
       onClick={onClick}
-      className="group flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+      className="touch-target-list-item group flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
     >
       {/* Rank */}
       <div

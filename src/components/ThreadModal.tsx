@@ -1055,7 +1055,7 @@ export function ThreadModal({
               {posts.length > 0 && tierConfig.showAnalyticsBadge && (
                 <button
                   onClick={() => setShowAnalytics(!showAnalytics)}
-                  className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-colors sm:px-3 ${
+                  className={`touch-target flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-colors sm:px-3 ${
                     showAnalytics
                       ? "bg-blue-500 text-white"
                       : "hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -1078,7 +1078,7 @@ export function ThreadModal({
                   e.stopPropagation();
                   handleClose();
                 }}
-                className="-mr-1 rounded-full p-3 transition-all hover:scale-110 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700 sm:mr-0 sm:p-2"
+                className="touch-target-icon -mr-1 rounded-full p-3 transition-all hover:scale-110 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700 sm:mr-0 sm:p-2"
                 style={{ color: "var(--asph-text-secondary)" }}
                 aria-label="Close thread"
               >
@@ -1173,7 +1173,7 @@ export function ThreadModal({
                         error.message === "Thread data is empty") && (
                         <button
                           onClick={() => refetch()}
-                          className="mt-4 rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-80"
+                          className="touch-target-sm mt-4 rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-80"
                           style={{
                             backgroundColor: "var(--asph-primary)",
                             color: "white",
@@ -1186,7 +1186,7 @@ export function ThreadModal({
 
                     <button
                       onClick={onClose}
-                      className="text-sm underline"
+                      className="touch-target-sm text-sm underline"
                       style={{ color: "var(--asph-text-tertiary)" }}
                     >
                       Close
@@ -1413,7 +1413,7 @@ export function ThreadModal({
             <button
               onClick={handleNavigateUp}
               disabled={focusedPostIndex === 0}
-              className="flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all active:scale-95 disabled:opacity-40"
+              className="touch-target flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all active:scale-95 disabled:opacity-40"
               style={{
                 backgroundColor: "var(--asph-bg-secondary)",
                 border: "1px solid var(--asph-border-primary)",
@@ -1429,7 +1429,7 @@ export function ThreadModal({
             <button
               onClick={handleNavigateDown}
               disabled={focusedPostIndex >= posts.length - 1}
-              className="flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all active:scale-95 disabled:opacity-40"
+              className="touch-target flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all active:scale-95 disabled:opacity-40"
               style={{
                 backgroundColor: "var(--asph-bg-secondary)",
                 border: "1px solid var(--asph-border-primary)",

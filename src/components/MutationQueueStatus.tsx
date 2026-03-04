@@ -133,7 +133,7 @@ export const MutationQueueStatus: React.FC = () => {
       >
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex w-full items-center gap-2 p-3 text-left hover:opacity-90"
+          className="touch-target-list-item flex w-full items-center gap-2 p-3 text-left hover:opacity-90"
           aria-expanded={isExpanded}
           aria-label={`Sync status: ${config.title}`}
         >
@@ -202,7 +202,7 @@ export const MutationQueueStatus: React.FC = () => {
                 !isProcessing && (
                   <button
                     onClick={handleSync}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors"
+                    className="touch-target-sm flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-white transition-colors"
                     style={{ backgroundColor: "var(--asph-primary)" }}
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
@@ -212,7 +212,7 @@ export const MutationQueueStatus: React.FC = () => {
               {(pendingCount > 0 || failedCount > 0) && (
                 <button
                   onClick={handleClear}
-                  className="flex items-center justify-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-80"
+                  className="touch-target-sm flex items-center justify-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-80"
                   style={{
                     backgroundColor: "var(--asph-bg-secondary)",
                     borderColor: "var(--asph-border)",

@@ -78,7 +78,7 @@ export const ComposerSettings: React.FC<ComposerSettingsProps> = ({
       </div>
 
       <button
-        className="asph-button-secondary p-1.5"
+        className="touch-target-icon asph-button-secondary p-1.5"
         onClick={onToggleSettings}
         aria-label="Toggle settings"
       >

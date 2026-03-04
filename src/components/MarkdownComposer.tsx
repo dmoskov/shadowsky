@@ -391,7 +391,7 @@ export const MarkdownComposer = forwardRef<
             key={button.label}
             onClick={() => applyFormatting(button)}
             disabled={isPreviewMode}
-            className="rounded p-1.5 transition-colors hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded p-1.5 transition-colors hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-gray-800"
             style={{ color: "var(--asph-text-secondary)" }}
             title={button.label}
           >
@@ -409,7 +409,7 @@ export const MarkdownComposer = forwardRef<
             key={button.label}
             onClick={() => applyFormatting(button)}
             disabled={isPreviewMode}
-            className="rounded p-1.5 transition-colors hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded p-1.5 transition-colors hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-gray-800"
             style={{ color: "var(--asph-text-secondary)" }}
             title={button.label}
           >
@@ -421,7 +421,7 @@ export const MarkdownComposer = forwardRef<
 
         <button
           onClick={togglePreview}
-          className={`flex items-center gap-1.5 rounded px-2 py-1 text-sm transition-colors ${
+          className={`touch-target flex items-center gap-1.5 rounded px-2 py-1 text-sm transition-colors ${
             isPreviewMode
               ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30"
               : "hover:bg-gray-100 dark:hover:bg-gray-800"

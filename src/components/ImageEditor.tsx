@@ -691,7 +691,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={onCancel}
-              className="rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-icon rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               style={{ color: "var(--asph-text-primary)" }}
             >
               <X size={20} />
@@ -710,7 +710,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={resetAdjustments}
-              className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-sm flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               style={{
                 borderColor: "var(--asph-border-primary)",
                 color: "var(--asph-text-secondary)",
@@ -722,7 +722,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium text-white transition-opacity disabled:opacity-50"
+              className="touch-target-sm flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium text-white transition-opacity disabled:opacity-50"
               style={{ backgroundColor: "var(--asph-primary)" }}
             >
               {isSaving ? (
@@ -861,7 +861,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                 <button
                   key={id}
                   onClick={() => setActiveTab(id as typeof activeTab)}
-                  className={`flex flex-1 items-center justify-center gap-1.5 py-3 text-sm font-medium transition-colors ${
+                  className={`touch-target flex flex-1 items-center justify-center gap-1.5 py-3 text-sm font-medium transition-colors ${
                     activeTab === id
                       ? "border-b-2"
                       : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -960,7 +960,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                     <div className="flex gap-2">
                       <button
                         onClick={() => rotate("ccw")}
-                        className="flex-1 rounded-lg border p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="touch-target-icon flex-1 rounded-lg border p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                         style={{
                           borderColor: "var(--asph-border-primary)",
                           color: "var(--asph-text-primary)",
@@ -971,7 +971,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                       </button>
                       <button
                         onClick={() => rotate("cw")}
-                        className="flex-1 rounded-lg border p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="touch-target-icon flex-1 rounded-lg border p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                         style={{
                           borderColor: "var(--asph-border-primary)",
                           color: "var(--asph-text-primary)",
@@ -982,7 +982,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                       </button>
                       <button
                         onClick={() => flip("h")}
-                        className={`flex-1 rounded-lg border p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                        className={`touch-target flex-1 rounded-lg border p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 ${
                           adjustments.flipH
                             ? "bg-blue-100 dark:bg-blue-900"
                             : ""
@@ -999,7 +999,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                       </button>
                       <button
                         onClick={() => flip("v")}
-                        className={`flex-1 rounded-lg border p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                        className={`touch-target flex-1 rounded-lg border p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 ${
                           adjustments.flipV
                             ? "bg-blue-100 dark:bg-blue-900"
                             : ""
@@ -1031,7 +1031,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                             filter: key as FilterPreset,
                           }))
                         }
-                        className={`relative overflow-hidden rounded-lg border transition-all ${
+                        className={`touch-target relative overflow-hidden rounded-lg border transition-all ${
                           adjustments.filter === key
                             ? "ring-2 ring-offset-2"
                             : ""
@@ -1078,7 +1078,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                               initCrop();
                             }
                           }}
-                          className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                          className={`touch-target rounded-lg border px-3 py-2 text-sm transition-colors ${
                             selectedAspectRatio === key ? "font-medium" : ""
                           }`}
                           style={{
@@ -1107,7 +1107,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                     {!isCropping ? (
                       <button
                         onClick={initCrop}
-                        className="flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
+                        className="touch-target-sm flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
                         style={{ backgroundColor: "var(--asph-primary)" }}
                       >
                         Start Crop
@@ -1119,7 +1119,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                             setIsCropping(false);
                             setCropArea(null);
                           }}
-                          className="flex-1 rounded-lg border px-4 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                          className="touch-target-sm flex-1 rounded-lg border px-4 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                           style={{
                             borderColor: "var(--asph-border-primary)",
                             color: "var(--asph-text-primary)",
@@ -1129,7 +1129,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                         </button>
                         <button
                           onClick={() => setIsCropping(false)}
-                          className="flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
+                          className="touch-target-sm flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
                           style={{ backgroundColor: "var(--asph-primary)" }}
                         >
                           Apply Crop
@@ -1160,7 +1160,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                       <button
                         key={`image-thumb-${index}-${img.preview.substring(0, 20)}`}
                         onClick={() => goToImage(index)}
-                        className={`relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
+                        className={`touch-target relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
                           currentIndex === index
                             ? "ring-2 ring-offset-1"
                             : "opacity-70 hover:opacity-100"

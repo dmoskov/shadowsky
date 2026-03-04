@@ -53,7 +53,7 @@ export const NewPostsIndicator: React.FC<NewPostsIndicatorProps> = ({
       <button
         onClick={handleClick}
         onKeyDown={handleKeyDown}
-        className="flex transform items-center gap-2 rounded-full bg-blue-500 px-6 py-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+        className="touch-target-sm flex transform items-center gap-2 rounded-full bg-blue-500 px-6 py-3 text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
         aria-live="polite"
         aria-label={`${count} new ${count === 1 ? "post" : "posts"} available. Click to refresh.`}
       >

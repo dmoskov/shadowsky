@@ -334,7 +334,7 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
         {showRetryButton && (
           <button
             onClick={onRetry}
-            className="rounded p-1 transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-gray-700"
+            className="touch-target-icon rounded p-1 transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-gray-700"
             aria-label="Retry upload"
           >
             <RefreshCw className="h-4 w-4 text-asph-text-secondary" />
@@ -343,7 +343,7 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
         {showCancelButton && (
           <button
             onClick={onCancel}
-            className="rounded p-1 transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-gray-700"
+            className="touch-target-icon rounded p-1 transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-gray-700"
             aria-label="Cancel upload"
           >
             <X className="h-4 w-4 text-asph-text-secondary" />
@@ -408,7 +408,7 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
             {showRetryButton && (
               <button
                 onClick={onRetry}
-                className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                className="touch-target-sm inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 aria-label={config.actionLabel || "Retry upload"}
               >
                 <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -418,7 +418,7 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
             {showCancelButton && (
               <button
                 onClick={onCancel}
-                className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="touch-target-sm inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 aria-label="Cancel upload"
               >
                 <X className="h-4 w-4" aria-hidden="true" />

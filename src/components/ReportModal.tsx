@@ -293,13 +293,13 @@ export function ReportModal({
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={handleClose}
-                    className="rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700"
+                    className="touch-target-sm rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700"
                   >
                     Skip
                   </button>
                   <button
                     onClick={handleBlock}
-                    className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
+                    className="touch-target-sm rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
                   >
                     Block User
                   </button>
@@ -312,7 +312,7 @@ export function ReportModal({
               <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
                 <button
                   onClick={handleClose}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                  className="touch-target-sm rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
                 >
                   Close
                 </button>
@@ -348,7 +348,7 @@ export function ReportModal({
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`flex w-full items-start gap-3 border-b border-gray-200 p-4 text-left transition-colors dark:border-gray-700 ${
+                  className={`touch-target flex w-full items-start gap-3 border-b border-gray-200 p-4 text-left transition-colors dark:border-gray-700 ${
                     selectedCategory === category.id
                       ? "bg-blue-50 dark:bg-blue-900/20"
                       : "hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -418,14 +418,14 @@ export function ReportModal({
               <button
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 disabled:opacity-50 dark:hover:bg-gray-700"
+                className="touch-target-sm rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 disabled:opacity-50 dark:hover:bg-gray-700"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={!selectedCategory || isSubmitting}
-                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 dark:bg-red-500 dark:hover:bg-red-600"
+                className="touch-target-sm rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 dark:bg-red-500 dark:hover:bg-red-600"
               >
                 {isSubmitting ? "Submitting..." : "Submit Report"}
               </button>

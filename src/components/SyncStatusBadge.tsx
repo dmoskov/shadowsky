@@ -83,7 +83,7 @@ export const SyncStatusBadge: React.FC<SyncStatusBadgeProps> = memo(
       return (
         <button
           onClick={handleRetry}
-          className={`${baseClasses} ${positionClasses} animate-sync-badge-in group cursor-pointer border-none bg-red-500 p-0 hover:scale-110 ${className}`}
+          className={`touch-target ${baseClasses} ${positionClasses} animate-sync-badge-in group cursor-pointer border-none bg-red-500 p-0 hover:scale-110 ${className}`}
           style={{
             width: onRetry ? (size === "small" ? "28px" : "32px") : undefined,
             height: size === "small" ? "14px" : "16px",

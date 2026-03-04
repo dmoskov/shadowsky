@@ -57,7 +57,7 @@ export const OAuthCallback: React.FC = () => {
           </p>
           <button
             onClick={() => navigate("/", { replace: true })}
-            className="asph-button-primary px-4 py-2 text-white"
+            className="touch-target-sm asph-button-primary px-4 py-2 text-white"
           >
             Return to Login
           </button>

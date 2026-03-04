@@ -149,7 +149,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
           {query && (
             <button
               onClick={() => setQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-asph-text-secondary hover:text-asph-text-primary"
+              className="touch-target absolute right-3 top-1/2 -translate-y-1/2 text-asph-text-secondary hover:text-asph-text-primary"
               aria-label="Clear search"
             >
               <X className="h-4 w-4" />
@@ -160,7 +160,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
         {/* Filter toggle */}
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`mt-2 flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors ${
+          className={`touch-target mt-2 flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors ${
             hasActiveFilters(filters)
               ? "bg-asph-primary text-white"
               : "text-asph-text-secondary hover:bg-asph-bg-secondary"
@@ -283,7 +283,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
                         contentType: value as DmSearchFilters["contentType"],
                       })
                     }
-                    className={`flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors ${
+                    className={`touch-target flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors ${
                       (filters.contentType || "all") === value
                         ? "bg-asph-primary text-white"
                         : "hover:bg-asph-bg-primary/80 bg-asph-bg-primary text-asph-text-secondary"
@@ -300,7 +300,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
             {hasActiveFilters(filters) && (
               <button
                 onClick={clearFilters}
-                className="text-xs text-asph-primary hover:underline"
+                className="touch-target-sm text-xs text-asph-primary hover:underline"
               >
                 Clear all filters
               </button>
@@ -321,7 +321,7 @@ export const DmSearch: React.FC<DmSearchProps> = ({
               <button
                 key={result.message.id}
                 onClick={() => handleResultClick(result)}
-                className="w-full cursor-pointer p-3 text-left transition-colors hover:bg-asph-bg-secondary focus-visible:bg-asph-bg-secondary focus-visible:outline-none"
+                className="touch-target-list-item w-full cursor-pointer p-3 text-left transition-colors hover:bg-asph-bg-secondary focus-visible:bg-asph-bg-secondary focus-visible:outline-none"
               >
                 <div className="flex items-center gap-2 text-xs text-asph-text-secondary">
                   <span className="font-medium">

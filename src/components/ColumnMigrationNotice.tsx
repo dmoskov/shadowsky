@@ -66,14 +66,14 @@ export const ColumnMigrationNotice: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={handleGoToSettings}
-              className="flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+              className="touch-target-sm flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
             >
               Enable Sync
               <ArrowRight className="h-3 w-3" />
             </button>
             <button
               onClick={handleDismiss}
-              className="rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-sm rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               style={{ color: "var(--asph-text-secondary)" }}
             >
               Later
@@ -82,7 +82,7 @@ export const ColumnMigrationNotice: React.FC = () => {
         </div>
         <button
           onClick={handleDismiss}
-          className="rounded p-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="touch-target-icon rounded p-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
           aria-label="Dismiss"
         >
           <X

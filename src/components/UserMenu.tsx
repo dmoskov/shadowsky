@@ -115,7 +115,7 @@ export const UserMenu: React.FC = () => {
           }
           setIsOpen(!isOpen);
         }}
-        className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-asph-bg-hover"
+        className="touch-target flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-asph-bg-hover"
         style={{ color: "var(--asph-text-primary)" }}
         aria-label="User menu"
         aria-haspopup="menu"
@@ -181,7 +181,7 @@ export const UserMenu: React.FC = () => {
                     key={`menu-item-${item.label}-${index}`}
                     role="menuitem"
                     onClick={item.onClick}
-                    className={`ios-press-light flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-asph-bg-hover focus-visible:bg-asph-bg-hover focus-visible:outline-none ${
+                    className={`touch-target ios-press-light flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-asph-bg-hover focus-visible:bg-asph-bg-hover focus-visible:outline-none ${
                       item.className || ""
                     }`}
                     style={{

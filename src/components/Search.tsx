@@ -724,7 +724,7 @@ export const Search: React.FC = () => {
                 setSelectedPostUri(null);
                 setHighlightPostUri(null);
               }}
-              className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all hover:bg-gray-200/50 dark:hover:bg-white/10"
+              className="touch-target-sm flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-all hover:bg-gray-200/50 dark:hover:bg-white/10"
               style={{ color: "var(--asph-primary)" }}
             >
               <ArrowLeft size={16} />
@@ -803,7 +803,7 @@ export const Search: React.FC = () => {
               <div className="flex gap-2">
                 <button
                   onClick={handleSearch}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all sm:flex-none sm:px-4"
+                  className="touch-target-sm flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all sm:flex-none sm:px-4"
                   style={{
                     backgroundColor: "var(--asph-primary)",
                     color: "white",
@@ -814,7 +814,7 @@ export const Search: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-all ${
+                  className={`touch-target flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-all ${
                     showAdvanced ? "text-white" : ""
                   }`}
                   style={{
@@ -855,7 +855,7 @@ export const Search: React.FC = () => {
                       hasMedia: !prev.hasMedia,
                     }))
                   }
-                  className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80 ${
+                  className={`touch-target flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80 ${
                     filters.hasMedia ? "ring-2" : ""
                   }`}
                   style={{
@@ -877,7 +877,7 @@ export const Search: React.FC = () => {
                 </button>
                 <button
                   onClick={() => addToArrayFilter("from", "")}
-                  className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
+                  className="touch-target-sm flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                   style={{
                     color: "var(--asph-text-secondary)",
                     backgroundColor: "var(--asph-bg-secondary)",
@@ -898,7 +898,7 @@ export const Search: React.FC = () => {
                       untilDate: format(today, "yyyy-MM-dd"),
                     }));
                   }}
-                  className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
+                  className="touch-target flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                   style={{
                     color: "var(--asph-text-secondary)",
                     backgroundColor: "var(--asph-bg-secondary)",
@@ -914,7 +914,7 @@ export const Search: React.FC = () => {
                     <button
                       key="phrases"
                       onClick={() => addToArrayFilter("phrases", "")}
-                      className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
+                      className="touch-target-sm flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                       style={{
                         color: "var(--asph-text-secondary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -928,7 +928,7 @@ export const Search: React.FC = () => {
                     <button
                       key="hashtags"
                       onClick={() => addToArrayFilter("hashtags", "")}
-                      className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
+                      className="touch-target-sm flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                       style={{
                         color: "var(--asph-text-secondary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -942,7 +942,7 @@ export const Search: React.FC = () => {
                     <button
                       key="mentions"
                       onClick={() => addToArrayFilter("mentions", "")}
-                      className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
+                      className="touch-target-sm flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                       style={{
                         color: "var(--asph-text-secondary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -956,7 +956,7 @@ export const Search: React.FC = () => {
                     <button
                       key="domains"
                       onClick={() => addToArrayFilter("domains", "")}
-                      className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
+                      className="touch-target-sm flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                       style={{
                         color: "var(--asph-text-secondary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -972,7 +972,7 @@ export const Search: React.FC = () => {
                       onClick={() =>
                         setFilters((prev) => ({ ...prev, language: "en" }))
                       }
-                      className="flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
+                      className="touch-target-sm flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors hover:bg-opacity-80"
                       style={{
                         color: "var(--asph-text-secondary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -1009,7 +1009,7 @@ export const Search: React.FC = () => {
                           hasMedia: !prev.hasMedia,
                         }))
                       }
-                      className={`rounded-lg border px-3 py-2 text-sm transition-all ${
+                      className={`touch-target rounded-lg border px-3 py-2 text-sm transition-all ${
                         filters.hasMedia ? "ring-2" : ""
                       }`}
                       style={{
@@ -1088,7 +1088,7 @@ export const Search: React.FC = () => {
                           />
                           <button
                             onClick={() => removeFromArrayFilter("from", i)}
-                            className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                            className="touch-target-icon rounded-lg p-2 transition-opacity hover:opacity-70"
                             style={{ color: "var(--asph-text-secondary)" }}
                           >
                             <X size={16} />
@@ -1123,7 +1123,7 @@ export const Search: React.FC = () => {
                                     onMouseEnter={() =>
                                       setSelectedSuggestionIndex(idx)
                                     }
-                                    className={`flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors ${
+                                    className={`touch-target flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors ${
                                       idx === selectedSuggestionIndex
                                         ? "bg-opacity-20"
                                         : "hover:bg-opacity-10"
@@ -1187,7 +1187,7 @@ export const Search: React.FC = () => {
                     ))}
                     <button
                       onClick={() => addToArrayFilter("from", "")}
-                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      className="touch-target-sm rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
                         color: "var(--asph-primary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -1222,7 +1222,7 @@ export const Search: React.FC = () => {
                           untilDate: format(today, "yyyy-MM-dd"),
                         }));
                       }}
-                      className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
+                      className="touch-target rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                       style={{
                         backgroundColor: "var(--asph-bg-secondary)",
                         color: "var(--asph-primary)",
@@ -1242,7 +1242,7 @@ export const Search: React.FC = () => {
                           untilDate: format(today, "yyyy-MM-dd"),
                         }));
                       }}
-                      className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
+                      className="touch-target rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                       style={{
                         backgroundColor: "var(--asph-bg-secondary)",
                         color: "var(--asph-primary)",
@@ -1262,7 +1262,7 @@ export const Search: React.FC = () => {
                           untilDate: format(today, "yyyy-MM-dd"),
                         }));
                       }}
-                      className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
+                      className="touch-target rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                       style={{
                         backgroundColor: "var(--asph-bg-secondary)",
                         color: "var(--asph-primary)",
@@ -1282,7 +1282,7 @@ export const Search: React.FC = () => {
                           untilDate: format(today, "yyyy-MM-dd"),
                         }));
                       }}
-                      className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
+                      className="touch-target rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                       style={{
                         backgroundColor: "var(--asph-bg-secondary)",
                         color: "var(--asph-primary)",
@@ -1301,7 +1301,7 @@ export const Search: React.FC = () => {
                             untilDate: "",
                           }))
                         }
-                        className="rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
+                        className="touch-target-sm rounded-md px-2 py-0.5 text-xs transition-colors hover:opacity-80"
                         style={{
                           backgroundColor: "var(--asph-border-primary)",
                           color: "var(--asph-text-secondary)",
@@ -1343,7 +1343,7 @@ export const Search: React.FC = () => {
                           onClick={() =>
                             setFilters((prev) => ({ ...prev, sinceDate: "" }))
                           }
-                          className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 transition-opacity hover:opacity-70"
+                          className="touch-target-icon touch-target absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 transition-opacity hover:opacity-70"
                           style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <X size={12} />
@@ -1379,7 +1379,7 @@ export const Search: React.FC = () => {
                           onClick={() =>
                             setFilters((prev) => ({ ...prev, untilDate: "" }))
                           }
-                          className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 transition-opacity hover:opacity-70"
+                          className="touch-target-icon touch-target absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 transition-opacity hover:opacity-70"
                           style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <X size={12} />
@@ -1447,7 +1447,7 @@ export const Search: React.FC = () => {
                         />
                         <button
                           onClick={() => removeFromArrayFilter("phrases", i)}
-                          className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                          className="touch-target-icon rounded-lg p-2 transition-opacity hover:opacity-70"
                           style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <X size={16} />
@@ -1456,7 +1456,7 @@ export const Search: React.FC = () => {
                     ))}
                     <button
                       onClick={() => addToArrayFilter("phrases", "")}
-                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      className="touch-target-sm rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
                         color: "var(--asph-primary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -1506,7 +1506,7 @@ export const Search: React.FC = () => {
                         />
                         <button
                           onClick={() => removeFromArrayFilter("hashtags", i)}
-                          className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                          className="touch-target-icon rounded-lg p-2 transition-opacity hover:opacity-70"
                           style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <X size={16} />
@@ -1515,7 +1515,7 @@ export const Search: React.FC = () => {
                     ))}
                     <button
                       onClick={() => addToArrayFilter("hashtags", "")}
-                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      className="touch-target-sm rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
                         color: "var(--asph-primary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -1598,7 +1598,7 @@ export const Search: React.FC = () => {
                           />
                           <button
                             onClick={() => removeFromArrayFilter("mentions", i)}
-                            className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                            className="touch-target-icon rounded-lg p-2 transition-opacity hover:opacity-70"
                             style={{ color: "var(--asph-text-secondary)" }}
                           >
                             <X size={16} />
@@ -1633,7 +1633,7 @@ export const Search: React.FC = () => {
                                     onMouseEnter={() =>
                                       setSelectedSuggestionIndex(idx)
                                     }
-                                    className={`flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors ${
+                                    className={`touch-target flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors ${
                                       idx === selectedSuggestionIndex
                                         ? "bg-opacity-20"
                                         : "hover:bg-opacity-10"
@@ -1697,7 +1697,7 @@ export const Search: React.FC = () => {
                     ))}
                     <button
                       onClick={() => addToArrayFilter("mentions", "")}
-                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      className="touch-target-sm rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
                         color: "var(--asph-primary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -1747,7 +1747,7 @@ export const Search: React.FC = () => {
                         />
                         <button
                           onClick={() => removeFromArrayFilter("domains", i)}
-                          className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                          className="touch-target-icon rounded-lg p-2 transition-opacity hover:opacity-70"
                           style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <X size={16} />
@@ -1756,7 +1756,7 @@ export const Search: React.FC = () => {
                     ))}
                     <button
                       onClick={() => addToArrayFilter("domains", "")}
-                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      className="touch-target-sm rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
                         color: "var(--asph-primary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -2000,14 +2000,13 @@ export const Search: React.FC = () => {
                                   "noopener,noreferrer",
                                 );
                               }}
-                              className="flex items-center gap-1 text-xs hover:underline"
                               style={{ color: "var(--asph-primary)" }}
                             >
                               View on Bluesky
                               <ExternalLink size={12} />
                             </button>
                             <span
-                              className="text-xs"
+                              className="touch-target-sm flex items-center gap-1 text-xs hover:underline"
                               style={{ color: "var(--asph-text-tertiary)" }}
                             >
                               Click to view thread

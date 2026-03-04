@@ -149,7 +149,7 @@ export const DMMessage = forwardRef<HTMLDivElement, DMMessageProps>(
                     <button
                       key={idx}
                       type="button"
-                      className="block cursor-pointer overflow-hidden rounded border-0 bg-transparent p-0"
+                      className="touch-target block cursor-pointer overflow-hidden rounded border-0 bg-transparent p-0"
                       onClick={() =>
                         setExpandedImage(
                           expandedImage === cdnUrl ? null : cdnUrl,
@@ -193,7 +193,7 @@ export const DMMessage = forwardRef<HTMLDivElement, DMMessageProps>(
             <div className="mt-1 flex items-center gap-2">
               <button
                 onClick={() => onRetry(localId)}
-                className="flex items-center gap-1 rounded px-2 py-1 text-xs text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
+                className="touch-target-sm flex items-center gap-1 rounded px-2 py-1 text-xs text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
                 title={lastError || "Message failed to send"}
               >
                 <RefreshCw className="h-3 w-3" />

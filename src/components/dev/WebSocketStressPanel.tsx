@@ -204,6 +204,7 @@ export function WebSocketStressPanel() {
     <>
       {/* Toggle button - always visible in debug mode */}
       <button
+        className="touch-target"
         onClick={() => setIsOpen(!isOpen)}
         style={{
           position: "fixed",
@@ -289,6 +290,7 @@ export function WebSocketStressPanel() {
             </span>
           </div>
           <button
+            className="touch-target"
             onClick={() => setIsOpen(false)}
             style={{
               background: "none",
@@ -723,6 +725,7 @@ export function WebSocketStressPanel() {
               </div>
               <div style={{ display: "flex", gap: "8px" }}>
                 <button
+                  className="touch-target"
                   onClick={handleForceDisconnect}
                   style={{
                     flex: 1,
@@ -744,6 +747,7 @@ export function WebSocketStressPanel() {
                   Disconnect
                 </button>
                 <button
+                  className="touch-target"
                   onClick={handleForceReconnect}
                   style={{
                     flex: 1,
@@ -882,6 +886,7 @@ export function WebSocketStressPanel() {
                 </div>
               )}
               <button
+                className="touch-target"
                 onClick={handleFloodMessages}
                 disabled={
                   isFlooding ||
@@ -933,6 +938,7 @@ export function WebSocketStressPanel() {
             Ctrl+Shift+W to toggle
           </span>
           <button
+            className="touch-target"
             onClick={handleReset}
             style={{
               padding: "6px 12px",

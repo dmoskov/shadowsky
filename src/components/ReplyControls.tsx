@@ -70,7 +70,7 @@ export function ReplyControls({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           disabled={disabled}
-          className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-gray-800"
+          className="touch-target-sm flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-gray-800"
           style={{
             borderColor: "var(--asph-border-primary)",
             backgroundColor: "var(--asph-bg-secondary)",
@@ -102,7 +102,7 @@ export function ReplyControls({
                     onChange(option.id);
                     setIsOpen(false);
                   }}
-                  className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                  className={`touch-target flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
                     option.id === value ? "bg-blue-50 dark:bg-blue-900/20" : ""
                   }`}
                 >
@@ -161,7 +161,7 @@ export function ReplyControls({
             type="button"
             onClick={() => onChange(option.id)}
             disabled={disabled}
-            className={`flex flex-col items-center gap-2 rounded-lg border p-3 transition-all ${
+            className={`touch-target flex flex-col items-center gap-2 rounded-lg border p-3 transition-all ${
               option.id === value
                 ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20"
                 : "hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -241,7 +241,7 @@ export function QuoteControl({
       type="button"
       onClick={() => onChange(!quotingDisabled)}
       disabled={disabled}
-      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-gray-800 ${
+      className={`touch-target flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-gray-800 ${
         quotingDisabled ? "bg-amber-50 dark:bg-amber-900/20" : ""
       }`}
       style={{

@@ -120,7 +120,7 @@ export function InlineReplyComposer({
         </span>
         <button
           onClick={onClose}
-          className="rounded p-1 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+          className="touch-target-icon rounded p-1 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
           aria-label="Cancel reply"
         >
           <X
@@ -181,7 +181,7 @@ export function InlineReplyComposer({
           <button
             onClick={handleSubmit}
             disabled={!text.trim() || isPosting || text.length > 300}
-            className="flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50"
+            className="touch-target-sm flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50"
             style={{
               backgroundColor: "var(--asph-primary)",
               color: "white",

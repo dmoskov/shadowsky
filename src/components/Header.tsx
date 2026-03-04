@@ -30,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           <button
             onClick={onMenuToggle}
             aria-label="Toggle navigation menu"
-            className="rounded-lg p-2 transition-all hover:scale-105 hover:bg-asph-bg-hover lg:hidden"
+            className="touch-target-icon rounded-lg p-2 transition-all hover:scale-105 hover:bg-asph-bg-hover lg:hidden"
           >
             <Menu
               size={24}

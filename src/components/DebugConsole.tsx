@@ -370,6 +370,7 @@ export function DebugConsole() {
             }}
           >
             <button
+              className="touch-target"
               onClick={() => setActiveTab("cache")}
               style={{
                 padding: "4px 12px",
@@ -389,6 +390,7 @@ export function DebugConsole() {
               Cache Status
             </button>
             <button
+              className="touch-target"
               onClick={() => setActiveTab("storage")}
               style={{
                 padding: "4px 12px",
@@ -410,6 +412,7 @@ export function DebugConsole() {
               Storage Analytics
             </button>
             <button
+              className="touch-target"
               onClick={() => setActiveTab("backends")}
               style={{
                 padding: "4px 12px",
@@ -740,6 +743,7 @@ export function DebugConsole() {
 
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                 <button
+                  className="touch-target"
                   onClick={() => handleClearCache("everything")}
                   style={{
                     padding: "6px 12px",
@@ -1112,6 +1116,7 @@ export function DebugConsole() {
               {/* Actions */}
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                 <button
+                  className="touch-target"
                   onClick={() => {
                     StorageManager.cleanupStorage(7);
                     updateMetrics();
@@ -1133,6 +1138,7 @@ export function DebugConsole() {
                   Clean Old Data
                 </button>
                 <button
+                  className="touch-target"
                   onClick={updateMetrics}
                   style={{
                     padding: "6px 12px",
@@ -1361,6 +1367,7 @@ export function DebugConsole() {
 
               {/* Full Health Report Button */}
               <button
+                className="touch-target"
                 onClick={() => {
                   const report = getStorageHealthReport();
                   debug.log(report);

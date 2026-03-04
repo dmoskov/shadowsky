@@ -1883,7 +1883,7 @@ function EmojiCell({
     <div style={style}>
       <button
         onClick={() => onSelect(emoji)}
-        className="flex h-full w-full items-center justify-center rounded text-2xl hover:bg-gray-100 dark:hover:bg-gray-800"
+        className="touch-target flex h-full w-full items-center justify-center rounded text-2xl hover:bg-gray-100 dark:hover:bg-gray-800"
         style={{
           background: "transparent",
           transition: "background 0.2s",
@@ -2045,7 +2045,7 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
                 <button
                   key={key}
                   onClick={() => setSelectedCategory(key)}
-                  className={`flex-shrink-0 p-3 ${selectedCategory === key ? "border-b-2" : ""}`}
+                  className={`touch-target flex-shrink-0 p-3 ${selectedCategory === key ? "border-b-2" : ""}`}
                   style={{
                     borderColor:
                       selectedCategory === key

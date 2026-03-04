@@ -91,7 +91,7 @@ export const NewContentIndicator = memo(function NewContentIndicator({
       type="button"
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      className={`new-content-indicator ${isExiting ? "exiting" : ""} ${className}`}
+      className={`touch-target new-content-indicator ${isExiting ? "exiting" : ""} ${className}`}
       style={{
         top: topOffset,
         zIndex,

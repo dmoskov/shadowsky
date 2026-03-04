@@ -427,6 +427,7 @@ export function DevPerformanceOverlay() {
           </div>
           <div style={{ display: "flex", gap: "4px" }}>
             <button
+              className="touch-target"
               onClick={() => setIsMinimized(true)}
               style={{
                 background: "transparent",
@@ -444,6 +445,7 @@ export function DevPerformanceOverlay() {
               />
             </button>
             <button
+              className="touch-target"
               onClick={() => setIsVisible(false)}
               style={{
                 background: "transparent",

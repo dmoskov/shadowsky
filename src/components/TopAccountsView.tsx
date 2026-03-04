@@ -194,7 +194,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
           </h2>
           <button
             onClick={onConfigClick}
-            className="asph-button-secondary flex items-center gap-2"
+            className="touch-target-sm asph-button-secondary flex items-center gap-2"
           >
             <Settings size={16} />
             Settings
@@ -225,7 +225,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
           </h2>
           <button
             onClick={onConfigClick}
-            className="asph-button-secondary flex items-center gap-2"
+            className="touch-target-sm asph-button-secondary flex items-center gap-2"
           >
             <Settings size={16} />
             Settings
@@ -283,7 +283,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
         </div>
         <button
           onClick={onConfigClick}
-          className="asph-button-secondary flex items-center gap-2"
+          className="touch-target-sm asph-button-secondary flex items-center gap-2"
         >
           <Settings size={16} />
           Settings

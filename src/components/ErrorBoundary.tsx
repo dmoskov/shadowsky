@@ -276,7 +276,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 {friendlyError.retryable && (
                   <button
                     onClick={this.handleReset}
-                    className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-white transition-colors ${styles.button}`}
+                    className={`touch-target flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-white transition-colors ${styles.button}`}
                     aria-label="Try again to load content"
                   >
                     <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -288,7 +288,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   {showGoBack && (
                     <button
                       onClick={this.handleGoBack}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-asph-text-secondary transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
+                      className="touch-target-sm flex flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-asph-text-secondary transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
                       aria-label="Go back to previous page"
                     >
                       <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -298,7 +298,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
                   <button
                     onClick={this.handleRefresh}
-                    className={`flex ${showGoBack ? "flex-1" : "w-full"} items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-asph-text-secondary transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700`}
+                    className={`touch-target flex ${showGoBack ? "flex-1" : "w-full"} items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-asph-text-secondary transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700`}
                     aria-label="Refresh the page"
                   >
                     <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -313,7 +313,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   <>
                     <button
                       onClick={this.toggleDetails}
-                      className={`flex w-full items-center justify-center gap-1 text-xs ${styles.text} opacity-75 hover:opacity-100`}
+                      className={`touch-target flex w-full items-center justify-center gap-1 text-xs ${styles.text} opacity-75 hover:opacity-100`}
                       aria-expanded={this.state.showDetails}
                       aria-controls="error-details"
                     >

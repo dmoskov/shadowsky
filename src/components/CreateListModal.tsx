@@ -47,7 +47,7 @@ export const CreateListModal: React.FC<CreateListModalProps> = ({
           </h3>
           <button
             onClick={onClose}
-            className="cursor-pointer rounded-md border-none bg-transparent p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-secondary"
+            className="touch-target-icon cursor-pointer rounded-md border-none bg-transparent p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-secondary"
           >
             <X className="h-4 w-4" />
           </button>
@@ -107,14 +107,14 @@ export const CreateListModal: React.FC<CreateListModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="cursor-pointer rounded-lg border border-asph-border-primary bg-transparent px-4 py-2 text-sm font-medium text-asph-text-primary transition-all duration-200 hover:bg-asph-bg-secondary"
+              className="touch-target-sm cursor-pointer rounded-lg border border-asph-border-primary bg-transparent px-4 py-2 text-sm font-medium text-asph-text-primary transition-all duration-200 hover:bg-asph-bg-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isCreating || !name.trim()}
-              className="cursor-pointer rounded-lg border-none bg-asph-primary px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="touch-target-sm cursor-pointer rounded-lg border-none bg-asph-primary px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isCreating ? "Creating..." : "Create List"}
             </button>

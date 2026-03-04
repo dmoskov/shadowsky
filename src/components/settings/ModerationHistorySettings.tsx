@@ -681,7 +681,7 @@ export const ModerationHistorySettings: React.FC = () => {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+            className={`touch-target flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
               activeTab === tab ? "bg-blue-500 text-white" : ""
             }`}
             style={
@@ -721,7 +721,7 @@ export const ModerationHistorySettings: React.FC = () => {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
+                className="touch-target absolute right-3 top-1/2 -translate-y-1/2"
                 style={{ color: "var(--asph-text-tertiary)" }}
               >
                 <X size={14} />
@@ -730,7 +730,7 @@ export const ModerationHistorySettings: React.FC = () => {
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition-colors ${
+            className={`touch-target flex items-center gap-2 rounded-lg px-4 py-2 text-sm transition-colors ${
               showFilters ? "bg-blue-500 text-white" : ""
             }`}
             style={
@@ -821,7 +821,7 @@ export const ModerationHistorySettings: React.FC = () => {
                   setActiveOnly(false);
                   setSearchQuery("");
                 }}
-                className="text-sm text-blue-500 hover:underline"
+                className="touch-target-sm text-sm text-blue-500 hover:underline"
               >
                 Clear filters
               </button>
@@ -841,7 +841,7 @@ export const ModerationHistorySettings: React.FC = () => {
         <div className="flex gap-2">
           <button
             onClick={() => toggleSort("createdAt")}
-            className={`flex items-center gap-1 rounded px-2 py-1 text-xs ${
+            className={`touch-target flex items-center gap-1 rounded px-2 py-1 text-xs ${
               sortField === "createdAt" ? "bg-blue-500 bg-opacity-20" : ""
             }`}
             style={{ color: "var(--asph-text-secondary)" }}
@@ -851,7 +851,7 @@ export const ModerationHistorySettings: React.FC = () => {
           </button>
           <button
             onClick={() => toggleSort("handle")}
-            className={`flex items-center gap-1 rounded px-2 py-1 text-xs ${
+            className={`touch-target flex items-center gap-1 rounded px-2 py-1 text-xs ${
               sortField === "handle" ? "bg-blue-500 bg-opacity-20" : ""
             }`}
             style={{ color: "var(--asph-text-secondary)" }}
@@ -875,7 +875,7 @@ export const ModerationHistorySettings: React.FC = () => {
         >
           <button
             onClick={handleClearHistory}
-            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-500 hover:bg-opacity-10"
+            className="touch-target-sm flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-500 hover:bg-opacity-10"
             style={{
               border: "1px solid rgba(239, 68, 68, 0.3)",
             }}

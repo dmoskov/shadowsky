@@ -164,7 +164,7 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
           <div className="absolute inset-0 flex items-center justify-center">
             <button
               onClick={handleShowSensitive}
-              className="rounded-lg px-6 py-3 text-sm font-medium shadow-lg transition-colors"
+              className="touch-target-sm rounded-lg px-6 py-3 text-sm font-medium shadow-lg transition-colors"
               style={{
                 backgroundColor: "var(--asph-bg-primary)",
                 color: "var(--asph-text-primary)",

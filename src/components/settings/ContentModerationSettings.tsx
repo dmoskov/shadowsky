@@ -568,7 +568,7 @@ export const ContentModerationSettings: React.FC = () => {
             <button
               onClick={handleAddMutedWord}
               disabled={!newMutedWord.trim() || isLoading}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
+              className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
               style={{
                 backgroundColor: "var(--asph-primary)",
               }}
@@ -600,7 +600,7 @@ export const ContentModerationSettings: React.FC = () => {
                 </span>
                 <button
                   onClick={() => toggleTarget("content")}
-                  className={`rounded-full px-2 py-0.5 text-xs ${
+                  className={`touch-target rounded-full px-2 py-0.5 text-xs ${
                     newWordTargets.includes("content")
                       ? "bg-blue-500 text-white"
                       : ""
@@ -618,7 +618,7 @@ export const ContentModerationSettings: React.FC = () => {
                 </button>
                 <button
                   onClick={() => toggleTarget("tag")}
-                  className={`rounded-full px-2 py-0.5 text-xs ${
+                  className={`touch-target rounded-full px-2 py-0.5 text-xs ${
                     newWordTargets.includes("tag")
                       ? "bg-blue-500 text-white"
                       : ""
@@ -713,7 +713,7 @@ export const ContentModerationSettings: React.FC = () => {
                 <button
                   onClick={() => handleRemoveMutedWord(word)}
                   disabled={isLoading}
-                  className="transition-colors hover:text-red-500 disabled:opacity-50"
+                  className="touch-target transition-colors hover:text-red-500 disabled:opacity-50"
                   style={{ color: "var(--asph-text-secondary)" }}
                 >
                   <X size={14} />
@@ -815,7 +815,7 @@ export const ContentModerationSettings: React.FC = () => {
           <button
             onClick={handleToggleAdultContent}
             disabled={isLoading}
-            className={`relative h-6 w-11 rounded-full transition-colors disabled:opacity-50 ${
+            className={`touch-target relative h-6 w-11 rounded-full transition-colors disabled:opacity-50 ${
               adultContentEnabled ? "bg-blue-500" : "bg-gray-300"
             }`}
           >
@@ -860,7 +860,7 @@ export const ContentModerationSettings: React.FC = () => {
           <button
             onClick={handleMuteUser}
             disabled={!newMuteHandle.trim() || isLoading}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
+            className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
             style={{
               backgroundColor: "var(--asph-primary)",
             }}
@@ -897,7 +897,7 @@ export const ContentModerationSettings: React.FC = () => {
                 <button
                   onClick={() => handleUnmuteUser(user.did, user.handle)}
                   disabled={isLoading}
-                  className="rounded-lg px-3 py-1 text-sm font-medium transition-colors disabled:opacity-50"
+                  className="touch-target-sm rounded-lg px-3 py-1 text-sm font-medium transition-colors disabled:opacity-50"
                   style={{
                     backgroundColor: "var(--asph-bg-tertiary)",
                     color: "var(--asph-text-primary)",
@@ -965,7 +965,7 @@ export const ContentModerationSettings: React.FC = () => {
                     handleUnblockUser(user.blockUri, user.handle)
                   }
                   disabled={isLoading || !user.blockUri}
-                  className="rounded-lg px-3 py-1 text-sm font-medium transition-colors disabled:opacity-50"
+                  className="touch-target-sm rounded-lg px-3 py-1 text-sm font-medium transition-colors disabled:opacity-50"
                   style={{
                     backgroundColor: "var(--asph-bg-tertiary)",
                     color: "var(--asph-text-primary)",

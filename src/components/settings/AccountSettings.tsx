@@ -225,7 +225,7 @@ export const AccountSettings: React.FC = () => {
             <button
               onClick={() => bannerInputRef.current?.click()}
               disabled={isCompressing !== null}
-              className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 transition-all hover:bg-opacity-50 disabled:cursor-not-allowed"
+              className="touch-target absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 transition-all hover:bg-opacity-50 disabled:cursor-not-allowed"
             >
               <div className="flex items-center gap-2 rounded-lg bg-black bg-opacity-75 px-3 py-2 text-sm text-white opacity-0 transition-all hover:opacity-100">
                 <Upload size={16} />
@@ -267,7 +267,7 @@ export const AccountSettings: React.FC = () => {
               <button
                 onClick={() => avatarInputRef.current?.click()}
                 disabled={isCompressing !== null}
-                className="absolute bottom-0 right-0 rounded-full bg-blue-500 p-2 text-white shadow-lg transition-all hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="touch-target-icon absolute bottom-0 right-0 rounded-full bg-blue-500 p-2 text-white shadow-lg transition-all hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Camera size={16} />
               </button>
@@ -380,7 +380,7 @@ export const AccountSettings: React.FC = () => {
             setMessage(null);
           }}
           disabled={!hasChanges() || isLoading}
-          className="rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+          className="touch-target rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
           style={{
             backgroundColor: "var(--asph-bg-tertiary)",
             color: "var(--asph-text-primary)",
@@ -392,7 +392,7 @@ export const AccountSettings: React.FC = () => {
         <button
           onClick={handleSave}
           disabled={!hasChanges() || isLoading}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
+          className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
           style={{
             backgroundColor: "var(--asph-primary)",
           }}

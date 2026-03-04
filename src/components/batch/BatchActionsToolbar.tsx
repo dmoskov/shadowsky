@@ -172,7 +172,7 @@ export const BatchActionsToolbar: React.FC<BatchActionsToolbarProps> = ({
       {onSelectAll && (
         <button
           onClick={onSelectAll}
-          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-asph-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="touch-target-sm flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-asph-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800"
           disabled={isOperationActive}
         >
           <Check className="h-4 w-4" aria-hidden="true" />
@@ -187,7 +187,7 @@ export const BatchActionsToolbar: React.FC<BatchActionsToolbarProps> = ({
           <button
             key={action.type}
             onClick={() => handleAction(action.type)}
-            className={getButtonClasses(action.variant)}
+            className={`touch-target ${getButtonClasses(action.variant)}`}
             disabled={selectedCount === 0 || isOperationActive}
             title={action.description}
             aria-label={action.description}
@@ -203,7 +203,7 @@ export const BatchActionsToolbar: React.FC<BatchActionsToolbarProps> = ({
         <div className="relative">
           <button
             onClick={() => setShowDropdown(!showDropdown)}
-            className={`${getButtonClasses("default")} ${showDropdown ? "bg-gray-200 dark:bg-gray-700" : ""}`}
+            className={`touch-target ${getButtonClasses("default")} ${showDropdown ? "bg-gray-200 dark:bg-gray-700" : ""}`}
             disabled={selectedCount === 0 || isOperationActive}
             aria-expanded={showDropdown}
             aria-haspopup="menu"
@@ -233,7 +233,7 @@ export const BatchActionsToolbar: React.FC<BatchActionsToolbarProps> = ({
                     <button
                       key={action.type}
                       onClick={() => handleAction(action.type)}
-                      className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-asph-text-secondary hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="touch-target-list-item flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-asph-text-secondary hover:bg-gray-100 dark:hover:bg-gray-700"
                       role="menuitem"
                     >
                       <Icon className="h-4 w-4" aria-hidden="true" />
@@ -251,7 +251,7 @@ export const BatchActionsToolbar: React.FC<BatchActionsToolbarProps> = ({
       {canUndo && onUndo && (
         <button
           onClick={handleUndo}
-          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
+          className="touch-target-sm flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-blue-600 hover:bg-blue-50 disabled:opacity-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
           disabled={isUndoing || isOperationActive}
           title="Undo last action"
           aria-label="Undo last action"
@@ -267,7 +267,7 @@ export const BatchActionsToolbar: React.FC<BatchActionsToolbarProps> = ({
       {/* Deselect all */}
       <button
         onClick={deselectAll}
-        className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-asph-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800"
+        className="touch-target-sm flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-asph-text-secondary hover:bg-gray-100 dark:hover:bg-gray-800"
         disabled={selectedCount === 0 || isOperationActive}
         title="Deselect all"
         aria-label="Deselect all"
@@ -279,7 +279,7 @@ export const BatchActionsToolbar: React.FC<BatchActionsToolbarProps> = ({
       {/* Exit selection mode */}
       <button
         onClick={() => toggleSelectionMode(false)}
-        className="flex items-center gap-1.5 rounded-lg bg-gray-200 px-3 py-1.5 text-sm font-medium text-asph-text-secondary hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+        className="touch-target-sm flex items-center gap-1.5 rounded-lg bg-gray-200 px-3 py-1.5 text-sm font-medium text-asph-text-secondary hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
         title="Exit selection mode (Esc)"
         aria-label="Exit selection mode"
       >

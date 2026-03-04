@@ -437,7 +437,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
           {config.showRetryButton && (
             <button
               onClick={handleManualRetry}
-              className="ml-2 flex items-center gap-1 rounded-md bg-white/20 px-2.5 py-1 text-xs font-medium transition-colors hover:bg-white/30"
+              className="touch-target-sm ml-2 flex items-center gap-1 rounded-md bg-white/20 px-2.5 py-1 text-xs font-medium transition-colors hover:bg-white/30"
             >
               <RefreshCw className="h-3 w-3" />
               Retry now

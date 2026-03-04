@@ -156,7 +156,7 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
             </h2>
             <button
               onClick={onClose}
-              className="rounded-full p-2 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="touch-target-icon rounded-full p-2 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
             >
               <X size={20} style={{ color: "var(--asph-text-secondary)" }} />
             </button>
@@ -185,7 +185,7 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
           <div className="mt-4 flex gap-2">
             <button
               onClick={() => setActiveTab("suggested")}
-              className={`flex-1 rounded-lg px-4 py-2 font-medium transition-colors ${
+              className={`touch-target flex-1 rounded-lg px-4 py-2 font-medium transition-colors ${
                 activeTab === "suggested" ? "text-white" : ""
               }`}
               style={{
@@ -203,7 +203,7 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
             </button>
             <button
               onClick={() => setActiveTab("popular")}
-              className={`flex-1 rounded-lg px-4 py-2 font-medium transition-colors ${
+              className={`touch-target flex-1 rounded-lg px-4 py-2 font-medium transition-colors ${
                 activeTab === "popular" ? "text-white" : ""
               }`}
               style={{
@@ -278,7 +278,7 @@ export const FeedDiscovery: React.FC<FeedDiscoveryProps> = ({
                           addFeedMutation.isPending ||
                           removeFeedMutation.isPending
                         }
-                        className={`rounded-lg px-4 py-2 font-medium transition-colors ${
+                        className={`touch-target rounded-lg px-4 py-2 font-medium transition-colors ${
                           isFeedSaved(feed.uri) ? "border" : "text-white"
                         }`}
                         style={{

@@ -246,7 +246,7 @@ export const ScheduledPosts: React.FC = () => {
         >
           <button
             onClick={() => setDisplayMode("calendar")}
-            className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`touch-target flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
               displayMode === "calendar" ? "shadow-sm" : ""
             }`}
             style={{
@@ -265,7 +265,7 @@ export const ScheduledPosts: React.FC = () => {
           </button>
           <button
             onClick={() => setDisplayMode("queue")}
-            className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+            className={`touch-target flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
               displayMode === "queue" ? "shadow-sm" : ""
             }`}
             style={{
@@ -296,7 +296,7 @@ export const ScheduledPosts: React.FC = () => {
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
-                  className={`rounded-md px-3 py-1 text-sm font-medium capitalize transition-colors ${
+                  className={`touch-target rounded-md px-3 py-1 text-sm font-medium capitalize transition-colors ${
                     viewMode === mode ? "shadow-sm" : ""
                   }`}
                   style={{
@@ -319,7 +319,7 @@ export const ScheduledPosts: React.FC = () => {
             <div className="flex items-center gap-1">
               <button
                 onClick={navigatePrevious}
-                className="rounded-lg p-2 transition-colors hover:bg-opacity-80"
+                className="touch-target-icon rounded-lg p-2 transition-colors hover:bg-opacity-80"
                 style={{ color: "var(--asph-text-secondary)" }}
                 aria-label="Previous"
               >
@@ -327,7 +327,7 @@ export const ScheduledPosts: React.FC = () => {
               </button>
               <button
                 onClick={goToToday}
-                className="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
+                className="touch-target-sm rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
                 style={{
                   backgroundColor: "var(--asph-bg-secondary)",
                   color: "var(--asph-text-primary)",
@@ -337,7 +337,7 @@ export const ScheduledPosts: React.FC = () => {
               </button>
               <button
                 onClick={navigateNext}
-                className="rounded-lg p-2 transition-colors hover:bg-opacity-80"
+                className="touch-target-icon rounded-lg p-2 transition-colors hover:bg-opacity-80"
                 style={{ color: "var(--asph-text-secondary)" }}
                 aria-label="Next"
               >
@@ -699,7 +699,7 @@ const CalendarPostChip: React.FC<{
     <div className="relative">
       <button
         onClick={onClick}
-        className="group flex w-full items-center gap-1 rounded px-1.5 py-1 text-left text-xs transition-colors hover:bg-opacity-20"
+        className="touch-target-list-item group flex w-full items-center gap-1 rounded px-1.5 py-1 text-left text-xs transition-colors hover:bg-opacity-20"
         style={{
           backgroundColor: `${statusColor}15`,
         }}
@@ -720,7 +720,7 @@ const CalendarPostChip: React.FC<{
           e.stopPropagation();
           onShowMenu(showMenu ? null : post.id);
         }}
-        className="absolute right-0 top-0 p-1 opacity-0 group-hover:opacity-100"
+        className="touch-target-icon absolute right-0 top-0 p-1 opacity-0 group-hover:opacity-100"
         style={{ color: "var(--asph-text-secondary)" }}
       >
         <MoreVertical size={12} />
@@ -924,7 +924,7 @@ const PostCard: React.FC<{
               e.stopPropagation();
               onShowMenu(showMenu ? null : post.id);
             }}
-            className="rounded-lg p-1.5 transition-colors hover:bg-opacity-80"
+            className="touch-target-icon rounded-lg p-1.5 transition-colors hover:bg-opacity-80"
             style={{ color: "var(--asph-text-secondary)" }}
             aria-label="Post options"
           >
@@ -968,7 +968,7 @@ const PostMenu: React.FC<{
       {canReschedule && (
         <button
           onClick={() => onReschedule(post)}
-          className="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-opacity-80"
+          className="touch-target-sm flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-opacity-80"
           style={{ color: "var(--asph-text-primary)" }}
         >
           <Clock size={16} />
@@ -980,7 +980,7 @@ const PostMenu: React.FC<{
           // TODO: Open edit modal
           onClose();
         }}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-opacity-80"
+        className="touch-target-sm flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-opacity-80"
         style={{ color: "var(--asph-text-primary)" }}
       >
         <Edit2 size={16} />
@@ -989,7 +989,7 @@ const PostMenu: React.FC<{
       {canCancel && (
         <button
           onClick={() => onCancel(post)}
-          className="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-opacity-80"
+          className="touch-target-sm flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-opacity-80"
           style={{ color: "var(--asph-warning, #f59e0b)" }}
         >
           <X size={16} />
@@ -998,7 +998,7 @@ const PostMenu: React.FC<{
       )}
       <button
         onClick={() => onDelete(post)}
-        className="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-opacity-80"
+        className="touch-target-sm flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-opacity-80"
         style={{ color: "var(--asph-error, #ef4444)" }}
       >
         <Trash2 size={16} />
@@ -1057,7 +1057,7 @@ const RescheduleModal: React.FC<{
           </h3>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 transition-colors hover:bg-opacity-80"
+            className="touch-target-icon rounded-lg p-1 transition-colors hover:bg-opacity-80"
             style={{ color: "var(--asph-text-secondary)" }}
           >
             <X size={20} />
@@ -1131,7 +1131,7 @@ const RescheduleModal: React.FC<{
           <button
             type="button"
             onClick={() => setShowSuggestions(!showSuggestions)}
-            className="mb-3 flex items-center gap-2 text-sm font-medium transition-colors"
+            className="touch-target-sm mb-3 flex items-center gap-2 text-sm font-medium transition-colors"
             style={{ color: "var(--asph-primary)" }}
           >
             <Sparkles size={16} />
@@ -1146,7 +1146,6 @@ const RescheduleModal: React.FC<{
                   key={`suggested-time-${time.toISOString()}-${index}`}
                   type="button"
                   onClick={() => selectSuggestedTime(time)}
-                  className="rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:border-blue-500"
                   style={{
                     borderColor: "var(--asph-border-primary)",
                     backgroundColor: "var(--asph-bg-secondary)",
@@ -1160,11 +1159,11 @@ const RescheduleModal: React.FC<{
           )}
 
           {/* Actions */}
-          <div className="flex justify-end gap-2">
+          <div className="touch-target-sm flex justify-end gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:border-blue-500">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+              className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium transition-colors"
               style={{
                 backgroundColor: "var(--asph-bg-secondary)",
                 color: "var(--asph-text-primary)",
@@ -1175,7 +1174,7 @@ const RescheduleModal: React.FC<{
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
+              className="touch-target-sm flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
               style={{ backgroundColor: "var(--asph-primary)" }}
             >
               {isLoading && <RefreshCw size={16} className="animate-spin" />}

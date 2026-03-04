@@ -214,7 +214,7 @@ export class ChunkLoadErrorBoundary extends Component<Props, State> {
                 <button
                   onClick={this.handleRetry}
                   disabled={isRetrying || !isOnline}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-white transition-colors disabled:opacity-50"
+                  className="touch-target-sm flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium text-white transition-colors disabled:opacity-50"
                   style={{
                     backgroundColor: "var(--asph-primary)",
                   }}
@@ -240,7 +240,7 @@ export class ChunkLoadErrorBoundary extends Component<Props, State> {
               {/* Refresh page button */}
               <button
                 onClick={this.handleRefresh}
-                className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium transition-colors"
+                className="touch-target-sm flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 font-medium transition-colors"
                 style={{
                   backgroundColor: "var(--asph-bg-tertiary)",
                   color: "var(--asph-text-primary)",

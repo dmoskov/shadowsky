@@ -286,7 +286,7 @@ export function Toast({
               handleAction();
             }}
             disabled={actionTriggered}
-            className="hover:bg-asph-primary-hover mt-2 min-h-[44px] rounded-md bg-asph-primary px-4 py-2 text-sm font-medium text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-asph-primary disabled:cursor-not-allowed disabled:opacity-50"
+            className="touch-target-sm hover:bg-asph-primary-hover mt-2 min-h-[44px] rounded-md bg-asph-primary px-4 py-2 text-sm font-medium text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-asph-primary disabled:cursor-not-allowed disabled:opacity-50"
           >
             {toast.action.label}
           </button>
@@ -311,7 +311,7 @@ export function Toast({
             e.stopPropagation();
             dismiss(true);
           }}
-          className="flex min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-md p-2 text-asph-text-tertiary transition-colors duration-150 hover:bg-asph-bg-hover hover:text-asph-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-asph-primary"
+          className="touch-target-icon flex min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded-md p-2 text-asph-text-tertiary transition-colors duration-150 hover:bg-asph-bg-hover hover:text-asph-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-asph-primary"
           aria-label="Dismiss notification"
         >
           <X className="h-4 w-4" aria-hidden="true" />

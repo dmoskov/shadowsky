@@ -232,7 +232,7 @@ export const ComposerToolbar: React.FC<ComposerToolbarProps> = ({
         {/* Progressive disclosure toggle */}
         {enableProgressiveDisclosure && (
           <button
-            className="asph-button-secondary flex items-center gap-1 px-2 py-1 text-xs"
+            className="touch-target-sm asph-button-secondary flex items-center gap-1 px-2 py-1 text-xs"
             onClick={toggleDisclosure}
             aria-label={`Switch to ${disclosureLevel === "advanced" ? "basic" : "more"} features`}
           >
@@ -314,7 +314,7 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
   return (
     <div className="group relative">
       <button
-        className={`asph-button-secondary relative flex items-center gap-2 ${
+        className={`touch-target asph-button-secondary relative flex items-center gap-2 ${
           active ? "ring-2 ring-blue-400" : ""
         } ${loading ? "animate-pulse" : ""}`}
         onClick={onClick}

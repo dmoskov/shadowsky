@@ -1009,7 +1009,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                         handle={item.reply.parent.author?.handle || "unknown"}
                       >
                         <button
-                          className="font-semibold text-asph-primary hover:underline"
+                          className="touch-target-sm font-semibold text-asph-primary hover:underline"
                           onClick={(e) => {
                             e.stopPropagation();
                             // Navigate to parent post
@@ -1704,7 +1704,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                     {/* Alt text generation button */}
                     {postUri && (
                       <button
-                        className="absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
+                        className="touch-target-icon absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
                         onClick={(e) => {
                           e.stopPropagation();
 

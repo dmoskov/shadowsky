@@ -171,7 +171,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
         {onClose && (
           <button
             onClick={onClose}
-            className="rounded-full p-1.5 text-asph-text-secondary transition-colors hover:bg-asph-bg-secondary"
+            className="touch-target-icon rounded-full p-1.5 text-asph-text-secondary transition-colors hover:bg-asph-bg-secondary"
           >
             <X size={18} />
           </button>
@@ -183,7 +183,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
         {/* All Bookmarks option */}
         <button
           onClick={() => onSelectCollection(null)}
-          className={`flex w-full items-center gap-3 border-b border-asph-border-primary px-4 py-3 transition-colors hover:bg-asph-bg-secondary ${
+          className={`touch-target flex w-full items-center gap-3 border-b border-asph-border-primary px-4 py-3 transition-colors hover:bg-asph-bg-secondary ${
             selectedCollectionId === null
               ? "bg-blue-500 bg-opacity-10 text-blue-500"
               : "text-asph-text-primary"
@@ -196,7 +196,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
         {/* Uncategorized option */}
         <button
           onClick={() => onSelectCollection("__uncategorized__")}
-          className={`flex w-full items-center gap-3 border-b border-asph-border-primary px-4 py-3 transition-colors hover:bg-asph-bg-secondary ${
+          className={`touch-target flex w-full items-center gap-3 border-b border-asph-border-primary px-4 py-3 transition-colors hover:bg-asph-bg-secondary ${
             selectedCollectionId === "__uncategorized__"
               ? "bg-blue-500 bg-opacity-10 text-blue-500"
               : "text-asph-text-secondary"
@@ -218,7 +218,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
           >
             <button
               onClick={() => onSelectCollection(collection.id)}
-              className="flex flex-1 items-center gap-3"
+              className="touch-target-sm flex flex-1 items-center gap-3"
             >
               <div
                 className="h-4 w-4 rounded-full"
@@ -254,7 +254,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
                     activeDropdown === collection.id ? null : collection.id,
                   );
                 }}
-                className="rounded p-1 text-asph-text-tertiary opacity-0 transition-all hover:bg-asph-bg-hover hover:text-asph-text-primary group-hover:opacity-100"
+                className="touch-target-icon rounded p-1 text-asph-text-tertiary opacity-0 transition-all hover:bg-asph-bg-hover hover:text-asph-text-primary group-hover:opacity-100"
               >
                 <MoreVertical size={16} />
               </button>
@@ -266,7 +266,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
                       e.stopPropagation();
                       startEditing(collection);
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-asph-text-primary transition-colors hover:bg-asph-bg-secondary"
+                    className="touch-target-sm flex w-full items-center gap-2 px-3 py-2 text-sm text-asph-text-primary transition-colors hover:bg-asph-bg-secondary"
                   >
                     <Edit2 size={14} />
                     Edit
@@ -278,7 +278,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
                       handleDeleteCollection(collection);
                     }}
                     disabled={isDeleting}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
+                    className="touch-target-sm flex w-full items-center gap-2 px-3 py-2 text-sm text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
                     <Trash2 size={14} />
                     Delete
@@ -344,7 +344,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
                     key={color.id}
                     type="button"
                     onClick={() => setSelectedColor(color.id)}
-                    className={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${
+                    className={`touch-target h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${
                       selectedColor === color.id
                         ? "border-asph-text-primary ring-2 ring-blue-500 ring-offset-1"
                         : "border-transparent"
@@ -361,14 +361,14 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
               <button
                 type="button"
                 onClick={cancelEditing}
-                className="flex-1 rounded-md bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-secondary transition-colors hover:bg-asph-bg-hover"
+                className="touch-target-sm flex-1 rounded-md bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-secondary transition-colors hover:bg-asph-bg-hover"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!collectionName.trim() || isCreating || isUpdating}
-                className="flex-1 rounded-md bg-blue-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 disabled:opacity-50"
+                className="touch-target-sm flex-1 rounded-md bg-blue-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600 disabled:opacity-50"
               >
                 {isCreating || isUpdating
                   ? "Saving..."
@@ -386,7 +386,7 @@ export const CollectionManager: React.FC<CollectionManagerProps> = ({
         <div className="border-t border-asph-border-primary p-4">
           <button
             onClick={() => setShowCreateForm(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-asph-border-primary py-2.5 text-sm text-asph-text-secondary transition-colors hover:border-blue-500 hover:text-blue-500"
+            className="touch-target-sm flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-asph-border-primary py-2.5 text-sm text-asph-text-secondary transition-colors hover:border-blue-500 hover:text-blue-500"
           >
             <Plus size={16} />
             Create Collection

@@ -223,7 +223,7 @@ const MediaItem: React.FC<MediaItemProps> = ({
 
       {/* Remove button */}
       <button
-        className="absolute right-2 top-2 rounded-full bg-black bg-opacity-70 p-1 text-white transition-all hover:bg-opacity-90"
+        className="touch-target-icon absolute right-2 top-2 rounded-full bg-black bg-opacity-70 p-1 text-white transition-all hover:bg-opacity-90"
         onClick={onRemove}
         aria-label="Remove media"
       >
@@ -278,7 +278,7 @@ const MediaItem: React.FC<MediaItemProps> = ({
         {media.type === "image" && (
           <button
             onClick={onAutoGenerateAlt}
-            className={`absolute right-2 top-2 rounded-lg p-1.5 transition-all ${
+            className={`touch-target absolute right-2 top-2 rounded-lg p-1.5 transition-all ${
               isGeneratingAlt
                 ? "animate-pulse bg-blue-100 dark:bg-blue-900"
                 : "hover:scale-110 hover:bg-gray-100 dark:hover:bg-gray-800"

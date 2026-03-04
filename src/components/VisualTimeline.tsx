@@ -639,7 +639,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
               >
                 <button
                   onClick={refreshNotifications}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all hover:opacity-90"
+                  className="touch-target-sm flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all hover:opacity-90"
                   style={{
                     backgroundColor: "var(--asph-primary)",
                     color: "white",
@@ -2013,7 +2013,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
                 <div className="mt-4 flex justify-center">
                   <button
                     onClick={loadMore}
-                    className="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-90"
+                    className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:opacity-90"
                     style={{
                       backgroundColor: "var(--asph-bg-secondary)",
                       color: "var(--asph-text-primary)",

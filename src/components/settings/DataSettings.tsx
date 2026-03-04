@@ -451,7 +451,7 @@ export const DataSettings: React.FC = () => {
             {message.type === "success" && (
               <button
                 onClick={() => window.location.reload()}
-                className="ml-4 rounded-md bg-asph-success px-3 py-1.5 text-xs font-medium text-white transition-colors hover:opacity-90"
+                className="touch-target-sm ml-4 rounded-md bg-asph-success px-3 py-1.5 text-xs font-medium text-white transition-colors hover:opacity-90"
               >
                 Reload Page
               </button>
@@ -577,7 +577,7 @@ export const DataSettings: React.FC = () => {
                     <>
                       <div className="flex items-center gap-2 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
                         <button
-                          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                          className={`touch-target rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                             !isEnabled
                               ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
                               : "cursor-not-allowed text-asph-text-secondary opacity-50"
@@ -593,7 +593,7 @@ export const DataSettings: React.FC = () => {
                           Local
                         </button>
                         <button
-                          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                          className={`touch-target rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                             isEnabled
                               ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
                               : "text-asph-text-secondary hover:text-gray-900 dark:hover:text-gray-200"
@@ -614,7 +614,7 @@ export const DataSettings: React.FC = () => {
                     <>
                       <div className="flex items-center gap-2 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
                         <button
-                          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                          className={`touch-target rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                             !isEnabled
                               ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
                               : "text-asph-text-secondary hover:text-gray-900 dark:hover:text-gray-200"
@@ -625,7 +625,7 @@ export const DataSettings: React.FC = () => {
                           Local
                         </button>
                         <button
-                          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                          className={`touch-target rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                             isEnabled
                               ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
                               : "text-asph-text-secondary hover:text-gray-900 dark:hover:text-gray-200"
@@ -656,7 +656,7 @@ export const DataSettings: React.FC = () => {
                                 handleCreateMissingRecord("columns")
                               }
                               disabled={loadingStates[`create_columns`]}
-                              className="flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                              className="touch-target-sm flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
                             >
                               {loadingStates[`create_columns`] ? (
                                 <>Creating...</>
@@ -697,7 +697,7 @@ export const DataSettings: React.FC = () => {
                               <button
                                 onClick={handleMigrateLocalColumns}
                                 disabled={loadingStates.migrate_columns}
-                                className="flex items-center gap-2 rounded-md bg-yellow-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-yellow-700 disabled:opacity-50"
+                                className="touch-target-sm flex items-center gap-2 rounded-md bg-yellow-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-yellow-700 disabled:opacity-50"
                               >
                                 {loadingStates.migrate_columns ? (
                                   <>Migrating...</>
@@ -707,7 +707,7 @@ export const DataSettings: React.FC = () => {
                               </button>
                               <button
                                 onClick={() => setShowMigrationPrompt(false)}
-                                className="rounded-md px-3 py-1.5 text-xs font-medium text-yellow-700 transition-colors hover:bg-yellow-100 dark:text-yellow-300 dark:hover:bg-yellow-900/30"
+                                className="touch-target-sm rounded-md px-3 py-1.5 text-xs font-medium text-yellow-700 transition-colors hover:bg-yellow-100 dark:text-yellow-300 dark:hover:bg-yellow-900/30"
                               >
                                 Dismiss
                               </button>
@@ -724,7 +724,7 @@ export const DataSettings: React.FC = () => {
                                 handleCreateMissingRecord("bookmarks")
                               }
                               disabled={loadingStates[`create_bookmarks`]}
-                              className="flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                              className="touch-target-sm flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
                             >
                               {loadingStates[`create_bookmarks`] ? (
                                 <>Creating...</>

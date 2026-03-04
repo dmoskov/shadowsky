@@ -56,7 +56,7 @@ export function LinkPreview({
             e.stopPropagation();
             onRemove();
           }}
-          className="rounded p-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+          className="touch-target-icon rounded p-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
           title="Remove link preview"
         >
           <X size={16} style={{ color: "var(--asph-text-secondary)" }} />
@@ -80,7 +80,7 @@ export function LinkPreview({
           e.stopPropagation();
           onRemove();
         }}
-        className="absolute right-2 top-2 z-10 rounded-full bg-black/50 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+        className="touch-target-icon absolute right-2 top-2 z-10 rounded-full bg-black/50 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
         title="Remove link preview"
       >
         <X size={14} />

@@ -155,7 +155,7 @@ export const ThreadBreadcrumb: React.FC<ThreadBreadcrumbProps> = ({
               <button
                 onClick={() => onNavigate(actualItem.index)}
                 disabled={isCurrent}
-                className={`flex min-w-0 max-w-[120px] items-center gap-1 rounded px-2 py-1 text-xs transition-colors sm:max-w-[150px] ${
+                className={`touch-target flex min-w-0 max-w-[120px] items-center gap-1 rounded px-2 py-1 text-xs transition-colors sm:max-w-[150px] ${
                   isCurrent
                     ? "cursor-default font-medium"
                     : "hover:bg-gray-200 dark:hover:bg-gray-700"

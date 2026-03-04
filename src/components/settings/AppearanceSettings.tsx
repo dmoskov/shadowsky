@@ -83,7 +83,7 @@ export const AppearanceSettings: React.FC = () => {
               <button
                 key={themeOption.value}
                 onClick={() => setTheme(themeOption.value as any)}
-                className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all ${
+                className={`touch-target flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all ${
                   theme === themeOption.value
                     ? "border-blue-500"
                     : "border-gray-200 hover:border-gray-300"
@@ -153,7 +153,7 @@ export const AppearanceSettings: React.FC = () => {
           </div>
           <div className="mt-3 flex gap-2">
             <button
-              className="rounded px-3 py-1 text-sm"
+              className="touch-target-sm rounded px-3 py-1 text-sm"
               style={{
                 backgroundColor: "var(--asph-primary)",
                 color: "white",
@@ -162,7 +162,7 @@ export const AppearanceSettings: React.FC = () => {
               Primary Button
             </button>
             <button
-              className="rounded px-3 py-1 text-sm"
+              className="touch-target-sm rounded px-3 py-1 text-sm"
               style={{
                 backgroundColor: "var(--asph-bg-tertiary)",
                 color: "var(--asph-text-primary)",
@@ -242,7 +242,7 @@ export const AppearanceSettings: React.FC = () => {
                 updateColumnWidth.isPending ||
                 selectedWidth === appPreferences?.columnWidth
               }
-              className="mt-3 rounded px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+              className="touch-target-sm mt-3 rounded px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
               style={{
                 backgroundColor:
                   updateColumnWidth.isPending ||

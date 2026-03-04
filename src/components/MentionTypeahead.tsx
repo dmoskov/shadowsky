@@ -371,7 +371,7 @@ export const MentionTypeahead = forwardRef<
                   aria-selected={index === selectedIndex}
                   data-index={index}
                   onClick={() => selectSuggestion(suggestion)}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors"
+                  className="touch-target-list-item flex w-full items-center gap-2 px-3 py-2 text-left transition-colors"
                   style={{
                     backgroundColor:
                       index === selectedIndex

@@ -276,7 +276,7 @@ export function ThreadContextBar({
             <button
               onClick={() => setJumpMenuOpen(!jumpMenuOpen)}
               onKeyDown={handleMenuKeyDown}
-              className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-sm flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               style={{ color: "var(--asph-text-secondary)" }}
               title="Jump to..."
               aria-expanded={jumpMenuOpen}
@@ -303,13 +303,12 @@ export function ThreadContextBar({
                   <button
                     key={`${target.label}-${target.index}`}
                     onClick={() => handleJumpSelect(target)}
-                    className="flex w-full items-center justify-between px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
                     style={{ color: "var(--asph-text-primary)" }}
                   >
                     <span>{target.label}</span>
                     {target.description && (
                       <span
-                        className="ml-2 text-xs"
+                        className="touch-target-list-item ml-2 flex w-full items-center justify-between px-3 py-2 text-left text-sm text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
                         style={{ color: "var(--asph-text-tertiary)" }}
                       >
                         {target.description}
@@ -324,7 +323,7 @@ export function ThreadContextBar({
           {/* Quick navigation buttons */}
           <button
             onClick={onJumpToStart}
-            className="rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
             style={{ color: "var(--asph-text-secondary)" }}
             title="Jump to start (Home)"
             disabled={currentIndex === 0}
@@ -334,7 +333,7 @@ export function ThreadContextBar({
 
           <button
             onClick={onJumpToParent}
-            className="rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
             style={{ color: "var(--asph-text-secondary)" }}
             title="Jump to parent post"
           >
@@ -343,7 +342,7 @@ export function ThreadContextBar({
 
           <button
             onClick={onJumpToEnd}
-            className="rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
             style={{ color: "var(--asph-text-secondary)" }}
             title="Jump to end (End)"
             disabled={currentIndex === totalPosts - 1}

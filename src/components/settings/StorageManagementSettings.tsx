@@ -150,7 +150,7 @@ export const StorageManagementSettings: React.FC = () => {
             {message.type === "success" && message.text.includes("reload") && (
               <button
                 onClick={() => window.location.reload()}
-                className="ml-4 rounded-md bg-asph-success px-3 py-1.5 text-xs font-medium text-white transition-colors hover:opacity-90"
+                className="touch-target-sm ml-4 rounded-md bg-asph-success px-3 py-1.5 text-xs font-medium text-white transition-colors hover:opacity-90"
               >
                 Reload Page
               </button>
@@ -317,21 +317,21 @@ export const StorageManagementSettings: React.FC = () => {
               <button
                 onClick={() => handleCleanupOldData(14)}
                 disabled={isCleaningUp}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                className="touch-target-sm rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
               >
                 {isCleaningUp ? "Cleaning..." : "Delete > 2 weeks old"}
               </button>
               <button
                 onClick={() => handleCleanupOldData(28)}
                 disabled={isCleaningUp}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                className="touch-target-sm rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
               >
                 {isCleaningUp ? "Cleaning..." : "Delete > 4 weeks old"}
               </button>
               <button
                 onClick={() => handleCleanupOldData(60)}
                 disabled={isCleaningUp}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                className="touch-target-sm rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
               >
                 {isCleaningUp ? "Cleaning..." : "Delete > 2 months old"}
               </button>
@@ -359,7 +359,7 @@ export const StorageManagementSettings: React.FC = () => {
             <button
               onClick={handleClearAllNotifications}
               disabled={isClearingAll}
-              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+              className="touch-target-sm rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
             >
               {isClearingAll ? "Clearing..." : "Clear All Notifications"}
             </button>

@@ -526,7 +526,7 @@ export function ThreadComposer({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowPreview(!showPreview)}
-              className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors"
+              className="touch-target-sm flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-colors"
               style={{
                 background: showPreview
                   ? "var(--asph-primary)"
@@ -539,7 +539,7 @@ export function ThreadComposer({
             </button>
             <button
               onClick={onClose}
-              className="rounded-lg p-2 transition-colors hover:opacity-80"
+              className="touch-target-icon rounded-lg p-2 transition-colors hover:opacity-80"
               style={{ color: "var(--asph-text-secondary)" }}
               aria-label="Close"
             >
@@ -661,7 +661,7 @@ export function ThreadComposer({
                       {posts.length > 1 && (
                         <button
                           onClick={() => removePost(index)}
-                          className="rounded p-1 transition-colors hover:opacity-80"
+                          className="touch-target-icon rounded p-1 transition-colors hover:opacity-80"
                           style={{ color: "var(--asph-error)" }}
                           aria-label="Remove post"
                         >
@@ -698,7 +698,7 @@ export function ThreadComposer({
                     <div className="absolute -bottom-6 left-1/2 z-10 -translate-x-1/2">
                       <button
                         onClick={() => addPost(index)}
-                        className="rounded-full p-1 shadow transition-colors hover:opacity-80"
+                        className="touch-target-icon rounded-full p-1 shadow transition-colors hover:opacity-80"
                         style={{
                           background: "var(--asph-bg-primary)",
                           border: "1px solid var(--asph-border-primary)",
@@ -716,7 +716,7 @@ export function ThreadComposer({
               {/* Add post button at bottom */}
               <button
                 onClick={() => addPost()}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed py-4 transition-colors hover:opacity-80"
+                className="touch-target-list-item flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed py-4 transition-colors hover:opacity-80"
                 style={{
                   borderColor: "var(--asph-border-primary)",
                   color: "var(--asph-text-secondary)",
@@ -759,7 +759,7 @@ export function ThreadComposer({
               disabled={
                 isSaving || !posts.some((p) => p.text.trim().length > 0)
               }
-              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+              className="touch-target-sm flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
               style={{
                 background: "var(--asph-bg-secondary)",
                 color: "var(--asph-text-primary)",
@@ -771,7 +771,7 @@ export function ThreadComposer({
             <button
               onClick={handlePost}
               disabled={isPosting || validPostCount === 0}
-              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
+              className="touch-target-sm flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
               style={{ background: "var(--asph-primary)" }}
             >
               {isPosting ? (
