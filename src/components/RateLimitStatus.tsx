@@ -65,7 +65,7 @@ export const RateLimitStatus: React.FC = () => {
     <div className="fixed bottom-4 right-4 z-50" style={{ maxWidth: "300px" }}>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="asph-card flex items-center gap-2 p-3 transition-opacity hover:opacity-90"
+        className="touch-target-sm asph-card flex items-center gap-2 p-3 transition-opacity hover:opacity-90"
         style={{
           background: hasThrottling
             ? "var(--asph-red-subtle)"

@@ -133,7 +133,7 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
           <button
             onClick={onClose}
             aria-label="Close keyboard shortcuts help"
-            className="rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <X size={20} style={{ color: "var(--asph-text-secondary)" }} />
           </button>

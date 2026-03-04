@@ -63,7 +63,7 @@ export function GlobalErrorFallback({
           <div className="flex w-full flex-col gap-2">
             <button
               onClick={handleReload}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+              className="touch-target-sm flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
               aria-label="Reload the application"
             >
               <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -72,7 +72,7 @@ export function GlobalErrorFallback({
 
             <button
               onClick={handleGoHome}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-asph-text-secondary transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
+              className="touch-target-sm flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-asph-text-secondary transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
               aria-label="Go to home page"
             >
               <Home className="h-4 w-4" aria-hidden="true" />

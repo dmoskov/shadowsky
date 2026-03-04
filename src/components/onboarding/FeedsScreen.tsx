@@ -208,7 +208,7 @@ export const FeedsScreen: React.FC<FeedsScreenProps> = ({
                     <button
                       onClick={() => handleFeedToggle(feed)}
                       disabled={isInProgress}
-                      className="ml-auto flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50"
+                      className="touch-target-sm ml-auto flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-50"
                       style={{
                         backgroundColor: isSaved
                           ? "var(--asph-bg-tertiary)"
@@ -251,7 +251,7 @@ export const FeedsScreen: React.FC<FeedsScreenProps> = ({
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
           <button
             onClick={onBack}
-            className="rounded-xl px-6 py-3 font-medium transition-all hover:opacity-80"
+            className="touch-target-sm rounded-xl px-6 py-3 font-medium transition-all hover:opacity-80"
             style={{
               color: "var(--asph-text-secondary)",
               border: "1px solid var(--asph-border-primary)",
@@ -262,7 +262,7 @@ export const FeedsScreen: React.FC<FeedsScreenProps> = ({
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               onClick={onSkip}
-              className="rounded-xl px-6 py-3 font-medium transition-all hover:opacity-80"
+              className="touch-target-sm rounded-xl px-6 py-3 font-medium transition-all hover:opacity-80"
               style={{
                 color: "var(--asph-text-secondary)",
                 border: "1px solid var(--asph-border-primary)",
@@ -272,7 +272,7 @@ export const FeedsScreen: React.FC<FeedsScreenProps> = ({
             </button>
             <button
               onClick={handleContinue}
-              className="asph-button-primary flex items-center justify-center gap-2 px-6 py-3 font-semibold text-white"
+              className="touch-target-sm asph-button-primary flex items-center justify-center gap-2 px-6 py-3 font-semibold text-white"
             >
               Continue
               <ArrowRight size={20} />

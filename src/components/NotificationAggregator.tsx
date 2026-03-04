@@ -517,7 +517,6 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                     e.stopPropagation();
                     onExpand();
                   }}
-                  className="mt-2 flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-asph-bg-secondary"
                   style={{ color: "var(--asph-text-secondary)" }}
                   aria-expanded={isExpanded}
                   aria-label={
@@ -542,7 +541,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
 
               {hasUnread && (
                 <div
-                  className="mt-1 h-2 w-2 animate-pulse rounded-full"
+                  className="touch-target-sm mt-1 mt-2 flex h-2 w-2 animate-pulse items-center gap-1 rounded-full rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-asph-bg-secondary"
                   style={{ backgroundColor: "var(--asph-primary)" }}
                 ></div>
               )}

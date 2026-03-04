@@ -145,7 +145,7 @@ export const AccessibilitySettings: React.FC = () => {
               onClick={() =>
                 updateSettings({ highContrast: !settings.highContrast })
               }
-              className={`relative inline-flex h-6 w-11 items-center rounded-full spring-toggle ${
+              className={`touch-target relative inline-flex h-6 w-11 items-center rounded-full spring-toggle ${
                 settings.highContrast ? "bg-blue-500" : "bg-gray-400"
               }`}
               style={{
@@ -254,7 +254,7 @@ export const AccessibilitySettings: React.FC = () => {
                 <button
                   key={option.value}
                   onClick={() => updateSettings({ reduceMotion: option.value })}
-                  className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors ${
+                  className={`touch-target flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors ${
                     isSelected ? "ring-2 ring-blue-500" : ""
                   }`}
                   style={{
@@ -348,7 +348,7 @@ export const AccessibilitySettings: React.FC = () => {
                   onClick={() =>
                     updateSettings({ focusIndicators: option.value })
                   }
-                  className={`rounded-lg p-4 text-left transition-colors ${
+                  className={`touch-target rounded-lg p-4 text-left transition-colors ${
                     isSelected ? "ring-2 ring-blue-500" : ""
                   }`}
                   style={{
@@ -415,7 +415,7 @@ export const AccessibilitySettings: React.FC = () => {
                   onClick={() =>
                     updateSettings({ videoAutoplay: option.value })
                   }
-                  className={`flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors ${
+                  className={`touch-target flex w-full items-start gap-3 rounded-lg p-3 text-left transition-colors ${
                     isSelected ? "ring-2 ring-blue-500" : ""
                   }`}
                   style={{

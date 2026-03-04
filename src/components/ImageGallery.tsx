@@ -95,7 +95,7 @@ export function ImageGallery({
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute right-4 top-4 rounded-full p-2 text-white transition-colors hover:bg-white/10 hover:text-gray-300"
+        className="touch-target-icon absolute right-4 top-4 rounded-full p-2 text-white transition-colors hover:bg-white/10 hover:text-gray-300"
         style={{ zIndex: 10002 }}
         aria-label="Close gallery"
       >
@@ -111,7 +111,7 @@ export function ImageGallery({
       {images.length > 1 && (
         <button
           onClick={handlePrevious}
-          className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full p-2 text-white transition-colors hover:bg-white/10 hover:text-gray-300"
+          className="touch-target-icon absolute left-4 top-1/2 -translate-y-1/2 rounded-full p-2 text-white transition-colors hover:bg-white/10 hover:text-gray-300"
           aria-label="Previous image"
         >
           <ChevronLeft size={32} />
@@ -122,7 +122,7 @@ export function ImageGallery({
       {images.length > 1 && (
         <button
           onClick={handleNext}
-          className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-2 text-white transition-colors hover:bg-white/10 hover:text-gray-300"
+          className="touch-target-icon absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-2 text-white transition-colors hover:bg-white/10 hover:text-gray-300"
           aria-label="Next image"
         >
           <ChevronRight size={32} />
@@ -198,7 +198,7 @@ export function ImageGallery({
               onClick={() => {
                 setCurrentIndex(index);
               }}
-              className={`h-12 w-12 overflow-hidden rounded transition-all ${
+              className={`touch-target h-12 w-12 overflow-hidden rounded transition-all ${
                 index === currentIndex
                   ? "ring-2 ring-white"
                   : "opacity-60 hover:opacity-100"

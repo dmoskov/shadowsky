@@ -661,7 +661,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                 setSelectedPostUri(null);
                 setHighlightPostUri(null);
               }}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-gray-200/50 dark:hover:bg-white/10"
+              className="touch-target-sm flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-gray-200/50 dark:hover:bg-white/10"
               style={{ color: "var(--asph-text-primary)" }}
             >
               <ArrowLeft size={16} />
@@ -754,7 +754,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         setActiveSearchQuery("");
                         mainSearchInputRef.current?.focus();
                       }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 transition-opacity hover:opacity-70"
+                      className="touch-target-icon absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 transition-opacity hover:opacity-70"
                       style={{ color: "var(--asph-text-secondary)" }}
                     >
                       <X size={16} />
@@ -765,7 +765,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                 <button
                   onClick={handleSearch}
                   disabled={!filters.query.trim()}
-                  className="flex items-center gap-2 rounded-xl px-4 py-3 font-medium transition-all disabled:opacity-50"
+                  className="touch-target-sm flex items-center gap-2 rounded-xl px-4 py-3 font-medium transition-all disabled:opacity-50"
                   style={{
                     backgroundColor: "var(--asph-primary)",
                     color: "white",
@@ -787,7 +787,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         saveSearch(filters.query.trim());
                       }
                     }}
-                    className="rounded-xl p-3 transition-all hover:bg-gray-200/50 dark:hover:bg-white/10"
+                    className="touch-target rounded-xl p-3 transition-all hover:bg-gray-200/50 dark:hover:bg-white/10"
                     style={{ color: "var(--asph-text-secondary)" }}
                     title={isSearchSaved ? "Remove from saved" : "Save search"}
                   >
@@ -837,13 +837,12 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 e.preventDefault();
                                 navigate(`/profile/${user.handle}`);
                               }}
-                              className="flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-gray-200/50 dark:hover:bg-white/10"
                             >
                               {user.avatar && (
                                 <img
                                   src={proxifyBskyImage(user.avatar)}
                                   alt=""
-                                  className="h-8 w-8 rounded-full"
+                                  className="touch-target-list-item flex h-8 w-8 w-full cursor-pointer items-center gap-3 rounded-full px-3 py-2 text-left transition-colors hover:bg-gray-200/50 dark:hover:bg-white/10"
                                 />
                               )}
                               <div className="min-w-0 flex-1">
@@ -896,7 +895,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 setShowMainTypeahead(false);
                                 setTimeout(() => handleSearch(), 100);
                               }}
-                              className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                              className="touch-target flex min-w-0 flex-1 items-center gap-2 text-left"
                             >
                               <Bookmark
                                 size={14}
@@ -915,7 +914,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                 e.stopPropagation();
                                 removeSavedSearch(search.id);
                               }}
-                              className="rounded p-1 opacity-0 transition-opacity hover:bg-gray-200/50 group-hover:opacity-100 dark:hover:bg-white/10"
+                              className="touch-target-icon rounded p-1 opacity-0 transition-opacity hover:bg-gray-200/50 group-hover:opacity-100 dark:hover:bg-white/10"
                               style={{ color: "var(--asph-text-secondary)" }}
                             >
                               <X size={14} />
@@ -943,7 +942,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               e.preventDefault();
                               clearSearchHistory();
                             }}
-                            className="text-xs hover:underline"
+                            className="touch-target-sm text-xs hover:underline"
                             style={{ color: "var(--asph-primary)" }}
                           >
                             Clear
@@ -958,7 +957,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               setShowMainTypeahead(false);
                               setTimeout(() => handleSearch(), 100);
                             }}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-gray-200/50 dark:hover:bg-white/10"
+                            className="touch-target-list-item flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-gray-200/50 dark:hover:bg-white/10"
                           >
                             <Clock
                               size={14}
@@ -1009,7 +1008,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                     setShowMainTypeahead(false);
                                     setTimeout(() => handleSearch(), 100);
                                   }}
-                                  className="rounded-full px-3 py-1 text-xs transition-all hover:bg-white hover:bg-opacity-20"
+                                  className="touch-target rounded-full px-3 py-1 text-xs transition-all hover:bg-white hover:bg-opacity-20"
                                   style={{
                                     backgroundColor: "var(--asph-bg-tertiary)",
                                     color: "var(--asph-text-secondary)",
@@ -1030,7 +1029,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
               {activeTab === "posts" && (
                 <button
                   onClick={() => setShowFacetedFilters(!showFacetedFilters)}
-                  className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                  className={`touch-target flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
                     showFacetedFilters
                       ? ""
                       : "hover:bg-gray-200/50 dark:hover:bg-white/10"
@@ -1060,7 +1059,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
               {activeTab === "posts" && (
                 <button
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+                  className={`touch-target flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all ${
                     showAdvanced
                       ? ""
                       : "hover:bg-gray-200/50 dark:hover:bg-white/10"
@@ -1085,7 +1084,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
           <div className="mb-2 flex gap-2">
             <button
               onClick={() => setActiveTab("posts")}
-              className={`relative flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
+              className={`touch-target relative flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
                 activeTab === "posts"
                   ? ""
                   : "hover:bg-gray-200/50 dark:hover:bg-white/10"
@@ -1104,7 +1103,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
             </button>
             <button
               onClick={() => setActiveTab("users")}
-              className={`relative flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
+              className={`touch-target relative flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
                 activeTab === "users"
                   ? ""
                   : "hover:bg-gray-200/50 dark:hover:bg-white/10"
@@ -1123,7 +1122,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
             </button>
             <button
               onClick={() => setActiveTab("feeds")}
-              className={`relative flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
+              className={`touch-target relative flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
                 activeTab === "feeds"
                   ? ""
                   : "hover:bg-gray-200/50 dark:hover:bg-white/10"
@@ -1154,7 +1153,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
               <div className="flex gap-1">
                 <button
                   onClick={() => setSortOrder("latest")}
-                  className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
+                  className={`touch-target rounded-md px-3 py-1 text-xs font-medium transition-all ${
                     sortOrder === "latest" ? "" : "opacity-60"
                   }`}
                   style={{
@@ -1172,7 +1171,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                 </button>
                 <button
                   onClick={() => setSortOrder("top")}
-                  className={`rounded-md px-3 py-1 text-xs font-medium transition-all ${
+                  className={`touch-target rounded-md px-3 py-1 text-xs font-medium transition-all ${
                     sortOrder === "top" ? "" : "opacity-60"
                   }`}
                   style={{
@@ -1253,7 +1252,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         />
                         <button
                           onClick={() => removeFromArrayFilter("phrases", i)}
-                          className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                          className="touch-target-icon rounded-lg p-2 transition-opacity hover:opacity-70"
                           style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <X size={16} />
@@ -1262,7 +1261,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     ))}
                     <button
                       onClick={() => addToArrayFilter("phrases", "")}
-                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      className="touch-target-sm rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
                         color: "var(--asph-primary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -1312,7 +1311,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         />
                         <button
                           onClick={() => removeFromArrayFilter("hashtags", i)}
-                          className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                          className="touch-target-icon rounded-lg p-2 transition-opacity hover:opacity-70"
                           style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <X size={16} />
@@ -1321,7 +1320,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     ))}
                     <button
                       onClick={() => addToArrayFilter("hashtags", "")}
-                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      className="touch-target-sm rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
                         color: "var(--asph-primary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -1397,7 +1396,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               setShowSuggestions(true);
                               setUserSearchQuery("");
                             }}
-                            className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                            className="touch-target-icon rounded-lg p-2 transition-opacity hover:opacity-70"
                             style={{ color: "var(--asph-text-secondary)" }}
                             title="Show following"
                           >
@@ -1405,7 +1404,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           </button>
                           <button
                             onClick={() => removeFromArrayFilter("from", i)}
-                            className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                            className="touch-target-icon rounded-lg p-2 transition-opacity hover:opacity-70"
                             style={{ color: "var(--asph-text-secondary)" }}
                           >
                             <X size={16} />
@@ -1440,7 +1439,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                     onMouseEnter={() =>
                                       setSelectedSuggestionIndex(idx)
                                     }
-                                    className={`flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors ${
+                                    className={`touch-target flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors ${
                                       idx === selectedSuggestionIndex
                                         ? "bg-opacity-20"
                                         : "hover:bg-opacity-10"
@@ -1490,7 +1489,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     ))}
                     <button
                       onClick={() => addToArrayFilter("from", "")}
-                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      className="touch-target-sm rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
                         color: "var(--asph-primary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -1581,7 +1580,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                               setShowSuggestions(true);
                               setUserSearchQuery("");
                             }}
-                            className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                            className="touch-target rounded-lg p-2 transition-opacity hover:opacity-70"
                             style={{ color: "var(--asph-text-secondary)" }}
                             title="Show following"
                           >
@@ -1589,7 +1588,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                           </button>
                           <button
                             onClick={() => removeFromArrayFilter("mentions", i)}
-                            className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                            className="touch-target-icon rounded-lg p-2 transition-opacity hover:opacity-70"
                             style={{ color: "var(--asph-text-secondary)" }}
                           >
                             <X size={16} />
@@ -1624,7 +1623,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                                     onMouseEnter={() =>
                                       setSelectedSuggestionIndex(idx)
                                     }
-                                    className={`flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors ${
+                                    className={`touch-target flex w-full cursor-pointer items-center gap-3 px-3 py-2 text-left transition-colors ${
                                       idx === selectedSuggestionIndex
                                         ? "bg-opacity-20"
                                         : "hover:bg-opacity-10"
@@ -1674,7 +1673,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     ))}
                     <button
                       onClick={() => addToArrayFilter("mentions", "")}
-                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      className="touch-target-sm rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
                         color: "var(--asph-primary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -1724,7 +1723,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         />
                         <button
                           onClick={() => removeFromArrayFilter("domains", i)}
-                          className="rounded-lg p-2 transition-opacity hover:opacity-70"
+                          className="touch-target-icon rounded-lg p-2 transition-opacity hover:opacity-70"
                           style={{ color: "var(--asph-text-secondary)" }}
                         >
                           <X size={16} />
@@ -1733,7 +1732,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                     ))}
                     <button
                       onClick={() => addToArrayFilter("domains", "")}
-                      className="rounded-lg px-3 py-1.5 text-sm transition-colors"
+                      className="touch-target-sm rounded-lg px-3 py-1.5 text-sm transition-colors"
                       style={{
                         color: "var(--asph-primary)",
                         backgroundColor: "var(--asph-bg-secondary)",
@@ -1855,7 +1854,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         untilDate: format(new Date(), "yyyy-MM-dd"),
                       }))
                     }
-                    className="rounded-lg px-3 py-1.5 text-xs transition-colors"
+                    className="touch-target-sm rounded-lg px-3 py-1.5 text-xs transition-colors"
                     style={{
                       color: "var(--asph-primary)",
                       backgroundColor: "var(--asph-bg-secondary)",
@@ -1873,7 +1872,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         untilDate: format(new Date(), "yyyy-MM-dd"),
                       }))
                     }
-                    className="rounded-lg px-3 py-1.5 text-xs transition-colors"
+                    className="touch-target-sm rounded-lg px-3 py-1.5 text-xs transition-colors"
                     style={{
                       color: "var(--asph-primary)",
                       backgroundColor: "var(--asph-bg-secondary)",
@@ -1894,7 +1893,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         untilDate: format(new Date(), "yyyy-MM-dd"),
                       }))
                     }
-                    className="rounded-lg px-3 py-1.5 text-xs transition-colors"
+                    className="touch-target rounded-lg px-3 py-1.5 text-xs transition-colors"
                     style={{
                       color: "var(--asph-primary)",
                       backgroundColor: "var(--asph-bg-secondary)",
@@ -1912,7 +1911,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                         untilDate: "",
                       }))
                     }
-                    className="rounded-lg px-3 py-1.5 text-xs transition-colors"
+                    className="touch-target-sm rounded-lg px-3 py-1.5 text-xs transition-colors"
                     style={{
                       color: "var(--asph-text-secondary)",
                       backgroundColor: "var(--asph-bg-secondary)",

@@ -79,7 +79,7 @@ export const AddAccountPage: React.FC = () => {
     <div className="mx-auto max-w-md p-4">
       <button
         onClick={() => navigate(-1)}
-        className="mb-6 flex items-center gap-2 text-sm transition-opacity hover:opacity-80"
+        className="touch-target-sm mb-6 flex items-center gap-2 text-sm transition-opacity hover:opacity-80"
         style={{ color: "var(--asph-text-secondary)" }}
       >
         <ArrowLeft size={16} />
@@ -117,7 +117,7 @@ export const AddAccountPage: React.FC = () => {
               }
             }}
             disabled={!isOAuthAvailable}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all ${
+            className={`touch-target flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all ${
               loginMode === "oauth" ? "shadow-sm" : ""
             } ${!isOAuthAvailable ? "cursor-not-allowed opacity-50" : ""}`}
             style={{
@@ -141,7 +141,7 @@ export const AddAccountPage: React.FC = () => {
               setLoginMode("app-password");
               setError("");
             }}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all ${
+            className={`touch-target flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all ${
               loginMode === "app-password" ? "shadow-sm" : ""
             }`}
             style={{
@@ -224,7 +224,7 @@ export const AddAccountPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="asph-button-primary flex w-full items-center justify-center gap-2 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="touch-target-sm asph-button-primary flex w-full items-center justify-center gap-2 px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? (
                 "Redirecting..."
@@ -360,7 +360,7 @@ export const AddAccountPage: React.FC = () => {
                       setShowEmailCode(false);
                       setError("");
                     }}
-                    className="text-xs hover:underline"
+                    className="touch-target-sm text-xs hover:underline"
                     style={{ color: "var(--asph-primary)" }}
                   >
                     Try different credentials
@@ -373,7 +373,7 @@ export const AddAccountPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center gap-1 text-sm transition-opacity hover:opacity-80"
+                className="touch-target-sm flex items-center gap-1 text-sm transition-opacity hover:opacity-80"
                 style={{ color: "var(--asph-text-secondary)" }}
               >
                 <span
@@ -412,7 +412,7 @@ export const AddAccountPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="asph-button-primary w-full px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className="touch-target-sm asph-button-primary w-full px-4 py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? "Signing in..." : "Sign In"}
             </button>

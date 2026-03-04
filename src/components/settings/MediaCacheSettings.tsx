@@ -298,7 +298,7 @@ export const MediaCacheSettings: React.FC = () => {
                       <button
                         onClick={() => handleClearByType(type)}
                         disabled={isLoading}
-                        className="rounded px-2 py-1 text-xs transition-colors"
+                        className="touch-target-sm rounded px-2 py-1 text-xs transition-colors"
                         style={{
                           backgroundColor: "var(--asph-bg-tertiary)",
                           color: "var(--asph-text-secondary)",
@@ -357,7 +357,7 @@ export const MediaCacheSettings: React.FC = () => {
           <button
             onClick={handleUpdateMaxSize}
             disabled={isLoading}
-            className="rounded-lg px-4 py-2 text-sm transition-colors"
+            className="touch-target-sm rounded-lg px-4 py-2 text-sm transition-colors"
             style={{
               backgroundColor: "var(--asph-accent-blue)",
               color: "white",
@@ -383,7 +383,7 @@ export const MediaCacheSettings: React.FC = () => {
         <button
           onClick={handleClearCache}
           disabled={isLoading}
-          className="border-asph-error/30 bg-asph-error/10 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm text-asph-error transition-colors"
+          className="touch-target-sm border-asph-error/30 bg-asph-error/10 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm text-asph-error transition-colors"
         >
           <Trash2 className="h-4 w-4" />
           {isLoading ? "Clearing..." : "Clear All Cached Media"}

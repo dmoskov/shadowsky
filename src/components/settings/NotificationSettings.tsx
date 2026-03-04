@@ -190,7 +190,7 @@ export const NotificationSettings: React.FC = () => {
               onClick={() =>
                 handleToggle(type.key as keyof typeof notifications)
               }
-              className={`relative inline-flex h-6 w-11 items-center rounded-full spring-toggle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+              className={`touch-target relative inline-flex h-6 w-11 items-center rounded-full spring-toggle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
                 notifications[type.key as keyof typeof notifications]
                   ? "bg-blue-500"
                   : "bg-gray-300 dark:bg-gray-600"
@@ -228,7 +228,7 @@ export const NotificationSettings: React.FC = () => {
         <button
           onClick={handleSave}
           disabled={isLoading}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
+          className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
           style={{
             backgroundColor: "var(--asph-primary)",
           }}

@@ -79,7 +79,7 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({
           {/* Hide Reposts */}
           <button
             onClick={() => togglePreference("hideReposts")}
-            className="asph-card flex w-full items-start gap-4 p-5 text-left transition-all hover:shadow-md"
+            className="touch-target-list-item asph-card flex w-full items-start gap-4 p-5 text-left transition-all hover:shadow-md"
             style={{ background: "var(--asph-bg-secondary)" }}
           >
             <div
@@ -121,7 +121,7 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({
           {/* Hide Replies */}
           <button
             onClick={() => togglePreference("hideReplies")}
-            className="asph-card flex w-full items-start gap-4 p-5 text-left transition-all hover:shadow-md"
+            className="touch-target-list-item asph-card flex w-full items-start gap-4 p-5 text-left transition-all hover:shadow-md"
             style={{ background: "var(--asph-bg-secondary)" }}
           >
             <div
@@ -163,7 +163,7 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({
           {/* Adult Content */}
           <button
             onClick={() => togglePreference("showAdultContent")}
-            className="asph-card flex w-full items-start gap-4 p-5 text-left transition-all hover:shadow-md"
+            className="touch-target-list-item asph-card flex w-full items-start gap-4 p-5 text-left transition-all hover:shadow-md"
             style={{ background: "var(--asph-bg-secondary)" }}
           >
             <div
@@ -224,7 +224,7 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
           <button
             onClick={onBack}
-            className="rounded-xl px-6 py-3 font-medium transition-all hover:opacity-80"
+            className="touch-target-sm rounded-xl px-6 py-3 font-medium transition-all hover:opacity-80"
             style={{
               color: "var(--asph-text-secondary)",
               border: "1px solid var(--asph-border-primary)",
@@ -234,7 +234,7 @@ export const PreferencesScreen: React.FC<PreferencesScreenProps> = ({
           </button>
           <button
             onClick={handleComplete}
-            className="asph-button-primary flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white"
+            className="touch-target-sm asph-button-primary flex items-center justify-center gap-2 px-8 py-3 font-semibold text-white"
           >
             <Check size={20} />
             Complete Setup

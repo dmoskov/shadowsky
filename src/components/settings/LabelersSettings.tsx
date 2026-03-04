@@ -298,7 +298,7 @@ export const LabelersSettings: React.FC = () => {
           <button
             onClick={handleAddLabelerByDid}
             disabled={!newLabelerDid.trim() || isLoading}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
+            className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
             style={{
               backgroundColor: "var(--asph-primary)",
             }}
@@ -381,7 +381,7 @@ export const LabelersSettings: React.FC = () => {
                             isExpanded ? null : subscription.did,
                           )
                         }
-                        className="rounded-lg px-3 py-1 text-sm font-medium transition-colors"
+                        className="touch-target-sm rounded-lg px-3 py-1 text-sm font-medium transition-colors"
                         style={{
                           backgroundColor: "var(--asph-bg-tertiary)",
                           color: "var(--asph-text-primary)",
@@ -403,7 +403,7 @@ export const LabelersSettings: React.FC = () => {
                       <button
                         onClick={() => handleUnsubscribe(subscription.did)}
                         disabled={isLoading}
-                        className="rounded-lg px-3 py-1 text-sm font-medium transition-colors disabled:opacity-50"
+                        className="touch-target-sm rounded-lg px-3 py-1 text-sm font-medium transition-colors disabled:opacity-50"
                         style={{
                           backgroundColor: "var(--asph-bg-tertiary)",
                           color: "var(--asph-text-primary)",
@@ -559,7 +559,7 @@ export const LabelersSettings: React.FC = () => {
                 <button
                   onClick={() => handleSubscribe(labeler.did)}
                   disabled={isLoading || isSubscribed(labeler.did)}
-                  className="rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+                  className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
                   style={{
                     backgroundColor: isSubscribed(labeler.did)
                       ? "var(--asph-bg-tertiary)"

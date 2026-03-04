@@ -143,7 +143,7 @@ export const Lists: React.FC = () => {
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex cursor-pointer items-center gap-2 rounded-full bg-asph-primary px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90"
+            className="touch-target-sm flex cursor-pointer items-center gap-2 rounded-full bg-asph-primary px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90"
             aria-label="Create new list"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
@@ -188,7 +188,7 @@ export const Lists: React.FC = () => {
           </p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex cursor-pointer items-center gap-2 rounded-full bg-asph-primary px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90"
+            className="touch-target-sm flex cursor-pointer items-center gap-2 rounded-full bg-asph-primary px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90"
             aria-label="Create your first list"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
@@ -233,7 +233,7 @@ export const Lists: React.FC = () => {
                         menuOpenForList === list.uri ? null : list.uri,
                       );
                     }}
-                    className="cursor-pointer rounded-md border-none bg-transparent p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-hover"
+                    className="touch-target-icon cursor-pointer rounded-md border-none bg-transparent p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-hover"
                     aria-label={`Options for ${list.name}`}
                     aria-expanded={menuOpenForList === list.uri}
                     aria-haspopup="menu"
@@ -261,7 +261,7 @@ export const Lists: React.FC = () => {
                             setEditingList(list);
                             setMenuOpenForList(null);
                           }}
-                          className="flex w-full cursor-pointer items-center gap-2 border-none bg-transparent px-4 py-2.5 text-left text-sm text-asph-text-primary transition-all duration-200 hover:bg-asph-bg-hover"
+                          className="touch-target-list-item flex w-full cursor-pointer items-center gap-2 border-none bg-transparent px-4 py-2.5 text-left text-sm text-asph-text-primary transition-all duration-200 hover:bg-asph-bg-hover"
                           role="menuitem"
                         >
                           <Edit2 className="h-4 w-4" aria-hidden="true" />
@@ -273,7 +273,7 @@ export const Lists: React.FC = () => {
                             handleDeleteList(list.uri);
                             setMenuOpenForList(null);
                           }}
-                          className="flex w-full cursor-pointer items-center gap-2 border-none bg-transparent px-4 py-2.5 text-left text-sm text-red-600 transition-all duration-200 hover:bg-red-50"
+                          className="touch-target-list-item flex w-full cursor-pointer items-center gap-2 border-none bg-transparent px-4 py-2.5 text-left text-sm text-red-600 transition-all duration-200 hover:bg-red-50"
                           role="menuitem"
                         >
                           <Trash2 className="h-4 w-4" aria-hidden="true" />

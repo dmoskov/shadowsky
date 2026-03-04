@@ -82,7 +82,7 @@ export const WebSocketStatus: React.FC = () => {
       >
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex w-full items-center gap-2 p-3 text-left hover:opacity-80"
+          className="touch-target-list-item flex w-full items-center gap-2 p-3 text-left hover:opacity-80"
           style={{ color: "var(--asph-text-primary)" }}
         >
           {getStatusIcon()}
@@ -183,7 +183,7 @@ export const WebSocketStatus: React.FC = () => {
             {!isConnected && (
               <button
                 onClick={reconnect}
-                className="mt-2 w-full rounded px-2 py-1 text-xs font-medium transition-colors"
+                className="touch-target-sm mt-2 w-full rounded px-2 py-1 text-xs font-medium transition-colors"
                 style={{
                   background: "var(--asph-primary)",
                   color: "white",

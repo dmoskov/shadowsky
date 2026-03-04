@@ -40,7 +40,7 @@ export const StorageOptionSelector: React.FC<StorageOptionSelectorProps> = ({
             key={option.type}
             onClick={() => onSelect(option.type)}
             disabled={disabled || isLoading || isSelected}
-            className={`w-full rounded-lg p-4 text-left transition-all ${
+            className={`touch-target w-full rounded-lg p-4 text-left transition-all ${
               isSelected ? "ring-2 ring-offset-2" : "hover:brightness-110"
             } ${isLoading || disabled ? "opacity-50" : ""}`}
             style={{

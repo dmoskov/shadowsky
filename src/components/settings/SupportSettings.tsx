@@ -63,7 +63,7 @@ export const SupportSettings: React.FC = () => {
             <div className="mt-4 flex items-center gap-4">
               <button
                 onClick={() => setIsBugReportOpen(true)}
-                className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
+                className="touch-target-sm flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
                 style={{ backgroundColor: "var(--asph-primary)" }}
               >
                 <Bug className="h-4 w-4" />

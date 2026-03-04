@@ -165,7 +165,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
                   {/* Alt text generation button */}
                   {uri && (
                     <button
-                      className="absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
+                      className="touch-target-icon absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
                       onClick={(e) => {
                         e.stopPropagation();
                         if (hasAltText && !generatedAltTexts[postKey]?.[idx]) {

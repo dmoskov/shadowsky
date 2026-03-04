@@ -777,7 +777,7 @@ export const VirtualizedPostList = React.forwardRef<
         {showNewPostsIndicator && (
           <button
             onClick={handleNewPostsClick}
-            className="absolute left-1/2 top-4 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 shadow-lg transition-all duration-200 hover:scale-105"
+            className="touch-target-sm absolute left-1/2 top-4 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 shadow-lg transition-all duration-200 hover:scale-105"
             style={{
               backgroundColor: "var(--asph-primary)",
               color: "white",

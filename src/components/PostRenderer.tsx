@@ -592,7 +592,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
 
                   {/* Alt text generation button */}
                   <button
-                    className="absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
+                    className="touch-target-icon absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (hasAltText && !generatedAltTexts[index]) {
@@ -631,7 +631,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                   e.stopPropagation();
                   setShowSensitiveMedia(true);
                 }}
-                className="rounded-lg px-6 py-3 text-sm font-medium shadow-lg transition-colors"
+                className="touch-target-sm rounded-lg px-6 py-3 text-sm font-medium shadow-lg transition-colors"
                 style={{
                   backgroundColor: "var(--asph-bg-primary)",
                   color: "var(--asph-text-primary)",
@@ -1331,7 +1331,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               {onMenuClick && (
                 <button
                   onClick={onMenuClick}
-                  className="rounded-full p-1 transition-colors hover:bg-asph-bg-hover"
+                  className="touch-target-icon rounded-full p-1 transition-colors hover:bg-asph-bg-hover"
                   aria-label="More options"
                   aria-haspopup="menu"
                 >
@@ -1398,7 +1398,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                     e.stopPropagation();
                     handleTranslate();
                   }}
-                  className="mt-1 flex items-center gap-1 text-xs transition-colors hover:opacity-80"
+                  className="touch-target-sm mt-1 flex items-center gap-1 text-xs transition-colors hover:opacity-80"
                   style={{ color: "var(--asph-primary)" }}
                   disabled={isTranslating}
                   aria-label={
@@ -1455,7 +1455,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                       onReply?.();
                     }
                   }}
-                  className={`flex items-center gap-1 text-sm transition-colors ${
+                  className={`touch-target flex items-center gap-1 text-sm transition-colors ${
                     post.viewer?.replyDisabled
                       ? "cursor-not-allowed opacity-40"
                       : "hover:text-blue-500"
@@ -1482,7 +1482,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                     e.stopPropagation();
                     onRepost?.();
                   }}
-                  className={`flex items-center gap-1 text-sm transition-colors hover:text-green-500 ${
+                  className={`touch-target flex items-center gap-1 text-sm transition-colors hover:text-green-500 ${
                     post.viewer?.repost ? "text-green-500" : ""
                   }`}
                   style={{
@@ -1502,7 +1502,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                     e.stopPropagation();
                     onLike?.();
                   }}
-                  className={`flex items-center gap-1 text-sm transition-colors hover:text-red-500 ${
+                  className={`touch-target flex items-center gap-1 text-sm transition-colors hover:text-red-500 ${
                     post.viewer?.like ? "text-red-500" : ""
                   }`}
                   style={{
@@ -1527,7 +1527,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                       e.stopPropagation();
                       onBookmark();
                     }}
-                    className={`flex items-center gap-1 text-sm transition-colors hover:text-blue-500 ${
+                    className={`touch-target flex items-center gap-1 text-sm transition-colors hover:text-blue-500 ${
                       isBookmarked ? "text-blue-500" : ""
                     }`}
                     style={{

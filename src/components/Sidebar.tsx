@@ -85,7 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={onClose}
             aria-label="Close menu"
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 transition-all hover:opacity-70"
+            className="touch-target-icon flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 transition-all hover:opacity-70"
           >
             <CloseIcon
               size={20}

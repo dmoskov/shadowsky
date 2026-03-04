@@ -112,7 +112,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
         {onRefresh && (
           <button
             onClick={onRefresh}
-            className="rounded-md p-2 transition-opacity hover:opacity-70"
+            className="touch-target-icon rounded-md p-2 transition-opacity hover:opacity-70"
             title="Refresh"
           >
             <RefreshCw className="h-4 w-4 text-asph-text-tertiary" />
@@ -142,7 +142,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
                   setShowFeedDropdown(false);
                 }
               }}
-              className="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               title="Change feed"
             >
               <span className="text-asph-text-secondary">Change</span>
@@ -170,7 +170,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
                           onFeedChange(option.type);
                           setShowFeedDropdown(false);
                         }}
-                        className="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="touch-target-list-item flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         <option.icon className="h-4 w-4 text-asph-text-secondary" />
                         <span className="text-sm text-gray-900 dark:text-gray-100">
@@ -186,7 +186,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
                             onDiscoverFeeds();
                             setShowFeedDropdown(false);
                           }}
-                          className="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                          className="touch-target-list-item flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
                           <Plus className="h-4 w-4 text-asph-text-secondary" />
                           <span className="text-sm text-gray-900 dark:text-gray-100">
@@ -206,7 +206,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
         {canRemove() && (
           <button
             onClick={() => onRemove(column.id)}
-            className="rounded-md p-2 transition-opacity hover:opacity-70"
+            className="touch-target-icon rounded-md p-2 transition-opacity hover:opacity-70"
             title="Remove column"
           >
             <X className="h-4 w-4 text-asph-text-tertiary hover:text-red-600 dark:hover:text-red-400" />
@@ -235,7 +235,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
                 setShowMenu(false);
               }
             }}
-            className="rounded-md p-2 transition-opacity hover:opacity-70"
+            className="touch-target rounded-md p-2 transition-opacity hover:opacity-70"
             title="More options"
           >
             <MoreVertical className="h-4 w-4 text-asph-text-tertiary" />
@@ -264,7 +264,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
                           onMoveLeft();
                           setShowMenu(false);
                         }}
-                        className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="touch-target-list-item flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         <ChevronLeft className="h-4 w-4" />
                         Move Left
@@ -276,7 +276,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
                           onMoveRight();
                           setShowMenu(false);
                         }}
-                        className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="touch-target-list-item flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         <ChevronRight className="h-4 w-4" />
                         Move Right

@@ -437,7 +437,7 @@ export const UserAnalytics: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setDateRange("24h")}
-            className="rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
+            className="touch-target-sm rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
             style={{
               backgroundColor:
                 dateRange === "24h"
@@ -451,7 +451,7 @@ export const UserAnalytics: React.FC = () => {
           </button>
           <button
             onClick={() => setDateRange("7d")}
-            className="rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
+            className="touch-target-sm rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
             style={{
               backgroundColor:
                 dateRange === "7d"
@@ -465,7 +465,7 @@ export const UserAnalytics: React.FC = () => {
           </button>
           <button
             onClick={() => setDateRange("30d")}
-            className="rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
+            className="touch-target-sm rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
             style={{
               backgroundColor:
                 dateRange === "30d"
@@ -479,7 +479,7 @@ export const UserAnalytics: React.FC = () => {
           </button>
           <button
             onClick={() => setDateRange("90d")}
-            className="rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
+            className="touch-target-sm rounded-lg px-3 py-1.5 text-sm transition-all hover:opacity-80"
             style={{
               backgroundColor:
                 dateRange === "90d"
@@ -1172,7 +1172,7 @@ export const UserAnalytics: React.FC = () => {
             {!analysisRequested && (
               <button
                 onClick={() => setAnalysisRequested(true)}
-                className="rounded-lg px-4 py-2 text-sm font-medium transition-all hover:opacity-90"
+                className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium transition-all hover:opacity-90"
                 style={{
                   backgroundColor: "var(--asph-primary)",
                   color: "white",
@@ -1578,7 +1578,7 @@ export const UserAnalytics: React.FC = () => {
 
               <button
                 onClick={() => setAnalysisRequested(false)}
-                className="w-full rounded-lg px-4 py-2 text-sm transition-all hover:opacity-80"
+                className="touch-target-sm w-full rounded-lg px-4 py-2 text-sm transition-all hover:opacity-80"
                 style={{
                   backgroundColor: "var(--asph-bg-tertiary)",
                   color: "var(--asph-text-secondary)",

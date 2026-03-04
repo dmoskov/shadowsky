@@ -104,7 +104,7 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
               <button
                 key={emoji}
                 onClick={() => handleReactionClick(emoji)}
-                className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs transition-colors ${
+                className={`touch-target flex items-center gap-1 rounded-full px-2 py-1 text-xs transition-colors ${
                   hasReacted
                     ? "bg-asph-primary/20 dark:bg-asph-primary/30 text-asph-primary"
                     : "bg-asph-bg-secondary text-asph-text-secondary hover:bg-asph-bg-tertiary"
@@ -120,7 +120,7 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
         {/* Add reaction button */}
         <button
           onClick={handleAddReactionClick}
-          className="flex h-6 w-6 items-center justify-center rounded-full text-xs text-asph-text-secondary transition-colors hover:bg-asph-bg-secondary"
+          className="touch-target-sm flex h-6 w-6 items-center justify-center rounded-full text-xs text-asph-text-secondary transition-colors hover:bg-asph-bg-secondary"
           title="Add reaction"
         >
           <svg
@@ -150,7 +150,7 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
             <button
               key={emoji}
               onClick={() => handleReactionClick(emoji)}
-              className="flex h-8 w-8 items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="touch-target flex h-8 w-8 items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700"
               title={`React with ${emoji}`}
             >
               {emoji}

@@ -621,7 +621,7 @@ const NotificationsFeedComponent: React.FC = () => {
                     }
                     setShowMoreFilters(!showMoreFilters);
                   }}
-                  className={`flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+                  className={`touch-target flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
                     showMoreFilters
                       ? "bg-asph-primary text-white"
                       : "text-asph-text-secondary hover:bg-asph-bg-secondary hover:text-asph-text-primary"
@@ -647,7 +647,7 @@ const NotificationsFeedComponent: React.FC = () => {
                           handleFilterChange("quotes");
                           setShowMoreFilters(false);
                         }}
-                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-asph-bg-hover ${
+                        className={`touch-target flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-asph-bg-hover ${
                           filter === "quotes" ? "text-blue-500" : ""
                         }`}
                       >
@@ -664,7 +664,7 @@ const NotificationsFeedComponent: React.FC = () => {
                           handleFilterChange("images");
                           setShowMoreFilters(false);
                         }}
-                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-asph-bg-hover ${
+                        className={`touch-target flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-asph-bg-hover ${
                           filter === "images" ? "text-blue-500" : ""
                         }`}
                       >
@@ -681,7 +681,7 @@ const NotificationsFeedComponent: React.FC = () => {
                           handleFilterChange("from-following");
                           setShowMoreFilters(false);
                         }}
-                        className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-asph-bg-hover ${
+                        className={`touch-target flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-asph-bg-hover ${
                           filter === "from-following" ? "text-blue-500" : ""
                         }`}
                         disabled={isLoadingFollowing}
@@ -700,7 +700,7 @@ const NotificationsFeedComponent: React.FC = () => {
                             handleFilterChange("top-accounts");
                             setShowMoreFilters(false);
                           }}
-                          className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-asph-bg-hover ${
+                          className={`touch-target flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm hover:bg-asph-bg-hover ${
                             filter === "top-accounts" ? "text-blue-500" : ""
                           }`}
                         >
@@ -725,7 +725,7 @@ const NotificationsFeedComponent: React.FC = () => {
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing || isLoading}
-                className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-asph-text-secondary transition-all hover:bg-asph-bg-secondary hover:text-asph-text-primary disabled:opacity-50"
+                className="touch-target-sm flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-asph-text-secondary transition-all hover:bg-asph-bg-secondary hover:text-asph-text-primary disabled:opacity-50"
                 aria-label={
                   isRefreshing
                     ? "Refreshing notifications"
@@ -744,7 +744,6 @@ const NotificationsFeedComponent: React.FC = () => {
               {unreadCount && unreadCount > 0 && (
                 <button
                   onClick={() => markAsRead()}
-                  className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-asph-primary transition-all hover:bg-asph-bg-secondary"
                   aria-label={`Mark all ${unreadCount} notifications as read`}
                 >
                   <svg
@@ -754,7 +753,7 @@ const NotificationsFeedComponent: React.FC = () => {
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
-                    className="flex-shrink-0"
+                    className="touch-target-sm flex flex-shrink-0 items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-asph-primary transition-all hover:bg-asph-bg-secondary"
                     aria-hidden="true"
                   >
                     <polyline points="9 11 12 14 22 4" />
@@ -907,7 +906,7 @@ const NotificationsFeedComponent: React.FC = () => {
                             newExpanded.delete(aggregationKey);
                             setExpandedAggregations(newExpanded);
                           }}
-                          className="flex w-full items-center gap-1 rounded-md px-3 py-2 text-left text-xs hover:bg-asph-bg-hover"
+                          className="touch-target-list-item flex w-full items-center gap-1 rounded-md px-3 py-2 text-left text-xs hover:bg-asph-bg-hover"
                           style={{
                             color: "var(--asph-text-secondary)",
                             paddingLeft: "calc(1rem + 3rem)",
@@ -1053,13 +1052,13 @@ const NotificationsFeedComponent: React.FC = () => {
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setShowConfigModal(false)}
-                  className="asph-button-secondary"
+                  className="touch-target asph-button-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => setShowConfigModal(false)}
-                  className="asph-button-primary"
+                  className="touch-target asph-button-primary"
                 >
                   Save
                 </button>
@@ -1101,7 +1100,7 @@ const FilterTab: React.FC<FilterTabProps> = React.memo(
     return (
       <button
         onClick={onClick}
-        className={`flex items-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-1 text-xs font-medium transition-all duration-200 sm:gap-1 sm:px-2 sm:py-1.5 sm:text-sm md:px-2.5 ${
+        className={`touch-target flex items-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-1 text-xs font-medium transition-all duration-200 sm:gap-1 sm:px-2 sm:py-1.5 sm:text-sm md:px-2.5 ${
           active
             ? "bg-asph-primary text-white"
             : "text-asph-text-secondary hover:bg-asph-bg-secondary hover:text-asph-text-primary"

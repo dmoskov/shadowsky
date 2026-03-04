@@ -285,7 +285,7 @@ interface ArticleCardProps {
 const ArticleCard: React.FC<ArticleCardProps> = ({ article, onClick }) => (
   <button
     onClick={onClick}
-    className="w-full rounded-lg p-4 text-left transition-colors hover:bg-asph-bg-secondary"
+    className="touch-target-list-item w-full rounded-lg p-4 text-left transition-colors hover:bg-asph-bg-secondary"
     style={{
       border: "1px solid var(--asph-border-primary)",
     }}
@@ -318,7 +318,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-4 rounded-lg p-4 text-left transition-colors hover:bg-asph-bg-secondary"
+      className="touch-target-list-item flex w-full items-center gap-4 rounded-lg p-4 text-left transition-colors hover:bg-asph-bg-secondary"
       style={{
         border: "1px solid var(--asph-border-primary)",
       }}
@@ -426,7 +426,7 @@ export const HelpSettings: React.FC = () => {
       <div className="space-y-4">
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 text-sm transition-colors hover:text-asph-primary"
+          className="touch-target-sm flex items-center gap-2 text-sm transition-colors hover:text-asph-primary"
           style={{ color: "var(--asph-text-secondary)" }}
         >
           <ArrowLeft size={16} />
@@ -462,7 +462,7 @@ export const HelpSettings: React.FC = () => {
       <div className="space-y-4">
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 text-sm transition-colors hover:text-asph-primary"
+          className="touch-target-sm flex items-center gap-2 text-sm transition-colors hover:text-asph-primary"
           style={{ color: "var(--asph-text-secondary)" }}
         >
           <ArrowLeft size={16} />
@@ -505,7 +505,7 @@ export const HelpSettings: React.FC = () => {
       <div className="space-y-4">
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 text-sm transition-colors hover:text-asph-primary"
+          className="touch-target-sm flex items-center gap-2 text-sm transition-colors hover:text-asph-primary"
           style={{ color: "var(--asph-text-secondary)" }}
         >
           <ArrowLeft size={16} />
@@ -622,7 +622,7 @@ export const HelpSettings: React.FC = () => {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setIsShortcutsHelpOpen(true)}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-asph-bg-tertiary"
+            className="touch-target-sm flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-asph-bg-tertiary"
             style={{
               backgroundColor: "var(--asph-bg-primary)",
               color: "var(--asph-text-primary)",
@@ -648,7 +648,7 @@ export const HelpSettings: React.FC = () => {
           </a>
           <button
             onClick={() => setIsBugReportOpen(true)}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-asph-bg-tertiary"
+            className="touch-target-sm flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-asph-bg-tertiary"
             style={{
               backgroundColor: "var(--asph-bg-primary)",
               color: "var(--asph-text-primary)",
@@ -698,7 +698,7 @@ export const HelpSettings: React.FC = () => {
           Can't find what you're looking for?{" "}
           <button
             onClick={() => setIsBugReportOpen(true)}
-            className="text-blue-500 hover:underline"
+            className="touch-target text-blue-500 hover:underline"
           >
             Report a bug
           </button>{" "}

@@ -270,7 +270,7 @@ export const PerformanceSettings: React.FC = () => {
         </div>
         <button
           onClick={refreshData}
-          className="flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+          className="touch-target-sm flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
         >
           <RefreshCw className="h-4 w-4" aria-hidden="true" />
           Refresh
@@ -422,7 +422,7 @@ export const PerformanceSettings: React.FC = () => {
                 <button
                   key={preset}
                   onClick={() => handlePresetChange(preset)}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`touch-target rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                     budgetPreset === preset
                       ? "bg-blue-600 text-white"
                       : "bg-gray-100 text-asph-text-secondary hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
@@ -523,7 +523,7 @@ export const PerformanceSettings: React.FC = () => {
           {history.length > 0 && (
             <button
               onClick={handleClearHistory}
-              className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+              className="touch-target-sm flex items-center gap-1 rounded-md px-2 py-1 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
               Clear
@@ -698,7 +698,7 @@ export const PerformanceSettings: React.FC = () => {
           </div>
           <button
             onClick={() => setEngagementEnabled(!isEngagementEnabled)}
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${
+            className={`touch-target relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${
               isEngagementEnabled
                 ? "bg-blue-600"
                 : "bg-gray-300 dark:bg-gray-600"

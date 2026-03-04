@@ -50,7 +50,7 @@ export const ThreadShortcutsHelp: React.FC<ThreadShortcutsHelpProps> = ({
         {enabledShortcuts.length > 5 && (
           <button
             onClick={onClose}
-            className="text-blue-500 hover:underline"
+            className="touch-target text-blue-500 hover:underline"
             aria-label="Show all shortcuts"
           >
             +{enabledShortcuts.length - 5} more
@@ -58,7 +58,7 @@ export const ThreadShortcutsHelp: React.FC<ThreadShortcutsHelpProps> = ({
         )}
         <button
           onClick={onClose}
-          className="ml-auto text-blue-500 hover:underline"
+          className="touch-target ml-auto text-blue-500 hover:underline"
           aria-label={isOpen ? "Hide shortcuts panel" : "Show shortcuts panel"}
         >
           {isOpen ? "Hide" : "? for all"}
@@ -107,7 +107,7 @@ export const ThreadShortcutsHelp: React.FC<ThreadShortcutsHelpProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-1.5 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="touch-target-icon rounded-full p-1.5 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
             style={{ color: "var(--asph-text-secondary)" }}
             aria-label="Close shortcuts panel"
           >
@@ -248,7 +248,7 @@ export const ThreadShortcutsHintBar: React.FC<{
 
       <button
         onClick={onShowHelp}
-        className="ml-auto flex items-center gap-1 transition-colors hover:text-blue-500"
+        className="touch-target-sm ml-auto flex items-center gap-1 transition-colors hover:text-blue-500"
         aria-label="Show all keyboard shortcuts"
       >
         <kbd

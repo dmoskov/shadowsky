@@ -359,7 +359,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
             {onCancel && progress.state !== "complete" && (
               <button
                 onClick={onCancel}
-                className="ml-2 rounded-md p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="touch-target-icon ml-2 rounded-md p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
                 aria-label="Cancel upload"
               >
                 <span className="text-xs text-asph-text-secondary">✕</span>

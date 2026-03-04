@@ -60,7 +60,7 @@ export const ExploreEmptyState: React.FC<ExploreEmptyStateProps> = ({
           </p>
           <button
             onClick={() => refetchAll()}
-            className="mx-auto flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors"
+            className="touch-target-sm mx-auto flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors"
             style={{
               backgroundColor: "var(--asph-primary)",
               color: "white",
@@ -93,7 +93,7 @@ export const ExploreEmptyState: React.FC<ExploreEmptyStateProps> = ({
         {hasContent && (
           <button
             onClick={() => refetchAll()}
-            className="rounded-full p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded-full p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
             style={{ color: "var(--asph-text-tertiary)" }}
             aria-label="Refresh trending content"
           >
@@ -136,7 +136,6 @@ export const ExploreEmptyState: React.FC<ExploreEmptyStateProps> = ({
               <button
                 key={`${item.topic}-${index}`}
                 onClick={() => onTopicClick(item.topic)}
-                className="rounded-full border px-3 py-1.5 text-sm transition-all hover:border-blue-400 hover:shadow-sm"
                 style={{
                   backgroundColor: "var(--asph-bg-secondary)",
                   borderColor: "var(--asph-border-primary)",
@@ -152,7 +151,7 @@ export const ExploreEmptyState: React.FC<ExploreEmptyStateProps> = ({
 
       {/* Search tip */}
       <div
-        className="rounded-lg p-3 text-center text-xs"
+        className="touch-target-sm rounded-full rounded-lg border p-3 px-3 py-1.5 text-center text-sm text-xs transition-all hover:border-blue-400 hover:shadow-sm"
         style={{
           backgroundColor: "var(--asph-bg-secondary)",
           color: "var(--asph-text-tertiary)",

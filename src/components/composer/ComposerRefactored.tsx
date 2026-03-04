@@ -1460,14 +1460,14 @@ export function ComposerRefactored() {
         {/* Post Button and Thread Composer Button */}
         <div className="mb-4 flex items-center justify-between">
           <button
-            className="asph-button-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium"
+            className="touch-target-sm asph-button-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium"
             onClick={() => state.setShowThreadComposer(true)}
           >
             <MessageSquare size={16} />
             Create Thread
           </button>
           <button
-            className="asph-button-primary flex items-center gap-2 px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+            className="touch-target-sm asph-button-primary flex items-center gap-2 px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleSend}
             disabled={state.posts.length === 0 || state.isPosting}
             aria-label={
@@ -1529,7 +1529,7 @@ export function ComposerRefactored() {
           />
 
           <button
-            className="asph-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
+            className="touch-target-sm asph-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
             onClick={saveDraftHandler}
             disabled={!state.text.trim()}
           >
@@ -1540,7 +1540,7 @@ export function ComposerRefactored() {
           </button>
 
           <button
-            className="asph-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
+            className="touch-target-sm asph-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
             onClick={() => state.setShowDrafts(!state.showDrafts)}
           >
             <FileText size={14} />
@@ -1551,7 +1551,7 @@ export function ComposerRefactored() {
 
           {state.currentDraftId && (
             <button
-              className="asph-button-secondary p-2 text-sm"
+              className="touch-target-sm asph-button-secondary p-2 text-sm"
               onClick={() => {
                 state.resetComposer();
                 state.setPostStatus({
@@ -1675,7 +1675,7 @@ export function ComposerRefactored() {
             />
             <button
               onClick={() => state.setGifEmbed(null)}
-              className="absolute right-2 top-2 rounded-full bg-black bg-opacity-60 p-1.5 text-white transition-opacity hover:bg-opacity-80"
+              className="touch-target-icon absolute right-2 top-2 rounded-full bg-black bg-opacity-60 p-1.5 text-white transition-opacity hover:bg-opacity-80"
               aria-label="Remove GIF"
               disabled={state.isPosting}
             >
@@ -1727,7 +1727,7 @@ export function ComposerRefactored() {
               Saved Drafts
             </h3>
             <button
-              className="asph-button-secondary p-2"
+              className="touch-target-icon asph-button-secondary p-2"
               onClick={() => state.setShowDrafts(false)}
             >
               <X size={20} />
@@ -1790,7 +1790,7 @@ export function ComposerRefactored() {
             </span>
             {state.postStatus.type === "posting" && state.countdown && (
               <button
-                className="flex items-center gap-1 rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                className="touch-target-sm flex items-center gap-1 rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-700"
                 onClick={cancelDelayedSend}
               >
                 <Undo size={14} />
@@ -1902,7 +1902,7 @@ const DraftCard: React.FC<DraftCardProps> = ({ draft, onLoad, onDelete }) => {
           {draft.title}
         </h4>
         <button
-          className="rounded p-1 text-red-600 hover:bg-red-100"
+          className="touch-target-icon rounded p-1 text-red-600 hover:bg-red-100"
           onClick={(e) => {
             e.stopPropagation();
             onDelete();
@@ -1951,7 +1951,7 @@ const DraftCard: React.FC<DraftCardProps> = ({ draft, onLoad, onDelete }) => {
           Updated {new Date(draft.updatedAt).toLocaleString()}
         </span>
         <button
-          className="asph-button-secondary px-3 py-1 text-sm"
+          className="touch-target-sm asph-button-secondary px-3 py-1 text-sm"
           onClick={onLoad}
         >
           Load

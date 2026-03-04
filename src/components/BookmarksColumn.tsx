@@ -676,7 +676,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowCollectionPanel(true)}
-              className="flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="touch-target-sm flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
               title="Manage collections"
             >
               <Folder
@@ -690,7 +690,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
 
             <button
               onClick={() => navigate("/settings/data")}
-              className="flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="touch-target-sm flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
               title="Data storage settings"
             >
               <Cloud
@@ -706,7 +706,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
             {onClose && (
               <button
                 onClick={onClose}
-                className="rounded-full p-1.5 opacity-0 transition-all hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
+                className="touch-target-icon rounded-full p-1.5 opacity-0 transition-all hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
                 style={{ color: "var(--asph-text-secondary)" }}
                 aria-label="Close column"
               >
@@ -721,7 +721,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
           <div className="relative" ref={collectionDropdownRef}>
             <button
               onClick={() => setShowCollectionDropdown(!showCollectionDropdown)}
-              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors hover:bg-asph-bg-secondary"
+              className="touch-target-sm flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors hover:bg-asph-bg-secondary"
               style={{
                 backgroundColor: "var(--asph-bg-secondary)",
                 border: "1px solid var(--asph-border-primary)",
@@ -797,7 +797,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                     setSelectedCollectionId(null);
                     setShowCollectionDropdown(false);
                   }}
-                  className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-asph-bg-secondary ${
+                  className={`touch-target flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-asph-bg-secondary ${
                     !selectedCollectionId ? "bg-blue-500 bg-opacity-10" : ""
                   }`}
                 >
@@ -816,7 +816,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                     setSelectedCollectionId("__uncategorized__");
                     setShowCollectionDropdown(false);
                   }}
-                  className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-asph-bg-secondary ${
+                  className={`touch-target flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-asph-bg-secondary ${
                     selectedCollectionId === "__uncategorized__"
                       ? "bg-blue-500 bg-opacity-10"
                       : ""
@@ -846,7 +846,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                       setSelectedCollectionId(collection.id);
                       setShowCollectionDropdown(false);
                     }}
-                    className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-asph-bg-secondary ${
+                    className={`touch-target flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-asph-bg-secondary ${
                       selectedCollectionId === collection.id
                         ? "bg-blue-500 bg-opacity-10"
                         : ""
@@ -996,7 +996,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                                   e.stopPropagation();
                                   handleUnbookmark(bookmark.postUri);
                                 }}
-                                className="rounded p-1 text-yellow-500 opacity-50 transition-colors hover:bg-yellow-100 group-hover:opacity-100 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+                                className="touch-target-icon rounded p-1 text-yellow-500 opacity-50 transition-colors hover:bg-yellow-100 group-hover:opacity-100 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
                                 title="Remove bookmark"
                               >
                                 <Bookmark size={16} fill="currentColor" />

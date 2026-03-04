@@ -220,7 +220,7 @@ export const ListTimeline: React.FC = () => {
         <p className="text-asph-text-primary">List not found</p>
         <button
           onClick={() => navigate("/lists")}
-          className="mt-4 cursor-pointer rounded-lg bg-asph-primary px-4 py-2 text-white transition-all duration-200 hover:opacity-90"
+          className="touch-target-sm mt-4 cursor-pointer rounded-lg bg-asph-primary px-4 py-2 text-white transition-all duration-200 hover:opacity-90"
         >
           Back to Lists
         </button>
@@ -234,7 +234,7 @@ export const ListTimeline: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/lists")}
-            className="cursor-pointer rounded-full p-2 transition-all duration-200 hover:bg-asph-bg-secondary"
+            className="touch-target-icon cursor-pointer rounded-full p-2 transition-all duration-200 hover:bg-asph-bg-secondary"
           >
             <ArrowLeft className="h-5 w-5 text-asph-text-primary" />
           </button>
@@ -255,7 +255,7 @@ export const ListTimeline: React.FC = () => {
           <button
             onClick={handleRefresh}
             disabled={loading}
-            className="cursor-pointer rounded-full p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-secondary disabled:opacity-50"
+            className="touch-target-icon cursor-pointer rounded-full p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-secondary disabled:opacity-50"
           >
             <RefreshCw className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
           </button>

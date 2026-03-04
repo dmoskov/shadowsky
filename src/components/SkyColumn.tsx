@@ -412,7 +412,7 @@ const SkyColumn = memo(
                 {/* Refresh button */}
                 <button
                   onClick={scrollToTopAndRefresh}
-                  className={`bg-primary hover:bg-primary/90 group relative rounded-full p-3 text-white shadow-lg transition-all hover:shadow-xl ${
+                  className={`touch-target bg-primary hover:bg-primary/90 group relative rounded-full p-3 text-white shadow-lg transition-all hover:shadow-xl ${
                     isRefreshing ? "animate-spin" : ""
                   }`}
                   title="Refresh feed"
@@ -425,7 +425,7 @@ const SkyColumn = memo(
                 {/* Scroll to top button */}
                 <button
                   onClick={scrollToTop}
-                  className="bg-primary hover:bg-primary/90 group relative rounded-full p-3 text-white shadow-lg transition-all hover:shadow-xl"
+                  className="touch-target bg-primary hover:bg-primary/90 group relative rounded-full p-3 text-white shadow-lg transition-all hover:shadow-xl"
                   title="Scroll to top"
                 >
                   <ArrowUp className="h-5 w-5" />

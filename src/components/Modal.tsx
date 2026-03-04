@@ -174,7 +174,7 @@ export function Modal({
           <button
             onClick={handleClose}
             aria-label="Close dialog"
-            className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -185,14 +185,14 @@ export function Modal({
           {type === "confirm" && (
             <button
               onClick={handleClose}
-              className="ios-press-light rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="touch-target-sm ios-press-light rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700"
             >
               {cancelText}
             </button>
           )}
           <button
             onClick={handleConfirm}
-            className="ios-press-light rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+            className="touch-target-sm ios-press-light rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
           >
             {confirmText}
           </button>

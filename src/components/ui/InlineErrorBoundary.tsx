@@ -75,7 +75,7 @@ export class InlineErrorBoundary extends Component<Props, State> {
         <span>{this.props.componentName} failed to load.</span>
         <button
           onClick={this.handleRetry}
-          className="inline-flex items-center gap-1 rounded px-2 py-1 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+          className="touch-target-sm inline-flex items-center gap-1 rounded px-2 py-1 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
           aria-label={`Retry loading ${this.props.componentName}`}
         >
           <RefreshCw className="h-3 w-3" aria-hidden="true" />

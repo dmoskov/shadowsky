@@ -121,7 +121,7 @@ export function VideoUploadProgress({
         {isActive && onCancel && (
           <button
             onClick={onCancel}
-            className="ml-1 rounded-full p-1 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="touch-target-icon ml-1 rounded-full p-1 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
             title="Cancel upload"
           >
             <X size={14} style={{ color: "var(--asph-text-secondary)" }} />
@@ -186,7 +186,7 @@ export function VideoUploadProgress({
           {isActive && onCancel && (
             <button
               onClick={onCancel}
-              className="rounded-full p-1.5 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="touch-target-icon rounded-full p-1.5 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
               title="Cancel upload"
             >
               <X size={18} style={{ color: "var(--asph-text-secondary)" }} />
@@ -196,7 +196,7 @@ export function VideoUploadProgress({
           {isError && onRetry && (
             <button
               onClick={onRetry}
-              className="rounded-full bg-blue-500 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-600"
+              className="touch-target-sm rounded-full bg-blue-500 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-600"
             >
               Retry
             </button>

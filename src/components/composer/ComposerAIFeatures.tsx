@@ -183,7 +183,7 @@ const ToneOptionsModal: React.FC<ToneOptionsModalProps> = ({
             Choose a Tone
           </h3>
           <button
-            className="rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
             onClick={onClose}
             aria-label="Close dialog"
           >
@@ -199,7 +199,7 @@ const ToneOptionsModal: React.FC<ToneOptionsModalProps> = ({
           {TONE_OPTIONS.map((option) => (
             <button
               key={option.value}
-              className={`w-full rounded-lg border p-3 text-left transition-all hover:shadow-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
+              className={`touch-target w-full rounded-lg border p-3 text-left transition-all hover:shadow-md focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
                 isAdjustingTone
                   ? "cursor-not-allowed opacity-50"
                   : "hover:border-blue-400"
@@ -302,7 +302,7 @@ const TonePreviewModal: React.FC<TonePreviewModalProps> = ({
             </span>
           </h3>
           <button
-            className="rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
             onClick={onCancel}
             aria-label="Close dialog"
           >
@@ -355,13 +355,13 @@ const TonePreviewModal: React.FC<TonePreviewModalProps> = ({
 
         <div className="mt-6 flex justify-end gap-3">
           <button
-            className="asph-button-secondary px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="touch-target-sm asph-button-secondary px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onCancel}
           >
             Cancel
           </button>
           <button
-            className="asph-button-primary flex items-center gap-2 px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="touch-target-sm asph-button-primary flex items-center gap-2 px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onApply}
           >
             <CheckCircle size={16} aria-hidden="true" />
@@ -419,7 +419,7 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
             Thread Optimization - {result.totalPosts} Posts
           </h3>
           <button
-            className="rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
             onClick={onCancel}
             aria-label="Close dialog"
           >
@@ -507,13 +507,13 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
 
         <div className="mt-6 flex justify-end gap-3">
           <button
-            className="asph-button-secondary px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="touch-target-sm asph-button-secondary px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onCancel}
           >
             Cancel
           </button>
           <button
-            className="asph-button-primary flex items-center gap-2 px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="touch-target-sm asph-button-primary flex items-center gap-2 px-4 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onApply}
           >
             <CheckCircle size={16} aria-hidden="true" />
@@ -575,7 +575,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
             Writing Feedback
           </h3>
           <button
-            className="rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
             onClick={onClose}
             aria-label="Close dialog"
           >
@@ -642,7 +642,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
                 Corrected Version
               </span>
               <button
-                className="asph-button-secondary flex items-center gap-1 px-3 py-1 text-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                className="touch-target-sm asph-button-secondary flex items-center gap-1 px-3 py-1 text-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 onClick={onApplyCorrected}
               >
                 <Undo size={14} aria-hidden="true" />
@@ -678,7 +678,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
                 Enhanced Version
               </span>
               <button
-                className="asph-button-primary flex items-center gap-1 px-3 py-1 text-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                className="touch-target-sm asph-button-primary flex items-center gap-1 px-3 py-1 text-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                 onClick={onApplyEnhanced}
               >
                 <Undo size={14} aria-hidden="true" />
@@ -751,7 +751,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
 
         <div className="mt-6 flex justify-end">
           <button
-            className="asph-button-primary px-6 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="touch-target-sm asph-button-primary px-6 py-2 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onClose}
           >
             Got it!

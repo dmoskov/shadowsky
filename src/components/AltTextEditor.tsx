@@ -140,7 +140,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={onCancel}
-              className="rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-icon rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               style={{ color: "var(--asph-text-primary)" }}
             >
               <X size={20} />
@@ -156,7 +156,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
           <button
             onClick={handleSave}
             disabled={altText.length > MAX_ALT_TEXT_LENGTH}
-            className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium text-white transition-opacity disabled:opacity-50"
+            className="touch-target-sm flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium text-white transition-opacity disabled:opacity-50"
             style={{ backgroundColor: "var(--asph-primary)" }}
           >
             <Check size={16} />
@@ -184,7 +184,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
               <button
                 onClick={generateAltText}
                 disabled={isGenerating}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-gray-800"
+                className="touch-target-sm flex w-full items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-gray-800"
                 style={{
                   borderColor: "var(--asph-primary)",
                   color: "var(--asph-primary)",
@@ -227,7 +227,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
                     <button
                       key={`ai-suggestion-${index}-${suggestion.substring(0, 20)}`}
                       onClick={() => applySuggestion(suggestion, index)}
-                      className={`w-full rounded-lg border p-3 text-left text-sm transition-colors ${
+                      className={`touch-target w-full rounded-lg border p-3 text-left text-sm transition-colors ${
                         selectedSuggestion === index
                           ? "ring-2 ring-blue-500"
                           : "hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -247,7 +247,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
                 <button
                   onClick={generateAltText}
                   disabled={isGenerating}
-                  className="mt-2 flex items-center gap-1 text-xs transition-colors hover:underline"
+                  className="touch-target-sm mt-2 flex items-center gap-1 text-xs transition-colors hover:underline"
                   style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   <RefreshCw size={12} />
@@ -269,7 +269,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
                   <button
                     key={`template-${template.label}-${index}`}
                     onClick={() => applyTemplate(template.prefix)}
-                    className="rounded-full border px-2.5 py-1 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="touch-target-sm rounded-full border px-2.5 py-1 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
                     style={{
                       borderColor: "var(--asph-border-primary)",
                       color: "var(--asph-text-secondary)",
@@ -292,7 +292,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
                 </label>
                 <button
                   onClick={copyToClipboard}
-                  className="flex items-center gap-1 text-xs transition-colors hover:underline"
+                  className="touch-target-sm flex items-center gap-1 text-xs transition-colors hover:underline"
                   style={{ color: "var(--asph-text-tertiary)" }}
                 >
                   <Copy size={12} />

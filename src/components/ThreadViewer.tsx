@@ -469,7 +469,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     e.stopPropagation();
                     toggleCollapseBranch(nodeUri);
                   }}
-                  className="mr-1 flex flex-shrink-0 items-center justify-center rounded transition-all hover:scale-110"
+                  className="touch-target mr-1 flex flex-shrink-0 items-center justify-center rounded transition-all hover:scale-110"
                   style={{
                     width: "20px",
                     height: "20px",
@@ -751,7 +751,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                                 "noopener,noreferrer",
                               );
                             }}
-                            className="transition-opacity hover:opacity-70"
+                            className="touch-target transition-opacity hover:opacity-70"
                             aria-label="Open in Bluesky"
                           >
                             <ExternalLink
@@ -843,7 +843,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                           e.stopPropagation();
                           onDeletePost(post);
                         }}
-                        className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all hover:bg-red-500 hover:bg-opacity-10"
+                        className="touch-target-sm flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all hover:bg-red-500 hover:bg-opacity-10"
                         style={{
                           color: "var(--asph-error, #ef4444)",
                         }}
@@ -872,7 +872,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     e.stopPropagation();
                     toggleCollapseBranch(nodeUri);
                   }}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:scale-105"
+                  className="touch-target-sm flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:scale-105"
                   style={{
                     backgroundColor: depthBorderColor,
                     color: "white",
@@ -929,7 +929,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                         }
                       });
                     }}
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-100 dark:hover:bg-blue-900/20"
+                    className="touch-target flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-100 dark:hover:bg-blue-900/20"
                     style={{
                       backgroundColor: "var(--asph-bg-tertiary)",
                       color: "var(--asph-primary)",
@@ -973,7 +973,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                         }
                       });
                     }}
-                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-100 dark:hover:bg-blue-900/20"
+                    className="touch-target flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-blue-100 dark:hover:bg-blue-900/20"
                     style={{
                       backgroundColor: "var(--asph-bg-tertiary)",
                       color: "var(--asph-text-secondary)",
@@ -1031,7 +1031,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             <button
               onClick={onLoadMoreAbove}
               disabled={isLoadingMoreAbove}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-3 transition-colors hover:border-solid disabled:cursor-not-allowed disabled:opacity-50"
+              className="touch-target-list-item flex w-full items-center justify-center gap-2 rounded-lg border border-dashed px-4 py-3 transition-colors hover:border-solid disabled:cursor-not-allowed disabled:opacity-50"
               style={{
                 borderColor: "var(--asph-border-primary)",
                 backgroundColor: "var(--asph-bg-secondary)",
@@ -1182,7 +1182,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             {replyCount > 0 && (
               <button
                 onClick={() => setShowReplies(!showReplies)}
-                className="mt-4 flex w-full items-center justify-between rounded-lg px-4 py-3 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/10"
+                className="touch-target-list-item mt-4 flex w-full items-center justify-between rounded-lg px-4 py-3 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/10"
                 style={{
                   backgroundColor: "var(--asph-bg-secondary)",
                   border: "1px solid var(--asph-border-primary)",
@@ -1262,7 +1262,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                   e.stopPropagation();
                   onContinueThread();
                 }}
-                className="flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-all hover:scale-105"
+                className="touch-target-sm flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-all hover:scale-105"
                 style={{
                   backgroundColor: "var(--asph-primary)",
                   color: "white",
@@ -1289,7 +1289,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     onPostClick?.(lastPost, "reply");
                   }
                 }}
-                className="flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-all hover:scale-105"
+                className="touch-target-sm flex items-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition-all hover:scale-105"
                 style={{
                   backgroundColor: "var(--asph-bg-secondary)",
                   borderColor: "var(--asph-border-primary)",

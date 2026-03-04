@@ -147,7 +147,7 @@ export const AccountsSettings: React.FC = () => {
                     {account.authMethod === "oauth" ? (
                       <button
                         onClick={handleAddAccount}
-                        className="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:bg-opacity-90"
+                        className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:bg-opacity-90"
                         style={{
                           backgroundColor: "var(--asph-bg-tertiary)",
                           color: "var(--asph-text-primary)",
@@ -160,7 +160,7 @@ export const AccountsSettings: React.FC = () => {
                     ) : (
                       <button
                         onClick={() => handleSwitchAccount(account.did)}
-                        className="rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:bg-opacity-90"
+                        className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:bg-opacity-90"
                         style={{
                           backgroundColor: "var(--asph-primary)",
                           color: "white",
@@ -175,7 +175,7 @@ export const AccountsSettings: React.FC = () => {
                 <button
                   onClick={() => handleRemoveAccount(account.did)}
                   disabled={isRemoving}
-                  className="rounded-lg p-2 transition-colors hover:bg-red-50 hover:bg-opacity-10 disabled:opacity-50"
+                  className="touch-target-icon rounded-lg p-2 transition-colors hover:bg-red-50 hover:bg-opacity-10 disabled:opacity-50"
                   style={{ color: "var(--asph-text-secondary)" }}
                   title="Remove account"
                 >
@@ -194,7 +194,7 @@ export const AccountsSettings: React.FC = () => {
       <div className="flex flex-col gap-3 pt-4">
         <button
           onClick={handleAddAccount}
-          className="flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          className="touch-target-sm flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
           style={{
             backgroundColor: "var(--asph-primary)",
             color: "white",
@@ -207,7 +207,7 @@ export const AccountsSettings: React.FC = () => {
         {accounts.length > 0 && (
           <button
             onClick={handleLogoutAll}
-            className="flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-50 hover:bg-opacity-10"
+            className="touch-target-sm flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-50 hover:bg-opacity-10"
             style={{
               border: "1px solid rgba(239, 68, 68, 0.3)",
             }}

@@ -325,7 +325,7 @@ export const DirectMessagesColumn: React.FC = () => {
           </h2>
           <button
             onClick={() => setShowSearch(!showSearch)}
-            className={`rounded-lg p-2 transition-colors ${
+            className={`touch-target rounded-lg p-2 transition-colors ${
               showSearch
                 ? "bg-asph-primary text-white"
                 : "text-asph-text-secondary hover:bg-asph-bg-secondary"
@@ -493,7 +493,7 @@ export const DirectMessagesColumn: React.FC = () => {
       {/* Chat header */}
       <div className="flex items-center gap-3 border-b border-asph-border-primary p-4">
         <button
-          className="inline-flex cursor-pointer items-center gap-2 border-none bg-transparent p-2 text-asph-primary"
+          className="touch-target-sm inline-flex cursor-pointer items-center gap-2 border-none bg-transparent p-2 text-asph-primary"
           onClick={() => setSelectedConversation(null)}
         >
           ← Back
@@ -571,7 +571,7 @@ export const DirectMessagesColumn: React.FC = () => {
         {/* Search button in chat header */}
         <button
           onClick={() => setShowSearch(!showSearch)}
-          className={`rounded-lg p-2 transition-colors ${
+          className={`touch-target rounded-lg p-2 transition-colors ${
             showSearch
               ? "bg-asph-primary text-white"
               : "text-asph-text-secondary hover:bg-asph-bg-secondary"
@@ -659,7 +659,7 @@ export const DirectMessagesColumn: React.FC = () => {
           <button
             type="submit"
             disabled={!messageText.trim() || isSending}
-            className="flex-shrink-0 cursor-pointer rounded-lg border-none bg-asph-primary px-4 py-2 font-semibold text-white transition-colors duration-200 hover:bg-asph-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
+            className="touch-target-sm flex-shrink-0 cursor-pointer rounded-lg border-none bg-asph-primary px-4 py-2 font-semibold text-white transition-colors duration-200 hover:bg-asph-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
           >
             Send
           </button>

@@ -348,7 +348,7 @@ export const DirectMessages: React.FC = () => {
           </h1>
           <button
             onClick={() => setShowSearch(!showSearch)}
-            className={`rounded-lg p-2 transition-colors ${
+            className={`touch-target rounded-lg p-2 transition-colors ${
               showSearch
                 ? "bg-asph-primary text-white"
                 : "text-asph-text-secondary hover:bg-asph-bg-secondary"
@@ -445,7 +445,7 @@ export const DirectMessages: React.FC = () => {
                 <button
                   key={conversation.id}
                   onClick={() => setSelectedConversation(conversation.id)}
-                  className={`w-full cursor-pointer overflow-hidden border-b border-asph-border-primary p-4 text-left transition-colors duration-200 hover:bg-asph-bg-secondary ${selectedConversation === conversation.id ? "bg-asph-bg-secondary" : ""}`}
+                  className={`touch-target w-full cursor-pointer overflow-hidden border-b border-asph-border-primary p-4 text-left transition-colors duration-200 hover:bg-asph-bg-secondary ${selectedConversation === conversation.id ? "bg-asph-bg-secondary" : ""}`}
                   role="listitem"
                   aria-label={`Conversation with ${otherMember.displayName || otherMember.handle || "Unknown User"}${conversation.unreadCount > 0 ? `, ${conversation.unreadCount} unread messages` : ""}`}
                   aria-current={
@@ -519,7 +519,7 @@ export const DirectMessages: React.FC = () => {
             {/* Chat header */}
             <header className="flex items-center gap-3 border-b border-asph-border-primary p-4">
               <button
-                className="mr-4 inline-flex cursor-pointer items-center gap-2 border-none bg-transparent p-2 text-asph-primary md:hidden"
+                className="touch-target-sm mr-4 inline-flex cursor-pointer items-center gap-2 border-none bg-transparent p-2 text-asph-primary md:hidden"
                 onClick={() => setSelectedConversation(null)}
                 aria-label="Back to conversations list"
               >
@@ -564,7 +564,7 @@ export const DirectMessages: React.FC = () => {
               {/* Search button in chat header for mobile */}
               <button
                 onClick={() => setShowSearch(!showSearch)}
-                className={`rounded-lg p-2 transition-colors md:hidden ${
+                className={`touch-target rounded-lg p-2 transition-colors md:hidden ${
                   showSearch
                     ? "bg-asph-primary text-white"
                     : "text-asph-text-secondary hover:bg-asph-bg-secondary"
@@ -657,7 +657,7 @@ export const DirectMessages: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!messageText.trim() || isSending}
-                  className="cursor-pointer rounded-lg border-none bg-asph-primary px-6 py-2 font-semibold text-white transition-colors duration-200 hover:bg-asph-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
+                  className="touch-target-sm cursor-pointer rounded-lg border-none bg-asph-primary px-6 py-2 font-semibold text-white transition-colors duration-200 hover:bg-asph-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
                   aria-label={isSending ? "Sending message..." : "Send message"}
                 >
                   Send

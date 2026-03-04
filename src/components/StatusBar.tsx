@@ -230,7 +230,7 @@ const SubsystemRow: React.FC<{ subsystem: SubsystemStatus }> = ({
               e.stopPropagation();
               subsystem.action?.handler();
             }}
-            className="rounded px-2 py-0.5 text-xs font-medium transition-colors hover:opacity-80"
+            className="touch-target-sm rounded px-2 py-0.5 text-xs font-medium transition-colors hover:opacity-80"
             style={{
               background: "var(--asph-primary)",
               color: "white",
@@ -344,7 +344,7 @@ export const StatusBar: React.FC = () => {
         {!isExpanded && (
           <button
             onClick={() => setIsExpanded(true)}
-            className="flex items-center gap-2 rounded-full px-3 py-2 shadow-lg transition-all duration-200 hover:scale-105"
+            className="touch-target-sm flex items-center gap-2 rounded-full px-3 py-2 shadow-lg transition-all duration-200 hover:scale-105"
             style={{
               background: "var(--asph-bg-secondary)",
               border: "1px solid var(--asph-border)",
@@ -396,7 +396,7 @@ export const StatusBar: React.FC = () => {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => refresh()}
-                  className="rounded p-1 transition-colors hover:bg-black/10"
+                  className="touch-target-icon rounded p-1 transition-colors hover:bg-black/10"
                   aria-label="Refresh status"
                 >
                   <RefreshCw
@@ -406,7 +406,7 @@ export const StatusBar: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setIsExpanded(false)}
-                  className="rounded p-1 transition-colors hover:bg-black/10"
+                  className="touch-target-icon rounded p-1 transition-colors hover:bg-black/10"
                   aria-label="Close status panel"
                 >
                   <X

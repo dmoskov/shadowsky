@@ -586,7 +586,7 @@ export default function SkyDeck() {
                   <button
                     key={`column-dot-${col.id}-${index}`}
                     onClick={() => setMobileColumnIndex(index)}
-                    className={`h-2 w-2 rounded-full transition-all ${
+                    className={`touch-target h-2 w-2 rounded-full transition-all ${
                       index === mobileColumnIndex
                         ? "w-6 bg-blue-500"
                         : "bg-gray-400 dark:bg-gray-500"
@@ -681,7 +681,7 @@ export default function SkyDeck() {
                         <button
                           key={option.type}
                           onClick={() => handleAddColumn(option.type)}
-                          className="flex min-h-[4rem] items-start gap-3 rounded-md border border-gray-200 p-3 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900/50"
+                          className="touch-target flex min-h-[4rem] items-start gap-3 rounded-md border border-gray-200 p-3 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900/50"
                         >
                           <Icon className="mt-0.5 h-5 w-5 text-blue-500" />
                           <div className="flex-1">
@@ -729,7 +729,7 @@ export default function SkyDeck() {
                                             generator.displayName,
                                           )
                                         }
-                                        className="flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50"
+                                        className="touch-target flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50"
                                       >
                                         {savedFeed.pinned ? (
                                           <Star className="mt-0.5 h-4 w-4 text-yellow-500" />
@@ -770,7 +770,7 @@ export default function SkyDeck() {
                                   onClick={() =>
                                     handleAddColumn("feed", list.uri, list.name)
                                   }
-                                  className="flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50"
+                                  className="touch-target-icon touch-target flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50"
                                 >
                                   <Users className="mt-0.5 h-4 w-4 text-blue-500" />
                                   <div className="min-w-0 flex-1">
@@ -969,7 +969,7 @@ export default function SkyDeck() {
                           disabled={
                             !customFeedUri.trim() || isLoadingCustomFeed
                           }
-                          className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-500 text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="touch-target-icon flex h-10 w-10 items-center justify-center rounded-md bg-blue-500 text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
                           aria-label="Add custom feed"
                           title="Add Feed"
                         >
@@ -984,7 +984,7 @@ export default function SkyDeck() {
                   <div className="mt-4">
                     <button
                       onClick={() => setIsAddingColumn(false)}
-                      className="w-full rounded-md bg-gray-300 px-4 py-2 text-asph-text-secondary transition-colors hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500"
+                      className="touch-target-list-item w-full rounded-md bg-gray-300 px-4 py-2 text-asph-text-secondary transition-colors hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500"
                     >
                       Cancel
                     </button>
@@ -994,7 +994,7 @@ export default function SkyDeck() {
             ) : (
               <button
                 onClick={() => setIsAddingColumn(true)}
-                className="group relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-white shadow-md transition-all duration-300 hover:border-blue-400 hover:bg-gray-50 hover:shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:hover:border-blue-500 dark:hover:bg-gray-900/50"
+                className="touch-target group relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-white shadow-md transition-all duration-300 hover:border-blue-400 hover:bg-gray-50 hover:shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:hover:border-blue-500 dark:hover:bg-gray-900/50"
                 aria-label="Add new column"
               >
                 <Plus

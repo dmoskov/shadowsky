@@ -291,7 +291,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
               >
                 <button
                   role="menuitem"
-                  className="ios-press-light flex min-h-[44px] w-full items-center gap-3 bg-transparent px-4 py-3 text-left text-sm text-asph-text-primary transition-all hover:bg-asph-bg-hover"
+                  className="touch-target-list-item ios-press-light flex min-h-[44px] w-full items-center gap-3 bg-transparent px-4 py-3 text-left text-sm text-asph-text-primary transition-all hover:bg-asph-bg-hover"
                   onClick={(e) => {
                     setRepostAnimating(true);
                     setTimeout(() => setRepostAnimating(false), 400);
@@ -304,7 +304,7 @@ const PostActionBarComponent: React.FC<PostActionBarProps> = ({
                 </button>
                 <button
                   role="menuitem"
-                  className="ios-press-light flex min-h-[44px] w-full items-center gap-3 bg-transparent px-4 py-3 text-left text-sm text-asph-text-primary transition-all hover:bg-asph-bg-hover"
+                  className="touch-target-list-item ios-press-light flex min-h-[44px] w-full items-center gap-3 bg-transparent px-4 py-3 text-left text-sm text-asph-text-primary transition-all hover:bg-asph-bg-hover"
                   onClick={(e) => {
                     handleAction(e, onQuote);
                     setShowRepostMenu(false);

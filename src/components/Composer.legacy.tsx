@@ -2609,7 +2609,7 @@ export function Composer() {
           </div>
 
           <button
-            className="asph-button-secondary p-1.5"
+            className="touch-target-icon asph-button-secondary p-1.5"
             onClick={() => setShowSettings(!showSettings)}
             aria-label="Toggle settings"
           >
@@ -2620,7 +2620,7 @@ export function Composer() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <button
-              className="asph-button-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium"
+              className="touch-target-sm asph-button-secondary flex items-center gap-2 px-4 py-2 text-sm font-medium"
               onClick={() => setShowThreadComposer(true)}
             >
               <MessageSquare size={16} />
@@ -2639,7 +2639,7 @@ export function Composer() {
             />
           </div>
           <button
-            className="asph-button-primary flex items-center gap-2 px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+            className="touch-target-sm asph-button-primary flex items-center gap-2 px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
             onClick={handleSend}
             disabled={posts.length === 0 || isPosting}
             aria-label={
@@ -2696,7 +2696,7 @@ export function Composer() {
 
         <div className="mb-3 mt-3 flex items-center gap-2">
           <button
-            className="asph-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
+            className="touch-target-sm asph-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
             onClick={saveDraftHandler}
             disabled={!text.trim()}
           >
@@ -2707,7 +2707,7 @@ export function Composer() {
           </button>
 
           <button
-            className="asph-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
+            className="touch-target-sm asph-button-secondary flex items-center gap-2 px-3 py-2 text-sm"
             onClick={() => setShowDrafts(!showDrafts)}
           >
             <FileText size={14} />
@@ -2716,7 +2716,7 @@ export function Composer() {
 
           {currentDraftId && (
             <button
-              className="asph-button-secondary p-2 text-sm"
+              className="touch-target-sm asph-button-secondary p-2 text-sm"
               onClick={() => {
                 // Clear everything to start a new draft
                 setText("");
@@ -2765,7 +2765,7 @@ export function Composer() {
           <div className="flex gap-2">
             <div className="group relative">
               <button
-                className="asph-button-secondary flex items-center gap-2"
+                className="touch-target-sm asph-button-secondary flex items-center gap-2"
                 onClick={insertThreadSplit}
                 disabled={isPosting}
                 aria-label="Insert thread split"
@@ -2786,7 +2786,7 @@ export function Composer() {
 
             <div className="group relative">
               <button
-                className="asph-button-secondary relative flex items-center gap-2"
+                className="touch-target-sm asph-button-secondary relative flex items-center gap-2"
                 onClick={() => {
                   if (fileInputRef.current) {
                     fileInputRef.current.accept = "image/*";
@@ -2826,7 +2826,7 @@ export function Composer() {
 
             <div className="group relative">
               <button
-                className="asph-button-secondary relative flex items-center gap-2"
+                className="touch-target-sm asph-button-secondary relative flex items-center gap-2"
                 onClick={() => {
                   if (fileInputRef.current) {
                     fileInputRef.current.accept =
@@ -2867,7 +2867,7 @@ export function Composer() {
             {isDev && (
               <div className="group relative">
                 <button
-                  className="asph-button-secondary flex items-center gap-2"
+                  className="touch-target-sm asph-button-secondary flex items-center gap-2"
                   onClick={() => setShowGiphySearch(true)}
                   disabled={
                     isPosting ||
@@ -2895,7 +2895,7 @@ export function Composer() {
 
             <div className="group relative">
               <button
-                className="asph-button-secondary flex items-center gap-2"
+                className="touch-target-sm asph-button-secondary flex items-center gap-2"
                 onClick={() => setShowEmojiPicker(true)}
                 disabled={isPosting}
                 aria-label="Add emoji"
@@ -2913,7 +2913,7 @@ export function Composer() {
 
             <div className="group relative">
               <button
-                className={`asph-button-secondary flex items-center gap-2 ${selectedTone ? "ring-2 ring-blue-400" : ""}`}
+                className={`touch-target asph-button-secondary flex items-center gap-2 ${selectedTone ? "ring-2 ring-blue-400" : ""}`}
                 onClick={() => setShowToneOptions(!showToneOptions)}
                 disabled={isPosting || isAdjustingTone}
                 aria-label="Adjust tone"
@@ -2936,7 +2936,7 @@ export function Composer() {
 
             <div className="group relative">
               <button
-                className={`asph-button-secondary flex items-center gap-2 ${isLoadingFeedback ? "animate-pulse" : ""}`}
+                className={`touch-target asph-button-secondary flex items-center gap-2 ${isLoadingFeedback ? "animate-pulse" : ""}`}
                 onClick={handleWritingFeedback}
                 disabled={isPosting || isLoadingFeedback || !text.trim()}
                 aria-label="Get writing feedback"
@@ -3212,7 +3212,7 @@ export function Composer() {
               Saved Drafts
             </h3>
             <button
-              className="asph-button-secondary p-2"
+              className="touch-target-icon asph-button-secondary p-2"
               onClick={() => {
                 setShowDrafts(false);
               }}
@@ -3262,7 +3262,7 @@ export function Composer() {
                           {draftTitle}
                         </h4>
                         <button
-                          className="rounded p-1 text-red-600 hover:bg-red-100"
+                          className="touch-target-icon rounded p-1 text-red-600 hover:bg-red-100"
                           onClick={(e) => {
                             e.stopPropagation();
                             deleteDraftHandler(draftView.id);
@@ -3312,7 +3312,7 @@ export function Composer() {
                           {new Date(draftView.updatedAt).toLocaleString()}
                         </span>
                         <button
-                          className="asph-button-secondary px-3 py-1 text-sm"
+                          className="touch-target-sm asph-button-secondary px-3 py-1 text-sm"
                           onClick={() => loadDraft(draftView)}
                         >
                           Load
@@ -3372,7 +3372,7 @@ export function Composer() {
             )}
             {postStatus.type === "posting" && countdown && (
               <button
-                className="flex items-center gap-1 rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                className="touch-target-sm flex items-center gap-1 rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white transition-colors hover:bg-blue-700"
                 onClick={cancelDelayedSend}
               >
                 <Undo size={14} />

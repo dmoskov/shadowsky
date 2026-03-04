@@ -219,7 +219,7 @@ export const Bookmarks: React.FC = () => {
 
           <button
             onClick={() => setShowExportModal(true)}
-            className="cursor-pointer rounded-md border-none bg-transparent p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-secondary hover:text-asph-text-primary"
+            className="touch-target-icon cursor-pointer rounded-md border-none bg-transparent p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-secondary hover:text-asph-text-primary"
             aria-label="Manage bookmarks menu"
             aria-haspopup="dialog"
           >
@@ -304,7 +304,7 @@ export const Bookmarks: React.FC = () => {
                   e.stopPropagation();
                   handleDeleteBookmark(bookmark.postUri);
                 }}
-                className="cursor-pointer rounded-md border-none bg-transparent p-2 text-asph-text-tertiary opacity-0 transition-all duration-200 hover:bg-asph-bg-secondary hover:text-red-600 group-hover:opacity-100"
+                className="touch-target-icon cursor-pointer rounded-md border-none bg-transparent p-2 text-asph-text-tertiary opacity-0 transition-all duration-200 hover:bg-asph-bg-secondary hover:text-red-600 group-hover:opacity-100"
                 aria-label={`Delete bookmark for post by ${bookmark.author?.displayName || bookmark.author?.handle || "unknown"}`}
               >
                 <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -377,7 +377,7 @@ export const Bookmarks: React.FC = () => {
               </h3>
               <button
                 onClick={() => setShowExportModal(false)}
-                className="cursor-pointer rounded-md border-none bg-transparent p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-secondary"
+                className="touch-target-icon cursor-pointer rounded-md border-none bg-transparent p-2 text-asph-text-secondary transition-all duration-200 hover:bg-asph-bg-secondary"
                 aria-label="Close manage bookmarks dialog"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
@@ -391,7 +391,7 @@ export const Bookmarks: React.FC = () => {
             >
               <button
                 onClick={handleExport}
-                className="flex cursor-pointer items-center gap-2 rounded-lg border border-asph-border-primary bg-asph-bg-secondary px-4 py-3 text-sm font-medium text-asph-text-primary transition-all duration-200 hover:bg-asph-bg-hover"
+                className="touch-target-sm flex cursor-pointer items-center gap-2 rounded-lg border border-asph-border-primary bg-asph-bg-secondary px-4 py-3 text-sm font-medium text-asph-text-primary transition-all duration-200 hover:bg-asph-bg-hover"
               >
                 <Download className="h-4 w-4" aria-hidden="true" />
                 Export Bookmarks
@@ -399,7 +399,7 @@ export const Bookmarks: React.FC = () => {
 
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex cursor-pointer items-center gap-2 rounded-lg border border-asph-border-primary bg-asph-bg-secondary px-4 py-3 text-sm font-medium text-asph-text-primary transition-all duration-200 hover:bg-asph-bg-hover"
+                className="touch-target-sm flex cursor-pointer items-center gap-2 rounded-lg border border-asph-border-primary bg-asph-bg-secondary px-4 py-3 text-sm font-medium text-asph-text-primary transition-all duration-200 hover:bg-asph-bg-hover"
               >
                 <Upload className="h-4 w-4" aria-hidden="true" />
                 Import Bookmarks
@@ -407,7 +407,7 @@ export const Bookmarks: React.FC = () => {
 
               <button
                 onClick={handleClearAll}
-                className="flex cursor-pointer items-center gap-2 rounded-lg border border-red-600 bg-asph-bg-secondary px-4 py-3 text-sm font-medium text-red-600 transition-all duration-200 hover:bg-red-50"
+                className="touch-target-sm flex cursor-pointer items-center gap-2 rounded-lg border border-red-600 bg-asph-bg-secondary px-4 py-3 text-sm font-medium text-red-600 transition-all duration-200 hover:bg-red-50"
               >
                 <Trash2 className="h-4 w-4" aria-hidden="true" />
                 Clear All Bookmarks

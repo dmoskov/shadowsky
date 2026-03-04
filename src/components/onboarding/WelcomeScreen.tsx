@@ -84,14 +84,14 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <button
             onClick={onContinue}
-            className="asph-button-primary flex items-center justify-center gap-2 px-8 py-4 text-lg font-semibold text-white"
+            className="touch-target-sm asph-button-primary flex items-center justify-center gap-2 px-8 py-4 text-lg font-semibold text-white"
           >
             Get Started
             <ArrowRight size={20} />
           </button>
           <button
             onClick={onSkip}
-            className="rounded-xl px-8 py-4 text-lg font-medium transition-all hover:opacity-80"
+            className="touch-target-sm rounded-xl px-8 py-4 text-lg font-medium transition-all hover:opacity-80"
             style={{
               color: "var(--asph-text-secondary)",
               border: "1px solid var(--asph-border-primary)",

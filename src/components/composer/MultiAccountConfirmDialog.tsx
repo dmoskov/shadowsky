@@ -79,7 +79,7 @@ export const MultiAccountConfirmDialog: React.FC<
           </div>
           <button
             onClick={onClose}
-            className="rounded p-1 transition-colors hover:bg-gray-200/50 dark:hover:bg-white/10"
+            className="touch-target-icon rounded p-1 transition-colors hover:bg-gray-200/50 dark:hover:bg-white/10"
           >
             <X size={20} style={{ color: "var(--asph-text-secondary)" }} />
           </button>
@@ -164,7 +164,7 @@ export const MultiAccountConfirmDialog: React.FC<
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+              className="touch-target-sm flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
               style={{
                 backgroundColor: "var(--asph-bg-tertiary)",
                 color: "var(--asph-text-primary)",
@@ -174,7 +174,7 @@ export const MultiAccountConfirmDialog: React.FC<
             </button>
             <button
               onClick={handleConfirm}
-              className="flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
+              className="touch-target-sm flex-1 rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors"
               style={{ backgroundColor: "var(--asph-primary)" }}
             >
               Post to {accounts.length} Account{accounts.length > 1 ? "s" : ""}

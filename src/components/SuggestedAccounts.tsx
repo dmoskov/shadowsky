@@ -91,7 +91,7 @@ export const SuggestedAccounts: React.FC<SuggestedAccountsProps> = ({
           <button
             key={actor.did}
             onClick={() => onAccountClick(actor.handle)}
-            className="flex items-center gap-2 rounded-lg border p-2 text-left transition-all hover:border-blue-400 hover:shadow-sm"
+            className="touch-target-sm flex items-center gap-2 rounded-lg border p-2 text-left transition-all hover:border-blue-400 hover:shadow-sm"
             style={{
               backgroundColor: "var(--asph-bg-secondary)",
               borderColor: "var(--asph-border-primary)",

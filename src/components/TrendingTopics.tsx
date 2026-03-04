@@ -87,7 +87,7 @@ export const TrendingTopics: React.FC<TrendingTopicsProps> = ({
           <button
             key={`${item.topic}-${index}`}
             onClick={() => onTopicClick(item.topic)}
-            className="group flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-all hover:border-blue-400 hover:shadow-sm"
+            className="touch-target-sm group flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-all hover:border-blue-400 hover:shadow-sm"
             style={{
               backgroundColor: "var(--asph-bg-secondary)",
               borderColor: item.isHot

@@ -381,7 +381,7 @@ export function BugReportModal({
               <button
                 onClick={handleModalClose}
                 aria-label="Close dialog"
-                className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="touch-target-icon rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -391,7 +391,7 @@ export function BugReportModal({
             <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
               <button
                 onClick={handleModalClose}
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                className="touch-target-sm rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
               >
                 Close
               </button>
@@ -421,7 +421,7 @@ export function BugReportModal({
               <button
                 onClick={handleModalClose}
                 aria-label="Close dialog"
-                className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="touch-target-icon rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -517,7 +517,7 @@ export function BugReportModal({
                       />
                       <button
                         onClick={removeScreenshot}
-                        className="absolute right-2 top-2 rounded-full bg-red-600 p-1 text-white hover:bg-red-700"
+                        className="touch-target-icon absolute right-2 top-2 rounded-full bg-red-600 p-1 text-white hover:bg-red-700"
                         aria-label="Remove screenshot"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -527,7 +527,7 @@ export function BugReportModal({
                     <button
                       onClick={captureScreenshot}
                       disabled={isCapturingScreenshot}
-                      className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
+                      className="touch-target-sm flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
                     >
                       {isCapturingScreenshot ? (
                         <>
@@ -557,7 +557,7 @@ export function BugReportModal({
                     </div>
                     <button
                       onClick={() => setIncludeDiagnostics(!includeDiagnostics)}
-                      className={`relative h-6 w-11 rounded-full transition-colors ${
+                      className={`touch-target relative h-6 w-11 rounded-full transition-colors ${
                         includeDiagnostics
                           ? "bg-blue-600 dark:bg-blue-500"
                           : "bg-gray-300 dark:bg-gray-600"
@@ -637,14 +637,14 @@ export function BugReportModal({
               <button
                 onClick={handleModalClose}
                 disabled={isSubmitting}
-                className="rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 disabled:opacity-50 dark:hover:bg-gray-700"
+                className="touch-target-sm rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 disabled:opacity-50 dark:hover:bg-gray-700"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={!description.trim() || isSubmitting}
-                className="flex items-center gap-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50 dark:bg-orange-500 dark:hover:bg-orange-600"
+                className="touch-target-sm flex items-center gap-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50 dark:bg-orange-500 dark:hover:bg-orange-600"
               >
                 {isSubmitting ? (
                   <>

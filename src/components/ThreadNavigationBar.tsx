@@ -129,7 +129,7 @@ export const ThreadNavigationBar: React.FC<ThreadNavigationBarProps> = ({
         <button
           onClick={onJumpToRoot}
           disabled={!rootPost || currentIndex === 0}
-          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-gray-700"
+          className="touch-target-sm flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-gray-700"
           style={{ color: "var(--asph-text-secondary)" }}
           title="Jump to thread root (r)"
         >
@@ -147,7 +147,7 @@ export const ThreadNavigationBar: React.FC<ThreadNavigationBarProps> = ({
         <button
           onClick={onJumpToParent}
           disabled={!hasParent}
-          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-gray-700"
+          className="touch-target-sm flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-gray-700"
           style={{ color: "var(--asph-text-secondary)" }}
           title="Jump to parent post (p)"
         >
@@ -167,7 +167,7 @@ export const ThreadNavigationBar: React.FC<ThreadNavigationBarProps> = ({
               <button
                 onClick={onJumpToPrevSibling}
                 disabled={!hasPrevSibling}
-                className="rounded-lg p-1.5 transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-gray-700"
+                className="touch-target-icon rounded-lg p-1.5 transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-gray-700"
                 style={{ color: "var(--asph-text-secondary)" }}
                 title="Previous sibling (h)"
               >
@@ -185,7 +185,7 @@ export const ThreadNavigationBar: React.FC<ThreadNavigationBarProps> = ({
               <button
                 onClick={onJumpToNextSibling}
                 disabled={!hasNextSibling}
-                className="rounded-lg p-1.5 transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-gray-700"
+                className="touch-target-icon rounded-lg p-1.5 transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-gray-700"
                 style={{ color: "var(--asph-text-secondary)" }}
                 title="Next sibling (l)"
               >
@@ -210,7 +210,7 @@ export const ThreadNavigationBar: React.FC<ThreadNavigationBarProps> = ({
         <button
           onClick={handleToggleBookmark}
           disabled={!rootPost}
-          className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-gray-700 ${
+          className={`touch-target flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-all hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-gray-700 ${
             isRootBookmarked ? "text-amber-500" : ""
           }`}
           style={{
@@ -234,7 +234,7 @@ export const ThreadNavigationBar: React.FC<ThreadNavigationBarProps> = ({
         <div className="relative">
           <button
             onClick={() => setShowShareMenu(!showShareMenu)}
-            className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="touch-target-sm flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
             style={{ color: "var(--asph-text-secondary)" }}
             title="Share thread"
           >
@@ -257,7 +257,7 @@ export const ThreadNavigationBar: React.FC<ThreadNavigationBarProps> = ({
               >
                 <button
                   onClick={handleCopyLink}
-                  className="flex w-full items-center gap-2 rounded-t-lg px-3 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="touch-target-sm flex w-full items-center gap-2 rounded-t-lg px-3 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
                   style={{ color: "var(--asph-text-primary)" }}
                 >
                   <Copy size={14} />
@@ -267,7 +267,7 @@ export const ThreadNavigationBar: React.FC<ThreadNavigationBarProps> = ({
                 {"share" in navigator && (
                   <button
                     onClick={handleNativeShare}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="touch-target-sm flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
                     style={{ color: "var(--asph-text-primary)" }}
                   >
                     <Share2 size={14} />
@@ -277,7 +277,7 @@ export const ThreadNavigationBar: React.FC<ThreadNavigationBarProps> = ({
 
                 <button
                   onClick={handleOpenInBluesky}
-                  className="flex w-full items-center gap-2 rounded-b-lg px-3 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                  className="touch-target-sm flex w-full items-center gap-2 rounded-b-lg px-3 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
                   style={{ color: "var(--asph-text-primary)" }}
                 >
                   <ExternalLink size={14} />

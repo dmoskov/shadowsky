@@ -684,7 +684,7 @@ class SuspenseErrorBoundary extends React.Component<
             </p>
             <button
               onClick={() => this.setState({ hasError: false, error: null })}
-              className="mt-2 text-sm text-asph-primary hover:underline"
+              className="touch-target-sm mt-2 text-sm text-asph-primary hover:underline"
             >
               Try again
             </button>

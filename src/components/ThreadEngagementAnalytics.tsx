@@ -180,7 +180,7 @@ export const ThreadEngagementAnalytics: React.FC<
       {/* Header - always visible */}
       <button
         onClick={toggleCollapse}
-        className="flex w-full items-center justify-between px-4 py-3 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+        className="touch-target-list-item flex w-full items-center justify-between px-4 py-3 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
       >
         <div className="flex items-center gap-2">
           <BarChart3 size={18} style={{ color: "var(--asph-primary)" }} />
@@ -414,7 +414,7 @@ export const ThreadEngagementAnalytics: React.FC<
                     {postText && (
                       <button
                         onClick={() => onPostClick?.(pe.post)}
-                        className="mb-1 mt-2 line-clamp-2 block w-full cursor-pointer text-left text-xs transition-opacity hover:opacity-70"
+                        className="touch-target-list-item mb-1 mt-2 line-clamp-2 block w-full cursor-pointer text-left text-xs transition-opacity hover:opacity-70"
                         style={{ color: "var(--asph-text-secondary)" }}
                         title="View this post in thread"
                       >

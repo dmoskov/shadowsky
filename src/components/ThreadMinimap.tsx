@@ -480,7 +480,7 @@ export const ThreadMinimap: React.FC<ThreadMinimapProps> = ({
                     e.stopPropagation();
                     setIsVisible(false);
                   }}
-                  className="rounded p-0.5 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
+                  className="touch-target rounded p-0.5 transition-colors hover:bg-black/10 dark:hover:bg-white/10"
                   title="Close minimap"
                 >
                   <X size={12} style={{ color: "var(--asph-text-tertiary)" }} />

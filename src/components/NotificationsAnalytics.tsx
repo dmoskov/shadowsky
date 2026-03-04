@@ -914,7 +914,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
               <div className="flex items-center gap-2 text-sm">
                 <button
                   onClick={() => setActivityView("received")}
-                  className={`rounded-lg px-3 py-1 transition-all ${
+                  className={`touch-target rounded-lg px-3 py-1 transition-all ${
                     activityView === "received" ? "font-semibold" : ""
                   }`}
                   style={{
@@ -932,7 +932,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                 </button>
                 <button
                   onClick={() => setActivityView("sent")}
-                  className={`rounded-lg px-3 py-1 transition-all ${
+                  className={`touch-target rounded-lg px-3 py-1 transition-all ${
                     activityView === "sent" ? "font-semibold" : ""
                   }`}
                   style={{
@@ -959,7 +959,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   e.stopPropagation();
                   handleTimeRangeChange("1d");
                 }}
-                className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
+                className="touch-target-sm cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
                 style={{
                   backgroundColor:
                     timeRange === "1d"
@@ -979,7 +979,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   e.stopPropagation();
                   handleTimeRangeChange("3d");
                 }}
-                className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
+                className="touch-target-sm cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
                 style={{
                   backgroundColor:
                     timeRange === "3d"
@@ -999,7 +999,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   e.stopPropagation();
                   handleTimeRangeChange("7d");
                 }}
-                className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
+                className="touch-target-sm cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
                 style={{
                   backgroundColor:
                     timeRange === "7d"
@@ -1019,7 +1019,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   e.stopPropagation();
                   handleTimeRangeChange("4w");
                 }}
-                className="cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
+                className="touch-target-sm cursor-pointer rounded-lg px-3 py-1 text-sm transition-all hover:opacity-80"
                 style={{
                   backgroundColor:
                     timeRange === "4w"
@@ -1462,7 +1462,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
             <div className="flex items-center gap-2 text-sm">
               <button
                 onClick={() => setTopUsersView("received")}
-                className={`rounded-lg px-3 py-1 transition-all ${
+                className={`touch-target rounded-lg px-3 py-1 transition-all ${
                   topUsersView === "received" ? "font-semibold" : ""
                 }`}
                 style={{
@@ -1480,7 +1480,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
               </button>
               <button
                 onClick={() => setTopUsersView("sent")}
-                className={`rounded-lg px-3 py-1 transition-all ${
+                className={`touch-target rounded-lg px-3 py-1 transition-all ${
                   topUsersView === "sent" ? "font-semibold" : ""
                 }`}
                 style={{

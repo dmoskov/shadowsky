@@ -665,7 +665,7 @@ function VideoPlayerComponent({
         {videoError?.recoverable && retryCount < MAX_RETRIES && (
           <button
             onClick={handleRetry}
-            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600"
+            className="touch-target-sm mt-3 inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-600"
           >
             <RefreshCw className="h-4 w-4" />
             Retry
@@ -906,7 +906,7 @@ function VideoPlayerComponent({
             <div className="flex items-center space-x-3">
               <button
                 onClick={handlePlayPause}
-                className="text-white transition-colors hover:text-gray-300"
+                className="touch-target text-white transition-colors hover:text-gray-300"
                 aria-label={isPlaying ? "Pause" : "Play"}
               >
                 {isPlaying ? (
@@ -920,7 +920,7 @@ function VideoPlayerComponent({
               <div className="group relative flex items-center">
                 <button
                   onClick={handleMuteToggle}
-                  className="text-white transition-colors hover:text-gray-300"
+                  className="touch-target text-white transition-colors hover:text-gray-300"
                   aria-label={isMuted ? "Unmute" : "Mute"}
                 >
                   {isMuted || volume === 0 ? (
@@ -964,7 +964,7 @@ function VideoPlayerComponent({
 
             <button
               onClick={handleFullscreen}
-              className="text-white transition-colors hover:text-gray-300"
+              className="touch-target text-white transition-colors hover:text-gray-300"
               aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
             >
               {isFullscreen ? (

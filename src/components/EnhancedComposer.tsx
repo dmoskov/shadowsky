@@ -775,7 +775,7 @@ export function EnhancedComposer({
             {detectedQuotePost && !quotedPost && (
               <button
                 onClick={() => setDetectedQuotePost(null)}
-                className="text-xs hover:text-red-500"
+                className="touch-target-sm text-xs hover:text-red-500"
                 title="Remove quote"
               >
                 <X size={14} />
@@ -904,7 +904,7 @@ export function EnhancedComposer({
                 {item.type === "video" && (
                   <button
                     onClick={() => setShowVideoEditor(true)}
-                    className="rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
+                    className="touch-target-icon rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
                     title="Trim video"
                   >
                     <Scissors size={16} />
@@ -913,7 +913,7 @@ export function EnhancedComposer({
                 {/* Remove button */}
                 <button
                   onClick={() => removeMedia(item.id)}
-                  className="rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
+                  className="touch-target-icon rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
                   title="Remove"
                 >
                   <X size={16} />
@@ -934,7 +934,7 @@ export function EnhancedComposer({
                     {/* Open full alt text editor */}
                     <button
                       onClick={() => setShowAltTextEditor(item.id)}
-                      className="rounded bg-white/20 px-2 py-1 text-xs text-white hover:bg-white/30"
+                      className="touch-target-sm rounded bg-white/20 px-2 py-1 text-xs text-white hover:bg-white/30"
                       title="Edit alt text"
                     >
                       <FileText size={12} />
@@ -943,7 +943,7 @@ export function EnhancedComposer({
                       <button
                         onClick={() => handleGenerateAlt(item.id)}
                         disabled={generatingAlt === item.id}
-                        className="rounded bg-white/20 px-2 py-1 text-xs text-white hover:bg-white/30"
+                        className="touch-target-sm rounded bg-white/20 px-2 py-1 text-xs text-white hover:bg-white/30"
                         title="Generate with AI"
                       >
                         {generatingAlt === item.id ? (
@@ -970,7 +970,7 @@ export function EnhancedComposer({
           {features.imageEditing && hasEditableImages && (
             <button
               onClick={() => setShowImageEditor(true)}
-              className="flex h-32 w-full items-center justify-center rounded border-2 border-dashed transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target flex h-32 w-full items-center justify-center rounded border-2 border-dashed transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
               style={{
                 borderColor: "var(--asph-border-primary)",
                 color: "var(--asph-text-secondary)",
@@ -1024,7 +1024,7 @@ export function EnhancedComposer({
               <button
                 key={`hashtag-suggestion-${tag.tag}-${index}`}
                 onClick={() => handleSelectHashtag(tag.tag)}
-                className="rounded-full border px-2 py-0.5 text-xs transition-all hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 dark:hover:bg-opacity-20"
+                className="touch-target-sm rounded-full border px-2 py-0.5 text-xs transition-all hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 dark:hover:bg-opacity-20"
                 style={{
                   backgroundColor: "var(--asph-bg-secondary)",
                   borderColor: "var(--asph-border-primary)",
@@ -1056,7 +1056,7 @@ export function EnhancedComposer({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isSubmitting}
-                className="rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="touch-target-icon rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
                 style={{ color: "var(--asph-text-secondary)" }}
                 title="Add image or video"
               >
@@ -1071,7 +1071,7 @@ export function EnhancedComposer({
               <button
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                 disabled={isSubmitting}
-                className="rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="touch-target-icon rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
                 style={{ color: "var(--asph-text-secondary)" }}
                 title="Add emoji"
               >
@@ -1116,7 +1116,7 @@ export function EnhancedComposer({
             <button
               onClick={onCancel}
               disabled={isSubmitting}
-              className="rounded-full border px-4 py-2"
+              className="touch-target-sm rounded-full border px-4 py-2"
               style={{
                 borderColor: "var(--asph-border-primary)",
                 color: "var(--asph-text-secondary)",
@@ -1130,7 +1130,7 @@ export function EnhancedComposer({
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || (!text.trim() && media.length === 0)}
-            className="flex items-center gap-2 rounded-full px-4 py-2 transition-all hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
+            className="touch-target-sm flex items-center gap-2 rounded-full px-4 py-2 transition-all hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
             style={{
               backgroundColor: "var(--asph-primary)",
               color: "white",
@@ -1161,7 +1161,7 @@ export function EnhancedComposer({
               <h3 className="text-lg font-semibold">Search GIFs</h3>
               <button
                 onClick={() => setShowGifSearch(false)}
-                className="rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="touch-target-icon rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-700"
               >
                 <X size={20} />
               </button>

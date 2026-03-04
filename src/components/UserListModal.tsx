@@ -201,7 +201,7 @@ export function UserListModal({
           <button
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>

@@ -260,7 +260,7 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
                     {!isOwnProfile && (
                       <button
                         onClick={handleFollow}
-                        className={`rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
+                        className={`touch-target rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
                           profile.viewer?.following
                             ? "asph-button-secondary hover:scale-105"
                             : "asph-button-primary hover:scale-105"
