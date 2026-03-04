@@ -5,6 +5,8 @@
 @import "./styles/tailwind-components.css";
 /* Responsive placeholder system for CLS prevention */
 @import "./styles/placeholder-system.css";
+/* View Transitions API route animations */
+@import "./styles/view-transitions.css";
 
 @tailwind base;
 @tailwind components;

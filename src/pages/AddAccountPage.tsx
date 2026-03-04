@@ -1,13 +1,13 @@
 import { ArrowLeft, ExternalLink, Key, Mail } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { ATProtoError } from "../types/errors";
 
 type LoginMode = "oauth" | "app-password";
 
 export const AddAccountPage: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const { login, loginWithOAuth, isOAuthAvailable } = useAuth();
   const [loginMode, setLoginMode] = useState<LoginMode>(
     isOAuthAvailable ? "oauth" : "app-password",

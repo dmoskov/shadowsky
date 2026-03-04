@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 import React, { useEffect, useId, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useMenuKeyboardNavigation } from "../hooks/useMenuKeyboardNavigation";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { AccountManager } from "../services/account-manager";
 
 export const UserMenu: React.FC = () => {
@@ -23,7 +23,7 @@ export const UserMenu: React.FC = () => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
   const { session, logout } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
 
   // Keyboard navigation for menu
   useMenuKeyboardNavigation({

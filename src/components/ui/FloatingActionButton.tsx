@@ -1,8 +1,8 @@
 import { PenTool } from "lucide-react";
 import React from "react";
-import { useNavigate } from "react-router";
 import { usePrefersReducedMotion } from "../../contexts/AccessibilityContext";
 import { useScrollVisibility } from "../../hooks/useRAFScroll";
+import { useViewTransitionNavigate } from "../../hooks/useViewTransitionNavigate";
 
 interface FloatingActionButtonProps {
   className?: string;
@@ -11,7 +11,7 @@ interface FloatingActionButtonProps {
 export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   className = "",
 }) => {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const prefersReducedMotion = usePrefersReducedMotion();
 
   // Use RAF-batched scroll visibility hook

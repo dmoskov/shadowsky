@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import { useNavigate, useParams, useSearchParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { List, ListImperativeAPI, useDynamicRowHeight } from "react-window";
 import { AddToListModal } from "../components/AddToListModal";
 import { PostCard } from "../components/PostCard";
@@ -49,6 +49,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { useTopPosts } from "../hooks/useTopPosts";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { analyzePosts } from "../services/anthropic";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
 import { moderationHistoryDB } from "../services/moderation-history-db";
@@ -105,7 +106,7 @@ const scrollPositions = new Map<string, number>();
 
 export default function ProfilePage() {
   const { handle } = useParams<{ handle: string }>();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { session, agent } = useAuth();
   const { showToast } = useToast();
@@ -800,6 +801,7 @@ export default function ProfilePage() {
               alt={profile.displayName || profile.handle}
               className="h-36 w-36 rounded-full border-4 shadow-lg transition-transform hover:scale-105"
               style={{
+                viewTransitionName: "vt-profile-avatar",
                 borderColor: "var(--asph-bg-secondary)",
                 backgroundColor: "var(--asph-bg-tertiary)",
               }}

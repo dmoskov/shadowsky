@@ -17,11 +17,11 @@ import {
   Users,
 } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { useDelayedValue } from "../hooks/useTiming";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 
 interface Command {
   id: string;
@@ -49,7 +49,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const listRef = useRef<HTMLDivElement>(null);
   const containerRef = useFocusTrap<HTMLDivElement>(isOpen);
 
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const { logout, session } = useAuth();
   const { theme, toggleTheme } = useTheme();
 

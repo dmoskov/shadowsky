@@ -13,7 +13,7 @@
 
 import { List, Rss, Shield, Sparkles, Users } from "lucide-react";
 import React, { useCallback, useState } from "react";
-import { useNavigate } from "react-router";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
@@ -44,7 +44,7 @@ export const EmbedRenderer: React.FC<EmbedRendererProps> = ({
   postUri,
   onImageClick,
 }) => {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const [generatedAltTexts, setGeneratedAltTexts] = useState<
     Record<string, Record<number, string>>
   >({});

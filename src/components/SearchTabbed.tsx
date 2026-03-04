@@ -28,7 +28,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModeration } from "../contexts/ModerationContext";
@@ -38,6 +38,7 @@ import {
   defaultFilters as defaultFacetedFilters,
   type SearchFilters as FacetedSearchFilters,
 } from "../hooks/useSearch";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
 import { getProfileCacheService } from "../services/profile-cache-service";
 import { proxifyBskyImage } from "../utils/image-proxy";
@@ -59,7 +60,7 @@ import {
 
 export const SearchTabbed: React.FC = React.memo(() => {
   const { agent } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isPostHidden } = useHiddenPosts();
   const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();

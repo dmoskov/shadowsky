@@ -109,6 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <NavLink
                 key={item.path}
                 to={item.path}
+                viewTransition
                 onClick={() => onClose()}
                 className={({ isActive }) =>
                   `group relative flex min-h-[44px] items-center ${isCollapsed ? "justify-center" : "gap-3"} rounded-xl ${isCollapsed ? "px-2" : "px-3"} ios-press-light py-2.5 transition-all duration-200 ${

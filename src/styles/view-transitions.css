@@ -1,0 +1,98 @@
+/* ===========================================
+ * View Transitions - Route Animation System
+ * ===========================================
+ * Uses the View Transitions API for smooth page transitions.
+ * Falls back to instant navigation in unsupported browsers.
+ *
+ * Timing tokens from asphodel-theme.css:
+ * --transition-fast: 150ms
+ * --transition-normal: 200ms
+ * --ease-out: cubic-bezier(0, 0, 0.2, 1)
+ * --ease-entrance: cubic-bezier(0, 0, 0.2, 1)
+ * --ease-exit: cubic-bezier(0.4, 0, 1, 1)
+ */
+
+/* -----------------------------------------
+ * Global crossfade for all route transitions
+ * ----------------------------------------- */
+::view-transition-old(root) {
+  animation: vt-fade-out 150ms var(--ease-exit, cubic-bezier(0.4, 0, 1, 1))
+    forwards;
+}
+
+::view-transition-new(root) {
+  animation: vt-fade-in 150ms var(--ease-entrance, cubic-bezier(0, 0, 0.2, 1))
+    forwards;
+}
+
+@keyframes vt-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* -----------------------------------------
+ * Shared element: Post card → Thread header
+ * -----------------------------------------
+ * Apply view-transition-name: vt-post-hero on the clicked
+ * post card (feed) and the thread header post (thread page).
+ * The browser morphs between them automatically.
+ */
+::view-transition-old(vt-post-hero),
+::view-transition-new(vt-post-hero) {
+  animation-duration: 200ms;
+  animation-timing-function: var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
+}
+
+/* -----------------------------------------
+ * Shared element: Avatar → Profile avatar
+ * -----------------------------------------
+ * Apply view-transition-name: vt-profile-avatar on the clicked
+ * avatar (feed) and the profile page avatar.
+ */
+::view-transition-old(vt-profile-avatar),
+::view-transition-new(vt-profile-avatar) {
+  animation-duration: 200ms;
+  animation-timing-function: var(--ease-out, cubic-bezier(0, 0, 0.2, 1));
+}
+
+/* Ensure shared element transitions sit above the crossfade */
+::view-transition-group(vt-post-hero),
+::view-transition-group(vt-profile-avatar) {
+  z-index: 1;
+}
+
+/* -----------------------------------------
+ * Reduced motion: disable all view transitions
+ * ----------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+
+  ::view-transition-old(vt-post-hero),
+  ::view-transition-new(vt-post-hero),
+  ::view-transition-old(vt-profile-avatar),
+  ::view-transition-new(vt-profile-avatar) {
+    animation: none;
+  }
+}
+
+/* User override via data attribute (matches asphodel-theme.css pattern) */
+[data-reduce-motion="true"] ::view-transition-old(root),
+[data-reduce-motion="true"] ::view-transition-new(root) {
+  animation: none;
+}

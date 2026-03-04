@@ -153,6 +153,7 @@ const PrefetchLinkComponent: React.FC<PrefetchLinkProps> = ({
   return (
     <NavLink
       to={to}
+      viewTransition
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
@@ -188,7 +189,7 @@ const SimplePrefetchLinkComponent: React.FC<SimplePrefetchLinkProps> = ({
   const handlers = disablePrefetch ? {} : getRoutePrefetchHandlers(to);
 
   return (
-    <NavLink to={to} {...handlers} {...navLinkProps}>
+    <NavLink to={to} viewTransition {...handlers} {...navLinkProps}>
       {children}
     </NavLink>
   );

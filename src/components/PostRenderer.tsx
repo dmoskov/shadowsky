@@ -17,11 +17,14 @@ import {
   Users,
 } from "lucide-react";
 import React, { memo } from "react";
-import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useModeration } from "../contexts/ModerationContext";
 import { usePostTranslation } from "../hooks/usePostTranslation";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
+import {
+  tagForViewTransition,
+  useViewTransitionNavigate,
+} from "../hooks/useViewTransitionNavigate";
 import { fetchLinkMetadata, type LinkMetadata } from "../services/anthropic";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { createLogger } from "../utils/logger";
@@ -409,8 +412,9 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
   onClick,
   onQuoteClick,
 }) => {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const { isThreadMuted } = useModeration();
+  const articleRef = React.useRef<HTMLElement>(null);
   const record = post.record as any;
   const rootUri = getThreadRootUri(post);
   const isThreadMutedState = isThreadMuted(rootUri);
@@ -454,11 +458,18 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
 
   const handleAuthorClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    // Tag the clicked avatar for shared element transition to profile page
+    const avatar = (e.currentTarget as HTMLElement)
+      .closest(".post-renderer")
+      ?.querySelector("img.post-avatar") as HTMLElement | null;
+    tagForViewTransition(avatar, "vt-profile-avatar");
     navigate(`/profile/${post.author.handle}`);
   };
 
   const handlePostClick = () => {
     if (onClick) {
+      // Tag this post card for shared element transition to thread page
+      tagForViewTransition(articleRef.current, "vt-post-hero");
       onClick();
     }
   };
@@ -1194,6 +1205,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
   return (
     <>
       <article
+        ref={articleRef}
         className={`post-renderer p-4 ${compact ? "compact" : ""} ${record?.reply?.parent ? "is-reply" : ""} ${onClick ? "post-hover-refined cursor-pointer" : ""}`}
         onClick={handlePostClick}
         aria-label={`Post by ${post.author.displayName || post.author.handle}`}
@@ -1266,7 +1278,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                 proxifyBskyImage(post.author.avatar) || "/default-avatar.svg"
               }
               alt={post.author.handle}
-              className="h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+              className="post-avatar h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
               onClick={handleAuthorClick}
               {...authorPrefetchHandlers}
             />
@@ -1303,6 +1315,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                   style={{ color: "var(--asph-text-secondary)" }}
                   onClick={(e) => {
                     e.stopPropagation();
+                    tagForViewTransition(articleRef.current, "vt-post-hero");
                     const postId = post.uri.split("/").pop();
                     navigate(`/thread/${post.author.handle}/${postId}`);
                   }}

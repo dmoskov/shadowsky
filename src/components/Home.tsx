@@ -24,7 +24,6 @@ import {
   Users,
 } from "lucide-react";
 import React, { Suspense, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useKeyboardShortcutsContext } from "../contexts/KeyboardShortcutsContext";
@@ -40,6 +39,7 @@ import {
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { usePostDeepLink } from "../hooks/usePostDeepLink";
 import { useMinDuration } from "../hooks/useTiming";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { columnService } from "../services/column-service";
 import { offlineStorageDB } from "../services/offline-storage-db";
 import { rateLimitedFeedFetch } from "../services/rate-limiter";
@@ -261,7 +261,7 @@ export const Home: React.FC<HomeProps> = React.memo(
     onCloseFeedDiscovery,
   }) => {
     const { agent } = useAuth();
-    const navigate = useNavigate();
+    const navigate = useViewTransitionNavigate();
     const queryClient = useQueryClient();
     const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
       useOptimisticPosts();
