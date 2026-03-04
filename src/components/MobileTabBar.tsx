@@ -1,9 +1,10 @@
 import { Bell, Home, Mail, Search, User } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useUnreadNotificationCount } from "../hooks/useNotifications";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 
 /**
  * Scroll all visible scroll containers to the top.
@@ -37,7 +38,7 @@ export const MobileTabBar: React.FC = () => {
   const { session } = useAuth();
   const { data: unreadCount } = useUnreadNotificationCount();
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const lastTapRef = useRef<number>(0);
   const [bouncingTab, setBouncingTab] = useState<string | null>(null);
   const { getRoutePrefetchHandlers, getProfilePrefetchHandlers } =

@@ -9,10 +9,10 @@ import {
   Users,
 } from "lucide-react";
 import React, { useState } from "react";
-import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
 import { useToast } from "../contexts/ToastContext";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import {
   BlueskyList,
   blueskyListService,
@@ -22,7 +22,7 @@ import { EditListModal } from "./EditListModal";
 
 export const Lists: React.FC = () => {
   const { agent } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const queryClient = useQueryClient();
   const { showConfirm } = useModal();
   const { showToast } = useToast();

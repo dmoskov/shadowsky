@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation } from "react-router";
 import { useModeration } from "../contexts/ModerationContext";
 import { useFollowing } from "../hooks/useFollowing";
 import {
@@ -30,6 +30,7 @@ import {
   useUnreadCount,
 } from "../hooks/useNotifications";
 import { useMinDuration } from "../hooks/useTiming";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { NotificationCache } from "../utils/notificationCache";
 import { getNotificationUrl } from "../utils/url-helpers";
@@ -64,7 +65,7 @@ type NotificationFilter =
   | "from-following";
 
 const NotificationsFeedComponent: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const showTopAccounts = searchParams.get("top") === "1";
@@ -1179,7 +1180,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
     markAsRead,
     isNew = false,
   }) => {
-    const navigate = useNavigate();
+    const navigate = useViewTransitionNavigate();
     // Get the post for all notification types that reference posts
     // For reposts and likes, use reasonSubject which contains the original post URI
     const postUri =

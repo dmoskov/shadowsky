@@ -5,11 +5,11 @@
 
 import { Loader2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 
 export const OAuthCallback: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const { handleOAuthCallback } = useAuth();
   const [error, setError] = useState<string | null>(null);
 

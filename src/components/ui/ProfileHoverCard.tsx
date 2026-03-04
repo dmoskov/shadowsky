@@ -2,9 +2,9 @@ import { getProfileService } from "@bsky/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRoutePrefetch } from "../../hooks/useRoutePrefetch";
+import { useViewTransitionNavigate } from "../../hooks/useViewTransitionNavigate";
 import { layoutMeasurementService } from "../../services/layout-measurement-service";
 import { proxifyBskyImage } from "../../utils/image-proxy";
 import { DomainVerifiedBadge } from "./DomainVerifiedBadge";
@@ -45,7 +45,7 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
     const cardRef = useRef<HTMLDivElement>(null);
 
     const { agent, session } = useAuth();
-    const navigate = useNavigate();
+    const navigate = useViewTransitionNavigate();
     const queryClient = useQueryClient();
     const { prefetchProfile } = useRoutePrefetch();
 

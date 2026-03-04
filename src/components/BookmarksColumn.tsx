@@ -18,7 +18,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useNavigate } from "react-router";
 import { List, ListImperativeAPI, useDynamicRowHeight } from "react-window";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModal } from "../contexts/ModalContext";
@@ -28,6 +27,7 @@ import {
   useCollectionBookmarks,
 } from "../hooks/useBookmarkCollections";
 import { useMinDuration } from "../hooks/useTiming";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import type { BookmarkCollection } from "../services/bookmark-collections";
 import { COLLECTION_COLORS } from "../services/bookmark-collections";
 import { bookmarkServiceV2 } from "../services/bookmark-service-v2";
@@ -55,7 +55,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
   isFocused = false,
   onClose,
 }) => {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const queryClient = useQueryClient();
   const { isPostHidden } = useHiddenPosts();
   const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();

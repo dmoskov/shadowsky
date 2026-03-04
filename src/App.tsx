@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ErrorInfo, lazy, Suspense, useEffect, useState } from "react";
-import { BrowserRouter, useLocation, useNavigate } from "react-router";
+import { BrowserRouter, useLocation } from "react-router";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { GlobalErrorFallback } from "./components/GlobalErrorFallback";
 import { Header } from "./components/Header";
@@ -34,6 +34,7 @@ import { usePendingMutationsWarning } from "./hooks/usePendingMutationsWarning";
 import { useSidebarManagement } from "./hooks/useSidebarManagement";
 import { useStorageInitialization } from "./hooks/useStorageInitialization";
 import { useSwipeNavigation } from "./hooks/useSwipeNavigation";
+import { useViewTransitionNavigate } from "./hooks/useViewTransitionNavigate";
 import "./utils/debug-control"; // Initialize debug controls
 import { removeTrailingSlash } from "./utils/removeTrailingSlash";
 
@@ -118,7 +119,7 @@ const queryClient = createAppQueryClient();
 function AppContent() {
   const { isAuthenticated, isLoading, session, agent } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const { isShortcutsHelpOpen, setIsShortcutsHelpOpen } =
     useKeyboardShortcutsContext();
 

@@ -1,8 +1,8 @@
 import { Check, ChevronDown, Plus, User } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import {
   AccountManager,
   type StoredAccount,
@@ -19,7 +19,7 @@ export const AccountSwitcher: React.FC = () => {
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { session, switchAccount } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
 
   useEffect(() => {
     if (isOpen) {

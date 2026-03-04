@@ -23,7 +23,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { ThreadProvider, type ThreadNode } from "../contexts/ThreadContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
@@ -32,6 +31,7 @@ import { useScrollPersistence } from "../hooks/useScrollPersistence";
 import { useThreadCollapse } from "../hooks/useThreadCollapse";
 import { useThreadKeyboardNav } from "../hooks/useThreadKeyboardNav";
 import { useThreadTree } from "../hooks/useThreadTree";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { countNodeDescendants } from "../utils/thread-helpers";
 import { EmbedRenderer } from "./EmbedRenderer";
 import { ImageGallery } from "./ImageGallery";
@@ -113,7 +113,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   isLoadingMoreAbove = false,
   onLoadMoreAbove,
 }) => {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const { session } = useAuth();
   const currentUserDid = propCurrentUserDid || session?.did;
 

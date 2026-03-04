@@ -1,10 +1,10 @@
 import { ArrowRight, Database, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { LOCAL_STORAGE_KEYS } from "../services/storage/storage-constants";
 
 export const ColumnMigrationNotice: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const [showNotice, setShowNotice] = useState(false);
 
   useEffect(() => {

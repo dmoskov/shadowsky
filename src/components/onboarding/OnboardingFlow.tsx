@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
+import { useViewTransitionNavigate } from "../../hooks/useViewTransitionNavigate";
 import { onboardingService } from "../../services/onboarding-service";
 import { FeedsScreen } from "./FeedsScreen";
 import { FollowsScreen } from "./FollowsScreen";
@@ -23,7 +23,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   onComplete,
 }) => {
   const { agent } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("welcome");
 
   // Initialize onboarding service with agent

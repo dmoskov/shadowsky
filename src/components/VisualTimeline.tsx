@@ -9,11 +9,11 @@ import {
   Repeat2,
 } from "lucide-react";
 import React from "react";
-import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useScrollContainerGPU } from "../hooks/useGPUAcceleration";
 import { useNotificationPosts } from "../hooks/useNotificationPosts";
 import { usePageVisibility } from "../hooks/usePageVisibility";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { throttle, TIMING } from "../utils/timing";
 import { ThreadModal } from "./ThreadModal";
@@ -38,7 +38,7 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
   ({ hideTimeLabels = false, isInSkyDeck = false, isFocused = true }) => {
     const { agent } = useAuth();
     const isVisible = usePageVisibility();
-    const navigate = useNavigate();
+    const navigate = useViewTransitionNavigate();
     const containerRef = React.useRef<HTMLDivElement>(null);
     const scrollableRef = React.useRef<HTMLDivElement>(null);
     const gpuScrollRef = useScrollContainerGPU();

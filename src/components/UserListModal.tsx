@@ -1,11 +1,11 @@
 import { AppBskyActorDefs } from "@atproto/api";
 import { X } from "lucide-react";
 import React, { useCallback, useEffect, useId, useRef, useState } from "react";
-import { useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 import { useInfiniteScroll } from "../hooks/useRAFScroll";
 import { useMinDuration } from "../hooks/useTiming";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
@@ -27,7 +27,7 @@ export function UserListModal({
   type,
 }: UserListModalProps) {
   const { agent } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const [users, setUsers] = useState<AppBskyActorDefs.ProfileView[]>([]);
   const [loadingRaw, setLoadingRaw] = useState(true);
   const [cursor, setCursor] = useState<string | undefined>();

@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useParams } from "react-router";
 import { ThreadModal } from "../components/ThreadModal";
 import { useAuth } from "../contexts/AuthContext";
+import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { constructAtUri } from "../utils/url-helpers";
 
 export default function ThreadPage() {
   const { handle, postId } = useParams<{ handle: string; postId: string }>();
-  const navigate = useNavigate();
+  const navigate = useViewTransitionNavigate();
   const { agent } = useAuth();
   const [postUri, setPostUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,6 +55,12 @@ export default function ThreadPage() {
   }
 
   return (
-    <ThreadModal postUri={postUri} openToReply={false} onClose={handleClose} />
+    <div style={{ viewTransitionName: "vt-post-hero" }}>
+      <ThreadModal
+        postUri={postUri}
+        openToReply={false}
+        onClose={handleClose}
+      />
+    </div>
   );
 }
