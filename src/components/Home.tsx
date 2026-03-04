@@ -1558,6 +1558,18 @@ export const Home: React.FC<HomeProps> = React.memo(
         onOpen: (post) => {
           handlePostClick(post as unknown as Post);
         },
+        onMoreMenu: (post) => {
+          // Find the focused post element and click its more menu button
+          const postEl = document.querySelector(
+            `[data-post-uri="${post.uri}"][aria-selected="true"]`,
+          );
+          if (postEl) {
+            const moreBtn = postEl.querySelector(
+              '[aria-label="More options"]',
+            ) as HTMLButtonElement | null;
+            moreBtn?.click();
+          }
+        },
         onNavigateNext: () => {
           if (focusedPostIndex < posts.length - 1) {
             isKeyboardNavigationRef.current = true;
