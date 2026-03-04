@@ -30,6 +30,17 @@ vi.mock("../contexts/ActionSyncContext", () => ({
   useActionSyncOptional: () => mockActionSync,
 }));
 
+vi.mock("../contexts/ToastContext", () => ({
+  useToast: () => ({
+    showToast: vi.fn().mockReturnValue("toast-1"),
+    showUndoToast: vi.fn().mockReturnValue("toast-1"),
+    dismissToast: vi.fn(),
+    dismissAllToasts: vi.fn(),
+    getQueueStats: vi.fn().mockReturnValue({ visible: 0, queued: 0, total: 0 }),
+    updateQueueConfig: vi.fn(),
+  }),
+}));
+
 vi.mock("../services/mutation-queue-db", () => ({
   mutationQueueDB: {
     init: vi.fn().mockResolvedValue(undefined),

@@ -227,7 +227,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   });
 
   // Get optimistic post mutations
-  const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
+  const { likeMutation, repostMutation, undoableUnlike, undoableUnrepost } =
     useOptimisticPosts();
 
   // Handle like action
@@ -235,10 +235,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     async (post: Post) => {
       try {
         if (post.viewer?.like) {
-          await unlikeMutation.mutateAsync({
-            likeUri: post.viewer.like,
-            postUri: post.uri,
-          });
+          undoableUnlike(post.uri, post.viewer.like);
         } else {
           await likeMutation.mutateAsync({
             uri: post.uri,
@@ -249,7 +246,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
         console.error("Failed to like/unlike post:", error);
       }
     },
-    [likeMutation, unlikeMutation],
+    [likeMutation, undoableUnlike],
   );
 
   // Handle repost action
@@ -257,10 +254,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
     async (post: Post) => {
       try {
         if (post.viewer?.repost) {
-          await unrepostMutation.mutateAsync({
-            repostUri: post.viewer.repost,
-            postUri: post.uri,
-          });
+          undoableUnrepost(post.uri, post.viewer.repost);
         } else {
           await repostMutation.mutateAsync({
             uri: post.uri,
@@ -271,7 +265,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
         console.error("Failed to repost/unrepost:", error);
       }
     },
-    [repostMutation, unrepostMutation],
+    [repostMutation, undoableUnrepost],
   );
 
   // Get the CSS custom property name based on thread depth

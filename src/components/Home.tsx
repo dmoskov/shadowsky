@@ -263,7 +263,7 @@ export const Home: React.FC<HomeProps> = React.memo(
     const { agent } = useAuth();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
+    const { likeMutation, repostMutation, undoableUnlike, undoableUnrepost } =
       useOptimisticPosts();
     const { toggleBookmark } = useBookmarks();
     const { isPostHidden } = useHiddenPosts();
@@ -1260,10 +1260,7 @@ export const Home: React.FC<HomeProps> = React.memo(
 
         try {
           if (post.viewer?.like) {
-            await unlikeMutation.mutateAsync({
-              likeUri: post.viewer.like,
-              postUri: post.uri,
-            });
+            undoableUnlike(post.uri, post.viewer.like);
           } else {
             await likeMutation.mutateAsync({
               uri: post.uri,
@@ -1274,7 +1271,7 @@ export const Home: React.FC<HomeProps> = React.memo(
           debug.error("Failed to like/unlike post:", error);
         }
       },
-      [agent, likeMutation, unlikeMutation],
+      [agent, likeMutation, undoableUnlike],
     );
 
     const handleRepost = React.useCallback(
@@ -1287,10 +1284,7 @@ export const Home: React.FC<HomeProps> = React.memo(
 
         try {
           if (post.viewer?.repost) {
-            await unrepostMutation.mutateAsync({
-              repostUri: post.viewer.repost,
-              postUri: post.uri,
-            });
+            undoableUnrepost(post.uri, post.viewer.repost);
           } else {
             await repostMutation.mutateAsync({
               uri: post.uri,
@@ -1301,7 +1295,7 @@ export const Home: React.FC<HomeProps> = React.memo(
           debug.error("Failed to repost:", error);
         }
       },
-      [agent, repostMutation, unrepostMutation],
+      [agent, repostMutation, undoableUnrepost],
     );
 
     const handleBookmark = React.useCallback(
@@ -1513,20 +1507,14 @@ export const Home: React.FC<HomeProps> = React.memo(
       registerPostActions(effectiveColumnId, {
         onLike: (post) => {
           if (post.viewer?.like) {
-            unlikeMutation.mutate({
-              postUri: post.uri,
-              likeUri: post.viewer.like,
-            });
+            undoableUnlike(post.uri, post.viewer.like);
           } else {
             likeMutation.mutate({ uri: post.uri, cid: post.cid });
           }
         },
         onRepost: (post) => {
           if (post.viewer?.repost) {
-            unrepostMutation.mutate({
-              postUri: post.uri,
-              repostUri: post.viewer.repost,
-            });
+            undoableUnrepost(post.uri, post.viewer.repost);
           } else {
             repostMutation.mutate({ uri: post.uri, cid: post.cid });
           }
@@ -1584,9 +1572,9 @@ export const Home: React.FC<HomeProps> = React.memo(
       registerPostActions,
       unregisterPostActions,
       likeMutation,
-      unlikeMutation,
+      undoableUnlike,
       repostMutation,
-      unrepostMutation,
+      undoableUnrepost,
       toggleBookmark,
       focusedPostIndex,
       posts,

@@ -42,11 +42,18 @@ export function usePostMenuActions({
   onClose,
 }: PostMenuActionsProps) {
   const { session, agent } = useAuth();
-  const { hidePost } = useHiddenPosts();
-  const { muteUser, muteThread, unmuteThread, blockUser, isThreadMuted } =
-    useModeration();
+  const { hidePost, unhidePost } = useHiddenPosts();
+  const {
+    muteUser,
+    unmuteUser,
+    muteThread,
+    unmuteThread,
+    blockUser,
+    unblockUser,
+    isThreadMuted,
+  } = useModeration();
   const { showDestructiveConfirm } = useModal();
-  const { showToast } = useToast();
+  const { showToast, showUndoToast } = useToast();
 
   const isOwnPost = session?.did === post.author.did;
   const postRecord = post.record as { reply?: unknown } | undefined;
@@ -74,13 +81,18 @@ export function usePostMenuActions({
     if (onMute) {
       onMute();
     } else {
-      // Default implementation
-      try {
-        if (agent) {
-          await agent.mute(post.author.did);
+      if (!agent) return;
 
-          // Only update local state after successful API call
-          muteUser(post.author.did);
+      // Optimistic update — apply mute locally
+      muteUser(post.author.did);
+
+      let resolved = false;
+
+      const commit = async () => {
+        if (resolved) return;
+        resolved = true;
+        try {
+          await agent.mute(post.author.did);
 
           // Record mute to history
           try {
@@ -95,16 +107,20 @@ export function usePostMenuActions({
           } catch (historyErr) {
             console.warn("Failed to record mute to history:", historyErr);
           }
-
-          showToast(`Muted @${post.author.handle}`, {
-            type: "success",
-            duration: 3000,
-          });
+        } catch (error) {
+          console.error("Failed to mute user:", error);
+          unmuteUser(post.author.did);
+          showToast("Failed to mute user", { type: "error" });
         }
-      } catch (error) {
-        console.error("Failed to mute user:", error);
-        showToast("Failed to mute user", { type: "error" });
-      }
+      };
+
+      const undo = () => {
+        if (resolved) return;
+        resolved = true;
+        unmuteUser(post.author.did);
+      };
+
+      showUndoToast(`Muted @${post.author.handle}`, undo, commit, 5000);
     }
   };
 
@@ -113,19 +129,28 @@ export function usePostMenuActions({
     if (onBlock) {
       onBlock();
     } else {
-      // Default implementation
-      if (agent) {
-        await showDestructiveConfirm(
-          {
-            title: "Block User",
-            message: `Are you sure you want to block @${post.author.handle}? They won't be able to see your posts, reply to you, or interact with your content.`,
-            confirmButtonLabel: "Block User",
-            severity: "danger",
-            canUndo: true,
-            warningMessage:
-              "You can unblock this user later from your settings.",
-          },
-          async () => {
+      if (!agent) return;
+
+      // Block still shows confirm dialog because it's a severe action
+      await showDestructiveConfirm(
+        {
+          title: "Block User",
+          message: `Are you sure you want to block @${post.author.handle}? They won't be able to see your posts, reply to you, or interact with your content.`,
+          confirmButtonLabel: "Block User",
+          severity: "danger",
+          canUndo: true,
+          warningMessage:
+            "You can undo within 5 seconds, or unblock later from settings.",
+        },
+        async () => {
+          // Optimistic update — apply block locally
+          blockUser(post.author.did);
+
+          let resolved = false;
+
+          const commit = async () => {
+            if (resolved) return;
+            resolved = true;
             try {
               if (!agent.session?.did) {
                 throw new Error("No session available");
@@ -137,9 +162,6 @@ export function usePostMenuActions({
                   createdAt: new Date().toISOString(),
                 },
               );
-
-              // Only update local state after successful API call
-              blockUser(post.author.did);
 
               // Record block to history
               try {
@@ -155,18 +177,22 @@ export function usePostMenuActions({
               } catch (historyErr) {
                 console.warn("Failed to record block to history:", historyErr);
               }
-
-              showToast(`Blocked @${post.author.handle}`, {
-                type: "success",
-                duration: 3000,
-              });
             } catch (error) {
               console.error("Failed to block user:", error);
+              unblockUser(post.author.did);
               showToast("Failed to block user", { type: "error" });
             }
-          },
-        );
-      }
+          };
+
+          const undo = () => {
+            if (resolved) return;
+            resolved = true;
+            unblockUser(post.author.did);
+          };
+
+          showUndoToast(`Blocked @${post.author.handle}`, undo, commit, 5000);
+        },
+      );
     }
   };
 
@@ -175,32 +201,32 @@ export function usePostMenuActions({
     if (onDelete) {
       onDelete();
     } else {
-      // Default implementation
-      await showDestructiveConfirm(
-        {
-          title: "Delete Post",
-          message:
-            "Are you sure you want to delete this post? This will remove it from your profile and timeline.",
-          confirmButtonLabel: "Delete Post",
-          severity: "danger",
-          canUndo: false,
-          warningMessage: "This action cannot be undone.",
-        },
-        async () => {
-          try {
-            if (agent) {
-              await agent.deletePost(post.uri);
-              showToast("Post deleted", {
-                type: "success",
-                duration: 3000,
-              });
-            }
-          } catch (error) {
-            console.error("Failed to delete post:", error);
-            showToast("Failed to delete post", { type: "error" });
-          }
-        },
-      );
+      if (!agent) return;
+
+      // Optimistic update — hide the post immediately
+      hidePost(post.uri);
+
+      let resolved = false;
+
+      const commit = async () => {
+        if (resolved) return;
+        resolved = true;
+        try {
+          await agent.deletePost(post.uri);
+        } catch (error) {
+          console.error("Failed to delete post:", error);
+          unhidePost(post.uri);
+          showToast("Failed to delete post", { type: "error" });
+        }
+      };
+
+      const undo = () => {
+        if (resolved) return;
+        resolved = true;
+        unhidePost(post.uri);
+      };
+
+      showUndoToast("Post deleted", undo, commit, 5000);
     }
   };
 

@@ -154,7 +154,7 @@ export default function ProfilePage() {
     key: cacheKey,
   });
 
-  const { likeMutation, unlikeMutation, repostMutation, unrepostMutation } =
+  const { likeMutation, repostMutation, undoableUnlike, undoableUnrepost } =
     useOptimisticPosts();
 
   // Fetch profile data via React Query for request deduplication
@@ -588,10 +588,7 @@ export default function ProfilePage() {
 
   const handleLike = async (post: AppBskyFeedDefs.PostView) => {
     if (post.viewer?.like) {
-      await unlikeMutation.mutateAsync({
-        likeUri: post.viewer.like,
-        postUri: post.uri,
-      });
+      undoableUnlike(post.uri, post.viewer.like);
     } else {
       await likeMutation.mutateAsync({
         uri: post.uri,
@@ -602,10 +599,7 @@ export default function ProfilePage() {
 
   const handleRepost = async (post: AppBskyFeedDefs.PostView) => {
     if (post.viewer?.repost) {
-      await unrepostMutation.mutateAsync({
-        repostUri: post.viewer.repost,
-        postUri: post.uri,
-      });
+      undoableUnrepost(post.uri, post.viewer.repost);
     } else {
       await repostMutation.mutateAsync({
         uri: post.uri,
