@@ -46,7 +46,7 @@ public class FeedListModule: Module {
             Events("onRefresh", "onLoadMore", "onPostPress", "onProfilePress",
                    "onLike", "onRepost", "onReply", "onBookmark",
                    "onMentionPress", "onHashtagPress", "onShare",
-                   "onImagePress", "onLinkPress", "onQuotePress")
+                   "onImagePress", "onLinkPress", "onQuotePress", "onScroll")
         }
     }
 }
@@ -76,6 +76,7 @@ class FeedListViewWrapper: ExpoView {
     private let onImagePress = EventDispatcher()
     private let onLinkPress = EventDispatcher()
     private let onQuotePress = EventDispatcher()
+    private let onScroll = EventDispatcher()
 
     // SwiftUI hosting controller
     private var hostingController: UIHostingController<FeedListView>?
@@ -190,6 +191,11 @@ class FeedListViewWrapper: ExpoView {
                 self?.onQuotePress([
                     "uri": uri,
                     "handle": handle
+                ])
+            },
+            onScroll: { [weak self] offset in
+                self?.onScroll([
+                    "y": offset
                 ])
             }
         )

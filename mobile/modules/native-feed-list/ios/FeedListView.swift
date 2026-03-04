@@ -22,6 +22,16 @@ struct ConvertedFeedPost: Identifiable {
     let sourcePost: SerializedFeedViewPost
 }
 
+// MARK: - Scroll Offset Tracking
+
+/// PreferenceKey for tracking ScrollView content offset
+struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
 // MARK: - Feed List Props
 
 /// ObservableObject for props passed from React Native.
@@ -69,6 +79,7 @@ struct FeedListView: View {
     let onImagePress: (([ImageEmbedData], Int) -> Void)?
     let onLinkPress: ((String) -> Void)?
     let onQuotePress: ((String, String) -> Void)?
+    let onScroll: ((CGFloat) -> Void)?
 
     // MARK: - Body
 
@@ -100,6 +111,15 @@ struct FeedListView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
+                    // Invisible scroll offset tracker
+                    GeometryReader { geo in
+                        Color.clear.preference(
+                            key: ScrollOffsetPreferenceKey.self,
+                            value: -geo.frame(in: .named("feedScroll")).minY
+                        )
+                    }
+                    .frame(height: 0)
+
                     // Post items - uses pre-computed conversions
                     ForEach(Array(feedState.convertedPosts.enumerated()), id: \.element.id) { index, converted in
                         PostCardView(
@@ -183,6 +203,10 @@ struct FeedListView: View {
                             .padding()
                     }
                 }
+            }
+            .coordinateSpace(name: "feedScroll")
+            .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+                onScroll?(value)
             }
             .scrollDismissesKeyboard(.interactively)
             .refreshable {
@@ -553,7 +577,8 @@ struct FeedListView_Previews: PreviewProvider {
             onShare: { uri in print("Share: \(uri)") },
             onImagePress: { images, index in print("Image: \(index)") },
             onLinkPress: { url in print("Link: \(url)") },
-            onQuotePress: { uri, handle in print("Quote: \(uri)") }
+            onQuotePress: { uri, handle in print("Quote: \(uri)") },
+            onScroll: { offset in print("Scroll: \(offset)") }
         )
     }
 }
