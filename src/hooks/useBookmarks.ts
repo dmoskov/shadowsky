@@ -263,7 +263,7 @@ export function useBookmarks() {
               queryKey: ["bookmarkCount"],
               exact: true,
             });
-          } catch (error) {
+          } catch (_error) {
             bookmarkSyncStore.setFailed(post.uri, () =>
               toggleBookmarkMutation.mutate(post),
             );
