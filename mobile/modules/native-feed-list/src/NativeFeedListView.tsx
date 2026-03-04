@@ -144,6 +144,14 @@ export const NativeFeedList = forwardRef<any, NativeFeedListWithDataProps>((prop
   const [isUserRefreshing, setIsUserRefreshing] = useState(false);
   const [scrollToTopTrigger, setScrollToTopTrigger] = useState(0);
 
+  // Clear stale feed data from the native bridge when switching to a new uncached feed.
+  // Without this, the old feed's posts remain visible with no loading indicator.
+  useEffect(() => {
+    if (isLoading && FeedBridge) {
+      FeedBridge.clearFeedData();
+    }
+  }, [isLoading]);
+
   // Serialize feed data for Swift
   const { serializedJSON } = useCompleteFeedSerializer(query, {
     isOnline,
