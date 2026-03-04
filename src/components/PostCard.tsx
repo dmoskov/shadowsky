@@ -1,7 +1,8 @@
 import { AppBskyFeedDefs } from "@atproto/api";
-import React, { memo } from "react";
+import React, { memo, useCallback, useState } from "react";
 import { extractPostId } from "../hooks/usePostDeepLink";
 import { PostActionBar } from "./PostActionBar";
+import { PostContextMenu } from "./PostContextMenu";
 import { PostRenderer } from "./PostRenderer";
 
 interface PostCardProps {
@@ -91,6 +92,26 @@ const PostCardComponent: React.FC<PostCardProps> = ({
   // Extract post ID for deep linking
   const postId = extractPostId(post.uri);
 
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    // Don't override context menu on interactive elements (buttons, links, inputs)
+    const target = e.target as HTMLElement;
+    if (target.closest("button, a, input, textarea, [role='menuitem']")) {
+      return;
+    }
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  }, []);
+
+  const handleCloseContextMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
   return (
     <article
       role="article"
@@ -100,6 +121,7 @@ const PostCardComponent: React.FC<PostCardProps> = ({
       data-post-uri={post.uri}
       className={`${showBorder ? "border-b" : ""} ${isDeepLinkTarget ? "deep-link-highlight" : ""}`}
       style={showBorder ? { borderColor: "var(--asph-border-primary)" } : {}}
+      onContextMenu={handleContextMenu}
     >
       <PostRenderer
         post={post}
@@ -120,6 +142,13 @@ const PostCardComponent: React.FC<PostCardProps> = ({
           showCounts={true}
         />
       </div>
+      {contextMenu && (
+        <PostContextMenu
+          post={post}
+          position={contextMenu}
+          onClose={handleCloseContextMenu}
+        />
+      )}
     </article>
   );
 };
