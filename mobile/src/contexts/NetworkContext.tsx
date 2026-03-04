@@ -18,6 +18,7 @@ import React, {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import OfflineBanner from "../components/OfflineBanner";
 import { useNetworkStatus } from "../hooks/useNetworkStatus";
@@ -27,6 +28,12 @@ import type { NetworkStatus } from "../hooks/useNetworkStatus";
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('NetworkContext');
+
+// Grace period before showing the offline banner (ms).
+// Prevents the banner from flashing during brief connectivity blips
+// that commonly occur when iOS wakes from sleep.
+const OFFLINE_GRACE_PERIOD_MS = 3000;
+
 interface NetworkContextType extends NetworkStatus {
   isOnline: boolean;
   waitForConnection: () => Promise<void>;
@@ -41,8 +48,41 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
   const waitingPromises = useRef<Set<(value: void) => void>>(new Set());
   const previousOnlineState = useRef<boolean>(networkStatus.isConnected);
 
-  // Derive simple online state
+  // Derive simple online state (raw — reacts immediately)
   const isOnline = networkStatus.isConnected && networkStatus.isInternetReachable !== false;
+
+  // Debounced online state for the banner: going offline is delayed by
+  // OFFLINE_GRACE_PERIOD_MS so transient blips (e.g. iOS sleep/wake) don't
+  // flash the banner. Going back online is immediate.
+  const [stableOnline, setStableOnline] = useState(true);
+  const offlineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (isOnline) {
+      // Immediately mark as online & cancel any pending offline transition
+      if (offlineTimerRef.current !== null) {
+        clearTimeout(offlineTimerRef.current);
+        offlineTimerRef.current = null;
+      }
+      setStableOnline(true);
+    } else {
+      // Delay the offline transition — only show the banner if we stay
+      // offline for the full grace period
+      if (offlineTimerRef.current === null) {
+        offlineTimerRef.current = setTimeout(() => {
+          offlineTimerRef.current = null;
+          setStableOnline(false);
+        }, OFFLINE_GRACE_PERIOD_MS);
+      }
+    }
+
+    return () => {
+      if (offlineTimerRef.current !== null) {
+        clearTimeout(offlineTimerRef.current);
+        offlineTimerRef.current = null;
+      }
+    };
+  }, [isOnline]);
 
   // Detect when connection is restored and call callbacks
   useEffect(() => {
@@ -125,7 +165,7 @@ export function NetworkProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <NetworkContext.Provider value={contextValue}>
-      <OfflineBanner isOnline={isOnline} />
+      <OfflineBanner isOnline={stableOnline} />
       {children}
     </NetworkContext.Provider>
   );
