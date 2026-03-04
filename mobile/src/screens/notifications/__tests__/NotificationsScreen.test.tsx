@@ -211,9 +211,10 @@ describe('NotificationsScreen', () => {
     jest.clearAllMocks();
   });
 
-  it('renders header with title', () => {
-    const {getByText} = render(<NotificationsScreen />);
-    expect(getByText('Notifications')).toBeTruthy();
+  it('renders tab bar with filter options', () => {
+    const {getByTestId, getByText} = render(<NotificationsScreen />);
+    expect(getByTestId('notification-tab-bar')).toBeTruthy();
+    expect(getByText('All')).toBeTruthy();
   });
 
   it('renders tab bar', () => {
