@@ -29,6 +29,7 @@ import {
   useNotifications,
   useUnreadCount,
 } from "../hooks/useNotifications";
+import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useMinDuration } from "../hooks/useTiming";
 import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { proxifyBskyImage } from "../utils/image-proxy";
@@ -1181,6 +1182,8 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
     isNew = false,
   }) => {
     const navigate = useViewTransitionNavigate();
+    const { getThreadPrefetchHandlers, getProfilePrefetchHandlers } =
+      useRoutePrefetch();
     // Get the post for all notification types that reference posts
     // For reposts and likes, use reasonSubject which contains the original post URI
     const postUri =
@@ -1674,6 +1677,14 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
 
     const authorProfileUrl = `/profile/${notification.author.handle}`;
 
+    // Prefetch handlers for this notification
+    const threadHandlers = postUri
+      ? getThreadPrefetchHandlers(postUri)
+      : undefined;
+    const authorProfileHandlers = getProfilePrefetchHandlers(
+      notification.author.handle,
+    );
+
     return (
       <Link
         to={notificationUrl}
@@ -1687,6 +1698,16 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
             e.preventDefault();
           }
         }}
+        onMouseEnter={() => {
+          // Prefetch thread data for post-related notifications
+          if (threadHandlers) threadHandlers.onMouseEnter();
+          // Also prefetch the author's profile
+          authorProfileHandlers.onMouseEnter();
+        }}
+        onMouseLeave={() => {
+          if (threadHandlers) threadHandlers.onMouseLeave();
+          authorProfileHandlers.onMouseLeave();
+        }}
         onClick={handleNotificationClick}
       >
         <div className="flex items-start gap-2">
@@ -1696,7 +1717,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
               {getNotificationIcon(notification.reason)}
             </div>
             <ProfileHoverCard handle={notification.author.handle}>
-              <Link to={authorProfileUrl} onClick={(e) => e.stopPropagation()}>
+              <Link to={authorProfileUrl} onClick={(e) => e.stopPropagation()} {...authorProfileHandlers}>
                 {notification.author.avatar ? (
                   <img
                     src={proxifyBskyImage(notification.author.avatar)}
