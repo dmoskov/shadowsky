@@ -81,7 +81,9 @@ public class ThreadViewModule: Module {
             DispatchQueue.main.async {
                 guard let data = jsonString.data(using: .utf8),
                       let threadData = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    #if DEBUG
                     print("[ThreadViewModule] Failed to decode thread data JSON")
+                    #endif
                     return
                 }
                 NotificationCenter.default.post(

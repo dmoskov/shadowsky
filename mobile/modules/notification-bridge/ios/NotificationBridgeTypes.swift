@@ -317,7 +317,9 @@ public struct SerializedNotificationData: Codable {
                         decodedNotifications.append(notification)
                     } catch {
                         skipped += 1
+                        #if DEBUG
                         print("[NotificationBridge] Skipping notification at index \(index): \(error.localizedDescription)")
+                        #endif
                     }
                 }
             }

@@ -650,7 +650,9 @@ public extension SerializedFeedData {
                         posts.append(post)
                     } catch {
                         skipped += 1
+                        #if DEBUG
                         print("[FeedBridge] Skipping post at index \(index): \(error.localizedDescription)")
+                        #endif
                     }
                 }
             }

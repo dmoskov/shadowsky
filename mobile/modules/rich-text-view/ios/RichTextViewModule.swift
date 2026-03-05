@@ -70,7 +70,9 @@ class RichTextViewWrapper: ExpoView {
             self.facets = try decoder.decode([Facet].self, from: data)
             updateView()
         } catch {
+            #if DEBUG
             print("[RichTextView] Failed to decode facets: \(error)")
+            #endif
             self.facets = []
             updateView()
         }

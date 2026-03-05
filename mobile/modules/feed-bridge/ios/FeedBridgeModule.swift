@@ -46,7 +46,9 @@ public class FeedBridgeModule: Module {
 
                     // If some posts were skipped, notify so UI can inform user
                     if result.skippedCount > 0 {
+                        #if DEBUG
                         print("[FeedBridge] Lenient decode skipped \(result.skippedCount) posts")
+                        #endif
                         NotificationCenter.default.post(
                             name: FeedBridgeModule.feedDecodeErrorNotification,
                             object: nil,
@@ -58,7 +60,9 @@ public class FeedBridgeModule: Module {
                         )
                     }
                 } catch {
+                    #if DEBUG
                     print("[FeedBridge] Failed to decode feed data: \(error)")
+                    #endif
                     NotificationCenter.default.post(
                         name: FeedBridgeModule.feedDecodeErrorNotification,
                         object: nil,
@@ -126,7 +130,9 @@ public class FeedBridgeModule: Module {
                         self.feedDataLock.unlock()
                     }
                 } catch {
+                    #if DEBUG
                     print("[FeedBridge] Failed to decode batch update: \(error)")
+                    #endif
                     NotificationCenter.default.post(
                         name: FeedBridgeModule.feedDecodeErrorNotification,
                         object: nil,

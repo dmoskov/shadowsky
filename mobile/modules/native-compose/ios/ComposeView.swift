@@ -67,6 +67,7 @@ struct ComposeView: View {
     let onUpdateThreadPost: (Int, String) -> Void
     let onMentionSearch: (String) -> Void
     let onThreadImagePicker: (Int) -> Void
+    var onNavigateToProfile: ((String) -> Void)?
 
     /// Bottom safe area inset read from the key window so keyboard offset
     /// calculations work correctly on devices with a home indicator.
@@ -225,7 +226,8 @@ struct ComposeView: View {
 
     private func replyContextView(_ context: ReplyContext) -> some View {
         Button(action: {
-            // TODO: navigate to parent post if needed
+            // Navigate to replying-to author's profile via JS bridge
+            onNavigateToProfile?(context.authorHandle)
         }) {
             HStack(spacing: 6) {
                 Text("Replying to")

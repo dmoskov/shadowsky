@@ -10,6 +10,7 @@ import { NotificationSetup } from "../../src/components/NotificationSetup";
 import { IPadSidebar } from "../../src/components/IPadSidebar";
 import { IPadDetailPanel } from "../../src/components/IPadDetailPanel";
 import { useIPadLayout } from "../../src/contexts/IPadLayoutContext";
+import { useTheme } from "../../src/contexts/ThemeContext";
 import { ScreenErrorBoundary } from "../../src/components/ScreenErrorBoundary";
 
 function IPadAppLayout() {
@@ -27,18 +28,21 @@ function IPadAppLayout() {
 }
 
 function PhoneAppLayout() {
+  const { colors } = useTheme();
+
   return (
     <Drawer
       drawerContent={() => <CustomDrawerContent />}
       screenOptions={{
         headerShown: false,
         drawerStyle: {
-          backgroundColor: "#0a0a0f",
+          backgroundColor: colors.background,
           width: 280,
         },
         drawerType: "front",
         overlayColor: "rgba(0, 0, 0, 0.7)",
-        swipeEnabled: false,
+        swipeEnabled: true,
+        swipeEdgeWidth: 30,
       }}
     >
       <Drawer.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -66,8 +70,8 @@ function PhoneAppLayout() {
         options={{
           headerShown: true,
           title: "Scheduled Posts",
-          headerStyle: { backgroundColor: "#0a0a0f" },
-          headerTintColor: "#ffffff",
+          headerStyle: { backgroundColor: colors.background },
+          headerTintColor: colors.text,
           headerLeft: () => <HeaderBackButton />,
         }}
       />

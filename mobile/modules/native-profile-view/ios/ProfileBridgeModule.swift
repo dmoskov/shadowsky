@@ -78,7 +78,9 @@ public class ProfileBridgeModule: Module {
                 // Index viewed profile in CoreSpotlight
                 ProfileSpotlightIndexer.shared.indexProfile(profileData)
             } catch {
+                #if DEBUG
                 print("[ProfileBridge] Failed to decode profile data: \(error)")
+                #endif
                 throw error
             }
         }
@@ -102,7 +104,9 @@ public class ProfileBridgeModule: Module {
                     userInfo: ["starterPacks": packs]
                 )
             } catch {
+                #if DEBUG
                 print("[ProfileBridge] Failed to decode starter packs: \(error)")
+                #endif
                 throw error
             }
         }
@@ -126,7 +130,9 @@ public class ProfileBridgeModule: Module {
                     userInfo: ["pinnedPost": pinnedPost]
                 )
             } catch {
+                #if DEBUG
                 print("[ProfileBridge] Failed to decode pinned post: \(error)")
+                #endif
                 throw error
             }
         }

@@ -151,9 +151,23 @@ export function ComposeScreen(props: ComposeScreenProps = {}) {
       {draft.replyTo && (
         <View style={styles.replyContext}>
           <View style={styles.replyHeader}>
-            <Text style={styles.replyingTo}>
-              Replying to @{draft.replyTo.author.handle}
-            </Text>
+            <TouchableOpacity
+              onPress={() =>
+                draft.router.push(
+                  `/(app)/(tabs)/(home)/profile/${draft.replyTo!.author.handle}`,
+                )
+              }
+              hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+              accessibilityRole="link"
+              accessibilityLabel={`View profile of ${draft.replyTo.author.displayName || draft.replyTo.author.handle}`}
+            >
+              <Text style={styles.replyingTo}>
+                Replying to{" "}
+                <Text style={styles.replyingToHandle}>
+                  @{draft.replyTo.author.handle}
+                </Text>
+              </Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.parentPost}>
             <Avatar uri={draft.replyTo.author.avatar} size={36} />
@@ -429,6 +443,9 @@ function createStyles(colors: any) {
       color: colors.textTertiary,
       fontSize: fontSize.subheadline,
       fontWeight: "500",
+    },
+    replyingToHandle: {
+      color: colors.primary,
     },
     parentPost: {
       flexDirection: "row",

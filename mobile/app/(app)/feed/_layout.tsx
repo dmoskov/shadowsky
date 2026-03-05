@@ -16,6 +16,15 @@ export default function FeedLayout() {
       }}
     >
       <Stack.Screen name="[uri]" options={{ title: "Feed" }} />
+      <Stack.Screen name="profile/[handle]" options={{ title: "Profile" }} />
+      <Stack.Screen
+        name="thread/[postId]"
+        options={{
+          title: "Thread",
+          animation: "fade",
+          animationDuration: 280,
+        }}
+      />
     </Stack>
   );
 }

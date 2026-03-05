@@ -43,7 +43,9 @@ public class NotificationBridgeModule: Module {
 
                     // If some notifications were skipped, notify so UI can inform user
                     if result.skippedCount > 0 {
+                        #if DEBUG
                         print("[NotificationBridge] Lenient decode skipped \(result.skippedCount) notifications")
+                        #endif
                         NotificationCenter.default.post(
                             name: NotificationBridgeModule.notificationDecodeErrorNotification,
                             object: nil,
@@ -55,7 +57,9 @@ public class NotificationBridgeModule: Module {
                         )
                     }
                 } catch {
+                    #if DEBUG
                     print("[NotificationBridge] Failed to decode notification data: \(error)")
+                    #endif
                     NotificationCenter.default.post(
                         name: NotificationBridgeModule.notificationDecodeErrorNotification,
                         object: nil,
