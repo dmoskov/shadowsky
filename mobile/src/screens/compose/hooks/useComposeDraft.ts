@@ -258,6 +258,7 @@ export function useComposeDraft(props: ComposeScreenProps = {}) {
       ? threadPosts.some((p) => p.text.trim() || p.images.length > 0)
       : imagePicker.selectedImages.length > 0 ||
         videoPicker.selectedVideo ||
+        gifPicker.selectedGif ||
         text.trim();
 
     if (hasContent && !isThreadMode) {
