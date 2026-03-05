@@ -12,6 +12,7 @@ import { useLikePost, useUnlikePost, useRepost, useDeleteRepost } from "../../ho
 import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useAppNavigation } from "../../hooks/useNavigation";
 import { NativeFeedList } from "../../../modules/native-feed-list";
+import { ErrorState } from "../../components/ErrorState";
 import { useRouter } from "expo-router";
 import { triggerHaptic } from "../../utils/haptics";
 import { useToast } from "../../contexts/ToastContext";
@@ -133,8 +134,8 @@ export function HomeScreen() {
   const customFeedQuery = useCustomFeed(selectedFeedUri || '');
 
   // Use the appropriate query based on selection
-  const { data } =
-    selectedFeedUri ? customFeedQuery : timelineQuery;
+  const activeQuery = selectedFeedUri ? customFeedQuery : timelineQuery;
+  const { data, isLoading, isError, error, refetch } = activeQuery;
 
   // Flatten paginated feed data into a single array
   const flatPosts = useMemo(
@@ -491,27 +492,36 @@ export function HomeScreen() {
           )}
         </View>
 
-        {/* Feed list */}
-        <NativeFeedList
-          ref={scrollRef}
-          query={selectedFeedUri ? customFeedQuery : timelineQuery}
-          bookmarkedPostUris={bookmarkedPostUris}
-          isOnline={true}
-          onPostPress={handlePostPress}
-          onProfilePress={handleProfilePress}
-          onLike={handleLike}
-          onRepost={handleRepost}
-          onReply={handleReply}
-          onBookmark={handleBookmark}
-          onMentionPress={handleMentionPress}
-          onHashtagPress={handleHashtagPress}
-          onShare={handleShare}
-          onLinkPress={handleLinkPress}
-          onImagePress={handleImagePress}
-          onQuotePress={handleQuotePress}
-          onScroll={handleScroll}
-          emptyMessage="No posts in your timeline yet"
-        />
+        {/* Error fallback — shown instead of feed when query fails with no cached data */}
+        {isError && flatPosts.length === 0 ? (
+          <View testID="feed-error" style={{ flex: 1 }}>
+            <ErrorState
+              message={error?.message || "Couldn’t load your feed. Check your connection and try again."}
+              onRetry={() => refetch()}
+            />
+          </View>
+        ) : (
+          <NativeFeedList
+            ref={scrollRef}
+            query={activeQuery}
+            bookmarkedPostUris={bookmarkedPostUris}
+            isOnline={true}
+            onPostPress={handlePostPress}
+            onProfilePress={handleProfilePress}
+            onLike={handleLike}
+            onRepost={handleRepost}
+            onReply={handleReply}
+            onBookmark={handleBookmark}
+            onMentionPress={handleMentionPress}
+            onHashtagPress={handleHashtagPress}
+            onShare={handleShare}
+            onLinkPress={handleLinkPress}
+            onImagePress={handleImagePress}
+            onQuotePress={handleQuotePress}
+            onScroll={handleScroll}
+            emptyMessage="No posts in your timeline yet"
+          />
+        )}
       </Animated.View>
     </View>
   );
