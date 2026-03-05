@@ -9,6 +9,7 @@ import { AppBskyFeedDefs } from "@atproto/api";
 import { PostCard } from "./PostCard";
 import { useTheme } from "../contexts/ThemeContext";
 import { triggerHaptic } from "../utils/haptics";
+import {fontSize} from '../utils/typography';
 
 interface ThreadNode {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -300,7 +301,7 @@ function createStyles(colors: any) {
     },
     collapseIcon: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "bold",
       lineHeight: 20,
     },
@@ -336,12 +337,12 @@ function createStyles(colors: any) {
     },
     collapsedText: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "500",
     },
     expandIcon: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "bold",
       marginLeft: 8,
     },

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+import {fontSize} from '../../../utils/typography';
 
 interface MessageInputProps {
   messageText: string;
@@ -77,7 +78,7 @@ function createStyles(colors: any) {
       paddingHorizontal: 16,
       paddingVertical: 10,
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       maxHeight: 100,
     },
     sendButton: {
@@ -96,7 +97,7 @@ function createStyles(colors: any) {
     },
     sendButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
   });

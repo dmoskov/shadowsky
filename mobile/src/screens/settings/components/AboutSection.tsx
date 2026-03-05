@@ -4,6 +4,7 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import { openLink } from "../../../utils/browser";
 import { SettingRow } from "./SettingRow";
 import { createSectionStyles } from "./settingsStyles";
+import {fontSize} from '../../../utils/typography';
 
 const APP_VERSION = "0.7.0";
 
@@ -65,12 +66,12 @@ const createStyles = (themeColors: Record<string, string>) =>
     },
     footerText: {
       color: themeColors.textTertiary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
     },
     footerSubtext: {
       color: themeColors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       marginTop: 4,
     },
   });

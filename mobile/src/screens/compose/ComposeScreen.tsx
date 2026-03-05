@@ -33,6 +33,7 @@ import {
   useComposeFacets,
   useComposeMedia,
 } from "./hooks";
+import {fontSize} from '../../utils/typography';
 
 export interface ReplyToPost {
   uri: string;
@@ -376,7 +377,7 @@ function createStyles(colors: any) {
     },
     draftsButtonText: {
       color: colors.primary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "500",
     },
     cancelTouchable: {
@@ -386,7 +387,7 @@ function createStyles(colors: any) {
     },
     cancelButton: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     postButton: {
       backgroundColor: colors.primary,
@@ -404,13 +405,13 @@ function createStyles(colors: any) {
     },
     postButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
     input: {
       flex: 1,
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       padding: 16,
       textAlignVertical: "top",
     },
@@ -426,7 +427,7 @@ function createStyles(colors: any) {
     },
     replyingTo: {
       color: colors.textTertiary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "500",
     },
     parentPost: {
@@ -444,18 +445,18 @@ function createStyles(colors: any) {
     },
     parentPostAuthor: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
       maxWidth: 150,
     },
     parentPostHandle: {
       color: colors.textTertiary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       flex: 1,
     },
     parentPostText: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       lineHeight: 18,
     },
   });

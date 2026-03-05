@@ -12,6 +12,7 @@ import {
 import {useLists, useAddToList} from '../hooks/api';
 import {AppBskyGraphDefs} from '@atproto/api';
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 interface AddToListModalProps {
   visible: boolean;
@@ -145,7 +146,7 @@ function createStyles(colors: any) {
     },
     title: {
       color: colors.text,
-      fontSize: 20,
+      fontSize: fontSize.title3,
       fontWeight: '700',
     },
     closeButton: {
@@ -156,7 +157,7 @@ function createStyles(colors: any) {
     },
     closeButtonText: {
       color: colors.textSecondary,
-      fontSize: 24,
+      fontSize: fontSize.title2,
       fontWeight: '300',
     },
     listItem: {
@@ -171,22 +172,22 @@ function createStyles(colors: any) {
     },
     listName: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       marginBottom: 4,
     },
     listDescription: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       marginBottom: 4,
     },
     listMemberCount: {
       color: colors.textTertiary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
     },
     chevron: {
       color: colors.textTertiary,
-      fontSize: 24,
+      fontSize: fontSize.title2,
       fontWeight: '300',
       marginLeft: 8,
     },
@@ -202,23 +203,23 @@ function createStyles(colors: any) {
     },
     loadingText: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       marginTop: 12,
     },
     emptyText: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
       marginBottom: 8,
     },
     emptySubtext: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       textAlign: 'center',
     },
     errorText: {
       color: colors.danger,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
   });

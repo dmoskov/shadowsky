@@ -6,6 +6,7 @@ import {formatDistanceToNow} from 'date-fns';
 import {HeartIcon, RepostIcon, FollowIcon, AtSignIcon, ReplyIcon, QuoteIcon, BellIcon} from './icons';
 import {RichText} from '../utils/rich-text';
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 interface NotificationItemProps {
   notification: AppBskyNotificationListNotifications.Notification;
@@ -230,20 +231,20 @@ function createStyles(colors: any) {
     },
     displayName: {
       color: colors.text,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     message: {
       color: colors.textSecondary,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
     },
     handle: {
       color: colors.textTertiary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
     },
     timestamp: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       marginLeft: 8,
     },
     postPreview: {
@@ -254,12 +255,12 @@ function createStyles(colors: any) {
     },
     postText: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       lineHeight: 18,
     },
     tapHint: {
       color: colors.textTertiary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontStyle: 'italic',
     },
     unreadIndicator: {

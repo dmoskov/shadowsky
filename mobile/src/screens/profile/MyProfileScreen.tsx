@@ -23,6 +23,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { ProfileSkeleton } from "../../components/ProfileSkeleton";
 import { AuthorFeedFilter } from "../../services/atproto/feeds";
 import { triggerHaptic } from "../../utils/haptics";
+import {fontSize} from '../../utils/typography';
 
 interface MyProfileScreenProps {
   onNavigateToPost?: (uri: string) => void;
@@ -356,7 +357,7 @@ function createStyles(colors: any) {
   },
   errorText: {
     color: colors.danger,
-    fontSize: 16,
+    fontSize: fontSize.callout,
   },
   header: {
     paddingHorizontal: 16,
@@ -370,18 +371,18 @@ function createStyles(colors: any) {
   },
   displayName: {
     color: colors.text,
-    fontSize: 24,
+    fontSize: fontSize.title2,
     fontWeight: "bold",
     marginTop: 12,
   },
   handle: {
     color: colors.textSecondary,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     marginTop: 4,
   },
   bio: {
     color: colors.text,
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     lineHeight: 20,
     marginBottom: 16,
     textAlign: "center",
@@ -396,12 +397,12 @@ function createStyles(colors: any) {
   },
   statValue: {
     color: colors.text,
-    fontSize: 20,
+    fontSize: fontSize.title3,
     fontWeight: "bold",
   },
   statLabel: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     marginTop: 4,
   },
   actionButtons: {
@@ -419,7 +420,7 @@ function createStyles(colors: any) {
   },
   editProfileButtonText: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
   },
   bookmarksButton: {
@@ -434,7 +435,7 @@ function createStyles(colors: any) {
   },
   bookmarksButtonText: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
   },
   signOutButton: {
@@ -447,12 +448,12 @@ function createStyles(colors: any) {
   },
   signOutButtonText: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
   },
   postsHeader: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "bold",
     marginTop: 8,
   },
@@ -466,7 +467,7 @@ function createStyles(colors: any) {
   },
   emptyText: {
     color: colors.textSecondary,
-    fontSize: 16,
+    fontSize: fontSize.callout,
   },
   emptyList: {
     flexGrow: 1,
@@ -476,7 +477,7 @@ function createStyles(colors: any) {
   },
   starterPacksTitle: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "bold",
     marginBottom: 12,
   },
@@ -494,17 +495,17 @@ function createStyles(colors: any) {
   },
   starterPackName: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
     marginBottom: 4,
   },
   starterPackMeta: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
   },
   starterPackArrow: {
     color: colors.primary,
-    fontSize: 24,
+    fontSize: fontSize.title2,
     fontWeight: "300",
     marginLeft: 8,
   },

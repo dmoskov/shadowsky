@@ -10,6 +10,7 @@ import {
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useTheme } from "../contexts/ThemeContext";
 import { triggerHaptic } from "../utils/haptics";
+import {fontSize} from '../utils/typography';
 
 interface ThreadNavigatorProps {
   posts: AppBskyFeedDefs.FeedViewPost[];
@@ -162,7 +163,7 @@ function createStyles(colors: any, width: number) {
       shadowRadius: 4,
     },
     toggleIcon: {
-      fontSize: 20,
+      fontSize: fontSize.title3,
     },
     badge: {
       position: "absolute",
@@ -178,7 +179,7 @@ function createStyles(colors: any, width: number) {
     },
     badgeText: {
       color: colors.text,
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       fontWeight: "bold",
     },
     panel: {
@@ -204,12 +205,12 @@ function createStyles(colors: any, width: number) {
     },
     headerText: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
     },
     headerSubtext: {
       color: colors.textSecondary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       marginTop: 2,
     },
     postList: {
@@ -235,7 +236,7 @@ function createStyles(colors: any, width: number) {
     },
     postItemAuthor: {
       color: colors.textSecondary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       flex: 1,
     },
     postItemAuthorCurrent: {
@@ -247,7 +248,7 @@ function createStyles(colors: any, width: number) {
     },
     currentIndicatorText: {
       color: colors.primary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "bold",
     },
     postItemDot: {

@@ -27,6 +27,7 @@ import {
   useUnpinFeed,
   useUnsaveFeed,
 } from "../../hooks/api";
+import {fontSize} from '../../utils/typography';
 
 type TabType = "popular" | "suggested" | "search";
 
@@ -453,7 +454,7 @@ function createStyles(colors: any) {
       borderBottomColor: colors.primary,
     },
     tabText: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
       color: colors.textSecondary,
     },
@@ -477,7 +478,7 @@ function createStyles(colors: any) {
     searchInput: {
       flex: 1,
       paddingVertical: 10,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       color: colors.text,
     },
     listContent: {
@@ -508,20 +509,20 @@ function createStyles(colors: any) {
       alignItems: "center",
     },
     feedAvatarText: {
-      fontSize: 24,
+      fontSize: fontSize.title2,
     },
     feedInfo: {
       flex: 1,
       marginRight: 12,
     },
     feedName: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "700",
       color: colors.text,
       marginBottom: 2,
     },
     feedCreator: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
     },
     actionButtons: {
@@ -543,7 +544,7 @@ function createStyles(colors: any) {
       borderColor: colors.primary,
     },
     saveButtonText: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
       color: colors.text,
     },
@@ -566,13 +567,13 @@ function createStyles(colors: any) {
       borderColor: colors.primary,
     },
     pinButtonText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     pinButtonTextActive: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     feedDescription: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textMuted,
       lineHeight: 20,
       marginBottom: 12,
@@ -583,11 +584,11 @@ function createStyles(colors: any) {
       justifyContent: "space-between",
     },
     feedLikes: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
     },
     pinnedBadge: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.primary,
       fontWeight: "600",
     },
@@ -604,14 +605,14 @@ function createStyles(colors: any) {
       paddingVertical: 64,
     },
     emptyStateText: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "600",
       color: colors.text,
       marginBottom: 8,
       textAlign: "center",
     },
     emptyStateSubtext: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       textAlign: "center",
     },

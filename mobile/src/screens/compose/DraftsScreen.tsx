@@ -17,6 +17,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { CloseIcon } from '../../components/icons';
 import { PostCardSkeleton } from '../../components/PostCardSkeleton';
 import { triggerHaptic } from '../../utils/haptics';
+import {fontSize} from '../../utils/typography';
 
 /**
  * DraftsScreen - List and manage all saved drafts
@@ -225,7 +226,7 @@ function createStyles(colors: any) {
       padding: 8,
     },
     headerTitle: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
       color: colors.text,
     },
@@ -252,7 +253,7 @@ function createStyles(colors: any) {
       marginRight: 12,
     },
     draftPreview: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       color: colors.text,
       marginBottom: 8,
     },
@@ -265,17 +266,17 @@ function createStyles(colors: any) {
       gap: 8,
     },
     draftMetaText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
     },
     deviceName: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       color: colors.textSecondary,
       fontStyle: 'italic',
       marginTop: 4,
     },
     warningText: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       color: colors.danger,
       marginTop: 4,
     },
@@ -289,13 +290,13 @@ function createStyles(colors: any) {
       paddingHorizontal: 32,
     },
     emptyStateTitle: {
-      fontSize: 20,
+      fontSize: fontSize.title3,
       fontWeight: '600',
       color: colors.text,
       marginBottom: 8,
     },
     emptyStateText: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       color: colors.textSecondary,
       textAlign: 'center',
     },

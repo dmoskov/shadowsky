@@ -24,6 +24,7 @@ import {
   SettingsIcon,
   SparklesIcon,
 } from "./icons";
+import {fontSize} from '../utils/typography';
 
 export interface NavItemDef {
   id: string;
@@ -330,22 +331,22 @@ const createStyles = (colors: Record<string, string>) =>
     },
     title: {
       color: colors.text,
-      fontSize: 17,
+      fontSize: fontSize.body,
       fontWeight: "600",
     },
     cancelText: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     saveText: {
       color: colors.info,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
       textAlign: "right",
     },
     subtitle: {
       color: colors.textTertiary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       textAlign: "center",
       marginBottom: 12,
     },
@@ -358,13 +359,13 @@ const createStyles = (colors: Record<string, string>) =>
     },
     sectionTitle: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: "600",
       letterSpacing: 0.5,
     },
     sectionCount: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
     },
     scrollArea: {
       flexGrow: 0,
@@ -413,12 +414,12 @@ const createStyles = (colors: Record<string, string>) =>
     },
     itemLabel: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "500",
     },
     availableLabel: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     reorderBtn: {
       width: 44,
@@ -430,7 +431,7 @@ const createStyles = (colors: Record<string, string>) =>
     },
     reorderText: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
     reorderDown: {
@@ -446,7 +447,7 @@ const createStyles = (colors: Record<string, string>) =>
     },
     removeBtnText: {
       color: colors.danger,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "700",
       lineHeight: 20,
     },
@@ -460,7 +461,7 @@ const createStyles = (colors: Record<string, string>) =>
     },
     addBtnText: {
       color: colors.info,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "700",
       lineHeight: 20,
     },
@@ -475,7 +476,7 @@ const createStyles = (colors: Record<string, string>) =>
     },
     previewLabel: {
       color: colors.textTertiary,
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       fontWeight: "600",
       letterSpacing: 0.5,
       textTransform: "uppercase",
@@ -495,7 +496,7 @@ const createStyles = (colors: Record<string, string>) =>
     },
     previewItemText: {
       color: colors.textTertiary,
-      fontSize: 10,
+      fontSize: fontSize.caption2,
     },
   });
 

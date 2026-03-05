@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { analyzePosts, type PostAnalysisResult } from "../services/ai-service";
 import { getAuthorFeed } from "../services/atproto/feeds";
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 interface ProfileAIInsightsProps {
   handle: string;
@@ -299,11 +300,11 @@ function createStyles(colors: any) {
       flexShrink: 1,
     },
     sparkle: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.accentPurple,
     },
     title: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
       color: colors.text,
     },
@@ -319,7 +320,7 @@ function createStyles(colors: any) {
       backgroundColor: colors.accentPurple,
     },
     analyzingText: {
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       color: colors.textTertiary,
     },
     fullAnalysisBadge: {
@@ -329,7 +330,7 @@ function createStyles(colors: any) {
       paddingVertical: 2,
     },
     fullAnalysisText: {
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       color: colors.accentPurple,
     },
     expandButton: {
@@ -340,11 +341,11 @@ function createStyles(colors: any) {
       paddingVertical: 4,
     },
     expandButtonText: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.textTertiary,
     },
     expandChevron: {
-      fontSize: 8,
+      fontSize: fontSize.caption2,
       color: colors.textTertiary,
     },
     loadingContainer: {
@@ -352,12 +353,12 @@ function createStyles(colors: any) {
       paddingVertical: 8,
     },
     errorText: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       color: colors.textSecondary,
       paddingVertical: 4,
     },
     summaryText: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       lineHeight: 20,
       color: colors.textSecondary,
     },
@@ -369,13 +370,13 @@ function createStyles(colors: any) {
       gap: 6,
     },
     sectionTitle: {
-      fontSize: 10,
+      fontSize: fontSize.caption2,
       fontWeight: "700",
       letterSpacing: 1,
       color: colors.textTertiary,
     },
     sectionBody: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       lineHeight: 18,
       color: colors.textSecondary,
     },
@@ -394,12 +395,12 @@ function createStyles(colors: any) {
       gap: 6,
     },
     tagText: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: "500",
       color: colors.text,
     },
     tagFrequency: {
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       color: colors.textTertiary,
     },
     characteristicsContainer: {
@@ -415,14 +416,14 @@ function createStyles(colors: any) {
       paddingVertical: 3,
     },
     characteristicText: {
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       color: colors.textSecondary,
     },
     listContainer: {
       gap: 3,
     },
     listItem: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       lineHeight: 17,
       color: colors.textSecondary,
     },
@@ -431,7 +432,7 @@ function createStyles(colors: any) {
       gap: 3,
     },
     observationItem: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       lineHeight: 17,
       color: colors.textTertiary,
     },

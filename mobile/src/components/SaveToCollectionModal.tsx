@@ -16,6 +16,7 @@ import {
 import { COLLECTION_COLORS } from '../services/bookmark-collections';
 import { useTheme } from '../contexts/ThemeContext';
 import { BlurOverlay } from './BlurOverlay';
+import {fontSize} from '../utils/typography';
 
 interface SaveToCollectionModalProps {
   visible: boolean;
@@ -198,7 +199,7 @@ function createStyles(colors: any) {
       borderBottomColor: colors.border,
     },
     headerTitle: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
       color: colors.text,
     },
@@ -209,14 +210,14 @@ function createStyles(colors: any) {
       justifyContent: 'center',
     },
     closeButtonText: {
-      fontSize: 20,
+      fontSize: fontSize.title3,
       color: colors.textSecondary,
     },
     content: {
       padding: 16,
     },
     emptyText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       textAlign: 'center',
       paddingVertical: 16,
@@ -237,11 +238,11 @@ function createStyles(colors: any) {
     },
     collectionName: {
       flex: 1,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       color: colors.text,
     },
     checkMark: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       color: colors.success,
     },
     formContainer: {
@@ -257,7 +258,7 @@ function createStyles(colors: any) {
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 10,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.text,
       marginBottom: 12,
     },
@@ -290,7 +291,7 @@ function createStyles(colors: any) {
       alignItems: 'center',
     },
     cancelButtonText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
     },
     createButton: {
@@ -304,7 +305,7 @@ function createStyles(colors: any) {
       opacity: 0.5,
     },
     createButtonText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: colors.text,
     },
@@ -318,7 +319,7 @@ function createStyles(colors: any) {
       alignItems: 'center',
     },
     newCollectionButtonText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
     },
   });

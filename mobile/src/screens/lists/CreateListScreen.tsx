@@ -12,6 +12,7 @@ import {
 import {useCreateList} from '../../hooks/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {useTheme} from '../../contexts/ThemeContext';
+import {fontSize} from '../../utils/typography';
 
 interface CreateListScreenProps {
   onSuccess?: () => void;
@@ -171,13 +172,13 @@ function createStyles(colors: any) {
     },
     label: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       marginBottom: 8,
     },
     helperText: {
       color: colors.textSecondary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       marginBottom: 12,
     },
     input: {
@@ -187,7 +188,7 @@ function createStyles(colors: any) {
       borderRadius: 8,
       padding: 12,
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     textArea: {
       height: 100,
@@ -231,13 +232,13 @@ function createStyles(colors: any) {
     },
     purposeTitle: {
       color: colors.text,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       marginBottom: 4,
     },
     purposeDescription: {
       color: colors.textSecondary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       lineHeight: 18,
     },
     createButton: {
@@ -252,7 +253,7 @@ function createStyles(colors: any) {
     },
     createButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
     cancelButton: {
@@ -263,7 +264,7 @@ function createStyles(colors: any) {
     },
     cancelButtonText: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
   });

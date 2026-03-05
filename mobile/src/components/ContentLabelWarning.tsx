@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { EyeOffIcon, EyeIcon, AlertTriangleIcon } from './icons';
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 interface ContentLabelWarningProps {
   labels: Array<{ val: string }>;
@@ -149,13 +150,13 @@ function createStyles(colors: any) {
       gap: 12,
     },
     warningText: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "600",
       color: colors.text,
       textAlign: "center",
     },
     description: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.text,
       opacity: 0.9,
       textAlign: "center",
@@ -171,7 +172,7 @@ function createStyles(colors: any) {
       marginTop: 8,
     },
     buttonText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
       color: colors.text,
     },
@@ -189,7 +190,7 @@ function createStyles(colors: any) {
       borderRadius: 12,
     },
     labelText: {
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       color: colors.text,
       fontWeight: "500",
       textTransform: "uppercase",

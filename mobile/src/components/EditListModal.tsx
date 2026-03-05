@@ -21,6 +21,7 @@ import {
 import {AppBskyGraphDefs} from '@atproto/api';
 import { useTheme } from "../contexts/ThemeContext";
 import { BlurOverlay } from "./BlurOverlay";
+import {fontSize} from '../utils/typography';
 
 const MAX_NAME_LENGTH = 64;
 const MAX_DESCRIPTION_LENGTH = 300;
@@ -242,12 +243,12 @@ function createStyles(colors: any) {
     },
     title: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '700',
     },
     closeButton: {
       color: colors.textSecondary,
-      fontSize: 24,
+      fontSize: fontSize.title2,
       fontWeight: '600',
     },
     disabledText: {
@@ -268,7 +269,7 @@ function createStyles(colors: any) {
     },
     avatarNote: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontStyle: 'italic',
     },
     inputSection: {
@@ -276,14 +277,14 @@ function createStyles(colors: any) {
     },
     label: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       marginBottom: 8,
     },
     input: {
       backgroundColor: colors.surfaceAlt,
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       padding: 12,
       borderRadius: 8,
       borderWidth: 1,
@@ -302,7 +303,7 @@ function createStyles(colors: any) {
     },
     charCount: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
     },
     charCountError: {
       color: colors.danger,
@@ -315,12 +316,12 @@ function createStyles(colors: any) {
     },
     infoLabel: {
       color: colors.textSecondary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       marginBottom: 4,
     },
     infoValue: {
       color: colors.primary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     footer: {
@@ -344,7 +345,7 @@ function createStyles(colors: any) {
     },
     cancelButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
     saveButton: {
@@ -352,7 +353,7 @@ function createStyles(colors: any) {
     },
     saveButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
     buttonDisabled: {

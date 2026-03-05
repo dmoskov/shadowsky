@@ -17,6 +17,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { AuthAccount } from "../services/auth/auth-service";
 import { CheckIcon, CloseIcon, PlusIcon } from "./icons";
+import {fontSize} from '../utils/typography';
 
 interface AccountSwitcherProps {
   onAccountSwitch?: () => void;
@@ -180,7 +181,7 @@ function createStyles(colors: any) {
       borderBottomColor: colors.border,
     },
     title: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "bold",
       color: colors.text,
     },
@@ -219,7 +220,7 @@ function createStyles(colors: any) {
     },
     avatarText: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "bold",
     },
     accountInfo: {
@@ -227,13 +228,13 @@ function createStyles(colors: any) {
     },
     displayName: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
       marginBottom: 2,
     },
     handle: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     spinner: {
       marginLeft: 8,
@@ -256,7 +257,7 @@ function createStyles(colors: any) {
     },
     emptyText: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       textAlign: "center",
       padding: 24,
     },
@@ -274,7 +275,7 @@ function createStyles(colors: any) {
     },
     addAccountButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
   });

@@ -16,6 +16,7 @@ import React, {useMemo} from 'react';
 import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
 import {AlertTriangleIcon} from './icons';
 import {useTheme} from '../contexts/ThemeContext';
+import {fontSize} from '../utils/typography';
 
 interface StaleContentIndicatorProps {
   isStale: boolean;
@@ -94,13 +95,13 @@ function createStyles(colors: any) {
       marginRight: 8,
     },
     text: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       color: colors.textTertiary,
       fontWeight: '500',
       flex: 1,
     },
     retryText: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.info,
       fontWeight: '600',
       marginLeft: 8,

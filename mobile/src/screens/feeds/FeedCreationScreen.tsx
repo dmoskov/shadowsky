@@ -18,6 +18,7 @@ import {useCreateFeedGenerator} from '../../hooks/api';
 
 
 import { createLogger } from '../../utils/logger';
+import {fontSize} from '../../utils/typography';
 
 const logger = createLogger('Feedcreationscreenx');
 export function FeedCreationScreen() {
@@ -215,13 +216,13 @@ function createStyles(colors: any) {
       marginBottom: 24,
     },
     headerTitle: {
-      fontSize: 24,
+      fontSize: fontSize.title2,
       fontWeight: '700',
       color: colors.text,
       marginBottom: 8,
     },
     headerSubtitle: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       lineHeight: 20,
     },
@@ -234,13 +235,13 @@ function createStyles(colors: any) {
       borderLeftColor: colors.primary,
     },
     infoTitle: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       color: colors.text,
       marginBottom: 8,
     },
     infoText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       lineHeight: 20,
     },
@@ -251,7 +252,7 @@ function createStyles(colors: any) {
       marginBottom: 20,
     },
     label: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       color: colors.text,
       marginBottom: 8,
@@ -263,7 +264,7 @@ function createStyles(colors: any) {
       backgroundColor: colors.surface,
       borderRadius: 12,
       padding: 16,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       color: colors.text,
       borderWidth: 1,
       borderColor: colors.surface,
@@ -273,7 +274,7 @@ function createStyles(colors: any) {
       textAlignVertical: 'top',
     },
     helperText: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.textSecondary,
       marginTop: 6,
     },
@@ -284,13 +285,13 @@ function createStyles(colors: any) {
       marginTop: 8,
     },
     exampleTitle: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: colors.text,
       marginBottom: 12,
     },
     exampleText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       lineHeight: 24,
     },
@@ -321,7 +322,7 @@ function createStyles(colors: any) {
       opacity: 0.5,
     },
     buttonText: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       color: colors.text,
     },

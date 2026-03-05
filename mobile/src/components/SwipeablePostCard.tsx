@@ -8,6 +8,7 @@ import {usePreferences} from '../contexts/PreferencesContext';
 import {useNetwork} from '../contexts/NetworkContext';
 import {triggerHaptic} from '../utils/haptics';
 import {AppBskyFeedDefs} from '@atproto/api';
+import {fontSize} from '../utils/typography';
 
 interface SwipeablePostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -234,7 +235,7 @@ function createStyles(colors: Record<string, string>) {
     },
     actionLabel: {
       color: '#FFFFFF',
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       fontWeight: '600',
       marginTop: 4,
     },

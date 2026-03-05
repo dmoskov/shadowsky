@@ -16,6 +16,7 @@ import {
   ALL_LANGUAGES,
   Language,
 } from '../constants/languages';
+import {fontSize} from '../utils/typography';
 
 interface LanguagePickerProps {
   visible: boolean;
@@ -236,7 +237,7 @@ function createStyles(colors: any) {
       borderBottomColor: colors.surfaceElevated,
     },
     headerTitle: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
       color: colors.text,
     },
@@ -258,13 +259,13 @@ function createStyles(colors: any) {
       borderRadius: 8,
       padding: 12,
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     listContent: {
       paddingHorizontal: 16,
     },
     sectionHeader: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: colors.textTertiary,
       marginTop: 16,
@@ -288,18 +289,18 @@ function createStyles(colors: any) {
       flex: 1,
     },
     languageName: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '500',
       color: colors.text,
       marginBottom: 2,
     },
     languageNative: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       marginBottom: 2,
     },
     languageCode: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.textTertiary,
       fontWeight: '600',
     },
@@ -311,7 +312,7 @@ function createStyles(colors: any) {
       alignItems: 'center',
     },
     emptyStateText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textTertiary,
       textAlign: 'center',
     },
@@ -333,7 +334,7 @@ function createStyles(colors: any) {
     },
     doneButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
   });

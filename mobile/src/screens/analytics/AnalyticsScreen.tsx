@@ -22,6 +22,7 @@ import { EngagementChart } from "./components/EngagementChart";
 import { PostingFrequencyChart } from "./components/PostingFrequencyChart";
 import { HourlyChart } from "./components/HourlyChart";
 import { AIAnalysisPanel } from "./components/AIAnalysisPanel";
+import {fontSize} from '../../utils/typography';
 
 export function AnalyticsScreen() {
   const router = useRouter();
@@ -405,12 +406,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   errorText: {
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "600",
     textAlign: "center",
   },
   errorSubtext: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     marginTop: 8,
     textAlign: "center",
   },
@@ -428,7 +429,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   timeRangeText: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     fontWeight: "600",
   },
   metricsGrid: {
@@ -450,15 +451,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   metricValue: {
-    fontSize: 22,
+    fontSize: fontSize.title2,
     fontWeight: "bold",
   },
   metricTitle: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     marginTop: 2,
   },
   metricSubtitle: {
-    fontSize: 11,
+    fontSize: fontSize.caption2,
     marginTop: 2,
   },
   section: {
@@ -468,7 +469,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "bold",
     marginBottom: 12,
   },
@@ -493,7 +494,7 @@ const styles = StyleSheet.create({
   },
   rankText: {
     color: "#ffffff",
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "bold",
   },
   topPostContent: {
@@ -510,11 +511,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   topPostStatLabel: {
-    fontSize: 11,
+    fontSize: fontSize.caption2,
     marginTop: 2,
   },
   topPostStatValue: {
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
   },
   // Summary bar
@@ -525,7 +526,7 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   summaryText: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     marginBottom: 8,
   },
   summaryStats: {
@@ -537,11 +538,11 @@ const styles = StyleSheet.create({
     alignItems: "baseline",
   },
   summaryStatValue: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
   },
   summaryStatLabel: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
   },
   emptyContainer: {
     paddingVertical: 48,
@@ -549,12 +550,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   emptyText: {
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "600",
     textAlign: "center",
   },
   emptySubtext: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     marginTop: 8,
     textAlign: "center",
   },

@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import {TouchableOpacity, Text, StyleSheet, ActivityIndicator, Alert} from 'react-native';
 import {useFollowUser, useUnfollowUser} from '../hooks/api/useProfile';
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 interface FollowButtonProps {
   did: string;
@@ -57,19 +58,19 @@ export function FollowButton({
         return {
           paddingVertical: 12,
           paddingHorizontal: 12,
-          fontSize: 12,
+          fontSize: fontSize.caption1,
         };
       case 'large':
         return {
           paddingVertical: 12,
           paddingHorizontal: 24,
-          fontSize: 16,
+          fontSize: fontSize.callout,
         };
       default:
         return {
           paddingVertical: 8,
           paddingHorizontal: 16,
-          fontSize: 14,
+          fontSize: fontSize.subheadline,
         };
     }
   };

@@ -8,6 +8,7 @@ import type { ImageAsset } from "../../../hooks/useImagePicker";
 import type { VideoAsset } from "../../../hooks/useVideoPicker";
 import type { VideoCompressionState } from "../../../hooks/useVideoCompression";
 import type { SelectedGif } from "../../../hooks/useGifPicker";
+import {fontSize} from '../../../utils/typography';
 
 export interface ComposeMediaPreviewProps {
   // Image preview
@@ -223,7 +224,7 @@ function createStyles(colors: any) {
   },
   removeText: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "600",
     lineHeight: 20,
   },
@@ -238,12 +239,12 @@ function createStyles(colors: any) {
   },
   altTextButtonText: {
     color: colors.text,
-    fontSize: 10,
+    fontSize: fontSize.caption2,
     fontWeight: "600",
   },
   uploadingText: {
     color: colors.textSecondary,
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     marginTop: 8,
     textAlign: "center",
   },
@@ -277,7 +278,7 @@ function createStyles(colors: any) {
   },
   videoDurationText: {
     color: colors.text,
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     fontWeight: "600",
   },
   videoPlayIcon: {
@@ -330,12 +331,12 @@ function createStyles(colors: any) {
   },
   gifBadgeText: {
     color: colors.text,
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     fontWeight: "600",
   },
   gifHintText: {
     color: colors.textTertiary,
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     marginTop: 8,
   },
   });

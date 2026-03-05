@@ -6,6 +6,7 @@ import { getLanguageShortName } from "../../../constants/languages";
 import type { ImageAsset } from "../../../hooks/useImagePicker";
 import type { VideoAsset } from "../../../hooks/useVideoPicker";
 import type { SelectedGif } from "../../../hooks/useGifPicker";
+import {fontSize} from '../../../utils/typography';
 
 const MAX_POST_LENGTH = 300;
 
@@ -203,12 +204,12 @@ function createStyles(colors: any, isNarrow: boolean) {
   },
   languageButtonText: {
     color: colors.textSecondary,
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     fontWeight: '600',
   },
   charCount: {
     color: colors.textTertiary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "500",
   },
   charCountOver: {
@@ -222,7 +223,7 @@ function createStyles(colors: any, isNarrow: boolean) {
   },
   exitThreadText: {
     color: colors.primary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
   },
   });

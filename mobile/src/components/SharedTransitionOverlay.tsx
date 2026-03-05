@@ -12,6 +12,7 @@ import Animated, {
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useSharedTransition} from '../contexts/SharedTransitionContext';
 import {useTheme} from '../contexts/ThemeContext';
+import {fontSize} from '../utils/typography';
 const SPRING_CONFIG = {
   damping: 20,
   stiffness: 200,
@@ -211,15 +212,15 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   authorName: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: '600',
   },
   authorHandle: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     marginTop: 1,
   },
   postText: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     lineHeight: 20,
     marginBottom: 8,
   },

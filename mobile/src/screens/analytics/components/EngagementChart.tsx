@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import type { ThemeColors } from "../../../contexts/ThemeContext";
 import type { DailyEngagement, TimeRange } from "../../../services/atproto/analytics";
+import {fontSize} from '../../../utils/typography';
 
 function formatHourLabel(hour: number): string {
   if (hour === 0) return "12a";
@@ -158,7 +159,6 @@ function EngagementChartInner({
                 !showLabel && { opacity: 0 },
               ]}
               numberOfLines={1}
-              allowFontScaling={false}
             >
               {showLabel ? dateLabel : " "}
             </Text>
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "bold",
     marginBottom: 12,
   },
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   legendText: {
-    fontSize: 12,
+    fontSize: fontSize.caption1,
   },
   chartWithAxis: {
     flexDirection: "row",
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     paddingRight: 4,
   },
   yAxisLabel: {
-    fontSize: 10,
+    fontSize: fontSize.caption2,
   },
   gridLines: {
     position: "absolute",
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     width: "80%",
   },
   barLabel: {
-    fontSize: 9,
+    fontSize: fontSize.caption2,
     marginTop: 4,
     textAlign: "center",
   },

@@ -217,7 +217,7 @@ struct PostCardView: View {
                 // Share
                 Button(action: { onShare?() }) {
                     Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 18))
+                        .font(.body)
                         .foregroundColor(.secondary)
                         .frame(minWidth: 48, minHeight: 48)
                         .contentShape(Rectangle())
@@ -315,7 +315,7 @@ struct PostCardView: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 18))
+                    .font(.body)
                 if count > 0 {
                     Text(formatCount(count))
                         .font(.subheadline)

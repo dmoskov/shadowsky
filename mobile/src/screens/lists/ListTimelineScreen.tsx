@@ -7,6 +7,7 @@ import {useAppNavigation} from '../../hooks/useNavigation';
 import {useRouter} from 'expo-router';
 import {useTheme} from '../../contexts/ThemeContext';
 import {PostCardSkeleton} from '../../components/PostCardSkeleton';
+import {fontSize} from '../../utils/typography';
 
 interface ListTimelineScreenProps {
   listId: string;
@@ -153,7 +154,7 @@ function createStyles(colors: any) {
     },
     loadingText: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       marginTop: 12,
     },
     header: {
@@ -164,13 +165,13 @@ function createStyles(colors: any) {
     },
     listName: {
       color: colors.text,
-      fontSize: 20,
+      fontSize: fontSize.title3,
       fontWeight: '700',
       marginBottom: 6,
     },
     listDescription: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       marginBottom: 8,
       lineHeight: 20,
     },
@@ -181,11 +182,11 @@ function createStyles(colors: any) {
     },
     listMemberCount: {
       color: colors.textTertiary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
     },
     chevron: {
       color: colors.textTertiary,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       marginLeft: 4,
     },
   });

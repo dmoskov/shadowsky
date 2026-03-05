@@ -14,6 +14,7 @@ import {
 import { useTheme } from "../contexts/ThemeContext";
 import {NotificationItem} from './NotificationItem';
 import {InlineErrorBoundary} from './ui/InlineErrorBoundary';
+import {fontSize} from '../utils/typography';
 
 interface AggregatedNotificationItemProps {
   notifications: AppBskyNotificationListNotifications.Notification[];
@@ -279,14 +280,14 @@ function createStyles(colors: any) {
     },
     moreCountText: {
       color: colors.textSecondary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: '600',
     },
     textContainer: {
       flex: 1,
     },
     summaryText: {
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       lineHeight: 20,
       marginBottom: 2,
     },
@@ -299,7 +300,7 @@ function createStyles(colors: any) {
     },
     timestamp: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
     },
     unreadIndicator: {
       position: 'absolute',
@@ -323,7 +324,7 @@ function createStyles(colors: any) {
     },
     expandText: {
       color: colors.textTertiary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontWeight: '600',
     },
     expandedList: {

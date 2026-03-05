@@ -12,6 +12,7 @@ import type {
   TrendingTopic,
   Trend,
 } from "../services/trending-service";
+import {fontSize} from '../utils/typography';
 
 interface TrendingTopicsProps {
   topics?: TrendingTopic[];
@@ -118,12 +119,12 @@ function createStyles(colors: any) {
       marginBottom: 12,
     },
     headerIcon: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       marginRight: 6,
     },
     headerText: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
     },
     loadingContainer: {
@@ -154,17 +155,17 @@ function createStyles(colors: any) {
       backgroundColor: "rgba(201, 168, 76, 0.1)",
     },
     topicIcon: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     topicText: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "500",
       maxWidth: 120,
     },
     postCount: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       marginLeft: 4,
     },
   });

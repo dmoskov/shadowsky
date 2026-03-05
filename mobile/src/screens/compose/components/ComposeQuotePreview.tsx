@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Avatar } from "../../../components/Avatar";
 import { useTheme } from "../../../contexts/ThemeContext";
+import {fontSize} from '../../../utils/typography';
 
 export interface QuoteToPost {
   uri: string;
@@ -68,17 +69,17 @@ function createStyles(colors: any) {
   },
   quoteAuthorName: {
     color: colors.text,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
     marginBottom: 2,
   },
   quoteAuthorHandle: {
     color: colors.textTertiary,
-    fontSize: 13,
+    fontSize: fontSize.footnote,
   },
   quoteText: {
     color: colors.textMuted,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     lineHeight: 18,
   },
   });

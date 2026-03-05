@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../contexts/ThemeContext";
+import {fontSize} from '../../utils/typography';
 
 export interface WelcomeScreenProps {
   onContinue: () => void;
@@ -127,16 +128,16 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   iconText: {
-    fontSize: 40,
+    fontSize: fontSize.largeTitle,
   },
   title: {
-    fontSize: 28,
+    fontSize: fontSize.title1,
     fontWeight: "700",
     textAlign: "center",
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: fontSize.callout,
     textAlign: "center",
     marginBottom: 32,
   },
@@ -147,12 +148,12 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   stepsTitle: {
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "600",
     marginBottom: 8,
   },
   stepsDescription: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     marginBottom: 16,
   },
   stepsList: {
@@ -164,11 +165,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   stepNumber: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
   },
   stepText: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     flex: 1,
   },
   buttonsContainer: {
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   primaryButtonText: {
-    fontSize: 17,
+    fontSize: fontSize.body,
     fontWeight: "600",
   },
   secondaryButton: {
@@ -192,7 +193,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   secondaryButtonText: {
-    fontSize: 17,
+    fontSize: fontSize.body,
     fontWeight: "500",
   },
 });

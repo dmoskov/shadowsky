@@ -13,6 +13,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useSearchActors } from "../hooks/api/useProfile";
 import { Avatar } from "./Avatar";
 import { CloseIcon } from "./icons";
+import {fontSize} from '../utils/typography';
 
 interface PersonTypeaheadProps {
   value: string;
@@ -191,7 +192,7 @@ function createStyles(colors: any) {
       flex: 1,
       paddingHorizontal: 16,
       paddingVertical: 14,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       color: colors.text,
     },
     clearButton: {
@@ -223,12 +224,12 @@ function createStyles(colors: any) {
     },
     displayName: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
     },
     handle: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       marginTop: 1,
     },
     loadingRow: {
@@ -240,7 +241,7 @@ function createStyles(colors: any) {
     },
     loadingText: {
       color: colors.textSecondary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
     },
   });
 }

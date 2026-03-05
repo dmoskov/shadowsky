@@ -16,6 +16,7 @@ import { calculateExpirationTime, getActiveMutedWords } from "../../utils/conten
 import { useTheme } from "../../contexts/ThemeContext";
 import { BlurOverlay } from "../../components/BlurOverlay";
 import { triggerHaptic } from "../../utils/haptics";
+import {fontSize} from '../../utils/typography';
 
 export function MutedWordsScreen() {
   const { colors } = useTheme();
@@ -319,12 +320,12 @@ function createStyles(colors: any) {
   },
   headerTitle: {
     color: colors.text,
-    fontSize: 24,
+    fontSize: fontSize.title2,
     fontWeight: "bold",
   },
   headerDescription: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
   },
   addButton: {
     margin: 16,
@@ -335,7 +336,7 @@ function createStyles(colors: any) {
   },
   addButtonText: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
   },
   wordItem: {
@@ -352,7 +353,7 @@ function createStyles(colors: any) {
   },
   wordValue: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
     marginBottom: 4,
   },
@@ -361,11 +362,11 @@ function createStyles(colors: any) {
   },
   wordMetaText: {
     color: colors.textSecondary,
-    fontSize: 13,
+    fontSize: fontSize.footnote,
   },
   expirationText: {
     color: colors.textTertiary,
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     fontStyle: "italic",
   },
   deleteButton: {
@@ -378,7 +379,7 @@ function createStyles(colors: any) {
   },
   deleteButtonText: {
     color: colors.danger,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
   },
   emptyContainer: {
@@ -390,14 +391,14 @@ function createStyles(colors: any) {
   },
   emptyText: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "600",
     marginBottom: 8,
     textAlign: "center",
   },
   emptySubtext: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     textAlign: "center",
     lineHeight: 20,
   },
@@ -419,13 +420,13 @@ function createStyles(colors: any) {
   },
   modalTitle: {
     color: colors.text,
-    fontSize: 20,
+    fontSize: fontSize.title3,
     fontWeight: "bold",
     marginBottom: 20,
   },
   inputLabel: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
     marginBottom: 8,
     marginTop: 12,
@@ -435,7 +436,7 @@ function createStyles(colors: any) {
     color: colors.text,
     borderRadius: 8,
     padding: 12,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     borderWidth: 1,
     borderColor: colors.borderLight,
   },
@@ -458,7 +459,7 @@ function createStyles(colors: any) {
   },
   optionButtonText: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "500",
   },
   optionButtonTextActive: {
@@ -481,7 +482,7 @@ function createStyles(colors: any) {
   },
   modalButtonText: {
     color: colors.textSecondary,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
   },
   modalButtonTextPrimary: {

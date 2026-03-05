@@ -5,6 +5,7 @@ import {AppBskyEmbedImages} from '@atproto/api';
 import { useTheme } from "../contexts/ThemeContext";
 import {getOptimizedUrl} from '../utils/image-cdn';
 import {useLightbox, LightboxImage, LightboxPostMeta} from '../contexts/LightboxContext';
+import {fontSize} from '../utils/typography';
 
 // Aspect ratio clamping constants
 const MIN_ASPECT_RATIO = 4 / 5; // portrait (0.8)
@@ -295,7 +296,7 @@ function createStyles(colors: any) {
     },
     altText: {
       color: colors.text,
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       fontWeight: '600',
     },
     countBadge: {
@@ -309,7 +310,7 @@ function createStyles(colors: any) {
     },
     countBadgeText: {
       color: colors.text,
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       fontWeight: '600',
     },
   });

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "../../contexts/ThemeContext";
+import {fontSize} from '../../utils/typography';
 
 interface OAuthCallbackScreenProps {
   error?: string;
@@ -45,7 +46,7 @@ function createStyles(colors: any) {
     text: {
       marginTop: 16,
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
   });
 }

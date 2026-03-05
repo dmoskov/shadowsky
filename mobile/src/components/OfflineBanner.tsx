@@ -22,6 +22,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 interface OfflineBannerProps {
   isOnline: boolean;
@@ -112,7 +113,7 @@ function createStyles(colors: any) {
       elevation: 3,
     },
     bannerText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
       color: colors.text,
       textAlign: "center",

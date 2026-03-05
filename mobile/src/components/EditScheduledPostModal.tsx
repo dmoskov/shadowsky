@@ -21,6 +21,7 @@ import { BlurOverlay } from "./BlurOverlay";
 
 
 import { createLogger } from '../utils/logger';
+import {fontSize} from '../utils/typography';
 
 const logger = createLogger('Editscheduledpostmodalx');
 const MAX_POST_LENGTH = 300;
@@ -166,12 +167,12 @@ function createStyles(colors: any) {
     },
     title: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
     },
     closeButton: {
       color: colors.textSecondary,
-      fontSize: 24,
+      fontSize: fontSize.title2,
       fontWeight: '300',
     },
     disabledText: {
@@ -182,7 +183,7 @@ function createStyles(colors: any) {
     },
     input: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       padding: 16,
       minHeight: 150,
       textAlignVertical: 'top',
@@ -193,7 +194,7 @@ function createStyles(colors: any) {
     },
     charCount: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: '500',
       textAlign: 'right',
     },
@@ -220,7 +221,7 @@ function createStyles(colors: any) {
     },
     cancelButtonText: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
     saveButton: {
@@ -232,7 +233,7 @@ function createStyles(colors: any) {
     },
     saveButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
   });

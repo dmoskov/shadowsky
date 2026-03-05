@@ -6,8 +6,9 @@ import {ExternalLinkEmbed} from './ExternalLinkEmbed';
 import {QuoteEmbed} from './QuoteEmbed';
 import {VideoEmbed} from './VideoEmbed';
 import {InlineErrorBoundary} from './ui/InlineErrorBoundary';
+import {fontSize} from '../utils/typography';
 
-const embedFallbackStyle = { fontSize: 13, color: '#8899a6', padding: 12, textAlign: 'center' as const };
+const embedFallbackStyle = { fontSize: fontSize.footnote, color: '#8899a6', padding: 12, textAlign: 'center' as const };
 const embedFallback = <Text style={embedFallbackStyle}>Content unavailable</Text>;
 
 interface PostEmbedProps {

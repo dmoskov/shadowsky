@@ -23,6 +23,7 @@ import {
 } from '../../hooks/api';
 import {AppBskyFeedDefs} from '@atproto/api';
 import DraggableFlatList, {RenderItemParams, ScaleDecorator} from 'react-native-draggable-flatlist';
+import {fontSize} from '../../utils/typography';
 
 export function SavedFeedsScreen() {
   const router = useRouter();
@@ -284,13 +285,13 @@ function createStyles(colors: any) {
       backgroundColor: colors.surface,
     },
     backButtonText: {
-      fontSize: 32,
+      fontSize: fontSize.largeTitle,
       color: colors.text,
       lineHeight: 34,
       marginRight: 8,
     },
     headerTitle: {
-      fontSize: 20,
+      fontSize: fontSize.title3,
       fontWeight: '700',
       color: colors.text,
       flex: 1,
@@ -309,7 +310,7 @@ function createStyles(colors: any) {
       borderColor: colors.surface,
     },
     reorderButtonText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: colors.textSecondary,
     },
@@ -325,7 +326,7 @@ function createStyles(colors: any) {
       alignItems: 'center',
     },
     closeButtonText: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       color: colors.textSecondary,
     },
     listContent: {
@@ -364,16 +365,16 @@ function createStyles(colors: any) {
       alignItems: 'center',
     },
     compactAvatarText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     compactName: {
       flex: 1,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: colors.text,
     },
     compactPinned: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       marginLeft: 8,
     },
     feedCard: {
@@ -402,7 +403,7 @@ function createStyles(colors: any) {
       paddingVertical: 4,
     },
     dragHandleText: {
-      fontSize: 20,
+      fontSize: fontSize.title3,
       color: colors.textSecondary,
     },
     feedAvatar: {
@@ -417,20 +418,20 @@ function createStyles(colors: any) {
       alignItems: 'center',
     },
     feedAvatarText: {
-      fontSize: 24,
+      fontSize: fontSize.title2,
     },
     feedInfo: {
       flex: 1,
       marginRight: 12,
     },
     feedName: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '700',
       color: colors.text,
       marginBottom: 2,
     },
     feedCreator: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
     },
     actionButtons: {
@@ -453,7 +454,7 @@ function createStyles(colors: any) {
       borderColor: colors.primary,
     },
     pinButtonText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     removeButton: {
       paddingHorizontal: 10,
@@ -467,12 +468,12 @@ function createStyles(colors: any) {
       justifyContent: 'center',
     },
     removeButtonText: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       color: colors.textSecondary,
       fontWeight: '600',
     },
     feedDescription: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textMuted,
       lineHeight: 20,
       marginBottom: 12,
@@ -483,11 +484,11 @@ function createStyles(colors: any) {
       justifyContent: 'space-between',
     },
     feedLikes: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
     },
     pinnedBadge: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.primary,
       fontWeight: '600',
     },
@@ -503,14 +504,14 @@ function createStyles(colors: any) {
       paddingHorizontal: 32,
     },
     emptyStateText: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
       color: colors.text,
       marginBottom: 8,
       textAlign: 'center',
     },
     emptyStateSubtext: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       textAlign: 'center',
     },

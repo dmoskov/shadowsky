@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import type { ThemeColors } from "../../../contexts/ThemeContext";
 import type { PostingTimeData } from "../../../services/atproto/analytics";
+import {fontSize} from '../../../utils/typography';
 
 interface HourlyChartProps {
   postingTimes: PostingTimeData;
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "bold",
     marginBottom: 12,
   },
@@ -159,15 +160,15 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   postingTimeLabel: {
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     marginBottom: 4,
   },
   postingTimeValue: {
-    fontSize: 22,
+    fontSize: fontSize.title2,
     fontWeight: "bold",
   },
   postingTimeDetail: {
-    fontSize: 11,
+    fontSize: fontSize.caption2,
     marginTop: 4,
   },
   hourlyChartContainer: {
@@ -192,7 +193,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 2,
   },
   hourlyLabel: {
-    fontSize: 9,
+    fontSize: fontSize.caption2,
     marginTop: 3,
   },
 });

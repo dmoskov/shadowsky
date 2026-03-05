@@ -20,6 +20,7 @@ import {
   ModerationActionType,
   ModerationHistoryStats,
 } from '../../services/moderation-history';
+import {fontSize} from '../../utils/typography';
 
 interface ModerationHistoryScreenProps {
   navigation: {
@@ -370,7 +371,7 @@ function createStyles(colors: any) {
       width: 60,
     },
     headerTitle: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
       color: colors.text,
       flex: 1,
@@ -403,7 +404,7 @@ function createStyles(colors: any) {
       alignItems: 'center',
     },
     tabText: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontWeight: '600',
     },
     statsRow: {
@@ -418,17 +419,17 @@ function createStyles(colors: any) {
       padding: 12,
     },
     statLabel: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.textSecondary,
       marginBottom: 4,
     },
     statCount: {
-      fontSize: 24,
+      fontSize: fontSize.title2,
       fontWeight: '700',
       color: colors.text,
     },
     statSub: {
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       color: colors.textSecondary,
       marginTop: 2,
     },
@@ -447,18 +448,18 @@ function createStyles(colors: any) {
       marginBottom: 16,
     },
     emptyIcon: {
-      fontSize: 24,
+      fontSize: fontSize.title2,
       color: colors.textSecondary,
     },
     emptyTitle: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
       color: colors.text,
       marginBottom: 8,
       textAlign: 'center',
     },
     emptySubtext: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       textAlign: 'center',
       lineHeight: 20,
@@ -471,7 +472,7 @@ function createStyles(colors: any) {
       borderColor: colors.border,
     },
     infoText: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       color: colors.textSecondary,
       lineHeight: 18,
     },
@@ -511,26 +512,26 @@ function createEntryStyles(colors: any) {
       marginBottom: 2,
     },
     entryAction: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: colors.text,
     },
     entryTime: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.textSecondary,
     },
     entryTarget: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.text,
       marginBottom: 1,
     },
     entryHandle: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       color: colors.textSecondary,
       marginBottom: 2,
     },
     entryMeta: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.textSecondary,
       marginTop: 2,
     },
@@ -550,7 +551,7 @@ function createEntryStyles(colors: any) {
       backgroundColor: '#dbeafe',
     },
     statusText: {
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       fontWeight: '600',
     },
     statusTextActive: {

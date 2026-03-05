@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import {fontSize} from '../../../utils/typography';
 
 export const createSectionStyles = (themeColors: Record<string, string>) =>
   StyleSheet.create({
@@ -7,7 +8,7 @@ export const createSectionStyles = (themeColors: Record<string, string>) =>
     },
     sectionTitle: {
       color: themeColors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: "600",
       textTransform: "uppercase",
       letterSpacing: 0.5,
@@ -37,7 +38,7 @@ export const createSectionStyles = (themeColors: Record<string, string>) =>
     },
     themeButtonText: {
       color: themeColors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "500",
     },
     themeButtonTextActive: {
@@ -48,6 +49,6 @@ export const createSectionStyles = (themeColors: Record<string, string>) =>
       paddingVertical: 4,
     },
     smallButtonText: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
     },
   });

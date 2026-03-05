@@ -16,6 +16,7 @@ import {
   exportBookmarkCollections,
   importBookmarkCollections,
 } from '../utils/bookmarkCollectionsImportExport';
+import {fontSize} from '../utils/typography';
 
 interface CollectionManagerProps {
   selectedCollectionId: string | null;
@@ -352,7 +353,7 @@ function createStyles(colors: any) {
       borderBottomColor: colors.border,
     },
     headerTitle: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
       color: colors.text,
     },
@@ -370,7 +371,7 @@ function createStyles(colors: any) {
       borderRadius: 6,
     },
     headerButtonText: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.text,
     },
     closeButton: {
@@ -380,7 +381,7 @@ function createStyles(colors: any) {
       justifyContent: 'center',
     },
     closeButtonText: {
-      fontSize: 20,
+      fontSize: fontSize.title3,
       color: colors.textSecondary,
     },
     listContainer: {
@@ -410,7 +411,7 @@ function createStyles(colors: any) {
       flex: 1,
     },
     collectionName: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       color: colors.text,
     },
     selectedText: {
@@ -418,12 +419,12 @@ function createStyles(colors: any) {
       fontWeight: '600',
     },
     collectionDescription: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.textSecondary,
       marginTop: 2,
     },
     bookmarkCount: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       marginRight: 8,
     },
@@ -434,19 +435,19 @@ function createStyles(colors: any) {
       justifyContent: 'center',
     },
     editButtonText: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     emptyState: {
       padding: 32,
       alignItems: 'center',
     },
     emptyStateText: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       color: colors.text,
       marginBottom: 8,
     },
     emptyStateSubtext: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       textAlign: 'center',
     },
@@ -456,7 +457,7 @@ function createStyles(colors: any) {
       borderTopColor: colors.border,
     },
     formTitle: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       color: colors.text,
       marginBottom: 12,
@@ -468,12 +469,12 @@ function createStyles(colors: any) {
       borderRadius: 8,
       paddingHorizontal: 12,
       paddingVertical: 10,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.text,
       marginBottom: 12,
     },
     colorLabel: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.textSecondary,
       marginBottom: 8,
     },
@@ -506,7 +507,7 @@ function createStyles(colors: any) {
       alignItems: 'center',
     },
     cancelButtonText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
     },
     submitButton: {
@@ -520,7 +521,7 @@ function createStyles(colors: any) {
       opacity: 0.5,
     },
     submitButtonText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: colors.text,
     },
@@ -532,7 +533,7 @@ function createStyles(colors: any) {
       alignItems: 'center',
     },
     deleteButtonText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.danger,
     },
     createButtonContainer: {
@@ -549,7 +550,7 @@ function createStyles(colors: any) {
       alignItems: 'center',
     },
     createButtonText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
     },
   });

@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../contexts/ThemeContext";
+import {fontSize} from '../../utils/typography';
 
 interface TourFeature {
   icon: string;
@@ -196,16 +197,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headerIconText: {
-    fontSize: 28,
+    fontSize: fontSize.title1,
   },
   title: {
-    fontSize: 26,
+    fontSize: fontSize.title1,
     fontWeight: "700",
     textAlign: "center",
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     textAlign: "center",
   },
   scrollView: {
@@ -233,18 +234,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   featureIcon: {
-    fontSize: 22,
+    fontSize: fontSize.title2,
   },
   featureTextContainer: {
     flex: 1,
   },
   featureTitle: {
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
     marginBottom: 4,
   },
   featureDescription: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     lineHeight: 18,
   },
   navigation: {
@@ -262,7 +263,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   backButtonText: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "500",
   },
   completeButton: {
@@ -271,7 +272,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   completeButtonText: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
   },
 });

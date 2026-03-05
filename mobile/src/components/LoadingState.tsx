@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import {View, ActivityIndicator, Text, StyleSheet} from 'react-native';
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 interface LoadingStateProps {
   message?: string;
@@ -30,7 +31,7 @@ function createStyles(colors: any) {
     message: {
       marginTop: 16,
       color: colors.textSecondary,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: '500',
     },
   });

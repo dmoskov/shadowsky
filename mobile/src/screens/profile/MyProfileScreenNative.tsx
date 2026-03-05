@@ -29,6 +29,7 @@ import {
 import { MyProfileScreen } from "./MyProfileScreen";
 import { ProfileAIInsights } from "../../components/ProfileAIInsights";
 import { InlineErrorBoundary } from "../../components/ui/InlineErrorBoundary";
+import {fontSize} from '../../utils/typography';
 
 interface MyProfileScreenNativeProps {
   onNavigateToPost?: (uri: string) => void;
@@ -414,7 +415,7 @@ function createStyles(colors: any) {
     },
     errorText: {
       color: colors.danger,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     emptyContainer: {
       paddingVertical: 48,
@@ -422,7 +423,7 @@ function createStyles(colors: any) {
     },
     emptyText: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     emptyList: {
       flexGrow: 1,

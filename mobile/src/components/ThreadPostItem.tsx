@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import { ImageIcon, CloseIcon } from "./icons";
 import { ImageAsset } from "../hooks/useImagePicker";
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 const MAX_POST_LENGTH = 300;
 
@@ -161,7 +162,7 @@ function createStyles(colors: any) {
     },
     postNumberText: {
       color: colors.textSecondary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: "600",
     },
     removeButton: {
@@ -172,7 +173,7 @@ function createStyles(colors: any) {
     },
     input: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       minHeight: 80,
       textAlignVertical: "top",
       marginBottom: 8,
@@ -207,7 +208,7 @@ function createStyles(colors: any) {
     },
     removeImageText: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
       lineHeight: 16,
     },
@@ -222,7 +223,7 @@ function createStyles(colors: any) {
     },
     altTextButtonText: {
       color: colors.text,
-      fontSize: 9,
+      fontSize: fontSize.caption2,
       fontWeight: "600",
     },
     footer: {
@@ -244,7 +245,7 @@ function createStyles(colors: any) {
     },
     charCount: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: "500",
     },
     charCountOver: {
