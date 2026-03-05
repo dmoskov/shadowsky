@@ -70,3 +70,5 @@ export {BanIcon} from './BanIcon';
 export {VolumeXIcon} from './VolumeXIcon';
 export {FlagIcon} from './FlagIcon';
 export {DownloadIcon} from './DownloadIcon';
+export {PinIcon} from './PinIcon';
+export {TrendingUpIcon} from './TrendingUpIcon';

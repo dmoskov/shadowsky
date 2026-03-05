@@ -102,6 +102,13 @@ jest.mock('../../../hooks/api/useFeed', () => ({
   usePostThread: () => ({ data: null }),
 }));
 
+jest.mock('../../../hooks/api/useTopPosts', () => ({
+  useTopPosts: () => ({
+    data: null,
+    isLoading: false,
+  }),
+}));
+
 jest.mock('../../../hooks/api/useStarterPacks', () => ({
   useActorStarterPacks: () => ({ data: null }),
 }));

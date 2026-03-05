@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 import {fontSize} from '../utils/typography';
 
-export type ProfileTab = "posts" | "replies" | "media" | "likes";
+export type ProfileTab = "posts" | "replies" | "media" | "likes" | "top";
 
 interface ProfileTabBarProps {
   activeTab: ProfileTab;
@@ -19,6 +19,7 @@ export function ProfileTabBar({ activeTab, onTabChange }: ProfileTabBarProps) {
     { key: "replies", label: "Replies" },
     { key: "media", label: "Media" },
     { key: "likes", label: "Likes" },
+    { key: "top", label: "Top" },
   ];
 
   return (

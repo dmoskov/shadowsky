@@ -14,6 +14,7 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useProfile, useFollowUser, useUnfollowUser, useBlockUser, useUnblockUser, useMuteUser, useUnmuteUser } from "../../hooks/api/useProfile";
 import { useAuthorFeed, useActorLikes, usePostThread } from "../../hooks/api/useFeed";
+import { useTopPosts } from "../../hooks/api/useTopPosts";
 import { useActorStarterPacks } from "../../hooks/api/useStarterPacks";
 import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
@@ -21,7 +22,8 @@ import { ProfileTabBar, ProfileTab } from "../../components/ProfileTabBar";
 import { AddToListModal } from "../../components/AddToListModal";
 import { ReportModal } from "../../components/ReportModal";
 import { ProfileSkeleton } from "../../components/ProfileSkeleton";
-import { MoreVerticalIcon, SendIcon } from "../../components/icons";
+import { MoreVerticalIcon, SendIcon, PinIcon } from "../../components/icons";
+import { TopPostsShowcase } from "../../components/TopPostsShowcase";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -120,6 +122,13 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   const { data: pinnedPostThread } = usePostThread(pinnedPostUri ?? "");
   const pinnedPost = pinnedPostThread && "post" in pinnedPostThread ? pinnedPostThread.post as AppBskyFeedDefs.PostView : null;
 
+  // Fetch top posts by engagement
+  const { data: topPostsData, isLoading: isTopPostsLoading } = useTopPosts({
+    handle,
+    limit: 10,
+    enabled: !!handle,
+  });
+
   const isOwnProfile = account?.handle === handle;
 
   const handleFollowToggle = () => {
@@ -145,15 +154,28 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
     }
   };
 
+  // Build top-posts feed items so FlatList can render them
+  const topPostsFeedItems: AppBskyFeedDefs.FeedViewPost[] = useMemo(() => {
+    if (!topPostsData?.topPosts) return [];
+    return topPostsData.topPosts.map((item) => ({
+      post: item.post,
+      reply: undefined,
+      reason: undefined,
+      feedContext: undefined,
+    } as AppBskyFeedDefs.FeedViewPost));
+  }, [topPostsData]);
+
   // Get posts based on the active tab
   const posts = activeTab === "likes"
     ? likesData?.pages.flatMap((page) => page.feed) ?? []
+    : activeTab === "top"
+    ? topPostsFeedItems
     : feedData?.pages.flatMap((page) => page.feed) ?? [];
 
-  const isLoading = activeTab === "likes" ? isLoadingLikes : isLoadingFeed;
+  const isLoading = activeTab === "likes" ? isLoadingLikes : activeTab === "top" ? isTopPostsLoading : isLoadingFeed;
   const fetchNextPage = activeTab === "likes" ? fetchNextLikesPage : fetchNextFeedPage;
-  const hasNextPage = activeTab === "likes" ? hasNextLikesPage : hasNextFeedPage;
-  const isFetchingNextPage = activeTab === "likes" ? isFetchingNextLikesPage : isFetchingNextFeedPage;
+  const hasNextPage = activeTab === "likes" ? hasNextLikesPage : activeTab === "top" ? false : hasNextFeedPage;
+  const isFetchingNextPage = activeTab === "likes" ? isFetchingNextLikesPage : activeTab === "top" ? false : isFetchingNextFeedPage;
 
   const handleMentionPress = useCallback((mentionHandle: string, _did: string) => {
     onNavigateToProfile?.(mentionHandle);
@@ -571,7 +593,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
       );
     }
 
-    const emptyMessage = activeTab === "likes" ? "No likes yet" : "No posts yet";
+    const emptyMessage = activeTab === "likes" ? "No likes yet" : activeTab === "top" ? "No top posts found" : "No posts yet";
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>{emptyMessage}</Text>
@@ -601,9 +623,17 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           <>
             {renderHeader()}
             {renderTabBar()}
+            {topPostsData && topPostsData.topPosts.length > 0 && activeTab === "posts" && (
+              <TopPostsShowcase
+                topPosts={topPostsData.topPosts}
+                totalPostsAnalyzed={topPostsData.totalPostsAnalyzed}
+                onPostPress={(uri) => onNavigateToPost?.(uri)}
+              />
+            )}
             {pinnedPost && activeTab === "posts" && (
               <View style={styles.pinnedPostContainer}>
                 <View style={styles.pinnedPostLabel}>
+                  <PinIcon size={12} color={colors.textSecondary} />
                   <Text style={styles.pinnedPostLabelText}>Pinned</Text>
                 </View>
                 <PostCard

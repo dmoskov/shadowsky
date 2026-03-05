@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo } from "react";
+import React, { useRef, useState, useMemo, useCallback } from "react";
 import { AppBskyFeedDefs } from "@atproto/api";
 import {
   ActivityIndicator,
@@ -15,12 +15,15 @@ import { Avatar } from "../../components/Avatar";
 import { PostCard } from "../../components/PostCard";
 import { ProfileTabBar, ProfileTab } from "../../components/ProfileTabBar";
 import { useAuth } from "../../contexts/AuthContext";
-import { useAuthorFeed, useActorLikes } from "../../hooks/api/useFeed";
+import { useAuthorFeed, useActorLikes, usePostThread } from "../../hooks/api/useFeed";
+import { useTopPosts } from "../../hooks/api/useTopPosts";
 import { useProfile } from "../../hooks/api/useProfile";
 import { useActorStarterPacks } from "../../hooks/api/useStarterPacks";
 import { useBookmarks, useBookmarkCount } from "../../hooks/api/useBookmarks";
 import { useTheme } from "../../contexts/ThemeContext";
 import { ProfileSkeleton } from "../../components/ProfileSkeleton";
+import { TopPostsShowcase } from "../../components/TopPostsShowcase";
+import { PinIcon } from "../../components/icons";
 import { AuthorFeedFilter } from "../../services/atproto/feeds";
 import { triggerHaptic } from "../../utils/haptics";
 import {fontSize} from '../../utils/typography';
@@ -92,6 +95,18 @@ export function MyProfileScreen({
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const bookmarkCount = useBookmarkCount();
 
+  // Fetch pinned post if the profile has one
+  const pinnedPostUri = profile?.pinnedPost?.uri;
+  const { data: pinnedPostThread } = usePostThread(pinnedPostUri ?? "");
+  const pinnedPost = pinnedPostThread && "post" in pinnedPostThread ? pinnedPostThread.post as AppBskyFeedDefs.PostView : null;
+
+  // Fetch top posts by engagement
+  const { data: topPostsData, isLoading: isTopPostsLoading } = useTopPosts({
+    handle: account?.handle || "",
+    limit: 10,
+    enabled: !!account?.handle,
+  });
+
   // Enable scroll-to-top on tab press
   useScrollToTop(scrollRef);
 
@@ -104,23 +119,36 @@ export function MyProfileScreen({
     }
   };
 
+  // Build top-posts feed items so FlatList can render them
+  const topPostsFeedItems: AppBskyFeedDefs.FeedViewPost[] = useMemo(() => {
+    if (!topPostsData?.topPosts) return [];
+    return topPostsData.topPosts.map((item) => ({
+      post: item.post,
+      reply: undefined,
+      reason: undefined,
+      feedContext: undefined,
+    } as AppBskyFeedDefs.FeedViewPost));
+  }, [topPostsData]);
+
   // Get posts based on the active tab
   const posts = activeTab === "likes"
     ? likesData?.pages.flatMap((page) => page.feed) ?? []
+    : activeTab === "top"
+    ? topPostsFeedItems
     : feedData?.pages.flatMap((page) => page.feed) ?? [];
 
-  const isLoading = activeTab === "likes" ? isLoadingLikes : isLoadingFeed;
+  const isLoading = activeTab === "likes" ? isLoadingLikes : activeTab === "top" ? isTopPostsLoading : isLoadingFeed;
   const fetchNextPage = activeTab === "likes" ? fetchNextLikesPage : fetchNextFeedPage;
-  const hasNextPage = activeTab === "likes" ? hasNextLikesPage : hasNextFeedPage;
-  const isFetchingNextPage = activeTab === "likes" ? isFetchingNextLikesPage : isFetchingNextFeedPage;
+  const hasNextPage = activeTab === "likes" ? hasNextLikesPage : activeTab === "top" ? false : hasNextFeedPage;
+  const isFetchingNextPage = activeTab === "likes" ? isFetchingNextLikesPage : activeTab === "top" ? false : isFetchingNextFeedPage;
 
-  const handleMentionPress = (handle: string, _did: string) => {
-    onNavigateToProfile?.(handle);
-  };
+  const handleMentionPress = useCallback((mentionHandle: string, _did: string) => {
+    onNavigateToProfile?.(mentionHandle);
+  }, [onNavigateToProfile]);
 
-  const handleHashtagPress = (tag: string) => {
+  const handleHashtagPress = useCallback((tag: string) => {
     router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } } as any);
-  };
+  }, [router]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -278,7 +306,7 @@ export function MyProfileScreen({
       return <ProfileSkeleton />;
     }
 
-    const emptyMessage = activeTab === "likes" ? "No likes yet" : "No posts yet";
+    const emptyMessage = activeTab === "likes" ? "No likes yet" : activeTab === "top" ? "No top posts found" : "No posts yet";
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>{emptyMessage}</Text>
@@ -307,6 +335,30 @@ export function MyProfileScreen({
           <>
             {renderHeader()}
             {renderTabBar()}
+            {topPostsData && topPostsData.topPosts.length > 0 && activeTab === "posts" && (
+              <TopPostsShowcase
+                topPosts={topPostsData.topPosts}
+                totalPostsAnalyzed={topPostsData.totalPostsAnalyzed}
+                onPostPress={(uri) => onNavigateToPost?.(uri)}
+              />
+            )}
+            {pinnedPost && activeTab === "posts" && (
+              <View style={styles.pinnedPostContainer}>
+                <View style={styles.pinnedPostLabel}>
+                  <PinIcon size={12} color={colors.textSecondary} />
+                  <Text style={styles.pinnedPostLabelText}>Pinned</Text>
+                </View>
+                <PostCard
+                  post={{ post: pinnedPost, reply: undefined } as AppBskyFeedDefs.FeedViewPost}
+                  onPress={() => onNavigateToPost?.(pinnedPost.uri)}
+                  onPressProfile={(profileHandle) => onNavigateToProfile?.(profileHandle)}
+                  onBookmark={() => handleBookmark({ post: pinnedPost, reply: undefined } as AppBskyFeedDefs.FeedViewPost)}
+                  isBookmarked={isBookmarked(pinnedPost.uri)}
+                  onMentionPress={handleMentionPress}
+                  onHashtagPress={handleHashtagPress}
+                />
+              </View>
+            )}
           </>
         }
         ListFooterComponent={renderFooter}
@@ -471,6 +523,22 @@ function createStyles(colors: any) {
   },
   emptyList: {
     flexGrow: 1,
+  },
+  pinnedPostContainer: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+  },
+  pinnedPostLabel: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    gap: 6,
+  },
+  pinnedPostLabelText: {
+    color: colors.textSecondary,
+    fontSize: fontSize.caption1,
+    fontWeight: "600",
   },
   starterPacksContainer: {
     marginBottom: 16,
