@@ -13,6 +13,7 @@ export default function PostLayout() {
         contentStyle: { backgroundColor: colors.background },
         headerBackTitle: "Back",
         headerLeft: () => <HeaderBackButton />,
+        freezeOnBlur: true,
       }}
     >
       <Stack.Screen name="profile/[handle]" options={{ title: "Profile" }} />

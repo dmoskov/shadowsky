@@ -13,6 +13,7 @@ export default function FeedLayout() {
         contentStyle: { backgroundColor: colors.background },
         headerBackTitle: "Back",
         headerLeft: () => <HeaderBackButton />,
+        freezeOnBlur: true,
       }}
     >
       <Stack.Screen name="[uri]" options={{ title: "Feed" }} />

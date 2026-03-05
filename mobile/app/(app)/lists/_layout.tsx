@@ -12,6 +12,7 @@ export default function ListsLayout() {
         headerTintColor: colors.text,
         contentStyle: { backgroundColor: colors.background },
         headerBackTitle: "Back",
+        freezeOnBlur: true,
       }}
     >
       <Stack.Screen

@@ -12,6 +12,7 @@ export default function SettingsLayout() {
         headerTintColor: colors.text,
         contentStyle: { backgroundColor: colors.background },
         headerBackTitle: "Back",
+        freezeOnBlur: true,
       }}
     >
       <Stack.Screen
