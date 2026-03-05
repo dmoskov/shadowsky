@@ -17,6 +17,7 @@ import {
   Users,
 } from "lucide-react";
 import React, { memo } from "react";
+import { Link } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useModeration } from "../contexts/ModerationContext";
 import { usePostTranslation } from "../hooks/usePostTranslation";
@@ -440,6 +441,11 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
   // Get prefetch handlers for this post's author and thread
   const authorPrefetchHandlers = getProfilePrefetchHandlers(post.author.handle);
   const threadPrefetchHandlers = getThreadPrefetchHandlers(post.uri);
+
+  // Construct URLs for native link behavior
+  const postId = post.uri.split("/").pop();
+  const threadUrl = `/thread/${post.author.handle}/${postId}`;
+  const profileUrl = `/profile/${post.author.handle}`;
 
   // Translation support
   const {
@@ -1204,10 +1210,34 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
 
   return (
     <>
-      <article
-        ref={articleRef}
-        className={`post-renderer p-4 ${compact ? "compact" : ""} ${record?.reply?.parent ? "is-reply" : ""} ${onClick ? "post-hover-refined cursor-pointer" : ""}`}
-        onClick={handlePostClick}
+      <Link
+        to={threadUrl}
+        className={`post-renderer block p-4 no-underline ${compact ? "compact" : ""} ${record?.reply?.parent ? "is-reply" : ""} post-hover-refined cursor-pointer`}
+        style={{ color: "inherit" }}
+        onClickCapture={(e: React.MouseEvent) => {
+          // Prevent link navigation when clicking interactive children (buttons)
+          const target = e.target as HTMLElement;
+          if (target.closest('button, [role="button"]')) {
+            e.preventDefault();
+          }
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          // Let browser handle modified clicks natively (open in new tab)
+          if (
+            e.metaKey ||
+            e.ctrlKey ||
+            e.shiftKey ||
+            e.altKey ||
+            e.button !== 0
+          )
+            return;
+          if (onClick) {
+            tagForViewTransition(e.currentTarget as HTMLElement, "vt-post-hero");
+            e.preventDefault();
+            onClick();
+          }
+        }}
         aria-label={`Post by ${post.author.displayName || post.author.handle}`}
       >
         {/* Repost context */}
@@ -1219,15 +1249,14 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
             <Repeat2 size={16} />
             <span className="inline-flex items-center">
               <ProfileHoverCard handle={(reason as any).by.handle}>
-                <span
-                  className="cursor-pointer hover:underline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/profile/${(reason as any).by.handle}`);
-                  }}
+                <Link
+                  to={`/profile/${(reason as any).by.handle}`}
+                  className="no-underline hover:underline"
+                  style={{ color: "inherit" }}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   {(reason as any).by.displayName || (reason as any).by.handle}
-                </span>
+                </Link>
               </ProfileHoverCard>
               {(reason as any).by.handle && (
                 <DomainVerifiedBadgeInline handle={(reason as any).by.handle} />
@@ -1273,15 +1302,23 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
         <div className="flex gap-3">
           {/* Author avatar */}
           <ProfileHoverCard handle={post.author.handle}>
-            <img
-              src={
-                proxifyBskyImage(post.author.avatar) || "/default-avatar.svg"
-              }
-              alt={post.author.handle}
-              className="post-avatar h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
-              onClick={handleAuthorClick}
+            <Link
+              to={profileUrl}
+              onClick={(e) => {
+                e.stopPropagation();
+                const avatar = e.currentTarget.querySelector("img.post-avatar") as HTMLElement | null;
+                tagForViewTransition(avatar, "vt-profile-avatar");
+              }}
               {...authorPrefetchHandlers}
-            />
+            >
+              <img
+                src={
+                  proxifyBskyImage(post.author.avatar) || "/default-avatar.svg"
+                }
+                alt={post.author.handle}
+                className="h-12 w-12 rounded-full transition-opacity hover:opacity-80"
+              />
+            </Link>
           </ProfileHoverCard>
 
           <div className="min-w-0 flex-1">
@@ -1289,42 +1326,43 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
             <div className="flex items-start justify-between">
               <div className="flex flex-wrap items-center gap-1">
                 <ProfileHoverCard handle={post.author.handle}>
-                  <span
-                    className="max-w-[200px] cursor-pointer truncate font-semibold hover:underline"
+                  <Link
+                    to={profileUrl}
+                    className="max-w-[200px] truncate font-semibold no-underline hover:underline"
                     style={{ color: "var(--asph-text-primary)" }}
-                    onClick={handleAuthorClick}
+                    onClick={(e) => e.stopPropagation()}
                     {...authorPrefetchHandlers}
                   >
                     {post.author.displayName || post.author.handle}
-                  </span>
+                  </Link>
                 </ProfileHoverCard>
                 <ProfileHoverCard handle={post.author.handle}>
-                  <span
-                    className="max-w-[200px] cursor-pointer truncate hover:underline"
+                  <Link
+                    to={profileUrl}
+                    className="max-w-[200px] truncate no-underline hover:underline"
                     style={{ color: "var(--asph-text-secondary)" }}
-                    onClick={handleAuthorClick}
+                    onClick={(e) => e.stopPropagation()}
                     {...authorPrefetchHandlers}
                   >
                     @{post.author.handle}
-                  </span>
+                  </Link>
                 </ProfileHoverCard>
                 <DomainVerifiedBadgeInline handle={post.author.handle} />
                 <span style={{ color: "var(--asph-text-secondary)" }}>·</span>
-                <span
-                  className="cursor-pointer text-sm hover:underline"
+                <Link
+                  to={threadUrl}
+                  className="text-sm no-underline hover:underline"
                   style={{ color: "var(--asph-text-secondary)" }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    tagForViewTransition(articleRef.current, "vt-post-hero");
-                    const postId = post.uri.split("/").pop();
-                    navigate(`/thread/${post.author.handle}/${postId}`);
+                    tagForViewTransition(e.currentTarget.closest(".post-renderer") as HTMLElement, "vt-post-hero");
                   }}
                   {...threadPrefetchHandlers}
                 >
                   {formatDistanceToNow(new Date(post.indexedAt), {
                     addSuffix: true,
                   })}
-                </span>
+                </Link>
                 {isThreadMutedState && (
                   <>
                     <span style={{ color: "var(--asph-text-secondary)" }}>
@@ -1564,7 +1602,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
             )}
           </div>
         </div>
-      </article>
+      </Link>
 
       {/* Image Gallery Modal */}
       {galleryImages && (

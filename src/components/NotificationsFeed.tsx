@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import { useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 import { useModeration } from "../contexts/ModerationContext";
 import { useFollowing } from "../hooks/useFollowing";
 import {
@@ -1283,34 +1283,42 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
               </span>
               {post.author?.handle && (
                 <ProfileHoverCard handle={post.author.handle}>
-                  {post.author?.avatar ? (
-                    <img
-                      src={proxifyBskyImage(post.author.avatar)}
-                      alt={post.author.handle}
-                      className="asph-avatar h-5 w-5 cursor-pointer transition-opacity hover:opacity-80"
-                      onClick={handlePostAuthorClick}
-                    />
-                  ) : (
-                    <div
-                      className="asph-avatar flex h-5 w-5 cursor-pointer items-center justify-center text-xs transition-opacity hover:opacity-80"
-                      style={{ background: "var(--asph-bg-tertiary)" }}
-                      onClick={handlePostAuthorClick}
-                    >
-                      {post.author?.handle?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                  <Link
+                    to={`/profile/${post.author.handle}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {post.author?.avatar ? (
+                      <img
+                        src={proxifyBskyImage(post.author.avatar)}
+                        alt={post.author.handle}
+                        className="asph-avatar h-5 w-5 transition-opacity hover:opacity-80"
+                      />
+                    ) : (
+                      <div
+                        className="asph-avatar flex h-5 w-5 items-center justify-center text-xs transition-opacity hover:opacity-80"
+                        style={{ background: "var(--asph-bg-tertiary)" }}
+                      >
+                        {post.author?.handle?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </Link>
                 </ProfileHoverCard>
               )}
               {post.author?.handle ? (
                 <ProfileHoverCard handle={post.author.handle}>
-                  <span className="inline-flex cursor-pointer items-center text-xs font-medium text-asph-text-secondary hover:underline">
+                  <Link
+                    to={`/profile/${post.author.handle}`}
+                    className="inline-flex items-center text-xs font-medium no-underline hover:underline"
+                    style={{ color: "var(--asph-text-secondary)" }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <span>
                       {post.author?.displayName ||
                         post.author?.handle ||
                         "Unknown"}
                     </span>
                     <DomainVerifiedBadgeInline handle={post.author.handle} />
-                  </span>
+                  </Link>
                 </ProfileHoverCard>
               ) : (
                 <span className="inline-flex items-center text-xs font-medium text-asph-text-secondary">
@@ -1632,7 +1640,10 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
     };
 
     const handleNotificationClick = (e: React.MouseEvent) => {
-      // Prevent default behavior
+      e.stopPropagation();
+      // Let browser handle modified clicks natively (open in new tab)
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0)
+        return;
       e.preventDefault();
 
       // Mark notification as read when clicked
@@ -1661,23 +1672,21 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
       }
     };
 
-    const handleAuthorClick = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      navigate(`/profile/${notification.author.handle}`);
-    };
-
-    const handlePostAuthorClick = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (post?.author?.handle) {
-        navigate(`/profile/${post.author.handle}`);
-      }
-    };
+    const authorProfileUrl = `/profile/${notification.author.handle}`;
 
     return (
-      <div
-        className={`asph-notification cursor-pointer px-3 py-2 ${
+      <Link
+        to={notificationUrl}
+        className={`asph-notification block cursor-pointer px-3 py-2 no-underline ${
           !notification.isRead ? "asph-notification-unread" : ""
         } ${isNew ? "asph-notification-new" : ""}`}
+        style={{ color: "inherit" }}
+        onClickCapture={(e: React.MouseEvent) => {
+          const target = e.target as HTMLElement;
+          if (target.closest('button, [role="button"]')) {
+            e.preventDefault();
+          }
+        }}
         onClick={handleNotificationClick}
       >
         <div className="flex items-start gap-2">
@@ -1687,25 +1696,25 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
               {getNotificationIcon(notification.reason)}
             </div>
             <ProfileHoverCard handle={notification.author.handle}>
-              {notification.author.avatar ? (
-                <img
-                  src={proxifyBskyImage(notification.author.avatar)}
-                  alt={notification.author.handle}
-                  className="asph-avatar h-10 w-10 cursor-pointer transition-opacity hover:opacity-80"
-                  onClick={handleAuthorClick}
-                />
-              ) : (
-                <div
-                  className="asph-avatar flex h-10 w-10 cursor-pointer items-center justify-center transition-opacity hover:opacity-80"
-                  style={{ background: "var(--asph-bg-tertiary)" }}
-                  onClick={handleAuthorClick}
-                >
-                  <span className="text-sm font-semibold">
-                    {notification.author?.handle?.charAt(0).toUpperCase() ||
-                      "U"}
-                  </span>
-                </div>
-              )}
+              <Link to={authorProfileUrl} onClick={(e) => e.stopPropagation()}>
+                {notification.author.avatar ? (
+                  <img
+                    src={proxifyBskyImage(notification.author.avatar)}
+                    alt={notification.author.handle}
+                    className="asph-avatar h-10 w-10 transition-opacity hover:opacity-80"
+                  />
+                ) : (
+                  <div
+                    className="asph-avatar flex h-10 w-10 items-center justify-center transition-opacity hover:opacity-80"
+                    style={{ background: "var(--asph-bg-tertiary)" }}
+                  >
+                    <span className="text-sm font-semibold">
+                      {notification.author?.handle?.charAt(0).toUpperCase() ||
+                        "U"}
+                    </span>
+                  </div>
+                )}
+              </Link>
             </ProfileHoverCard>
           </div>
 
@@ -1727,18 +1736,20 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
             )}
             <p className="text-sm">
               <ProfileHoverCard handle={notification.author.handle}>
-                <span className="inline-flex items-center">
-                  <span
-                    className="cursor-pointer font-semibold hover:underline"
-                    style={{ color: "var(--asph-text-primary)" }}
-                  >
+                <Link
+                  to={authorProfileUrl}
+                  className="inline-flex items-center no-underline hover:underline"
+                  style={{ color: "var(--asph-text-primary)" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span className="font-semibold">
                     {notification.author.displayName ||
                       notification.author.handle}
                   </span>
                   <DomainVerifiedBadgeInline
                     handle={notification.author.handle}
                   />
-                </span>
+                </Link>
               </ProfileHoverCard>{" "}
               <span style={{ color: "var(--asph-text-secondary)" }}>
                 {getNotificationText(notification.reason)}
@@ -1763,7 +1774,7 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
             <div className="ml-[1.75rem] mt-2">{postContent}</div>
           ) : null;
         })()}
-      </div>
+      </Link>
     );
   },
   (prevProps, nextProps) => {
