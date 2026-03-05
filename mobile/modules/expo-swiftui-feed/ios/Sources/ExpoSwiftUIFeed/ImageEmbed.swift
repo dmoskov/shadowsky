@@ -57,17 +57,28 @@ struct ImageEmbed: View {
         }
     }
 
-    // Single image: 300h
+    // Single image: height derived from aspect ratio, constrained by width
     private var singleImageLayout: some View {
-        ImageTile(
-            imageData: images[0],
-            blurImage: blurImages,
-            index: 0,
-            onPress: handleImagePress
-        )
+        GeometryReader { geometry in
+            let ratio = max(0.8, images[0].aspectRatio ?? 1.0)
+            let height = min(max(geometry.size.width / ratio, 150), 600)
+            ImageTile(
+                imageData: images[0],
+                blurImage: blurImages,
+                index: 0,
+                onPress: handleImagePress
+            )
+            .frame(width: geometry.size.width, height: height)
+            .cornerRadius(12)
+        }
         .frame(maxWidth: .infinity)
-        .frame(height: 300)
-        .cornerRadius(12)
+        .frame(height: singleImageHeight)
+    }
+
+    private var singleImageHeight: CGFloat {
+        let screenWidth = UIScreen.main.bounds.width - 32
+        let ratio = max(0.8, images[0].aspectRatio ?? 1.0)
+        return min(max(screenWidth / ratio, 150), 600)
     }
 
     // Double image: 200h side-by-side
