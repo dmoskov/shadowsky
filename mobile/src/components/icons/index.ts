@@ -22,6 +22,9 @@ export {ChevronDownIcon} from './ChevronDownIcon';
 export {ChevronUpIcon} from './ChevronUpIcon';
 export {MenuIcon} from './MenuIcon';
 
+// Compose
+export {PenIcon} from './PenIcon';
+
 // Drawer
 export {ListIcon} from './ListIcon';
 export {CalendarIcon} from './CalendarIcon';
