@@ -109,6 +109,14 @@ jest.mock('../SaveToCollectionModal', () => ({
   SaveToCollectionModal: () => null,
 }));
 
+jest.mock('react-native-context-menu-view', () => {
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: ({ children }: any) => <View>{children}</View>,
+  };
+});
+
 jest.mock('../../utils/rich-text', () => ({
   RichText: ({text}: any) => {
     const {Text} = require('react-native');

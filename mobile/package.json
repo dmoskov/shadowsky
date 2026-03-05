@@ -72,6 +72,7 @@
     "react-dom": "19.1.0",
     "react-i18next": "^16.5.4",
     "react-native": "0.81.5",
+    "react-native-context-menu-view": "^1.16.0",
     "react-native-draggable-flatlist": "^4.0.3",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-mmkv": "^3.3.3",

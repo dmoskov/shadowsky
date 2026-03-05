@@ -1,5 +1,5 @@
 import React, {useState, useCallback, useMemo, useRef} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Modal, Alert, ActivityIndicator, ActionSheetIOS, Platform} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, ActionSheetIOS, Platform, NativeSyntheticEvent} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -7,6 +7,7 @@ import Animated, {
   withSpring,
   SharedValue,
 } from 'react-native-reanimated';
+import ContextMenu, {ContextMenuOnPressNativeEvent} from 'react-native-context-menu-view';
 import {AppBskyFeedDefs, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from 'date-fns';
@@ -28,7 +29,6 @@ import {SaveToCollectionModal} from './SaveToCollectionModal';
 import {usePostTranslation} from '../hooks/usePostTranslation';
 import {useSharedTransition} from '../contexts/SharedTransitionContext';
 import {useToast} from '../contexts/ToastContext';
-import {BlurOverlay} from './BlurOverlay';
 import {fontSize} from '../utils/typography';
 
 interface PostCardProps {
@@ -109,7 +109,6 @@ function PostCardComponent({
 
   const postView = post.post;
   const author = postView.author;
-  const [showMenu, setShowMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showSaveToCollection, setShowSaveToCollection] = useState(false);
   const handleCloseReportModal = useCallback(() => setShowReportModal(false), []);
@@ -142,7 +141,6 @@ function PostCardComponent({
   }, [onPressProfile, author.handle]);
 
   const handleMuteUser = useCallback(() => {
-    setShowMenu(false);
     Alert.alert(
       'Mute User',
       `Are you sure you want to mute @${author.handle}? You won't see their posts in your timeline.`,
@@ -170,7 +168,6 @@ function PostCardComponent({
   }, [author.handle, author.did, author.displayName, muteMutation, showToast]);
 
   const handleBlockUser = useCallback(() => {
-    setShowMenu(false);
     Alert.alert(
       'Block User',
       `Are you sure you want to block @${author.handle}? They won't be able to follow you or view your posts.`,
@@ -199,12 +196,10 @@ function PostCardComponent({
   }, [author.handle, author.did, author.displayName, blockMutation, showToast]);
 
   const handleReport = useCallback(() => {
-    setShowMenu(false);
     setShowReportModal(true);
   }, []);
 
   const handleDeletePost = useCallback(() => {
-    setShowMenu(false);
     Alert.alert(
       'Delete Post',
       'Are you sure you want to delete this post? This action cannot be undone.',
@@ -259,13 +254,37 @@ function PostCardComponent({
     sharePost(post);
   }, [post]);
 
-  const handleMenuOpen = useCallback(() => {
-    setShowMenu(true);
-  }, []);
-
-  const handleMenuClose = useCallback(() => {
-    setShowMenu(false);
-  }, []);
+  const handleMorePress = useCallback(() => {
+    if (Platform.OS !== 'ios') return;
+    triggerHaptic('light');
+    if (isOwnPost) {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', 'Delete Post'],
+          cancelButtonIndex: 0,
+          destructiveButtonIndex: 1,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) handleDeletePost();
+        },
+      );
+    } else {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', `Mute @${author.handle}`, `Block @${author.handle}`, 'Report Post'],
+          cancelButtonIndex: 0,
+          destructiveButtonIndex: [2, 3],
+        },
+        (buttonIndex) => {
+          switch (buttonIndex) {
+            case 1: handleMuteUser(); break;
+            case 2: handleBlockUser(); break;
+            case 3: handleReport(); break;
+          }
+        },
+      );
+    }
+  }, [isOwnPost, author.handle, handleDeletePost, handleMuteUser, handleBlockUser, handleReport]);
 
   const handleLikePress = useCallback(() => {
     triggerHaptic('light');
@@ -294,52 +313,62 @@ function PostCardComponent({
     setShowSaveToCollection(true);
   }, [isBookmarked, onBookmark]);
 
-  const handleLongPress = useCallback(() => {
-    if (Platform.OS !== 'ios') return;
-    triggerHaptic('medium');
+  // Native context menu actions for long-press
+  const contextMenuActions = useMemo(() => {
+    const actions: Array<{title: string; systemIcon?: string; destructive?: boolean}> = [
+      { title: 'Reply', systemIcon: 'arrowshape.turn.up.left' },
+      { title: 'Repost', systemIcon: 'arrow.2.squarepath' },
+      { title: isLiked ? 'Unlike' : 'Like', systemIcon: isLiked ? 'heart.slash' : 'heart' },
+      { title: isBookmarked ? 'Remove Bookmark' : 'Bookmark', systemIcon: isBookmarked ? 'bookmark.slash' : 'bookmark' },
+      { title: 'Share', systemIcon: 'square.and.arrow.up' },
+    ];
 
     if (isOwnPost) {
-      const options = ['Cancel', 'Reply', 'Repost', isLiked ? 'Unlike' : 'Like', 'Bookmark', 'Share', 'Delete Post'];
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options,
-          cancelButtonIndex: 0,
-          destructiveButtonIndex: 6,
-        },
-        (buttonIndex) => {
-          switch (buttonIndex) {
-            case 1: onReply?.(); break;
-            case 2: handleRepostPress(); break;
-            case 3: handleLikePress(); break;
-            case 4: handleBookmarkPress(); break;
-            case 5: handleShare(); break;
-            case 6: handleDeletePost(); break;
-          }
-        },
-      );
+      actions.push({ title: 'Delete Post', systemIcon: 'trash', destructive: true });
     } else {
-      const options = ['Cancel', 'Reply', 'Repost', isLiked ? 'Unlike' : 'Like', 'Bookmark', 'Share', `Mute @${author.handle}`, `Block @${author.handle}`, 'Report Post'];
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options,
-          cancelButtonIndex: 0,
-          destructiveButtonIndex: [7, 8],
-        },
-        (buttonIndex) => {
-          switch (buttonIndex) {
-            case 1: onReply?.(); break;
-            case 2: handleRepostPress(); break;
-            case 3: handleLikePress(); break;
-            case 4: handleBookmarkPress(); break;
-            case 5: handleShare(); break;
-            case 6: handleMuteUser(); break;
-            case 7: handleBlockUser(); break;
-            case 8: handleReport(); break;
-          }
-        },
+      actions.push(
+        { title: `Mute @${author.handle}`, systemIcon: 'speaker.slash' },
+        { title: `Block @${author.handle}`, systemIcon: 'hand.raised', destructive: true },
+        { title: 'Report Post', systemIcon: 'exclamationmark.bubble', destructive: true },
       );
     }
-  }, [isOwnPost, isLiked, author.handle, onReply, handleRepostPress, handleLikePress, handleBookmarkPress, handleShare, handleDeletePost, handleMuteUser, handleBlockUser, handleReport]);
+
+    return actions;
+  }, [isLiked, isBookmarked, isOwnPost, author.handle]);
+
+  const handleContextMenuAction = useCallback((e: NativeSyntheticEvent<ContextMenuOnPressNativeEvent>) => {
+    const { name } = e.nativeEvent;
+
+    switch (name) {
+      case 'Reply':
+        onReply?.();
+        break;
+      case 'Repost':
+        handleRepostPress();
+        break;
+      case 'Like':
+      case 'Unlike':
+        handleLikePress();
+        break;
+      case 'Bookmark':
+      case 'Remove Bookmark':
+        handleBookmarkPress();
+        break;
+      case 'Share':
+        handleShare();
+        break;
+      case 'Delete Post':
+        handleDeletePost();
+        break;
+      case 'Report Post':
+        handleReport();
+        break;
+      default:
+        if (name.startsWith('Mute')) handleMuteUser();
+        else if (name.startsWith('Block')) handleBlockUser();
+        break;
+    }
+  }, [onReply, handleRepostPress, handleLikePress, handleBookmarkPress, handleShare, handleDeletePost, handleMuteUser, handleBlockUser, handleReport]);
 
   // Memoized computed values
   const timestamp = useMemo(
@@ -371,15 +400,38 @@ function PostCardComponent({
     postLangs,
   });
 
-  const postPreview = useMemo(
+  const postPreviewText = useMemo(
     () => (postText ? `${postText.substring(0, 100)}${postText.length > 100 ? '...' : ''}` : 'No text content'),
     [postText]
   );
 
   const accessibilityLabel = useMemo(
-    () => `Post by ${author.displayName || author.handle}. ${postPreview}. ${postView.likeCount || 0} likes, ${postView.repostCount || 0} reposts, ${postView.replyCount || 0} replies. Posted ${timestamp}`,
-    [author.displayName, author.handle, postPreview, postView.likeCount, postView.repostCount, postView.replyCount, timestamp]
+    () => `Post by ${author.displayName || author.handle}. ${postPreviewText}. ${postView.likeCount || 0} likes, ${postView.repostCount || 0} reposts, ${postView.replyCount || 0} replies. Posted ${timestamp}`,
+    [author.displayName, author.handle, postPreviewText, postView.likeCount, postView.repostCount, postView.replyCount, timestamp]
   );
+
+  // 3D Touch peek preview for native context menu
+  const contextMenuPreview = useMemo(() => (
+    <View style={styles.previewContainer}>
+      <View style={styles.previewHeader}>
+        <Avatar uri={author.avatar} size={36} />
+        <View style={styles.previewAuthorInfo}>
+          <Text style={styles.previewDisplayName} numberOfLines={1}>
+            {author.displayName || author.handle}
+          </Text>
+          <Text style={styles.previewHandle} numberOfLines={1}>
+            @{author.handle}
+          </Text>
+        </View>
+      </View>
+      {postText ? (
+        <Text style={styles.previewText} numberOfLines={12}>
+          {postText}
+        </Text>
+      ) : null}
+      <Text style={styles.previewTimestamp}>{timestamp}</Text>
+    </View>
+  ), [author.avatar, author.displayName, author.handle, postText, timestamp, styles]);
 
   // Memoized content label checks
   const labels = useMemo(() => postView.labels || [], [postView.labels]);
@@ -456,7 +508,7 @@ function PostCardComponent({
             {isOnline && (
               <TouchableOpacity
                 style={styles.moreButton}
-                onPress={handleMenuOpen}
+                onPress={handleMorePress}
                 activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel="More options"
@@ -637,7 +689,7 @@ function PostCardComponent({
     isOwnPost,
     isOnline,
     handleProfilePress,
-    handleMenuOpen,
+    handleMorePress,
     record,
     onMentionPress,
     onHashtagPress,
@@ -668,125 +720,55 @@ function PostCardComponent({
   ]);
 
   return (
-    <TouchableOpacity
-      ref={cardRef}
-      style={styles.container}
-      onPress={handleCardPress}
-      onLongPress={handleLongPress}
-      delayLongPress={400}
-      activeOpacity={0.9}
-      accessible={true}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityHint="Double tap to view full post. Long press for more options">
-      {warnContent ? (
-        <ContentLabelWarning
-          labels={labels}
-          warningText={getContentWarningText(labels)}
-          blurImages={blurImages}>
-          {postContent}
-        </ContentLabelWarning>
-      ) : (
-        postContent
-      )}
+    <ContextMenu
+      actions={contextMenuActions}
+      onPress={handleContextMenuAction}
+      onPreviewPress={handleCardPress}
+      preview={contextMenuPreview}
+      previewBackgroundColor={colors.cardBackground}>
+      <TouchableOpacity
+        ref={cardRef}
+        style={styles.container}
+        onPress={handleCardPress}
+        activeOpacity={0.9}
+        accessible={true}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityHint="Double tap to view full post. Long press for more options">
+        {warnContent ? (
+          <ContentLabelWarning
+            labels={labels}
+            warningText={getContentWarningText(labels)}
+            blurImages={blurImages}>
+            {postContent}
+          </ContentLabelWarning>
+        ) : (
+          postContent
+        )}
 
-      {/* Menu Modal */}
-      <Modal
-        visible={showMenu}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={handleMenuClose}>
-        <TouchableOpacity
-          style={styles.menuOverlay}
-          activeOpacity={1}
-          onPress={handleMenuClose}>
-          <BlurOverlay intensity={25} />
-          <View style={styles.menuContainer}>
-            {isOwnPost ? (
-              <>
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={handleDeletePost}
-                  accessibilityRole="button"
-                  accessibilityLabel="Delete post"
-                  accessibilityHint="Double tap to delete this post">
-                  <Text style={[styles.menuItemText, styles.menuItemDanger]}>
-                    Delete Post
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.menuItem, styles.menuItemLast]}
-                  onPress={handleMenuClose}
-                  accessibilityRole="button"
-                  accessibilityLabel="Cancel">
-                  <Text style={styles.menuItemText}>Cancel</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={handleMuteUser}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Mute @${author.handle}`}
-                  accessibilityHint="Double tap to mute this user">
-                  <Text style={styles.menuItemText}>Mute @{author.handle}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={handleBlockUser}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Block @${author.handle}`}
-                  accessibilityHint="Double tap to block this user">
-                  <Text style={[styles.menuItemText, styles.menuItemDanger]}>
-                    Block @{author.handle}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.menuItem}
-                  onPress={handleReport}
-                  accessibilityRole="button"
-                  accessibilityLabel="Report post"
-                  accessibilityHint="Double tap to report this post">
-                  <Text style={[styles.menuItemText, styles.menuItemDanger]}>
-                    Report Post
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.menuItem, styles.menuItemLast]}
-                  onPress={handleMenuClose}
-                  accessibilityRole="button"
-                  accessibilityLabel="Cancel">
-                  <Text style={styles.menuItemText}>Cancel</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </TouchableOpacity>
-      </Modal>
+        {/* Report Modal */}
+        <ReportModal
+          visible={showReportModal}
+          onClose={handleCloseReportModal}
+          reportType="post"
+          subjectUri={postView.uri}
+          subjectCid={postView.cid}
+          subjectDid={author.did}
+          subjectHandle={author.handle}
+          subjectDisplayName={author.displayName}
+          subjectText={postText}
+          onBlock={handleBlockAfterReport}
+          onMute={handleMuteAfterReport}
+        />
 
-      {/* Report Modal */}
-      <ReportModal
-        visible={showReportModal}
-        onClose={handleCloseReportModal}
-        reportType="post"
-        subjectUri={postView.uri}
-        subjectCid={postView.cid}
-        subjectDid={author.did}
-        subjectHandle={author.handle}
-        subjectDisplayName={author.displayName}
-        subjectText={postText}
-        onBlock={handleBlockAfterReport}
-        onMute={handleMuteAfterReport}
-      />
-
-      {/* Save to Collection Modal */}
-      <SaveToCollectionModal
-        visible={showSaveToCollection}
-        postUri={postView.uri}
-        onClose={handleCloseSaveToCollection}
-      />
-    </TouchableOpacity>
+        {/* Save to Collection Modal */}
+        <SaveToCollectionModal
+          visible={showSaveToCollection}
+          postUri={postView.uri}
+          onClose={handleCloseSaveToCollection}
+        />
+      </TouchableOpacity>
+    </ContextMenu>
   );
 }
 
@@ -932,36 +914,39 @@ function createStyles(colors: any) {
     color: colors.borderLight,
     opacity: 0.5,
   },
-  menuOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  previewContainer: {
     padding: 16,
+    minWidth: 280,
+    maxWidth: 340,
   },
-  menuContainer: {
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: 12,
-    width: '100%',
-    maxWidth: 320,
-    overflow: 'hidden',
+  previewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
   },
-  menuItem: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+  previewAuthorInfo: {
+    marginLeft: 10,
+    flex: 1,
   },
-  menuItemLast: {
-    borderBottomWidth: 0,
-  },
-  menuItemText: {
+  previewDisplayName: {
     color: colors.text,
+    fontWeight: '600',
     fontSize: fontSize.callout,
-    fontWeight: '500',
-    textAlign: 'center',
+    marginBottom: 1,
   },
-  menuItemDanger: {
-    color: colors.danger,
+  previewHandle: {
+    color: colors.textSecondary,
+    fontSize: fontSize.footnote,
+  },
+  previewText: {
+    color: colors.text,
+    fontSize: fontSize.subheadline,
+    lineHeight: 20,
+  },
+  previewTimestamp: {
+    color: colors.textTertiary,
+    fontSize: fontSize.caption1,
+    marginTop: 8,
   },
   translationContainer: {
     borderLeftWidth: 2,
