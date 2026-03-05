@@ -38,6 +38,7 @@ import Constants from 'expo-constants';
 
 
 import { createLogger } from '../utils/logger';
+import { fetchWithTimeout } from '../utils/with-timeout';
 
 const logger = createLogger('Tenor');
 const TENOR_API_KEY = Constants.expoConfig?.extra?.tenorApiKey || "";
@@ -68,7 +69,7 @@ export async function searchGifs(
     url.searchParams.append("media_filter", "tinygif,gif,mediumgif");
     url.searchParams.append("contentfilter", "medium"); // Safe content filter
 
-    const response = await fetch(url.toString());
+    const response = await fetchWithTimeout(url.toString());
 
     if (!response.ok) {
       throw new Error(`Tenor API error: ${response.statusText}`);
@@ -98,7 +99,7 @@ export async function getTrending(limit = 20): Promise<TenorGif[]> {
     url.searchParams.append("media_filter", "tinygif,gif,mediumgif");
     url.searchParams.append("contentfilter", "medium");
 
-    const response = await fetch(url.toString());
+    const response = await fetchWithTimeout(url.toString());
 
     if (!response.ok) {
       throw new Error(`Tenor API error: ${response.statusText}`);
@@ -127,7 +128,7 @@ export async function getGifById(id: string): Promise<TenorGif | null> {
     url.searchParams.append("client_key", CLIENT_KEY);
     url.searchParams.append("media_filter", "tinygif,gif,mediumgif");
 
-    const response = await fetch(url.toString());
+    const response = await fetchWithTimeout(url.toString());
 
     if (!response.ok) {
       throw new Error(`Tenor API error: ${response.statusText}`);

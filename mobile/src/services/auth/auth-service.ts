@@ -9,6 +9,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {AtpSessionData} from '@atproto/api';
 import {getAtProtoClient, resetAtProtoClient} from '../atproto/client';
+import {withTimeout} from '../../utils/with-timeout';
 import {
   saveSessionTokens,
   getSessionTokens,
@@ -57,7 +58,7 @@ export async function signInWithPassword(
   }
 
   const agent = client.getAgent();
-  const profile = await agent.getProfile({actor: sessionData.did});
+  const profile = await withTimeout(() => agent.getProfile({actor: sessionData.did}), 15000);
 
   const account: AuthAccount = {
     did: sessionData.did,
@@ -108,7 +109,7 @@ export async function signInWithOAuth(
   client.setOAuthAgent(agent, did);
 
   // Fetch profile to populate account metadata
-  const profile = await agent.getProfile({actor: did});
+  const profile = await withTimeout(() => agent.getProfile({actor: did}), 15000);
 
   const account: AuthAccount = {
     did,
@@ -243,7 +244,7 @@ async function refreshProfileInBackground(session: StoredSession): Promise<void>
   try {
     const client = getAtProtoClient();
     const agent = client.getAgent();
-    const profile = await agent.getProfile({actor: session.did});
+    const profile = await withTimeout(() => agent.getProfile({actor: session.did}), 15000);
 
     session.account = {
       ...session.account,
@@ -467,7 +468,7 @@ export async function switchToAccount(did: string): Promise<StoredSession> {
     } as StoredSession;
 
     try {
-      const profile = await result.agent.getProfile({actor: result.did});
+      const profile = await withTimeout(() => result.agent.getProfile({actor: result.did}), 15000);
       targetSession.account = {
         ...targetSession.account,
         handle: profile.data.handle,
@@ -505,7 +506,7 @@ export async function switchToAccount(did: string): Promise<StoredSession> {
 
   try {
     const agent = client.getAgent();
-    const profile = await agent.getProfile({actor: targetSession.did});
+    const profile = await withTimeout(() => agent.getProfile({actor: targetSession.did}), 15000);
 
     targetSession.account = {
       ...targetSession.account,

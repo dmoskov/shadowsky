@@ -2,6 +2,7 @@ import { AppBskyActorDefs, BskyAgent } from "@atproto/api";
 import { MMKV } from "react-native-mmkv";
 
 import { createLogger } from "../utils/logger";
+import { withTimeout } from "../utils/with-timeout";
 
 const logger = createLogger("Preferences");
 
@@ -360,23 +361,23 @@ class PreferencesService {
     };
 
     try {
-      await agent.api.com.atproto.repo.putRecord({
+      await withTimeout(() => agent.api.com.atproto.repo.putRecord({
         repo: did,
         collection: AT_PROTO_PREFERENCES_COLLECTION,
         rkey: AT_PROTO_PREFERENCES_RKEY,
         record: record as unknown as Record<string, unknown>,
-      });
+      }), 30000);
     } catch (error: unknown) {
       const errObj = error as Record<string, unknown>;
       if (errObj?.status === 400) {
         // Record doesn't exist yet, create it
         try {
-          await agent.api.com.atproto.repo.createRecord({
+          await withTimeout(() => agent.api.com.atproto.repo.createRecord({
             repo: did,
             collection: AT_PROTO_PREFERENCES_COLLECTION,
             rkey: AT_PROTO_PREFERENCES_RKEY,
             record: record as unknown as Record<string, unknown>,
-          });
+          }), 30000);
         } catch (createError) {
           logger.error(
             "Failed to create preferences record on AT Proto:",
@@ -403,11 +404,11 @@ class PreferencesService {
     let serverPrefs: Partial<AppPreferences> | null = null;
 
     try {
-      const response = await agent.api.com.atproto.repo.getRecord({
+      const response = await withTimeout(() => agent.api.com.atproto.repo.getRecord({
         repo: did,
         collection: AT_PROTO_PREFERENCES_COLLECTION,
         rkey: AT_PROTO_PREFERENCES_RKEY,
-      });
+      }), 15000);
 
       if (response.data.value) {
         const record = response.data
@@ -524,7 +525,7 @@ class PreferencesService {
     agent: BskyAgent,
   ): Promise<MutedWord[] | null> {
     try {
-      const response = await agent.app.bsky.actor.getPreferences();
+      const response = await withTimeout(() => agent.app.bsky.actor.getPreferences(), 15000);
       const preferences = response.data.preferences;
 
       const mutedWordsPref = preferences.find(
@@ -549,7 +550,7 @@ class PreferencesService {
       // Push any local-only words to the server
       for (const word of localOnly) {
         try {
-          await agent.addMutedWord(this.localToServerMutedWord(word));
+          await withTimeout(() => agent.addMutedWord(this.localToServerMutedWord(word)), 15000);
         } catch (err) {
           logger.error("Failed to push local muted word to server:", err);
         }
@@ -583,7 +584,7 @@ class PreferencesService {
     // Push to server
     if (agent) {
       try {
-        await agent.addMutedWord(this.localToServerMutedWord(word));
+        await withTimeout(() => agent.addMutedWord(this.localToServerMutedWord(word)), 15000);
       } catch (error) {
         logger.error("Failed to add muted word to server:", error);
       }
@@ -614,11 +615,11 @@ class PreferencesService {
         const targets: AppBskyActorDefs.MutedWordTarget[] =
           wordToRemove.appliesTo === "home" ? ["content"] : ["content", "tag"];
 
-        await agent.removeMutedWord({
+        await withTimeout(() => agent.removeMutedWord({
           value: wordToRemove.value,
           targets,
           actorTarget: "all",
-        } as AppBskyActorDefs.MutedWord);
+        } as AppBskyActorDefs.MutedWord), 15000);
       } catch (error) {
         logger.error("Failed to remove muted word from server:", error);
       }

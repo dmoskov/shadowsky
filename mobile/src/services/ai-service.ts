@@ -7,6 +7,7 @@ import { Platform } from "react-native";
 import * as FileSystem from 'expo-file-system';
 
 import { createLogger } from '../utils/logger';
+import { fetchWithTimeout } from '../utils/with-timeout';
 import { getAtProtoClient } from './atproto/client';
 
 const logger = createLogger('AiService');
@@ -125,14 +126,14 @@ export async function generateThreadSummary(
     const apiUrl = getVersionedApiUrl();
     const endpoint = `${apiUrl}/thread-summary`;
 
-    const response = await fetch(endpoint, {
+    const response = await fetchWithTimeout(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...getApiAuthHeaders(),
       },
       body: JSON.stringify({ posts, format }),
-    });
+    }, 30000);
 
     if (!response.ok) {
       const status = response.status;
@@ -304,14 +305,14 @@ export async function adjustTone(
     const apiUrl = getVersionedApiUrl();
     const endpoint = `${apiUrl}/adjust-tone`;
 
-    const response = await fetch(endpoint, {
+    const response = await fetchWithTimeout(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...getApiAuthHeaders(),
       },
       body: JSON.stringify({ text, tone }),
-    });
+    }, 30000);
 
     if (!response.ok) {
       const status = response.status;
@@ -409,14 +410,14 @@ export async function analyzePosts(
     const apiUrl = getVersionedApiUrl();
     const endpoint = `${apiUrl}/analyze-posts`;
 
-    const response = await fetch(endpoint, {
+    const response = await fetchWithTimeout(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...getApiAuthHeaders(),
       },
       body: JSON.stringify({ posts, analysisType }),
-    });
+    }, 30000);
 
     if (!response.ok) {
       const status = response.status;
@@ -533,7 +534,7 @@ export async function fetchLinkMetadata(url: string): Promise<LinkMetadata> {
   const apiUrl = getVersionedApiUrl();
   const endpoint = `${apiUrl}/fetch-link-metadata`;
 
-  const response = await fetch(endpoint, {
+  const response = await fetchWithTimeout(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -577,14 +578,14 @@ export async function suggestHashtags(
     const apiUrl = getVersionedApiUrl();
     const endpoint = `${apiUrl}/suggest-hashtags`;
 
-    const response = await fetch(endpoint, {
+    const response = await fetchWithTimeout(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...getApiAuthHeaders(),
       },
       body: JSON.stringify({ text, existingTags }),
-    });
+    }, 30000);
 
     if (!response.ok) {
       const status = response.status;
@@ -646,14 +647,14 @@ export async function getWritingFeedback(
     const apiUrl = getVersionedApiUrl();
     const endpoint = `${apiUrl}/writing-feedback`;
 
-    const response = await fetch(endpoint, {
+    const response = await fetchWithTimeout(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...getApiAuthHeaders(),
       },
       body: JSON.stringify({ text }),
-    });
+    }, 30000);
 
     if (!response.ok) {
       const status = response.status;
@@ -707,14 +708,14 @@ export async function analyzeWritingStyle(
     const apiUrl = getVersionedApiUrl();
     const endpoint = `${apiUrl}/style-analysis`;
 
-    const response = await fetch(endpoint, {
+    const response = await fetchWithTimeout(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...getApiAuthHeaders(),
       },
       body: JSON.stringify({ currentText, historicalPosts }),
-    });
+    }, 30000);
 
     if (!response.ok) {
       const status = response.status;
@@ -775,14 +776,14 @@ export async function optimizeThread(
     const apiUrl = getVersionedApiUrl();
     const endpoint = `${apiUrl}/optimize-thread`;
 
-    const response = await fetch(endpoint, {
+    const response = await fetchWithTimeout(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...getApiAuthHeaders(),
       },
       body: JSON.stringify({ text, maxCharsPerPost }),
-    });
+    }, 30000);
 
     if (!response.ok) {
       const status = response.status;
