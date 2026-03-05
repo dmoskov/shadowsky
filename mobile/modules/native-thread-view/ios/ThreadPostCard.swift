@@ -75,6 +75,17 @@ struct ThreadPostCard: View {
     let onImagePress: (([ImageEmbedData], Int) -> Void)?
     let onQuotePress: ((String, String) -> Void)?
 
+    // Optimistic local state for instant feedback
+    @State private var likeOverride: Bool? = nil
+    @State private var likeCountOverride: Int? = nil
+    @State private var repostOverride: Bool? = nil
+    @State private var repostCountOverride: Int? = nil
+
+    private var isLiked: Bool { likeOverride ?? (node.post.viewer?.like != nil) }
+    private var displayLikeCount: Int { likeCountOverride ?? node.post.likeCount }
+    private var isReposted: Bool { repostOverride ?? (node.post.viewer?.repost != nil) }
+    private var displayRepostCount: Int { repostCountOverride ?? node.post.repostCount }
+
     /// Whether the current user authored this post
     private var isOwnPost: Bool {
         guard let currentUserDid = currentUserDid else { return false }
@@ -179,20 +190,28 @@ struct ThreadPostCard: View {
                 // Repost
                 ActionButton(
                     iconName: "arrow.2.squarepath",
-                    count: node.post.repostCount,
-                    isActive: node.post.viewer?.repost != nil,
+                    count: displayRepostCount,
+                    isActive: isReposted,
                     color: .green,
-                    action: onRepost,
+                    action: {
+                        repostOverride = !isReposted
+                        repostCountOverride = displayRepostCount + (isReposted ? -1 : 1)
+                        onRepost?()
+                    },
                     onPressCount: onPressRepostCount
                 )
 
                 // Like
                 ActionButton(
-                    iconName: node.post.viewer?.like != nil ? "heart.fill" : "heart",
-                    count: node.post.likeCount,
-                    isActive: node.post.viewer?.like != nil,
+                    iconName: isLiked ? "heart.fill" : "heart",
+                    count: displayLikeCount,
+                    isActive: isLiked,
                     color: .red,
-                    action: onLike,
+                    action: {
+                        likeOverride = !isLiked
+                        likeCountOverride = displayLikeCount + (isLiked ? -1 : 1)
+                        onLike?()
+                    },
                     onPressCount: onPressLikeCount
                 )
 
@@ -215,15 +234,27 @@ struct ThreadPostCard: View {
         }
         .padding(16)
         .background(isRoot ? Color(UIColor.systemBackground) : Color.clear)
+        .onChangeCompat(of: node.post.viewer?.like) { _ in likeOverride = nil; likeCountOverride = nil }
+        .onChangeCompat(of: node.post.likeCount) { _ in likeCountOverride = nil }
+        .onChangeCompat(of: node.post.viewer?.repost) { _ in repostOverride = nil; repostCountOverride = nil }
+        .onChangeCompat(of: node.post.repostCount) { _ in repostCountOverride = nil }
         .contextMenu {
             Button { onReply?() } label: {
                 Label("Reply", systemImage: "bubble.left")
             }
-            Button { onRepost?() } label: {
-                Label(node.post.viewer?.repost != nil ? "Undo Repost" : "Repost", systemImage: "arrow.2.squarepath")
+            Button {
+                repostOverride = !isReposted
+                repostCountOverride = displayRepostCount + (isReposted ? -1 : 1)
+                onRepost?()
+            } label: {
+                Label(isReposted ? "Undo Repost" : "Repost", systemImage: "arrow.2.squarepath")
             }
-            Button { onLike?() } label: {
-                Label(node.post.viewer?.like != nil ? "Unlike" : "Like", systemImage: node.post.viewer?.like != nil ? "heart.fill" : "heart")
+            Button {
+                likeOverride = !isLiked
+                likeCountOverride = displayLikeCount + (isLiked ? -1 : 1)
+                onLike?()
+            } label: {
+                Label(isLiked ? "Unlike" : "Like", systemImage: isLiked ? "heart.fill" : "heart")
             }
             Button { onShare?() } label: {
                 Label("Share", systemImage: "square.and.arrow.up")

@@ -58,6 +58,21 @@ struct PostCardView: View {
     // Tap feedback
     @State private var isContentHighlighted = false
 
+    // Optimistic local state for instant feedback on action taps.
+    // These override the prop values until the bridge sends updated data.
+    @State private var likeOverride: Bool? = nil
+    @State private var likeCountOverride: Int? = nil
+    @State private var repostOverride: Bool? = nil
+    @State private var repostCountOverride: Int? = nil
+    @State private var bookmarkOverride: Bool? = nil
+
+    // Computed values that prefer local overrides, falling back to props
+    private var isLiked: Bool { likeOverride ?? (post.post.viewer?.like != nil) }
+    private var displayLikeCount: Int { likeCountOverride ?? post.post.likeCount }
+    private var isReposted: Bool { repostOverride ?? (post.post.viewer?.repost != nil) }
+    private var displayRepostCount: Int { repostCountOverride ?? post.post.repostCount }
+    private var displayBookmarked: Bool { bookmarkOverride ?? isBookmarked }
+
     // Actions
     let onPress: (() -> Void)?
     let onPressProfile: ((String) -> Void)?
@@ -185,30 +200,41 @@ struct PostCardView: View {
                 // Repost
                 actionButton(
                     icon: "arrow.2.squarepath",
-                    count: post.post.repostCount,
-                    isActive: post.post.viewer?.repost != nil,
+                    count: displayRepostCount,
+                    isActive: isReposted,
                     activeColor: .green,
-                    action: { onRepost?() }
+                    action: {
+                        repostOverride = !isReposted
+                        repostCountOverride = displayRepostCount + (isReposted ? -1 : 1)
+                        onRepost?()
+                    }
                 )
                 .accessibilityIdentifier("repost-button")
 
                 // Like
                 actionButton(
-                    icon: post.post.viewer?.like != nil ? "heart.fill" : "heart",
-                    count: post.post.likeCount,
-                    isActive: post.post.viewer?.like != nil,
+                    icon: isLiked ? "heart.fill" : "heart",
+                    count: displayLikeCount,
+                    isActive: isLiked,
                     activeColor: .red,
-                    action: { onLike?() }
+                    action: {
+                        likeOverride = !isLiked
+                        likeCountOverride = displayLikeCount + (isLiked ? -1 : 1)
+                        onLike?()
+                    }
                 )
                 .accessibilityIdentifier("like-button")
 
                 // Bookmark
                 actionButton(
-                    icon: isBookmarked ? "bookmark.fill" : "bookmark",
+                    icon: displayBookmarked ? "bookmark.fill" : "bookmark",
                     count: 0,
-                    isActive: isBookmarked,
+                    isActive: displayBookmarked,
                     activeColor: .blue,
-                    action: { onBookmark?() }
+                    action: {
+                        bookmarkOverride = !displayBookmarked
+                        onBookmark?()
+                    }
                 )
                 .accessibilityIdentifier("bookmark-button")
 
@@ -231,18 +257,35 @@ struct PostCardView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        // Clear optimistic overrides when bridge confirms new state
+        .onChangeCompat(of: post.post.viewer?.like) { _ in likeOverride = nil; likeCountOverride = nil }
+        .onChangeCompat(of: post.post.likeCount) { _ in likeCountOverride = nil }
+        .onChangeCompat(of: post.post.viewer?.repost) { _ in repostOverride = nil; repostCountOverride = nil }
+        .onChangeCompat(of: post.post.repostCount) { _ in repostCountOverride = nil }
+        .onChangeCompat(of: isBookmarked) { _ in bookmarkOverride = nil }
         .contextMenu {
             Button { onReply?() } label: {
                 Label("Reply", systemImage: "bubble.left")
             }
-            Button { onRepost?() } label: {
-                Label(post.post.viewer?.repost != nil ? "Undo Repost" : "Repost", systemImage: "arrow.2.squarepath")
+            Button {
+                repostOverride = !isReposted
+                repostCountOverride = displayRepostCount + (isReposted ? -1 : 1)
+                onRepost?()
+            } label: {
+                Label(isReposted ? "Undo Repost" : "Repost", systemImage: "arrow.2.squarepath")
             }
-            Button { onLike?() } label: {
-                Label(post.post.viewer?.like != nil ? "Unlike" : "Like", systemImage: post.post.viewer?.like != nil ? "heart.fill" : "heart")
+            Button {
+                likeOverride = !isLiked
+                likeCountOverride = displayLikeCount + (isLiked ? -1 : 1)
+                onLike?()
+            } label: {
+                Label(isLiked ? "Unlike" : "Like", systemImage: isLiked ? "heart.fill" : "heart")
             }
-            Button { onBookmark?() } label: {
-                Label(isBookmarked ? "Remove Bookmark" : "Bookmark", systemImage: isBookmarked ? "bookmark.fill" : "bookmark")
+            Button {
+                bookmarkOverride = !displayBookmarked
+                onBookmark?()
+            } label: {
+                Label(displayBookmarked ? "Remove Bookmark" : "Bookmark", systemImage: displayBookmarked ? "bookmark.fill" : "bookmark")
             }
             Button { onShare?() } label: {
                 Label("Share", systemImage: "square.and.arrow.up")
