@@ -3,6 +3,7 @@ import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notif
 import { formatDistanceToNow } from "date-fns";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import React from "react";
+import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { getNotificationUrl } from "../utils/url-helpers";
 import { FollowIcon, HeartIcon, QuoteIcon, RepostIcon } from "./icons";
@@ -218,6 +219,9 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
       markAsRead,
       isExpanded = false,
     }) => {
+      const { getThreadPrefetchHandlers, getProfilePrefetchHandlers } =
+        useRoutePrefetch();
+
       const getIcon = () => {
         switch (item.reason) {
           case "like":
@@ -379,11 +383,22 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
         }
       };
 
+      // Prefetch handlers for the thread target
+      const threadHandlers = postUri
+        ? getThreadPrefetchHandlers(postUri)
+        : undefined;
+
       return (
         <div
           className={`asph-notification cursor-pointer px-3 py-3 ${
             hasUnread ? "asph-notification-unread" : ""
           }`}
+          onMouseEnter={() => {
+            if (threadHandlers) threadHandlers.onMouseEnter();
+          }}
+          onMouseLeave={() => {
+            if (threadHandlers) threadHandlers.onMouseLeave();
+          }}
           onClick={handleClick}
           title="Cmd/Ctrl+Click to open in Bluesky"
         >
@@ -398,6 +413,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                     key={user.did}
                     style={{ zIndex: displayUsers.length - idx }}
                     className="cursor-pointer transition-opacity hover:opacity-80"
+                    {...getProfilePrefetchHandlers(user.handle)}
                     onClick={(e) => {
                       e.stopPropagation();
                       if (onNavigate) {
@@ -494,6 +510,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                     <span key={user.did}>
                       <span
                         className="cursor-pointer hover:underline"
+                        {...getProfilePrefetchHandlers(user.handle)}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (onNavigate) {

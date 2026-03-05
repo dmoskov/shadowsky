@@ -38,6 +38,7 @@ import {
 } from "../hooks/useOfflineFeed";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { usePostDeepLink } from "../hooks/usePostDeepLink";
+import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useMinDuration } from "../hooks/useTiming";
 import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { columnService } from "../services/column-service";
@@ -268,6 +269,7 @@ export const Home: React.FC<HomeProps> = React.memo(
     const { toggleBookmark } = useBookmarks();
     const { isPostHidden } = useHiddenPosts();
     const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
+    const { getThreadPrefetchHandlers } = useRoutePrefetch();
     // Offline feed support - caching and status tracking
     const offlineStatus = useOfflineFeedStatus();
     const { cacheFeedItems } = useFeedCaching("timeline");
@@ -939,6 +941,7 @@ export const Home: React.FC<HomeProps> = React.memo(
             tabIndex={isFocused ? 0 : -1}
             aria-selected={isFocused}
             role="article"
+            {...getThreadPrefetchHandlers(post.uri)}
             onClick={(e) => {
               // Only handle click if not on interactive elements
               const target = e.target as HTMLElement;

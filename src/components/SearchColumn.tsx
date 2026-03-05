@@ -19,6 +19,7 @@ import React, {
 } from "react";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useModeration } from "../contexts/ModerationContext";
+import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useSearch } from "../hooks/useSearch";
 import { useTrendingData } from "../hooks/useTrending";
 import type { SearchHistoryEntry } from "../services/search-history-db";
@@ -41,6 +42,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
 }) => {
   const { isPostHidden } = useHiddenPosts();
   const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
+  const { getThreadPrefetchHandlers } = useRoutePrefetch();
 
   // Fetch trending data for autocomplete suggestions
   const { topics: trendingTopics, trends } = useTrendingData({ limit: 5 });
@@ -752,6 +754,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                     ? "border-l-4 border-l-blue-500 bg-blue-50/50 dark:bg-blue-900/10"
                     : ""
                 }`}
+                {...getThreadPrefetchHandlers(post.uri)}
               >
                 <PostCard
                   post={post}

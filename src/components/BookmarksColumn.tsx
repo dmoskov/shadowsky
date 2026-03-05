@@ -26,6 +26,7 @@ import {
   useBookmarkCollections,
   useCollectionBookmarks,
 } from "../hooks/useBookmarkCollections";
+import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useMinDuration } from "../hooks/useTiming";
 import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import type { BookmarkCollection } from "../services/bookmark-collections";
@@ -59,6 +60,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
   const queryClient = useQueryClient();
   const { isPostHidden } = useHiddenPosts();
   const { isUserMuted, isUserBlocked, isThreadMuted } = useModeration();
+  const { getThreadPrefetchHandlers } = useRoutePrefetch();
   const { showAlert } = useModal();
   const [searchQuery, setSearchQuery] = useState("");
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -947,6 +949,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
                         : ""
                     }`}
                     style={{ borderColor: "var(--asph-border-primary)" }}
+                    {...getThreadPrefetchHandlers(post.uri)}
                     onClick={() => handlePostClick(post)}
                   >
                     <div className="p-4">

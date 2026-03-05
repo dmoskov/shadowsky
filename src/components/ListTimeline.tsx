@@ -6,6 +6,7 @@ import { useParams } from "react-router";
 import { List, ListImperativeAPI, useDynamicRowHeight } from "react-window";
 import { useAuth } from "../contexts/AuthContext";
 import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
+import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { blueskyListService } from "../services/bluesky-list-service";
 import { PostCard } from "./PostCard";
 import { ThreadModal } from "./ThreadModal";
@@ -19,6 +20,7 @@ export const ListTimeline: React.FC = () => {
   const listUri = listId ? decodeURIComponent(listId) : undefined;
   const { agent } = useAuth();
   const navigate = useViewTransitionNavigate();
+  const { getThreadPrefetchHandlers } = useRoutePrefetch();
   const [posts, setPosts] = useState<AppBskyFeedDefs.FeedViewPost[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -281,6 +283,7 @@ export const ListTimeline: React.FC = () => {
               return (
                 <div
                   style={style}
+                  {...getThreadPrefetchHandlers(feedItem.post.uri)}
                   onClick={() => openPostThread(feedItem.post)}
                 >
                   <PostCard
