@@ -14,6 +14,7 @@
  */
 
 import { createLogger } from '../utils/logger';
+import { withTimeout } from '../utils/with-timeout';
 
 const logger = createLogger('RateLimiter');
 
@@ -245,6 +246,19 @@ interface AdaptiveState {
   probeTimer: ReturnType<typeof setTimeout> | null;
   consecutiveProbeFailures: number;
 }
+
+/**
+ * Default API call timeout per endpoint type (milliseconds).
+ * Applied to the actual network request, not the rate-limit queue wait.
+ */
+const DEFAULT_API_TIMEOUTS: Record<ATProtoEndpointType, number> = {
+  [ATProtoEndpointType.AUTH]: 15_000,
+  [ATProtoEndpointType.FEED]: 15_000,
+  [ATProtoEndpointType.RECORD]: 30_000,
+  [ATProtoEndpointType.UPLOAD]: 60_000,
+  [ATProtoEndpointType.NOTIFICATION]: 15_000,
+  [ATProtoEndpointType.CHAT]: 15_000,
+};
 
 /**
  * Default rate limit configurations per endpoint type
@@ -709,6 +723,8 @@ export function resetGlobalRateLimiter(): void {
 /**
  * Wrapper function to rate limit any async function.
  * Reports both successes and 429 failures to the circuit breaker.
+ * Applies an API call timeout (separate from the queue timeout) to prevent
+ * hung requests from blocking the user indefinitely.
  */
 export async function rateLimited<T>(
   fn: () => Promise<T>,
@@ -716,6 +732,7 @@ export async function rateLimited<T>(
   timeoutMs: number = 30000
 ): Promise<T> {
   const limiter = getGlobalRateLimiter();
+  const apiTimeoutMs = DEFAULT_API_TIMEOUTS[endpointType] ?? 15_000;
 
   try {
     const waitStart = performance.now();
@@ -726,7 +743,7 @@ export async function rateLimited<T>(
     }
 
     const apiStart = performance.now();
-    const result = await fn();
+    const result = await withTimeout(fn, apiTimeoutMs);
     const apiMs = performance.now() - apiStart;
     logger.log(`[perf] API call ${endpointType}: ${apiMs.toFixed(0)}ms`);
 

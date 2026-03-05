@@ -1,5 +1,6 @@
 import { BskyAgent } from "@atproto/api";
 import { withRetry } from "../utils/with-retry";
+import { fetchWithTimeout } from "../utils/with-timeout";
 import { rateLimited, ATProtoEndpointType } from './rate-limiter';
 
 import { createLogger } from '../utils/logger';
