@@ -135,7 +135,7 @@ export function HomeScreen() {
 
   // Use the appropriate query based on selection
   const activeQuery = selectedFeedUri ? customFeedQuery : timelineQuery;
-  const { data, isLoading, isError, error, refetch } = activeQuery;
+  const { data, isError, error, refetch } = activeQuery;
 
   // Flatten paginated feed data into a single array
   const flatPosts = useMemo(
