@@ -147,6 +147,14 @@ describe('Offline behavior', () => {
   });
 
   describe('Cached data availability', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
     it('serves cached data when offline', async () => {
       const queryClient = new QueryClient({
         defaultOptions: {
@@ -173,8 +181,6 @@ describe('Offline behavior', () => {
     });
 
     it('invalidates stale cache after timeout', async () => {
-      jest.useFakeTimers();
-
       const queryClient = new QueryClient({
         defaultOptions: {
           queries: {
@@ -194,8 +200,6 @@ describe('Offline behavior', () => {
 
       // Query should be stale
       expect(query?.isInvalidated || query?.dataUpdateCount).toBeDefined();
-
-      jest.useRealTimers();
     });
   });
 
