@@ -16,7 +16,6 @@ import {
   SerializedReplyRef,
   SerializedReason,
   SerializedFeedData,
-  FeedUpdateMetadata,
   PostUpdate,
   FeedBatchUpdate,
   Facet,
@@ -263,21 +262,6 @@ export function serializeFeedPosts(
   return posts
     .filter(p => p?.post?.uri)
     .map(serializeFeedViewPost);
-}
-
-/**
- * Serialize complete feed data with metadata
- */
-export function serializeFeedData(
-  posts: AppBskyFeedDefs.FeedViewPost[],
-  metadata: FeedUpdateMetadata,
-  cursor?: string
-): SerializedFeedData {
-  return {
-    posts: serializeFeedPosts(posts),
-    metadata,
-    cursor,
-  };
 }
 
 /**
