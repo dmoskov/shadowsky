@@ -43,7 +43,12 @@ import { DomainVerifiedBadge } from "../components/ui/DomainVerifiedBadge";
 import { EmptyState } from "../components/ui/EmptyState";
 import { LabelBadge } from "../components/ui/LabelBadge";
 import { RichText } from "../components/ui/RichText";
-import { FeedSkeleton, PostSkeleton, ProfileSkeleton, SkeletonLoader } from "../components/ui/SkeletonLoader";
+import {
+  FeedSkeleton,
+  PostSkeleton,
+  ProfileSkeleton,
+  SkeletonLoader,
+} from "../components/ui/SkeletonLoader";
 import { UserListModal } from "../components/UserListModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
@@ -1437,7 +1442,12 @@ export default function ProfilePage() {
 
             {isLoadingAnalysis && !analysisData ? (
               <div className="flex items-center gap-3 py-3">
-                <SkeletonLoader variant="circular" width={32} height={32} animation="shimmer" />
+                <SkeletonLoader
+                  variant="circular"
+                  width={32}
+                  height={32}
+                  animation="shimmer"
+                />
                 <div>
                   <p
                     className="text-sm"
@@ -1772,7 +1782,11 @@ export default function ProfilePage() {
         {activeTab === "top" ? (
           <div style={{ height: listHeight }}>
             {isTopPostsLoading ? (
-              <div className="skeleton-stagger" role="status" aria-label="Loading top posts">
+              <div
+                className="skeleton-stagger"
+                role="status"
+                aria-label="Loading top posts"
+              >
                 <FeedSkeleton count={3} />
               </div>
             ) : topPostsData?.topPosts.length === 0 ? (
@@ -1880,12 +1894,20 @@ export default function ProfilePage() {
                 rowProps={{}}
               />
             ) : postsLoading ? (
-              <div className="skeleton-stagger" role="status" aria-label="Loading posts">
+              <div
+                className="skeleton-stagger"
+                role="status"
+                aria-label="Loading posts"
+              >
                 <FeedSkeleton count={3} />
               </div>
             ) : null}
             {posts.length > 0 && (postsLoading || isFetchingNextPage) && (
-              <div className="skeleton-stagger" role="status" aria-label="Loading more posts">
+              <div
+                className="skeleton-stagger"
+                role="status"
+                aria-label="Loading more posts"
+              >
                 <PostSkeleton compact />
                 <PostSkeleton compact />
               </div>

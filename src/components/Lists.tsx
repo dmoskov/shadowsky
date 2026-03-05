@@ -153,9 +153,7 @@ export const Lists: React.FC = () => {
         </div>
       </div>
 
-      {isLoading && (
-        <ListItemSkeleton count={5} aria-label="Loading lists" />
-      )}
+      {isLoading && <ListItemSkeleton count={5} aria-label="Loading lists" />}
 
       {error && (
         <div className="p-4 text-center" role="alert">

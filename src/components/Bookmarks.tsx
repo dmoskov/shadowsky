@@ -229,9 +229,7 @@ export const Bookmarks: React.FC = () => {
         </div>
       </div>
 
-      {isLoading && (
-        <FeedSkeleton count={5} aria-label="Loading bookmarks" />
-      )}
+      {isLoading && <FeedSkeleton count={5} aria-label="Loading bookmarks" />}
 
       {error && (
         <div className="error-state p-4 text-center" role="alert">

@@ -748,7 +748,11 @@ export const Search: React.FC = () => {
             )}
           </div>
           {isLoadingThread ? (
-            <div className="skeleton-stagger" role="status" aria-label="Loading thread">
+            <div
+              className="skeleton-stagger"
+              role="status"
+              aria-label="Loading thread"
+            >
               <ThreadSkeleton />
             </div>
           ) : (
@@ -1837,9 +1841,16 @@ export const Search: React.FC = () => {
             )}
 
             {isLoading && (
-              <div className="skeleton-stagger" role="status" aria-label="Searching">
+              <div
+                className="skeleton-stagger"
+                role="status"
+                aria-label="Searching"
+              >
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <SearchResultSkeleton key={`search-skel-${i}`} aria-label={`Loading result ${i + 1}`} />
+                  <SearchResultSkeleton
+                    key={`search-skel-${i}`}
+                    aria-label={`Loading result ${i + 1}`}
+                  />
                 ))}
               </div>
             )}

@@ -2422,9 +2422,7 @@ export const Home: React.FC<HomeProps> = React.memo(
 
           {/* Progressive loader sentinel */}
           {hasMore && (
-            <div
-              ref={progressiveLoadRef}
-            >
+            <div ref={progressiveLoadRef}>
               <PostSkeleton compact aria-label="Loading more posts" />
             </div>
           )}
