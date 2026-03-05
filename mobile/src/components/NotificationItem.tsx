@@ -2,7 +2,7 @@ import React, {ReactNode, useMemo} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {AppBskyNotificationListNotifications, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
 import {Avatar} from './Avatar';
-import {formatDistanceToNow} from 'date-fns';
+import {formatDistanceToNow} from '../i18n/format-date';
 import {HeartIcon, RepostIcon, FollowIcon, AtSignIcon, ReplyIcon, QuoteIcon, BellIcon} from './icons';
 import {RichText} from '../utils/rich-text';
 import { useTheme } from "../contexts/ThemeContext";

@@ -126,7 +126,10 @@
     "app_version_label": "Version",
     "app_version_footer": "Asphodel v{{version}}",
     "app_footer_subtext": "A third-party Bluesky client",
-    "sign_out_label": "Sign Out"
+    "sign_out_label": "Sign Out",
+    "language_label": "App Language",
+    "language_description": "Choose your interface language",
+    "language_system": "System"
   },
   "home": {
     "title": "Home",

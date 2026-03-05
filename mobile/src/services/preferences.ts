@@ -108,6 +108,7 @@ export interface AppPreferences {
   reduceMotion: "system" | "off" | "on";
   largeText: boolean;
   screenReaderOptimized: boolean;
+  appLanguage: string;
 
   // Composer Defaults
   defaultPostLanguage: string;
@@ -175,6 +176,7 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   reduceMotion: "system",
   largeText: false,
   screenReaderOptimized: false,
+  appLanguage: "system",
 
   // Composer Defaults
   defaultPostLanguage: "en",

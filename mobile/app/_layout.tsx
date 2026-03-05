@@ -58,6 +58,7 @@ import { usePendingMutationsWarning } from "../src/hooks/usePendingMutationsWarn
 import { useWidgetSync } from "../src/hooks/useWidgetSync";
 import { useStateRestoration, useRestoredRoute } from "../src/hooks/useStateRestoration";
 import "../src/i18n";
+import { setAppLanguage } from "../src/i18n";
 
 // Global unhandled error handler — catches JS errors and unhandled promise
 // rejections that slip past React error boundaries.
@@ -131,6 +132,16 @@ function DynamicStatusBar() {
   }, [isDark]);
 
   return <StatusBar style={isDark ? "light" : "dark"} />;
+}
+
+function LanguageSyncManager() {
+  const { preferences } = usePreferences();
+  useEffect(() => {
+    if (preferences?.appLanguage) {
+      setAppLanguage(preferences.appLanguage);
+    }
+  }, [preferences?.appLanguage]);
+  return null;
 }
 
 function WidgetSyncManager() {
@@ -257,6 +268,7 @@ function RootLayout() {
               <JetstreamProvider>
                 <WidgetSyncManager />
                 <PreferencesProvider>
+                  <LanguageSyncManager />
                   <ThemeProvider>
                     <NetworkProvider>
                       <VideoAutoplayProvider>
