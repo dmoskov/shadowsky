@@ -2,6 +2,9 @@
 
 # Push script with pre-push checks
 # This script runs formatting checks and build tests before pushing to ensure code quality
+#
+# Prod branch elimination (Phase 1): main now invalidates both CloudFront distributions
+# (main.shadowsky.io AND shadowsky.io) to support single-branch deployment.
 
 set -e  # Exit on any error
 
@@ -46,16 +49,19 @@ git push "$@"
 
 echo "✅ Push completed successfully!"
 
-# Check if we're pushing to main or prod
+# Check if we're pushing to main
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 AMPLIFY_APP_ID="d1g6mni4b6812x"
 
-# Set CloudFront distribution ID based on branch
+# CloudFront distribution IDs
+CF_DIST_MAIN="E1FRQ5R58RZE6C"    # main.shadowsky.io
+CF_DIST_PROD="E22AUQHZGDBNK"     # shadowsky.io (production)
+
 if [ "$CURRENT_BRANCH" = "main" ]; then
-    CLOUDFRONT_DISTRIBUTION_ID="E1FRQ5R58RZE6C"  # main.shadowsky.io
-    DEPLOY_URL="https://main.shadowsky.io"
+    DEPLOY_URL="https://shadowsky.io"
 elif [ "$CURRENT_BRANCH" = "prod" ]; then
-    CLOUDFRONT_DISTRIBUTION_ID="E22AUQHZGDBNK"  # shadowsky.io
+    echo "⚠️  The 'prod' branch is deprecated. Please use 'main' for all deployments."
+    echo "   Proceeding with deployment, but consider switching to main."
     DEPLOY_URL="https://shadowsky.io"
 else
     echo "ℹ️  Branch '$CURRENT_BRANCH' - skipping Amplify/CloudFront checks"
@@ -111,14 +117,40 @@ if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
     exit 1
 fi
 
-# Invalidate CloudFront cache
-echo "🌐 Invalidating CloudFront cache ($CLOUDFRONT_DISTRIBUTION_ID)..."
-if INVALIDATION_ID=$(aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*" --query "Invalidation.Id" --output text 2>&1); then
-    echo "✅ CloudFront cache invalidation started (ID: $INVALIDATION_ID)"
-else
-    echo "❌ CloudFront invalidation failed:"
-    echo "   $INVALIDATION_ID"
-    exit 1
+# Invalidate CloudFront caches
+# Phase 1 prod elimination: main invalidates BOTH distributions
+if [ "$CURRENT_BRANCH" = "main" ]; then
+    echo "🌐 Invalidating CloudFront caches (main serves both distributions)..."
+
+    # Invalidate main.shadowsky.io
+    echo "   → main.shadowsky.io ($CF_DIST_MAIN)"
+    if INVALIDATION_ID=$(aws cloudfront create-invalidation --distribution-id "$CF_DIST_MAIN" --paths "/*" --query "Invalidation.Id" --output text 2>&1); then
+        echo "   ✅ Invalidation started (ID: $INVALIDATION_ID)"
+    else
+        echo "   ❌ CloudFront invalidation failed for main.shadowsky.io:"
+        echo "      $INVALIDATION_ID"
+        exit 1
+    fi
+
+    # Invalidate shadowsky.io (production)
+    echo "   → shadowsky.io ($CF_DIST_PROD)"
+    if INVALIDATION_ID=$(aws cloudfront create-invalidation --distribution-id "$CF_DIST_PROD" --paths "/*" --query "Invalidation.Id" --output text 2>&1); then
+        echo "   ✅ Invalidation started (ID: $INVALIDATION_ID)"
+    else
+        echo "   ❌ CloudFront invalidation failed for shadowsky.io:"
+        echo "      $INVALIDATION_ID"
+        exit 1
+    fi
+elif [ "$CURRENT_BRANCH" = "prod" ]; then
+    # Legacy prod branch support (deprecated)
+    echo "🌐 Invalidating CloudFront cache ($CF_DIST_PROD)..."
+    if INVALIDATION_ID=$(aws cloudfront create-invalidation --distribution-id "$CF_DIST_PROD" --paths "/*" --query "Invalidation.Id" --output text 2>&1); then
+        echo "✅ CloudFront cache invalidation started (ID: $INVALIDATION_ID)"
+    else
+        echo "❌ CloudFront invalidation failed:"
+        echo "   $INVALIDATION_ID"
+        exit 1
+    fi
 fi
 
 # Check if any server files were changed in the last commit (only on main)
