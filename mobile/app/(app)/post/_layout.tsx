@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import { HeaderBackButton } from "../../../src/components/HeaderBackButton";
 import { useTheme } from "../../../src/contexts/ThemeContext";
 
 export default function PostLayout() {
@@ -11,6 +12,7 @@ export default function PostLayout() {
         headerTintColor: colors.text,
         contentStyle: { backgroundColor: colors.background },
         headerBackTitle: "Back",
+        headerLeft: () => <HeaderBackButton />,
       }}
     />
   );
