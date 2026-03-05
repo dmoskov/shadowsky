@@ -9,6 +9,8 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { MutedWord } from "../../services/preferences";
@@ -211,7 +213,10 @@ export function MutedWordsScreen() {
         transparent={true}
         onRequestClose={() => setShowAddModal(false)}
       >
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
           <BlurOverlay intensity={25} />
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add Muted Word</Text>
@@ -295,7 +300,7 @@ export function MutedWordsScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

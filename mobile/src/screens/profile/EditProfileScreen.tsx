@@ -8,6 +8,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Avatar } from '../../components/Avatar';
 import { useAuth } from '../../contexts/AuthContext';
@@ -146,7 +148,10 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
   const descriptionRemaining = MAX_DESCRIPTION_LENGTH - description.length;
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardDismissMode="on-drag">
         {/* Avatar Section */}
         <View style={styles.section}>
@@ -252,7 +257,7 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
         onSave={handleSaveEditedImages}
         onCancel={handleCancelImageEditor}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

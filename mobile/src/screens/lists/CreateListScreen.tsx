@@ -8,6 +8,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {useCreateList} from '../../hooks/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
@@ -62,7 +64,11 @@ export function CreateListScreen({onSuccess}: CreateListScreenProps) {
   };
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+    <ScrollView style={{flex: 1}} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
       <View style={styles.content}>
         <View style={styles.section}>
           <Text style={styles.label}>List Name *</Text>
@@ -155,6 +161,7 @@ export function CreateListScreen({onSuccess}: CreateListScreenProps) {
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
