@@ -1717,7 +1717,11 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
               {getNotificationIcon(notification.reason)}
             </div>
             <ProfileHoverCard handle={notification.author.handle}>
-              <Link to={authorProfileUrl} onClick={(e) => e.stopPropagation()} {...authorProfileHandlers}>
+              <Link
+                to={authorProfileUrl}
+                onClick={(e) => e.stopPropagation()}
+                {...authorProfileHandlers}
+              >
                 {notification.author.avatar ? (
                   <img
                     src={proxifyBskyImage(notification.author.avatar)}

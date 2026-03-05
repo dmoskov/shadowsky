@@ -415,7 +415,6 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
 }) => {
   const navigate = useViewTransitionNavigate();
   const { isThreadMuted } = useModeration();
-  const articleRef = React.useRef<HTMLElement>(null);
   const record = post.record as any;
   const rootUri = getThreadRootUri(post);
   const isThreadMutedState = isThreadMuted(rootUri);
@@ -461,24 +460,6 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
     postText: record?.text || "",
     postLangs: record?.langs as string[] | undefined,
   });
-
-  const handleAuthorClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Tag the clicked avatar for shared element transition to profile page
-    const avatar = (e.currentTarget as HTMLElement)
-      .closest(".post-renderer")
-      ?.querySelector("img.post-avatar") as HTMLElement | null;
-    tagForViewTransition(avatar, "vt-profile-avatar");
-    navigate(`/profile/${post.author.handle}`);
-  };
-
-  const handlePostClick = () => {
-    if (onClick) {
-      // Tag this post card for shared element transition to thread page
-      tagForViewTransition(articleRef.current, "vt-post-hero");
-      onClick();
-    }
-  };
 
   const openImageGallery = (images: any[], index: number) => {
     setGalleryImages(
@@ -1233,7 +1214,10 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
           )
             return;
           if (onClick) {
-            tagForViewTransition(e.currentTarget as HTMLElement, "vt-post-hero");
+            tagForViewTransition(
+              e.currentTarget as HTMLElement,
+              "vt-post-hero",
+            );
             e.preventDefault();
             onClick();
           }
@@ -1306,7 +1290,9 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               to={profileUrl}
               onClick={(e) => {
                 e.stopPropagation();
-                const avatar = e.currentTarget.querySelector("img.post-avatar") as HTMLElement | null;
+                const avatar = e.currentTarget.querySelector(
+                  "img.post-avatar",
+                ) as HTMLElement | null;
                 tagForViewTransition(avatar, "vt-profile-avatar");
               }}
               {...authorPrefetchHandlers}
@@ -1355,7 +1341,10 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                   style={{ color: "var(--asph-text-secondary)" }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    tagForViewTransition(e.currentTarget.closest(".post-renderer") as HTMLElement, "vt-post-hero");
+                    tagForViewTransition(
+                      e.currentTarget.closest(".post-renderer") as HTMLElement,
+                      "vt-post-hero",
+                    );
                   }}
                   {...threadPrefetchHandlers}
                 >
