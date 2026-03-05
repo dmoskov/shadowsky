@@ -23,6 +23,7 @@ import {triggerHaptic} from '../utils/haptics';
 import {useMediaOrientation} from '../hooks/useMediaOrientation';
 import {RetroAltTextModal} from './RetroAltTextModal';
 import {LightboxPostMeta} from '../contexts/LightboxContext';
+import {fontSize} from '../utils/typography';
 
 export interface CarouselImage {
   thumb: string;
@@ -356,7 +357,7 @@ function createStyles(colors: any) {
     },
     counterText: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     closeButton: {
@@ -372,7 +373,7 @@ function createStyles(colors: any) {
     },
     closeButtonText: {
       color: colors.text,
-      fontSize: 20,
+      fontSize: fontSize.title3,
       fontWeight: '400',
     },
     bottomControls: {
@@ -400,12 +401,12 @@ function createStyles(colors: any) {
     },
     addAltButtonText: {
       color: '#ffffff',
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontWeight: '700',
     },
     shareIcon: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     dotsContainer: {
       position: 'absolute',
@@ -444,7 +445,7 @@ function createStyles(colors: any) {
     },
     altBadgeText: {
       color: colors.text,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: '600',
     },
     altTextExpanded: {
@@ -454,7 +455,7 @@ function createStyles(colors: any) {
     },
     altText: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       lineHeight: 20,
     },
   });

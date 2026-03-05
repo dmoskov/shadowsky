@@ -28,6 +28,7 @@ import type {
   LabelerLabelPreference,
 } from "../../services/atproto/labelers";
 import { createLogger } from "../../utils/logger";
+import {fontSize} from '../../utils/typography';
 
 const logger = createLogger("LabelersSettingsScreen");
 
@@ -502,7 +503,7 @@ function createStyles(colors: any) {
       width: 40,
     },
     headerTitle: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "600",
       color: colors.text,
       flex: 1,
@@ -518,7 +519,7 @@ function createStyles(colors: any) {
       padding: 16,
     },
     description: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       marginBottom: 24,
       lineHeight: 20,
@@ -527,7 +528,7 @@ function createStyles(colors: any) {
       marginBottom: 24,
     },
     sectionTitle: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
       color: colors.text,
       marginBottom: 12,
@@ -542,7 +543,7 @@ function createStyles(colors: any) {
       color: colors.text,
       borderRadius: 10,
       padding: 12,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       borderWidth: 1,
       borderColor: colors.border,
     },
@@ -558,14 +559,14 @@ function createStyles(colors: any) {
     },
     addButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
     loader: {
       marginVertical: 24,
     },
     emptyText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       lineHeight: 20,
     },
@@ -606,19 +607,19 @@ function createStyles(colors: any) {
     },
     avatarPlaceholderText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
     labelerText: {
       flex: 1,
     },
     labelerName: {
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
       color: colors.text,
     },
     labelerHandle: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       color: colors.textSecondary,
       marginTop: 2,
     },
@@ -629,13 +630,13 @@ function createStyles(colors: any) {
       borderTopColor: colors.border,
     },
     labelerDescription: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       color: colors.textSecondary,
       lineHeight: 18,
       marginTop: 12,
     },
     likeCount: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.textSecondary,
       marginTop: 6,
     },
@@ -643,7 +644,7 @@ function createStyles(colors: any) {
       marginTop: 16,
     },
     labelsSectionTitle: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
       color: colors.text,
       marginBottom: 10,
@@ -655,12 +656,12 @@ function createStyles(colors: any) {
       marginBottom: 8,
     },
     labelName: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "500",
       color: colors.text,
     },
     labelDescription: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.textSecondary,
       marginTop: 2,
       lineHeight: 16,
@@ -683,7 +684,7 @@ function createStyles(colors: any) {
       borderColor: colors.primary,
     },
     visibilityButtonText: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontWeight: "600",
       color: colors.textSecondary,
     },
@@ -701,7 +702,7 @@ function createStyles(colors: any) {
     },
     unsubscribeButtonText: {
       color: colors.danger,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
     },
     infoBox: {
@@ -713,13 +714,13 @@ function createStyles(colors: any) {
       borderColor: colors.border,
     },
     infoTitle: {
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
       color: colors.text,
       marginBottom: 8,
     },
     infoText: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       color: colors.textSecondary,
       lineHeight: 20,
     },

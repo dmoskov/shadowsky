@@ -20,6 +20,7 @@ import {
   updatePostAltText,
 } from "../../services/atproto/post-editor";
 import { createLogger } from "../../utils/logger";
+import {fontSize} from '../../utils/typography';
 
 const logger = createLogger("AltTextBackfill");
 
@@ -585,7 +586,7 @@ function createStyles(colors: any) {
     },
     statsText: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     batchActions: {
       flexDirection: "row",
@@ -601,7 +602,7 @@ function createStyles(colors: any) {
       alignItems: "center",
     },
     batchButtonText: {
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
     },
     loadingContainer: {
@@ -610,14 +611,14 @@ function createStyles(colors: any) {
       gap: 12,
     },
     loadingText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     loadMoreButton: {
       padding: 16,
       alignItems: "center",
     },
     loadMoreText: {
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
     },
     emptyState: {
@@ -626,11 +627,11 @@ function createStyles(colors: any) {
       gap: 8,
     },
     emptyTitle: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "600",
     },
     emptySubtitle: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       textAlign: "center",
     },
   });
@@ -656,17 +657,17 @@ function createCardStyles(colors: any) {
     },
     postText: {
       color: colors.text,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       marginBottom: 4,
     },
     timestamp: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       marginBottom: 8,
     },
     errorText: {
       color: colors.danger || "#ef4444",
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       marginBottom: 4,
     },
     altTextInput: {
@@ -674,7 +675,7 @@ function createCardStyles(colors: any) {
       borderColor: colors.borderLight,
       borderRadius: 6,
       padding: 8,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       color: colors.text,
       minHeight: 50,
       textAlignVertical: "top",
@@ -682,7 +683,7 @@ function createCardStyles(colors: any) {
     },
     charCount: {
       color: colors.textTertiary,
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       textAlign: "right",
       marginTop: 2,
       marginBottom: 6,
@@ -700,7 +701,7 @@ function createCardStyles(colors: any) {
       minWidth: 60,
     },
     actionButtonText: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontWeight: "600",
     },
     savedBadge: {
@@ -711,7 +712,7 @@ function createCardStyles(colors: any) {
     },
     savedBadgeText: {
       color: "#fff",
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontWeight: "600",
     },
   });

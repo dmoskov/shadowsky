@@ -21,6 +21,7 @@ import {
   PersonIcon,
   SearchIcon,
 } from "./icons";
+import {fontSize} from '../utils/typography';
 
 type MediaFilter = "all" | "images" | "videos" | "links";
 type DatePreset = "24h" | "7d" | "30d" | "1y" | "all";
@@ -499,7 +500,7 @@ function createStyles(colors: any) {
       borderBottomColor: colors.surfaceElevated,
     },
     title: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "600",
       color: colors.text,
     },
@@ -531,7 +532,7 @@ function createStyles(colors: any) {
     },
     chipText: {
       color: "#ffffff",
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontWeight: "500",
     },
     sectionHeader: {
@@ -542,7 +543,7 @@ function createStyles(colors: any) {
       marginBottom: 8,
     },
     sectionLabel: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
       color: colors.textSecondary,
     },
@@ -568,7 +569,7 @@ function createStyles(colors: any) {
       backgroundColor: colors.surface,
     },
     optionPillText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       fontWeight: "500",
     },
@@ -586,7 +587,7 @@ function createStyles(colors: any) {
       paddingVertical: 14,
     },
     selectButtonText: {
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       color: colors.textTertiary,
     },
     selectButtonTextActive: {
@@ -609,7 +610,7 @@ function createStyles(colors: any) {
       flex: 1,
       paddingHorizontal: 16,
       paddingVertical: 14,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       color: colors.text,
     },
     resetButton: {
@@ -622,7 +623,7 @@ function createStyles(colors: any) {
     },
     resetButtonText: {
       color: colors.danger,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
     },
     footer: {
@@ -640,7 +641,7 @@ function createStyles(colors: any) {
     },
     applyButtonText: {
       color: "#ffffff",
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
   });

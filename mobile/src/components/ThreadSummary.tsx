@@ -16,6 +16,7 @@ import {
 } from "../services/ai-service";
 import { getCachedSummary, cacheSummary } from "../services/thread-summary-cache";
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 type Post = AppBskyFeedDefs.PostView;
 
@@ -232,7 +233,7 @@ function createStyles(colors: any) {
     },
     loadingText: {
       color: colors.textSecondary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
     },
     header: {
       flexDirection: "row",
@@ -241,7 +242,7 @@ function createStyles(colors: any) {
       gap: 8,
     },
     sparkle: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     headerTextContainer: {
       flex: 1,
@@ -251,17 +252,17 @@ function createStyles(colors: any) {
     },
     headerLabel: {
       color: colors.textSecondary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: "600",
     },
     cachedBadge: {
       color: colors.textTertiary,
-      fontSize: 10,
+      fontSize: fontSize.caption2,
       fontStyle: "italic",
     },
     headerMeta: {
       color: colors.textTertiary,
-      fontSize: 11,
+      fontSize: fontSize.caption2,
     },
     modeToggle: {
       flexDirection: "row",
@@ -269,7 +270,7 @@ function createStyles(colors: any) {
     },
     modeButton: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: "500",
       paddingHorizontal: 8,
       paddingVertical: 4,
@@ -279,7 +280,7 @@ function createStyles(colors: any) {
     },
     chevron: {
       color: colors.textSecondary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
     },
     content: {
       paddingHorizontal: 12,
@@ -287,7 +288,7 @@ function createStyles(colors: any) {
     },
     summaryText: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       lineHeight: 20,
     },
     highlightsContainer: {
@@ -300,7 +301,7 @@ function createStyles(colors: any) {
     },
     highlightsLabel: {
       color: colors.textSecondary,
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       fontWeight: "600",
       marginBottom: 6,
       textTransform: "uppercase",
@@ -319,15 +320,15 @@ function createStyles(colors: any) {
     },
     highlightAuthor: {
       color: colors.primary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
     },
     highlightEngagement: {
       color: colors.textTertiary,
-      fontSize: 11,
+      fontSize: fontSize.caption2,
     },
     engagementText: {
       color: colors.textTertiary,
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       marginTop: 8,
     },
   });

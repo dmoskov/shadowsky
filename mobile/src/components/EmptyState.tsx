@@ -2,6 +2,7 @@ import React, {ReactNode, useMemo} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {MailboxIcon} from './icons';
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 interface EmptyStateProps {
   message: string;
@@ -52,14 +53,14 @@ function createStyles(colors: any) {
     },
     message: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       textAlign: 'center',
       fontWeight: '500',
       lineHeight: 24,
     },
     description: {
       color: colors.textTertiary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       textAlign: 'center',
       lineHeight: 20,
       marginTop: 8,
@@ -74,7 +75,7 @@ function createStyles(colors: any) {
     },
     actionLabel: {
       color: '#ffffff',
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
   });

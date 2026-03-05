@@ -26,6 +26,7 @@ import {
   PrivacySection,
   SecuritySection,
 } from "./components";
+import {fontSize} from '../../utils/typography';
 
 interface SettingsScreenProps {
   section?: string;
@@ -130,13 +131,13 @@ const createStyles = (themeColors: Record<string, string>) =>
     },
     loadingText: {
       color: themeColors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       textAlign: "center",
       marginTop: 24,
     },
     header: {
       color: themeColors.text,
-      fontSize: 32,
+      fontSize: fontSize.largeTitle,
       fontWeight: "bold",
       padding: 16,
       paddingTop: 24,
@@ -157,6 +158,6 @@ const createStyles = (themeColors: Record<string, string>) =>
     },
     backButtonText: {
       color: themeColors.info,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
   });

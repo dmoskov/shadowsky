@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 export type ProfileTab = "posts" | "replies" | "media" | "likes";
 
@@ -61,7 +62,7 @@ function createStyles(colors: any) {
       borderBottomColor: colors.primary,
     },
     tabText: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
       color: colors.textTertiary,
     },

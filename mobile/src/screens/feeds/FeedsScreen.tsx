@@ -4,6 +4,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { FeedDiscoveryScreen } from "./FeedDiscoveryScreen";
 import { SavedFeedsScreen } from "./SavedFeedsScreen";
+import {fontSize} from '../../utils/typography';
 
 type FeedsTab = "myFeeds" | "discover";
 
@@ -86,7 +87,7 @@ function createStyles(colors: any) {
       borderBottomColor: colors.primary,
     },
     tabText: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
       color: colors.textSecondary,
     },

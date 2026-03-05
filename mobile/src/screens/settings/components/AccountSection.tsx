@@ -5,6 +5,7 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import { useTranslation } from "../../../hooks/useTranslation";
 import { SettingRow } from "./SettingRow";
 import { createSectionStyles } from "./settingsStyles";
+import {fontSize} from '../../../utils/typography';
 
 interface AccountSectionProps {
   onShowAccountSwitcher: () => void;
@@ -94,7 +95,7 @@ const createStyles = (themeColors: Record<string, string>) =>
     },
     accountAvatarText: {
       color: themeColors.text,
-      fontSize: 20,
+      fontSize: fontSize.title3,
       fontWeight: "bold",
     },
     accountDetails: {
@@ -102,12 +103,12 @@ const createStyles = (themeColors: Record<string, string>) =>
     },
     accountName: {
       color: themeColors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
       marginBottom: 2,
     },
     accountHandle: {
       color: themeColors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
   });

@@ -7,6 +7,7 @@ import { useTheme } from "../contexts/ThemeContext";
 
 
 import { createLogger } from '../utils/logger';
+import {fontSize} from '../utils/typography';
 
 const logger = createLogger('Externallinkembedx');
 interface ExternalLinkEmbedProps {
@@ -94,18 +95,18 @@ function createStyles(colors: any) {
     },
     domain: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       marginBottom: 4,
     },
     title: {
       color: colors.text,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       marginBottom: 4,
     },
     description: {
       color: colors.textSecondary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       lineHeight: 18,
     },
   });

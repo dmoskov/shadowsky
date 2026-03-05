@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import type { ThemeColors } from "../../../contexts/ThemeContext";
 import type { PostAnalysisResult } from "../../../services/ai-service";
+import {fontSize} from '../../../utils/typography';
 
 interface AIAnalysisPanelProps {
   postsCount: number;
@@ -481,7 +482,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "bold",
     marginBottom: 12,
   },
@@ -498,7 +499,7 @@ const styles = StyleSheet.create({
   },
   analyzeButtonText: {
     color: "#ffffff",
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
   },
   aiPlaceholder: {
@@ -507,12 +508,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   aiPlaceholderTitle: {
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
     marginBottom: 8,
   },
   aiPlaceholderText: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     textAlign: "center",
     lineHeight: 20,
   },
@@ -522,12 +523,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   aiLoadingText: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "500",
     marginTop: 12,
   },
   aiLoadingSubtext: {
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     marginTop: 4,
   },
   aiResults: {
@@ -538,12 +539,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   aiCardTitle: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
     marginBottom: 12,
   },
   aiCardText: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     lineHeight: 20,
   },
   themeItem: {
@@ -556,7 +557,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   themeName: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
     flex: 1,
   },
@@ -567,11 +568,11 @@ const styles = StyleSheet.create({
   },
   frequencyText: {
     color: "#ffffff",
-    fontSize: 11,
+    fontSize: fontSize.caption2,
     fontWeight: "500",
   },
   themeDescription: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     lineHeight: 18,
     marginBottom: 4,
   },
@@ -581,7 +582,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   themeExample: {
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     fontStyle: "italic",
     lineHeight: 16,
   },
@@ -589,14 +590,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   styleLabel: {
-    fontSize: 11,
+    fontSize: fontSize.caption2,
     fontWeight: "500",
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   styleValue: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     lineHeight: 18,
   },
   characteristicRow: {
@@ -606,7 +607,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   characteristicText: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     lineHeight: 18,
     flex: 1,
   },
@@ -614,7 +615,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   insightLabel: {
-    fontSize: 11,
+    fontSize: fontSize.caption2,
     fontWeight: "500",
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -627,7 +628,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   insightText: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     lineHeight: 18,
     flex: 1,
   },
@@ -645,7 +646,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   optimalTimeRank: {
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     fontWeight: "500",
   },
   confidenceBadge: {
@@ -655,19 +656,19 @@ const styles = StyleSheet.create({
   },
   confidenceText: {
     color: "#ffffff",
-    fontSize: 11,
+    fontSize: fontSize.caption2,
     fontWeight: "500",
   },
   optimalTimeHour: {
-    fontSize: 20,
+    fontSize: fontSize.title3,
     fontWeight: "bold",
   },
   optimalTimeDay: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     marginTop: 2,
   },
   optimalTimeEngagement: {
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     marginTop: 6,
   },
   hideAnalysisButton: {
@@ -676,7 +677,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   hideAnalysisText: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
   },
 });
 

@@ -7,6 +7,7 @@ import React, {useMemo} from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ScheduledPost } from '../services/scheduled-posts';
 import { useTheme } from '../contexts/ThemeContext';
+import {fontSize} from '../utils/typography';
 
 const MAX_POST_LENGTH = 300;
 
@@ -103,17 +104,17 @@ function createStyles(colors: any) {
     },
     scheduledLabel: {
       color: colors.textSecondary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: '500',
     },
     scheduledTime: {
       color: colors.primary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: '600',
     },
     charCount: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: '500',
     },
     charCountOver: {
@@ -121,7 +122,7 @@ function createStyles(colors: any) {
     },
     text: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       lineHeight: 22,
       marginBottom: 16,
     },
@@ -140,7 +141,7 @@ function createStyles(colors: any) {
     },
     actionButtonText: {
       color: colors.primary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     deleteButton: {

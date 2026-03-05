@@ -13,6 +13,7 @@ import {useTheme} from '../contexts/ThemeContext';
 import {BlurOverlay} from './BlurOverlay';
 import {getAtProtoClient} from '../services/atproto/client';
 import {recordReport} from '../services/moderation-history';
+import {fontSize} from '../utils/typography';
 
 export type ReportType = 'post' | 'account';
 
@@ -409,7 +410,7 @@ function createStyles(colors: any) {
       borderBottomColor: '#e0e0e0',
     },
     headerTitle: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
       color: '#000',
     },
@@ -417,19 +418,19 @@ function createStyles(colors: any) {
       padding: 8,
     },
     closeButtonText: {
-      fontSize: 24,
+      fontSize: fontSize.title2,
       color: '#666',
     },
     content: {
       padding: 16,
     },
     description: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: '#666',
       marginBottom: 16,
     },
     successText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: '#666',
       marginBottom: 16,
     },
@@ -472,20 +473,20 @@ function createStyles(colors: any) {
       flex: 1,
     },
     categoryLabel: {
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: '#000',
       marginBottom: 4,
     },
     categoryDescription: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       color: '#666',
     },
     contextContainer: {
       marginTop: 8,
     },
     contextLabel: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: '#000',
       marginBottom: 8,
@@ -495,12 +496,12 @@ function createStyles(colors: any) {
       borderColor: '#e0e0e0',
       borderRadius: 8,
       padding: 12,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: '#000',
       minHeight: 100,
     },
     charCount: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: '#999',
       textAlign: 'right',
       marginTop: 4,
@@ -513,7 +514,7 @@ function createStyles(colors: any) {
     },
     errorText: {
       color: '#c00',
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     postReportActions: {
       marginTop: 8,
@@ -522,13 +523,13 @@ function createStyles(colors: any) {
       borderRadius: 8,
     },
     postReportTitle: {
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: '#000',
       marginBottom: 8,
     },
     postReportDescription: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       color: '#666',
       marginBottom: 12,
     },
@@ -546,7 +547,7 @@ function createStyles(colors: any) {
     },
     actionButtonText: {
       color: '#fff',
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     footer: {
@@ -570,7 +571,7 @@ function createStyles(colors: any) {
     },
     secondaryButtonText: {
       color: '#333',
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     primaryButton: {
@@ -578,7 +579,7 @@ function createStyles(colors: any) {
     },
     primaryButtonText: {
       color: '#fff',
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     dangerButton: {
@@ -586,7 +587,7 @@ function createStyles(colors: any) {
     },
     dangerButtonText: {
       color: '#fff',
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     buttonDisabled: {

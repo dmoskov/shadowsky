@@ -3,6 +3,7 @@ import {View, Text, StyleSheet} from 'react-native';
 import {Button} from './Button';
 import {AlertTriangleIcon} from './icons';
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 interface ErrorStateProps {
   message: string;
@@ -45,7 +46,7 @@ function createStyles(colors: any) {
     },
     message: {
       color: colors.danger,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       textAlign: 'center',
       marginBottom: 20,
       marginTop: 16,

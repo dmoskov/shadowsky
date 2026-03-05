@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { captureException } from "../utils/error-reporting";
 import { createLogger } from "../utils/logger";
 import { colors } from "../constants/theme";
+import {fontSize} from '../utils/typography';
 
 const logger = createLogger("ScreenErrorBoundary");
 
@@ -104,18 +105,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   icon: {
-    fontSize: 48,
+    fontSize: fontSize.largeTitle,
     marginBottom: 16,
   },
   title: {
-    fontSize: 20,
+    fontSize: fontSize.title3,
     fontWeight: "600",
     color: colors.text,
     marginBottom: 8,
     textAlign: "center",
   },
   message: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     color: colors.textSecondary,
     textAlign: "center",
     lineHeight: 22,
@@ -131,7 +132,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   errorMessage: {
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     color: colors.text,
     fontFamily: "monospace",
   },
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   retryButtonText: {
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
     color: colors.text,
   },

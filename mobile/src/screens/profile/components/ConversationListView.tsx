@@ -14,6 +14,7 @@ import { DmConversation } from "../../../services/dm-service";
 import { TrashIcon, BellSlashIcon, SearchIcon } from "../../../components/icons";
 import { InlineErrorBoundary } from "../../../components/ui/InlineErrorBoundary";
 import { EmptyState } from "../../../components/EmptyState";
+import {fontSize} from '../../../utils/typography';
 
 interface ConversationListViewProps {
   conversations: DmConversation[];
@@ -218,7 +219,7 @@ function createStyles(colors: any) {
     },
     avatarText: {
       color: colors.text,
-      fontSize: 20,
+      fontSize: fontSize.title3,
       fontWeight: "600",
     },
     conversationDetails: {
@@ -238,18 +239,18 @@ function createStyles(colors: any) {
     },
     displayName: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
       flexShrink: 1,
     },
     handle: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       marginTop: 2,
     },
     lastMessage: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       marginTop: 4,
     },
     unreadBadge: {
@@ -261,7 +262,7 @@ function createStyles(colors: any) {
     },
     unreadCount: {
       color: colors.text,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: "600",
     },
     swipeActions: {
@@ -277,7 +278,7 @@ function createStyles(colors: any) {
     },
     actionText: {
       color: colors.text,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: "600",
       marginTop: 4,
     },

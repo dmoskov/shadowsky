@@ -20,6 +20,7 @@ import {
 } from "./icons";
 import { useUnreadCount } from "../hooks/api/useNotifications";
 import { useUnreadMessageCount, useDraftCount } from "../hooks/api";
+import {fontSize} from '../utils/typography';
 
 /** Full sidebar width when there is plenty of room */
 const SIDEBAR_WIDTH_FULL = 260;
@@ -89,7 +90,7 @@ const sidebarItemStyles = StyleSheet.create({
     marginRight: 12,
   },
   label: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     flex: 1,
   },
   labelActive: {
@@ -105,7 +106,7 @@ const sidebarItemStyles = StyleSheet.create({
   },
   badgeText: {
     color: "#ffffff",
-    fontSize: 11,
+    fontSize: fontSize.caption2,
     fontWeight: "700",
   },
 });
@@ -286,17 +287,17 @@ function createStyles(colors: any, width: number = SIDEBAR_WIDTH_FULL) {
     },
     avatarText: {
       color: colors.text,
-      fontSize: 20,
+      fontSize: fontSize.title3,
       fontWeight: "bold",
     },
     username: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
     handle: {
       color: colors.textSecondary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       marginTop: 2,
     },
     scrollArea: {
@@ -318,7 +319,7 @@ function createStyles(colors: any, width: number = SIDEBAR_WIDTH_FULL) {
     },
     version: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
     },
   });
 }

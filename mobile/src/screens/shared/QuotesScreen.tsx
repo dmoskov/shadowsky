@@ -12,6 +12,7 @@ import {usePostQuotes} from '../../hooks/api/usePosts';
 import {PostCard} from '../../components/PostCard';
 import {PostCardSkeleton} from '../../components/PostCardSkeleton';
 import {useTheme} from '../../contexts/ThemeContext';
+import {fontSize} from '../../utils/typography';
 
 interface QuotesScreenProps {
   postUri: string;
@@ -180,11 +181,11 @@ function createStyles(colors: any) {
     },
     errorText: {
       color: colors.danger,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     emptyText: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     emptyList: {
       flexGrow: 1,

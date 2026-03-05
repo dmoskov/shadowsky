@@ -18,6 +18,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 
 
 import { createLogger } from '../../utils/logger';
+import {fontSize} from '../../utils/typography';
 
 const logger = createLogger('Editprofilescreenx');
 interface EditProfileScreenProps {
@@ -279,14 +280,14 @@ function createStyles(colors: any) {
     },
     errorText: {
       color: colors.danger,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     section: {
       marginBottom: 24,
     },
     sectionLabel: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       marginBottom: 8,
     },
@@ -298,7 +299,7 @@ function createStyles(colors: any) {
     },
     charCount: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
     },
     charCountError: {
       color: colors.danger,
@@ -315,13 +316,13 @@ function createStyles(colors: any) {
     },
     changeAvatarText: {
       color: colors.primary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     input: {
       backgroundColor: colors.surfaceElevated,
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       paddingVertical: 12,
       paddingHorizontal: 16,
       borderRadius: 8,
@@ -334,7 +335,7 @@ function createStyles(colors: any) {
     },
     handleText: {
       color: colors.textTertiary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       padding: 12,
     },
     buttonContainer: {
@@ -358,7 +359,7 @@ function createStyles(colors: any) {
     },
     cancelButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
     saveButton: {
@@ -370,7 +371,7 @@ function createStyles(colors: any) {
     },
     saveButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
   });

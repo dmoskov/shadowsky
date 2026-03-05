@@ -19,6 +19,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useOfflineFeedEnhancer } from "../../hooks/useOfflineFeed";
 import StaleContentIndicator from "../../components/StaleContentIndicator";
 import { useOfflineFeedStatus } from "../../hooks/useOfflineFeed";
+import {fontSize} from '../../utils/typography';
 
 const GRID_COLUMNS = 3;
 const GRID_SPACING = 2;
@@ -264,7 +265,7 @@ function createStyles(colors: any, itemSize: number) {
   },
   statText: {
     color: colors.text,
-    fontSize: 11,
+    fontSize: fontSize.caption2,
     fontWeight: "600",
   },
   footer: {

@@ -13,6 +13,7 @@ import {useLists} from '../../hooks/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {AppBskyGraphDefs} from '@atproto/api';
 import {useTheme} from '../../contexts/ThemeContext';
+import {fontSize} from '../../utils/typography';
 
 interface ListItemProps {
   list: AppBskyGraphDefs.ListView;
@@ -171,7 +172,7 @@ function createStyles(colors: any) {
     },
     createButtonText: {
       color: colors.text,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     listItem: {
@@ -186,25 +187,25 @@ function createStyles(colors: any) {
     },
     listName: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       marginBottom: 4,
     },
     listDescription: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       marginBottom: 4,
     },
     listMemberCount: {
       color: colors.textTertiary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
     },
     chevron: {
       marginLeft: 8,
     },
     chevronText: {
       color: colors.textTertiary,
-      fontSize: 24,
+      fontSize: fontSize.title2,
       fontWeight: '300',
     },
     centerContainer: {
@@ -219,29 +220,29 @@ function createStyles(colors: any) {
     },
     loadingText: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       marginTop: 12,
     },
     emptyText: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
       marginBottom: 8,
     },
     emptySubtext: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       textAlign: 'center',
     },
     errorText: {
       color: colors.danger,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       marginBottom: 8,
     },
     errorSubtext: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       textAlign: 'center',
       marginBottom: 16,
     },
@@ -253,7 +254,7 @@ function createStyles(colors: any) {
     },
     retryButtonText: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     footerLoader: {

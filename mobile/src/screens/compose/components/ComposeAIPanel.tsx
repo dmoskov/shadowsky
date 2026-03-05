@@ -19,6 +19,7 @@ import { FeedbackPanel } from "./ai-panels/FeedbackPanel";
 import { HashtagsPanel } from "./ai-panels/HashtagsPanel";
 import { StylePanel } from "./ai-panels/StylePanel";
 import { ThreadOptPanel } from "./ai-panels/ThreadOptPanel";
+import {fontSize} from '../../../utils/typography';
 
 type AIFeatureTab = "hashtags" | "feedback" | "style" | "thread";
 
@@ -244,7 +245,7 @@ function createStyles(colors: any) {
     },
     title: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "600",
     },
     tabBar: {
@@ -268,11 +269,11 @@ function createStyles(colors: any) {
       borderBottomColor: colors.primary,
     },
     tabIcon: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     tabLabel: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "500",
     },
     tabLabelActive: {
@@ -285,7 +286,7 @@ function createStyles(colors: any) {
     },
     sectionDesc: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       lineHeight: 20,
       marginBottom: 16,
     },
@@ -300,7 +301,7 @@ function createStyles(colors: any) {
     },
     actionButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
     hashtagGrid: {
@@ -324,12 +325,12 @@ function createStyles(colors: any) {
     },
     hashtagText: {
       color: colors.primary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "500",
     },
     trendingBadge: {
       color: colors.primary,
-      fontSize: 10,
+      fontSize: fontSize.caption2,
       fontWeight: "700",
       textTransform: "uppercase",
     },
@@ -339,7 +340,7 @@ function createStyles(colors: any) {
     },
     refreshButtonText: {
       color: colors.primary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
     },
     feedbackContainer: {
@@ -360,13 +361,13 @@ function createStyles(colors: any) {
     },
     assessmentTitle: {
       color: colors.text,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
       marginBottom: 6,
     },
     assessmentText: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       lineHeight: 20,
     },
     versionBox: {
@@ -380,7 +381,7 @@ function createStyles(colors: any) {
     },
     versionLabel: {
       color: colors.textSecondary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontWeight: "500",
       marginBottom: 6,
     },
@@ -395,7 +396,7 @@ function createStyles(colors: any) {
     },
     versionText: {
       color: colors.text,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       lineHeight: 22,
     },
     changesList: {
@@ -404,7 +405,7 @@ function createStyles(colors: any) {
     },
     changeItem: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       lineHeight: 18,
     },
     useButton: {
@@ -421,7 +422,7 @@ function createStyles(colors: any) {
     },
     useButtonText: {
       color: colors.primary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontWeight: "600",
     },
     useButtonTextPrimary: {
@@ -437,12 +438,12 @@ function createStyles(colors: any) {
     },
     styleMatchText: {
       color: colors.text,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
     },
     styleSummary: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       lineHeight: 20,
       fontStyle: "italic",
     },
@@ -451,7 +452,7 @@ function createStyles(colors: any) {
     },
     styleNotesTitle: {
       color: colors.textSecondary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontWeight: "600",
       marginBottom: 4,
     },
@@ -460,12 +461,12 @@ function createStyles(colors: any) {
     },
     threadSummary: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       lineHeight: 20,
     },
     threadMeta: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
     },
     segmentBox: {
       backgroundColor: colors.surfaceElevated,
@@ -485,7 +486,7 @@ function createStyles(colors: any) {
     },
     segmentNumber: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: "500",
     },
     standaloneBadge: {
@@ -496,12 +497,12 @@ function createStyles(colors: any) {
     },
     standaloneBadgeText: {
       color: colors.text,
-      fontSize: 10,
+      fontSize: fontSize.caption2,
       fontWeight: "600",
     },
     segmentText: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       lineHeight: 20,
     },
     threadActions: {
@@ -521,7 +522,7 @@ function createStyles(colors: any) {
     },
     applyButtonText: {
       color: colors.text,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
     },
   });

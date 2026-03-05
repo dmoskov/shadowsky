@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useTranslation } from "../../hooks/useTranslation";
+import {fontSize} from '../../utils/typography';
 
 type LoginMode = "oauth" | "app-password";
 
@@ -377,13 +378,13 @@ function createStyles(colors: any) {
     marginBottom: 48,
   },
   title: {
-    fontSize: 48,
+    fontSize: fontSize.largeTitle,
     fontWeight: "bold",
     color: colors.text,
     marginBottom: 16,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: fontSize.callout,
     color: colors.textSecondary,
     textAlign: "center",
     paddingHorizontal: 20,
@@ -408,7 +409,7 @@ function createStyles(colors: any) {
     backgroundColor: colors.primary,
   },
   toggleButtonText: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
     color: colors.textTertiary,
   },
@@ -428,7 +429,7 @@ function createStyles(colors: any) {
   },
   signUpButtonText: {
     color: colors.primary,
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "600",
   },
   dividerContainer: {
@@ -443,7 +444,7 @@ function createStyles(colors: any) {
   },
   dividerText: {
     color: colors.textTertiary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     marginHorizontal: 16,
   },
   inputContainer: {
@@ -451,7 +452,7 @@ function createStyles(colors: any) {
   },
   label: {
     color: colors.textMuted,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
     marginBottom: 8,
   },
@@ -462,12 +463,12 @@ function createStyles(colors: any) {
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     color: colors.text,
   },
   helpText: {
     color: colors.textTertiary,
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     marginTop: 6,
   },
   advancedToggle: {
@@ -475,7 +476,7 @@ function createStyles(colors: any) {
   },
   advancedToggleText: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
   },
   loginButton: {
     backgroundColor: colors.primary,
@@ -492,7 +493,7 @@ function createStyles(colors: any) {
   },
   loginButtonText: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "600",
   },
   infoContainer: {
@@ -500,7 +501,7 @@ function createStyles(colors: any) {
   },
   infoText: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     textAlign: "center",
     lineHeight: 20,
   },
@@ -510,7 +511,7 @@ function createStyles(colors: any) {
   },
   disclaimer: {
     color: colors.textTertiary,
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     textAlign: "center",
   },
   link: {
@@ -527,7 +528,7 @@ function createStyles(colors: any) {
   },
   explainerToggleText: {
     color: colors.textSecondary,
-    fontSize: 13,
+    fontSize: fontSize.footnote,
   },
   explainerContent: {
     marginTop: 12,
@@ -538,13 +539,13 @@ function createStyles(colors: any) {
   },
   explainerMethodTitle: {
     color: colors.text,
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     fontWeight: "600",
     marginBottom: 4,
   },
   explainerMethodDescription: {
     color: colors.textSecondary,
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     lineHeight: 18,
   },
   });

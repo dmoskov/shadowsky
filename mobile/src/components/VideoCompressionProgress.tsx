@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 import type { VideoCompressionState } from "../hooks/useVideoCompression";
+import {fontSize} from '../utils/typography';
 
 interface VideoCompressionProgressProps {
   state: VideoCompressionState;
@@ -109,7 +110,7 @@ function createStyles(colors: any) {
     },
     statusText: {
       color: colors.textSecondary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       flex: 1,
     },
     cancelButton: {
@@ -118,7 +119,7 @@ function createStyles(colors: any) {
     },
     cancelText: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
     },
     completeBadge: {
       backgroundColor: "rgba(34, 197, 94, 0.15)",
@@ -129,7 +130,7 @@ function createStyles(colors: any) {
     },
     completeText: {
       color: "#22c55e",
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       fontWeight: "500",
     },
     errorBadge: {
@@ -141,7 +142,7 @@ function createStyles(colors: any) {
     },
     errorText: {
       color: "#ef4444",
-      fontSize: 11,
+      fontSize: fontSize.caption2,
     },
   });
 }

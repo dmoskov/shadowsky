@@ -15,6 +15,7 @@ import {FollowButton} from '../../components/FollowButton';
 import {UserListSkeleton} from '../../components/UserListSkeleton';
 import {useTheme} from '../../contexts/ThemeContext';
 import {useAuth} from '../../contexts/AuthContext';
+import {fontSize} from '../../utils/typography';
 
 interface LikesScreenProps {
   postUri: string;
@@ -170,18 +171,18 @@ function createStyles(colors: any) {
     },
     displayName: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       marginBottom: 2,
     },
     handle: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       marginBottom: 4,
     },
     description: {
       color: colors.borderLight,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       lineHeight: 18,
     },
     buttonContainer: {
@@ -199,11 +200,11 @@ function createStyles(colors: any) {
     },
     errorText: {
       color: colors.danger,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     emptyText: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     emptyList: {
       flexGrow: 1,

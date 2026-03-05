@@ -33,6 +33,7 @@ import { MessageThread } from "./components/MessageThread";
 import { MessageInput } from "./components/MessageInput";
 
 import { createLogger } from '../../utils/logger';
+import {fontSize} from '../../utils/typography';
 
 const logger = createLogger('MessagesScreen');
 
@@ -85,7 +86,7 @@ export function MessagesScreen() {
             >
               <ArrowLeftIcon size={24} color={colors.text} />
             </TouchableOpacity>
-            <Text style={{ fontSize: 17, fontWeight: '600', color: colors.text, flex: 1, textAlign: 'center', marginRight: 36 }}>Messages</Text>
+            <Text style={{ fontSize: fontSize.body, fontWeight: '600', color: colors.text, flex: 1, textAlign: 'center', marginRight: 36 }}>Messages</Text>
           </View>
         </View>
         <NativeMessagesComponent
@@ -624,7 +625,7 @@ function createStyles(colors: any) {
   },
   headerTitle: {
     color: colors.text,
-    fontSize: 24,
+    fontSize: fontSize.title2,
     fontWeight: "bold",
   },
   headerActions: {
@@ -652,11 +653,11 @@ function createStyles(colors: any) {
   searchInput: {
     flex: 1,
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.callout,
   },
   avatarText: {
     color: colors.text,
-    fontSize: 20,
+    fontSize: fontSize.title3,
     fontWeight: "600",
   },
   chatHeader: {
@@ -683,7 +684,7 @@ function createStyles(colors: any) {
   },
   backButtonText: {
     color: colors.primary,
-    fontSize: 16,
+    fontSize: fontSize.callout,
   },
   chatHeaderContent: {
     flexDirection: "row",
@@ -709,12 +710,12 @@ function createStyles(colors: any) {
   },
   chatDisplayName: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
   },
   chatHandle: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
   },
   permissionErrorContainer: {
     flex: 1,
@@ -724,20 +725,20 @@ function createStyles(colors: any) {
   },
   permissionErrorTitle: {
     color: colors.text,
-    fontSize: 20,
+    fontSize: fontSize.title3,
     fontWeight: "bold",
     marginBottom: 12,
     textAlign: "center",
   },
   permissionErrorText: {
     color: colors.textSecondary,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     textAlign: "center",
     marginBottom: 16,
   },
   permissionErrorSteps: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     textAlign: "left",
     lineHeight: 22,
   },
@@ -754,7 +755,7 @@ function createStyles(colors: any) {
   },
   creatingText: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.callout,
   },
   });
 }

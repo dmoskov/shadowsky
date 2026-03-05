@@ -12,6 +12,7 @@ import { useTheme } from "../../../contexts/ThemeContext";
 import { BlurOverlay } from "../../../components/BlurOverlay";
 import { CloseIcon, CheckIcon } from "../../../components/icons";
 import type { ToneOption } from "../../../services/ai-service";
+import {fontSize} from '../../../utils/typography';
 
 interface ToneOptionConfig {
   value: ToneOption;
@@ -202,7 +203,7 @@ function createStyles(colors: any) {
     },
     title: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "600",
     },
     optionRow: {
@@ -217,7 +218,7 @@ function createStyles(colors: any) {
       opacity: 0.5,
     },
     optionIcon: {
-      fontSize: 24,
+      fontSize: fontSize.title2,
       marginRight: 12,
     },
     optionText: {
@@ -225,12 +226,12 @@ function createStyles(colors: any) {
     },
     optionLabel: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
     optionDesc: {
       color: colors.textSecondary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       marginTop: 2,
     },
     // Preview styles
@@ -240,7 +241,7 @@ function createStyles(colors: any) {
     },
     previewLabel: {
       color: colors.textSecondary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontWeight: "500",
       marginBottom: 6,
       marginTop: 8,
@@ -256,7 +257,7 @@ function createStyles(colors: any) {
     },
     previewText: {
       color: colors.text,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       lineHeight: 22,
     },
     previewActions: {
@@ -272,7 +273,7 @@ function createStyles(colors: any) {
     },
     cancelButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
     applyButton: {
@@ -287,7 +288,7 @@ function createStyles(colors: any) {
     },
     applyButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
   });

@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { ChevronLeftIcon } from '../../components/icons';
+import {fontSize} from '../../utils/typography';
 
 interface DataExportScreenProps {
   navigation: {
@@ -163,7 +164,7 @@ function createStyles(colors: any) {
       width: 60,
     },
     headerTitle: {
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "600",
       color: colors.text,
       flex: 1,
@@ -179,7 +180,7 @@ function createStyles(colors: any) {
       padding: 16,
     },
     description: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       marginBottom: 24,
       lineHeight: 20,
@@ -188,7 +189,7 @@ function createStyles(colors: any) {
       marginBottom: 24,
     },
     sectionTitle: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
       color: colors.text,
       marginBottom: 12,
@@ -207,18 +208,18 @@ function createStyles(colors: any) {
       marginRight: 12,
     },
     cardTitle: {
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
       color: colors.text,
       marginBottom: 4,
     },
     cardDescription: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       color: colors.textSecondary,
       lineHeight: 18,
     },
     exportButtonText: {
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
       color: colors.primary,
     },
@@ -230,7 +231,7 @@ function createStyles(colors: any) {
       borderColor: colors.border,
     },
     infoText: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       color: colors.textSecondary,
       lineHeight: 18,
     },

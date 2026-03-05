@@ -8,6 +8,7 @@ import {
   TextStyle,
 } from 'react-native';
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 interface ButtonProps {
   title: string;
@@ -146,13 +147,13 @@ function createStyles(colors: any) {
       color: colors.primary,
     },
     smallText: {
-      fontSize: 13,
+      fontSize: fontSize.footnote,
     },
     mediumText: {
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
     },
     largeText: {
-      fontSize: 17,
+      fontSize: fontSize.body,
     },
     // States
     disabled: {

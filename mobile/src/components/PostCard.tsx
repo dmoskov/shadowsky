@@ -29,6 +29,7 @@ import {usePostTranslation} from '../hooks/usePostTranslation';
 import {useSharedTransition} from '../contexts/SharedTransitionContext';
 import {useToast} from '../contexts/ToastContext';
 import {BlurOverlay} from './BlurOverlay';
+import {fontSize} from '../utils/typography';
 
 interface PostCardProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -878,22 +879,22 @@ function createStyles(colors: any) {
   },
   displayName: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: '600',
     marginBottom: 2,
   },
   handle: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
   },
   timestamp: {
     color: colors.textTertiary,
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     marginRight: 4,
   },
   text: {
     color: colors.text,
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -919,7 +920,7 @@ function createStyles(colors: any) {
   },
   engagementCount: {
     color: colors.textSecondary,
-    fontSize: 13,
+    fontSize: fontSize.footnote,
   },
   disabled: {
     color: colors.borderLight,
@@ -949,7 +950,7 @@ function createStyles(colors: any) {
   },
   menuItemText: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -965,17 +966,17 @@ function createStyles(colors: any) {
   },
   translatedText: {
     color: colors.text,
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     lineHeight: 20,
   },
   translationAttribution: {
     color: colors.textTertiary,
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     marginTop: 4,
   },
   translationError: {
     color: colors.danger,
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     marginTop: 2,
     marginBottom: 4,
   },
@@ -987,7 +988,7 @@ function createStyles(colors: any) {
     marginBottom: 8,
   },
   translateButtonText: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     fontWeight: '500',
   },
   });

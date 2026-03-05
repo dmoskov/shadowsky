@@ -23,6 +23,7 @@ import {AppBskyGraphDefs} from '@atproto/api';
 import {useTheme} from '../../contexts/ThemeContext';
 import {EditListModal} from '../../components/EditListModal';
 import {UserListSkeleton} from '../../components/UserListSkeleton';
+import {fontSize} from '../../utils/typography';
 
 interface ListDetailScreenProps {
   listUri: string;
@@ -364,24 +365,24 @@ function createStyles(colors: any) {
     },
     listName: {
       color: colors.text,
-      fontSize: 22,
+      fontSize: fontSize.title2,
       fontWeight: '700',
       marginBottom: 8,
     },
     listDescription: {
       color: colors.textSecondary,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       marginBottom: 8,
       lineHeight: 20,
     },
     listMemberCount: {
       color: colors.textTertiary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       marginBottom: 4,
     },
     listPurpose: {
       color: colors.primary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontWeight: '600',
     },
     headerActions: {
@@ -402,7 +403,7 @@ function createStyles(colors: any) {
     },
     actionButtonText: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     deleteButton: {
@@ -411,7 +412,7 @@ function createStyles(colors: any) {
     },
     deleteButtonText: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     sectionHeader: {
@@ -421,7 +422,7 @@ function createStyles(colors: any) {
     },
     sectionTitle: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
     memberItem: {
@@ -449,7 +450,7 @@ function createStyles(colors: any) {
     },
     avatarText: {
       color: colors.text,
-      fontSize: 20,
+      fontSize: fontSize.title3,
       fontWeight: '600',
     },
     memberInfo: {
@@ -457,13 +458,13 @@ function createStyles(colors: any) {
     },
     displayName: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       marginBottom: 2,
     },
     handle: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     removeButton: {
       backgroundColor: colors.danger,
@@ -473,7 +474,7 @@ function createStyles(colors: any) {
     },
     removeButtonText: {
       color: colors.text,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontWeight: '600',
     },
     centerContainer: {
@@ -488,29 +489,29 @@ function createStyles(colors: any) {
     },
     loadingText: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       marginTop: 12,
     },
     emptyText: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
       marginBottom: 8,
     },
     emptySubtext: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       textAlign: 'center',
     },
     errorText: {
       color: colors.danger,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       marginBottom: 8,
     },
     errorSubtext: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       textAlign: 'center',
       marginBottom: 16,
     },
@@ -522,7 +523,7 @@ function createStyles(colors: any) {
     },
     retryButtonText: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     footerLoader: {

@@ -16,6 +16,7 @@ import {useTheme} from '../contexts/ThemeContext';
 import {useVideoAutoplay} from '../contexts/VideoAutoplayContext';
 import {createLogger} from '../utils/logger';
 import {useMediaOrientation} from '../hooks/useMediaOrientation';
+import {fontSize} from '../utils/typography';
 
 const logger = createLogger('VideoEmbed');
 
@@ -442,7 +443,7 @@ function createStyles(colors: any, screenWidth: number, screenHeight: number) {
     },
     controlIcon: {
       color: '#fff',
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     pausedIndicator: {
       position: 'absolute',
@@ -470,7 +471,7 @@ function createStyles(colors: any, screenWidth: number, screenHeight: number) {
     },
     timeText: {
       color: '#fff',
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       textShadowColor: 'rgba(0,0,0,0.8)',
       textShadowOffset: {width: 0, height: 1},
       textShadowRadius: 2,
@@ -486,7 +487,7 @@ function createStyles(colors: any, screenWidth: number, screenHeight: number) {
     },
     altText: {
       color: '#fff',
-      fontSize: 12,
+      fontSize: fontSize.caption1,
     },
     fullscreenContainer: {
       flex: 1,
@@ -511,7 +512,7 @@ function createStyles(colors: any, screenWidth: number, screenHeight: number) {
     },
     fullscreenCloseText: {
       color: '#fff',
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
     },
   });

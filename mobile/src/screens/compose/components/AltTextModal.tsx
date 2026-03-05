@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { BlurOverlay } from "../../../components/BlurOverlay";
+import {fontSize} from '../../../utils/typography';
 
 export interface AltTextModalProps {
   visible: boolean;
@@ -195,15 +196,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "600",
   },
   modalCloseButton: {
-    fontSize: 32,
+    fontSize: fontSize.largeTitle,
     lineHeight: 32,
   },
   modalDescription: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     marginBottom: 12,
   },
   modalImage: {
@@ -225,7 +226,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   generateAltTextButtonText: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
   },
   generateButtonSpinner: {
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     padding: 12,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     minHeight: 100,
     textAlignVertical: "top",
     marginBottom: 12,
@@ -246,7 +247,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveAltTextButtonText: {
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
   },
 });

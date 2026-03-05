@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon, ChatBubbleIcon, SearchIcon, ImageIcon, BookmarkIcon } from "./icons";
 import { useUnreadMessageCount, useDraftCount } from "../hooks/api";
+import {fontSize} from '../utils/typography';
 
 interface DrawerItemProps {
   label: string;
@@ -174,17 +175,17 @@ function createStyles(colors: any) {
     },
     avatarText: {
       color: colors.text,
-      fontSize: 24,
+      fontSize: fontSize.title2,
       fontWeight: "bold",
     },
     username: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "600",
     },
     handle: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       marginTop: 2,
     },
     drawerItems: {
@@ -207,7 +208,7 @@ function createStyles(colors: any) {
     },
     drawerItemText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     drawerItemTextActive: {
       color: colors.primary,
@@ -225,7 +226,7 @@ function createStyles(colors: any) {
     },
     version: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
     },
     badge: {
       backgroundColor: colors.primary,
@@ -239,7 +240,7 @@ function createStyles(colors: any) {
     },
     badgeText: {
       color: colors.text,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: '600',
     },
   });

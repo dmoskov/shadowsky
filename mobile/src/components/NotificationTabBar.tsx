@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import {Text, StyleSheet, TouchableOpacity, ScrollView} from 'react-native';
 import { useTheme } from "../contexts/ThemeContext";
 import { triggerHaptic } from "../utils/haptics";
+import {fontSize} from '../utils/typography';
 
 export type NotificationFilter = 'all' | 'likes' | 'reposts' | 'replies' | 'follows' | 'mentions' | 'quotes';
 
@@ -80,7 +81,7 @@ function createStyles(colors: any) {
       borderBottomColor: colors.primary,
     },
     tabText: {
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: colors.textTertiary,
     },

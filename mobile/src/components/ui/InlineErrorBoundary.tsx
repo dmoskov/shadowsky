@@ -2,6 +2,7 @@ import React, { Component, ReactNode } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { captureException } from "../../utils/error-reporting";
 import { createLogger } from "../../utils/logger";
+import {fontSize} from '../../utils/typography';
 
 const logger = createLogger("InlineErrorBoundary");
 
@@ -109,7 +110,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   message: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     color: "#8899a6",
   },
   retryButton: {
@@ -121,7 +122,7 @@ const styles = StyleSheet.create({
     borderColor: "#38444d",
   },
   retryText: {
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     color: "#8899a6",
   },
 });

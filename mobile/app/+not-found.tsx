@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from "react-native";
 import { Link } from "expo-router";
+import {fontSize} from '../src/utils/typography';
 
 export default function NotFoundScreen() {
   return (
@@ -22,7 +23,7 @@ const styles = StyleSheet.create({
   },
   text: {
     color: "#ffffff",
-    fontSize: 20,
+    fontSize: fontSize.title3,
     fontWeight: "600",
   },
   link: {
@@ -31,6 +32,6 @@ const styles = StyleSheet.create({
   },
   linkText: {
     color: "#3b82f6",
-    fontSize: 16,
+    fontSize: fontSize.callout,
   },
 });

@@ -21,6 +21,7 @@ import { sharePost } from "../../utils/share";
 import { useLightbox } from "../../contexts/LightboxContext";
 import type { LightboxImage } from "../../contexts/LightboxContext";
 import { createLogger } from "../../utils/logger";
+import {fontSize} from '../../utils/typography';
 
 const logger = createLogger('HomeScreen');
 
@@ -545,7 +546,7 @@ function createStyles(colors: any) {
       position: 'relative',
     },
     navBarTitle: {
-      fontSize: 17,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
     badge: {
@@ -561,7 +562,7 @@ function createStyles(colors: any) {
     },
     badgeText: {
       color: '#ffffff',
-      fontSize: 11,
+      fontSize: fontSize.caption2,
       fontWeight: '700',
     },
     feedPickerContainer: {
@@ -588,7 +589,7 @@ function createStyles(colors: any) {
       borderColor: colors.primary,
     },
     feedChipText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: colors.textSecondary,
     },
@@ -605,7 +606,7 @@ function createStyles(colors: any) {
       marginRight: 8,
     },
     feedChipDiscoverText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: colors.primary,
     },

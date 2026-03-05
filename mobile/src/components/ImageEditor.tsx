@@ -17,6 +17,7 @@ import { ImageAsset } from '../hooks/useImagePicker';
 
 
 import { createLogger } from '../utils/logger';
+import {fontSize} from '../utils/typography';
 
 const logger = createLogger('Imageeditorx');
 // Aspect ratio presets
@@ -540,14 +541,14 @@ function createStyles(colors: any) {
     },
     headerButtonText: {
       color: colors.primary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     resetText: {
       color: colors.editorText,
     },
     headerTitle: {
       color: colors.text,
-      fontSize: 17,
+      fontSize: fontSize.body,
       fontWeight: '600',
     },
     headerRight: {
@@ -563,7 +564,7 @@ function createStyles(colors: any) {
     },
     doneButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
     previewContainer: {
@@ -591,7 +592,7 @@ function createStyles(colors: any) {
     },
     sectionTitle: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       marginBottom: 12,
     },
@@ -614,12 +615,12 @@ function createStyles(colors: any) {
     },
     controlButtonText: {
       color: colors.text,
-      fontSize: 24,
+      fontSize: fontSize.title2,
       marginBottom: 4,
     },
     controlButtonLabel: {
       color: colors.editorText,
-      fontSize: 11,
+      fontSize: fontSize.caption2,
     },
     aspectRatioScroll: {
       flexGrow: 0,
@@ -641,7 +642,7 @@ function createStyles(colors: any) {
     },
     aspectRatioButtonText: {
       color: colors.editorText,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     aspectRatioButtonTextActive: {
       color: colors.text,
@@ -655,7 +656,7 @@ function createStyles(colors: any) {
     },
     primaryButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
     secondaryButton: {
@@ -669,11 +670,11 @@ function createStyles(colors: any) {
     },
     secondaryButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     cropHint: {
       color: colors.editorText,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       marginTop: 8,
       textAlign: 'center',
     },
@@ -716,7 +717,7 @@ function createStyles(colors: any) {
     },
     editedBadgeText: {
       color: colors.text,
-      fontSize: 10,
+      fontSize: fontSize.caption2,
       fontWeight: 'bold',
     },
   });

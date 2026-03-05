@@ -5,6 +5,7 @@ import { captureException } from "../utils/error-reporting";
 import { colors } from "../constants/theme";
 
 import { createLogger } from "../utils/logger";
+import {fontSize} from '../utils/typography';
 
 const logger = createLogger("ErrorBoundary");
 
@@ -130,21 +131,21 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   title: {
-    fontSize: 24,
+    fontSize: fontSize.title2,
     fontWeight: "bold",
     color: colors.text,
     marginBottom: 12,
     textAlign: "center",
   },
   message: {
-    fontSize: 16,
+    fontSize: fontSize.callout,
     color: colors.textSecondary,
     marginBottom: 12,
     textAlign: "center",
     lineHeight: 22,
   },
   errorId: {
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     color: colors.textTertiary,
     marginBottom: 24,
     textAlign: "center",
@@ -159,19 +160,19 @@ const styles = StyleSheet.create({
     borderColor: colors.errorBorder,
   },
   errorTitle: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
     color: colors.errorBorder,
     marginBottom: 8,
   },
   errorMessage: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     color: colors.text,
     marginBottom: 8,
     fontFamily: "monospace",
   },
   errorStack: {
-    fontSize: 11,
+    fontSize: fontSize.caption2,
     color: colors.textSecondary,
     fontFamily: "monospace",
     lineHeight: 16,
@@ -189,7 +190,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.info,
   },
   primaryButtonText: {
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
     color: colors.text,
   },
@@ -199,7 +200,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   secondaryButtonText: {
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
     color: colors.textSecondary,
   },

@@ -18,6 +18,7 @@ import {Avatar} from '../../components/Avatar';
 import {SkeletonShimmer} from '../../components/SkeletonShimmer';
 
 import { createLogger } from '../../utils/logger';
+import {fontSize} from '../../utils/typography';
 
 const logger = createLogger('Starterpackdetailscreenx');
 interface StarterPackDetailScreenProps {
@@ -302,7 +303,7 @@ function createStyles(colors: any) {
     },
     errorText: {
       color: colors.danger,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       marginBottom: 16,
       textAlign: 'center',
     },
@@ -314,7 +315,7 @@ function createStyles(colors: any) {
     },
     retryButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
     },
     header: {
@@ -323,7 +324,7 @@ function createStyles(colors: any) {
       borderBottomColor: colors.surfaceElevated,
     },
     title: {
-      fontSize: 28,
+      fontSize: fontSize.title1,
       fontWeight: 'bold',
       color: colors.text,
       marginBottom: 16,
@@ -341,21 +342,21 @@ function createStyles(colors: any) {
       flex: 1,
     },
     creatorLabel: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.textSecondary,
       marginBottom: 2,
     },
     creatorName: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       color: colors.text,
     },
     creatorHandle: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
     },
     description: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       color: colors.textMuted,
       lineHeight: 24,
       marginBottom: 16,
@@ -372,12 +373,12 @@ function createStyles(colors: any) {
       alignItems: 'center',
     },
     statValue: {
-      fontSize: 24,
+      fontSize: fontSize.title2,
       fontWeight: 'bold',
       color: colors.primary,
     },
     statLabel: {
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       color: colors.textSecondary,
       marginTop: 4,
     },
@@ -391,7 +392,7 @@ function createStyles(colors: any) {
     },
     followAllButtonText: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
     },
     section: {
@@ -400,7 +401,7 @@ function createStyles(colors: any) {
       borderBottomColor: colors.surfaceElevated,
     },
     sectionTitle: {
-      fontSize: 20,
+      fontSize: fontSize.title3,
       fontWeight: 'bold',
       color: colors.text,
       marginBottom: 16,
@@ -417,17 +418,17 @@ function createStyles(colors: any) {
       flex: 1,
     },
     displayName: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       color: colors.text,
     },
     handle: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       marginTop: 2,
     },
     memberDescription: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       marginTop: 4,
     },
@@ -449,12 +450,12 @@ function createStyles(colors: any) {
       flex: 1,
     },
     feedName: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       color: colors.text,
     },
     feedDescription: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       marginTop: 4,
     },

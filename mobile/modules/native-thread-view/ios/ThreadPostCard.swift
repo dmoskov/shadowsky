@@ -203,7 +203,7 @@ struct ThreadPostCard: View {
                     onShare?()
                 }) {
                     Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 18))
+                        .font(.body)
                         .foregroundColor(.secondary)
                         .frame(minWidth: 48, minHeight: 48)
                         .contentShape(Rectangle())
@@ -304,7 +304,7 @@ struct ActionButton: View {
         }) {
             HStack(spacing: 4) {
                 Image(systemName: iconName)
-                    .font(.system(size: 18))
+                    .font(.body)
                 if count > 0 {
                     Text("\(count)")
                         .font(.subheadline)

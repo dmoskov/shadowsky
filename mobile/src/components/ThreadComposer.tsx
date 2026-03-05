@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
 import { ThreadPostItem, ThreadPost } from "./ThreadPostItem";
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 interface ThreadComposerProps {
   posts: ThreadPost[];
@@ -96,7 +97,7 @@ function createStyles(colors: any) {
     },
     headerText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
     threadBadge: {
@@ -107,7 +108,7 @@ function createStyles(colors: any) {
     },
     threadBadgeText: {
       color: colors.text,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: "600",
     },
     postsContainer: {
@@ -130,7 +131,7 @@ function createStyles(colors: any) {
     },
     addPostButtonText: {
       color: colors.primary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
     },
   });

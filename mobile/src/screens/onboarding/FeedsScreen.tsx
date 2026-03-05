@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../contexts/ThemeContext";
+import {fontSize} from '../../utils/typography';
 
 interface FeedGenerator {
   uri: string;
@@ -339,22 +340,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headerIconText: {
-    fontSize: 28,
+    fontSize: fontSize.title1,
     fontWeight: "700",
   },
   title: {
-    fontSize: 26,
+    fontSize: fontSize.title1,
     fontWeight: "700",
     textAlign: "center",
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     textAlign: "center",
     marginBottom: 8,
   },
   counter: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
   },
   loadingContainer: {
     flex: 1,
@@ -362,7 +363,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     marginTop: 12,
   },
   listContent: {
@@ -389,21 +390,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   feedAvatarText: {
-    fontSize: 22,
+    fontSize: fontSize.title2,
     fontWeight: "700",
   },
   feedTextContainer: {
     flex: 1,
   },
   feedName: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
   },
   feedCreator: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
   },
   feedDescription: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     marginBottom: 10,
     lineHeight: 18,
   },
@@ -413,7 +414,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   feedLikes: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
   },
   addButton: {
     borderRadius: 8,
@@ -424,7 +425,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   addButtonText: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
   },
   emptyContainer: {
@@ -434,7 +435,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   emptyText: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     textAlign: "center",
   },
   separator: {
@@ -455,7 +456,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   backButtonText: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "500",
   },
   rightButtons: {
@@ -469,7 +470,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   skipButtonText: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "500",
   },
   continueButton: {
@@ -478,7 +479,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   continueButtonText: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
   },
 });

@@ -15,6 +15,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useUnreadCount } from "../hooks/api/useNotifications";
 import { triggerHaptic } from "../utils/haptics";
 import { ALL_NAV_ITEMS, TabBarCustomizer } from "./TabBarCustomizer";
+import {fontSize} from '../utils/typography';
 
 /**
  * Maps nav item IDs to their Expo Router route names.
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: "#ffffff",
-    fontSize: 11,
+    fontSize: fontSize.caption2,
     fontWeight: "700",
   },
 });
@@ -231,7 +232,7 @@ const createTabStyles = () =>
       position: "relative",
     },
     label: {
-      fontSize: 10,
+      fontSize: fontSize.caption2,
       marginTop: 2,
       fontWeight: "500",
     },

@@ -24,6 +24,7 @@ import type { TenorGif } from "../services/tenor";
 import { getBestGifUrl } from "../services/tenor";
 import { useTheme } from "../contexts/ThemeContext";
 import Constants from "expo-constants";
+import {fontSize} from '../utils/typography';
 
 interface GifPickerProps {
   visible: boolean;
@@ -293,7 +294,7 @@ function createStyles(colors: any, itemWidth: number) {
     },
     headerTitle: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "600",
     },
     closeButton: {
@@ -317,7 +318,7 @@ function createStyles(colors: any, itemWidth: number) {
     searchInput: {
       flex: 1,
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       marginLeft: 8,
     },
     listContent: {
@@ -356,18 +357,18 @@ function createStyles(colors: any, itemWidth: number) {
     },
     errorText: {
       color: colors.danger,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       textAlign: "center",
     },
     hintText: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       textAlign: "center",
       marginTop: 8,
     },
     noResultsText: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       textAlign: "center",
     },
     trendingHeader: {
@@ -377,7 +378,7 @@ function createStyles(colors: any, itemWidth: number) {
     },
     trendingText: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     loadingContainer: {
       paddingVertical: 24,
@@ -390,7 +391,7 @@ function createStyles(colors: any, itemWidth: number) {
     },
     emptyText: {
       color: colors.textTertiary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       textAlign: "center",
     },
     footer: {
@@ -402,12 +403,12 @@ function createStyles(colors: any, itemWidth: number) {
     },
     footerText: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       marginBottom: 4,
     },
     footerHint: {
       color: colors.textTertiary,
-      fontSize: 10,
+      fontSize: fontSize.caption2,
     },
   });
 }

@@ -12,6 +12,7 @@ import {
   TOPIC_CATEGORIES,
   type TopicCategory,
 } from "../../services/onboarding/onboarding-service";
+import {fontSize} from '../../utils/typography';
 
 export interface TopicsScreenProps {
   initialSelected?: string[];
@@ -214,18 +215,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: 26,
+    fontSize: fontSize.title1,
     fontWeight: "700",
     textAlign: "center",
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     textAlign: "center",
     marginBottom: 8,
   },
   counter: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
   },
   scrollView: {
     flex: 1,
@@ -247,18 +248,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   topicIcon: {
-    fontSize: 28,
+    fontSize: fontSize.title1,
   },
   topicTextContainer: {
     flex: 1,
   },
   topicName: {
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
     marginBottom: 2,
   },
   topicDescription: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
   },
   checkBadge: {
     width: 24,
@@ -268,7 +269,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   checkText: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "700",
   },
   navigation: {
@@ -286,7 +287,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   backButtonText: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "500",
   },
   rightButtons: {
@@ -300,7 +301,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   skipButtonText: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "500",
   },
   continueButton: {
@@ -312,7 +313,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   continueButtonText: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
   },
 });

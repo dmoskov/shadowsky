@@ -12,6 +12,7 @@ import { useTheme } from "../contexts/ThemeContext";
 
 
 import { createLogger } from '../utils/logger';
+import {fontSize} from '../utils/typography';
 
 const logger = createLogger('Applockscreenx');
 interface AppLockScreenProps {
@@ -145,18 +146,18 @@ function createStyles(colors: any) {
     },
     iconText: {
       color: colors.text,
-      fontSize: 40,
+      fontSize: fontSize.largeTitle,
       fontWeight: "bold",
     },
     title: {
       color: colors.text,
-      fontSize: 28,
+      fontSize: fontSize.title1,
       fontWeight: "bold",
       marginBottom: 8,
     },
     subtitle: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       marginBottom: 48,
     },
     authenticatingContainer: {
@@ -165,7 +166,7 @@ function createStyles(colors: any) {
     },
     authenticatingText: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     unlockButton: {
       backgroundColor: colors.primary,
@@ -178,12 +179,12 @@ function createStyles(colors: any) {
     },
     unlockButtonText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
     helpText: {
       color: colors.textTertiary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       textAlign: "center",
       lineHeight: 20,
     },

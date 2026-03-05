@@ -15,6 +15,7 @@ import { AppBskyActorDefs } from '@atproto/api';
 import {useTheme} from '../../contexts/ThemeContext';
 import {UserListSkeleton} from '../../components/UserListSkeleton';
 import {recordUnblock} from '../../services/moderation-history';
+import {fontSize} from '../../utils/typography';
 
 interface BlockedAccountsScreenProps {
   onNavigateToProfile?: (handle: string) => void;
@@ -187,13 +188,13 @@ function createStyles(colors: any) {
     },
     headerTitle: {
       color: colors.text,
-      fontSize: 24,
+      fontSize: fontSize.title2,
       fontWeight: 'bold',
       marginBottom: 4,
     },
     headerDescription: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     accountItem: {
       flexDirection: 'row',
@@ -215,13 +216,13 @@ function createStyles(colors: any) {
     },
     displayName: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: '600',
       marginBottom: 2,
     },
     handle: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     unblockButton: {
       backgroundColor: 'transparent',
@@ -233,7 +234,7 @@ function createStyles(colors: any) {
     },
     unblockButtonText: {
       color: colors.danger,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     footerLoader: {
@@ -249,20 +250,20 @@ function createStyles(colors: any) {
     },
     emptyText: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: '600',
       marginBottom: 8,
       textAlign: 'center',
     },
     emptySubtext: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       textAlign: 'center',
       lineHeight: 20,
     },
     errorText: {
       color: colors.danger,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       textAlign: 'center',
     },
     emptyList: {

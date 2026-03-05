@@ -1,6 +1,7 @@
 import { useRequiredParam } from "../../../src/hooks/useRequiredParam";
 import { ErrorState } from "../../../src/components/ErrorState";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import {fontSize} from '../../../src/utils/typography';
 
 /**
  * Feed route handler for deep linking
@@ -40,12 +41,12 @@ const styles = StyleSheet.create({
   },
   text: {
     color: "#ffffff",
-    fontSize: 16,
+    fontSize: fontSize.callout,
     marginTop: 16,
   },
   uri: {
     color: "#8b8b8b",
-    fontSize: 12,
+    fontSize: fontSize.caption1,
     marginTop: 8,
     textAlign: "center",
   },

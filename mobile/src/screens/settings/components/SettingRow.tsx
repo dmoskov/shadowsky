@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../../../contexts/ThemeContext";
+import {fontSize} from '../../../utils/typography';
 
 export interface SettingRowProps {
   label: string;
@@ -68,12 +69,12 @@ const createStyles = (themeColors: Record<string, string>) =>
     },
     settingLabel: {
       color: themeColors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "500",
     },
     settingDescription: {
       color: themeColors.textTertiary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       marginTop: 2,
     },
     settingRight: {
@@ -84,11 +85,11 @@ const createStyles = (themeColors: Record<string, string>) =>
     },
     settingValue: {
       color: themeColors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     chevron: {
       color: themeColors.textTertiary,
-      fontSize: 24,
+      fontSize: fontSize.title2,
       fontWeight: "300",
     },
   });

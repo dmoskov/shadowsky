@@ -9,6 +9,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { DmMessage } from "../../../services/dm-service";
 import { InlineErrorBoundary } from "../../../components/ui/InlineErrorBoundary";
+import {fontSize} from '../../../utils/typography';
 
 interface MessageThreadProps {
   messages: DmMessage[];
@@ -160,7 +161,7 @@ function createStyles(colors: any) {
       backgroundColor: colors.surfaceAlt,
     },
     messageText: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       lineHeight: 20,
     },
     ownMessageText: {
@@ -176,7 +177,7 @@ function createStyles(colors: any) {
       gap: 4,
     },
     messageTime: {
-      fontSize: 11,
+      fontSize: fontSize.caption2,
     },
     ownMessageTime: {
       color: "rgba(255, 255, 255, 0.7)",
@@ -185,7 +186,7 @@ function createStyles(colors: any) {
       color: colors.textSecondary,
     },
     deliveryStatus: {
-      fontSize: 11,
+      fontSize: fontSize.caption2,
     },
     ownDeliveryStatus: {
       color: "rgba(255, 255, 255, 0.7)",

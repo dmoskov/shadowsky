@@ -13,6 +13,7 @@ import { ChevronLeftIcon } from '../../components/icons';
 
 
 import { createLogger } from '../../utils/logger';
+import {fontSize} from '../../utils/typography';
 
 const logger = createLogger('ContentModerationSettingsScreen');
 interface ContentModerationSettingsScreenProps {
@@ -263,7 +264,7 @@ function createStyles(colors: any) {
     width: 60,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: fontSize.headline,
     fontWeight: "600",
     color: colors.text,
     flex: 1,
@@ -276,7 +277,7 @@ function createStyles(colors: any) {
   },
   resetButtonText: {
     color: colors.primary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
   },
   container: {
@@ -286,7 +287,7 @@ function createStyles(colors: any) {
     padding: 16,
   },
   description: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     color: colors.textSecondary,
     marginBottom: 24,
     lineHeight: 20,
@@ -295,7 +296,7 @@ function createStyles(colors: any) {
     marginBottom: 24,
   },
   categoryTitle: {
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
     color: colors.text,
     marginBottom: 12,
@@ -312,13 +313,13 @@ function createStyles(colors: any) {
     marginBottom: 12,
   },
   labelName: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
     color: colors.text,
     marginBottom: 4,
   },
   labelDescription: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     color: colors.textSecondary,
     lineHeight: 18,
   },
@@ -341,7 +342,7 @@ function createStyles(colors: any) {
     borderColor: colors.primary,
   },
   preferenceButtonText: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     fontWeight: "600",
     color: colors.textSecondary,
   },
@@ -358,13 +359,13 @@ function createStyles(colors: any) {
     borderColor: colors.surface,
   },
   infoTitle: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
     color: colors.text,
     marginBottom: 12,
   },
   infoText: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: 6,

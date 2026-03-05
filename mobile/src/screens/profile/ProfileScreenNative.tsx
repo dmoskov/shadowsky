@@ -43,6 +43,7 @@ import { ProfileScreen } from "./ProfileScreen";
 import { InlineErrorBoundary } from "../../components/ui/InlineErrorBoundary";
 import { ProfileAIInsights } from "../../components/ProfileAIInsights";
 import { createLogger } from "../../utils/logger";
+import {fontSize} from '../../utils/typography';
 
 const logger = createLogger("ProfileScreenNative");
 
@@ -749,7 +750,7 @@ function createStyles(colors: any) {
     },
     emptyText: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     emptyList: {
       flexGrow: 1,
@@ -771,7 +772,7 @@ function createStyles(colors: any) {
     },
     pinnedPostLabelText: {
       color: colors.textSecondary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       fontWeight: "600",
     },
     menuOverlay: {
@@ -799,7 +800,7 @@ function createStyles(colors: any) {
     },
     menuItemText: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "500",
       textAlign: "center",
     },

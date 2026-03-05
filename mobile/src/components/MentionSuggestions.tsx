@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 import { Avatar } from "./Avatar";
+import {fontSize} from '../utils/typography';
 
 interface MentionSuggestionsProps {
   suggestions: AppBskyActorDefs.ProfileView[];
@@ -99,7 +100,7 @@ function createStyles(colors: any) {
     },
     loadingText: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
     suggestionItem: {
       flexDirection: "row",
@@ -115,13 +116,13 @@ function createStyles(colors: any) {
     },
     displayName: {
       color: colors.text,
-      fontSize: 15,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
       marginBottom: 2,
     },
     handle: {
       color: colors.textTertiary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
     },
   });
 }

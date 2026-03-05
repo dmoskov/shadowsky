@@ -24,6 +24,7 @@ import { useTheme } from "../contexts/ThemeContext";
 
 
 import { createLogger } from '../utils/logger';
+import {fontSize} from '../utils/typography';
 
 const logger = createLogger('Emojipickermodalx');
 interface EmojiPickerModalProps {
@@ -156,7 +157,7 @@ function createStyles(colors: any) {
     },
     headerTitle: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: fontSize.headline,
       fontWeight: "600",
     },
     closeButton: {
@@ -178,7 +179,7 @@ function createStyles(colors: any) {
     },
     footerText: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       textAlign: "center",
     },
   });

@@ -4,6 +4,7 @@ import {AppBskyEmbedRecord, AppBskyFeedPost, AppBskyRichtextFacet} from '@atprot
 import {Avatar} from './Avatar';
 import {RichText} from '../utils/rich-text';
 import {useTheme} from '../contexts/ThemeContext';
+import {fontSize} from '../utils/typography';
 
 interface QuoteEmbedProps {
   record: any;
@@ -91,7 +92,7 @@ function createStyles(colors: any) {
     },
     notFoundText: {
       color: colors.textTertiary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontStyle: 'italic',
     },
     header: {
@@ -108,21 +109,21 @@ function createStyles(colors: any) {
     },
     displayName: {
       color: colors.text,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     handle: {
       color: colors.textTertiary,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
     },
     text: {
       color: colors.textMuted,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       lineHeight: 18,
     },
     showMore: {
       color: colors.textTertiary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       marginTop: 2,
     },
   });

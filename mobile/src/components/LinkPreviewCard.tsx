@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { useTheme } from "../contexts/ThemeContext";
 import type { LinkMetadata } from "../services/ai-service";
+import {fontSize} from '../utils/typography';
 
 interface LinkPreviewCardProps {
   metadata: LinkMetadata;
@@ -72,17 +73,17 @@ function createStyles(colors: any) {
     },
     title: {
       color: colors.text,
-      fontSize: 13,
+      fontSize: fontSize.footnote,
       fontWeight: "600",
     },
     description: {
       color: colors.textSecondary,
-      fontSize: 12,
+      fontSize: fontSize.caption1,
       lineHeight: 16,
     },
     domain: {
       color: colors.textTertiary,
-      fontSize: 11,
+      fontSize: fontSize.caption2,
     },
     dismissButton: {
       padding: 8,
@@ -90,7 +91,7 @@ function createStyles(colors: any) {
     },
     dismissText: {
       color: colors.textTertiary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
     },
   });
 }

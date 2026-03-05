@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../../contexts/ThemeContext";
+import {fontSize} from '../../utils/typography';
 
 interface ContentPreferences {
   hideReposts: boolean;
@@ -247,16 +248,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headerIconText: {
-    fontSize: 28,
+    fontSize: fontSize.title1,
   },
   title: {
-    fontSize: 26,
+    fontSize: fontSize.title1,
     fontWeight: "700",
     textAlign: "center",
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     textAlign: "center",
   },
   scrollView: {
@@ -284,18 +285,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   preferenceIconText: {
-    fontSize: 20,
+    fontSize: fontSize.title3,
   },
   preferenceTextContainer: {
     flex: 1,
   },
   preferenceTitle: {
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
     marginBottom: 4,
   },
   preferenceDescription: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     lineHeight: 18,
   },
   checkBadge: {
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   checkText: {
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "700",
   },
   infoBox: {
@@ -317,7 +318,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   infoText: {
-    fontSize: 13,
+    fontSize: fontSize.footnote,
     lineHeight: 18,
   },
   navigation: {
@@ -335,7 +336,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   backButtonText: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "500",
   },
   completeButton: {
@@ -344,7 +345,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   completeButtonText: {
-    fontSize: 15,
+    fontSize: fontSize.subheadline,
     fontWeight: "600",
   },
 });

@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import type { ToastData, ToastType } from "../contexts/ToastContext";
 import { useTheme } from "../contexts/ThemeContext";
+import {fontSize} from '../utils/typography';
 
 interface ToastProps {
   toasts: ToastData[];
@@ -274,7 +275,7 @@ function createStyles(colors: any) {
       paddingHorizontal: 16,
     },
     toastText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "500",
       flex: 1,
       marginRight: 8,
@@ -286,7 +287,7 @@ function createStyles(colors: any) {
       backgroundColor: "rgba(255, 255, 255, 0.2)",
     },
     actionText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       fontWeight: "600",
     },
     progressBar: {

@@ -17,6 +17,7 @@ import { useTheme } from "../contexts/ThemeContext";
 
 
 import { createLogger } from '../utils/logger';
+import {fontSize} from '../utils/typography';
 
 const logger = createLogger('Newconversationmodalx');
 interface NewConversationModalProps {
@@ -249,7 +250,7 @@ function createStyles(colors: any) {
     },
     headerTitle: {
       color: colors.text,
-      fontSize: 20,
+      fontSize: fontSize.title3,
       fontWeight: "bold",
     },
     closeButton: {
@@ -271,7 +272,7 @@ function createStyles(colors: any) {
     searchInput: {
       flex: 1,
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
     },
     loadingContainer: {
       flex: 1,
@@ -302,7 +303,7 @@ function createStyles(colors: any) {
     },
     avatarText: {
       color: colors.text,
-      fontSize: 20,
+      fontSize: fontSize.title3,
       fontWeight: "600",
     },
     userDetails: {
@@ -311,17 +312,17 @@ function createStyles(colors: any) {
     },
     displayName: {
       color: colors.text,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       fontWeight: "600",
     },
     handle: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       marginTop: 2,
     },
     description: {
       color: colors.textSecondary,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       marginTop: 4,
     },
     emptyContainer: {
@@ -332,13 +333,13 @@ function createStyles(colors: any) {
     },
     emptyText: {
       color: colors.textSecondary,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       textAlign: "center",
       marginTop: 12,
     },
     errorText: {
       color: colors.danger,
-      fontSize: 16,
+      fontSize: fontSize.callout,
       textAlign: "center",
     },
   });

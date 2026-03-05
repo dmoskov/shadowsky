@@ -12,6 +12,7 @@ import { SettingsScreen } from "../screens/settings/SettingsScreen";
 import { ListDetailScreen } from "../screens/lists/ListDetailScreen";
 import { AnalyticsScreen } from "../screens/analytics/AnalyticsScreen";
 import { MessagesScreen } from "../screens/profile/MessagesScreen";
+import {fontSize} from '../utils/typography';
 
 /** Maximum detail panel width on very wide screens */
 const DETAIL_PANEL_MAX_WIDTH = 420;
@@ -172,15 +173,15 @@ function DetailPanelHeader({
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={{ marginRight: 8 }}
           >
-            <Text style={{ color: colors.primary, fontSize: 16 }}>‹</Text>
+            <Text style={{ color: colors.primary, fontSize: fontSize.callout }}>‹</Text>
           </TouchableOpacity>
         )}
-        <Text style={{ color: colors.text, fontSize: 16, fontWeight: "600", flex: 1 }} numberOfLines={1}>
+        <Text style={{ color: colors.text, fontSize: fontSize.callout, fontWeight: "600", flex: 1 }} numberOfLines={1}>
           {title}
         </Text>
       </View>
       <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-        <Text style={{ color: colors.textSecondary, fontSize: 14 }}>Close</Text>
+        <Text style={{ color: colors.textSecondary, fontSize: fontSize.subheadline }}>Close</Text>
       </TouchableOpacity>
     </View>
   );

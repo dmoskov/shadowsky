@@ -28,6 +28,7 @@ import { useOfflineFeedEnhancer, useOfflineFeedStatus } from "../../hooks/useOff
 import StaleContentIndicator from "../../components/StaleContentIndicator";
 
 import { createLogger } from '../../utils/logger';
+import {fontSize} from '../../utils/typography';
 
 const logger = createLogger('SearchScreen');
 const SEARCH_HISTORY_KEY = "@search_history";
@@ -621,7 +622,7 @@ function createStyles(colors: any) {
     flex: 1,
     paddingVertical: 12,
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.callout,
   },
   tabContainer: {
     flexDirection: "row",
@@ -639,7 +640,7 @@ function createStyles(colors: any) {
     borderBottomColor: colors.primary,
   },
   tabText: {
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
     color: colors.textTertiary,
   },
@@ -660,7 +661,7 @@ function createStyles(colors: any) {
   },
   filterButtonText: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     fontWeight: "500",
   },
   listContent: {
@@ -679,18 +680,18 @@ function createStyles(colors: any) {
   },
   displayName: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
     marginBottom: 2,
   },
   handle: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     marginBottom: 4,
   },
   description: {
     color: colors.textTertiary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     marginTop: 4,
   },
   loadingContainer: {
@@ -700,7 +701,7 @@ function createStyles(colors: any) {
   },
   loadingText: {
     color: colors.textSecondary,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     marginTop: 12,
   },
   emptyState: {
@@ -711,13 +712,13 @@ function createStyles(colors: any) {
   },
   emptyStateText: {
     color: colors.textSecondary,
-    fontSize: 18,
+    fontSize: fontSize.headline,
     textAlign: "center",
     marginBottom: 8,
   },
   emptyStateSubtext: {
     color: colors.textTertiary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
     textAlign: "center",
   },
   historyContainer: {
@@ -735,12 +736,12 @@ function createStyles(colors: any) {
   },
   historyTitle: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: fontSize.callout,
     fontWeight: "600",
   },
   clearHistoryText: {
     color: colors.primary,
-    fontSize: 14,
+    fontSize: fontSize.subheadline,
   },
   historyList: {
     flex: 1,
@@ -753,7 +754,7 @@ function createStyles(colors: any) {
   },
   historyText: {
     color: colors.textSecondary,
-    fontSize: 16,
+    fontSize: fontSize.callout,
   },
   filterButtonActive: {
     borderWidth: 1,

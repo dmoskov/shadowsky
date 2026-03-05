@@ -19,6 +19,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useBookmarks } from "../../hooks/api";
 import { useCollectionBookmarks } from "../../hooks/useBookmarkCollections";
 import { useThreadSummaryPreGeneration } from "../../hooks/useThreadSummaryPreGeneration";
+import {fontSize} from '../../utils/typography';
 
 export function BookmarksScreen() {
   const router = useRouter();
@@ -220,7 +221,7 @@ function createStyles(colors: any) {
       borderColor: colors.border,
     },
     collectionButtonText: {
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.text,
     },
     searchContainer: {
@@ -238,7 +239,7 @@ function createStyles(colors: any) {
       paddingHorizontal: 12,
       backgroundColor: colors.surface,
       borderRadius: 8,
-      fontSize: 14,
+      fontSize: fontSize.subheadline,
       color: colors.text,
     },
     clearButton: {
@@ -247,7 +248,7 @@ function createStyles(colors: any) {
       padding: 4,
     },
     clearButtonText: {
-      fontSize: 16,
+      fontSize: fontSize.callout,
       color: colors.textSecondary,
     },
   });
