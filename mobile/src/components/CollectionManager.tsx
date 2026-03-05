@@ -135,17 +135,21 @@ function CollectionManagerInner({
           <TouchableOpacity
             onPress={exportBookmarkCollections}
             style={styles.headerButton}
+            accessibilityRole="button"
+            accessibilityLabel="Export collections"
           >
             <Text style={styles.headerButtonText}>Export</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={importBookmarkCollections}
             style={styles.headerButton}
+            accessibilityRole="button"
+            accessibilityLabel="Import collections"
           >
             <Text style={styles.headerButtonText}>Import</Text>
           </TouchableOpacity>
           {onClose && (
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel="Close">
               <Text style={styles.closeButtonText}>✕</Text>
             </TouchableOpacity>
           )}
@@ -161,6 +165,9 @@ function CollectionManagerInner({
             styles.collectionItem,
             selectedCollectionId === null && styles.selectedCollection,
           ]}
+          accessibilityRole="button"
+          accessibilityLabel="All Bookmarks"
+          accessibilityState={{selected: selectedCollectionId === null}}
         >
           <View style={styles.collectionIcon}>
             <Text>📁</Text>
@@ -182,6 +189,9 @@ function CollectionManagerInner({
             styles.collectionItem,
             selectedCollectionId === '__uncategorized__' && styles.selectedCollection,
           ]}
+          accessibilityRole="button"
+          accessibilityLabel="Uncategorized"
+          accessibilityState={{selected: selectedCollectionId === '__uncategorized__'}}
         >
           <View style={styles.collectionIcon}>
             <Text>📁</Text>
@@ -205,6 +215,9 @@ function CollectionManagerInner({
                 styles.collectionItem,
                 selectedCollectionId === collection.id && styles.selectedCollection,
               ]}
+              accessibilityRole="button"
+              accessibilityLabel={`${collection.name} collection, ${collection.bookmarkCount} bookmarks`}
+              accessibilityState={{selected: selectedCollectionId === collection.id}}
             >
               <View
                 style={[
@@ -229,6 +242,8 @@ function CollectionManagerInner({
               <TouchableOpacity
                 onPress={() => startEditing(collection)}
                 style={styles.editButton}
+                accessibilityRole="button"
+                accessibilityLabel={`Edit ${collection.name}`}
               >
                 <Text style={styles.editButtonText}>✏️</Text>
               </TouchableOpacity>
@@ -260,6 +275,7 @@ function CollectionManagerInner({
             placeholder="Collection name"
             placeholderTextColor={colors.textSecondary}
             editable={!isCreating && !isUpdating}
+            accessibilityLabel="Collection name"
           />
 
           <TextInput
@@ -269,6 +285,7 @@ function CollectionManagerInner({
             placeholder="Description (optional)"
             placeholderTextColor={colors.textSecondary}
             editable={!isCreating && !isUpdating}
+            accessibilityLabel="Collection description"
           />
 
           <Text style={styles.colorLabel}>Color</Text>
@@ -283,12 +300,15 @@ function CollectionManagerInner({
                   selectedColor === color.id && styles.selectedColorOption,
                 ]}
                 disabled={isCreating || isUpdating}
+                accessibilityRole="button"
+                accessibilityLabel={`${color.id} color`}
+                accessibilityState={{selected: selectedColor === color.id}}
               />
             ))}
           </View>
 
           <View style={styles.formButtons}>
-            <TouchableOpacity onPress={cancelEditing} style={styles.cancelButton}>
+            <TouchableOpacity onPress={cancelEditing} style={styles.cancelButton} accessibilityRole="button" accessibilityLabel="Cancel">
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -299,6 +319,8 @@ function CollectionManagerInner({
                   styles.disabledButton,
               ]}
               disabled={!collectionName.trim() || isCreating || isUpdating}
+              accessibilityRole="button"
+              accessibilityLabel={editingCollection ? 'Save collection' : 'Create collection'}
             >
               {isCreating || isUpdating ? (
                 <ActivityIndicator color={colors.text} />
@@ -315,6 +337,8 @@ function CollectionManagerInner({
               onPress={() => handleDeleteCollection(editingCollection)}
               style={styles.deleteButton}
               disabled={isDeleting}
+              accessibilityRole="button"
+              accessibilityLabel="Delete collection"
             >
               <Text style={styles.deleteButtonText}>Delete Collection</Text>
             </TouchableOpacity>
@@ -328,6 +352,8 @@ function CollectionManagerInner({
           <TouchableOpacity
             onPress={() => setShowCreateForm(true)}
             style={styles.createButton}
+            accessibilityRole="button"
+            accessibilityLabel="Create collection"
           >
             <Text style={styles.createButtonText}>+ Create Collection</Text>
           </TouchableOpacity>

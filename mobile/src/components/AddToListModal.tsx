@@ -60,7 +60,9 @@ export function AddToListModal({
     <TouchableOpacity
       style={styles.listItem}
       onPress={() => handleAddToList(item)}
-      disabled={isPending}>
+      disabled={isPending}
+      accessibilityRole="button"
+      accessibilityLabel={`Add to ${item.name}, ${item.listItemCount || 0} members`}>
       <View style={styles.listContent}>
         <Text style={styles.listName}>{item.name}</Text>
         {item.description && (
@@ -111,7 +113,7 @@ export function AddToListModal({
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Add to List</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel="Close">
             <Text style={styles.closeButtonText}>✕</Text>
           </TouchableOpacity>
         </View>

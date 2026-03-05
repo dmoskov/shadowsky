@@ -75,6 +75,8 @@ export function ThreadPostItem({
             onPress={onRemove}
             style={styles.removeButton}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel={`Remove post ${index + 1}`}
           >
             <CloseIcon size={18} color={colors.danger} />
           </TouchableOpacity>
@@ -89,6 +91,7 @@ export function ThreadPostItem({
         value={post.text}
         onChangeText={onTextChange}
         editable={!isUploading}
+        accessibilityLabel={`Post ${index + 1} text`}
       />
 
       {/* Image Previews */}
@@ -103,6 +106,8 @@ export function ThreadPostItem({
                   onPress={() => handleRemoveImage(imageIndex)}
                   disabled={isUploading}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove image ${imageIndex + 1}`}
                 >
                   <Text style={styles.removeImageText}>{"\u00D7"}</Text>
                 </TouchableOpacity>
@@ -111,6 +116,8 @@ export function ThreadPostItem({
                   onPress={() => setAltTextModalImage(imageIndex)}
                   disabled={isUploading}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  accessibilityRole="button"
+                  accessibilityLabel={image.altText ? `Edit alt text for image ${imageIndex + 1}` : `Add alt text for image ${imageIndex + 1}`}
                 >
                   <Text style={styles.altTextButtonText}>
                     {image.altText ? "\u2713 ALT" : "ALT"}
@@ -127,6 +134,8 @@ export function ThreadPostItem({
           style={[styles.imageButton, !canAddImages && styles.imageButtonDisabled]}
           onPress={onImagePicker}
           disabled={!canAddImages || isUploading}
+          accessibilityRole="button"
+          accessibilityLabel="Add image"
         >
           <ImageIcon size={18} color={canAddImages ? colors.textTertiary : colors.borderLight} />
         </TouchableOpacity>

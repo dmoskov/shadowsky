@@ -148,7 +148,9 @@ const AggregatedNotificationItemInner = React.memo(function AggregatedNotificati
       <TouchableOpacity
         style={[styles.mainContent, hasUnread && styles.unread]}
         onPress={onPress}
-        activeOpacity={0.9}>
+        activeOpacity={0.9}
+        accessibilityRole="button"
+        accessibilityLabel={`${formatUserSummary()} ${getActionText()}, ${timestamp}`}>
         <View style={styles.content}>
           {/* Icon */}
           <View style={[styles.iconContainer, {backgroundColor: color + '20'}]}>
@@ -196,7 +198,10 @@ const AggregatedNotificationItemInner = React.memo(function AggregatedNotificati
         <TouchableOpacity
           style={styles.expandButton}
           onPress={() => setIsExpanded(!isExpanded)}
-          activeOpacity={0.7}>
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={isExpanded ? 'Collapse notifications' : `Show all ${count} notifications`}
+          accessibilityState={{expanded: isExpanded}}>
           <Text style={styles.expandText}>
             {isExpanded ? 'Collapse' : `Show all ${count} notifications`}
           </Text>

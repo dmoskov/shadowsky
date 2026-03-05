@@ -567,7 +567,10 @@ function PostCardComponent({
             <TouchableOpacity
               onPress={onPressRepostCount}
               disabled={!onPressRepostCount || (postView.repostCount || 0) === 0}
-              activeOpacity={0.7}>
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`${postView.repostCount || 0} reposts`}
+              accessibilityHint="Double tap to view who reposted">
               <Text style={[styles.engagementCount, !isOnline && styles.disabled]}>
                 {postView.repostCount || 0}
               </Text>
@@ -591,7 +594,10 @@ function PostCardComponent({
             <TouchableOpacity
               onPress={onPressLikeCount}
               disabled={!onPressLikeCount || (postView.likeCount || 0) === 0}
-              activeOpacity={0.7}>
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`${postView.likeCount || 0} likes`}
+              accessibilityHint="Double tap to view who liked">
               <Text style={[styles.engagementCount, !isOnline && styles.disabled]}>
                 {postView.likeCount || 0}
               </Text>

@@ -22,6 +22,9 @@ function DrawerItem({ label, icon, onPress, isActive, badge, styles }: DrawerIte
     <TouchableOpacity
       style={[styles.drawerItem, isActive && styles.drawerItemActive]}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{selected: isActive}}
     >
       {icon && <View style={styles.drawerItemIcon}>{icon}</View>}
       <Text

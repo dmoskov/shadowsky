@@ -86,6 +86,8 @@ export function TrendingTopics({
             ]}
             onPress={() => onTopicClick(item.topic)}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={`Trending topic: ${item.topic}${item.postCount ? `, ${item.postCount} posts` : ''}`}
           >
             <Text style={styles.topicIcon}>
               {item.isHot ? "\uD83D\uDD25" : "#"}

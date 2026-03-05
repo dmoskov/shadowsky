@@ -101,6 +101,9 @@ export function AccountSwitcher({
           style={[styles.accountButton, isActive && styles.activeAccount]}
           onPress={() => handleSwitchAccount(acc.did)}
           disabled={isSwitching || isRemoving}
+          accessibilityRole="button"
+          accessibilityLabel={`Switch to ${acc.displayName || acc.handle}${isActive ? ', currently active' : ''}`}
+          accessibilityState={{selected: isActive, disabled: isSwitching || isRemoving}}
         >
           {acc.avatar ? (
             <Image source={{ uri: acc.avatar }} style={styles.avatar} />
@@ -134,6 +137,9 @@ export function AccountSwitcher({
             style={styles.removeButton}
             onPress={() => handleRemoveAccount(acc.did, acc.handle)}
             disabled={isRemoving}
+            accessibilityRole="button"
+            accessibilityLabel={`Remove ${acc.handle}`}
+            accessibilityHint="Double tap to remove this account"
           >
             {isRemoving ? (
               <ActivityIndicator size="small" color={colors.accent} />
@@ -160,7 +166,7 @@ export function AccountSwitcher({
         )}
       </View>
 
-      <TouchableOpacity style={styles.addAccountButton} onPress={onAddAccount}>
+      <TouchableOpacity style={styles.addAccountButton} onPress={onAddAccount} accessibilityRole="button" accessibilityLabel="Add account">
         <View style={styles.addAccountContent}>
           <PlusIcon size={18} color={colors.text} />
           <Text style={styles.addAccountButtonText}>Add Account</Text>

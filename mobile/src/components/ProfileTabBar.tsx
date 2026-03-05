@@ -29,6 +29,9 @@ export function ProfileTabBar({ activeTab, onTabChange }: ProfileTabBarProps) {
           style={[styles.tab, activeTab === tab.key && styles.activeTab]}
           onPress={() => onTabChange(tab.key)}
           activeOpacity={0.7}
+          accessibilityRole="tab"
+          accessibilityLabel={tab.label}
+          accessibilityState={{selected: activeTab === tab.key}}
         >
           <Text
             style={[

@@ -155,7 +155,9 @@ export function ImageEmbed({images, onImagePress, blurImages = false, postUri, p
         ref={(ref) => setImageRef(idx, ref)}
         style={[styles.imageWrapper, {width: '100%', height, borderRadius: 12}]}
         onPress={() => handleImagePress(idx)}
-        activeOpacity={0.9}>
+        activeOpacity={0.9}
+        accessibilityRole="image"
+        accessibilityLabel={img.alt || 'Image'}>
         <Image
           source={{uri: getOptimizedUrl(img.thumb)}}
           style={[styles.image, blurImages && styles.blurredImage]}
@@ -184,7 +186,9 @@ export function ImageEmbed({images, onImagePress, blurImages = false, postUri, p
       ref={(ref) => setImageRef(idx, ref)}
       style={[styles.imageWrapper, style]}
       onPress={() => handleImagePress(idx)}
-      activeOpacity={0.9}>
+      activeOpacity={0.9}
+      accessibilityRole="image"
+      accessibilityLabel={img.alt || `Image ${idx + 1} of ${imageCount}`}>
       <Image
         source={{uri: getOptimizedUrl(img.thumb)}}
         style={[styles.image, blurImages && styles.blurredImage]}
