@@ -636,21 +636,21 @@ export function ComposeScreenNative({
         text: "English",
         onPress: () => {
           setSelectedLanguages(["en"]);
-          preferencesService.set("postLanguages", ["en"]).catch(() => {});
+          preferencesService.set("postLanguages", ["en"]).catch(err => logger.error('Failed to save language preference:', err));
         },
       },
       {
         text: "Spanish",
         onPress: () => {
           setSelectedLanguages(["es"]);
-          preferencesService.set("postLanguages", ["es"]).catch(() => {});
+          preferencesService.set("postLanguages", ["es"]).catch(err => logger.error('Failed to save language preference:', err));
         },
       },
       {
         text: "Portuguese",
         onPress: () => {
           setSelectedLanguages(["pt"]);
-          preferencesService.set("postLanguages", ["pt"]).catch(() => {});
+          preferencesService.set("postLanguages", ["pt"]).catch(err => logger.error('Failed to save language preference:', err));
         },
       },
       { text: "Cancel", style: "cancel" },

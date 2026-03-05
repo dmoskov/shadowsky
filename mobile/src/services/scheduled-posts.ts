@@ -150,6 +150,7 @@ async function pushToAtProto(post: ScheduledPost): Promise<void> {
     });
   } catch (error) {
     logger.error(`Failed to push scheduled post ${post.id} to AT Proto:`, error);
+    throw error;
   }
 }
 
@@ -240,7 +241,9 @@ export async function getScheduledPosts(): Promise<ScheduledPost[]> {
       const remoteIds = new Set(remotePosts.map(p => p.id));
       const localOnly = localPosts.filter(p => !remoteIds.has(p.id));
       for (const post of localOnly) {
-        pushToAtProto(post).catch(() => {});
+        pushToAtProto(post).catch(err =>
+          logger.error(`Failed to sync local post ${post.id} to AT Proto:`, err),
+        );
       }
 
       // Save merged result back to local
@@ -275,8 +278,10 @@ export async function addScheduledPost(
   posts.push(newPost);
   await AsyncStorage.setItem(SCHEDULED_POSTS_KEY, JSON.stringify(posts));
 
-  // Sync to AT Proto for cross-platform visibility (fire-and-forget)
-  pushToAtProto(newPost).catch(() => {});
+  // Sync to AT Proto for cross-platform visibility
+  pushToAtProto(newPost).catch(err =>
+    logger.error(`Failed to sync new scheduled post ${newPost.id} to AT Proto:`, err),
+  );
 
   return newPost;
 }
@@ -304,8 +309,10 @@ export async function updateScheduledPost(
   posts[index] = updatedPost;
   await AsyncStorage.setItem(SCHEDULED_POSTS_KEY, JSON.stringify(posts));
 
-  // Sync to AT Proto for cross-platform visibility (fire-and-forget)
-  pushToAtProto(updatedPost).catch(() => {});
+  // Sync to AT Proto for cross-platform visibility
+  pushToAtProto(updatedPost).catch(err =>
+    logger.error(`Failed to sync updated scheduled post ${updatedPost.id} to AT Proto:`, err),
+  );
 
   return updatedPost;
 }
@@ -323,8 +330,10 @@ export async function deleteScheduledPost(id: string): Promise<boolean> {
 
   await AsyncStorage.setItem(SCHEDULED_POSTS_KEY, JSON.stringify(filteredPosts));
 
-  // Remove from AT Proto (fire-and-forget)
-  removeFromAtProto(id).catch(() => {});
+  // Remove from AT Proto
+  removeFromAtProto(id).catch(err =>
+    logger.error(`Failed to remove scheduled post ${id} from AT Proto:`, err),
+  );
 
   return true;
 }
