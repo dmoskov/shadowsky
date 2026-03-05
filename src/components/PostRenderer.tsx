@@ -1214,7 +1214,10 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
           )
             return;
           if (onClick) {
-            tagForViewTransition(e.currentTarget as HTMLElement, "vt-post-hero");
+            tagForViewTransition(
+              e.currentTarget as HTMLElement,
+              "vt-post-hero",
+            );
             e.preventDefault();
             onClick();
           }
@@ -1287,7 +1290,9 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               to={profileUrl}
               onClick={(e) => {
                 e.stopPropagation();
-                const avatar = e.currentTarget.querySelector("img.post-avatar") as HTMLElement | null;
+                const avatar = e.currentTarget.querySelector(
+                  "img.post-avatar",
+                ) as HTMLElement | null;
                 tagForViewTransition(avatar, "vt-profile-avatar");
               }}
               {...authorPrefetchHandlers}
@@ -1336,7 +1341,10 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                   style={{ color: "var(--asph-text-secondary)" }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    tagForViewTransition(e.currentTarget.closest(".post-renderer") as HTMLElement, "vt-post-hero");
+                    tagForViewTransition(
+                      e.currentTarget.closest(".post-renderer") as HTMLElement,
+                      "vt-post-hero",
+                    );
                   }}
                   {...threadPrefetchHandlers}
                 >
