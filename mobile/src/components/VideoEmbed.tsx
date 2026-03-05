@@ -86,7 +86,7 @@ function VideoEmbedInner({video, postUri, isVisible = false}: VideoEmbedProps) {
         });
     } else if (!shouldPlay && isPlaying && !isFullscreen) {
       // Pause when scrolled out of view
-      videoRef.current.pauseAsync().catch(() => {});
+      videoRef.current.pauseAsync().catch(err => logger.warn('Failed to pause video on scroll out:', err));
       setIsPlaying(false);
     }
   }, [isAutoplayEnabled, isActiveVideo, isVisible, isPlaying, hasStartedPlaying, isFullscreen]);
@@ -96,8 +96,8 @@ function VideoEmbedInner({video, postUri, isVisible = false}: VideoEmbedProps) {
     if (!isVisible && hasStartedPlaying && !isFullscreen) {
       manuallyPausedRef.current = false;
       if (videoRef.current) {
-        videoRef.current.stopAsync().catch(() => {});
-        videoRef.current.setPositionAsync(0).catch(() => {});
+        videoRef.current.stopAsync().catch(err => logger.warn('Failed to stop video on view exit:', err));
+        videoRef.current.setPositionAsync(0).catch(err => logger.warn('Failed to reset video position:', err));
       }
       setIsPlaying(false);
       setHasStartedPlaying(false);
@@ -138,11 +138,11 @@ function VideoEmbedInner({video, postUri, isVisible = false}: VideoEmbedProps) {
       }
     } else if (isPlaying) {
       manuallyPausedRef.current = true;
-      await videoRef.current.pauseAsync().catch(() => {});
+      await videoRef.current.pauseAsync().catch(err => logger.warn('Failed to pause video:', err));
       setIsPlaying(false);
     } else {
       manuallyPausedRef.current = false;
-      await videoRef.current.playAsync().catch(() => {});
+      await videoRef.current.playAsync().catch(err => logger.warn('Failed to resume video:', err));
       setIsPlaying(true);
     }
   }, [hasStartedPlaying, isPlaying]);
@@ -151,7 +151,7 @@ function VideoEmbedInner({video, postUri, isVisible = false}: VideoEmbedProps) {
   const handleMuteToggle = useCallback(async () => {
     if (videoRef.current) {
       const newMuted = !isMuted;
-      await videoRef.current.setIsMutedAsync(newMuted).catch(() => {});
+      await videoRef.current.setIsMutedAsync(newMuted).catch(err => logger.warn('Failed to toggle mute:', err));
       setIsMuted(newMuted);
     }
   }, [isMuted]);
@@ -165,7 +165,7 @@ function VideoEmbedInner({video, postUri, isVisible = false}: VideoEmbedProps) {
       if (status.isLoaded) {
         await fullscreenVideoRef.current
           .setPositionAsync(status.positionMillis)
-          .catch(() => {});
+          .catch(err => logger.warn('Failed to sync fullscreen video position:', err));
       }
     }
   }, []);
@@ -177,7 +177,7 @@ function VideoEmbedInner({video, postUri, isVisible = false}: VideoEmbedProps) {
       if (status.isLoaded) {
         await videoRef.current
           .setPositionAsync(status.positionMillis)
-          .catch(() => {});
+          .catch(err => logger.warn('Failed to sync video position from fullscreen:', err));
       }
     }
     setIsFullscreen(false);
