@@ -347,9 +347,9 @@ describe('HomeScreen', () => {
       expect(getByTestId('feed-loading')).toBeTruthy();
     });
 
-    it('passes loading query to NativeFeedList', () => {
+    it('shows LoadingState instead of NativeFeedList when loading with no data', () => {
       const { getByTestId } = renderWithProviders(<HomeScreen />);
-      expect(getByTestId('native-feed-list')).toBeTruthy();
+      expect(getByTestId('feed-loading')).toBeTruthy();
     });
   });
 
@@ -398,9 +398,9 @@ describe('HomeScreen', () => {
 
       const { getByTestId, getByText } = renderWithProviders(<HomeScreen />);
       expect(getByTestId('feed-error')).toBeTruthy();
-      expect(getByText('Failed to load feed')).toBeTruthy();
+      expect(getByText('Network error')).toBeTruthy();
 
-      fireEvent.press(getByTestId('feed-retry'));
+      fireEvent.press(getByText('Try Again'));
       expect(mockRefetch).toHaveBeenCalledTimes(1);
     });
   });
