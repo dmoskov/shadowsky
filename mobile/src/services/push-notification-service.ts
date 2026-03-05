@@ -7,6 +7,7 @@ import {BskyAgent} from '@atproto/api';
 
 
 import { createLogger } from '../utils/logger';
+import { withTimeout } from '../utils/with-timeout';
 
 const logger = createLogger('PushNotificationService');
 const PUSH_TOKEN_STORAGE_KEY = '@shadowsky/push_token';
@@ -105,12 +106,12 @@ export async function savePushTokenToATProto(
     };
 
     // Save as singleton record
-    await agent.com.atproto.repo.putRecord({
+    await withTimeout(() => agent.com.atproto.repo.putRecord({
       repo: agent.session?.did || '',
       collection: PUSH_TOKEN_COLLECTION,
       rkey: PUSH_TOKEN_RECORD_KEY,
       record: record as unknown as { [key: string]: unknown },
-    });
+    }), 30000);
 
     logger.log('Push token saved to AT Protocol');
     return true;
@@ -127,11 +128,11 @@ export async function getPushTokenFromATProto(
   agent: BskyAgent,
 ): Promise<PushTokenRecord | null> {
   try {
-    const response = await agent.com.atproto.repo.getRecord({
+    const response = await withTimeout(() => agent.com.atproto.repo.getRecord({
       repo: agent.session?.did || '',
       collection: PUSH_TOKEN_COLLECTION,
       rkey: PUSH_TOKEN_RECORD_KEY,
-    });
+    }), 15000);
 
     return response.data.value as unknown as PushTokenRecord;
   } catch (error) {
@@ -215,11 +216,11 @@ export async function unregisterPushNotifications(
 ): Promise<void> {
   try {
     // Delete the push token record from AT Protocol
-    await agent.com.atproto.repo.deleteRecord({
+    await withTimeout(() => agent.com.atproto.repo.deleteRecord({
       repo: agent.session?.did || '',
       collection: PUSH_TOKEN_COLLECTION,
       rkey: PUSH_TOKEN_RECORD_KEY,
-    });
+    }), 30000);
 
     // Clear local storage
     await AsyncStorage.removeItem(PUSH_TOKEN_STORAGE_KEY);

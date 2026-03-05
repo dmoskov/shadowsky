@@ -133,7 +133,7 @@ class DmService {
         try {
           const headers = await this.getAuthHeaders();
 
-          const response = await fetch(
+          const response = await fetchWithTimeout(
             "https://api.bsky.chat/xrpc/chat.bsky.convo.listConvos",
             {
               headers,
@@ -206,7 +206,7 @@ class DmService {
         try {
           const headers = await this.getAuthHeaders();
 
-          const messagesResponse = await fetch(
+          const messagesResponse = await fetchWithTimeout(
             `https://api.bsky.chat/xrpc/chat.bsky.convo.getMessages?convoId=${conversationId}`,
             {
               headers,
@@ -224,7 +224,7 @@ class DmService {
           const messagesData =
             (await messagesResponse.json()) as ApiGetMessagesResponse;
 
-          const convoResponse = await fetch(
+          const convoResponse = await fetchWithTimeout(
             `https://api.bsky.chat/xrpc/chat.bsky.convo.getConvo?convoId=${conversationId}`,
             {
               headers,
@@ -306,7 +306,7 @@ class DmService {
     return rateLimited(
       async () => withRetry(async () => {
         // Fetch the media file
-        const response = await fetch(uri);
+        const response = await fetchWithTimeout(uri);
         const blob = await response.blob();
 
         // Convert blob to Uint8Array for upload
@@ -360,7 +360,7 @@ class DmService {
             };
           }
 
-          const response = await fetch(
+          const response = await fetchWithTimeout(
             "https://api.bsky.chat/xrpc/chat.bsky.convo.sendMessage",
             {
               method: "POST",
@@ -401,7 +401,7 @@ class DmService {
           const headers = await this.getAuthHeaders();
           headers["Content-Type"] = "application/json";
 
-          const convoResponse = await fetch(
+          const convoResponse = await fetchWithTimeout(
             `https://api.bsky.chat/xrpc/chat.bsky.convo.getConvo?convoId=${conversationId}`,
             {
               headers,
@@ -419,7 +419,7 @@ class DmService {
             return;
           }
 
-          await fetch("https://api.bsky.chat/xrpc/chat.bsky.convo.updateRead", {
+          await fetchWithTimeout("https://api.bsky.chat/xrpc/chat.bsky.convo.updateRead", {
             method: "POST",
             headers,
             body: JSON.stringify({
@@ -451,7 +451,7 @@ class DmService {
           const headers = await this.getAuthHeaders();
           headers["Content-Type"] = "application/json";
 
-          const response = await fetch(
+          const response = await fetchWithTimeout(
             "https://api.bsky.chat/xrpc/chat.bsky.convo.getConvoForMembers",
             {
               method: "POST",
@@ -530,7 +530,7 @@ class DmService {
           const headers = await this.getAuthHeaders();
           headers["Content-Type"] = "application/json";
 
-          const response = await fetch(
+          const response = await fetchWithTimeout(
             "https://api.bsky.chat/xrpc/chat.bsky.convo.muteConvo",
             {
               method: "POST",
@@ -575,7 +575,7 @@ class DmService {
           const headers = await this.getAuthHeaders();
           headers["Content-Type"] = "application/json";
 
-          const response = await fetch(
+          const response = await fetchWithTimeout(
             "https://api.bsky.chat/xrpc/chat.bsky.convo.unmuteConvo",
             {
               method: "POST",
@@ -623,7 +623,7 @@ class DmService {
           const headers = await this.getAuthHeaders();
           headers["Content-Type"] = "application/json";
 
-          const response = await fetch(
+          const response = await fetchWithTimeout(
             "https://api.bsky.chat/xrpc/chat.bsky.convo.deleteMessage",
             {
               method: "POST",
@@ -669,7 +669,7 @@ class DmService {
           const headers = await this.getAuthHeaders();
           headers["Content-Type"] = "application/json";
 
-          const response = await fetch(
+          const response = await fetchWithTimeout(
             "https://api.bsky.chat/xrpc/chat.bsky.convo.leaveConvo",
             {
               method: "POST",

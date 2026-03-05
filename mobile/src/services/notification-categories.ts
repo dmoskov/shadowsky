@@ -3,6 +3,7 @@ import {AppBskyFeedDefs} from '@atproto/api';
 import {getAtProtoClient} from './atproto/client';
 import {likePost, createPost} from './atproto/posts';
 import {createLogger} from '../utils/logger';
+import {withTimeout} from '../utils/with-timeout';
 
 const logger = createLogger('NotificationCategories');
 
@@ -150,7 +151,7 @@ async function resolvePost(
   try {
     const client = getAtProtoClient();
     const agent = client.getAgent();
-    const response = await agent.getPostThread({uri: postUri, depth: 0});
+    const response = await withTimeout(() => agent.getPostThread({uri: postUri, depth: 0}), 15000);
     const thread = response.data.thread;
 
     if (AppBskyFeedDefs.isThreadViewPost(thread)) {
@@ -173,7 +174,7 @@ async function resolveThreadRoot(
   try {
     const client = getAtProtoClient();
     const agent = client.getAgent();
-    const response = await agent.getPostThread({uri: postUri, depth: 0});
+    const response = await withTimeout(() => agent.getPostThread({uri: postUri, depth: 0}), 15000);
     const thread = response.data.thread;
 
     if (AppBskyFeedDefs.isThreadViewPost(thread)) {

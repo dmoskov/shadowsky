@@ -9,6 +9,7 @@
 import { MMKV } from "react-native-mmkv";
 import { getAgent } from "../atproto/client";
 import { createLogger } from "../../utils/logger";
+import { withTimeout } from "../../utils/with-timeout";
 
 const logger = createLogger("OnboardingService");
 
@@ -194,7 +195,7 @@ class MobileOnboardingService {
   async getSuggestedUsers(limit: number = 20): Promise<any[]> {
     try {
       const agent = getAgent();
-      const response = await agent.app.bsky.actor.getSuggestions({ limit });
+      const response = await withTimeout(() => agent.app.bsky.actor.getSuggestions({ limit }), 15000);
       return response.data.actors || [];
     } catch (error) {
       logger.error("Failed to get suggested users:", error);
@@ -205,7 +206,7 @@ class MobileOnboardingService {
   async getSuggestedFeeds(limit: number = 20): Promise<any[]> {
     try {
       const agent = getAgent();
-      const response = await agent.app.bsky.feed.getSuggestedFeeds({ limit });
+      const response = await withTimeout(() => agent.app.bsky.feed.getSuggestedFeeds({ limit }), 15000);
       return response.data.feeds || [];
     } catch (error) {
       logger.error("Failed to get suggested feeds:", error);
@@ -216,7 +217,7 @@ class MobileOnboardingService {
   async followUser(did: string): Promise<boolean> {
     try {
       const agent = getAgent();
-      await agent.follow(did);
+      await withTimeout(() => agent.follow(did), 15000);
       const state = this.getState();
       this.updateState({
         followedUsers: [...state.followedUsers, did],
@@ -237,7 +238,7 @@ class MobileOnboardingService {
         value: feedUri,
         pinned: false,
       };
-      await agent.addSavedFeeds([newSavedFeed]);
+      await withTimeout(() => agent.addSavedFeeds([newSavedFeed]), 15000);
       const state = this.getState();
       this.updateState({
         selectedFeeds: [...state.selectedFeeds, feedUri],

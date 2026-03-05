@@ -9,6 +9,7 @@
 import * as Localization from "expo-localization";
 
 import { createLogger } from "../utils/logger";
+import { fetchWithTimeout } from "../utils/with-timeout";
 
 const logger = createLogger("TranslationService");
 
@@ -142,7 +143,7 @@ export async function translatePost(
     const sourceLangCode = sourceLang.split("-")[0].toLowerCase();
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLangCode}&tl=${target}&dt=t&q=${encodedText}`;
 
-    const response = await fetch(url);
+    const response = await fetchWithTimeout(url);
 
     if (!response.ok) {
       throw new Error(
