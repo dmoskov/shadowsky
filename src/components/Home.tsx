@@ -11,7 +11,6 @@ import {
   Hash,
   Heart,
   List,
-  Loader,
   type LucideIcon,
   MessageCircle,
   Repeat2,
@@ -52,7 +51,7 @@ import { Spinner } from "./ui/LoadingState";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { ProgressiveImage } from "./ui/ProgressiveImage";
 import { RichText } from "./ui/RichText";
-import { FeedSkeleton } from "./ui/SkeletonLoader";
+import { FeedSkeleton, PostSkeleton } from "./ui/SkeletonLoader";
 
 // Code-split heavy components to improve initial load time
 const FeedDiscovery = lazyWithRetry(() =>
@@ -2418,27 +2417,16 @@ export const Home: React.FC<HomeProps> = React.memo(
           </div>
 
           {isFetchingNextPage && (
-            <div className="flex items-center justify-center p-8">
-              <Loader
-                className="animate-spin"
-                size={24}
-                style={{ color: "var(--asph-primary)" }}
-              />
+            <div>
+              <PostSkeleton compact aria-label="Loading more posts" />
+              <PostSkeleton compact aria-label="Loading more posts" />
             </div>
           )}
 
           {/* Progressive loader sentinel */}
           {hasMore && (
-            <div
-              ref={progressiveLoadRef}
-              className="flex items-center justify-center p-4"
-            >
-              <div
-                className="text-sm"
-                style={{ color: "var(--asph-text-secondary)" }}
-              >
-                Loading more posts...
-              </div>
+            <div ref={progressiveLoadRef}>
+              <PostSkeleton compact aria-label="Loading more posts" />
             </div>
           )}
 

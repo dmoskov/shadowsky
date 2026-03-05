@@ -19,6 +19,7 @@ import {
 } from "../services/bluesky-list-service";
 import { CreateListModal } from "./CreateListModal";
 import { EditListModal } from "./EditListModal";
+import { ListItemSkeleton } from "./ui/SkeletonLoader";
 
 export const Lists: React.FC = () => {
   const { agent } = useAuth();
@@ -152,19 +153,7 @@ export const Lists: React.FC = () => {
         </div>
       </div>
 
-      {isLoading && (
-        <div
-          className="flex flex-col items-center justify-center px-8 py-16"
-          role="status"
-          aria-label="Loading lists"
-        >
-          <div
-            className="border-t-asph-accent-primary h-8 w-8 animate-spin rounded-full border-2 border-asph-border-primary"
-            aria-hidden="true"
-          />
-          <p className="mt-4 text-asph-text-secondary">Loading lists...</p>
-        </div>
-      )}
+      {isLoading && <ListItemSkeleton count={5} aria-label="Loading lists" />}
 
       {error && (
         <div className="p-4 text-center" role="alert">

@@ -43,7 +43,12 @@ import { DomainVerifiedBadge } from "../components/ui/DomainVerifiedBadge";
 import { EmptyState } from "../components/ui/EmptyState";
 import { LabelBadge } from "../components/ui/LabelBadge";
 import { RichText } from "../components/ui/RichText";
-import { ProfileSkeleton } from "../components/ui/SkeletonLoader";
+import {
+  FeedSkeleton,
+  PostSkeleton,
+  ProfileSkeleton,
+  SkeletonLoader,
+} from "../components/ui/SkeletonLoader";
 import { UserListModal } from "../components/UserListModal";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
@@ -1433,7 +1438,12 @@ export default function ProfilePage() {
 
             {isLoadingAnalysis && !analysisData ? (
               <div className="flex items-center gap-3 py-3">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-200 border-t-purple-500" />
+                <SkeletonLoader
+                  variant="circular"
+                  width={32}
+                  height={32}
+                  animation="shimmer"
+                />
                 <div>
                   <p
                     className="text-sm"
@@ -1768,8 +1778,12 @@ export default function ProfilePage() {
         {activeTab === "top" ? (
           <div style={{ height: listHeight }}>
             {isTopPostsLoading ? (
-              <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                Loading top posts...
+              <div
+                className="skeleton-stagger"
+                role="status"
+                aria-label="Loading top posts"
+              >
+                <FeedSkeleton count={3} />
               </div>
             ) : topPostsData?.topPosts.length === 0 ? (
               <EmptyState
@@ -1876,13 +1890,22 @@ export default function ProfilePage() {
                 rowProps={{}}
               />
             ) : postsLoading ? (
-              <div className="flex justify-center p-4">
-                <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
+              <div
+                className="skeleton-stagger"
+                role="status"
+                aria-label="Loading posts"
+              >
+                <FeedSkeleton count={3} />
               </div>
             ) : null}
             {posts.length > 0 && (postsLoading || isFetchingNextPage) && (
-              <div className="flex justify-center p-4">
-                <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"></div>
+              <div
+                className="skeleton-stagger"
+                role="status"
+                aria-label="Loading more posts"
+              >
+                <PostSkeleton compact />
+                <PostSkeleton compact />
               </div>
             )}
           </div>

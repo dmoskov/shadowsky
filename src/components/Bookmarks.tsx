@@ -18,6 +18,7 @@ import { reinitializeBookmarkService } from "../services/bookmark-service-wrappe
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { PostRenderer } from "./PostRenderer";
 import { ThreadModal } from "./ThreadModal";
+import { FeedSkeleton } from "./ui/SkeletonLoader";
 
 export const Bookmarks: React.FC = () => {
   const queryClient = useQueryClient();
@@ -228,19 +229,7 @@ export const Bookmarks: React.FC = () => {
         </div>
       </div>
 
-      {isLoading && (
-        <div
-          className="flex flex-col items-center justify-center px-8 py-16"
-          role="status"
-          aria-label="Loading bookmarks"
-        >
-          <div
-            className="border-t-asph-accent-primary h-8 w-8 animate-spin rounded-full border-2 border-asph-border-primary"
-            aria-hidden="true"
-          />
-          <p>Loading bookmarks...</p>
-        </div>
-      )}
+      {isLoading && <FeedSkeleton count={5} aria-label="Loading bookmarks" />}
 
       {error && (
         <div className="error-state p-4 text-center" role="alert">
