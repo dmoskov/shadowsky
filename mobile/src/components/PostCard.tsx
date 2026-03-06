@@ -1,5 +1,6 @@
 import React, {useState, useCallback, useMemo, useRef} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Modal, Alert, ActivityIndicator, ActionSheetIOS, Platform} from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -294,52 +295,61 @@ function PostCardComponent({
     setShowSaveToCollection(true);
   }, [isBookmarked, onBookmark]);
 
+  const handleCopyText = useCallback(() => {
+    if (postText) {
+      Clipboard.setStringAsync(postText);
+      showToast('Text copied', { type: 'success' });
+    }
+  }, [postText, showToast]);
+
   const handleLongPress = useCallback(() => {
     if (Platform.OS !== 'ios') return;
     triggerHaptic('medium');
 
     if (isOwnPost) {
-      const options = ['Cancel', 'Reply', 'Repost', isLiked ? 'Unlike' : 'Like', 'Bookmark', 'Share', 'Delete Post'];
+      const options = ['Cancel', 'Copy Text', 'Reply', 'Repost', isLiked ? 'Unlike' : 'Like', 'Bookmark', 'Share', 'Delete Post'];
       ActionSheetIOS.showActionSheetWithOptions(
         {
           options,
           cancelButtonIndex: 0,
-          destructiveButtonIndex: 6,
+          destructiveButtonIndex: 7,
         },
         (buttonIndex) => {
           switch (buttonIndex) {
-            case 1: onReply?.(); break;
-            case 2: handleRepostPress(); break;
-            case 3: handleLikePress(); break;
-            case 4: handleBookmarkPress(); break;
-            case 5: handleShare(); break;
-            case 6: handleDeletePost(); break;
+            case 1: handleCopyText(); break;
+            case 2: onReply?.(); break;
+            case 3: handleRepostPress(); break;
+            case 4: handleLikePress(); break;
+            case 5: handleBookmarkPress(); break;
+            case 6: handleShare(); break;
+            case 7: handleDeletePost(); break;
           }
         },
       );
     } else {
-      const options = ['Cancel', 'Reply', 'Repost', isLiked ? 'Unlike' : 'Like', 'Bookmark', 'Share', `Mute @${author.handle}`, `Block @${author.handle}`, 'Report Post'];
+      const options = ['Cancel', 'Copy Text', 'Reply', 'Repost', isLiked ? 'Unlike' : 'Like', 'Bookmark', 'Share', `Mute @${author.handle}`, `Block @${author.handle}`, 'Report Post'];
       ActionSheetIOS.showActionSheetWithOptions(
         {
           options,
           cancelButtonIndex: 0,
-          destructiveButtonIndex: [7, 8],
+          destructiveButtonIndex: [8, 9],
         },
         (buttonIndex) => {
           switch (buttonIndex) {
-            case 1: onReply?.(); break;
-            case 2: handleRepostPress(); break;
-            case 3: handleLikePress(); break;
-            case 4: handleBookmarkPress(); break;
-            case 5: handleShare(); break;
-            case 6: handleMuteUser(); break;
-            case 7: handleBlockUser(); break;
-            case 8: handleReport(); break;
+            case 1: handleCopyText(); break;
+            case 2: onReply?.(); break;
+            case 3: handleRepostPress(); break;
+            case 4: handleLikePress(); break;
+            case 5: handleBookmarkPress(); break;
+            case 6: handleShare(); break;
+            case 7: handleMuteUser(); break;
+            case 8: handleBlockUser(); break;
+            case 9: handleReport(); break;
           }
         },
       );
     }
-  }, [isOwnPost, isLiked, author.handle, onReply, handleRepostPress, handleLikePress, handleBookmarkPress, handleShare, handleDeletePost, handleMuteUser, handleBlockUser, handleReport]);
+  }, [isOwnPost, isLiked, author.handle, onReply, handleCopyText, handleRepostPress, handleLikePress, handleBookmarkPress, handleShare, handleDeletePost, handleMuteUser, handleBlockUser, handleReport]);
 
   // Memoized computed values
   const timestamp = useMemo(

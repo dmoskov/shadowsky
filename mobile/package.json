@@ -41,6 +41,7 @@
     "expo-av": "^16.0.8",
     "expo-background-fetch": "^14.0.9",
     "expo-blur": "~15.0.8",
+    "expo-clipboard": "~8.0.8",
     "expo-constants": "~18.0.13",
     "expo-crypto": "~15.0.8",
     "expo-device": "~8.0.10",

@@ -264,6 +264,13 @@ struct PostCardView: View {
         .onChangeCompat(of: post.post.repostCount) { _ in repostCountOverride = nil }
         .onChangeCompat(of: isBookmarked) { _ in bookmarkOverride = nil }
         .contextMenu {
+            if !post.post.record.text.isEmpty {
+                Button {
+                    UIPasteboard.general.string = post.post.record.text
+                } label: {
+                    Label("Copy Text", systemImage: "doc.on.doc")
+                }
+            }
             Button { onReply?() } label: {
                 Label("Reply", systemImage: "bubble.left")
             }

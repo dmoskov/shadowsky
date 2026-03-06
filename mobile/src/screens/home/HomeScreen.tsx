@@ -3,7 +3,7 @@ import { View, StyleSheet, Alert, ActionSheetIOS, Platform, ScrollView, Touchabl
 import { useTheme } from "../../contexts/ThemeContext";
 import { useScrollToTop, DrawerActions, useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ChatBubbleIcon, MenuIcon } from "../../components/icons";
+import { ChatBubbleIcon, MenuIcon, PlusIcon } from "../../components/icons";
 import { useUnreadMessageCount } from "../../hooks/api/useMessages";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTimeline, useCustomFeed, useSavedFeeds } from "../../hooks/api";
@@ -523,6 +523,19 @@ export function HomeScreen() {
           />
         )}
       </Animated.View>
+      {/* Compose FAB */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => {
+          triggerHaptic('light');
+          navigateToCompose();
+        }}
+        activeOpacity={0.8}
+        accessibilityLabel="New post"
+        accessibilityRole="button"
+      >
+        <PlusIcon size={24} color="#ffffff" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -619,6 +632,23 @@ function createStyles(colors: any) {
       fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: colors.primary,
+    },
+    fab: {
+      position: 'absolute',
+      bottom: 90,
+      right: 16,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 100,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+      elevation: 8,
     },
   });
 }
