@@ -4,8 +4,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, usePathname } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon, ChatBubbleIcon, SearchIcon, ImageIcon, BookmarkIcon, PenIcon } from "./icons";
+import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon, ChatBubbleIcon, SearchIcon, ImageIcon, BookmarkIcon, PenIcon, BellIcon, PersonIcon } from "./icons";
 import { useUnreadMessageCount, useDraftCount } from "../hooks/api";
+import { useUnreadCount } from "../hooks/api/useNotifications";
 import {fontSize} from '../utils/typography';
 
 interface DrawerItemProps {
@@ -53,6 +54,7 @@ export function CustomDrawerContent() {
   const { account } = useAuth();
   const unreadCount = useUnreadMessageCount();
   const draftCount = useDraftCount();
+  const { data: notifUnreadCount } = useUnreadCount();
   return (
     <ScrollView style={[styles.drawerContent, { paddingTop: insets.top }]}>
       <View style={styles.drawerHeader}>
@@ -74,9 +76,16 @@ export function CustomDrawerContent() {
       <View style={styles.drawerItems}>
         <DrawerItem
           label="Home"
-          icon={<HomeIcon size={20} color={pathname === "/" || pathname.startsWith("/(app)/(tabs)") ? colors.primary : colors.text} />}
-          isActive={pathname === "/" || pathname.startsWith("/(app)/(tabs)")}
+          icon={<HomeIcon size={20} color={pathname === "/" || pathname.startsWith("/(app)/(tabs)/(home)") ? colors.primary : colors.text} />}
+          isActive={pathname === "/" || pathname.startsWith("/(app)/(tabs)/(home)")}
           onPress={() => router.push("/(app)/(tabs)/(home)")}
+          styles={styles}
+        />
+        <DrawerItem
+          label="Search"
+          icon={<SearchIcon size={20} color={pathname.includes("/(search)") ? colors.primary : colors.text} />}
+          isActive={pathname.includes("/(search)")}
+          onPress={() => router.push("/(app)/(tabs)/(search)")}
           styles={styles}
         />
         <DrawerItem
@@ -84,6 +93,14 @@ export function CustomDrawerContent() {
           icon={<PenIcon size={20} color={pathname.includes("/compose") ? colors.primary : colors.text} />}
           isActive={pathname.includes("/compose")}
           onPress={() => router.push("/(app)/compose")}
+          styles={styles}
+        />
+        <DrawerItem
+          label="Notifications"
+          icon={<BellIcon size={20} color={pathname.includes("/(notifications)") ? colors.primary : colors.text} />}
+          isActive={pathname.includes("/(notifications)")}
+          onPress={() => router.push("/(app)/(tabs)/(notifications)")}
+          badge={notifUnreadCount || undefined}
           styles={styles}
         />
         <DrawerItem
@@ -146,6 +163,14 @@ export function CustomDrawerContent() {
         />
 
         <View style={styles.divider} />
+
+        <DrawerItem
+          label="Profile"
+          icon={<PersonIcon size={20} color={pathname.includes("/(profile)") ? colors.primary : colors.text} />}
+          isActive={pathname.includes("/(profile)") && !pathname.includes("/bookmarks")}
+          onPress={() => router.push("/(app)/(tabs)/(profile)")}
+          styles={styles}
+        />
 
         <DrawerItem
           label="Settings"
