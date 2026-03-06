@@ -10,6 +10,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { BlurOverlay } from "../../../components/BlurOverlay";
 import {fontSize} from '../../../utils/typography';
@@ -33,6 +34,8 @@ function AltTextModalInner({
   onGenerateAltText,
   colors,
 }: AltTextModalProps) {
+  const { width: windowWidth } = useWindowDimensions();
+  const isWideScreen = windowWidth > 768;
   const [tempAltText, setTempAltText] = useState(initialAltText);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -73,7 +76,7 @@ function AltTextModalInner({
       >
         <BlurOverlay intensity={25} />
         <View
-          style={[styles.modalContent, { backgroundColor: colors.background }]}
+          style={[styles.modalContent, { backgroundColor: colors.background }, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 }]}
         >
           <View style={styles.modalHeader}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>

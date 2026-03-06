@@ -22,7 +22,6 @@ import { useOfflineFeedStatus } from "../../hooks/useOfflineFeed";
 import { useFeedPagePrefetch } from "../../hooks/useFeedPagePrefetch";
 import {fontSize} from '../../utils/typography';
 
-const GRID_COLUMNS = 3;
 const GRID_SPACING = 2;
 
 /**
@@ -99,6 +98,7 @@ function MediaGridItem({ post, onPress, itemSize }: MediaGridItemProps) {
 export function TimelineScreen() {
   const { colors } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
+  const GRID_COLUMNS = screenWidth > 900 ? 6 : screenWidth > 600 ? 4 : 3;
   const itemSize = (screenWidth - GRID_SPACING * (GRID_COLUMNS + 1)) / GRID_COLUMNS;
   const timelineQuery = useTimeline();
   const enhancedQuery = useOfflineFeedEnhancer(timelineQuery, 'timeline', ['timeline']);
@@ -189,6 +189,7 @@ export function TimelineScreen() {
         isOnline={isOnline}
       />
       <FlatList
+        key={`timeline-grid-${GRID_COLUMNS}`}
         data={postsWithMedia}
         keyboardDismissMode="on-drag"
         renderItem={renderItem}

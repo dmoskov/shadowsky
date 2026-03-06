@@ -17,6 +17,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  useWindowDimensions,
 } from 'react-native';
 import {AppBskyGraphDefs} from '@atproto/api';
 import { useTheme } from "../contexts/ThemeContext";
@@ -43,6 +44,8 @@ function EditListModalInner({
   onSave,
 }: EditListModalProps) {
   const { colors } = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
+  const isWideScreen = windowWidth > 768;
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -106,7 +109,7 @@ function EditListModalInner({
         style={styles.overlay}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <BlurOverlay intensity={25} />
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContainer, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 }]}>
           <View style={styles.header}>
             <Text style={styles.title}>Edit List</Text>
             <TouchableOpacity

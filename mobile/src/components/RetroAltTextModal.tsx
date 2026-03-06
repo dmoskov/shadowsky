@@ -10,6 +10,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import {Image} from 'expo-image';
 import {useTheme} from '../contexts/ThemeContext';
@@ -41,6 +42,8 @@ function RetroAltTextModalInner({
   onAltTextSaved,
 }: RetroAltTextModalProps) {
   const {colors} = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
+  const isWideScreen = windowWidth > 768;
   const [altText, setAltText] = useState(initialAltText);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -101,7 +104,7 @@ function RetroAltTextModalInner({
         style={styles.overlay}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <BlurOverlay intensity={25} />
-        <View style={[styles.content, {backgroundColor: colors.background}]}>
+        <View style={[styles.content, {backgroundColor: colors.background}, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 }]}>
           <View style={styles.header}>
             <Text style={[styles.title, {color: colors.text}]}>
               Add Alt Text

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import {
   useBookmarkCollections,
@@ -32,6 +33,8 @@ function SaveToCollectionModalInner({
   onClose,
 }: SaveToCollectionModalProps) {
   const { colors } = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
+  const isWideScreen = windowWidth > 768;
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [showNewCollectionForm, setShowNewCollectionForm] = useState(false);
@@ -86,7 +89,7 @@ function SaveToCollectionModalInner({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <BlurOverlay intensity={25} />
-        <View style={styles.modal}>
+        <View style={[styles.modal, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 }]}>
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Save to collection</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>

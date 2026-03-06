@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import ExpoSwiftUIFeed
 
 // MARK: - ProfileView
 
@@ -98,6 +99,8 @@ struct ProfileView: View {
             // Note: The feed content is rendered by the parent NativeFeedList component
             // This view only provides the header and tab switching
         }
+        .frame(maxWidth: LayoutConstants.maxContentWidth)
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Tab Bar

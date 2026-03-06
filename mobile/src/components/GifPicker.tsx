@@ -49,7 +49,8 @@ function GifPickerInner({
 }: GifPickerProps) {
   const { colors } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
-  const itemWidth = (screenWidth - 48) / 2; // 2 columns with padding
+  const numCols = screenWidth > 900 ? 4 : screenWidth > 600 ? 3 : 2;
+  const itemWidth = (screenWidth - 16 * (numCols + 1)) / numCols;
   const styles = useMemo(() => createStyles(colors, itemWidth), [colors, itemWidth]);
   const insets = useSafeAreaInsets();
   const searchInputRef = useRef<TextInput>(null);
@@ -240,11 +241,12 @@ function GifPickerInner({
 
         {/* GIF grid */}
         <FlatList
+          key={`gif-grid-${numCols}`}
           data={gifs}
           keyboardDismissMode="on-drag"
           renderItem={renderGifItem}
           keyExtractor={(item) => item.id}
-          numColumns={2}
+          numColumns={numCols}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.listContent}
           ListHeaderComponent={renderHeader}

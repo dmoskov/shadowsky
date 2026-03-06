@@ -50,8 +50,8 @@ export function ImageEmbed({images, onImagePress, blurImages = false, postUri, p
   const imageRefs = useRef<Record<number, View | null>>({});
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  // Account for horizontal padding (16px each side)
-  const containerWidth = windowWidth - 32;
+  // Account for horizontal padding (16px each side), capped for iPad
+  const containerWidth = Math.min(windowWidth, 700) - 32;
   const imageCount = images.length;
 
   const lightboxImages: LightboxImage[] = images.map(img => ({

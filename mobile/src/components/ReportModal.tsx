@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import {useTheme} from '../contexts/ThemeContext';
 import {BlurOverlay} from './BlurOverlay';
@@ -107,6 +108,8 @@ function ReportModalInner({
   onMute,
 }: ReportModalProps) {
   const { colors } = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
+  const isWideScreen = windowWidth > 768;
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -221,7 +224,7 @@ function ReportModalInner({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <BlurOverlay intensity={25} />
-        <View style={styles.container}>
+        <View style={[styles.container, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 }]}>
           {isSubmitted ? (
             <>
               {/* Success State */}

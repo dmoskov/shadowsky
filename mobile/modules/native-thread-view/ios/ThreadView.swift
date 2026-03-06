@@ -271,6 +271,8 @@ struct ThreadView: View {
                             .padding()
                     }
                 }
+                .frame(maxWidth: LayoutConstants.maxContentWidth)
+                .frame(maxWidth: .infinity)
             }
             .scrollDismissesKeyboard(.interactively)
             .refreshable {

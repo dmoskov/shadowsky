@@ -214,6 +214,8 @@ struct FeedListView: View {
                             .padding()
                     }
                 }
+                .frame(maxWidth: LayoutConstants.maxContentWidth)
+                .frame(maxWidth: .infinity)
             }
             .coordinateSpace(name: "feedScroll")
             .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in

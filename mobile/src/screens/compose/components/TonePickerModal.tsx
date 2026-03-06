@@ -7,6 +7,7 @@ import {
   Modal,
   ActivityIndicator,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { BlurOverlay } from "../../../components/BlurOverlay";
@@ -78,6 +79,8 @@ export function TonePickerModal({
   onCancelPreview,
 }: TonePickerModalProps) {
   const { colors } = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
+  const isWideScreen = windowWidth > 768;
   const styles = useMemo(() => createStyles(colors), [colors]);
   const showPreview = previewText !== null;
 
@@ -92,7 +95,7 @@ export function TonePickerModal({
       >
         <View style={styles.overlay}>
           <BlurOverlay intensity={25} />
-          <View style={styles.content}>
+          <View style={[styles.content, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 }]}>
             <View style={styles.header}>
               <Text style={styles.title}>
                 {toneConfig?.icon} {toneConfig?.label} Tone
@@ -144,7 +147,7 @@ export function TonePickerModal({
     >
       <View style={styles.overlay}>
         <BlurOverlay intensity={25} />
-        <View style={styles.content}>
+        <View style={[styles.content, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 }]}>
           <View style={styles.header}>
             <Text style={styles.title}>Choose a Tone</Text>
             <TouchableOpacity onPress={onClose} hitSlop={8}>

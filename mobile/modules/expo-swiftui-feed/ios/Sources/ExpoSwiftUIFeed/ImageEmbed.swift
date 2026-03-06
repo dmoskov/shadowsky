@@ -60,8 +60,9 @@ struct ImageEmbed: View {
     // Single image: height derived from aspect ratio, constrained by width
     private var singleImageLayout: some View {
         GeometryReader { geometry in
+            let width = min(geometry.size.width, LayoutConstants.maxContentWidth)
             let ratio = max(0.8, images[0].aspectRatio ?? 1.0)
-            let height = min(max(geometry.size.width / ratio, 150), 600)
+            let height = min(max(width / ratio, 150), 600)
             ImageTile(
                 imageData: images[0],
                 blurImage: blurImages,
@@ -72,13 +73,12 @@ struct ImageEmbed: View {
             .cornerRadius(12)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: singleImageHeight)
+        .frame(height: singleImageHeight(for: min(UIScreen.main.bounds.width, LayoutConstants.maxContentWidth) - 32))
     }
 
-    private var singleImageHeight: CGFloat {
-        let screenWidth = UIScreen.main.bounds.width - 32
+    private func singleImageHeight(for width: CGFloat) -> CGFloat {
         let ratio = max(0.8, images[0].aspectRatio ?? 1.0)
-        return min(max(screenWidth / ratio, 150), 600)
+        return min(max(width / ratio, 150), 600)
     }
 
     // Double image: 200h side-by-side

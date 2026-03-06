@@ -11,6 +11,7 @@ import SwiftUI
 import ExpoModulesCore
 import FeedBridge
 import NotificationBridge
+import ExpoSwiftUIFeed
 
 // MARK: - Notification List Props
 
@@ -276,6 +277,8 @@ struct NotificationListView: View {
                         .padding(20)
                 }
             }
+            .frame(maxWidth: LayoutConstants.maxContentWidth)
+            .frame(maxWidth: .infinity)
         }
         .scrollDismissesKeyboard(.interactively)
         .refreshable {

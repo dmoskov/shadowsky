@@ -9,6 +9,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PINNED_LANGUAGES } from "../constants/languages";
@@ -71,6 +72,8 @@ function SearchFilterSheetInner({
 }: SearchFilterSheetProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const isWideScreen = windowWidth > 768;
   const [draft, setDraft] = useState<SearchFilterValues>(filters);
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -225,6 +228,7 @@ function SearchFilterSheetInner({
             style={[
               styles.sheet,
               { paddingBottom: Math.max(insets.bottom, 16) },
+              isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 },
             ]}
           >
             {/* Handle bar */}

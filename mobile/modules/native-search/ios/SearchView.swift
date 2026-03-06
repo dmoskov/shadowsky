@@ -54,6 +54,8 @@ struct SearchView: View {
                 resultsList
             }
         }
+        .frame(maxWidth: LayoutConstants.maxContentWidth)
+        .frame(maxWidth: .infinity)
         .background(Color(UIColor.systemBackground))
         .onTapGesture {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)

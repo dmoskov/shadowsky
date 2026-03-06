@@ -8,6 +8,7 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  useWindowDimensions,
 } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 import { BlurOverlay } from "./BlurOverlay";
@@ -36,6 +37,8 @@ function AppealLabelModalInner({
   onAppealSubmitted,
 }: AppealLabelModalProps) {
   const { colors } = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
+  const isWideScreen = windowWidth > 768;
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,7 +90,7 @@ function AppealLabelModalInner({
     >
       <View style={styles.backdrop}>
         <BlurOverlay intensity={25} />
-        <View style={styles.container}>
+        <View style={[styles.container, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 }]}>
           {isSubmitted ? (
             <>
               <View style={styles.header}>
