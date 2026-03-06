@@ -7,7 +7,7 @@
 
 import React, { useEffect, useCallback, useMemo, forwardRef, useImperativeHandle, useState } from 'react';
 import { requireNativeViewManager } from 'expo-modules-core';
-import { ViewProps, Platform, View, Linking } from 'react-native';
+import { ViewProps, Platform, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   useNotifications,
@@ -22,6 +22,7 @@ import { aggregateNotifications } from '../../../src/utils/notification-aggregat
 import { filterMutedNotifications } from '../../../src/utils/content-filter';
 import { clearBadgeCount } from '../../../src/utils/badge';
 import { useRouter } from 'expo-router';
+import { openLink } from '../../../src/utils/browser';
 
 // Lazy-load native modules (only available on iOS)
 let NotificationBridge: any = null;
@@ -298,7 +299,7 @@ export const NativeNotificationsList = forwardRef<any, ViewProps>((props, ref) =
   // Handle link press
   const handleLinkPress = useCallback(
     (event: { nativeEvent: { uri: string } }) => {
-      Linking.openURL(event.nativeEvent.uri).catch(() => {});
+      openLink(event.nativeEvent.uri).catch(() => {});
     },
     [],
   );

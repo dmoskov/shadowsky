@@ -10,13 +10,13 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Linking,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useTranslation } from "../../hooks/useTranslation";
 import {fontSize} from '../../utils/typography';
+import { openLink } from "../../utils/browser";
 
 type LoginMode = "oauth" | "app-password";
 
@@ -119,7 +119,7 @@ export function LandingScreen() {
 
   const handleSignUp = async () => {
     try {
-      await Linking.openURL("https://bsky.app/signup");
+      await openLink("https://bsky.app/signup");
     } catch {
       Alert.alert(
         t("auth.error_title"),
@@ -320,7 +320,7 @@ export function LandingScreen() {
                   {t("auth.no_app_password_info")}{" "}
                   <Text
                     style={styles.linkText}
-                    onPress={() => Linking.openURL("https://bsky.app/settings/app-passwords")}
+                    onPress={() => openLink("https://bsky.app/settings/app-passwords")}
                   >
                     {t("auth.create_app_password_link")}
                   </Text>
@@ -347,11 +347,11 @@ export function LandingScreen() {
 
           <Text style={styles.disclaimer}>
             {t("auth.disclaimer")}{" "}
-            <Text style={styles.link} onPress={() => Linking.openURL("https://shadowsky.io/terms")}>
+            <Text style={styles.link} onPress={() => openLink("https://shadowsky.io/terms")}>
               {t("auth.terms_of_service")}
             </Text>{" "}
             {t("auth.and")}{" "}
-            <Text style={styles.link} onPress={() => Linking.openURL("https://shadowsky.io/privacy")}>
+            <Text style={styles.link} onPress={() => openLink("https://shadowsky.io/privacy")}>
               {t("auth.privacy_policy")}
             </Text>
           </Text>
