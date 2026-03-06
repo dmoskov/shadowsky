@@ -15,7 +15,7 @@ import { MessagesScreen } from "../screens/profile/MessagesScreen";
 import {fontSize} from '../utils/typography';
 
 /** Maximum detail panel width on very wide screens */
-const DETAIL_PANEL_MAX_WIDTH = 420;
+const DETAIL_PANEL_MAX_WIDTH = 520;
 /** Minimum detail panel width */
 const DETAIL_PANEL_MIN_WIDTH = 320;
 /** Default sidebar width — must stay in sync with IPadSidebar */

@@ -1,13 +1,17 @@
 import React, { useMemo } from "react";
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "../../components/Avatar";
@@ -42,6 +46,8 @@ import type { ComposeScreenProps } from "./ComposeTypes";
 export function ComposeScreen(props: ComposeScreenProps = {}) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
+  const isWideScreen = windowWidth > 768;
 
   // Core draft/thread state machine
   const draft = useComposeDraft(props);
@@ -81,6 +87,7 @@ export function ComposeScreen(props: ComposeScreenProps = {}) {
       style={[styles.container, { paddingTop: insets.top }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      <View style={isWideScreen ? styles.wideContentWrapper : styles.fullWidth}>
       <View style={styles.header}>
         <TouchableOpacity
           onPress={draft.handleClose}
@@ -119,6 +126,13 @@ export function ComposeScreen(props: ComposeScreenProps = {}) {
         </TouchableOpacity>
       </View>
 
+      <ScrollView
+        style={styles.scrollContent}
+        contentContainerStyle={styles.scrollContentContainer}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
+      >
+        <Pressable style={styles.dismissArea} onPress={Keyboard.dismiss}>
       {/* Reply Context */}
       {draft.replyTo && (
         <View style={styles.replyContext}>
@@ -223,6 +237,8 @@ export function ComposeScreen(props: ComposeScreenProps = {}) {
           isLoading={facets.isSearching}
         />
       )}
+        </Pressable>
+      </ScrollView>
 
       <ComposeToolbar
         onImagePicker={media.handleImagePicker}
@@ -246,6 +262,8 @@ export function ComposeScreen(props: ComposeScreenProps = {}) {
         hasText={draft.text.trim().length > 0}
         bottomInset={insets.bottom}
       />
+
+      </View>
 
       {/* Alt Text Modal */}
       <AltTextModal
@@ -344,6 +362,15 @@ function createStyles(colors: any) {
       flex: 1,
       backgroundColor: colors.background,
     },
+    wideContentWrapper: {
+      flex: 1,
+      maxWidth: 700,
+      width: '100%' as const,
+      alignSelf: 'center' as const,
+    },
+    fullWidth: {
+      flex: 1,
+    },
     header: {
       flexDirection: "row",
       justifyContent: "space-between",
@@ -394,8 +421,17 @@ function createStyles(colors: any) {
       fontSize: fontSize.callout,
       fontWeight: "600",
     },
-    input: {
+    scrollContent: {
       flex: 1,
+    },
+    scrollContentContainer: {
+      flexGrow: 1,
+    },
+    dismissArea: {
+      flexGrow: 1,
+    },
+    input: {
+      minHeight: 150,
       color: colors.text,
       fontSize: fontSize.headline,
       padding: 16,

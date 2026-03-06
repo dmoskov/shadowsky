@@ -221,6 +221,8 @@ PODS:
     - ExpoModulesCore
   - ExpoBlur (15.0.8):
     - ExpoModulesCore
+  - ExpoClipboard (8.0.8):
+    - ExpoModulesCore
   - ExpoCrypto (15.0.8):
     - ExpoModulesCore
   - ExpoDevice (8.0.10):
@@ -1690,6 +1692,8 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
+  - react-native-context-menu-view (1.21.0):
+    - React
   - react-native-mmkv (3.3.3):
     - hermes-engine
     - RCTRequired
@@ -2457,6 +2461,7 @@ DEPENDENCIES:
   - "ExpoAtprotoOAuthClient (from `../node_modules/@atproto/oauth-client-expo/ios`)"
   - ExpoBackgroundFetch (from `../node_modules/expo-background-fetch/ios`)
   - ExpoBlur (from `../node_modules/expo-blur/ios`)
+  - ExpoClipboard (from `../node_modules/expo-clipboard/ios`)
   - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
   - ExpoDevice (from `../node_modules/expo-device/ios`)
   - ExpoDocumentPicker (from `../node_modules/expo-document-picker/ios`)
@@ -2531,6 +2536,7 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
+  - react-native-context-menu-view (from `../node_modules/react-native-context-menu-view`)
   - react-native-mmkv (from `../node_modules/react-native-mmkv`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
@@ -2626,6 +2632,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-background-fetch/ios"
   ExpoBlur:
     :path: "../node_modules/expo-blur/ios"
+  ExpoClipboard:
+    :path: "../node_modules/expo-clipboard/ios"
   ExpoCrypto:
     :path: "../node_modules/expo-crypto/ios"
   ExpoDevice:
@@ -2773,6 +2781,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
+  react-native-context-menu-view:
+    :path: "../node_modules/react-native-context-menu-view"
   react-native-mmkv:
     :path: "../node_modules/react-native-mmkv"
   react-native-netinfo:
@@ -2886,6 +2896,7 @@ SPEC CHECKSUMS:
   ExpoAtprotoOAuthClient: 87c4b0380dd938fe1a445993478ac6776f519b3a
   ExpoBackgroundFetch: 1631d1fbf59e6ad98ca83b6780ae3a35f678f632
   ExpoBlur: b90747a3f22a8b6ceffd9cb0dc41a4184efdc656
+  ExpoClipboard: b36b287d8356887844bb08ed5c84b5979bb4dd1e
   ExpoCrypto: b6105ebaa15d6b38a811e71e43b52cd934945322
   ExpoDevice: 6327c3c200816795708885adf540d26ecab83d1a
   ExpoDocumentPicker: 7cd9e71a0f66fb19eb0a586d6f26eee1284692e0
@@ -2964,6 +2975,7 @@ SPEC CHECKSUMS:
   React-logger: 50fdb9a8236da90c0b1072da5c32ee03aeb5bf28
   React-Mapbuffer: 9050ee10c19f4f7fca8963d0211b2854d624973e
   React-microtasksnativemodule: f775db9e991c6f3b8ccbc02bfcde22770f96e23b
+  react-native-context-menu-view: da39a4612c1294d651907162529cfba8421e9b89
   react-native-mmkv: 3d69c8bbdbceb1c0d3754863ecffa6ec24e4be12
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
   react-native-safe-area-context: 37e680fc4cace3c0030ee46e8987d24f5d3bdab2

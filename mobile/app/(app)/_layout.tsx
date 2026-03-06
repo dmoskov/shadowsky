@@ -12,9 +12,11 @@ import { IPadDetailPanel } from "../../src/components/IPadDetailPanel";
 import { useIPadLayout } from "../../src/contexts/IPadLayoutContext";
 import { useTheme } from "../../src/contexts/ThemeContext";
 import { ScreenErrorBoundary } from "../../src/components/ScreenErrorBoundary";
+import { useIPadKeyboardShortcuts } from "../../src/hooks/useIPadKeyboardShortcuts";
 
 function IPadAppLayout() {
   const { detailContent, canShowDetailPanel } = useIPadLayout();
+  useIPadKeyboardShortcuts();
 
   return (
     <View style={{ flex: 1, flexDirection: "row" }}>

@@ -707,6 +707,7 @@ struct ProfileHeaderView_Previews: PreviewProvider {
                     followsCount: 567,
                     postsCount: 890,
                     indexedAt: nil,
+                    isVerified: false,
                     viewer: SerializedProfileViewer(
                         muted: false,
                         blockedBy: false,

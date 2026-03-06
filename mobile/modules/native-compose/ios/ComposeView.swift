@@ -249,37 +249,41 @@ struct ComposeView: View {
     // MARK: - Single Post Content
 
     private var singlePostContent: some View {
-        VStack(spacing: 0) {
-            // Text editor
-            ComposeTextEditor(
-                text: $composeState.text,
-                placeholder: placeholderText,
-                isEnabled: !composeState.isPosting && !composeState.isUploading,
-                onTextChange: { newText in
-                    composeState.detectMention(in: newText)
-                    if let query = composeState.mentionQuery {
-                        onMentionSearch(query)
+        ScrollView {
+            VStack(spacing: 0) {
+                // Text editor
+                ComposeTextEditor(
+                    text: $composeState.text,
+                    placeholder: placeholderText,
+                    isEnabled: !composeState.isPosting && !composeState.isUploading,
+                    onTextChange: { newText in
+                        composeState.detectMention(in: newText)
+                        if let query = composeState.mentionQuery {
+                            onMentionSearch(query)
+                        }
                     }
-                }
-            )
+                )
+                .frame(minHeight: 200)
 
-            // Media grid
-            ComposeMediaGrid(
-                attachments: composeState.mediaAttachments,
-                isUploading: composeState.isUploading,
-                onRemove: { index in onRemoveMedia(index) },
-                onEditAltText: { index in
-                    composeState.editingAltTextIndex = index
-                    composeState.tempAltText = composeState.mediaAttachments[index].altText
-                    onEditAltText(index)
-                }
-            )
+                // Media grid
+                ComposeMediaGrid(
+                    attachments: composeState.mediaAttachments,
+                    isUploading: composeState.isUploading,
+                    onRemove: { index in onRemoveMedia(index) },
+                    onEditAltText: { index in
+                        composeState.editingAltTextIndex = index
+                        composeState.tempAltText = composeState.mediaAttachments[index].altText
+                        onEditAltText(index)
+                    }
+                )
 
-            // Quote preview
-            if let quoteContext = composeState.quoteContext {
-                quotePreviewView(quoteContext)
+                // Quote preview
+                if let quoteContext = composeState.quoteContext {
+                    quotePreviewView(quoteContext)
+                }
             }
         }
+        .scrollDismissesKeyboard(.interactively)
     }
 
     // MARK: - Thread Mode Content

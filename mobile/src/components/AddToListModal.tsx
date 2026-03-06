@@ -8,6 +8,7 @@ import {
   Modal,
   ActivityIndicator,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 import {useLists, useAddToList} from '../hooks/api';
 import {AppBskyGraphDefs} from '@atproto/api';
@@ -28,6 +29,8 @@ export function AddToListModal({
   userHandle,
 }: AddToListModalProps) {
   const { colors } = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
+  const isWideScreen = windowWidth > 768;
   const {data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage} = useLists();
   const {mutateAsync: addToList, isPending} = useAddToList();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -110,7 +113,7 @@ export function AddToListModal({
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={onClose}>
-      <View style={styles.container}>
+      <View style={[styles.container, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, width: '100%' as const }]}>
         <View style={styles.header}>
           <Text style={styles.title}>Add to List</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton} accessibilityRole="button" accessibilityLabel="Close">
