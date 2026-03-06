@@ -19,6 +19,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useOfflineFeedEnhancer } from "../../hooks/useOfflineFeed";
 import StaleContentIndicator from "../../components/StaleContentIndicator";
 import { useOfflineFeedStatus } from "../../hooks/useOfflineFeed";
+import { useFeedPagePrefetch } from "../../hooks/useFeedPagePrefetch";
 import {fontSize} from '../../utils/typography';
 
 const GRID_COLUMNS = 3;
@@ -104,6 +105,7 @@ export function TimelineScreen() {
   const { data, isLoading, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = enhancedQuery;
   const { isServingCached, isStale, isOnline } = enhancedQuery;
   const offlineStatus = useOfflineFeedStatus();
+  useFeedPagePrefetch(enhancedQuery);
   const { navigateToThread } = useAppNavigation();
   const styles = useMemo(() => createStyles(colors, itemSize), [colors, itemSize]);
   const [isRefreshing, setIsRefreshing] = useState(false);

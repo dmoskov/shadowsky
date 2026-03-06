@@ -33,6 +33,7 @@ import { recordBlock, recordUnblock, recordMute, recordUnmute } from "../../serv
 import { useSpotlightProfile } from "../../hooks/useSpotlightIndex";
 import { useOfflineFeedEnhancer, useOfflineFeedStatus } from "../../hooks/useOfflineFeed";
 import StaleContentIndicator from "../../components/StaleContentIndicator";
+import { useFeedPagePrefetch } from "../../hooks/useFeedPagePrefetch";
 
 
 import { createLogger } from '../../utils/logger';
@@ -91,6 +92,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
   } = enhancedFeedQuery;
   const { isServingCached: isFeedServingCached, isStale: isFeedStale, isOnline: isFeedOnline } = enhancedFeedQuery;
   const feedOfflineStatus = useOfflineFeedStatus();
+  useFeedPagePrefetch(enhancedFeedQuery);
 
   const {
     data: likesData,
