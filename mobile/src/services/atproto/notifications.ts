@@ -57,7 +57,7 @@ export async function updateSeenNotifications(seenAt?: string) {
         const client = getAtProtoClient();
         const agent = client.getAgent();
 
-        await agent.updateSeenNotifications(seenAt as any);
+        await agent.updateSeenNotifications(seenAt);
       },
     ATProtoEndpointType.NOTIFICATION
   );

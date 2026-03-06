@@ -19,16 +19,38 @@ export interface RetryOptions {
 const DEFAULT_RETRYABLE_STATUSES = [429, 500, 502, 503, 504];
 const NON_RETRYABLE_STATUSES = [400, 401, 403, 404];
 
+/** Shape of HTTP-like errors from AT Protocol client */
+interface HttpError {
+  status?: number;
+  statusCode?: number;
+  name?: string;
+  message?: string;
+  headers?: Record<string, string>;
+  response?: {
+    status?: number;
+    headers?: Record<string, string>;
+  };
+}
+
+/**
+ * Narrow unknown error to object shape for property access
+ */
+function asErrorObject(error: unknown): HttpError | null {
+  if (error && typeof error === 'object') {
+    return error as HttpError;
+  }
+  return null;
+}
+
 /**
  * Extract HTTP status code from error
  */
 function getErrorStatus(error: unknown): number | undefined {
-  if (error && typeof error === 'object') {
-    const err = error as any;
-    if (err.status !== undefined) return err.status;
-    if (err.statusCode !== undefined) return err.statusCode;
-    if (err.response?.status !== undefined) return err.response.status;
-  }
+  const err = asErrorObject(error);
+  if (!err) return undefined;
+  if (err.status !== undefined) return err.status;
+  if (err.statusCode !== undefined) return err.statusCode;
+  if (err.response?.status !== undefined) return err.response.status;
   return undefined;
 }
 
@@ -40,7 +62,7 @@ function hasHeaders(error: unknown): error is { headers: Record<string, string> 
     error !== null &&
     typeof error === 'object' &&
     'headers' in error &&
-    typeof (error as any).headers === 'object'
+    typeof (error as HttpError).headers === 'object'
   );
 }
 
@@ -51,11 +73,12 @@ function hasHeaders(error: unknown): error is { headers: Record<string, string> 
 function getRetryAfterDelay(error: unknown): number | null {
   if (!hasHeaders(error)) return null;
 
+  const err = asErrorObject(error);
   const retryAfter =
     error.headers['retry-after'] ||
     error.headers['Retry-After'] ||
-    (error as any).response?.headers?.['retry-after'] ||
-    (error as any).response?.headers?.['Retry-After'];
+    err?.response?.headers?.['retry-after'] ||
+    err?.response?.headers?.['Retry-After'];
 
   if (!retryAfter) return null;
 
@@ -99,9 +122,10 @@ function isRetryableError(
   }
 
   // Check error name for common network/timeout errors
-  if (error && typeof error === 'object') {
-    const errorName = (error as any).name;
-    const errorMessage = (error as any).message || '';
+  const err = asErrorObject(error);
+  if (err) {
+    const errorName = err.name;
+    const errorMessage = err.message || '';
 
     if (
       errorName === 'AbortError' ||

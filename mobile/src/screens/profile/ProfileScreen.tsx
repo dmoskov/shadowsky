@@ -498,7 +498,7 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           <View style={styles.starterPacksContainer}>
             <Text style={styles.starterPacksTitle}>Starter Packs</Text>
             {starterPacksData.starterPacks.map((pack) => {
-              const record = pack.record as any;
+              const record = pack.record as { name?: string };
               const name = record?.name || 'Starter Pack';
               return (
                 <TouchableOpacity

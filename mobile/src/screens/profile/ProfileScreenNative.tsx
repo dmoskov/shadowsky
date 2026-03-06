@@ -51,6 +51,7 @@ import { triggerHaptic } from "../../utils/haptics";
 import { openLink } from "../../utils/browser";
 import { sharePost } from "../../utils/share";
 import {fontSize} from '../../utils/typography';
+import {AppBskyFeedPost, AppBskyFeedDefs} from '@atproto/api';
 
 const logger = createLogger("ProfileScreenNative");
 
@@ -186,8 +187,8 @@ function ProfileScreenNativeIOS({
   const pinnedPostUri = profile?.pinnedPost?.uri;
   const { data: pinnedPostThread } = usePostThread(pinnedPostUri ?? "");
   const pinnedPost =
-    pinnedPostThread && "post" in pinnedPostThread
-      ? (pinnedPostThread.post as any)
+    pinnedPostThread && AppBskyFeedDefs.isThreadViewPost(pinnedPostThread)
+      ? pinnedPostThread.post
       : null;
 
   const isOwnProfile = account?.handle === handle;
@@ -208,7 +209,7 @@ function ProfileScreenNativeIOS({
             followsCount: profile.followsCount,
             postsCount: profile.postsCount,
             indexedAt: profile.indexedAt,
-            isVerified: (profile as any).verification?.verifiedStatus === 'valid' || undefined,
+            isVerified: profile.verification?.verifiedStatus === 'valid' || undefined,
             viewer: profile.viewer
               ? {
                   muted: profile.viewer.muted,
@@ -233,12 +234,12 @@ function ProfileScreenNativeIOS({
                     : undefined,
                 }
               : undefined,
-            knownFollowers: (profile as any).knownFollowers
+            knownFollowers: profile.viewer?.knownFollowers
               ? {
-                  count: (profile as any).knownFollowers.count,
+                  count: profile.viewer.knownFollowers.count,
                   followers:
-                    (profile as any).knownFollowers.followers?.map(
-                      (f: any) => ({
+                    profile.viewer.knownFollowers.followers?.map(
+                      (f) => ({
                         did: f.did,
                         handle: f.handle,
                         displayName: f.displayName,
@@ -255,7 +256,7 @@ function ProfileScreenNativeIOS({
   const starterPacksForNative: StarterPackData[] = useMemo(
     () =>
       starterPacksData?.starterPacks?.map((pack) => {
-        const record = pack.record as any;
+        const record = pack.record as { name?: string };
         return {
           uri: pack.uri,
           cid: pack.cid,
@@ -275,7 +276,7 @@ function ProfileScreenNativeIOS({
             authorHandle: pinnedPost.author?.handle || "",
             authorDisplayName: pinnedPost.author?.displayName,
             authorAvatar: pinnedPost.author?.avatar,
-            text: (pinnedPost.record as any)?.text,
+            text: (pinnedPost.record as AppBskyFeedPost.Record)?.text,
             indexedAt: pinnedPost.indexedAt,
             likeCount: pinnedPost.likeCount,
             repostCount: pinnedPost.repostCount,
@@ -546,7 +547,7 @@ function ProfileScreenNativeIOS({
     const { uri } = event.nativeEvent;
     const postData = postsByUri.get(uri);
     if (postData) {
-      const record = postData.post.record as any;
+      const record = postData.post.record as AppBskyFeedPost.Record;
       navigateToCompose({
         replyTo: {
           uri: postData.post.uri,

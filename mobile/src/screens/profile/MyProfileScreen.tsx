@@ -231,7 +231,7 @@ export function MyProfileScreen({
           <View style={styles.starterPacksContainer}>
             <Text style={styles.starterPacksTitle}>My Starter Packs</Text>
             {starterPacksData.starterPacks.map((pack) => {
-              const record = pack.record as any;
+              const record = pack.record as { name?: string };
               const name = record?.name || 'Starter Pack';
               return (
                 <TouchableOpacity

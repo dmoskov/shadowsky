@@ -94,7 +94,7 @@ export function useFeedSerializer(
               _isBookmarked: bookmarkedPostUris.has(post.post.uri),
             }))
           : pagePosts;
-        serializedPage = serializeFeedPosts(enhancedPosts as any);
+        serializedPage = serializeFeedPosts(enhancedPosts as AppBskyFeedDefs.FeedViewPost[]);
         serializedPagesCache.current.set(i, serializedPage);
       }
 

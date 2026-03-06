@@ -300,7 +300,7 @@ const NativeSearchView = forwardRef<NativeSearchHandle, NativeSearchOuterProps>(
                 isVerified: item.post?.author?.verification?.verifiedStatus === 'valid' || undefined,
               },
               record: {
-                text: (item.post?.record as any)?.text || '',
+                text: (item.post?.record as { text?: string })?.text || '',
               },
               indexedAt: item.post?.indexedAt || '',
               likeCount: item.post?.likeCount || 0,

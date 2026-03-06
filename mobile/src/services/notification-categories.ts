@@ -274,7 +274,7 @@ async function handleReplyAction(
   // Get the text the user typed in the inline input
   const userInput =
     response.userText ??
-    (response as any).notification?.request?.content?.data?.userText;
+    (response as { notification?: { request?: { content?: { data?: { userText?: string } } } } }).notification?.request?.content?.data?.userText;
 
   if (!userInput || userInput.trim().length === 0) {
     logger.log('Reply action: no text provided, ignoring');

@@ -264,7 +264,7 @@ export function NotificationsScreen() {
       <NotificationTabBar
         activeFilter={activeFilter}
         onFilterChange={handleFilterChange}
-        counts={notificationCounts as any}
+        counts={notificationCounts as Partial<Record<NotificationFilter, number>>}
       />
       <StaleContentIndicator
         isStale={isNotifServingCached || isNotifStale}

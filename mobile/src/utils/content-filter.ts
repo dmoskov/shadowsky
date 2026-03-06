@@ -1,4 +1,4 @@
-import { AppBskyFeedDefs } from "@atproto/api";
+import { AppBskyFeedDefs, AppBskyFeedPost, AppBskyEmbedRecord, AppBskyNotificationListNotifications } from "@atproto/api";
 import { MutedWord } from "../services/preferences";
 
 /**
@@ -107,7 +107,7 @@ function containsMutedWord(text: string, mutedWord: MutedWord): boolean {
  * Extract text content from a post for filtering
  */
 function extractPostText(post: AppBskyFeedDefs.FeedViewPost): string {
-  const record = post.post.record as any;
+  const record = post.post.record as AppBskyFeedPost.Record;
   let text = "";
 
   // Add post text
@@ -116,8 +116,8 @@ function extractPostText(post: AppBskyFeedDefs.FeedViewPost): string {
   }
 
   // Add alt text from images
-  if (record.embed?.images) {
-    for (const image of record.embed.images) {
+  if (record.embed && 'images' in record.embed) {
+    for (const image of (record.embed as { images: Array<{ alt?: string }> }).images) {
       if (image.alt) {
         text += image.alt + " ";
       }
@@ -126,9 +126,10 @@ function extractPostText(post: AppBskyFeedDefs.FeedViewPost): string {
 
   // Add quoted post text
   if (post.post.embed && "record" in post.post.embed) {
-    const embeddedRecord = (post.post.embed as any).record;
-    if (embeddedRecord?.value?.text) {
-      text += embeddedRecord.value.text + " ";
+    const embedView = post.post.embed as AppBskyEmbedRecord.View;
+    const viewRecord = embedView.record as AppBskyEmbedRecord.ViewRecord;
+    if (viewRecord?.value && (viewRecord.value as { text?: string }).text) {
+      text += (viewRecord.value as { text?: string }).text + " ";
     }
   }
 
@@ -195,17 +196,18 @@ export function getActiveMutedWords(mutedWords: MutedWord[]): MutedWord[] {
 /**
  * Extract text from a notification for filtering
  */
-function extractNotificationText(notification: any): string {
+function extractNotificationText(notification: AppBskyNotificationListNotifications.Notification): string {
   let text = "";
 
   // Add notification record text (for replies, mentions, quotes)
-  if (notification.record?.text) {
-    text += notification.record.text + " ";
+  const record = notification.record as { text?: string; embed?: { images?: Array<{ alt?: string }> } } | undefined;
+  if (record?.text) {
+    text += record.text + " ";
   }
 
   // Add alt text from embedded images
-  if (notification.record?.embed?.images) {
-    for (const image of notification.record.embed.images) {
+  if (record?.embed?.images) {
+    for (const image of record.embed.images) {
       if (image.alt) {
         text += image.alt + " ";
       }
@@ -219,7 +221,7 @@ function extractNotificationText(notification: any): string {
  * Check if a notification should be muted based on muted words
  */
 export function isNotificationMuted(
-  notification: any,
+  notification: AppBskyNotificationListNotifications.Notification,
   mutedWords: MutedWord[],
 ): boolean {
   if (!mutedWords || mutedWords.length === 0) {
@@ -253,9 +255,9 @@ export function isNotificationMuted(
  * Filter a list of notifications based on muted words
  */
 export function filterMutedNotifications(
-  notifications: any[],
+  notifications: AppBskyNotificationListNotifications.Notification[],
   mutedWords: MutedWord[],
-): any[] {
+): AppBskyNotificationListNotifications.Notification[] {
   if (!mutedWords || mutedWords.length === 0) {
     return notifications;
   }

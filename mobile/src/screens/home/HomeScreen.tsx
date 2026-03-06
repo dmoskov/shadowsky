@@ -27,6 +27,7 @@ import type { LightboxImage } from "../../contexts/LightboxContext";
 import { useScrollChrome } from "../../contexts/ScrollChromeContext";
 import { createLogger } from "../../utils/logger";
 import {fontSize} from '../../utils/typography';
+import {AppBskyFeedPost} from '@atproto/api';
 
 const logger = createLogger('HomeScreen');
 
@@ -320,7 +321,7 @@ export function HomeScreen() {
     const postData = postsByUri.get(uri);
 
     if (postData) {
-      const record = postData.post.record as any;
+      const record = postData.post.record as AppBskyFeedPost.Record;
       navigateToCompose({
         replyTo: {
           uri: postData.post.uri,
