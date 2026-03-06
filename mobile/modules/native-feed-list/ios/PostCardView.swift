@@ -90,6 +90,7 @@ struct PostCardView: View {
     let onImagePress: (([ImageEmbedData], Int) -> Void)?
     let onLinkPress: ((String) -> Void)?
     let onQuotePress: ((String, String) -> Void)?
+    let onQuotePost: (() -> Void)?
 
     /// Whether the current user authored this post
     private var isOwnPost: Bool {
@@ -197,19 +198,51 @@ struct PostCardView: View {
                 )
                 .accessibilityIdentifier("reply-button")
 
-                // Repost
-                actionButton(
-                    icon: "arrow.2.squarepath",
-                    count: displayRepostCount,
-                    isActive: isReposted,
-                    activeColor: .green,
-                    action: {
-                        repostOverride = !isReposted
-                        repostCountOverride = displayRepostCount + (isReposted ? -1 : 1)
-                        onRepost?()
+                // Repost / Quote menu
+                if isReposted {
+                    // Already reposted — tap to undo repost
+                    actionButton(
+                        icon: "arrow.2.squarepath",
+                        count: displayRepostCount,
+                        isActive: true,
+                        activeColor: .green,
+                        action: {
+                            repostOverride = false
+                            repostCountOverride = displayRepostCount - 1
+                            onRepost?()
+                        }
+                    )
+                    .accessibilityIdentifier("repost-button")
+                } else {
+                    // Not reposted — show menu with Repost and Quote options
+                    Menu {
+                        Button {
+                            repostOverride = true
+                            repostCountOverride = displayRepostCount + 1
+                            onRepost?()
+                        } label: {
+                            Label("Repost", systemImage: "arrow.2.squarepath")
+                        }
+                        Button {
+                            onQuotePost?()
+                        } label: {
+                            Label("Quote Post", systemImage: "quote.bubble")
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.2.squarepath")
+                                .font(.body)
+                            if displayRepostCount > 0 {
+                                Text(formatCount(displayRepostCount))
+                                    .font(.subheadline)
+                            }
+                        }
+                        .foregroundColor(.secondary)
+                        .frame(minWidth: 48, minHeight: 48)
+                        .contentShape(Rectangle())
                     }
-                )
-                .accessibilityIdentifier("repost-button")
+                    .accessibilityIdentifier("repost-button")
+                }
 
                 // Like
                 actionButton(
@@ -280,6 +313,11 @@ struct PostCardView: View {
                 onRepost?()
             } label: {
                 Label(isReposted ? "Undo Repost" : "Repost", systemImage: "arrow.2.squarepath")
+            }
+            Button {
+                onQuotePost?()
+            } label: {
+                Label("Quote Post", systemImage: "quote.bubble")
             }
             Button {
                 likeOverride = !isLiked

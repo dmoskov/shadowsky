@@ -70,7 +70,7 @@ public class ThreadViewModule: Module {
                    "onNavigateToParent", "onNavigateToRoot",
                    "onPressLikeCount", "onPressRepostCount", "onPressQuoteCount",
                    "onSummaryModeChange", "onTranslate",
-                   "onLinkPress", "onImagePress", "onQuotePress",
+                   "onLinkPress", "onImagePress", "onQuotePress", "onQuotePost",
                    // Composer events
                    "onSendReply", "onOpenImagePicker", "onOpenGifPicker",
                    "onOpenEmojiPicker", "onMentionSearchQuery")
@@ -259,6 +259,7 @@ class ThreadViewWrapper: ExpoView {
     private let onLinkPress = EventDispatcher()
     private let onImagePress = EventDispatcher()
     private let onQuotePress = EventDispatcher()
+    private let onQuotePost = EventDispatcher()
 
     // Composer event dispatchers
     private let onSendReply = EventDispatcher()
@@ -462,6 +463,16 @@ class ThreadViewWrapper: ExpoView {
                 self?.onQuotePress([
                     "uri": uri,
                     "handle": handle
+                ])
+            },
+            onQuotePost: { [weak self] uri, cid, handle, displayName, avatar, text in
+                self?.onQuotePost([
+                    "uri": uri,
+                    "cid": cid,
+                    "authorHandle": handle,
+                    "authorDisplayName": displayName as Any,
+                    "authorAvatar": avatar as Any,
+                    "text": text,
                 ])
             },
             // Composer event handlers

@@ -62,6 +62,7 @@ struct ThreadView: View {
     let onLinkPress: ((String) -> Void)? // uri
     let onImagePress: (([ImageEmbedData], Int) -> Void)? // (images, index)
     let onQuotePress: ((String, String) -> Void)? // (uri, handle)
+    let onQuotePost: ((String, String, String, String?, String?, String) -> Void)? // (uri, cid, handle, displayName?, avatar?, text)
 
     // Composer event handlers (bridge to JS)
     let onSendReply: ((String, String?, String?) -> Void)?  // (text, replyToUri, replyToCid)
@@ -216,6 +217,16 @@ struct ThreadView: View {
                         },
                         onQuotePress: { uri, handle in
                             onQuotePress?(uri, handle)
+                        },
+                        onQuotePost: {
+                            onQuotePost?(
+                                rootPost.post.uri,
+                                rootPost.post.cid,
+                                rootPost.post.author.handle,
+                                rootPost.post.author.displayName,
+                                rootPost.post.author.avatar,
+                                rootPost.post.record.text
+                            )
                         }
                     )
                     .id(rootPost.post.uri)
@@ -325,6 +336,9 @@ struct ThreadView: View {
             },
             onQuotePress: { uri, handle in
                 onQuotePress?(uri, handle)
+            },
+            onQuotePost: { uri, cid, handle, displayName, avatar, text in
+                onQuotePost?(uri, cid, handle, displayName, avatar, text)
             }
         )
         .id(replyNode.post.uri)
@@ -696,6 +710,7 @@ struct ThreadView_Previews: PreviewProvider {
             onLinkPress: { uri in print("Link: \(uri)") },
             onImagePress: { images, index in print("Image: \(index)") },
             onQuotePress: { uri, handle in print("Quote: \(uri)") },
+            onQuotePost: { uri, cid, handle, displayName, avatar, text in print("QuotePost: \(uri)") },
             onSendReply: { text, uri, cid in print("Send reply: \(text)") },
             onOpenImagePicker: { print("Image picker") },
             onOpenGifPicker: { print("GIF picker") },
