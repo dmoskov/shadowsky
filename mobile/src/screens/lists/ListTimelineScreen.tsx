@@ -7,6 +7,7 @@ import {useAppNavigation} from '../../hooks/useNavigation';
 import {useRouter} from 'expo-router';
 import {useTheme} from '../../contexts/ThemeContext';
 import {PostCardSkeleton} from '../../components/PostCardSkeleton';
+import {useFeedPagePrefetch} from '../../hooks/useFeedPagePrefetch';
 import {fontSize} from '../../utils/typography';
 
 interface ListTimelineScreenProps {
@@ -32,6 +33,7 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
   const {data: listData, isLoading: isLoadingList} = useList(decodedListId);
 
   // Fetch list feed with infinite scroll
+  const listFeedQuery = useListFeed(decodedListId);
   const {
     data,
     isLoading,
@@ -40,7 +42,8 @@ export function ListTimelineScreen({listId}: ListTimelineScreenProps) {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useListFeed(decodedListId);
+  } = listFeedQuery;
+  useFeedPagePrefetch(listFeedQuery);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = useCallback(() => {

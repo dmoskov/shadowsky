@@ -19,6 +19,7 @@ import { triggerHaptic } from "../../utils/haptics";
 import { useToast } from "../../contexts/ToastContext";
 import { useNetworkStatus } from "../../hooks/useNetworkStatus";
 import { useDataPrefetch } from "../../hooks/useDataPrefetch";
+import { useFeedPagePrefetch } from "../../hooks/useFeedPagePrefetch";
 import { openLink } from "../../utils/browser";
 import { sharePost } from "../../utils/share";
 import { useLightbox } from "../../contexts/LightboxContext";
@@ -171,6 +172,9 @@ export function HomeScreen() {
 
   // Prefetch thread and profile data for the first visible posts
   useDataPrefetch(flatPosts);
+
+  // Prefetch next feed page during idle to eliminate pagination loading flicker
+  useFeedPagePrefetch(activeQuery);
 
   // Enable scroll-to-top on tab press
   useScrollToTop(scrollRef);
