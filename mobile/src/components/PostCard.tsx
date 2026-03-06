@@ -12,7 +12,7 @@ import ContextMenu, {ContextMenuOnPressNativeEvent} from 'react-native-context-m
 import {AppBskyFeedDefs, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
 import {Avatar} from './Avatar';
 import {formatDistanceToNow} from '../i18n/format-date';
-import {ReplyIcon, RepostIcon, HeartIcon, BookmarkIcon, MoreIcon, SendIcon, TranslateIcon} from './icons';
+import {ReplyIcon, RepostIcon, HeartIcon, BookmarkIcon, MoreIcon, SendIcon, TranslateIcon, ShieldIcon} from './icons';
 import {RichText} from '../utils/rich-text';
 import {useNetwork} from '../contexts/NetworkContext';
 import {sharePost} from '../utils/share';
@@ -26,6 +26,7 @@ import {triggerHaptic} from '../utils/haptics';
 import {useModeration} from '../contexts/ModerationContext';
 import {ContentLabelWarning} from './ContentLabelWarning';
 import {ReportModal} from './ReportModal';
+import {AppealLabelModal} from './AppealLabelModal';
 import {SaveToCollectionModal} from './SaveToCollectionModal';
 import {usePostTranslation} from '../hooks/usePostTranslation';
 import {useSharedTransition} from '../contexts/SharedTransitionContext';
@@ -114,8 +115,13 @@ function PostCardComponent({
   const author = postView.author;
   const [showReportModal, setShowReportModal] = useState(false);
   const [showSaveToCollection, setShowSaveToCollection] = useState(false);
+  const [appealLabel, setAppealLabel] = useState<{val: string; src: string} | null>(null);
   const handleCloseReportModal = useCallback(() => setShowReportModal(false), []);
   const handleCloseSaveToCollection = useCallback(() => setShowSaveToCollection(false), []);
+  const handleAppeal = useCallback((labelVal: string, labelerDid: string) => {
+    setAppealLabel({val: labelVal, src: labelerDid});
+  }, []);
+  const handleCloseAppeal = useCallback(() => setAppealLabel(null), []);
   const blockMutation = useBlockUser();
   const muteMutation = useMuteUser();
   const deleteMutation = useDeletePost();
@@ -589,6 +595,13 @@ function PostCardComponent({
           </TouchableOpacity>
           <View style={styles.headerRight}>
             <Text style={styles.timestamp}>{timestamp}</Text>
+            {labels.length > 0 && !hideContent && (
+              <ShieldIcon
+                size={14}
+                color={colors.warning}
+                accessibilityLabel="This post has content labels"
+              />
+            )}
             {isOnline && (
               <TouchableOpacity
                 style={styles.moreButton}
@@ -822,11 +835,24 @@ function PostCardComponent({
           <ContentLabelWarning
             labels={labels}
             warningText={getContentWarningText(labels)}
-            blurImages={blurImages}>
+            blurImages={blurImages}
+            onAppeal={handleAppeal}>
             {postContent}
           </ContentLabelWarning>
         ) : (
           postContent
+        )}
+
+        {/* Appeal Label Modal */}
+        {appealLabel && (
+          <AppealLabelModal
+            visible={!!appealLabel}
+            onClose={handleCloseAppeal}
+            subjectUri={postView.uri}
+            subjectCid={postView.cid}
+            labelerDid={appealLabel.src}
+            labelVal={appealLabel.val}
+          />
         )}
 
         {/* Report Modal */}

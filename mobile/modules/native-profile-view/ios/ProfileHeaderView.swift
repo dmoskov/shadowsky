@@ -237,24 +237,60 @@ struct ProfileHeaderView: View {
             if !displayLabels.isEmpty {
                 HStack(spacing: 8) {
                     ForEach(displayLabels, id: \.val) { label in
-                        Text(formattedLabelText(label.val))
-                            .font(.caption2.weight(.medium))
-                            .foregroundColor(.orange)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(
-                                Capsule()
-                                    .fill(Color.orange.opacity(0.15))
-                            )
-                            .accessibilityLabel("Content label: \(formattedLabelText(label.val))")
+                        let labelColor = labelSeverityColor(label.val)
+                        let isSelfLabeled = label.src == profile.did
+                        HStack(spacing: 4) {
+                            Image(systemName: "shield.fill")
+                                .font(.caption2)
+                                .foregroundColor(labelColor)
+                            Text(formattedLabelText(label.val))
+                                .font(.caption2.weight(.semibold))
+                                .foregroundColor(labelColor)
+                            if isSelfLabeled {
+                                Text("self")
+                                    .font(.caption2)
+                                    .foregroundColor(labelColor.opacity(0.7))
+                                    .italic()
+                            }
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule()
+                                .strokeBorder(labelColor, lineWidth: 1)
+                        )
+                        .accessibilityLabel("Content label: \(formattedLabelText(label.val))\(isSelfLabeled ? ", self-labeled" : "")")
                     }
                 }
             }
         }
     }
 
+    private func labelSeverityColor(_ val: String) -> Color {
+        let lower = val.lowercased()
+        if ["porn", "nsfl", "gore", "scam"].contains(lower) {
+            return .red
+        }
+        if ["sexual", "nudity", "graphic-media", "spam", "impersonation", "misleading"].contains(lower) {
+            return .orange
+        }
+        return .secondary
+    }
+
     private func formattedLabelText(_ val: String) -> String {
-        val.replacingOccurrences(of: "-", with: " ").capitalized
+        let displayNames: [String: String] = [
+            "porn": "Adult Content",
+            "sexual": "Sexually Suggestive",
+            "nudity": "Nudity",
+            "graphic-media": "Graphic Media",
+            "gore": "Gore",
+            "nsfl": "NSFL",
+            "spam": "Spam",
+            "impersonation": "Impersonation",
+            "scam": "Scam",
+            "misleading": "Misleading",
+        ]
+        return displayNames[val.lowercased()] ?? val.replacingOccurrences(of: "-", with: " ").capitalized
     }
 
     // MARK: - Bio Section

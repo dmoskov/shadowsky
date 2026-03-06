@@ -23,6 +23,7 @@ import { AddToListModal } from "../../components/AddToListModal";
 import { ReportModal } from "../../components/ReportModal";
 import { ProfileSkeleton } from "../../components/ProfileSkeleton";
 import { MoreVerticalIcon, SendIcon, PinIcon } from "../../components/icons";
+import { ProfileLabelBadges } from "../../components/ProfileLabelBadges";
 import { TopPostsShowcase } from "../../components/TopPostsShowcase";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useAuth } from "../../contexts/AuthContext";
@@ -457,6 +458,12 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
               <Text style={styles.statusBadgeText}>Blocks you</Text>
             </View>
           )}
+
+          {/* Content Labels */}
+          <ProfileLabelBadges
+            labels={profile.labels?.map((l) => ({ val: l.val, src: l.src }))}
+            profileDid={profile.did}
+          />
         </View>
 
         {/* Bio */}

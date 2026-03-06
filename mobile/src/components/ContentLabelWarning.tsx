@@ -6,16 +6,17 @@ import {
   TouchableOpacity,
   ViewStyle,
 } from "react-native";
-import { EyeOffIcon, EyeIcon, AlertTriangleIcon } from './icons';
+import { EyeOffIcon, EyeIcon, AlertTriangleIcon, ShieldIcon } from './icons';
 import { useTheme } from "../contexts/ThemeContext";
 import {fontSize} from '../utils/typography';
 
 interface ContentLabelWarningProps {
-  labels: Array<{ val: string }>;
+  labels: Array<{ val: string; src?: string }>;
   warningText: string;
   children: React.ReactNode;
   style?: ViewStyle;
   blurImages?: boolean;
+  onAppeal?: (labelVal: string, labelerDid: string) => void;
 }
 
 /**
@@ -29,6 +30,7 @@ export function ContentLabelWarning({
   children,
   style,
   blurImages = false,
+  onAppeal,
 }: ContentLabelWarningProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -111,6 +113,20 @@ export function ContentLabelWarning({
             <Text style={styles.buttonText}>Show Content</Text>
           </TouchableOpacity>
 
+          {/* Appeal button */}
+          {onAppeal && labels.length > 0 && labels[0].src && (
+            <TouchableOpacity
+              style={styles.appealButton}
+              onPress={() => onAppeal(labels[0].val, labels[0].src!)}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Appeal this label"
+            >
+              <ShieldIcon size={14} color={colors.text} />
+              <Text style={styles.appealButtonText}>Appeal</Text>
+            </TouchableOpacity>
+          )}
+
           {/* Label badges */}
           <View style={styles.labelContainer}>
             {labels.slice(0, 3).map((label, index) => (
@@ -175,6 +191,22 @@ function createStyles(colors: any) {
       fontSize: fontSize.subheadline,
       fontWeight: "600",
       color: colors.text,
+    },
+    appealButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: "rgba(255, 255, 255, 0.4)",
+    },
+    appealButtonText: {
+      fontSize: fontSize.caption1,
+      fontWeight: "500",
+      color: colors.text,
+      opacity: 0.9,
     },
     labelContainer: {
       flexDirection: "row",
