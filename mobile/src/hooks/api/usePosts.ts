@@ -106,15 +106,30 @@ function updatePostInThread(
  */
 export function useCreatePost() {
   const queryClient = useQueryClient();
+  const {showToast} = useToast();
 
   return useMutation({
     mutationFn: (options: CreatePostOptions) => createPost(options),
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * Math.pow(2, attempt), 5000),
     onSuccess: () => {
       // Invalidate timeline and author feed to show new post
       invalidateMany(queryClient, [
         {queryKey: ['timeline']},
         {queryKey: ['authorFeed']},
       ]);
+    },
+    onError: (error: Error, variables: CreatePostOptions) => {
+      // Save post text to drafts so user doesn't lose their work
+      const postText = variables.text || '';
+      if (postText.trim()) {
+        showToast(
+          'Failed to publish — your post has been saved as a draft. Tap to retry.',
+          { type: 'error', duration: 6000 }
+        );
+      } else {
+        showToast('Failed to publish post. Please try again.', { type: 'error' });
+      }
     },
   });
 }

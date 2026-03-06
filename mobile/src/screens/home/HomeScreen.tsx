@@ -17,6 +17,7 @@ import { ErrorState } from "../../components/ErrorState";
 import { useRouter } from "expo-router";
 import { triggerHaptic } from "../../utils/haptics";
 import { useToast } from "../../contexts/ToastContext";
+import { useNetworkStatus } from "../../hooks/useNetworkStatus";
 import { useDataPrefetch } from "../../hooks/useDataPrefetch";
 import { openLink } from "../../utils/browser";
 import { sharePost } from "../../utils/share";
@@ -357,6 +358,7 @@ export function HomeScreen() {
   // Note: Arrow key navigation disabled for native SwiftUI view
   // Can be re-implemented if needed with native bridge
 
+  const { isConnected } = useNetworkStatus();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
@@ -453,7 +455,7 @@ export function HomeScreen() {
             ref={scrollRef}
             query={activeQuery}
             bookmarkedPostUris={bookmarkedPostUris}
-            isOnline={true}
+            isOnline={isConnected}
             onPostPress={handlePostPress}
             onProfilePress={handleProfilePress}
             onLike={handleLike}
