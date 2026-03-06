@@ -13,7 +13,7 @@ import NetInfo, {
   NetInfoState,
   NetInfoStateType,
 } from "@react-native-community/netinfo";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export interface NetworkStatus {
   isConnected: boolean;
@@ -112,6 +112,10 @@ function mapConnectionType(
  */
 export function useNetworkStatus(): NetworkStatus {
   const [netInfoState, setNetInfoState] = useState<NetInfoState | null>(null);
+  // Debounce offline transitions to avoid flash on app wake from sleep.
+  // Going online is instant; going offline waits to confirm it's real.
+  const [debouncedOffline, setDebouncedOffline] = useState(false);
+  const offlineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     // Get initial state
@@ -125,10 +129,36 @@ export function useNetworkStatus(): NetworkStatus {
     };
   }, []);
 
+  // Debounce offline: wait 3s before reporting offline to avoid
+  // the brief "not connected" blip when waking from sleep
+  useEffect(() => {
+    const isCurrentlyOffline = netInfoState !== null && !netInfoState.isConnected;
+
+    if (isCurrentlyOffline) {
+      // Delay reporting offline
+      offlineTimerRef.current = setTimeout(() => {
+        setDebouncedOffline(true);
+      }, 3000);
+    } else {
+      // Going online is instant — clear any pending offline timer
+      if (offlineTimerRef.current) {
+        clearTimeout(offlineTimerRef.current);
+        offlineTimerRef.current = null;
+      }
+      setDebouncedOffline(false);
+    }
+
+    return () => {
+      if (offlineTimerRef.current) {
+        clearTimeout(offlineTimerRef.current);
+      }
+    };
+  }, [netInfoState]);
+
   // Memoize the network status to prevent unnecessary re-renders
   const networkStatus = useMemo<NetworkStatus>(() => {
     if (!netInfoState) {
-      // Default state while loading
+      // Default state while loading — assume connected
       return {
         isConnected: true,
         isInternetReachable: null,
@@ -137,13 +167,16 @@ export function useNetworkStatus(): NetworkStatus {
       };
     }
 
+    // Use debounced offline state instead of raw NetInfo
+    const isConnected = debouncedOffline ? false : (netInfoState.isConnected ?? true);
+
     return {
-      isConnected: netInfoState.isConnected ?? false,
-      isInternetReachable: netInfoState.isInternetReachable,
+      isConnected,
+      isInternetReachable: isConnected ? netInfoState.isInternetReachable : false,
       connectionType: mapConnectionType(netInfoState.type),
-      networkQuality: deriveNetworkQuality(netInfoState),
+      networkQuality: isConnected ? deriveNetworkQuality(netInfoState) : "offline",
     };
-  }, [netInfoState]);
+  }, [netInfoState, debouncedOffline]);
 
   return networkStatus;
 }

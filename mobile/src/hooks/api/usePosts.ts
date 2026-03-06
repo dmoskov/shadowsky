@@ -119,7 +119,7 @@ export function useCreatePost() {
         {queryKey: ['authorFeed']},
       ]);
     },
-    onError: (error: Error, variables: CreatePostOptions) => {
+    onError: (_error: Error, variables: CreatePostOptions) => {
       // Save post text to drafts so user doesn't lose their work
       const postText = variables.text || '';
       if (postText.trim()) {

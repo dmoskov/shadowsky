@@ -1,5 +1,5 @@
 import React, {useState, useCallback, useMemo, useRef} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, ActionSheetIOS, Platform, NativeSyntheticEvent} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, ActionSheetIOS, Platform} from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import Animated, {
   useSharedValue,
@@ -263,6 +263,69 @@ function PostCardComponent({
     sharePost(post);
   }, [post]);
 
+
+  const handleLikePress = useCallback(() => {
+    triggerHaptic('light');
+    triggerBounce(likeScale);
+    onLike?.();
+  }, [onLike]);
+
+  const handleRepostPress = useCallback(() => {
+    triggerHaptic('medium');
+    triggerBounce(repostScale);
+    onRepost?.();
+  }, [onRepost]);
+
+  const handleBookmarkPress = useCallback(() => {
+    triggerHaptic('light');
+    triggerBounce(bookmarkScale);
+    onBookmark?.();
+  }, [onBookmark]);
+
+  const handleBookmarkLongPress = useCallback(() => {
+    triggerHaptic('medium');
+    // First ensure the post is bookmarked
+    if (!isBookmarked && onBookmark) {
+      onBookmark();
+    }
+    setShowSaveToCollection(true);
+  }, [isBookmarked, onBookmark]);
+
+  const handleCopyText = useCallback(() => {
+    if (postText) {
+      Clipboard.setStringAsync(postText);
+      showToast('Text copied', { type: 'success' });
+    }
+  }, [postText, showToast]);
+
+  // Native context menu actions for long-press
+
+
+  // Memoized computed values
+  const timestamp = useMemo(
+    () => formatDistanceToNow(new Date(postView.indexedAt), { addSuffix: true }),
+    [postView.indexedAt]
+  );
+
+  // Translation support
+  const postLangs = useMemo(
+    () => (record && Array.isArray(record.langs) ? record.langs as string[] : undefined),
+    [record]
+  );
+  const {
+    showTranslateButton,
+    isTranslating,
+    translatedText,
+    isShowingTranslation,
+    translationError,
+    sourceLanguageName,
+    handleTranslate,
+  } = usePostTranslation({
+    postUri: postView.uri,
+    postText,
+    postLangs,
+  });
+
   const handleMorePress = useCallback(() => {
     if (Platform.OS !== 'ios') return;
     triggerHaptic('light');
@@ -332,41 +395,6 @@ function PostCardComponent({
     );
   }, [isOwnPost, isReposted, isLiked, isBookmarked, postText, showTranslateButton, isShowingTranslation, author.handle, handleDeletePost, handleMuteUser, handleBlockUser, handleReport, handleCopyText, onReply, handleRepostPress, onQuotePost, handleLikePress, handleBookmarkPress, handleShare, handleTranslate]);
 
-  const handleLikePress = useCallback(() => {
-    triggerHaptic('light');
-    triggerBounce(likeScale);
-    onLike?.();
-  }, [onLike]);
-
-  const handleRepostPress = useCallback(() => {
-    triggerHaptic('medium');
-    triggerBounce(repostScale);
-    onRepost?.();
-  }, [onRepost]);
-
-  const handleBookmarkPress = useCallback(() => {
-    triggerHaptic('light');
-    triggerBounce(bookmarkScale);
-    onBookmark?.();
-  }, [onBookmark]);
-
-  const handleBookmarkLongPress = useCallback(() => {
-    triggerHaptic('medium');
-    // First ensure the post is bookmarked
-    if (!isBookmarked && onBookmark) {
-      onBookmark();
-    }
-    setShowSaveToCollection(true);
-  }, [isBookmarked, onBookmark]);
-
-  const handleCopyText = useCallback(() => {
-    if (postText) {
-      Clipboard.setStringAsync(postText);
-      showToast('Text copied', { type: 'success' });
-    }
-  }, [postText, showToast]);
-
-  // Native context menu actions for long-press
   const contextMenuActions = useMemo(() => {
     const actions: Array<{title: string; systemIcon?: string; destructive?: boolean}> = [];
 
@@ -409,7 +437,7 @@ function PostCardComponent({
     return actions;
   }, [isLiked, isReposted, isBookmarked, isOwnPost, author.handle, postText, onQuotePost, showTranslateButton, isShowingTranslation]);
 
-  const handleContextMenuAction = useCallback((e: NativeSyntheticEvent<ContextMenuOnPressNativeEvent>) => {
+  const handleContextMenuAction = useCallback((e: { nativeEvent: ContextMenuOnPressNativeEvent }) => {
     const { name } = e.nativeEvent;
 
     switch (name) {
@@ -454,30 +482,6 @@ function PostCardComponent({
     }
   }, [onReply, handleRepostPress, onQuotePost, handleLikePress, handleBookmarkPress, handleShare, handleTranslate, handleDeletePost, handleMuteUser, handleBlockUser, handleReport, handleCopyText]);
 
-  // Memoized computed values
-  const timestamp = useMemo(
-    () => formatDistanceToNow(new Date(postView.indexedAt), { addSuffix: true }),
-    [postView.indexedAt]
-  );
-
-  // Translation support
-  const postLangs = useMemo(
-    () => (record && Array.isArray(record.langs) ? record.langs as string[] : undefined),
-    [record]
-  );
-  const {
-    showTranslateButton,
-    isTranslating,
-    translatedText,
-    isShowingTranslation,
-    translationError,
-    sourceLanguageName,
-    handleTranslate,
-  } = usePostTranslation({
-    postUri: postView.uri,
-    postText,
-    postLangs,
-  });
 
   const postPreviewText = useMemo(
     () => (postText ? `${postText.substring(0, 100)}${postText.length > 100 ? '...' : ''}` : 'No text content'),
