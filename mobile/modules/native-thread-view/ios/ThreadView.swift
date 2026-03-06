@@ -35,6 +35,8 @@ struct ThreadView: View {
     @State private var hasScrolledToFocus = false
     // Controls the highlight flash animation
     @State private var highlightedUri: String? = nil
+    // Accordion: tracks which top-level reply section is expanded (nil = all collapsed)
+    @State private var expandedReplyUri: String? = nil
 
     // Summary data (passed from JS via bridge)
     let summaryData: ThreadSummaryData?
@@ -250,9 +252,15 @@ struct ThreadView: View {
                             .padding(.vertical, 8)
                     }
 
-                    // Nested replies
+                    // Nested replies — accordion style (one subthread expanded at a time)
                     ForEach(rootPost.replies) { replyNode in
-                        threadReplyWithHighlight(replyNode: replyNode)
+                        accordionReplySection(replyNode: replyNode)
+                            .id(replyNode.post.uri)
+                            .background(
+                                highlightedUri == replyNode.post.uri
+                                    ? Color.accentColor.opacity(0.12)
+                                    : Color.clear
+                            )
                     }
 
                     // Empty replies message
@@ -277,11 +285,19 @@ struct ThreadView: View {
         }
     }
 
-    // MARK: - Reply with highlight overlay
+    // MARK: - Accordion Reply Section
 
-    private func threadReplyWithHighlight(replyNode: ThreadNode) -> some View {
-        ThreadReplyView(
+    private func accordionReplySection(replyNode: ThreadNode) -> some View {
+        AccordionReplySection(
             node: replyNode,
+            isExpanded: expandedReplyUri == replyNode.post.uri,
+            onToggle: {
+                if expandedReplyUri == replyNode.post.uri {
+                    expandedReplyUri = nil
+                } else {
+                    expandedReplyUri = replyNode.post.uri
+                }
+            },
             currentUserDid: nil,
             onPress: { uri, handle in
                 onPostPress?(uri, handle)
@@ -341,12 +357,6 @@ struct ThreadView: View {
                 onQuotePost?(uri, cid, handle, displayName, avatar, text)
             }
         )
-        .id(replyNode.post.uri)
-        .background(
-            highlightedUri == replyNode.post.uri
-                ? Color.accentColor.opacity(0.12)
-                : Color.clear
-        )
     }
 
     // MARK: - Scroll to focused reply
@@ -355,12 +365,19 @@ struct ThreadView: View {
         guard let focusUri = focusedReplyUri,
               !focusUri.isEmpty,
               !hasScrolledToFocus,
-              threadState.rootPost != nil else { return }
+              let rootPost = threadState.rootPost else { return }
 
         // Check that the target URI exists in the thread tree
-        guard findNodeInTree(threadState.rootPost!, uri: focusUri) else { return }
+        guard findNodeInTree(rootPost, uri: focusUri) else { return }
 
         hasScrolledToFocus = true
+
+        // Auto-expand the accordion section containing the focused reply
+        if let containingReply = rootPost.replies.first(where: { topReply in
+            topReply.post.uri == focusUri || findNodeInTree(topReply, uri: focusUri)
+        }) {
+            expandedReplyUri = containingReply.post.uri
+        }
 
         // Delay to allow LazyVStack to render the target row
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
