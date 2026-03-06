@@ -36,6 +36,7 @@ struct MessagesView: View {
     let onMarkAsRead: ((String) -> Void)?
     let onProfilePress: ((String) -> Void)?
     let onSearchTextChange: ((String) -> Void)?
+    let onReaction: ((String, String) -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -51,7 +52,8 @@ struct MessagesView: View {
                         onBack: onBack,
                         onToggleMute: onToggleMute,
                         onDeleteMessage: onDeleteMessage,
-                        onProfilePress: onProfilePress
+                        onProfilePress: onProfilePress,
+                        onReaction: onReaction
                     )
 
                     MessageComposerView(

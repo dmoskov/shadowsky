@@ -11,6 +11,7 @@ import React, {
   useCallback,
   useMemo,
   useState,
+  useRef,
   forwardRef,
   useImperativeHandle,
 } from 'react';
@@ -34,6 +35,7 @@ import {
 } from '../../../src/services/dm-service';
 import { getAtProtoClient } from '../../../src/services/atproto/client';
 import { createLogger } from '../../../src/utils/logger';
+import { fetchLinkMetadata, LinkMetadata } from '../../../src/services/ai-service';
 
 const logger = createLogger('NativeMessages');
 
@@ -64,6 +66,7 @@ export interface MessagesViewEvents {
   onMarkAsRead?: (event: { nativeEvent: { conversationId: string } }) => void;
   onProfilePress?: (event: { nativeEvent: { handle: string } }) => void;
   onSearchTextChange?: (event: { nativeEvent: { text: string } }) => void;
+  onReaction?: (event: { nativeEvent: { messageId: string; emoji: string } }) => void;
 }
 
 // MARK: - Props Types
@@ -101,6 +104,7 @@ export const NativeMessagesView = forwardRef<any, NativeMessagesProps>(
       onMarkAsRead,
       onProfilePress,
       onSearchTextChange,
+      onReaction,
       ...viewProps
     } = props;
 
@@ -129,12 +133,22 @@ export const NativeMessagesView = forwardRef<any, NativeMessagesProps>(
         onMarkAsRead={onMarkAsRead}
         onProfilePress={onProfilePress}
         onSearchTextChange={onSearchTextChange}
+        onReaction={onReaction}
       />
     );
   },
 );
 
 NativeMessagesView.displayName = 'NativeMessagesView';
+
+// MARK: - Link Detection
+
+const URL_REGEX = /https?:\/\/[^\s<>)"']+/i;
+
+function extractFirstUrl(text: string): string | null {
+  const match = text.match(URL_REGEX);
+  return match?.[0] || null;
+}
 
 // MARK: - Serialization Helpers
 
@@ -169,6 +183,7 @@ function serializeConversationMessages(
     conversation: DmConversation;
     messages: any[];
   } | null | undefined,
+  linkPreviews: Map<string, LinkMetadata>,
 ): string | null {
   if (!conversationData) return null;
 
@@ -185,13 +200,24 @@ function serializeConversationMessages(
       muted: conversationData.conversation.muted,
       unreadCount: conversationData.conversation.unreadCount,
     },
-    messages: conversationData.messages.map((msg) => ({
-      id: msg.id,
-      rev: msg.rev,
-      text: msg.text,
-      sentAt: msg.sentAt,
-      senderDid: msg.sender.did,
-    })),
+    messages: conversationData.messages.map((msg) => {
+      const url = extractFirstUrl(msg.text || '');
+      const preview = url ? linkPreviews.get(url) : null;
+
+      return {
+        id: msg.id,
+        rev: msg.rev,
+        text: msg.text,
+        sentAt: msg.sentAt,
+        senderDid: msg.sender.did,
+        linkPreview: preview ? {
+          url: preview.url,
+          title: preview.title || null,
+          description: preview.description || null,
+          imageUrl: preview.imageUrl || null,
+        } : null,
+      };
+    }),
   };
   return JSON.stringify(serialized);
 }
@@ -232,6 +258,8 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
 
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [searchText, setSearchText] = useState('');
+  const linkPreviewCache = useRef<Map<string, LinkMetadata>>(new Map());
+  const linkPreviewFetching = useRef<Set<string>>(new Set());
 
   // Set up DM service with agent
   useEffect(() => {
@@ -279,12 +307,46 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
     }
   }, [conversations]);
 
-  // Bridge messages data to native
+  // Bridge messages data to native (including link previews)
   useEffect(() => {
     if (conversationData && NativeMessagesModule) {
-      const json = serializeConversationMessages(conversationData);
+      // First, push with whatever previews we have cached
+      const json = serializeConversationMessages(conversationData, linkPreviewCache.current);
       if (json) {
         NativeMessagesModule.updateMessages(json);
+      }
+
+      // Then, fetch any missing link previews
+      const urls: string[] = [];
+      for (const msg of conversationData.messages) {
+        const url = extractFirstUrl(msg.text || '');
+        if (url && !linkPreviewCache.current.has(url) && !linkPreviewFetching.current.has(url)) {
+          urls.push(url);
+        }
+      }
+
+      if (urls.length > 0) {
+        urls.forEach((url) => linkPreviewFetching.current.add(url));
+        Promise.allSettled(
+          urls.map(async (url) => {
+            try {
+              const metadata = await fetchLinkMetadata(url);
+              linkPreviewCache.current.set(url, metadata);
+            } catch {
+              // Ignore failures — just don't show a preview
+            } finally {
+              linkPreviewFetching.current.delete(url);
+            }
+          }),
+        ).then(() => {
+          // Re-serialize with updated previews
+          if (conversationData && NativeMessagesModule) {
+            const updatedJson = serializeConversationMessages(conversationData, linkPreviewCache.current);
+            if (updatedJson) {
+              NativeMessagesModule.updateMessages(updatedJson);
+            }
+          }
+        });
       }
     }
   }, [conversationData]);
@@ -468,6 +530,16 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
     [],
   );
 
+  const handleReaction = useCallback(
+    (event: { nativeEvent: { messageId: string; emoji: string } }) => {
+      if (!selectedConversation) return;
+      // Reactions are not yet supported by the Bluesky chat API,
+      // but we handle the event for future integration
+      logger.log('Reaction event:', event.nativeEvent.messageId, event.nativeEvent.emoji);
+    },
+    [selectedConversation],
+  );
+
   // Expose scroll-to-top
   useImperativeHandle(ref, () => ({
     scrollToTop: () => {
@@ -495,6 +567,7 @@ export const NativeMessages = forwardRef<NativeMessagesHandle, ViewProps & {
       onDeleteMessage={handleDeleteMessage}
       onProfilePress={handleProfilePress}
       onSearchTextChange={handleSearchTextChange}
+      onReaction={handleReaction}
       style={{ flex: 1 }}
     />
   );
