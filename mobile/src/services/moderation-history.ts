@@ -288,6 +288,133 @@ export function getAllEntries(
   return entries;
 }
 
+// ==================== API Sync ====================
+
+export function syncBlocksFromApi(
+  apiBlocks: Array<{
+    did: string;
+    handle?: string;
+    displayName?: string;
+    blockUri: string;
+  }>,
+): void {
+  const existing = readEntries<BlockHistoryEntry>(STORAGE_KEY_BLOCKS);
+  const existingByDid = new Map(existing.map((b) => [b.subjectDid, b]));
+  const apiDidSet = new Set(apiBlocks.map((b) => b.did));
+
+  let changed = false;
+
+  for (const apiBlock of apiBlocks) {
+    const entry = existingByDid.get(apiBlock.did);
+    if (!entry) {
+      // New block not in local store — add it
+      existing.unshift({
+        id: apiBlock.blockUri || `block_${apiBlock.did}_${Date.now()}`,
+        subjectDid: apiBlock.did,
+        subjectHandle: apiBlock.handle,
+        subjectDisplayName: apiBlock.displayName,
+        createdAt: Date.now(),
+        isActive: true,
+      });
+      changed = true;
+    } else {
+      // Entry exists — ensure it's marked active and profile info is current
+      if (!entry.isActive) {
+        entry.isActive = true;
+        entry.unblockedAt = undefined;
+        changed = true;
+      }
+      if (apiBlock.handle && entry.subjectHandle !== apiBlock.handle) {
+        entry.subjectHandle = apiBlock.handle;
+        changed = true;
+      }
+      if (
+        apiBlock.displayName &&
+        entry.subjectDisplayName !== apiBlock.displayName
+      ) {
+        entry.subjectDisplayName = apiBlock.displayName;
+        changed = true;
+      }
+    }
+  }
+
+  // Mark local blocks not found in API as inactive (unblocked elsewhere)
+  for (const entry of existing) {
+    if (entry.isActive && !apiDidSet.has(entry.subjectDid)) {
+      entry.isActive = false;
+      entry.unblockedAt = Date.now();
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    writeEntries(STORAGE_KEY_BLOCKS, existing.slice(0, MAX_BLOCKS));
+  }
+}
+
+export function syncMutesFromApi(
+  apiMutes: Array<{
+    did: string;
+    handle?: string;
+    displayName?: string;
+  }>,
+): void {
+  const existing = readEntries<MuteHistoryEntry>(STORAGE_KEY_MUTES);
+  const existingActiveDids = new Set(
+    existing.filter((m) => m.isActive).map((m) => m.subjectDid),
+  );
+  const apiDidSet = new Set(apiMutes.map((m) => m.did));
+
+  let changed = false;
+
+  for (const apiMute of apiMutes) {
+    if (!existingActiveDids.has(apiMute.did)) {
+      // New mute not in local store — add it
+      const now = Date.now();
+      existing.unshift({
+        id: `${apiMute.did}_${now}`,
+        subjectDid: apiMute.did,
+        subjectHandle: apiMute.handle,
+        subjectDisplayName: apiMute.displayName,
+        createdAt: now,
+        isActive: true,
+      });
+      changed = true;
+    } else {
+      // Update profile info on existing active entries
+      for (const entry of existing) {
+        if (entry.subjectDid === apiMute.did && entry.isActive) {
+          if (apiMute.handle && entry.subjectHandle !== apiMute.handle) {
+            entry.subjectHandle = apiMute.handle;
+            changed = true;
+          }
+          if (
+            apiMute.displayName &&
+            entry.subjectDisplayName !== apiMute.displayName
+          ) {
+            entry.subjectDisplayName = apiMute.displayName;
+            changed = true;
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  // Mark local mutes not found in API as inactive (unmuted elsewhere)
+  for (const entry of existing) {
+    if (entry.isActive && !apiDidSet.has(entry.subjectDid)) {
+      entry.isActive = false;
+      entry.unmutedAt = Date.now();
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    writeEntries(STORAGE_KEY_MUTES, existing.slice(0, MAX_MUTES));
+  }
+}
+
 // ==================== Cleanup ====================
 
 export function evictOldEntries(): void {
