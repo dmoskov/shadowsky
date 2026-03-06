@@ -138,6 +138,14 @@ jest.mock('../SaveToCollectionModal', () => ({
   SaveToCollectionModal: () => null,
 }));
 
+jest.mock('react-native-context-menu-view', () => {
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: ({ children }: any) => <View>{children}</View>,
+  };
+});
+
 // ─── Import after mocks ───────────────────────────────────
 import {FeedList} from '../FeedList';
 

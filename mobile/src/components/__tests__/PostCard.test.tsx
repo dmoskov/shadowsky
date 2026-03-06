@@ -125,6 +125,21 @@ jest.mock('../ReportModal', () => ({
   ReportModal: () => null,
 }));
 
+// Mock react-native-context-menu-view to capture actions in test
+let capturedContextMenuProps: any = {};
+jest.mock('react-native-context-menu-view', () => {
+  const { View } = require('react-native');
+  const ContextMenuMock = ({ children, actions, onPress, ...rest }: any) => {
+    capturedContextMenuProps = { actions, onPress };
+    return <View testID="context-menu" {...rest}>{children}</View>;
+  };
+  ContextMenuMock.displayName = 'ContextMenu';
+  return {
+    __esModule: true,
+    default: ContextMenuMock,
+  };
+});
+
 jest.mock('../SaveToCollectionModal', () => ({
   SaveToCollectionModal: () => null,
 }));
@@ -145,6 +160,10 @@ import { PostCard } from '../PostCard';
 
 // ─── Tests ─────────────────────────────────────────────────
 describe('PostCard', () => {
+  beforeEach(() => {
+    capturedContextMenuProps = {};
+  });
+
   it('renders a basic text post', () => {
     const post = makeFeedViewPost();
     const { getByText, getByTestId } = render(<PostCard post={post as any} />);
@@ -399,53 +418,56 @@ describe('PostCard', () => {
       expect(onBookmark).toHaveBeenCalledTimes(1);
     });
 
-    it('shows context menu on long press (iOS)', () => {
-      const RN = require('react-native');
-      const originalOS = RN.Platform.OS;
-      RN.Platform.OS = 'ios';
-      const mockShowActionSheet = jest.fn();
-      RN.ActionSheetIOS.showActionSheetWithOptions = mockShowActionSheet;
-
+    it('provides native context menu with correct actions for other users posts', () => {
       const post = makeFeedViewPost();
-      const { getByLabelText } = render(
+      render(
         <PostCard post={post as any} currentUserDid="did:plc:other" />
       );
 
-      const card = getByLabelText(/Post by Alice/);
-      fireEvent(card, 'longPress');
-
-      expect(mockShowActionSheet).toHaveBeenCalledTimes(1);
-      const [opts] = mockShowActionSheet.mock.calls[0];
-      expect(opts.options).toContain('Reply');
-      expect(opts.options).toContain('Share');
-      expect(opts.options).toContain('Report Post');
-      expect(opts.cancelButtonIndex).toBe(0);
-
-      RN.Platform.OS = originalOS;
+      const actionTitles = capturedContextMenuProps.actions.map((a: any) => a.title);
+      expect(actionTitles).toContain('Reply');
+      expect(actionTitles).toContain('Share');
+      expect(actionTitles).toContain('Report Post');
+      expect(actionTitles).toContain('Repost');
+      expect(actionTitles).toContain('Like');
+      expect(actionTitles).toContain('Bookmark');
+      // Should have mute and block for other users' posts
+      expect(actionTitles.some((t: string) => t.startsWith('Mute'))).toBe(true);
+      expect(actionTitles.some((t: string) => t.startsWith('Block'))).toBe(true);
+      // Destructive actions should be marked
+      const reportAction = capturedContextMenuProps.actions.find((a: any) => a.title === 'Report Post');
+      expect(reportAction.destructive).toBe(true);
     });
 
-    it('shows delete option in context menu for own posts', () => {
-      const RN = require('react-native');
-      const originalOS = RN.Platform.OS;
-      RN.Platform.OS = 'ios';
-      const mockShowActionSheet = jest.fn();
-      RN.ActionSheetIOS.showActionSheetWithOptions = mockShowActionSheet;
-
+    it('provides native context menu with delete for own posts', () => {
       const post = makeFeedViewPost();
-      const { getByLabelText } = render(
+      render(
         <PostCard post={post as any} currentUserDid="did:plc:test123" />
       );
 
-      const card = getByLabelText(/Post by Alice/);
-      fireEvent(card, 'longPress');
+      const actionTitles = capturedContextMenuProps.actions.map((a: any) => a.title);
+      expect(actionTitles).toContain('Delete Post');
+      expect(actionTitles).not.toContain('Report Post');
+      expect(actionTitles).not.toContain('Mute @alice.bsky.social');
+      // Delete should be marked destructive
+      const deleteAction = capturedContextMenuProps.actions.find((a: any) => a.title === 'Delete Post');
+      expect(deleteAction.destructive).toBe(true);
+      expect(deleteAction.systemIcon).toBe('trash');
+    });
 
-      expect(mockShowActionSheet).toHaveBeenCalledTimes(1);
-      const [opts] = mockShowActionSheet.mock.calls[0];
-      expect(opts.options).toContain('Delete Post');
-      expect(opts.options).not.toContain('Report Post');
-      expect(opts.destructiveButtonIndex).toBe(6);
+    it('dispatches correct action from context menu', () => {
+      const onReply = jest.fn();
+      const post = makeFeedViewPost();
+      render(
+        <PostCard post={post as any} onReply={onReply} currentUserDid="did:plc:other" />
+      );
 
-      RN.Platform.OS = originalOS;
+      // Simulate selecting "Reply" from the native context menu
+      capturedContextMenuProps.onPress({
+        nativeEvent: { index: 0, indexPath: [0], name: 'Reply' },
+      });
+
+      expect(onReply).toHaveBeenCalledTimes(1);
     });
   });
 
