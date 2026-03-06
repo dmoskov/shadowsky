@@ -244,6 +244,7 @@ const NativeSearchView = forwardRef<NativeSearchHandle, NativeSearchOuterProps>(
             displayName: a.displayName,
             avatar: a.avatar,
             description: a.description,
+            isVerified: a.verification?.verifiedStatus === 'valid' || undefined,
           })),
           hasMore: false,
         });
@@ -296,6 +297,7 @@ const NativeSearchView = forwardRef<NativeSearchHandle, NativeSearchOuterProps>(
                 handle: item.post?.author?.handle || '',
                 displayName: item.post?.author?.displayName,
                 avatar: item.post?.author?.avatar,
+                isVerified: item.post?.author?.verification?.verifiedStatus === 'valid' || undefined,
               },
               record: {
                 text: (item.post?.record as any)?.text || '',
@@ -335,6 +337,7 @@ const NativeSearchView = forwardRef<NativeSearchHandle, NativeSearchOuterProps>(
           displayName: a.displayName,
           avatar: a.avatar,
           description: a.description,
+          isVerified: a.verification?.verifiedStatus === 'valid' || undefined,
         })),
         isLoading: isLoadingTypeahead,
       });

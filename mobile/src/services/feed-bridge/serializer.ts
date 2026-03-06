@@ -25,11 +25,13 @@ import {
  * Serialize author profile
  */
 function serializeAuthor(author: AppBskyActorDefs.ProfileViewBasic): SerializedAuthor {
+  const verification = (author as any).verification;
   return {
     did: author.did,
     handle: author.handle,
     displayName: author.displayName,
     avatar: author.avatar,
+    isVerified: verification?.verifiedStatus === 'valid' || undefined,
   };
 }
 

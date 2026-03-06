@@ -50,6 +50,7 @@ struct PostAuthor: Equatable {
     let handle: String
     let displayName: String?
     let avatar: String?
+    let isVerified: Bool
 }
 
 struct PostRecord: Equatable {

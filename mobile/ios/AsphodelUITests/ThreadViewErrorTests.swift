@@ -394,7 +394,7 @@ class ThreadNodeTypeTests: XCTestCase {
         let post = ThreadPost(
             uri: "",
             cid: "",
-            author: ThreadAuthor(did: "", handle: "", displayName: nil, avatar: nil),
+            author: ThreadAuthor(did: "", handle: "", displayName: nil, avatar: nil, isVerified: false),
             record: ThreadRecord(text: "", facets: nil, createdAt: "", langs: nil),
             embed: nil,
             indexedAt: "",
@@ -421,7 +421,7 @@ class ThreadNodeTypeTests: XCTestCase {
             let post = ThreadPost(
                 uri: "at://test/post/depth\(depth)",
                 cid: "bafyrei-\(depth)",
-                author: ThreadAuthor(did: "did:plc:test", handle: "test.bsky.social", displayName: nil, avatar: nil),
+                author: ThreadAuthor(did: "did:plc:test", handle: "test.bsky.social", displayName: nil, avatar: nil, isVerified: false),
                 record: ThreadRecord(text: "Reply at depth \(depth)", facets: nil, createdAt: "", langs: nil),
                 embed: nil,
                 indexedAt: "",

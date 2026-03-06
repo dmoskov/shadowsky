@@ -31,6 +31,7 @@ struct SearchActorResult: Identifiable {
     let displayName: String?
     let avatar: String?
     let description: String?
+    let isVerified: Bool
 
     static func fromDict(_ dict: [String: Any]) -> SearchActorResult {
         SearchActorResult(
@@ -38,7 +39,8 @@ struct SearchActorResult: Identifiable {
             handle: dict["handle"] as? String ?? "",
             displayName: dict["displayName"] as? String,
             avatar: dict["avatar"] as? String,
-            description: dict["description"] as? String
+            description: dict["description"] as? String,
+            isVerified: dict["isVerified"] as? Bool ?? false
         )
     }
 }
@@ -49,6 +51,7 @@ struct SearchPostResult: Identifiable {
     let authorHandle: String
     let authorDisplayName: String?
     let authorAvatar: String?
+    let authorIsVerified: Bool
     let text: String
     let indexedAt: String
     let likeCount: Int
@@ -66,6 +69,7 @@ struct SearchPostResult: Identifiable {
             authorHandle: author["handle"] as? String ?? "",
             authorDisplayName: author["displayName"] as? String,
             authorAvatar: author["avatar"] as? String,
+            authorIsVerified: author["isVerified"] as? Bool ?? false,
             text: record["text"] as? String ?? "",
             indexedAt: post["indexedAt"] as? String ?? "",
             likeCount: post["likeCount"] as? Int ?? 0,

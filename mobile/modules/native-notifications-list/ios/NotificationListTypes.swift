@@ -128,6 +128,7 @@ struct NotificationUIModel: Identifiable {
     let authorHandle: String
     let authorDisplayName: String?
     let authorAvatar: String?
+    let authorIsVerified: Bool
     let reason: NotificationReason
     let reasonSubject: String?
     let postText: String?
@@ -143,7 +144,7 @@ struct AggregatedNotificationUIModel: Identifiable {
     let id: String
     let reason: NotificationReason
     let count: Int
-    let users: [(did: String, handle: String, displayName: String?, avatar: String?)]
+    let users: [(did: String, handle: String, displayName: String?, avatar: String?, isVerified: Bool)]
     let latestTimestamp: Date
     let timestamp: String
     let hasUnread: Bool
@@ -204,6 +205,7 @@ extension NotificationUIModel {
             authorHandle: serialized.author.handle,
             authorDisplayName: serialized.author.displayName,
             authorAvatar: serialized.author.avatar,
+            authorIsVerified: serialized.author.isVerified ?? false,
             reason: reason,
             reasonSubject: serialized.reasonSubject,
             postText: serialized.record?.text,
@@ -237,7 +239,7 @@ extension AggregatedNotificationUIModel {
         let hasUnread = aggregated.notifications.contains(where: { !$0.isRead })
 
         let users = aggregated.users.map { user in
-            (did: user.did, handle: user.handle, displayName: user.displayName, avatar: user.avatar)
+            (did: user.did, handle: user.handle, displayName: user.displayName, avatar: user.avatar, isVerified: user.isVerified ?? false)
         }
 
         let notifications = aggregated.notifications.map { NotificationUIModel.from($0) }

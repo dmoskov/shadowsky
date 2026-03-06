@@ -147,6 +147,11 @@ struct NotificationItemView: View {
                         .foregroundColor(Color(UIColor.label))
                         .lineLimit(1)
 
+                    if notification.authorIsVerified {
+                        VerifiedBadge(size: .small)
+                            .padding(.leading, 3)
+                    }
+
                     Text(" \(notification.reason.actionText)")
                         .font(.subheadline)
                         .foregroundColor(Color(UIColor.secondaryLabel))

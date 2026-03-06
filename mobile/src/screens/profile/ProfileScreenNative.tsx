@@ -167,6 +167,7 @@ function ProfileScreenNativeIOS({
             followsCount: profile.followsCount,
             postsCount: profile.postsCount,
             indexedAt: profile.indexedAt,
+            isVerified: (profile as any).verification?.verifiedStatus === 'valid' || undefined,
             viewer: profile.viewer
               ? {
                   muted: profile.viewer.muted,

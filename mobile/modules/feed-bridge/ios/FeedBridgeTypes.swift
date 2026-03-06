@@ -357,12 +357,14 @@ public struct SerializedAuthor: Codable {
     public let handle: String
     public let displayName: String?
     public let avatar: String?
+    public let isVerified: Bool?
 
-    public init(did: String, handle: String, displayName: String?, avatar: String?) {
+    public init(did: String, handle: String, displayName: String?, avatar: String?, isVerified: Bool? = nil) {
         self.did = did
         self.handle = handle
         self.displayName = displayName
         self.avatar = avatar
+        self.isVerified = isVerified
     }
 }
 

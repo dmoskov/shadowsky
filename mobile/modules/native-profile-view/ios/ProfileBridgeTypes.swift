@@ -22,6 +22,7 @@ public struct SerializedProfile: Codable {
     let followsCount: Int?
     let postsCount: Int?
     let indexedAt: String?
+    let isVerified: Bool?
     let viewer: SerializedProfileViewer?
     let labels: [SerializedLabel]?
     let pinnedPost: SerializedPinnedPostRef?

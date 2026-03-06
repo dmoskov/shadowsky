@@ -125,6 +125,7 @@ export interface SerializedAuthor {
   handle: string;
   displayName?: string;
   avatar?: string;
+  isVerified?: boolean;
 }
 
 /**

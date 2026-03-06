@@ -124,9 +124,15 @@ struct ThreadPostCard: View {
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(node.post.author.displayName.orIfEmpty(node.post.author.handle))
-                            .font(.body.weight(.semibold))
-                            .foregroundColor(.primary)
+                        HStack(spacing: 4) {
+                            Text(node.post.author.displayName.orIfEmpty(node.post.author.handle))
+                                .font(.body.weight(.semibold))
+                                .foregroundColor(.primary)
+
+                            if node.post.author.isVerified {
+                                VerifiedBadge(size: .medium)
+                            }
+                        }
 
                         Text("@\(node.post.author.handle)")
                             .font(.subheadline)

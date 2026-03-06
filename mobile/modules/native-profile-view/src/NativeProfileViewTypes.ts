@@ -17,6 +17,7 @@ export interface ProfileData {
   followsCount?: number;
   postsCount?: number;
   indexedAt?: string;
+  isVerified?: boolean;
   viewer?: ProfileViewer;
   labels?: Label[];
   pinnedPost?: PinnedPostRef;
