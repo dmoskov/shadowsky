@@ -1,35 +1,53 @@
-import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { View, Text, StyleSheet, Alert, ActionSheetIOS, Platform, TouchableOpacity } from "react-native";
-import { useRouter } from "expo-router";
 import * as Localization from "expo-localization";
-import { useCreatePost } from "../../hooks/api/usePosts";
-import { useSaveDraft, useDeleteDraft, useDrafts } from "../../hooks/api";
-import { draftToComposerState, ComposerState } from "../../services/drafts";
-import { useImagePicker, ImageAsset } from "../../hooks/useImagePicker";
-import { useVideoPicker } from "../../hooks/useVideoPicker";
-import { useVideoCompression } from "../../hooks/useVideoCompression";
-import { useTheme } from "../../contexts/ThemeContext";
-import { useSearchActors } from "../../hooks/api/useProfile";
-import { useGifPicker } from "../../hooks/useGifPicker";
-import { useEmojiPicker } from "../../hooks/useEmojiPicker";
-import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
-import { triggerHaptic } from "../../utils/haptics";
-import { preferencesService } from "../../services/preferences";
-import { usePreferences } from "../../contexts/PreferencesContext";
-import { useToast } from "../../contexts/ToastContext";
-import { useTranslation } from "../../hooks/useTranslation";
-import { generateAltText } from "../../services/ai-service";
-import { useLinkPreview } from "../../hooks/useLinkPreview";
-import { createLogger } from "../../utils/logger";
-import { GlobeIcon } from "../../components/icons";
-import { AlertTriangleIcon } from "../../components/icons";
-import { fontSize } from "../../utils/typography";
+import { useRouter } from "expo-router";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  ActionSheetIOS,
+  Alert,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import {
   NativeComposeView,
-  setMentionSearchResults,
   setGeneratedAltText,
+  setMentionSearchResults,
   setPostResult,
 } from "../../../modules/native-compose";
+import { AlertTriangleIcon, GlobeIcon } from "../../components/icons";
+import { usePreferences } from "../../contexts/PreferencesContext";
+import { useTheme } from "../../contexts/ThemeContext";
+import { useToast } from "../../contexts/ToastContext";
+import { useDeleteDraft, useDrafts, useSaveDraft } from "../../hooks/api";
+import { useCreatePost } from "../../hooks/api/usePosts";
+import { useSearchActors } from "../../hooks/api/useProfile";
+import {
+  clearAutoSavedCompose,
+  consumeAutoSavedCompose,
+  useComposeAutoSave,
+} from "../../hooks/useComposeAutoSave";
+import { useEmojiPicker } from "../../hooks/useEmojiPicker";
+import { useGifPicker } from "../../hooks/useGifPicker";
+import { ImageAsset, useImagePicker } from "../../hooks/useImagePicker";
+import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
+import { useLinkPreview } from "../../hooks/useLinkPreview";
+import { useTranslation } from "../../hooks/useTranslation";
+import { useVideoCompression } from "../../hooks/useVideoCompression";
+import { useVideoPicker } from "../../hooks/useVideoPicker";
+import { generateAltText } from "../../services/ai-service";
+import { ComposerState, draftToComposerState } from "../../services/drafts";
+import { preferencesService } from "../../services/preferences";
+import { triggerHaptic } from "../../utils/haptics";
+import { createLogger } from "../../utils/logger";
+import { fontSize } from "../../utils/typography";
 import type { ComposeScreenProps } from "./ComposeScreen";
 
 const logger = createLogger("ComposeScreenNative");
@@ -53,19 +71,21 @@ export function ComposeScreenNative({
   const [text, setText] = useState("");
   const [isPosting, setIsPosting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [loadedDraftId, setLoadedDraftId] = useState<string | undefined>(draftId);
+  const [loadedDraftId, setLoadedDraftId] = useState<string | undefined>(
+    draftId,
+  );
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [isThreadMode, setIsThreadMode] = useState(false);
-  const [threadPosts, setThreadPosts] = useState<Array<{ text: string; images: ImageAsset[] }>>([
-    { text: "", images: [] },
-  ]);
+  const [threadPosts, setThreadPosts] = useState<
+    Array<{ text: string; images: ImageAsset[] }>
+  >([{ text: "", images: [] }]);
 
   // Content warning / self-labeling
   const [selfLabels, setSelfLabels] = useState<string[]>([]);
 
   // Threadgate / who-can-reply
-  type ThreadgateOption = 'everybody' | 'following' | 'mentioned' | 'nobody';
-  const [threadgate, setThreadgate] = useState<ThreadgateOption>('everybody');
+  type ThreadgateOption = "everybody" | "following" | "mentioned" | "nobody";
+  const [threadgate, setThreadgate] = useState<ThreadgateOption>("everybody");
 
   // Hooks
   const createPost = useCreatePost();
@@ -78,6 +98,28 @@ export function ComposeScreenNative({
   const gifPicker = useGifPicker();
   const emojiPicker = useEmojiPicker();
   const linkPreview = useLinkPreview(text);
+
+  // Auto-save compose text to MMKV (debounced 500ms + on background)
+  const threadTexts = useMemo(
+    () => threadPosts.map((p) => p.text),
+    [threadPosts],
+  );
+  useComposeAutoSave(text, isThreadMode, threadTexts);
+
+  // Restore auto-saved compose text on mount (if no other content is provided)
+  useEffect(() => {
+    if (draftId || sharedUrl || sharedText || initialText || replyTo || quoteTo)
+      return;
+    const saved = consumeAutoSavedCompose();
+    if (saved) {
+      setText(saved.text);
+      if (saved.threadMode && saved.threadTexts.length > 0) {
+        setIsThreadMode(true);
+        setThreadPosts(saved.threadTexts.map((t) => ({ text: t, images: [] })));
+      }
+      showToast("Restored unsaved compose text", { type: "info" });
+    }
+  }, []);
 
   // Mention search
   const [mentionQuery, setMentionQuery] = useState("");
@@ -96,12 +138,17 @@ export function ComposeScreenNative({
   useEffect(() => {
     if (searchResults && searchResults.length > 0) {
       const serialized = searchResults.map(
-        (actor: { did: string; handle: string; displayName?: string; avatar?: string }) => ({
+        (actor: {
+          did: string;
+          handle: string;
+          displayName?: string;
+          avatar?: string;
+        }) => ({
           did: actor.did,
           handle: actor.handle,
           displayName: actor.displayName || null,
           avatar: actor.avatar || null,
-        })
+        }),
       );
       setMentionSearchResults(JSON.stringify(serialized));
     } else {
@@ -136,7 +183,9 @@ export function ComposeScreenNative({
       let composedText = "";
       if (sharedText) composedText = sharedText;
       if (sharedUrl) {
-        composedText = composedText ? `${composedText}\n\n${sharedUrl}` : sharedUrl;
+        composedText = composedText
+          ? `${composedText}\n\n${sharedUrl}`
+          : sharedUrl;
       }
       setText(composedText);
     }
@@ -246,7 +295,11 @@ export function ComposeScreenNative({
       });
     }
     return media.length > 0 ? JSON.stringify(media) : undefined;
-  }, [imagePicker.selectedImages, videoPicker.selectedVideo, gifPicker.selectedGif]);
+  }, [
+    imagePicker.selectedImages,
+    videoPicker.selectedVideo,
+    gifPicker.selectedGif,
+  ]);
 
   // Build reply/quote JSON
   const replyToJson = useMemo(() => {
@@ -276,36 +329,56 @@ export function ComposeScreenNative({
   // MARK: - Event Handlers
 
   const handleClose = useCallback(() => {
-    const hasContent =
-      isThreadMode
-        ? threadPosts.some((p) => p.text.trim() || p.images.length > 0)
-        : imagePicker.selectedImages.length > 0 ||
-          videoPicker.selectedVideo ||
-          text.trim();
+    const hasContent = isThreadMode
+      ? threadPosts.some((p) => p.text.trim() || p.images.length > 0)
+      : imagePicker.selectedImages.length > 0 ||
+        videoPicker.selectedVideo ||
+        text.trim();
 
     if (hasContent && !isThreadMode) {
-      Alert.alert(t("compose.save_draft_title"), t("compose.save_draft_message"), [
-        {
-          text: t("compose.discard_button"),
-          style: "destructive",
-          onPress: () => router.back(),
-        },
-        { text: t("compose.cancel_button"), style: "cancel" },
-        { text: t("compose.save_draft_button"), onPress: handleSaveDraft },
-      ]);
+      Alert.alert(
+        t("compose.save_draft_title"),
+        t("compose.save_draft_message"),
+        [
+          {
+            text: t("compose.discard_button"),
+            style: "destructive",
+            onPress: () => {
+              clearAutoSavedCompose();
+              router.back();
+            },
+          },
+          { text: t("compose.cancel_button"), style: "cancel" },
+          { text: t("compose.save_draft_button"), onPress: handleSaveDraft },
+        ],
+      );
     } else if (hasContent && isThreadMode) {
-      Alert.alert(t("compose.discard_thread_title"), t("compose.discard_thread_message"), [
-        { text: t("compose.cancel_button"), style: "cancel" },
-        {
-          text: t("compose.discard_button"),
-          style: "destructive",
-          onPress: () => router.back(),
-        },
-      ]);
+      Alert.alert(
+        t("compose.discard_thread_title"),
+        t("compose.discard_thread_message"),
+        [
+          { text: t("compose.cancel_button"), style: "cancel" },
+          {
+            text: t("compose.discard_button"),
+            style: "destructive",
+            onPress: () => {
+              clearAutoSavedCompose();
+              router.back();
+            },
+          },
+        ],
+      );
     } else {
+      clearAutoSavedCompose();
       router.back();
     }
-  }, [text, isThreadMode, threadPosts, imagePicker.selectedImages, videoPicker.selectedVideo]);
+  }, [
+    text,
+    isThreadMode,
+    threadPosts,
+    imagePicker.selectedImages,
+    videoPicker.selectedVideo,
+  ]);
 
   const handleSaveDraft = useCallback(async () => {
     try {
@@ -329,6 +402,7 @@ export function ComposeScreenNative({
         draftId: loadedDraftId,
         state: composerState,
       });
+      clearAutoSavedCompose();
       triggerHaptic("success");
       showToast("Draft saved", { type: "success" });
       router.back();
@@ -380,7 +454,7 @@ export function ComposeScreenNative({
         }
 
         // Threadgate (who can reply)
-        if (threadgate !== 'everybody') {
+        if (threadgate !== "everybody") {
           postOptions.threadgateAllow = threadgate;
         }
 
@@ -431,6 +505,7 @@ export function ComposeScreenNative({
         }
 
         setPostResult(true);
+        clearAutoSavedCompose();
         imagePicker.clearImages();
         videoPicker.clearVideo();
         router.back();
@@ -444,7 +519,9 @@ export function ComposeScreenNative({
       } catch (error) {
         triggerHaptic("error");
         const errorMessage =
-          error instanceof Error ? error.message : "Failed to create post. Please try again.";
+          error instanceof Error
+            ? error.message
+            : "Failed to create post. Please try again.";
         setPostResult(false, errorMessage);
         Alert.alert("Error", errorMessage);
       } finally {
@@ -467,11 +544,13 @@ export function ComposeScreenNative({
       loadedDraftId,
       selfLabels,
       threadgate,
-    ]
+    ],
   );
 
   const handlePostThread = useCallback(async () => {
-    const validPosts = threadPosts.filter((p) => p.text.trim() || p.images.length > 0);
+    const validPosts = threadPosts.filter(
+      (p) => p.text.trim() || p.images.length > 0,
+    );
     if (validPosts.length === 0) {
       Alert.alert("Error", "Thread must have at least one post with content.");
       return;
@@ -508,6 +587,7 @@ export function ComposeScreenNative({
 
       const result = await createThread(threadOptions);
       setPostResult(true);
+      clearAutoSavedCompose();
 
       // Delete draft after successful thread publish
       if (loadedDraftId) {
@@ -521,7 +601,7 @@ export function ComposeScreenNative({
       if (result.failureCount > 0) {
         showToast(
           `Posted ${result.successCount} of ${validPosts.length} posts. Some posts failed.`,
-          { type: "warning" }
+          { type: "warning" },
         );
       } else {
         showToast("Thread published!", { type: "success" });
@@ -530,7 +610,9 @@ export function ComposeScreenNative({
       router.back();
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to create thread. Please try again.";
+        error instanceof Error
+          ? error.message
+          : "Failed to create thread. Please try again.";
       setPostResult(false, errorMessage);
       Alert.alert("Error", errorMessage);
     } finally {
@@ -541,15 +623,18 @@ export function ComposeScreenNative({
     }
   }, [threadPosts, selectedLanguages, replyTo, loadedDraftId]);
 
-  const handleTextChange = useCallback((event: { nativeEvent: { text: string } }) => {
-    setText(event.nativeEvent.text);
-  }, []);
+  const handleTextChange = useCallback(
+    (event: { nativeEvent: { text: string } }) => {
+      setText(event.nativeEvent.text);
+    },
+    [],
+  );
 
   const handleImagePicker = useCallback(() => {
     if (videoPicker.selectedVideo) {
       Alert.alert(
         "Media Type Conflict",
-        "You can attach either images or a video, not both. Remove the video first to add images."
+        "You can attach either images or a video, not both. Remove the video first to add images.",
       );
       return;
     }
@@ -576,13 +661,16 @@ export function ComposeScreenNative({
     if (imagePicker.selectedImages.length > 0) {
       Alert.alert(
         "Media Type Conflict",
-        "You can attach either images or a video, not both. Remove the images first to add a video."
+        "You can attach either images or a video, not both. Remove the images first to add a video.",
       );
       return;
     }
     Alert.alert("Add Video", "Choose an option", [
       { text: "Record Video", onPress: () => videoPicker.recordVideo() },
-      { text: "Choose from Library", onPress: () => videoPicker.pickFromLibrary() },
+      {
+        text: "Choose from Library",
+        onPress: () => videoPicker.pickFromLibrary(),
+      },
       { text: "Cancel", style: "cancel" },
     ]);
   }, [imagePicker.selectedImages.length]);
@@ -591,16 +679,23 @@ export function ComposeScreenNative({
     if (imagePicker.selectedImages.length > 0 || videoPicker.selectedVideo) {
       Alert.alert(
         "Media Already Attached",
-        "Remove images or video first to add a GIF."
+        "Remove images or video first to add a GIF.",
       );
       return;
     }
     if (gifPicker.selectedGif) {
-      Alert.alert("GIF Already Added", "You already have a GIF attached. Remove it first.");
+      Alert.alert(
+        "GIF Already Added",
+        "You already have a GIF attached. Remove it first.",
+      );
       return;
     }
     gifPicker.open();
-  }, [imagePicker.selectedImages.length, videoPicker.selectedVideo, gifPicker.selectedGif]);
+  }, [
+    imagePicker.selectedImages.length,
+    videoPicker.selectedVideo,
+    gifPicker.selectedGif,
+  ]);
 
   const handleEmojiPicker = useCallback(() => {
     emojiPicker.open();
@@ -622,7 +717,11 @@ export function ComposeScreenNative({
         gifPicker.clearSelection();
       }
     },
-    [imagePicker.selectedImages.length, videoPicker.selectedVideo, gifPicker.selectedGif]
+    [
+      imagePicker.selectedImages.length,
+      videoPicker.selectedVideo,
+      gifPicker.selectedGif,
+    ],
   );
 
   const handleGenerateAltText = useCallback(
@@ -641,7 +740,7 @@ export function ComposeScreenNative({
         triggerHaptic("error");
       }
     },
-    [imagePicker.selectedImages]
+    [imagePicker.selectedImages],
   );
 
   const handleSaveAltText = useCallback(
@@ -649,14 +748,14 @@ export function ComposeScreenNative({
       const { index, altText } = event.nativeEvent;
       imagePicker.updateAltText(index, altText);
     },
-    []
+    [],
   );
 
   const handleMentionSearch = useCallback(
     async (event: { nativeEvent: { query: string } }) => {
       setMentionQuery(event.nativeEvent.query);
     },
-    []
+    [],
   );
 
   const handleLanguagePicker = useCallback(() => {
@@ -667,21 +766,33 @@ export function ComposeScreenNative({
         text: "English",
         onPress: () => {
           setSelectedLanguages(["en"]);
-          preferencesService.set("postLanguages", ["en"]).catch(err => logger.error('Failed to save language preference:', err));
+          preferencesService
+            .set("postLanguages", ["en"])
+            .catch((err) =>
+              logger.error("Failed to save language preference:", err),
+            );
         },
       },
       {
         text: "Spanish",
         onPress: () => {
           setSelectedLanguages(["es"]);
-          preferencesService.set("postLanguages", ["es"]).catch(err => logger.error('Failed to save language preference:', err));
+          preferencesService
+            .set("postLanguages", ["es"])
+            .catch((err) =>
+              logger.error("Failed to save language preference:", err),
+            );
         },
       },
       {
         text: "Portuguese",
         onPress: () => {
           setSelectedLanguages(["pt"]);
-          preferencesService.set("postLanguages", ["pt"]).catch(err => logger.error('Failed to save language preference:', err));
+          preferencesService
+            .set("postLanguages", ["pt"])
+            .catch((err) =>
+              logger.error("Failed to save language preference:", err),
+            );
         },
       },
       { text: "Cancel", style: "cancel" },
@@ -689,84 +800,130 @@ export function ComposeScreenNative({
   }, []);
 
   const handleContentWarning = useCallback(() => {
-    if (Platform.OS === 'ios') {
+    if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: ['Cancel', 'Sexual Content', 'Nudity', 'Graphic/Gore'],
+          options: ["Cancel", "Sexual Content", "Nudity", "Graphic/Gore"],
           cancelButtonIndex: 0,
-          title: 'Content Warning',
-          message: 'Select labels that apply to this post',
+          title: "Content Warning",
+          message: "Select labels that apply to this post",
         },
         (buttonIndex) => {
-          const labelMap: Record<number, string> = { 1: 'sexual', 2: 'nudity', 3: 'gore' };
+          const labelMap: Record<number, string> = {
+            1: "sexual",
+            2: "nudity",
+            3: "gore",
+          };
           const label = labelMap[buttonIndex];
           if (label) {
             setSelfLabels((prev) =>
-              prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+              prev.includes(label)
+                ? prev.filter((l) => l !== label)
+                : [...prev, label],
             );
           }
         },
       );
     } else {
-      Alert.alert('Content Warning', 'Select labels that apply', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Sexual Content', onPress: () => setSelfLabels((prev) => prev.includes('sexual') ? prev.filter((l) => l !== 'sexual') : [...prev, 'sexual']) },
-        { text: 'Nudity', onPress: () => setSelfLabels((prev) => prev.includes('nudity') ? prev.filter((l) => l !== 'nudity') : [...prev, 'nudity']) },
-        { text: 'Graphic/Gore', onPress: () => setSelfLabels((prev) => prev.includes('gore') ? prev.filter((l) => l !== 'gore') : [...prev, 'gore']) },
+      Alert.alert("Content Warning", "Select labels that apply", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Sexual Content",
+          onPress: () =>
+            setSelfLabels((prev) =>
+              prev.includes("sexual")
+                ? prev.filter((l) => l !== "sexual")
+                : [...prev, "sexual"],
+            ),
+        },
+        {
+          text: "Nudity",
+          onPress: () =>
+            setSelfLabels((prev) =>
+              prev.includes("nudity")
+                ? prev.filter((l) => l !== "nudity")
+                : [...prev, "nudity"],
+            ),
+        },
+        {
+          text: "Graphic/Gore",
+          onPress: () =>
+            setSelfLabels((prev) =>
+              prev.includes("gore")
+                ? prev.filter((l) => l !== "gore")
+                : [...prev, "gore"],
+            ),
+        },
       ]);
     }
   }, []);
 
   const handleThreadgate = useCallback(() => {
-    if (Platform.OS === 'ios') {
+    if (Platform.OS === "ios") {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: ['Cancel', 'Everyone', 'People you follow', 'Mentioned users only', 'Nobody'],
+          options: [
+            "Cancel",
+            "Everyone",
+            "People you follow",
+            "Mentioned users only",
+            "Nobody",
+          ],
           cancelButtonIndex: 0,
-          title: 'Who can reply?',
+          title: "Who can reply?",
         },
         (buttonIndex) => {
           const optionMap: Record<number, ThreadgateOption> = {
-            1: 'everybody',
-            2: 'following',
-            3: 'mentioned',
-            4: 'nobody',
+            1: "everybody",
+            2: "following",
+            3: "mentioned",
+            4: "nobody",
           };
           const option = optionMap[buttonIndex];
           if (option) setThreadgate(option);
         },
       );
     } else {
-      Alert.alert('Who can reply?', undefined, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Everyone', onPress: () => setThreadgate('everybody') },
-        { text: 'People you follow', onPress: () => setThreadgate('following') },
-        { text: 'Mentioned users only', onPress: () => setThreadgate('mentioned') },
-        { text: 'Nobody', onPress: () => setThreadgate('nobody') },
+      Alert.alert("Who can reply?", undefined, [
+        { text: "Cancel", style: "cancel" },
+        { text: "Everyone", onPress: () => setThreadgate("everybody") },
+        {
+          text: "People you follow",
+          onPress: () => setThreadgate("following"),
+        },
+        {
+          text: "Mentioned users only",
+          onPress: () => setThreadgate("mentioned"),
+        },
+        { text: "Nobody", onPress: () => setThreadgate("nobody") },
       ]);
     }
   }, []);
 
   const threadgateLabel = useMemo(() => {
     switch (threadgate) {
-      case 'everybody': return 'Everyone can reply';
-      case 'following': return 'People you follow';
-      case 'mentioned': return 'Mentioned users only';
-      case 'nobody': return 'Nobody can reply';
+      case "everybody":
+        return "Everyone can reply";
+      case "following":
+        return "People you follow";
+      case "mentioned":
+        return "Mentioned users only";
+      case "nobody":
+        return "Nobody can reply";
     }
   }, [threadgate]);
 
   const selfLabelDisplayNames: Record<string, string> = {
-    sexual: 'Sexual',
-    nudity: 'Nudity',
-    gore: 'Graphic/Gore',
+    sexual: "Sexual",
+    nudity: "Nudity",
+    gore: "Graphic/Gore",
   };
 
   const handleToggleThreadMode = useCallback(
     (event: { nativeEvent: { isThreadMode: boolean } }) => {
       setIsThreadMode(event.nativeEvent.isThreadMode);
     },
-    []
+    [],
   );
 
   const handleUpdateThreadPost = useCallback(
@@ -780,7 +937,7 @@ export function ComposeScreenNative({
         return next;
       });
     },
-    []
+    [],
   );
 
   // Keyboard shortcut
@@ -804,23 +961,49 @@ export function ComposeScreenNative({
       {/* Content Warning & Threadgate toolbar */}
       <View style={styles.composeToolbar}>
         <TouchableOpacity
-          style={[styles.toolbarButton, selfLabels.length > 0 && { backgroundColor: colors.danger + '20' }]}
+          style={[
+            styles.toolbarButton,
+            selfLabels.length > 0 && { backgroundColor: colors.danger + "20" },
+          ]}
           onPress={handleContentWarning}
           activeOpacity={0.7}
           accessibilityLabel="Content warning"
           accessibilityRole="button"
         >
-          <AlertTriangleIcon size={18} color={selfLabels.length > 0 ? colors.danger : colors.textSecondary} />
+          <AlertTriangleIcon
+            size={18}
+            color={selfLabels.length > 0 ? colors.danger : colors.textSecondary}
+          />
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.toolbarButton, threadgate !== 'everybody' && { backgroundColor: colors.primary + '20' }]}
+          style={[
+            styles.toolbarButton,
+            threadgate !== "everybody" && {
+              backgroundColor: colors.primary + "20",
+            },
+          ]}
           onPress={handleThreadgate}
           activeOpacity={0.7}
           accessibilityLabel="Who can reply"
           accessibilityRole="button"
         >
-          <GlobeIcon size={18} color={threadgate !== 'everybody' ? colors.primary : colors.textSecondary} />
-          <Text style={[styles.toolbarButtonText, { color: threadgate !== 'everybody' ? colors.primary : colors.textSecondary }]}>
+          <GlobeIcon
+            size={18}
+            color={
+              threadgate !== "everybody" ? colors.primary : colors.textSecondary
+            }
+          />
+          <Text
+            style={[
+              styles.toolbarButtonText,
+              {
+                color:
+                  threadgate !== "everybody"
+                    ? colors.primary
+                    : colors.textSecondary,
+              },
+            ]}
+          >
             {threadgateLabel}
           </Text>
         </TouchableOpacity>
@@ -832,14 +1015,24 @@ export function ComposeScreenNative({
           {selfLabels.map((label) => (
             <TouchableOpacity
               key={label}
-              style={[styles.chip, { backgroundColor: colors.danger + '20', borderColor: colors.danger + '40' }]}
-              onPress={() => setSelfLabels((prev) => prev.filter((l) => l !== label))}
+              style={[
+                styles.chip,
+                {
+                  backgroundColor: colors.danger + "20",
+                  borderColor: colors.danger + "40",
+                },
+              ]}
+              onPress={() =>
+                setSelfLabels((prev) => prev.filter((l) => l !== label))
+              }
               activeOpacity={0.7}
             >
               <Text style={[styles.chipText, { color: colors.danger }]}>
                 {selfLabelDisplayNames[label] || label}
               </Text>
-              <Text style={[styles.chipRemove, { color: colors.danger }]}>{'\u00D7'}</Text>
+              <Text style={[styles.chipRemove, { color: colors.danger }]}>
+                {"\u00D7"}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -941,8 +1134,8 @@ function createStyles(colors: any) {
       flex: 1,
     },
     composeToolbar: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       paddingHorizontal: 12,
       paddingVertical: 8,
       gap: 8,
@@ -950,8 +1143,8 @@ function createStyles(colors: any) {
       borderBottomColor: colors.borderLight,
     },
     toolbarButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 6,
       paddingHorizontal: 10,
       paddingVertical: 6,
@@ -960,18 +1153,18 @@ function createStyles(colors: any) {
     },
     toolbarButtonText: {
       fontSize: fontSize.caption1,
-      fontWeight: '500',
+      fontWeight: "500",
     },
     chipRow: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+      flexDirection: "row",
+      flexWrap: "wrap",
       paddingHorizontal: 12,
       paddingVertical: 6,
       gap: 6,
     },
     chip: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 4,
       paddingHorizontal: 8,
       paddingVertical: 4,
@@ -980,11 +1173,11 @@ function createStyles(colors: any) {
     },
     chipText: {
       fontSize: fontSize.caption2,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     chipRemove: {
       fontSize: fontSize.caption1,
-      fontWeight: '700',
+      fontWeight: "700",
     },
   });
 }

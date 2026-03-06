@@ -1,6 +1,6 @@
 import * as Localization from "expo-localization";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "react-native";
 import { ThreadPost } from "../../../components/ThreadPostItem";
 import { usePreferences } from "../../../contexts/PreferencesContext";
@@ -11,6 +11,7 @@ import {
   clearAutoSavedCompose,
   consumeAutoSavedCompose,
   useComposeAutoSave,
+  type AutoSavedCompose,
 } from "../../../hooks/useComposeAutoSave";
 import { useGifPicker } from "../../../hooks/useGifPicker";
 import { ImageAsset, useImagePicker } from "../../../hooks/useImagePicker";
@@ -76,16 +77,24 @@ export function useComposeDraft(props: ComposeScreenProps = {}) {
   ]);
   const [, setActiveThreadPostIndex] = useState<number | null>(null);
 
-  // Auto-save compose text to MMKV when the app backgrounds
-  useComposeAutoSave(text);
+  // Auto-save compose text to MMKV (debounced 500ms + on background)
+  const threadTexts = useMemo(
+    () => threadPosts.map((p) => p.text),
+    [threadPosts],
+  );
+  useComposeAutoSave(text, isThreadMode, threadTexts);
 
   // Restore auto-saved compose text on mount (if no other content is provided)
   useEffect(() => {
     if (draftId || sharedUrl || sharedText || initialText || replyTo || quoteTo)
       return;
-    const saved = consumeAutoSavedCompose();
+    const saved: AutoSavedCompose | null = consumeAutoSavedCompose();
     if (saved) {
-      setText(saved);
+      setText(saved.text);
+      if (saved.threadMode && saved.threadTexts.length > 0) {
+        setIsThreadMode(true);
+        setThreadPosts(saved.threadTexts.map((t) => ({ text: t, images: [] })));
+      }
       showToast("Restored unsaved compose text", { type: "info" });
     }
   }, []);
