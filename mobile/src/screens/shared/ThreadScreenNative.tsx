@@ -117,7 +117,7 @@ function serializeFromRoot(thread: any): { serialized: any; focusUri: string | n
   };
 }
 
-const SUMMARY_STALE_TIME_MS = 10 * 60 * 1000; // 10 minutes
+const SUMMARY_STALE_TIME_MS = Infinity; // Cache permanently; invalidated via replyCount in queryKey
 const MIN_POSTS_FOR_SUMMARY = 5;
 
 interface ThreadScreenProps {
@@ -350,6 +350,12 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
   const aiSummariesEnabled = preferences?.enableAISummaries !== false;
   const shouldFetchSummary = aiSummariesEnabled && threadPostData.posts.length >= MIN_POSTS_FOR_SUMMARY;
 
+  // Track reply count for cache invalidation — summary only needs regeneration when new replies arrive
+  const threadReplyCount = useMemo(() => {
+    if (!thread || !AppBskyFeedDefs.isThreadViewPost(thread)) return 0;
+    return thread.post.replyCount || 0;
+  }, [thread]);
+
   // Calculate the active format
   const activeFormat: ThreadSummaryFormat = useMemo(() => {
     if (summaryMode === "quick") return "tldr";
@@ -376,15 +382,14 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
   }, [threadPostData]);
 
   // Generate summary using the same API as the JS ThreadSummary component
+  // queryKey includes threadReplyCount so React Query auto-invalidates when new replies arrive
   const { data: summaryResult, isLoading: isSummaryLoading } = useQuery<ThreadSummaryResult>({
-    queryKey: ["thread-summary-native", postUri, activeFormat, summaryMode],
+    queryKey: ["thread-summary-native", postUri, activeFormat, summaryMode, threadReplyCount],
     queryFn: async () => {
-      const cacheKeyUri = `${postUri}:${activeFormat}`;
+      // Persistent cache key includes replyCount — auto-invalidates when replies change
+      const cacheKeyUri = `${postUri}:${activeFormat}:${threadReplyCount}`;
       const cached = await getCachedSummary(cacheKeyUri);
-      // Use cached summary only if it was generated from a comparable number of posts.
-      // Pre-generation sends only the root post, so cached.metadata.postCount may be 1
-      // while the full thread has many more posts — regenerate in that case.
-      if (cached && cached.metadata.postCount >= summaryPosts.length * 0.5) {
+      if (cached) {
         return cached;
       }
 
@@ -394,7 +399,7 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
     },
     enabled: shouldFetchSummary && !!postUri,
     staleTime: SUMMARY_STALE_TIME_MS,
-    gcTime: SUMMARY_STALE_TIME_MS * 2,
+    gcTime: SUMMARY_STALE_TIME_MS,
     retry: false,
     refetchOnWindowFocus: false,
     meta: { suppressErrors: true },
