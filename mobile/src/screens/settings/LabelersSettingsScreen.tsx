@@ -23,6 +23,7 @@ import {
   setLabelerLabelPreference,
   getDirectoryLabelers,
   searchLabelers,
+  getModerationLists,
   LABELER_CATEGORIES,
 } from "../../services/atproto/labelers";
 import type {
@@ -78,6 +79,28 @@ export function LabelersSettingsScreen({
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Moderation lists state
+  const [moderationLists, setModerationLists] = useState<
+    Array<{
+      uri: string;
+      name: string;
+      description?: string;
+      avatar?: string;
+      purpose: string;
+      listItemCount?: number;
+      creator: { did: string; handle: string; displayName?: string };
+    }>
+  >([]);
+
+  const loadModerationLists = useCallback(async () => {
+    try {
+      const lists = await getModerationLists();
+      setModerationLists(lists);
+    } catch (error) {
+      logger.error("Failed to load moderation lists:", error);
+    }
+  }, []);
+
   const loadLabelers = useCallback(async () => {
     try {
       const subs = await getSubscribedLabelers();
@@ -114,10 +137,10 @@ export function LabelersSettingsScreen({
   useEffect(() => {
     (async () => {
       setIsLoading(true);
-      await Promise.all([loadLabelers(), loadDirectory()]);
+      await Promise.all([loadLabelers(), loadDirectory(), loadModerationLists()]);
       setIsLoading(false);
     })();
-  }, [loadLabelers, loadDirectory]);
+  }, [loadLabelers, loadDirectory, loadModerationLists]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -127,9 +150,9 @@ export function LabelersSettingsScreen({
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await Promise.all([loadLabelers(), loadDirectory(selectedCategory)]);
+    await Promise.all([loadLabelers(), loadDirectory(selectedCategory), loadModerationLists()]);
     setIsRefreshing(false);
-  }, [loadLabelers, loadDirectory, selectedCategory]);
+  }, [loadLabelers, loadDirectory, loadModerationLists, selectedCategory]);
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
@@ -314,6 +337,10 @@ export function LabelersSettingsScreen({
 
   const renderLabelerBrowseCard = (labeler: LabelerInfo) => {
     const subscribed = isSubscribed(labeler.did);
+    const labelDefs = labeler.policies?.labelValueDefinitions || [];
+    const standardLabelCount = labeler.policies?.labelValues?.length || 0;
+    const customLabelCount = labelDefs.length;
+
     return (
       <View key={labeler.did} style={styles.browseCard}>
         <View style={styles.browseCardContent}>
@@ -347,10 +374,46 @@ export function LabelersSettingsScreen({
                 {labeler.creator.description}
               </Text>
             ) : null}
-            {labeler.likeCount != null && labeler.likeCount > 0 && (
-              <Text style={styles.browseLikes}>
-                {labeler.likeCount.toLocaleString()} likes
-              </Text>
+            <View style={styles.browseMetaRow}>
+              {labeler.likeCount != null && labeler.likeCount > 0 && (
+                <Text style={styles.browseLikes}>
+                  {labeler.likeCount.toLocaleString()} likes
+                </Text>
+              )}
+              {(standardLabelCount > 0 || customLabelCount > 0) && (
+                <Text style={styles.browseLabelCount}>
+                  {standardLabelCount + customLabelCount} label{standardLabelCount + customLabelCount !== 1 ? "s" : ""}
+                </Text>
+              )}
+            </View>
+            {/* Custom label definitions preview */}
+            {customLabelCount > 0 && (
+              <View style={styles.browseCustomLabels}>
+                {labelDefs.slice(0, 4).map((def) => {
+                  const name =
+                    def.locales.find((l) => l.lang === "en")?.name ||
+                    def.locales[0]?.name ||
+                    def.identifier;
+                  return (
+                    <View key={def.identifier} style={[
+                      styles.browseCustomLabelPill,
+                      def.adultOnly && styles.browseCustomLabelPillAdult,
+                    ]}>
+                      <Text style={[
+                        styles.browseCustomLabelText,
+                        def.adultOnly && styles.browseCustomLabelTextAdult,
+                      ]} numberOfLines={1}>
+                        {name}
+                      </Text>
+                    </View>
+                  );
+                })}
+                {customLabelCount > 4 && (
+                  <Text style={styles.browseCustomLabelMore}>
+                    +{customLabelCount - 4} more
+                  </Text>
+                )}
+              </View>
             )}
           </View>
         </View>
@@ -459,7 +522,14 @@ export function LabelersSettingsScreen({
                   return (
                     <View key={def.identifier} style={styles.labelRow}>
                       <View style={styles.labelInfo}>
-                        <Text style={styles.labelName}>{localeName}</Text>
+                        <View style={styles.labelNameRow}>
+                          <Text style={styles.labelName}>{localeName}</Text>
+                          {def.adultOnly && (
+                            <View style={styles.adultOnlyBadge}>
+                              <Text style={styles.adultOnlyText}>18+</Text>
+                            </View>
+                          )}
+                        </View>
                         {localeDesc ? (
                           <Text
                             style={styles.labelDescription}
@@ -468,6 +538,18 @@ export function LabelersSettingsScreen({
                             {localeDesc}
                           </Text>
                         ) : null}
+                        <View style={styles.labelMetaTags}>
+                          {def.severity && (
+                            <Text style={styles.labelMetaTag}>
+                              {def.severity}
+                            </Text>
+                          )}
+                          {def.blurs && (
+                            <Text style={styles.labelMetaTag}>
+                              blurs: {def.blurs}
+                            </Text>
+                          )}
+                        </View>
                       </View>
                       <View style={styles.visibilityButtons}>
                         {VISIBILITY_OPTIONS.map((opt) => (
@@ -697,6 +779,36 @@ export function LabelersSettingsScreen({
           )}
         </View>
 
+        {/* Moderation Lists */}
+        {moderationLists.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Moderation Lists</Text>
+            <Text style={styles.sectionSubtitle}>
+              Your moderation lists that act as label sources for blocking and muting.
+            </Text>
+            {moderationLists.map((list) => (
+              <View key={list.uri} style={styles.modListCard}>
+                <View style={styles.modListInfo}>
+                  <Text style={styles.modListName} numberOfLines={1}>
+                    {list.name}
+                  </Text>
+                  {list.description ? (
+                    <Text style={styles.modListDescription} numberOfLines={2}>
+                      {list.description}
+                    </Text>
+                  ) : null}
+                  <Text style={styles.modListMeta}>
+                    by @{list.creator.handle}
+                    {list.listItemCount != null
+                      ? ` · ${list.listItemCount} item${list.listItemCount !== 1 ? "s" : ""}`
+                      : ""}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Info Box */}
         <View style={styles.infoBox}>
           <Text style={styles.infoTitle}>About Content Labelers</Text>
@@ -866,10 +978,47 @@ function createStyles(colors: any) {
       marginTop: 4,
       lineHeight: 16,
     },
+    browseMetaRow: {
+      flexDirection: "row",
+      gap: 12,
+      marginTop: 4,
+    },
     browseLikes: {
       fontSize: fontSize.caption2,
       color: colors.textSecondary,
-      marginTop: 4,
+    },
+    browseLabelCount: {
+      fontSize: fontSize.caption2,
+      color: colors.textSecondary,
+    },
+    browseCustomLabels: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 4,
+      marginTop: 6,
+    },
+    browseCustomLabelPill: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 10,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+    },
+    browseCustomLabelPillAdult: {
+      borderColor: colors.danger,
+    },
+    browseCustomLabelText: {
+      fontSize: fontSize.caption2,
+      color: colors.textSecondary,
+    },
+    browseCustomLabelTextAdult: {
+      color: colors.danger,
+    },
+    browseCustomLabelMore: {
+      fontSize: fontSize.caption2,
+      color: colors.textSecondary,
+      alignSelf: "center",
     },
     browseSubscribeButton: {
       backgroundColor: colors.primary,
@@ -1016,10 +1165,40 @@ function createStyles(colors: any) {
     labelInfo: {
       marginBottom: 8,
     },
+    labelNameRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
     labelName: {
       fontSize: fontSize.subheadline,
       fontWeight: "500",
       color: colors.text,
+    },
+    adultOnlyBadge: {
+      backgroundColor: colors.danger,
+      borderRadius: 4,
+      paddingHorizontal: 4,
+      paddingVertical: 1,
+    },
+    adultOnlyText: {
+      fontSize: fontSize.caption2,
+      fontWeight: "700",
+      color: "#fff",
+    },
+    labelMetaTags: {
+      flexDirection: "row",
+      gap: 6,
+      marginTop: 4,
+    },
+    labelMetaTag: {
+      fontSize: fontSize.caption2,
+      color: colors.textSecondary,
+      backgroundColor: colors.surface,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      overflow: "hidden",
     },
     labelDescription: {
       fontSize: fontSize.caption1,
@@ -1065,6 +1244,33 @@ function createStyles(colors: any) {
       color: colors.danger,
       fontSize: fontSize.subheadline,
       fontWeight: "600",
+    },
+    modListCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    modListInfo: {
+      flex: 1,
+    },
+    modListName: {
+      fontSize: fontSize.subheadline,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    modListDescription: {
+      fontSize: fontSize.caption1,
+      color: colors.textSecondary,
+      marginTop: 2,
+      lineHeight: 16,
+    },
+    modListMeta: {
+      fontSize: fontSize.caption2,
+      color: colors.textSecondary,
+      marginTop: 4,
     },
     infoBox: {
       backgroundColor: colors.surfaceElevated,

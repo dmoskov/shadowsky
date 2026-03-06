@@ -593,3 +593,99 @@ export async function setLabelerLabelPreference(
     ATProtoEndpointType.RECORD,
   );
 }
+
+/**
+ * Appeal a label applied to the user's own content.
+ * Uses com.atproto.moderation.createReport with reasonType=reasonAppeal.
+ */
+export async function appealLabel(params: {
+  subjectUri: string;
+  subjectCid?: string;
+  labelerDid: string;
+  labelVal: string;
+  reason: string;
+}): Promise<void> {
+  const client = getAtProtoClient();
+  const agent = client.getAgent();
+
+  const subject = params.subjectCid
+    ? {
+        $type: "com.atproto.repo.strongRef" as const,
+        uri: params.subjectUri,
+        cid: params.subjectCid,
+      }
+    : {
+        $type: "com.atproto.admin.defs#repoRef" as const,
+        did: params.subjectUri,
+      };
+
+  await rateLimited(
+    () =>
+      agent.com.atproto.moderation.createReport({
+        reasonType: "com.atproto.moderation.defs#reasonAppeal",
+        subject: subject as any,
+        reason: `Appeal label "${params.labelVal}" from ${params.labelerDid}: ${params.reason}`,
+      }),
+    ATProtoEndpointType.RECORD,
+  );
+}
+
+/**
+ * Get moderation lists that act as label sources (moderation lists).
+ * These are lists with purpose "app.bsky.graph.defs#modlist".
+ */
+export async function getModerationLists(): Promise<
+  Array<{
+    uri: string;
+    name: string;
+    description?: string;
+    avatar?: string;
+    purpose: string;
+    listItemCount?: number;
+    creator: {
+      did: string;
+      handle: string;
+      displayName?: string;
+    };
+  }>
+> {
+  try {
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
+    const did = agent.session?.did;
+    if (!did) return [];
+
+    const response = await rateLimited(
+      () =>
+        agent.app.bsky.graph.getLists({
+          actor: did,
+          limit: 50,
+        }),
+      ATProtoEndpointType.FEED,
+    );
+
+    if (!response.data.lists) return [];
+
+    return response.data.lists
+      .filter(
+        (list) =>
+          list.purpose === "app.bsky.graph.defs#modlist",
+      )
+      .map((list) => ({
+        uri: list.uri,
+        name: list.name,
+        description: list.description,
+        avatar: list.avatar,
+        purpose: list.purpose,
+        listItemCount: list.listItemCount,
+        creator: {
+          did: list.creator.did,
+          handle: list.creator.handle,
+          displayName: list.creator.displayName,
+        },
+      }));
+  } catch (error) {
+    logger.error("Failed to get moderation lists:", error);
+    return [];
+  }
+}

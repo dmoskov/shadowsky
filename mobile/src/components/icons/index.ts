@@ -75,3 +75,6 @@ export {FlagIcon} from './FlagIcon';
 export {DownloadIcon} from './DownloadIcon';
 export {PinIcon} from './PinIcon';
 export {TrendingUpIcon} from './TrendingUpIcon';
+
+// Moderation
+export {ShieldIcon} from './ShieldIcon';
