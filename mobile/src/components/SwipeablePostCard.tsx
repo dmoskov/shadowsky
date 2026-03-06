@@ -32,6 +32,7 @@ interface SwipeablePostCardProps {
   onPressLikeCount?: () => void;
   onPressRepostCount?: () => void;
   onPressQuoteCount?: () => void;
+  onQuotePost?: () => void;
 }
 
 const SWIPE_THRESHOLD = 64;
