@@ -23,7 +23,6 @@ import { SearchIcon, CloseIcon } from "./icons";
 import type { TenorGif } from "../services/tenor";
 import { getBestGifUrl } from "../services/tenor";
 import { useTheme } from "../contexts/ThemeContext";
-import Constants from "expo-constants";
 import {fontSize} from '../utils/typography';
 
 interface GifPickerProps {
@@ -106,7 +105,7 @@ function GifPickerInner({
     [onSelectGif, onClose],
   );
 
-  const hasApiKey = !!Constants.expoConfig?.extra?.tenorApiKey;
+  const hasApiKey = true; // Uses Bluesky GIF proxy, no key needed
 
   const renderGifItem = ({ item }: { item: TenorGif }) => {
     const gifUrl = getBestGifUrl(item);

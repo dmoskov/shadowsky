@@ -95,7 +95,7 @@ struct ThreadSummaryView: View {
     let summaryMode: String // "quick" or "full"
     let onToggleMode: ((String) -> Void)?
 
-    @State private var isExpanded: Bool = true
+    @State private var isExpanded: Bool = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -103,10 +103,22 @@ struct ThreadSummaryView: View {
             // Header row
             headerView
 
-            // Expandable content
+            // Expandable content — collapsed shows snippet
             if isExpanded {
                 contentView
                     .transition(.opacity.combined(with: .move(edge: .top)))
+            } else {
+                // Collapsed: show first ~120 chars as preview
+                let snippet = summaryData.summary.count > 120
+                    ? String(summaryData.summary.prefix(120)) + "…"
+                    : summaryData.summary
+                Text(snippet)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8)
+                    .transition(.opacity)
             }
         }
         .background(Color(UIColor.secondarySystemBackground))
@@ -124,13 +136,11 @@ struct ThreadSummaryView: View {
 
     private var headerView: some View {
         Button(action: {
-            if summaryData.isComprehensive {
-                if reduceMotion {
+            if reduceMotion {
+                isExpanded.toggle()
+            } else {
+                withAnimation(.easeInOut(duration: 0.25)) {
                     isExpanded.toggle()
-                } else {
-                    withAnimation(.easeInOut(duration: 0.25)) {
-                        isExpanded.toggle()
-                    }
                 }
             }
         }) {
@@ -172,17 +182,15 @@ struct ThreadSummaryView: View {
                     modeButton("Full", mode: "full")
                 }
 
-                // Chevron for comprehensive
-                if summaryData.isComprehensive {
-                    Text(isExpanded ? "\u{25BC}" : "\u{25B6}")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+                // Chevron — all summaries are collapsible
+                Text(isExpanded ? "\u{25BC}" : "\u{25B6}")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
             .padding(12)
         }
         .buttonStyle(.plain)
-        .disabled(!summaryData.isComprehensive)
+        // All summaries are collapsible
         .accessibilityLabel(accessibilityHeaderLabel)
         .accessibilityHint(summaryData.isComprehensive ? "Double tap to \(isExpanded ? "collapse" : "expand") summary" : "")
         .accessibilityAddTraits(summaryData.isComprehensive ? .isButton : .isStaticText)
@@ -286,9 +294,8 @@ struct ThreadSummaryView: View {
         if let authors = summaryData.metadata.authors {
             label += ", \(authors.count) participants"
         }
-        if summaryData.isComprehensive {
-            label += ", \(isExpanded ? "expanded" : "collapsed")"
-        }
+        label += ", \(isExpanded ? "expanded" : "collapsed, tap to show more")"
+
         return label
     }
 }

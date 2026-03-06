@@ -107,7 +107,11 @@ export function ImageCarouselItem({
     });
 
   // Pan gesture: momentum with decay when zoomed, vertical dismiss when not
+  // When not zoomed: only activate on vertical drag (let FlatList handle horizontal swipe)
+  // When zoomed: allow pan in all directions
   const panGesture = Gesture.Pan()
+    .activeOffsetY([-10, 10])
+    .failOffsetX([-20, 20])
     .onUpdate((e) => {
       if (scale.value > 1) {
         const {maxX, maxY} = getMaxTranslation(scale.value);
