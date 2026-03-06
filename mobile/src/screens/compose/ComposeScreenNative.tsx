@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { View, StyleSheet, Alert } from "react-native";
+import { View, Text, StyleSheet, Alert, ActionSheetIOS, Platform, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import * as Localization from "expo-localization";
 import { useCreatePost } from "../../hooks/api/usePosts";
@@ -21,6 +21,9 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { generateAltText } from "../../services/ai-service";
 import { useLinkPreview } from "../../hooks/useLinkPreview";
 import { createLogger } from "../../utils/logger";
+import { GlobeIcon } from "../../components/icons";
+import { AlertTriangleIcon } from "../../components/icons";
+import { fontSize } from "../../utils/typography";
 import {
   NativeComposeView,
   setMentionSearchResults,
@@ -56,6 +59,13 @@ export function ComposeScreenNative({
   const [threadPosts, setThreadPosts] = useState<Array<{ text: string; images: ImageAsset[] }>>([
     { text: "", images: [] },
   ]);
+
+  // Content warning / self-labeling
+  const [selfLabels, setSelfLabels] = useState<string[]>([]);
+
+  // Threadgate / who-can-reply
+  type ThreadgateOption = 'everybody' | 'following' | 'mentioned' | 'nobody';
+  const [threadgate, setThreadgate] = useState<ThreadgateOption>('everybody');
 
   // Hooks
   const createPost = useCreatePost();
@@ -364,6 +374,16 @@ export function ComposeScreenNative({
           postOptions.langs = selectedLanguages;
         }
 
+        // Self-labels (content warning)
+        if (selfLabels.length > 0) {
+          postOptions.selfLabels = selfLabels;
+        }
+
+        // Threadgate (who can reply)
+        if (threadgate !== 'everybody') {
+          postOptions.threadgateAllow = threadgate;
+        }
+
         if (replyTo) {
           postOptions.reply = {
             root: { uri: replyTo.uri, cid: replyTo.cid },
@@ -445,6 +465,8 @@ export function ComposeScreenNative({
       gifPicker.selectedGif,
       linkPreview.metadata,
       loadedDraftId,
+      selfLabels,
+      threadgate,
     ]
   );
 
@@ -657,6 +679,80 @@ export function ComposeScreenNative({
     ]);
   }, []);
 
+  const handleContentWarning = useCallback(() => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', 'Sexual Content', 'Nudity', 'Graphic/Gore'],
+          cancelButtonIndex: 0,
+          title: 'Content Warning',
+          message: 'Select labels that apply to this post',
+        },
+        (buttonIndex) => {
+          const labelMap: Record<number, string> = { 1: 'sexual', 2: 'nudity', 3: 'gore' };
+          const label = labelMap[buttonIndex];
+          if (label) {
+            setSelfLabels((prev) =>
+              prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+            );
+          }
+        },
+      );
+    } else {
+      Alert.alert('Content Warning', 'Select labels that apply', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sexual Content', onPress: () => setSelfLabels((prev) => prev.includes('sexual') ? prev.filter((l) => l !== 'sexual') : [...prev, 'sexual']) },
+        { text: 'Nudity', onPress: () => setSelfLabels((prev) => prev.includes('nudity') ? prev.filter((l) => l !== 'nudity') : [...prev, 'nudity']) },
+        { text: 'Graphic/Gore', onPress: () => setSelfLabels((prev) => prev.includes('gore') ? prev.filter((l) => l !== 'gore') : [...prev, 'gore']) },
+      ]);
+    }
+  }, []);
+
+  const handleThreadgate = useCallback(() => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', 'Everyone', 'People you follow', 'Mentioned users only', 'Nobody'],
+          cancelButtonIndex: 0,
+          title: 'Who can reply?',
+        },
+        (buttonIndex) => {
+          const optionMap: Record<number, ThreadgateOption> = {
+            1: 'everybody',
+            2: 'following',
+            3: 'mentioned',
+            4: 'nobody',
+          };
+          const option = optionMap[buttonIndex];
+          if (option) setThreadgate(option);
+        },
+      );
+    } else {
+      Alert.alert('Who can reply?', undefined, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Everyone', onPress: () => setThreadgate('everybody') },
+        { text: 'People you follow', onPress: () => setThreadgate('following') },
+        { text: 'Mentioned users only', onPress: () => setThreadgate('mentioned') },
+        { text: 'Nobody', onPress: () => setThreadgate('nobody') },
+      ]);
+    }
+  }, []);
+
+  const threadgateLabel = useMemo(() => {
+    switch (threadgate) {
+      case 'everybody': return 'Everyone can reply';
+      case 'following': return 'People you follow';
+      case 'mentioned': return 'Mentioned users only';
+      case 'nobody': return 'Nobody can reply';
+    }
+  }, [threadgate]);
+
+  const selfLabelDisplayNames: Record<string, string> = {
+    sexual: 'Sexual',
+    nudity: 'Nudity',
+    gore: 'Graphic/Gore',
+  };
+
   const handleToggleThreadMode = useCallback(
     (event: { nativeEvent: { isThreadMode: boolean } }) => {
       setIsThreadMode(event.nativeEvent.isThreadMode);
@@ -696,6 +792,50 @@ export function ComposeScreenNative({
 
   return (
     <View style={styles.container}>
+      {/* Content Warning & Threadgate toolbar */}
+      <View style={styles.composeToolbar}>
+        <TouchableOpacity
+          style={[styles.toolbarButton, selfLabels.length > 0 && { backgroundColor: colors.danger + '20' }]}
+          onPress={handleContentWarning}
+          activeOpacity={0.7}
+          accessibilityLabel="Content warning"
+          accessibilityRole="button"
+        >
+          <AlertTriangleIcon size={18} color={selfLabels.length > 0 ? colors.danger : colors.textSecondary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.toolbarButton, threadgate !== 'everybody' && { backgroundColor: colors.primary + '20' }]}
+          onPress={handleThreadgate}
+          activeOpacity={0.7}
+          accessibilityLabel="Who can reply"
+          accessibilityRole="button"
+        >
+          <GlobeIcon size={18} color={threadgate !== 'everybody' ? colors.primary : colors.textSecondary} />
+          <Text style={[styles.toolbarButtonText, { color: threadgate !== 'everybody' ? colors.primary : colors.textSecondary }]}>
+            {threadgateLabel}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Self-label chips */}
+      {selfLabels.length > 0 && (
+        <View style={styles.chipRow}>
+          {selfLabels.map((label) => (
+            <TouchableOpacity
+              key={label}
+              style={[styles.chip, { backgroundColor: colors.danger + '20', borderColor: colors.danger + '40' }]}
+              onPress={() => setSelfLabels((prev) => prev.filter((l) => l !== label))}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.chipText, { color: colors.danger }]}>
+                {selfLabelDisplayNames[label] || label}
+              </Text>
+              <Text style={[styles.chipRemove, { color: colors.danger }]}>{'\u00D7'}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
       <NativeComposeView
         style={styles.composeView}
         text={text}
@@ -790,6 +930,52 @@ function createStyles(colors: any) {
     },
     composeView: {
       flex: 1,
+    },
+    composeToolbar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      gap: 8,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderLight,
+    },
+    toolbarButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderRadius: 16,
+      backgroundColor: colors.surface,
+    },
+    toolbarButtonText: {
+      fontSize: fontSize.caption1,
+      fontWeight: '500',
+    },
+    chipRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      gap: 6,
+    },
+    chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+      borderWidth: 1,
+    },
+    chipText: {
+      fontSize: fontSize.caption2,
+      fontWeight: '600',
+    },
+    chipRemove: {
+      fontSize: fontSize.caption1,
+      fontWeight: '700',
     },
   });
 }

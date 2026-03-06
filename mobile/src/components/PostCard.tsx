@@ -1,5 +1,6 @@
 import React, {useState, useCallback, useMemo, useRef} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, ActionSheetIOS, Platform, NativeSyntheticEvent} from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -132,6 +133,11 @@ function PostCardComponent({
   const isLiked = useMemo(() => !!postView.viewer?.like, [postView.viewer?.like]);
 
   const isOwnPost = useMemo(() => currentUserDid === author.did, [currentUserDid, author.did]);
+
+  const postText = useMemo(
+    () => (record && typeof record.text === 'string' ? record.text : ''),
+    [record]
+  );
 
   // Memoized event handlers
   const handleProfilePress = useCallback(() => {
@@ -313,9 +319,17 @@ function PostCardComponent({
     setShowSaveToCollection(true);
   }, [isBookmarked, onBookmark]);
 
+  const handleCopyText = useCallback(() => {
+    if (postText) {
+      Clipboard.setStringAsync(postText);
+      showToast('Text copied', { type: 'success' });
+    }
+  }, [postText, showToast]);
+
   // Native context menu actions for long-press
   const contextMenuActions = useMemo(() => {
     const actions: Array<{title: string; systemIcon?: string; destructive?: boolean}> = [
+      { title: 'Copy Text', systemIcon: 'doc.on.doc' },
       { title: 'Reply', systemIcon: 'arrowshape.turn.up.left' },
       { title: 'Repost', systemIcon: 'arrow.2.squarepath' },
       { title: isLiked ? 'Unlike' : 'Like', systemIcon: isLiked ? 'heart.slash' : 'heart' },
@@ -340,6 +354,9 @@ function PostCardComponent({
     const { name } = e.nativeEvent;
 
     switch (name) {
+      case 'Copy Text':
+        handleCopyText();
+        break;
       case 'Reply':
         onReply?.();
         break;
@@ -368,17 +385,12 @@ function PostCardComponent({
         else if (name.startsWith('Block')) handleBlockUser();
         break;
     }
-  }, [onReply, handleRepostPress, handleLikePress, handleBookmarkPress, handleShare, handleDeletePost, handleMuteUser, handleBlockUser, handleReport]);
+  }, [onReply, handleRepostPress, handleLikePress, handleBookmarkPress, handleShare, handleDeletePost, handleMuteUser, handleBlockUser, handleReport, handleCopyText]);
 
   // Memoized computed values
   const timestamp = useMemo(
     () => formatDistanceToNow(new Date(postView.indexedAt), { addSuffix: true }),
     [postView.indexedAt]
-  );
-
-  const postText = useMemo(
-    () => (record && typeof record.text === 'string' ? record.text : ''),
-    [record]
   );
 
   // Translation support

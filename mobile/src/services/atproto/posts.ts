@@ -23,6 +23,8 @@ export interface CreatePostOptions {
   };
   quote?: {uri: string; cid: string};
   langs?: string[];
+  selfLabels?: string[];
+  threadgateAllow?: 'following' | 'mentioned' | 'nobody';
 }
 
 /**
@@ -140,7 +142,44 @@ export async function createPost(options: CreatePostOptions) {
         record.langs = options.langs;
       }
 
+      // Add self-labels (content warnings)
+      if (options.selfLabels && options.selfLabels.length > 0) {
+        (record as any).labels = {
+          $type: 'com.atproto.label.defs#selfLabels',
+          values: options.selfLabels.map((val) => ({ val })),
+        };
+      }
+
       const response = await agent.post(record);
+
+      // Create threadgate if needed
+      if (options.threadgateAllow && response.uri) {
+        try {
+          const allow: any[] = [];
+          if (options.threadgateAllow === 'following') {
+            allow.push({ $type: 'app.bsky.feed.threadgate#followingRule' });
+          } else if (options.threadgateAllow === 'mentioned') {
+            allow.push({ $type: 'app.bsky.feed.threadgate#mentionRule' });
+          }
+          // 'nobody' = empty allow list
+
+          const rkey = response.uri.split('/').pop();
+          await agent.api.com.atproto.repo.createRecord({
+            repo: agent.session?.did || '',
+            collection: 'app.bsky.feed.threadgate',
+            rkey,
+            record: {
+              $type: 'app.bsky.feed.threadgate',
+              post: response.uri,
+              allow,
+              createdAt: new Date().toISOString(),
+            },
+          });
+        } catch (e) {
+          // Threadgate creation failure is non-fatal
+        }
+      }
+
       return response;
     },
     ATProtoEndpointType.RECORD,
