@@ -27,7 +27,7 @@
     "update:production": "eas update --branch production --message"
   },
   "dependencies": {
-    "@atproto/api": "^0.18.21",
+    "@atproto/api": "^0.19.3",
     "@atproto/oauth-client-expo": "^0.0.10",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "11.4.1",
