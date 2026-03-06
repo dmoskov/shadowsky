@@ -89,6 +89,36 @@ function serializeThreadNode(node: any): any {
   return serialized;
 }
 
+
+/**
+ * Walk the parent chain from the queried post up to the root,
+ * then serialize starting from the root. Returns the root serialization
+ * and the URI of the originally-queried post (so we can scroll to it).
+ */
+function serializeFromRoot(thread: any): { serialized: any; focusUri: string | null } {
+  if (!thread || !AppBskyFeedDefs.isThreadViewPost(thread)) {
+    return { serialized: null, focusUri: null };
+  }
+
+  // Walk up the parent chain to find the actual root
+  let root = thread;
+  const originalUri = thread.post.uri;
+  while (root.parent && AppBskyFeedDefs.isThreadViewPost(root.parent)) {
+    root = root.parent;
+  }
+
+  // If we're already at root (no parent chain), just serialize normally
+  if (root === thread) {
+    return { serialized: serializeThreadNode(root), focusUri: null };
+  }
+
+  // Serialize from root — this includes the full parent chain + all replies
+  return {
+    serialized: serializeThreadNode(root),
+    focusUri: originalUri,
+  };
+}
+
 const SUMMARY_STALE_TIME_MS = 10 * 60 * 1000; // 10 minutes
 const MIN_POSTS_FOR_SUMMARY = 5;
 
@@ -219,6 +249,7 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
   const [isResolvingUri, setIsResolvingUri] = useState(false);
   const [resolveError, setResolveError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [autoFocusUri, setAutoFocusUri] = useState<string | null>(null);
   const [summaryMode, setSummaryMode] = useState<"quick" | "full">("quick");
 
   const { navigateToProfile, navigateToThread, navigateToCompose } = useAppNavigation();
@@ -281,13 +312,16 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
 
       try {
         const serializeStart = performance.now();
-        const serialized = serializeThreadNode(thread);
+        const { serialized, focusUri: rootFocusUri } = serializeFromRoot(thread);
         if (serialized) {
           const json = JSON.stringify(serialized);
           const serializeMs = (performance.now() - serializeStart).toFixed(0);
 
           const bridgeStart = performance.now();
           setThreadData(json);
+          if (rootFocusUri) {
+            setAutoFocusUri(rootFocusUri);
+          }
           const bridgeMs = (performance.now() - bridgeStart).toFixed(0);
 
           const totalMs = (performance.now() - perfRef.current.mountedAt).toFixed(0);
@@ -693,7 +727,7 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
         isRefreshing={isRefreshing}
         error={undefined}
         threadUri={postUri}
-        focusedReplyUri={focusedReplyUri}
+        focusedReplyUri={autoFocusUri || focusedReplyUri}
         summaryJson={summaryJson}
         isSummaryLoading={shouldFetchSummary && isSummaryLoading}
         summaryMode={summaryMode}

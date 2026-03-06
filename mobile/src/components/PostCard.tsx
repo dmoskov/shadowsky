@@ -496,6 +496,26 @@ function PostCardComponent({
   // Memoized post content JSX
   const postContent = useMemo(() => (
       <View style={styles.content}>
+        {/* Reply Context - show parent author when post is a reply */}
+        {post.reply?.parent && AppBskyFeedDefs.isPostView(post.reply.parent) && (
+          <TouchableOpacity
+            style={styles.replyContext}
+            onPress={() => {
+              const parentAuthor = (post.reply!.parent as AppBskyFeedDefs.PostView).author;
+              onPressProfile?.(parentAuthor.handle);
+            }}
+            activeOpacity={0.7}
+            accessibilityLabel={`Replying to @${(post.reply.parent as AppBskyFeedDefs.PostView).author.handle}`}
+          >
+            <ReplyIcon size={12} color={colors.textTertiary} />
+            <Text style={styles.replyContextText}>
+              Replying to{' '}
+              <Text style={styles.replyContextHandle}>
+                @{(post.reply.parent as AppBskyFeedDefs.PostView).author.handle}
+              </Text>
+            </Text>
+          </TouchableOpacity>
+        )}
         {/* Author Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -850,6 +870,22 @@ function createStyles(colors: any) {
   },
   content: {
     padding: 16,
+  },
+  replyContext: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 4,
+    paddingVertical: 6,
+    marginBottom: 2,
+  },
+  replyContextText: {
+    fontSize: 12,
+    color: colors.textTertiary,
+  },
+  replyContextHandle: {
+    fontWeight: '600',
+    color: colors.info || colors.primary,
   },
   header: {
     flexDirection: 'row',

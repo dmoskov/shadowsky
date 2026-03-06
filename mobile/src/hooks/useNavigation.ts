@@ -18,13 +18,16 @@ export function useAppNavigation() {
   );
 
   const navigateToThread = useCallback(
-    (handle: string, postId: string, did?: string) => {
+    (handle: string, postId: string, did?: string, focusUri?: string) => {
       if (canShowDetailPanel) {
         showThread(handle, postId);
       } else {
-        const params = did
+        let params = did
           ? `handle=${handle}&did=${encodeURIComponent(did)}`
           : `handle=${handle}`;
+        if (focusUri) {
+          params += `&focusUri=${encodeURIComponent(focusUri)}`;
+        }
         router.push(`/(app)/(tabs)/(home)/thread/${postId}?${params}`);
       }
     },
