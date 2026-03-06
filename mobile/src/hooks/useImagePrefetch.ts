@@ -1,6 +1,6 @@
 import {useRef, useCallback, useEffect} from 'react';
 import {Image} from 'expo-image';
-import {AppBskyFeedDefs, AppBskyEmbedImages} from '@atproto/api';
+import {AppBskyFeedDefs, AppBskyEmbedImages, AppBskyEmbedRecordWithMedia} from '@atproto/api';
 import {getOptimizedUrl} from '../utils/image-cdn';
 import {useLowPowerMode} from './useLowPowerMode';
 
@@ -19,7 +19,7 @@ function extractImageUrls(post: AppBskyFeedDefs.FeedViewPost): string[] {
 
   // Images nested inside record-with-media embeds
   if (embed.$type === 'app.bsky.embed.recordWithMedia#view') {
-    const media = (embed as any).media;
+    const media = (embed as AppBskyEmbedRecordWithMedia.View).media;
     if (media?.$type === 'app.bsky.embed.images#view') {
       return (media as AppBskyEmbedImages.View).images.map(
         (img: AppBskyEmbedImages.ViewImage) => getOptimizedUrl(img.thumb),

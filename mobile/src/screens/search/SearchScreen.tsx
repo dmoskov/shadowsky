@@ -20,7 +20,7 @@ import { PostCardSkeleton } from "../../components/PostCardSkeleton";
 import { TrendingTopics } from "../../components/TrendingTopics";
 import { SearchFilterSheet, type SearchFilterValues } from "../../components/SearchFilterSheet";
 import { CloseIcon, SearchIcon } from "../../components/icons";
-import { AppBskyActorDefs, AppBskyFeedDefs } from "@atproto/api";
+import { AppBskyActorDefs, AppBskyFeedDefs, AppBskyEmbedRecordWithMedia } from "@atproto/api";
 import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useTrendingData } from "../../hooks/useTrending";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -228,7 +228,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
         const embed = post.post.embed;
         if (!embed) return filters.mediaFilter === "links";
 
-        const media = (embed as any).media;
+        const media = (embed as AppBskyEmbedRecordWithMedia.View).media;
         switch (filters.mediaFilter) {
           case "images":
             return embed.$type === "app.bsky.embed.images#view" ||

@@ -6,7 +6,7 @@
  */
 
 import { useMemo } from 'react';
-import { AppBskyNotificationListNotifications, AppBskyFeedPost, AppBskyFeedDefs } from '@atproto/api';
+import { AppBskyNotificationListNotifications, AppBskyFeedPost, AppBskyFeedDefs, AppBskyEmbedImages, AppBskyEmbedExternal, AppBskyEmbedVideo, AppBskyEmbedRecordWithMedia } from '@atproto/api';
 import { UseInfiniteQueryResult, InfiniteData } from '@tanstack/react-query';
 import { ProcessedNotification } from '../../utils/notification-aggregator';
 
@@ -146,7 +146,7 @@ export type NotificationQuery = UseInfiniteQueryResult<InfiniteData<Notification
 /**
  * Serialize notification author
  */
-function serializeNotificationAuthor(author: any): SerializedNotificationAuthor {
+function serializeNotificationAuthor(author: { did: string; handle: string; displayName?: string; avatar?: string; verification?: { verifiedStatus?: string } }): SerializedNotificationAuthor {
   return {
     did: author.did,
     handle: author.handle,
@@ -225,8 +225,8 @@ function serializeNotificationLabels(labels: any[] | undefined): SerializedNotif
  * Serialize a post preview from a PostView for rich notification rendering
  */
 function serializePostPreview(post: AppBskyFeedDefs.PostView): SerializedPostPreview {
-  const embed = post.embed as any;
-  const record = post.record as any;
+  const embed = post.embed;
+  const record = post.record as AppBskyFeedPost.Record;
   const preview: SerializedPostPreview = {
     uri: post.uri,
     text: record?.text,
@@ -236,63 +236,67 @@ function serializePostPreview(post: AppBskyFeedDefs.PostView): SerializedPostPre
   if (!embed) return preview;
 
   // Extract images
-  if (embed.$type === 'app.bsky.embed.images#view' && embed.images) {
-    preview.images = embed.images.map((img: any) => ({
+  if (embed.$type === 'app.bsky.embed.images#view') {
+    const imagesView = embed as AppBskyEmbedImages.View;
+    preview.images = imagesView.images.map((img) => ({
       thumb: img.thumb,
       fullsize: img.fullsize,
       alt: img.alt || '',
       aspectRatio: img.aspectRatio,
     }));
-  } else if (
-    embed.$type === 'app.bsky.embed.recordWithMedia#view' &&
-    embed.media?.$type === 'app.bsky.embed.images#view' &&
-    embed.media.images
-  ) {
-    preview.images = embed.media.images.map((img: any) => ({
-      thumb: img.thumb,
-      fullsize: img.fullsize,
-      alt: img.alt || '',
-      aspectRatio: img.aspectRatio,
-    }));
+  } else if (embed.$type === 'app.bsky.embed.recordWithMedia#view') {
+    const rwmView = embed as AppBskyEmbedRecordWithMedia.View;
+    if (rwmView.media?.$type === 'app.bsky.embed.images#view') {
+      const mediaImages = rwmView.media as AppBskyEmbedImages.View;
+      preview.images = mediaImages.images.map((img) => ({
+        thumb: img.thumb,
+        fullsize: img.fullsize,
+        alt: img.alt || '',
+        aspectRatio: img.aspectRatio,
+      }));
+    }
   }
 
   // Extract video
   if (embed.$type === 'app.bsky.embed.video#view') {
+    const videoView = embed as AppBskyEmbedVideo.View;
     preview.video = {
-      playlist: embed.playlist,
-      thumbnail: embed.thumbnail,
-      aspectRatio: embed.aspectRatio,
+      playlist: videoView.playlist,
+      thumbnail: videoView.thumbnail,
+      aspectRatio: videoView.aspectRatio,
     };
-  } else if (
-    embed.$type === 'app.bsky.embed.recordWithMedia#view' &&
-    embed.media?.$type === 'app.bsky.embed.video#view'
-  ) {
-    preview.video = {
-      playlist: embed.media.playlist,
-      thumbnail: embed.media.thumbnail,
-      aspectRatio: embed.media.aspectRatio,
-    };
+  } else if (embed.$type === 'app.bsky.embed.recordWithMedia#view') {
+    const rwmView = embed as AppBskyEmbedRecordWithMedia.View;
+    if (rwmView.media?.$type === 'app.bsky.embed.video#view') {
+      const mediaVideo = rwmView.media as AppBskyEmbedVideo.View;
+      preview.video = {
+        playlist: mediaVideo.playlist,
+        thumbnail: mediaVideo.thumbnail,
+        aspectRatio: mediaVideo.aspectRatio,
+      };
+    }
   }
 
   // Extract external link
-  if (embed.$type === 'app.bsky.embed.external#view' && embed.external) {
+  if (embed.$type === 'app.bsky.embed.external#view') {
+    const externalView = embed as AppBskyEmbedExternal.View;
     preview.external = {
-      uri: embed.external.uri,
-      title: embed.external.title || '',
-      description: embed.external.description || '',
-      thumb: embed.external.thumb,
+      uri: externalView.external.uri,
+      title: externalView.external.title || '',
+      description: externalView.external.description || '',
+      thumb: externalView.external.thumb,
     };
-  } else if (
-    embed.$type === 'app.bsky.embed.recordWithMedia#view' &&
-    embed.media?.$type === 'app.bsky.embed.external#view' &&
-    embed.media.external
-  ) {
-    preview.external = {
-      uri: embed.media.external.uri,
-      title: embed.media.external.title || '',
-      description: embed.media.external.description || '',
-      thumb: embed.media.external.thumb,
-    };
+  } else if (embed.$type === 'app.bsky.embed.recordWithMedia#view') {
+    const rwmView = embed as AppBskyEmbedRecordWithMedia.View;
+    if (rwmView.media?.$type === 'app.bsky.embed.external#view') {
+      const mediaExternal = rwmView.media as AppBskyEmbedExternal.View;
+      preview.external = {
+        uri: mediaExternal.external.uri,
+        title: mediaExternal.external.title || '',
+        description: mediaExternal.external.description || '',
+        thumb: mediaExternal.external.thumb,
+      };
+    }
   }
 
   return preview;
@@ -373,7 +377,7 @@ function serializeProcessedNotifications(
           handle: user.handle,
           displayName: user.displayName,
           avatar: user.avatar,
-          isVerified: (user as any).verification?.verifiedStatus === 'valid' || undefined,
+          isVerified: undefined,
         })),
         latestTimestamp: item.latestTimestamp,
         notifications: item.notifications.map(n => serializeSingleNotification(n, postMap)),

@@ -3,7 +3,7 @@ import {
   View,
   StyleSheet,
 } from "react-native";
-import { AppBskyFeedDefs } from "@atproto/api";
+import { AppBskyFeedDefs, AppBskyFeedPost } from "@atproto/api";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { usePostThread } from "../../hooks/api/useFeed";
@@ -41,9 +41,9 @@ function serializeThreadNode(node: any): any {
   if (!node || !AppBskyFeedDefs.isThreadViewPost(node)) return null;
 
   const post = node.post;
-  const record = post.record as any;
+  const record = post.record as AppBskyFeedPost.Record;
 
-  const serialized: any = {
+  const serialized: Record<string, unknown> = {
     post: {
       uri: post.uri,
       cid: post.cid,
@@ -52,7 +52,7 @@ function serializeThreadNode(node: any): any {
         handle: post.author.handle,
         displayName: post.author.displayName,
         avatar: post.author.avatar,
-        isVerified: (post.author as any).verification?.verifiedStatus === 'valid' || undefined,
+        isVerified: post.author.verification?.verifiedStatus === 'valid' || undefined,
       },
       record: {
         text: record?.text || '',

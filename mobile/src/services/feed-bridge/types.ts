@@ -92,7 +92,7 @@ export interface EmbedRecordWithMedia {
   record: {
     record: ViewRecord;
   };
-  media: EmbedImages | EmbedExternal;
+  media: EmbedImages | EmbedExternal | EmbedVideo;
 }
 
 export interface ViewVideo {

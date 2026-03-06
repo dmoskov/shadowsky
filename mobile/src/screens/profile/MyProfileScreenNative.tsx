@@ -156,7 +156,7 @@ function MyProfileScreenNativeIOS({
   const starterPacksForNative: StarterPackData[] = useMemo(
     () =>
       starterPacksData?.starterPacks?.map((pack) => {
-        const record = pack.record as any;
+        const record = pack.record as { name?: string };
         return {
           uri: pack.uri,
           cid: pack.cid,

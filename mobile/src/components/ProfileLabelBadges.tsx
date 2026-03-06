@@ -35,7 +35,7 @@ export function ProfileLabelBadges({ labels, profileDid }: ProfileLabelBadgesPro
   const visibleLabels = useMemo(() => {
     if (!labels || labels.length === 0) return [];
     return labels.filter((l) => {
-      if ((l as any).neg) return false;
+      if ((l as { val: string; src: string; neg?: boolean }).neg) return false;
       if (l.val.startsWith("!")) return false;
       return true;
     });

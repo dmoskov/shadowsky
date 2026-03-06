@@ -137,7 +137,7 @@ export async function getPushTokenFromATProto(
     return response.data.value as unknown as PushTokenRecord;
   } catch (error) {
     // 400 error means record doesn't exist yet, which is normal
-    if ((error as any)?.status === 400) {
+    if ((error as { status?: number })?.status === 400) {
       return null;
     }
     logger.error('Error getting push token from AT Protocol:', error);

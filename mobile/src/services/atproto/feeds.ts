@@ -394,7 +394,7 @@ export async function saveFeed(feedUri: string): Promise<void> {
         pinned: true,
       });
 
-      (preferences as any[])[v2Index] = {
+      (preferences as Record<string, unknown>[])[v2Index] = {
         ...preferences[v2Index],
         items,
       };
@@ -459,7 +459,7 @@ export async function unsaveFeed(feedUri: string): Promise<void> {
     const found = findV2Item(preferences, feedUri);
     if (found) {
       const v2Pref = preferences[found.prefIndex] as { items: SavedFeedItemV2[] };
-      (preferences as any[])[found.prefIndex] = {
+      (preferences as Record<string, unknown>[])[found.prefIndex] = {
         ...preferences[found.prefIndex],
         items: v2Pref.items.filter((_, i) => i !== found.index),
       };
@@ -527,7 +527,7 @@ export async function pinFeed(feedUri: string): Promise<void> {
         });
       }
 
-      (preferences as any[])[v2Index] = { ...preferences[v2Index], items };
+      (preferences as Record<string, unknown>[])[v2Index] = { ...preferences[v2Index], items };
       await agent.app.bsky.actor.putPreferences({ preferences });
       return;
     }
@@ -594,7 +594,7 @@ export async function unpinFeed(feedUri: string): Promise<void> {
       const items = [...v2Pref.items];
       items[found.index] = { ...found.item, pinned: false };
 
-      (preferences as any[])[found.prefIndex] = { ...preferences[found.prefIndex], items };
+      (preferences as Record<string, unknown>[])[found.prefIndex] = { ...preferences[found.prefIndex], items };
       await agent.app.bsky.actor.putPreferences({ preferences });
       return;
     }

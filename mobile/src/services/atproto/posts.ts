@@ -144,7 +144,7 @@ export async function createPost(options: CreatePostOptions) {
 
       // Add self-labels (content warnings)
       if (options.selfLabels && options.selfLabels.length > 0) {
-        (record as any).labels = {
+        record.labels = {
           $type: 'com.atproto.label.defs#selfLabels',
           values: options.selfLabels.map((val) => ({ val })),
         };

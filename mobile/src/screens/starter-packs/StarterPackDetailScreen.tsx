@@ -172,7 +172,7 @@ export function StarterPackDetailScreen({
     );
   }
 
-  const record = starterPack.record as any;
+  const record = starterPack.record as { name?: string; description?: string };
   const description = record?.description || '';
   const name = record?.name || 'Starter Pack';
 
