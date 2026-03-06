@@ -130,6 +130,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     typedRoutes: true,
   },
   extra: {
+    tenorApiKey: "dVEiWsTGcOrB7qjmvk54J4nr1kdpslZy",
     eas: {
       projectId: "bb805399-ea1d-4550-9fee-e7ecf9cc8b74",
     },
