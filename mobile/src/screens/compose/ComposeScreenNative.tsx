@@ -22,7 +22,11 @@ import {
   setMentionSearchResults,
   setPostResult,
 } from "../../../modules/native-compose";
-import { AlertTriangleIcon, GlobeIcon } from "../../components/icons";
+import {
+  AlertTriangleIcon,
+  GlobeIcon,
+  WifiOffIcon,
+} from "../../components/icons";
 import { usePreferences } from "../../contexts/PreferencesContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -39,6 +43,7 @@ import { useGifPicker } from "../../hooks/useGifPicker";
 import { ImageAsset, useImagePicker } from "../../hooks/useImagePicker";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { useLinkPreview } from "../../hooks/useLinkPreview";
+import { useNetworkStatus } from "../../hooks/useNetworkStatus";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useVideoCompression } from "../../hooks/useVideoCompression";
 import { useVideoPicker } from "../../hooks/useVideoPicker";
@@ -86,6 +91,11 @@ export function ComposeScreenNative({
   // Threadgate / who-can-reply
   type ThreadgateOption = "everybody" | "following" | "mentioned" | "nobody";
   const [threadgate, setThreadgate] = useState<ThreadgateOption>("everybody");
+
+  // Network status
+  const { isConnected, networkQuality } = useNetworkStatus();
+  const isOffline = !isConnected;
+  const isPoorConnection = networkQuality === "poor";
 
   // Hooks
   const createPost = useCreatePost();
@@ -423,6 +433,15 @@ export function ComposeScreenNative({
     }) => {
       const { text: postText, isThreadMode: isThread } = event.nativeEvent;
 
+      if (isOffline) {
+        setPostResult(false, "No internet connection");
+        Alert.alert(
+          "No Connection",
+          "You are offline. Please check your internet connection and try again.",
+        );
+        return;
+      }
+
       if (isThread) {
         return handlePostThread();
       }
@@ -534,6 +553,7 @@ export function ComposeScreenNative({
       }
     },
     [
+      isOffline,
       selectedLanguages,
       replyTo,
       quoteTo,
@@ -1038,6 +1058,39 @@ export function ComposeScreenNative({
         </View>
       )}
 
+      {/* Offline banner */}
+      {isOffline && (
+        <View
+          style={styles.offlineBanner}
+          accessibilityRole="alert"
+          accessibilityLabel="You are offline. Posts cannot be sent."
+        >
+          <WifiOffIcon size={16} color={colors.danger} />
+          <Text style={[styles.offlineBannerText, { color: colors.danger }]}>
+            You are offline — connect to post
+          </Text>
+        </View>
+      )}
+
+      {/* Poor connection warning */}
+      {!isOffline && isPoorConnection && (
+        <View
+          style={[
+            styles.poorConnectionBanner,
+            { backgroundColor: colors.warning + "15" },
+          ]}
+          accessibilityRole="alert"
+          accessibilityLabel="Poor network connection detected"
+        >
+          <AlertTriangleIcon size={14} color={colors.warning} />
+          <Text
+            style={[styles.poorConnectionText, { color: colors.warning }]}
+          >
+            Poor connection — posting may be slow
+          </Text>
+        </View>
+      )}
+
       <NativeComposeView
         style={styles.composeView}
         text={text}
@@ -1048,6 +1101,7 @@ export function ComposeScreenNative({
         quoteToJson={quoteToJson}
         isThreadMode={isThreadMode}
         isPosting={isPosting || createPost.isPending}
+        isOffline={isOffline}
         isUploading={
           isUploading ||
           imagePicker.isUploading ||
@@ -1178,6 +1232,33 @@ function createStyles(colors: any) {
     chipRemove: {
       fontSize: fontSize.caption1,
       fontWeight: "700",
+    },
+    offlineBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      backgroundColor: colors.danger + "12",
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.danger + "30",
+    },
+    offlineBannerText: {
+      fontSize: fontSize.caption1,
+      fontWeight: "600",
+    },
+    poorConnectionBanner: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.warning + "25",
+    },
+    poorConnectionText: {
+      fontSize: fontSize.caption2,
+      fontWeight: "500",
     },
   });
 }

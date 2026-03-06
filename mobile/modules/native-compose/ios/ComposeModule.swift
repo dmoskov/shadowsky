@@ -68,6 +68,10 @@ public class ComposeModule: Module {
                 view.composeState.isUploading = isUploading
             }
 
+            Prop("isOffline") { (view: ComposeViewWrapper, isOffline: Bool) in
+                view.composeState.isOffline = isOffline
+            }
+
             // Events (native -> JS)
             Events(
                 "onClose",

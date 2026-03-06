@@ -203,7 +203,7 @@ struct ComposeView: View {
                     ProgressView()
                         .frame(width: 20, height: 20)
                 } else {
-                    Text("Post")
+                    Text(composeState.isOffline ? "Offline" : "Post")
                         .font(.body.weight(.semibold))
                 }
             }
@@ -212,8 +212,8 @@ struct ComposeView: View {
             .foregroundColor(composeState.canPost ? .white : Color(UIColor.systemGray2))
             .cornerRadius(20)
             .disabled(!composeState.canPost)
-            .accessibilityLabel("Post")
-            .accessibilityHint(composeState.canPost ? "Post your content" : "Cannot post: content is empty or over the character limit")
+            .accessibilityLabel(composeState.isOffline ? "Offline — cannot post" : "Post")
+            .accessibilityHint(composeState.isOffline ? "You are offline. Connect to the internet to post." : composeState.canPost ? "Post your content" : "Cannot post: content is empty or over the character limit")
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)

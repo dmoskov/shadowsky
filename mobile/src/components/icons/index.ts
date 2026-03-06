@@ -42,6 +42,7 @@ export {GlobeIcon} from './GlobeIcon';
 
 // State/feedback
 export {AlertTriangleIcon} from './AlertTriangleIcon';
+export {WifiOffIcon} from './WifiOffIcon';
 export {MailboxIcon} from './MailboxIcon';
 export {LockIcon} from './LockIcon';
 export {ChatBubbleIcon} from './ChatBubbleIcon';
