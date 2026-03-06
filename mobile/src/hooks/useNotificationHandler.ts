@@ -67,13 +67,18 @@ export function useNotificationHandler() {
 
   useEffect(() => {
     // Listen for notifications received while app is in foreground
-    notificationListener.current = Notifications.addNotificationReceivedListener((_notification: Notifications.Notification) => {
-      // The notification handler configured in useNotificationPermissions
-      // will determine if it shows as a banner
-    });
+    try {
+      notificationListener.current = Notifications.addNotificationReceivedListener((_notification: Notifications.Notification) => {
+        // The notification handler configured in useNotificationPermissions
+        // will determine if it shows as a banner
+      });
+    } catch {
+      // Notification listener registration failed
+    }
 
     // Listen for user interaction with notification (tap or action button)
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(async (response: Notifications.NotificationResponse) => {
+    try {
+      responseListener.current = Notifications.addNotificationResponseReceivedListener(async (response: Notifications.NotificationResponse) => {
       // Try to handle as an action button press (reply/like from banner)
       const handled = await handleNotificationAction(response);
 
@@ -86,6 +91,9 @@ export function useNotificationHandler() {
       // Clear badge count on any interaction
       clearBadgeCount();
     });
+    } catch {
+      // Response listener registration failed
+    }
 
     return () => {
       if (notificationListener.current) {

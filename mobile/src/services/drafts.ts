@@ -56,7 +56,16 @@ async function getDeviceId(): Promise<string> {
 
   if (!deviceId) {
     // Generate a new device ID
-    const randomBytes = await Crypto.getRandomBytesAsync(16);
+    let randomBytes: Uint8Array;
+    try {
+      randomBytes = await Crypto.getRandomBytesAsync(16);
+    } catch {
+      // Fallback to Math.random if Crypto native module unavailable
+      randomBytes = new Uint8Array(16);
+      for (let i = 0; i < 16; i++) {
+        randomBytes[i] = Math.floor(Math.random() * 256);
+      }
+    }
     deviceId = Array.from(randomBytes)
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');

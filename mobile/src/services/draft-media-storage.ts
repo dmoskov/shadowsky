@@ -34,9 +34,14 @@ export function generateVideoRefPath(mimeType: string): string {
  * Initialize the draft media directory
  */
 async function ensureMediaDirectory(): Promise<void> {
-  const info = await FileSystem.getInfoAsync(DRAFT_MEDIA_DIR);
-  if (!info.exists) {
-    await FileSystem.makeDirectoryAsync(DRAFT_MEDIA_DIR, { intermediates: true });
+  try {
+    const info = await FileSystem.getInfoAsync(DRAFT_MEDIA_DIR);
+    if (!info.exists) {
+      await FileSystem.makeDirectoryAsync(DRAFT_MEDIA_DIR, { intermediates: true });
+    }
+  } catch (error) {
+    logger.error('Failed to ensure media directory:', error);
+    throw error;
   }
 }
 
@@ -63,10 +68,15 @@ export async function saveMediaToLocal(
 
   const destPath = getFilePath(localRefPath);
 
-  await FileSystem.copyAsync({
-    from: sourceUri,
-    to: destPath,
-  });
+  try {
+    await FileSystem.copyAsync({
+      from: sourceUri,
+      to: destPath,
+    });
+  } catch (error) {
+    logger.error('Failed to copy media file:', error);
+    throw error;
+  }
 
   // Update cache
   mediaExistenceCache.set(localRefPath, true);
@@ -83,11 +93,14 @@ export async function loadMediaFromLocal(
   localRefPath: string
 ): Promise<string | null> {
   const filePath = getFilePath(localRefPath);
-  const info = await FileSystem.getInfoAsync(filePath);
-
-  if (info.exists) {
-    mediaExistenceCache.set(localRefPath, true);
-    return filePath;
+  try {
+    const info = await FileSystem.getInfoAsync(filePath);
+    if (info.exists) {
+      mediaExistenceCache.set(localRefPath, true);
+      return filePath;
+    }
+  } catch {
+    // File check failed, treat as not found
   }
 
   mediaExistenceCache.set(localRefPath, false);
@@ -100,10 +113,13 @@ export async function loadMediaFromLocal(
  */
 export async function deleteMediaFromLocal(localRefPath: string): Promise<void> {
   const filePath = getFilePath(localRefPath);
-  const info = await FileSystem.getInfoAsync(filePath);
-
-  if (info.exists) {
-    await FileSystem.deleteAsync(filePath, { idempotent: true });
+  try {
+    const info = await FileSystem.getInfoAsync(filePath);
+    if (info.exists) {
+      await FileSystem.deleteAsync(filePath, { idempotent: true });
+    }
+  } catch {
+    // Best-effort deletion
   }
 
   // Remove from cache
@@ -123,12 +139,14 @@ export async function mediaExists(localRefPath: string): Promise<boolean> {
 
   // Check filesystem
   const filePath = getFilePath(localRefPath);
-  const info = await FileSystem.getInfoAsync(filePath);
-
-  // Update cache
-  mediaExistenceCache.set(localRefPath, info.exists);
-
-  return info.exists;
+  try {
+    const info = await FileSystem.getInfoAsync(filePath);
+    mediaExistenceCache.set(localRefPath, info.exists);
+    return info.exists;
+  } catch {
+    mediaExistenceCache.set(localRefPath, false);
+    return false;
+  }
 }
 
 /**

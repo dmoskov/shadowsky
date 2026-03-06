@@ -117,23 +117,31 @@ export function useNotificationPermissions(): NotificationPermissions {
  */
 export function configureNotificationHandler(colors?: any): void {
   const themeColors = colors || defaultColors;
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
-  });
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+  } catch {
+    // Notification handler setup failed
+  }
 
   if (Platform.OS === 'android') {
     // Configure Android notification channel
-    Notifications.setNotificationChannelAsync('default', {
-      name: 'Default',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: themeColors.primary,
-    });
+    try {
+      Notifications.setNotificationChannelAsync('default', {
+        name: 'Default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: themeColors.primary,
+      });
+    } catch {
+      // Android notification channel setup failed
+    }
   }
 }

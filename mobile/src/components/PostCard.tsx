@@ -293,8 +293,12 @@ function PostCardComponent({
 
   const handleCopyText = useCallback(() => {
     if (postText) {
-      Clipboard.setStringAsync(postText);
-      showToast('Text copied', { type: 'success' });
+      try {
+        Clipboard.setStringAsync(postText);
+        showToast('Text copied', { type: 'success' });
+      } catch {
+        showToast('Failed to copy text', { type: 'error' });
+      }
     }
   }, [postText, showToast]);
 

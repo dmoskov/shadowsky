@@ -97,82 +97,86 @@ async function updateBadgeCount(count: number): Promise<void> {
  * Background fetch task handler
  * This runs periodically when the app is in the background
  */
-TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
-  try {
-    logger.log('Starting background fetch task');
-
-    // Skip background fetch in Low Power Mode to save battery
-    if (isLowPowerModeEnabled()) {
-      logger.log('Low Power Mode active, skipping background fetch');
-      return BackgroundFetch.BackgroundFetchResult.NoData;
-    }
-
-    // Check if user has enabled background fetch
-    const prefs = await preferencesService.get();
-    if (!prefs.backgroundFetchEnabled) {
-      logger.log('Background fetch disabled in preferences');
-      return BackgroundFetch.BackgroundFetchResult.NoData;
-    }
-
-    const prefetchData: PrefetchData = {
-      timestamp: Date.now(),
-    };
-
-    // Fetch first page of timeline (lightweight, no images)
+try {
+  TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
     try {
-      const timelineResult = await getTimeline({ limit: 20 });
-      prefetchData.timeline = {
-        feed: timelineResult.feed,
-        cursor: timelineResult.cursor,
-      };
-      logger.log(`Fetched ${timelineResult.feed.length} timeline posts`);
-    } catch (error) {
-      logger.error('Error fetching timeline:', error);
-    }
+      logger.log('Starting background fetch task');
 
-    // Fetch unread notification count and sync to widget
-    try {
-      const unreadCount = await getUnreadCount();
-      prefetchData.unreadCount = unreadCount;
-
-      // Update badge count
-      await updateBadgeCount(unreadCount);
-      logger.log(`Unread count: ${unreadCount}`);
-
-      // Fetch latest notifications for widget preview
-      try {
-        const notifResult = await getNotifications({ limit: 5 });
-        syncNotificationWidget(unreadCount, notifResult.notifications);
-      } catch (notifError) {
-        // Still update widget with count even if notification details fail
-        syncNotificationWidget(unreadCount);
+      // Skip background fetch in Low Power Mode to save battery
+      if (isLowPowerModeEnabled()) {
+        logger.log('Low Power Mode active, skipping background fetch');
+        return BackgroundFetch.BackgroundFetchResult.NoData;
       }
+
+      // Check if user has enabled background fetch
+      const prefs = await preferencesService.get();
+      if (!prefs.backgroundFetchEnabled) {
+        logger.log('Background fetch disabled in preferences');
+        return BackgroundFetch.BackgroundFetchResult.NoData;
+      }
+
+      const prefetchData: PrefetchData = {
+        timestamp: Date.now(),
+      };
+
+      // Fetch first page of timeline (lightweight, no images)
+      try {
+        const timelineResult = await getTimeline({ limit: 20 });
+        prefetchData.timeline = {
+          feed: timelineResult.feed,
+          cursor: timelineResult.cursor,
+        };
+        logger.log(`Fetched ${timelineResult.feed.length} timeline posts`);
+      } catch (error) {
+        logger.error('Error fetching timeline:', error);
+      }
+
+      // Fetch unread notification count and sync to widget
+      try {
+        const unreadCount = await getUnreadCount();
+        prefetchData.unreadCount = unreadCount;
+
+        // Update badge count
+        await updateBadgeCount(unreadCount);
+        logger.log(`Unread count: ${unreadCount}`);
+
+        // Fetch latest notifications for widget preview
+        try {
+          const notifResult = await getNotifications({ limit: 5 });
+          syncNotificationWidget(unreadCount, notifResult.notifications);
+        } catch (notifError) {
+          // Still update widget with count even if notification details fail
+          syncNotificationWidget(unreadCount);
+        }
+      } catch (error) {
+        logger.error('Error fetching unread count:', error);
+      }
+
+      // Fetch trending topics for widget
+      try {
+        const trendingResult = await getTrendingTopics(5);
+        const topics = [
+          ...trendingResult.topics.map(t => ({ topic: t.topic, status: 'stable' })),
+          ...trendingResult.suggested.map(t => ({ topic: t.topic, status: 'rising' })),
+        ];
+        syncTrendingWidget(topics);
+      } catch (error) {
+        logger.error('Error fetching trending for widget:', error);
+      }
+
+      // Save prefetched data to AsyncStorage
+      await savePrefetchData(prefetchData);
+
+      logger.log('Background fetch completed successfully');
+      return BackgroundFetch.BackgroundFetchResult.NewData;
     } catch (error) {
-      logger.error('Error fetching unread count:', error);
+      logger.error('Background fetch failed:', error);
+      return BackgroundFetch.BackgroundFetchResult.Failed;
     }
-
-    // Fetch trending topics for widget
-    try {
-      const trendingResult = await getTrendingTopics(5);
-      const topics = [
-        ...trendingResult.topics.map(t => ({ topic: t.topic, status: 'stable' })),
-        ...trendingResult.suggested.map(t => ({ topic: t.topic, status: 'rising' })),
-      ];
-      syncTrendingWidget(topics);
-    } catch (error) {
-      logger.error('Error fetching trending for widget:', error);
-    }
-
-    // Save prefetched data to AsyncStorage
-    await savePrefetchData(prefetchData);
-
-    logger.log('Background fetch completed successfully');
-    return BackgroundFetch.BackgroundFetchResult.NewData;
-  } catch (error) {
-    logger.error('Background fetch failed:', error);
-    return BackgroundFetch.BackgroundFetchResult.Failed;
-  }
-});
+  });
+} catch {
+  // TaskManager.defineTask may fail if native module unavailable
+}
 
 /**
  * Register the background fetch task
