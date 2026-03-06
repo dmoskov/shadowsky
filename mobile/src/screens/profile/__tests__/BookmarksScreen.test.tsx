@@ -20,7 +20,7 @@ jest.mock('../../../contexts/ThemeContext', () => ({
 
 jest.mock('../../../contexts/PreferencesContext', () => ({
   usePreferences: () => ({
-    preferences: { enableThreadSummaryPreGen: false },
+    preferences: { enableAISummaries: true, enableThreadSummaryPreGen: false },
   }),
 }));
 

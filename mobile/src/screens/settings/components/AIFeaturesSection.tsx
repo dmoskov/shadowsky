@@ -27,6 +27,20 @@ export function AIFeaturesSection() {
       <Text style={styles.sectionTitle}>AI FEATURES</Text>
 
       <SettingRow
+        label="AI Thread Summaries"
+        description="Show AI-generated summaries at the top of long threads"
+      >
+        <Switch
+          value={preferences.enableAISummaries}
+          onValueChange={(value) =>
+            updatePreference("enableAISummaries", value)
+          }
+          trackColor={switchColors.trackColor}
+          thumbColor={switchColors.thumbColor}
+        />
+      </SettingRow>
+
+      <SettingRow
         label="Auto-Generate Alt Text"
         description="Automatically generate descriptive alt text when you attach images"
       >
