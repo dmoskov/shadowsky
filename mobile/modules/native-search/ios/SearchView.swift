@@ -267,10 +267,16 @@ struct SearchView: View {
                 avatarView(url: actor.avatar, size: 48)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(actor.displayName.orIfEmpty(actor.handle))
-                        .font(.body.weight(.semibold))
-                        .foregroundColor(Color(UIColor.label))
-                        .lineLimit(1)
+                    HStack(spacing: 4) {
+                        Text(actor.displayName.orIfEmpty(actor.handle))
+                            .font(.body.weight(.semibold))
+                            .foregroundColor(Color(UIColor.label))
+                            .lineLimit(1)
+
+                        if actor.isVerified {
+                            VerifiedBadge(size: .medium)
+                        }
+                    }
 
                     Text("@\(actor.handle)")
                         .font(.subheadline)
@@ -351,10 +357,16 @@ struct SearchView: View {
                     avatarView(url: post.authorAvatar, size: 36)
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(post.authorDisplayName ?? post.authorHandle)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundColor(Color(UIColor.label))
-                            .lineLimit(1)
+                        HStack(spacing: 4) {
+                            Text(post.authorDisplayName ?? post.authorHandle)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(Color(UIColor.label))
+                                .lineLimit(1)
+
+                            if post.authorIsVerified {
+                                VerifiedBadge(size: .small)
+                            }
+                        }
 
                         Text("@\(post.authorHandle)")
                             .font(.footnote)
@@ -620,10 +632,16 @@ struct SearchView: View {
                         avatarView(url: actor.avatar, size: 36)
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(actor.displayName.orIfEmpty(actor.handle))
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundColor(Color(UIColor.label))
-                                .lineLimit(1)
+                            HStack(spacing: 4) {
+                                Text(actor.displayName.orIfEmpty(actor.handle))
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundColor(Color(UIColor.label))
+                                    .lineLimit(1)
+
+                                if actor.isVerified {
+                                    VerifiedBadge(size: .small)
+                                }
+                            }
 
                             Text("@\(actor.handle)")
                                 .font(.footnote)

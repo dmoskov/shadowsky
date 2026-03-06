@@ -516,7 +516,8 @@ class FeedState: ObservableObject {
                     did: post.author.did,
                     handle: post.author.handle,
                     displayName: post.author.displayName,
-                    avatar: post.author.avatar
+                    avatar: post.author.avatar,
+                    isVerified: post.author.isVerified ?? false
                 ),
                 record: PostRecord(
                     text: post.record.text,

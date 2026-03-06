@@ -285,7 +285,8 @@ enum MockSearch {
             handle: handle,
             displayName: displayName,
             avatar: avatar,
-            description: description
+            description: description,
+            isVerified: false
         )
     }
 
@@ -295,6 +296,7 @@ enum MockSearch {
         authorHandle: String = "alice.bsky.social",
         authorDisplayName: String? = "Alice Johnson",
         authorAvatar: String? = nil,
+        authorIsVerified: Bool = false,
         text: String = "Hello world! This is a sample post.",
         indexedAt: String = "2026-02-20T10:00:00.000Z",
         likeCount: Int = 10,
@@ -307,6 +309,7 @@ enum MockSearch {
             authorHandle: authorHandle,
             authorDisplayName: authorDisplayName,
             authorAvatar: authorAvatar,
+            authorIsVerified: authorIsVerified,
             text: text,
             indexedAt: indexedAt,
             likeCount: likeCount,
@@ -515,13 +518,15 @@ enum MockFeed {
         did: String = "did:plc:author1",
         handle: String = "alice.bsky.social",
         displayName: String? = "Alice Johnson",
-        avatar: String? = nil
+        avatar: String? = nil,
+        isVerified: Bool = false
     ) -> PostAuthor {
         PostAuthor(
             did: did,
             handle: handle,
             displayName: displayName,
-            avatar: avatar
+            avatar: avatar,
+            isVerified: isVerified
         )
     }
 

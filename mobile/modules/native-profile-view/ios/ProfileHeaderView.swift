@@ -146,12 +146,18 @@ struct ProfileHeaderView: View {
 
             // Display Name and Handle
             VStack(spacing: 4) {
-                Text(profile.displayName.orIfEmpty(profile.handle))
-                    .font(.title2.weight(.bold))
-                    .foregroundColor(.primary)
-                    .accessibilityIdentifier("profile-display-name")
-                    .accessibilityAddTraits(.isHeader)
-                    .accessibilityLabel("Display name: \(profile.displayName.orIfEmpty(profile.handle))")
+                HStack(spacing: 6) {
+                    Text(profile.displayName.orIfEmpty(profile.handle))
+                        .font(.title2.weight(.bold))
+                        .foregroundColor(.primary)
+                        .accessibilityIdentifier("profile-display-name")
+                        .accessibilityAddTraits(.isHeader)
+                        .accessibilityLabel("Display name: \(profile.displayName.orIfEmpty(profile.handle))")
+
+                    if profile.isVerified == true {
+                        VerifiedBadge(size: .large)
+                    }
+                }
 
                 Text("@\(profile.handle)")
                     .font(.body)

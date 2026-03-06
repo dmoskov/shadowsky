@@ -128,12 +128,17 @@ struct PostCardView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
-                        if let displayName = post.post.author.displayName, !displayName.isEmpty {
-                            Text(displayName)
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.primary)
-                                .lineLimit(1)
+                        HStack(spacing: 4) {
+                            if let displayName = post.post.author.displayName, !displayName.isEmpty {
+                                Text(displayName)
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary)
+                                    .lineLimit(1)
+                            }
+                            if post.post.author.isVerified {
+                                VerifiedBadge(size: .medium)
+                            }
                         }
                         Text("@\(post.post.author.handle)")
                             .font(.caption)

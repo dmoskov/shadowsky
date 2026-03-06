@@ -16,6 +16,7 @@ interface SerializedNotificationAuthor {
   handle: string;
   displayName?: string;
   avatar?: string;
+  isVerified?: boolean;
 }
 
 interface SerializedNotificationFacetIndex {
@@ -94,6 +95,7 @@ interface SerializedNotificationUser {
   handle: string;
   displayName?: string;
   avatar?: string;
+  isVerified?: boolean;
 }
 
 interface SerializedAggregatedNotification {
@@ -150,6 +152,7 @@ function serializeNotificationAuthor(author: any): SerializedNotificationAuthor 
     handle: author.handle,
     displayName: author.displayName,
     avatar: author.avatar,
+    isVerified: author.verification?.verifiedStatus === 'valid' || undefined,
   };
 }
 
@@ -370,6 +373,7 @@ function serializeProcessedNotifications(
           handle: user.handle,
           displayName: user.displayName,
           avatar: user.avatar,
+          isVerified: (user as any).verification?.verifiedStatus === 'valid' || undefined,
         })),
         latestTimestamp: item.latestTimestamp,
         notifications: item.notifications.map(n => serializeSingleNotification(n, postMap)),

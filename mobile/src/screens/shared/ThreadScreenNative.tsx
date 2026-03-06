@@ -52,6 +52,7 @@ function serializeThreadNode(node: any): any {
         handle: post.author.handle,
         displayName: post.author.displayName,
         avatar: post.author.avatar,
+        isVerified: (post.author as any).verification?.verifiedStatus === 'valid' || undefined,
       },
       record: {
         text: record?.text || '',

@@ -591,7 +591,8 @@ class ThreadState: ObservableObject {
                 did: authorData["did"] as? String ?? "",
                 handle: authorData["handle"] as? String ?? "",
                 displayName: authorData["displayName"] as? String,
-                avatar: authorData["avatar"] as? String
+                avatar: authorData["avatar"] as? String,
+                isVerified: authorData["isVerified"] as? Bool ?? false
             ),
             record: ThreadRecord(
                 text: recordData["text"] as? String ?? "",
