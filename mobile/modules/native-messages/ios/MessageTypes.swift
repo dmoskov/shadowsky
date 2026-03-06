@@ -58,6 +58,31 @@ struct SearchResult: Identifiable {
     let matchedMessageSentAt: String?
 }
 
+// MARK: - Message Reaction
+
+struct MessageReaction: Identifiable {
+    let id: String // emoji
+    let emoji: String
+    let count: Int
+    let userDids: [String]
+
+    init(emoji: String, count: Int, userDids: [String]) {
+        self.id = emoji
+        self.emoji = emoji
+        self.count = count
+        self.userDids = userDids
+    }
+}
+
+// MARK: - Link Preview
+
+struct MessageLinkPreview {
+    let url: String
+    let title: String?
+    let description: String?
+    let imageUrl: String?
+}
+
 // MARK: - Message
 
 struct Message: Identifiable {
@@ -66,6 +91,18 @@ struct Message: Identifiable {
     let text: String
     let sentAt: String
     let senderDid: String
+    let reactions: [MessageReaction]
+    let linkPreview: MessageLinkPreview?
+
+    init(id: String, rev: String, text: String, sentAt: String, senderDid: String, reactions: [MessageReaction] = [], linkPreview: MessageLinkPreview? = nil) {
+        self.id = id
+        self.rev = rev
+        self.text = text
+        self.sentAt = sentAt
+        self.senderDid = senderDid
+        self.reactions = reactions
+        self.linkPreview = linkPreview
+    }
 }
 
 // MARK: - Messages State
@@ -76,11 +113,13 @@ class MessagesDataState: ObservableObject {
     @Published var messages: [Message] = []
     @Published var searchResults: [SearchResult] = []
     @Published var hasReceivedConversations: Bool = false
+    @Published var isOtherTyping: Bool = false
 
     private var conversationsObserver: NSObjectProtocol?
     private var messagesObserver: NSObjectProtocol?
     private var clearObserver: NSObjectProtocol?
     private var searchResultsObserver: NSObjectProtocol?
+    private var typingObserver: NSObjectProtocol?
 
     func startObserving() {
         conversationsObserver = NotificationCenter.default.addObserver(
@@ -117,6 +156,16 @@ class MessagesDataState: ObservableObject {
             }
         }
 
+        typingObserver = NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("MessagesBridgeTypingUpdated"),
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            if let isTyping = notification.userInfo?["isTyping"] as? Bool {
+                self?.isOtherTyping = isTyping
+            }
+        }
+
         clearObserver = NotificationCenter.default.addObserver(
             forName: NSNotification.Name("MessagesBridgeDataCleared"),
             object: nil,
@@ -127,6 +176,7 @@ class MessagesDataState: ObservableObject {
             self?.messages = []
             self?.searchResults = []
             self?.hasReceivedConversations = false
+            self?.isOtherTyping = false
         }
     }
 
@@ -146,6 +196,10 @@ class MessagesDataState: ObservableObject {
         if let observer = searchResultsObserver {
             NotificationCenter.default.removeObserver(observer)
             searchResultsObserver = nil
+        }
+        if let observer = typingObserver {
+            NotificationCenter.default.removeObserver(observer)
+            typingObserver = nil
         }
         if let observer = clearObserver {
             NotificationCenter.default.removeObserver(observer)
@@ -206,12 +260,39 @@ class MessagesDataState: ObservableObject {
     static func parseMessage(from data: [String: Any]) -> Message? {
         guard let id = data["id"] as? String else { return nil }
 
+        // Parse reactions
+        var reactions: [MessageReaction] = []
+        if let reactionsData = data["reactions"] as? [[String: Any]] {
+            reactions = reactionsData.compactMap { reactionData in
+                guard let emoji = reactionData["emoji"] as? String else { return nil }
+                return MessageReaction(
+                    emoji: emoji,
+                    count: reactionData["count"] as? Int ?? 1,
+                    userDids: reactionData["userDids"] as? [String] ?? []
+                )
+            }
+        }
+
+        // Parse link preview
+        var linkPreview: MessageLinkPreview?
+        if let previewData = data["linkPreview"] as? [String: Any],
+           let url = previewData["url"] as? String {
+            linkPreview = MessageLinkPreview(
+                url: url,
+                title: previewData["title"] as? String,
+                description: previewData["description"] as? String,
+                imageUrl: previewData["imageUrl"] as? String
+            )
+        }
+
         return Message(
             id: id,
             rev: data["rev"] as? String ?? "",
             text: data["text"] as? String ?? "",
             sentAt: data["sentAt"] as? String ?? "",
-            senderDid: data["senderDid"] as? String ?? ""
+            senderDid: data["senderDid"] as? String ?? "",
+            reactions: reactions,
+            linkPreview: linkPreview
         )
     }
 }

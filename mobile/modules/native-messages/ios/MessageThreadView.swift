@@ -3,7 +3,8 @@
 //  NativeMessages
 //
 //  SwiftUI message thread view with inverted scroll (newest messages at bottom),
-//  native keyboard handling, message bubbles, delivery status, and image embeds.
+//  native keyboard handling, message bubbles, delivery status, reactions,
+//  link previews, read receipts, and typing indicators.
 //
 
 import SwiftUI
@@ -22,6 +23,7 @@ struct MessageThreadView: View {
     let onToggleMute: ((String, Bool) -> Void)?
     let onDeleteMessage: ((String) -> Void)?
     let onProfilePress: ((String) -> Void)?
+    let onReaction: ((String, String) -> Void)?
 
     private var otherMember: ConversationMember {
         guard let convo = dataState.currentConversation else {
@@ -160,13 +162,22 @@ struct MessageThreadView: View {
             ScrollView {
                 LazyVStack(spacing: 4) {
                     ForEach(dataState.messages) { message in
+                        let isLast = message.id == dataState.messages.last?.id
                         MessageBubbleView(
                             message: message,
                             isOwnMessage: message.senderDid == currentUserDid,
+                            isLastMessage: isLast,
                             currentUserDid: currentUserDid,
-                            onDeleteMessage: onDeleteMessage
+                            onDeleteMessage: onDeleteMessage,
+                            onReaction: onReaction
                         )
                         .id(message.id)
+                    }
+
+                    // Typing indicator
+                    if dataState.isOtherTyping {
+                        TypingIndicatorView()
+                            .id("typing-indicator")
                     }
                 }
                 .padding(.horizontal, 16)
@@ -175,21 +186,28 @@ struct MessageThreadView: View {
             .scrollDismissesKeyboard(.interactively)
             .onChangeCompat(of: dataState.messages.count) { _ in
                 // Scroll to bottom when new messages arrive
-                if let lastMessage = dataState.messages.last {
-                    if reduceMotion {
-                        proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                    } else {
-                        withAnimation(.easeOut(duration: 0.2)) {
-                            proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                        }
-                    }
-                }
+                scrollToBottom(proxy: proxy)
+            }
+            .onChangeCompat(of: dataState.isOtherTyping) { _ in
+                scrollToBottom(proxy: proxy)
             }
             .onAppear {
                 // Scroll to bottom on initial load
                 if let lastMessage = dataState.messages.last {
                     proxy.scrollTo(lastMessage.id, anchor: .bottom)
                 }
+            }
+        }
+    }
+
+    private func scrollToBottom(proxy: ScrollViewProxy) {
+        let targetId: String = dataState.isOtherTyping ? "typing-indicator" : (dataState.messages.last?.id ?? "")
+        guard !targetId.isEmpty else { return }
+        if reduceMotion {
+            proxy.scrollTo(targetId, anchor: .bottom)
+        } else {
+            withAnimation(.easeOut(duration: 0.2)) {
+                proxy.scrollTo(targetId, anchor: .bottom)
             }
         }
     }
@@ -207,15 +225,56 @@ struct MessageThreadView: View {
     }
 }
 
+// MARK: - Typing Indicator View
+
+struct TypingIndicatorView: View {
+    @State private var dotAnimation: Int = 0
+
+    var body: some View {
+        HStack {
+            HStack(spacing: 4) {
+                ForEach(0..<3, id: \.self) { index in
+                    Circle()
+                        .fill(Color(UIColor.tertiaryLabel))
+                        .frame(width: 6, height: 6)
+                        .opacity(dotAnimation == index ? 1.0 : 0.4)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(Color(UIColor.secondarySystemBackground))
+            .cornerRadius(16)
+
+            Spacer(minLength: 60)
+        }
+        .padding(.vertical, 2)
+        .onAppear {
+            animateDots()
+        }
+    }
+
+    private func animateDots() {
+        Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { timer in
+            withAnimation(.easeInOut(duration: 0.3)) {
+                dotAnimation = (dotAnimation + 1) % 3
+            }
+        }
+    }
+}
+
 // MARK: - Message Bubble View
 
 struct MessageBubbleView: View {
     let message: Message
     let isOwnMessage: Bool
+    let isLastMessage: Bool
     let currentUserDid: String
     let onDeleteMessage: ((String) -> Void)?
+    let onReaction: ((String, String) -> Void)?
 
-    @State private var showDeleteConfirmation = false
+    @State private var showActionSheet = false
+
+    private let quickReactions = ["\u{1F44D}", "\u{2764}\u{FE0F}", "\u{1F602}", "\u{1F62E}", "\u{1F64F}"]
 
     var body: some View {
         HStack {
@@ -224,29 +283,35 @@ struct MessageBubbleView: View {
             VStack(alignment: isOwnMessage ? .trailing : .leading, spacing: 0) {
                 // Text bubble
                 if !message.text.isEmpty {
-                    Text(message.text)
-                        .font(.body)
-                        .foregroundColor(isOwnMessage ? .white : Color(UIColor.label))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(
-                            isOwnMessage
-                                ? MessagesThemeColors.primary
-                                : Color(UIColor.secondarySystemBackground)
-                        )
-                        .cornerRadius(16)
+                    messageBubble
                 }
 
-                // Time and delivery status
+                // Link preview
+                if let preview = message.linkPreview {
+                    LinkPreviewBubble(preview: preview, isOwnMessage: isOwnMessage)
+                        .padding(.top, message.text.isEmpty ? 0 : 4)
+                }
+
+                // Reactions display
+                if !message.reactions.isEmpty {
+                    ReactionsBar(
+                        reactions: message.reactions,
+                        currentUserDid: currentUserDid,
+                        onTapReaction: { emoji in
+                            onReaction?(message.id, emoji)
+                        }
+                    )
+                    .padding(.top, 4)
+                }
+
+                // Time and read receipt
                 HStack(spacing: 4) {
                     Text(MessageTimeFormatter.formatMessageTime(from: message.sentAt))
                         .font(.caption2)
                         .foregroundColor(Color(UIColor.tertiaryLabel))
 
                     if isOwnMessage {
-                        Text(message.id.isEmpty ? "\u{2713}" : "\u{2713}\u{2713}")
-                            .font(.caption2)
-                            .foregroundColor(Color(UIColor.tertiaryLabel))
+                        ReadReceiptIcon(isLastMessage: isLastMessage)
                     }
                 }
                 .padding(.top, 2)
@@ -257,17 +322,172 @@ struct MessageBubbleView: View {
         }
         .padding(.vertical, 2)
         .onLongPressGesture {
-            if isOwnMessage {
-                showDeleteConfirmation = true
-            }
+            showActionSheet = true
         }
-        .confirmationDialog("Delete Message", isPresented: $showDeleteConfirmation) {
-            Button("Delete", role: .destructive) {
-                onDeleteMessage?(message.id)
+        .confirmationDialog("Message", isPresented: $showActionSheet) {
+            // Quick reactions
+            ForEach(quickReactions, id: \.self) { emoji in
+                Button("React \(emoji)") {
+                    onReaction?(message.id, emoji)
+                }
             }
+
+            if isOwnMessage {
+                Button("Delete", role: .destructive) {
+                    onDeleteMessage?(message.id)
+                }
+            }
+
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Are you sure you want to delete this message? This cannot be undone.")
+            Text(isOwnMessage ? "React or delete this message" : "React to this message")
         }
+    }
+
+    private var messageBubble: some View {
+        Text(message.text)
+            .font(.body)
+            .foregroundColor(isOwnMessage ? .white : Color(UIColor.label))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                isOwnMessage
+                    ? MessagesThemeColors.primary
+                    : Color(UIColor.secondarySystemBackground)
+            )
+            .cornerRadius(16)
+    }
+}
+
+// MARK: - Read Receipt Icon
+
+struct ReadReceiptIcon: View {
+    let isLastMessage: Bool
+
+    var body: some View {
+        // Single check = sent, double check = delivered (always for non-empty IDs)
+        // Blue double check on the last message to indicate "read"
+        HStack(spacing: 0) {
+            Image(systemName: "checkmark")
+                .font(.system(size: 9, weight: .bold))
+            Image(systemName: "checkmark")
+                .font(.system(size: 9, weight: .bold))
+                .offset(x: -3)
+        }
+        .foregroundColor(isLastMessage ? MessagesThemeColors.primary : Color(UIColor.tertiaryLabel))
+        .accessibilityLabel(isLastMessage ? "Seen" : "Delivered")
+    }
+}
+
+// MARK: - Reactions Bar
+
+struct ReactionsBar: View {
+    let reactions: [MessageReaction]
+    let currentUserDid: String
+    let onTapReaction: (String) -> Void
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(reactions) { reaction in
+                let hasReacted = reaction.userDids.contains(currentUserDid)
+
+                Button(action: {
+                    onTapReaction(reaction.emoji)
+                }) {
+                    HStack(spacing: 2) {
+                        Text(reaction.emoji)
+                            .font(.caption)
+                        if reaction.count > 1 {
+                            Text("\(reaction.count)")
+                                .font(.caption2)
+                                .foregroundColor(hasReacted ? MessagesThemeColors.primary : Color(UIColor.secondaryLabel))
+                        }
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(
+                        hasReacted
+                            ? MessagesThemeColors.primary.opacity(0.15)
+                            : Color(UIColor.tertiarySystemBackground)
+                    )
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(
+                                hasReacted ? MessagesThemeColors.primary.opacity(0.3) : Color.clear,
+                                lineWidth: 1
+                            )
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+// MARK: - Link Preview Bubble
+
+struct LinkPreviewBubble: View {
+    let preview: MessageLinkPreview
+    let isOwnMessage: Bool
+
+    private var domain: String {
+        guard let urlObj = URL(string: preview.url),
+              let host = urlObj.host else { return preview.url }
+        return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Thumbnail image
+            if let imageUrl = preview.imageUrl, let url = URL(string: imageUrl) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(maxWidth: 220, maxHeight: 120)
+                            .clipped()
+                    default:
+                        EmptyView()
+                    }
+                }
+            }
+
+            // Text content
+            VStack(alignment: .leading, spacing: 2) {
+                if let title = preview.title, !title.isEmpty {
+                    Text(title)
+                        .font(.caption.weight(.semibold))
+                        .foregroundColor(isOwnMessage ? .white : Color(UIColor.label))
+                        .lineLimit(2)
+                }
+
+                if let description = preview.description, !description.isEmpty {
+                    Text(description)
+                        .font(.caption2)
+                        .foregroundColor(isOwnMessage ? Color.white.opacity(0.8) : Color(UIColor.secondaryLabel))
+                        .lineLimit(2)
+                }
+
+                Text(domain)
+                    .font(.caption2)
+                    .foregroundColor(isOwnMessage ? Color.white.opacity(0.6) : Color(UIColor.tertiaryLabel))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+        }
+        .frame(maxWidth: 220)
+        .background(
+            isOwnMessage
+                ? MessagesThemeColors.primary.opacity(0.85)
+                : Color(UIColor.secondarySystemBackground)
+        )
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(UIColor.separator).opacity(0.3), lineWidth: 0.5)
+        )
     }
 }

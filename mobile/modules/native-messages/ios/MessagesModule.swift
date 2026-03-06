@@ -54,7 +54,8 @@ public class MessagesModule: Module {
                 "onDeleteMessage",
                 "onMarkAsRead",
                 "onProfilePress",
-                "onSearchTextChange"
+                "onSearchTextChange",
+                "onReaction"
             )
         }
 
@@ -115,6 +116,16 @@ public class MessagesModule: Module {
             }
         }
 
+        Function("updateTypingStatus") { (isTyping: Bool) in
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("MessagesBridgeTypingUpdated"),
+                    object: nil,
+                    userInfo: ["isTyping": isTyping]
+                )
+            }
+        }
+
         Function("clearData") {
             DispatchQueue.main.async {
                 NotificationCenter.default.post(
@@ -171,6 +182,7 @@ class MessagesViewWrapper: ExpoView {
     private let onMarkAsRead = EventDispatcher()
     private let onProfilePress = EventDispatcher()
     private let onSearchTextChange = EventDispatcher()
+    private let onReaction = EventDispatcher()
 
     // Hosting controller
     private var hostingController: UIHostingController<MessagesView>?
@@ -270,6 +282,12 @@ class MessagesViewWrapper: ExpoView {
             onSearchTextChange: { [weak self] text in
                 self?.onSearchTextChange([
                     "text": text
+                ])
+            },
+            onReaction: { [weak self] messageId, emoji in
+                self?.onReaction([
+                    "messageId": messageId,
+                    "emoji": emoji
                 ])
             }
         )
