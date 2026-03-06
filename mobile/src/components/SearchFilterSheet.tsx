@@ -1,6 +1,8 @@
 import React, { useCallback, useMemo, useState } from "react";
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -209,7 +211,10 @@ function SearchFilterSheetInner({
         animationType="slide"
         onRequestClose={onClose}
       >
-        <View style={styles.overlay}>
+        <KeyboardAvoidingView
+          style={styles.overlay}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
           <BlurOverlay intensity={25} />
           <TouchableOpacity
             style={styles.overlayBackground}
@@ -446,7 +451,7 @@ function SearchFilterSheetInner({
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Language picker sub-modal */}

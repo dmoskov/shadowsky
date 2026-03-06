@@ -8,6 +8,8 @@ import {
   ScrollView,
   Modal,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {
   useBookmarkCollections,
@@ -79,7 +81,10 @@ function SaveToCollectionModalInner({
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <BlurOverlay intensity={25} />
         <View style={styles.modal}>
           <View style={styles.header}>
@@ -172,7 +177,7 @@ function SaveToCollectionModalInner({
             )}
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

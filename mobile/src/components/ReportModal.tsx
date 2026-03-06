@@ -8,6 +8,8 @@ import {
   ScrollView,
   TextInput,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {useTheme} from '../contexts/ThemeContext';
 import {BlurOverlay} from './BlurOverlay';
@@ -214,7 +216,10 @@ function ReportModalInner({
       transparent
       animationType="slide"
       onRequestClose={handleClose}>
-      <View style={styles.backdrop}>
+      <KeyboardAvoidingView
+        style={styles.backdrop}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <BlurOverlay intensity={25} />
         <View style={styles.container}>
           {isSubmitted ? (
@@ -384,7 +389,7 @@ function ReportModalInner({
             </>
           )}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
