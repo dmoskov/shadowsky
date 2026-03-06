@@ -509,6 +509,15 @@ export function ComposeScreenNative({
       const result = await createThread(threadOptions);
       setPostResult(true);
 
+      // Delete draft after successful thread publish
+      if (loadedDraftId) {
+        try {
+          await deleteDraft.mutateAsync(loadedDraftId);
+        } catch (error) {
+          logger.error("Failed to delete draft after posting thread:", error);
+        }
+      }
+
       if (result.failureCount > 0) {
         showToast(
           `Posted ${result.successCount} of ${validPosts.length} posts. Some posts failed.`,
@@ -530,7 +539,7 @@ export function ComposeScreenNative({
       imagePicker.setIsUploading(false);
       imagePicker.setUploadProgress(0);
     }
-  }, [threadPosts, selectedLanguages, replyTo]);
+  }, [threadPosts, selectedLanguages, replyTo, loadedDraftId]);
 
   const handleTextChange = useCallback((event: { nativeEvent: { text: string } }) => {
     setText(event.nativeEvent.text);
