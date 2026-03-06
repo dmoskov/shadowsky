@@ -35,37 +35,9 @@ import {
 } from "./hooks";
 import {fontSize} from '../../utils/typography';
 
-export interface ReplyToPost {
-  uri: string;
-  cid: string;
-  author: {
-    handle: string;
-    displayName?: string;
-    avatar?: string;
-  };
-  text: string;
-}
-
-export interface QuoteToPost {
-  uri: string;
-  cid: string;
-  author: {
-    handle: string;
-    displayName?: string;
-    avatar?: string;
-  };
-  text: string;
-}
-
-export interface ComposeScreenProps {
-  replyTo?: ReplyToPost;
-  quoteTo?: QuoteToPost;
-  draftId?: string;
-  sharedUrl?: string;
-  sharedText?: string;
-  initialText?: string;
-  sharedImages?: string[];
-}
+// Types are canonical in ComposeTypes.ts — re-export for backward compatibility
+export type { ReplyToPost, QuoteToPost, ComposeScreenProps } from "./ComposeTypes";
+import type { ComposeScreenProps } from "./ComposeTypes";
 
 export function ComposeScreen(props: ComposeScreenProps = {}) {
   const { colors } = useTheme();

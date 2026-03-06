@@ -4,7 +4,6 @@ export { HomeScreen } from "./home/HomeScreen";
 export { TimelineScreen } from "./home/TimelineScreen";
 export { ThreadScreenNative } from "./shared/ThreadScreenNative";
 export { SearchScreen } from "./search/SearchScreen";
-export { ComposeScreen } from "./compose/ComposeScreen";
 export { NotificationsScreen } from "./notifications/NotificationsScreen";
 export { BookmarksScreen } from "./profile/BookmarksScreen";
 export { MessagesScreen } from "./profile/MessagesScreen";

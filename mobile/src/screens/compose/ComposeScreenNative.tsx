@@ -48,7 +48,7 @@ import { preferencesService } from "../../services/preferences";
 import { triggerHaptic } from "../../utils/haptics";
 import { createLogger } from "../../utils/logger";
 import { fontSize } from "../../utils/typography";
-import type { ComposeScreenProps } from "./ComposeScreen";
+import type { ComposeScreenProps } from "./ComposeTypes";
 
 const logger = createLogger("ComposeScreenNative");
 

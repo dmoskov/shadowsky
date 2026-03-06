@@ -25,7 +25,7 @@ import { ComposerState, draftToComposerState } from "../../../services/drafts";
 import { preferencesService } from "../../../services/preferences";
 import { triggerHaptic } from "../../../utils/haptics";
 import { createLogger } from "../../../utils/logger";
-import type { ComposeScreenProps } from "../ComposeScreen";
+import type { ComposeScreenProps } from "../ComposeTypes";
 
 const logger = createLogger("ComposeScreen");
 export const MAX_POST_LENGTH = 300;

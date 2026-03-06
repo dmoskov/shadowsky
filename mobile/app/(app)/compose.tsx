@@ -3,10 +3,7 @@ import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 
-// Feature flag: set to true to use the native SwiftUI compose screen on iOS
-const USE_NATIVE_COMPOSE = false;
-
-// Lazy-load native compose to avoid eager requireNativeModule crash
+// Lazy-load native compose to avoid eager requireNativeModule crash on non-iOS
 const getComposeScreenNative = () =>
   require("../../src/screens/compose/ComposeScreenNative").ComposeScreenNative;
 
@@ -53,7 +50,8 @@ export default function ComposeRoute() {
     }
   }, [hasImages]);
 
-  const Compose = USE_NATIVE_COMPOSE && Platform.OS === "ios" ? getComposeScreenNative() : ComposeScreen;
+  // Use native SwiftUI compose on iOS, RN compose elsewhere
+  const Compose = Platform.OS === "ios" ? getComposeScreenNative() : ComposeScreen;
 
   return (
     <Compose
