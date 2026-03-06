@@ -3,15 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
-  ActivityIndicator,
   TouchableOpacity,
-  RefreshControl,
   Modal,
   Alert,
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useProfile,
   useFollowUser,
@@ -23,16 +21,22 @@ import {
 } from "../../hooks/api/useProfile";
 import { useAuthorFeed, useActorLikes, usePostThread } from "../../hooks/api/useFeed";
 import { useActorStarterPacks } from "../../hooks/api/useStarterPacks";
-import { PostCard } from "../../components/PostCard";
+import { useLikePost, useUnlikePost, useRepost, useDeleteRepost } from "../../hooks/api/usePosts";
+import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { AddToListModal } from "../../components/AddToListModal";
 import { ReportModal } from "../../components/ReportModal";
-import { AppBskyFeedDefs } from "@atproto/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { AuthorFeedFilter } from "../../services/atproto/feeds";
+import { useToast } from "../../contexts/ToastContext";
+import { useLightbox } from "../../contexts/LightboxContext";
+import type { LightboxImage } from "../../contexts/LightboxContext";
+import { AuthorFeedFilter, getPostThread as getPostThreadFn } from "../../services/atproto/feeds";
 import { dmService } from "../../services/dm-service";
 import { useSpotlightProfile } from "../../hooks/useSpotlightIndex";
+import { useAppNavigation } from "../../hooks/useNavigation";
+import { useNetworkStatus } from "../../hooks/useNetworkStatus";
 import { NativeProfileViewWithData } from "../../../modules/native-profile-view/src/NativeProfileView";
+import { NativeFeedList } from "../../../modules/native-feed-list";
 import {
   ProfileData,
   StarterPackData,
@@ -43,9 +47,30 @@ import { ProfileScreen } from "./ProfileScreen";
 import { InlineErrorBoundary } from "../../components/ui/InlineErrorBoundary";
 import { ProfileAIInsights } from "../../components/ProfileAIInsights";
 import { createLogger } from "../../utils/logger";
+import { triggerHaptic } from "../../utils/haptics";
+import { openLink } from "../../utils/browser";
+import { sharePost } from "../../utils/share";
 import {fontSize} from '../../utils/typography';
 
 const logger = createLogger("ProfileScreenNative");
+
+/**
+ * Extract post ID (rkey) from AT Protocol URI
+ * URI format: at://did/collection/rkey
+ */
+function getPostIdFromUri(uri: string): string {
+  const parts = uri.split("/");
+  return parts[parts.length - 1];
+}
+
+/**
+ * Extract DID from AT Protocol URI
+ * URI format: at://did:plc:xxx/collection/rkey
+ */
+function getDidFromUri(uri: string): string {
+  const parts = uri.split("/");
+  return parts[2] || "";
+}
 
 interface ProfileScreenProps {
   handle: string;
@@ -74,6 +99,11 @@ function ProfileScreenNativeIOS({
 }: ProfileScreenProps) {
   const { colors } = useTheme();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { navigateToThread, navigateToProfile, navigateToCompose } = useAppNavigation();
+  const { showToast } = useToast();
+  const { openLightbox } = useLightbox();
+  const { isConnected } = useNetworkStatus();
   const {
     data: profile,
     isLoading: isLoadingProfile,
@@ -82,7 +112,6 @@ function ProfileScreenNativeIOS({
   } = useProfile(handle);
   const [activeTab, setActiveTab] = useState<ProfileTab>("posts");
   const [isStartingConversation, setIsStartingConversation] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAddToList, setShowAddToList] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -114,23 +143,35 @@ function ProfileScreenNativeIOS({
     }
   };
 
-  const {
-    data: feedData,
-    isLoading: isLoadingFeed,
-    fetchNextPage: fetchNextFeedPage,
-    hasNextPage: hasNextFeedPage,
-    isFetchingNextPage: isFetchingNextFeedPage,
-    refetch: refetchFeed,
-  } = useAuthorFeed(handle, getFilter());
+  // Feed queries — NativeFeedList handles serialization, pagination, and refresh
+  const feedQuery = useAuthorFeed(handle, getFilter());
+  const likesQuery = useActorLikes(handle);
+  const activeQuery = activeTab === "likes" ? likesQuery : feedQuery;
 
-  const {
-    data: likesData,
-    isLoading: isLoadingLikes,
-    fetchNextPage: fetchNextLikesPage,
-    hasNextPage: hasNextLikesPage,
-    isFetchingNextPage: isFetchingNextLikesPage,
-    refetch: refetchLikes,
-  } = useActorLikes(handle);
+  // Build a URI -> post lookup for action handlers that need full post data
+  const flatPosts = useMemo(
+    () => activeQuery.data?.pages.flatMap((page) => page.feed) ?? [],
+    [activeQuery.data?.pages],
+  );
+
+  const postsByUri = useMemo(() => {
+    const map = new Map<string, (typeof flatPosts)[number]>();
+    for (const p of flatPosts) {
+      map.set(p.post.uri, p);
+    }
+    return map;
+  }, [flatPosts]);
+
+  // Post interaction hooks
+  const likePost = useLikePost();
+  const unlikePost = useUnlikePost();
+  const repostMutation = useRepost();
+  const deleteRepostMutation = useDeleteRepost();
+  const { toggleBookmark, bookmarks } = useBookmarks();
+
+  const bookmarkedPostUris = useMemo(() => {
+    return new Set(bookmarks.map(b => b.postUri));
+  }, [bookmarks]);
 
   const { account } = useAuth();
   const followMutation = useFollowUser();
@@ -146,7 +187,7 @@ function ProfileScreenNativeIOS({
   const { data: pinnedPostThread } = usePostThread(pinnedPostUri ?? "");
   const pinnedPost =
     pinnedPostThread && "post" in pinnedPostThread
-      ? (pinnedPostThread.post as AppBskyFeedDefs.PostView)
+      ? (pinnedPostThread.post as any)
       : null;
 
   const isOwnProfile = account?.handle === handle;
@@ -231,9 +272,9 @@ function ProfileScreenNativeIOS({
       pinnedPost
         ? {
             uri: pinnedPost.uri,
-            authorHandle: (pinnedPost.author as any)?.handle || "",
-            authorDisplayName: (pinnedPost.author as any)?.displayName,
-            authorAvatar: (pinnedPost.author as any)?.avatar,
+            authorHandle: pinnedPost.author?.handle || "",
+            authorDisplayName: pinnedPost.author?.displayName,
+            authorAvatar: pinnedPost.author?.avatar,
             text: (pinnedPost.record as any)?.text,
             indexedAt: pinnedPost.indexedAt,
             likeCount: pinnedPost.likeCount,
@@ -244,7 +285,7 @@ function ProfileScreenNativeIOS({
     [pinnedPost],
   );
 
-  // --- Event handlers ---
+  // --- Profile header event handlers ---
 
   const handleFollowToggle = useCallback(() => {
     if (!profile) return;
@@ -321,14 +362,12 @@ function ProfileScreenNativeIOS({
   );
 
   const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
     if (activeTab === "likes") {
-      await Promise.all([refetchProfile(), refetchLikes()]);
+      await Promise.all([refetchProfile(), likesQuery.refetch()]);
     } else {
-      await Promise.all([refetchProfile(), refetchFeed()]);
+      await Promise.all([refetchProfile(), feedQuery.refetch()]);
     }
-    setIsRefreshing(false);
-  }, [activeTab, refetchProfile, refetchFeed, refetchLikes]);
+  }, [activeTab, refetchProfile, feedQuery, likesQuery]);
 
   const handleBlock = useCallback(() => {
     if (!profile) return;
@@ -453,197 +492,215 @@ function ProfileScreenNativeIOS({
     [profile, muteMutation],
   );
 
-  // --- Post list logic ---
+  // --- NativeFeedList event handlers ---
 
-  const posts =
-    activeTab === "likes"
-      ? likesData?.pages.flatMap((page) => page.feed) ?? []
-      : feedData?.pages.flatMap((page) => page.feed) ?? [];
-
-  const isLoading = activeTab === "likes" ? isLoadingLikes : isLoadingFeed;
-  const fetchNextPage =
-    activeTab === "likes" ? fetchNextLikesPage : fetchNextFeedPage;
-  const hasNextPage =
-    activeTab === "likes" ? hasNextLikesPage : hasNextFeedPage;
-  const isFetchingNextPage =
-    activeTab === "likes" ? isFetchingNextLikesPage : isFetchingNextFeedPage;
-
-  const handleMentionPress = useCallback(
-    (mentionHandle: string, _did: string) => {
-      onNavigateToProfile?.(mentionHandle);
-    },
-    [onNavigateToProfile],
-  );
-
-  const handleHashtagPress = useCallback(
-    (tag: string) => {
-      router.push({
-        pathname: "/(tabs)/(search)",
-        params: { q: "#" + tag },
-      } as any);
-    },
-    [router],
-  );
-
-  const renderPost = useCallback(
-    ({ item }: { item: AppBskyFeedDefs.FeedViewPost }) => (
-      <InlineErrorBoundary silent context="ProfilePostCard">
-        <PostCard
-          post={item}
-          onPress={() => onNavigateToPost?.(item.post.uri)}
-          onPressProfile={(profileHandle) =>
-            onNavigateToProfile?.(profileHandle)
-          }
-          onMentionPress={handleMentionPress}
-          onHashtagPress={handleHashtagPress}
-        />
-      </InlineErrorBoundary>
-    ),
-    [onNavigateToPost, onNavigateToProfile, handleMentionPress, handleHashtagPress],
-  );
-
-  const handleEndReached = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
+  const handlePostPress = useCallback((event: { nativeEvent: { uri: string; handle: string } }) => {
+    const { uri, handle: postHandle } = event.nativeEvent;
+    const postId = getPostIdFromUri(uri);
+    const did = getDidFromUri(uri);
+    if (did) {
+      const threadUri = `at://${did}/app.bsky.feed.post/${postId}`;
+      queryClient.prefetchQuery({
+        queryKey: ['thread', threadUri],
+        queryFn: () => getPostThreadFn(threadUri),
+        staleTime: 2 * 60 * 1000,
+      });
     }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const renderFooter = useCallback(() => {
-    if (!isFetchingNextPage) return null;
-    return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color={colors.primary} />
-      </View>
-    );
-  }, [isFetchingNextPage, styles, colors]);
-
-  const renderEmpty = useCallback(() => {
-    if (isLoading) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      );
+    if (onNavigateToPost) {
+      onNavigateToPost(uri);
+    } else {
+      navigateToThread(postHandle, postId, did || undefined);
     }
-    const emptyMessage =
-      activeTab === "likes" ? "No likes yet" : "No posts yet";
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>{emptyMessage}</Text>
-      </View>
-    );
-  }, [isLoading, activeTab, styles, colors]);
+  }, [queryClient, onNavigateToPost, navigateToThread]);
 
-  const renderHeader = useCallback(() => {
-    return (
-      <>
-        <InlineErrorBoundary context="ProfileHeader" onRetry={refetchProfile}>
-          <NativeProfileViewWithData
-            profile={profileData}
-            starterPacks={starterPacksForNative}
-            pinnedPost={pinnedPostForNative}
-            isOwnProfile={isOwnProfile}
-            isLoading={isLoadingProfile}
-            error={profileError ?? null}
-            isFollowPending={followMutation.isPending || unfollowMutation.isPending}
-            isMessagePending={isStartingConversation}
-            onTabChange={handleTabChange}
-            onFollowToggle={handleFollowToggle}
-            onFollowersPress={handleFollowersPress}
-            onFollowingPress={handleFollowingPress}
-            onMessagePress={handleMessagePress}
-            onMenuPress={handleMenuPress}
-            onAddToList={handleAddToList}
-            onPinnedPostPress={handlePinnedPostPress}
-            onStarterPackPress={handleStarterPackPress}
-            onKnownFollowerPress={handleKnownFollowerPress}
-            onRefresh={handleRefresh}
-            style={styles.nativeHeader}
-          />
-        </InlineErrorBoundary>
-        {pinnedPost && activeTab === "posts" && (
-          <InlineErrorBoundary silent context="PinnedPost">
-            <View style={styles.pinnedPostContainer}>
-              <View style={styles.pinnedPostLabel}>
-                <Text style={styles.pinnedPostLabelText}>Pinned</Text>
-              </View>
-              <PostCard
-                post={
-                  {
-                    post: pinnedPost,
-                    reply: undefined,
-                  } as AppBskyFeedDefs.FeedViewPost
-                }
-                onPress={() => onNavigateToPost?.(pinnedPost.uri)}
-                onPressProfile={(profileHandle) =>
-                  onNavigateToProfile?.(profileHandle)
-                }
-                onMentionPress={handleMentionPress}
-                onHashtagPress={handleHashtagPress}
-              />
-            </View>
-          </InlineErrorBoundary>
-        )}
-        {activeTab === "posts" && (
-          <InlineErrorBoundary silent context="ProfileAIInsights">
-            <ProfileAIInsights handle={handle} />
-          </InlineErrorBoundary>
-        )}
-      </>
-    );
-  }, [
-    profileData,
-    starterPacksForNative,
-    pinnedPostForNative,
-    isOwnProfile,
-    isLoadingProfile,
-    profileError,
-    followMutation.isPending,
-    unfollowMutation.isPending,
-    isStartingConversation,
-    activeTab,
-    pinnedPost,
-    handle,
-    styles,
-    handleTabChange,
-    handleFollowToggle,
-    handleFollowersPress,
-    handleFollowingPress,
-    handleMessagePress,
-    handleMenuPress,
-    handleAddToList,
-    handlePinnedPostPress,
-    handleStarterPackPress,
-    handleKnownFollowerPress,
-    handleRefresh,
-    refetchProfile,
-    onNavigateToPost,
-    onNavigateToProfile,
-    handleMentionPress,
-    handleHashtagPress,
-  ]);
+  const handleProfilePress = useCallback((event: { nativeEvent: { handle: string } }) => {
+    const { handle: profileHandle } = event.nativeEvent;
+    if (onNavigateToProfile) {
+      onNavigateToProfile(profileHandle);
+    } else {
+      navigateToProfile(profileHandle);
+    }
+  }, [onNavigateToProfile, navigateToProfile]);
+
+  const handleLike = useCallback((event: { nativeEvent: { uri: string; cid: string; likeUri?: string } }) => {
+    const { uri, cid, likeUri } = event.nativeEvent;
+    triggerHaptic("light");
+    if (likeUri) {
+      unlikePost.mutate({ likeUri, postUri: uri });
+    } else {
+      likePost.mutate({ uri, cid });
+    }
+  }, [unlikePost, likePost]);
+
+  const handleRepost = useCallback((event: { nativeEvent: { uri: string; cid: string; repostUri?: string } }) => {
+    const { uri, cid, repostUri } = event.nativeEvent;
+    triggerHaptic("medium");
+    if (repostUri) {
+      deleteRepostMutation.mutate({ repostUri, postUri: uri });
+    } else {
+      repostMutation.mutate({ uri, cid });
+    }
+  }, [deleteRepostMutation, repostMutation]);
+
+  const handleReply = useCallback((event: { nativeEvent: { uri: string; cid: string; handle: string } }) => {
+    const { uri } = event.nativeEvent;
+    const postData = postsByUri.get(uri);
+    if (postData) {
+      const record = postData.post.record as any;
+      navigateToCompose({
+        replyTo: {
+          uri: postData.post.uri,
+          cid: postData.post.cid,
+          author: {
+            handle: postData.post.author.handle,
+            displayName: postData.post.author.displayName,
+            avatar: postData.post.author.avatar,
+          },
+          text: record?.text?.substring(0, 100) || '',
+        },
+      });
+    }
+  }, [postsByUri, navigateToCompose]);
+
+  const handleBookmark = useCallback((event: { nativeEvent: { uri: string } }) => {
+    const { uri } = event.nativeEvent;
+    const postData = postsByUri.get(uri);
+    if (postData) {
+      const isCurrentlyBookmarked = bookmarkedPostUris.has(uri);
+      triggerHaptic("light");
+      toggleBookmark(postData.post);
+      if (isCurrentlyBookmarked) {
+        showToast("Post removed from saved", { type: "info" });
+      } else {
+        showToast("Post saved", { type: "success" });
+      }
+    }
+  }, [postsByUri, bookmarkedPostUris, toggleBookmark, showToast]);
+
+  const handleMentionPress = useCallback((event: { nativeEvent: { handle: string; did: string } }) => {
+    const { handle: mentionHandle } = event.nativeEvent;
+    if (onNavigateToProfile) {
+      onNavigateToProfile(mentionHandle);
+    } else {
+      navigateToProfile(mentionHandle);
+    }
+  }, [onNavigateToProfile, navigateToProfile]);
+
+  const handleHashtagPress = useCallback((event: { nativeEvent: { tag: string } }) => {
+    const { tag } = event.nativeEvent;
+    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } } as any);
+  }, [router]);
+
+  const handleShare = useCallback((event: { nativeEvent: { uri: string } }) => {
+    const { uri } = event.nativeEvent;
+    const postData = postsByUri.get(uri);
+    if (postData) {
+      sharePost(postData);
+    }
+  }, [postsByUri]);
+
+  const handleImagePress = useCallback((event: { nativeEvent: { images: Array<{ thumb: string; fullsize: string; alt: string }>; index: number } }) => {
+    const { images, index } = event.nativeEvent;
+    const lightboxImages: LightboxImage[] = images.map(img => ({
+      thumb: img.thumb,
+      fullsize: img.fullsize,
+      alt: img.alt,
+    }));
+    openLightbox(lightboxImages, index);
+  }, [openLightbox]);
+
+  const handleLinkPress = useCallback((event: { nativeEvent: { uri: string } }) => {
+    const { uri } = event.nativeEvent;
+    openLink(uri, colors);
+  }, [colors]);
+
+  const handleQuotePress = useCallback((event: { nativeEvent: { uri: string; handle: string } }) => {
+    const { uri, handle: quoteHandle } = event.nativeEvent;
+    const postId = getPostIdFromUri(uri);
+    const did = getDidFromUri(uri);
+    navigateToThread(quoteHandle, postId, did || undefined);
+  }, [navigateToThread]);
+
+  const handleQuotePost = useCallback((event: { nativeEvent: { uri: string; cid: string; authorHandle: string; authorDisplayName?: string; authorAvatar?: string; text: string } }) => {
+    const { uri, cid, authorHandle, authorDisplayName, authorAvatar, text } = event.nativeEvent;
+    navigateToCompose({
+      quoteTo: {
+        uri,
+        cid,
+        author: {
+          handle: authorHandle,
+          displayName: authorDisplayName,
+          avatar: authorAvatar,
+        },
+        text: text?.substring(0, 150) || '',
+      },
+    });
+  }, [navigateToCompose]);
+
+  // Empty message varies by active tab
+  const emptyMessage = useMemo(() => {
+    switch (activeTab) {
+      case "likes": return "No likes yet";
+      case "media": return "No media posts yet";
+      case "replies": return "No replies yet";
+      default: return "No posts yet";
+    }
+  }, [activeTab]);
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={posts}
-        keyboardDismissMode="on-drag"
-        renderItem={renderPost}
-        keyExtractor={(item, index) => item.post.uri || `post-${index}`}
-        ListHeaderComponent={renderHeader}
-        ListFooterComponent={renderFooter}
-        ListEmptyComponent={renderEmpty}
-        onEndReached={handleEndReached}
-        onEndReachedThreshold={0.5}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
-          />
-        }
-        contentContainerStyle={posts.length === 0 ? styles.emptyList : undefined}
+      {/* Native SwiftUI profile header with tabs */}
+      <InlineErrorBoundary context="ProfileHeader" onRetry={refetchProfile}>
+        <NativeProfileViewWithData
+          profile={profileData}
+          starterPacks={starterPacksForNative}
+          pinnedPost={pinnedPostForNative}
+          isOwnProfile={isOwnProfile}
+          isLoading={isLoadingProfile}
+          error={profileError ?? null}
+          isFollowPending={followMutation.isPending || unfollowMutation.isPending}
+          isMessagePending={isStartingConversation}
+          onTabChange={handleTabChange}
+          onFollowToggle={handleFollowToggle}
+          onFollowersPress={handleFollowersPress}
+          onFollowingPress={handleFollowingPress}
+          onMessagePress={handleMessagePress}
+          onMenuPress={handleMenuPress}
+          onAddToList={handleAddToList}
+          onPinnedPostPress={handlePinnedPostPress}
+          onStarterPackPress={handleStarterPackPress}
+          onKnownFollowerPress={handleKnownFollowerPress}
+          onRefresh={handleRefresh}
+          style={styles.nativeHeader}
+        />
+      </InlineErrorBoundary>
+
+      {/* AI Insights — only on posts tab */}
+      {activeTab === "posts" && (
+        <InlineErrorBoundary silent context="ProfileAIInsights">
+          <ProfileAIInsights handle={handle} />
+        </InlineErrorBoundary>
+      )}
+
+      {/* Native SwiftUI feed list — replaces RN FlatList + PostCard */}
+      <NativeFeedList
+        query={activeQuery}
+        bookmarkedPostUris={bookmarkedPostUris}
+        isOnline={isConnected}
+        emptyMessage={emptyMessage}
+        onPostPress={handlePostPress}
+        onProfilePress={handleProfilePress}
+        onLike={handleLike}
+        onRepost={handleRepost}
+        onReply={handleReply}
+        onBookmark={handleBookmark}
+        onMentionPress={handleMentionPress}
+        onHashtagPress={handleHashtagPress}
+        onShare={handleShare}
+        onImagePress={handleImagePress}
+        onLinkPress={handleLinkPress}
+        onQuotePress={handleQuotePress}
+        onQuotePost={handleQuotePost}
       />
 
       {profile && showAddToList && (
@@ -738,43 +795,6 @@ function createStyles(colors: any) {
     },
     nativeHeader: {
       minHeight: 400,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      paddingVertical: 48,
-    },
-    emptyContainer: {
-      paddingVertical: 48,
-      alignItems: "center",
-    },
-    emptyText: {
-      color: colors.textSecondary,
-      fontSize: fontSize.callout,
-    },
-    emptyList: {
-      flexGrow: 1,
-    },
-    footerLoader: {
-      paddingVertical: 16,
-      alignItems: "center",
-    },
-    pinnedPostContainer: {
-      borderBottomWidth: 1,
-      borderBottomColor: colors.borderLight,
-    },
-    pinnedPostLabel: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingHorizontal: 16,
-      paddingTop: 8,
-      gap: 6,
-    },
-    pinnedPostLabelText: {
-      color: colors.textSecondary,
-      fontSize: fontSize.caption1,
-      fontWeight: "600",
     },
     menuOverlay: {
       flex: 1,
