@@ -23,6 +23,7 @@ import { openLink } from "../../utils/browser";
 import { sharePost } from "../../utils/share";
 import { useLightbox } from "../../contexts/LightboxContext";
 import type { LightboxImage } from "../../contexts/LightboxContext";
+import { useScrollChrome } from "../../contexts/ScrollChromeContext";
 import { createLogger } from "../../utils/logger";
 import {fontSize} from '../../utils/typography';
 
@@ -67,6 +68,7 @@ export function HomeScreen() {
   const { openLightbox } = useLightbox();
   const queryClient = useQueryClient();
   const scrollRef = useRef<any>(null);
+  const { chromeVisible, onScrollActivity, showChrome } = useScrollChrome();
 
   // Collapsible header animation
   const totalHeaderHeight = insets.top + NAV_BAR_HEIGHT + FEED_PICKER_HEIGHT;
@@ -74,45 +76,58 @@ export function HomeScreen() {
   const lastScrollY = useRef(0);
   const isHeaderHidden = useRef(false);
 
-  const showHeader = useCallback(() => {
-    if (isHeaderHidden.current) {
-      isHeaderHidden.current = false;
-      Animated.timing(headerTranslateY, {
-        toValue: 0,
-        duration: 220,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [headerTranslateY]);
+  // FAB animation
+  const fabOpacity = useRef(new Animated.Value(1)).current;
 
-  const hideHeader = useCallback(() => {
-    if (!isHeaderHidden.current) {
+  // Sync header + FAB animations with chrome visibility from context
+  useEffect(() => {
+    if (chromeVisible && isHeaderHidden.current) {
+      isHeaderHidden.current = false;
+      Animated.parallel([
+        Animated.timing(headerTranslateY, {
+          toValue: 0,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fabOpacity, {
+          toValue: 1,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else if (!chromeVisible && !isHeaderHidden.current) {
       isHeaderHidden.current = true;
-      Animated.timing(headerTranslateY, {
-        toValue: -totalHeaderHeight,
-        duration: 220,
-        useNativeDriver: true,
-      }).start();
+      Animated.parallel([
+        Animated.timing(headerTranslateY, {
+          toValue: -totalHeaderHeight,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fabOpacity, {
+          toValue: 0,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
-  }, [headerTranslateY, totalHeaderHeight]);
+  }, [chromeVisible, headerTranslateY, fabOpacity, totalHeaderHeight]);
 
   const handleScroll = useCallback((event: { nativeEvent: { y: number } }) => {
     const y = event.nativeEvent.y;
     const diff = y - lastScrollY.current;
     lastScrollY.current = y;
 
-    // Always show header when near top
+    // Always show chrome when near top
     if (y <= SCROLL_THRESHOLD) {
-      showHeader();
+      showChrome();
       return;
     }
 
-    if (diff > SCROLL_THRESHOLD) {
-      hideHeader();
-    } else if (diff < -SCROLL_THRESHOLD) {
-      showHeader();
+    // Any meaningful scroll activity hides chrome and resets idle timer
+    if (Math.abs(diff) > SCROLL_THRESHOLD) {
+      onScrollActivity();
     }
-  }, [showHeader, hideHeader]);
+  }, [showChrome, onScrollActivity]);
 
   // Compute bookmarked post URIs for the native feed list
   const bookmarkedPostUris = useMemo(() => {
@@ -180,13 +195,13 @@ export function HomeScreen() {
         triggerHaptic("medium");
         scrollRef.current?.scrollToTop();
         scrollRef.current?.refresh();
-        showHeader();
+        showChrome();
         lastFeedTapRef.current = null;
       } else {
         // Single tap on active feed: scroll to top
         triggerHaptic("light");
         scrollRef.current?.scrollToTop();
-        showHeader();
+        showChrome();
         lastFeedTapRef.current = { feedUri, time: now };
       }
     } else {
@@ -476,23 +491,28 @@ export function HomeScreen() {
       </Animated.View>
 
       {/* Compose FAB */}
-      <TouchableOpacity
-        testID="compose-fab"
+      <Animated.View
         style={[
           styles.fab,
-          { backgroundColor: colors.primary, bottom: insets.bottom + 20 },
+          { backgroundColor: colors.primary, bottom: insets.bottom + 20, opacity: fabOpacity },
           elevation.high,
         ]}
-        onPress={() => {
-          triggerHaptic("light");
-          navigateToCompose();
-        }}
-        activeOpacity={0.8}
-        accessibilityLabel="Compose new post"
-        accessibilityRole="button"
+        pointerEvents={chromeVisible ? "auto" : "none"}
       >
-        <PenIcon size={24} color="#ffffff" />
-      </TouchableOpacity>
+        <TouchableOpacity
+          testID="compose-fab"
+          style={styles.fabInner}
+          onPress={() => {
+            triggerHaptic("light");
+            navigateToCompose();
+          }}
+          activeOpacity={0.8}
+          accessibilityLabel="Compose new post"
+          accessibilityRole="button"
+        >
+          <PenIcon size={24} color="#ffffff" />
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 }
@@ -596,9 +616,14 @@ function createStyles(colors: any) {
       width: 56,
       height: 56,
       borderRadius: 28,
+      zIndex: 10,
+    },
+    fabInner: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
       justifyContent: 'center',
       alignItems: 'center',
-      zIndex: 10,
     },
   });
 }
