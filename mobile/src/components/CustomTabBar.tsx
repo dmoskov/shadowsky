@@ -1,8 +1,9 @@
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { StackActions } from "@react-navigation/native";
 import { BlurView } from "expo-blur";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Animated,
   Pressable,
   StyleSheet,
   Text,
@@ -11,6 +12,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePreferences } from "../contexts/PreferencesContext";
+import { useScrollChrome } from "../contexts/ScrollChromeContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { useUnreadCount } from "../hooks/api/useNotifications";
 import { triggerHaptic } from "../utils/haptics";
@@ -70,6 +72,19 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const [customizerVisible, setCustomizerVisible] = useState(false);
+  const { chromeVisible, showChrome } = useScrollChrome();
+
+  // Animate tab bar slide in/out
+  const tabBarTranslateY = useRef(new Animated.Value(0)).current;
+  const TAB_BAR_HEIGHT = 60 + Math.max(insets.bottom, 8);
+
+  useEffect(() => {
+    Animated.timing(tabBarTranslateY, {
+      toValue: chromeVisible ? 0 : TAB_BAR_HEIGHT,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
+  }, [chromeVisible, tabBarTranslateY, TAB_BAR_HEIGHT]);
 
   const tabBarItems = preferences?.tabBarItems ?? [
     "home",
@@ -91,6 +106,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const handleTabPress = useCallback(
     (itemId: string) => {
       triggerHaptic("light");
+      showChrome();
 
       // If this is a tab-group route, switch tabs
       const routeName = TAB_ROUTE_MAP[itemId];
@@ -126,7 +142,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         navigation.navigate(pushRoute as never);
       }
     },
-    [state, navigation],
+    [state, navigation, showChrome],
   );
 
   // Determine which tab-group route is currently focused
@@ -139,13 +155,14 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <>
-      <View
+      <Animated.View
         style={[
           tabStyles.container,
           {
             borderTopColor: colors.border,
             paddingBottom: Math.max(insets.bottom, 8),
             overflow: "hidden",
+            transform: [{ translateY: tabBarTranslateY }],
           },
         ]}
       >
@@ -186,7 +203,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             </Pressable>
           );
         })}
-      </View>
+      </Animated.View>
 
       <TabBarCustomizer
         visible={customizerVisible}
