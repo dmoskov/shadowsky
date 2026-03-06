@@ -28,7 +28,7 @@ export function BookmarksScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   useThreadSummaryPreGeneration({
-    enabled: preferences?.enableThreadSummaryPreGen,
+    enabled: preferences?.enableAISummaries !== false && preferences?.enableThreadSummaryPreGen,
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedCollectionId, setSelectedCollectionId] = useState<

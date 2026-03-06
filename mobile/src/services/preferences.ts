@@ -22,6 +22,7 @@ const SYNCABLE_KEYS: ReadonlySet<keyof AppPreferences> = new Set([
   "autoPlayVideos",
   "imageQuality",
   "autoGenerateAltText",
+  "enableAISummaries",
   "enableThreadSummaryPreGen",
   "profileVisibility",
   "allowMessages",
@@ -93,6 +94,7 @@ export interface AppPreferences {
   postLanguages: string[];
 
   // AI Features
+  enableAISummaries: boolean;
   autoGenerateAltText: boolean;
   enableThreadSummaryPreGen: boolean;
 
@@ -161,6 +163,7 @@ const DEFAULT_PREFERENCES: AppPreferences = {
   postLanguages: ["en"],
 
   // AI Features
+  enableAISummaries: true,
   autoGenerateAltText: false,
   enableThreadSummaryPreGen: true,
 

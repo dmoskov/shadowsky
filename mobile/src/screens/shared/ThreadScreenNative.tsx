@@ -13,6 +13,7 @@ import { ThreadSkeleton } from "../../components/ThreadSkeleton";
 import { ErrorState } from "../../components/ErrorState";
 import { getAtProtoClient } from "../../services/atproto/client";
 import { useTheme } from "../../contexts/ThemeContext";
+import { usePreferences } from "../../contexts/PreferencesContext";
 import { sharePost } from "../../utils/share";
 import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useToast } from "../../contexts/ToastContext";
@@ -228,6 +229,7 @@ function getSummaryFormat(postCount: number, totalEngagement: number): ThreadSum
 
 export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: ThreadScreenProps) {
   const { colors } = useTheme();
+  const { preferences } = usePreferences();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
 
@@ -344,8 +346,9 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
     return { posts, parentUris };
   }, [thread]);
 
-  // Determine if we should show a summary (5+ posts, matching JS behavior)
-  const shouldFetchSummary = threadPostData.posts.length >= MIN_POSTS_FOR_SUMMARY;
+  // Determine if we should show a summary (5+ posts, matching JS behavior, and setting enabled)
+  const aiSummariesEnabled = preferences?.enableAISummaries !== false;
+  const shouldFetchSummary = aiSummariesEnabled && threadPostData.posts.length >= MIN_POSTS_FOR_SUMMARY;
 
   // Calculate the active format
   const activeFormat: ThreadSummaryFormat = useMemo(() => {
