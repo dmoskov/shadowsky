@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, usePathname } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon, ChatBubbleIcon, SearchIcon, ImageIcon, BookmarkIcon } from "./icons";
+import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon, ChatBubbleIcon, SearchIcon, ImageIcon, BookmarkIcon, PenIcon } from "./icons";
 import { useUnreadMessageCount, useDraftCount } from "../hooks/api";
 import {fontSize} from '../utils/typography';
 
@@ -77,6 +77,13 @@ export function CustomDrawerContent() {
           icon={<HomeIcon size={20} color={pathname === "/" || pathname.startsWith("/(app)/(tabs)") ? colors.primary : colors.text} />}
           isActive={pathname === "/" || pathname.startsWith("/(app)/(tabs)")}
           onPress={() => router.push("/(app)/(tabs)/(home)")}
+          styles={styles}
+        />
+        <DrawerItem
+          label="Compose"
+          icon={<PenIcon size={20} color={pathname.includes("/compose") ? colors.primary : colors.text} />}
+          isActive={pathname.includes("/compose")}
+          onPress={() => router.push("/(app)/compose")}
           styles={styles}
         />
         <DrawerItem

@@ -837,6 +837,27 @@ describe('HomeScreen', () => {
     });
   });
 
+  // ─── Compose FAB ──────────────────────────────────────
+  describe('compose FAB', () => {
+    it('renders compose FAB button', () => {
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      expect(getByTestId('compose-fab')).toBeTruthy();
+    });
+
+    it('navigates to compose when FAB is pressed', () => {
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      fireEvent.press(getByTestId('compose-fab'));
+      expect(mockNavigateToCompose).toHaveBeenCalledTimes(1);
+    });
+
+    it('has correct accessibility label', () => {
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      const fab = getByTestId('compose-fab');
+      expect(fab.props.accessibilityLabel).toBe('Compose new post');
+      expect(fab.props.accessibilityRole).toBe('button');
+    });
+  });
+
   // ─── Mixed embed interactions ──────────────────────────
   describe('mixed embed interactions', () => {
     it('image tap opens lightbox, link tap opens browser on same post', () => {
