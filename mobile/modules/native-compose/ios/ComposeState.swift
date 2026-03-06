@@ -36,6 +36,9 @@ class NativeComposeState: ObservableObject {
     @Published var isPosting: Bool = false
     @Published var isUploading: Bool = false
 
+    // Connectivity state
+    @Published var isOffline: Bool = false
+
     // Language
     @Published var selectedLanguages: [String] = ["en"]
 
@@ -66,7 +69,7 @@ class NativeComposeState: ObservableObject {
     }
 
     var canPost: Bool {
-        if isPosting || isUploading { return false }
+        if isPosting || isUploading || isOffline { return false }
 
         if isThreadMode {
             let hasAnyContent = threadPosts.contains {
@@ -186,6 +189,7 @@ class NativeComposeState: ObservableObject {
         mentionSuggestions = []
         isPosting = false
         isUploading = false
+        isOffline = false
         draftId = nil
         editingAltTextIndex = nil
         tempAltText = ""

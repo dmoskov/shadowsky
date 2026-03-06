@@ -22,6 +22,7 @@ export type NativeComposeViewProps = ViewProps & {
   // State
   isPosting?: boolean;
   isUploading?: boolean;
+  isOffline?: boolean;
 
   // Navigation events
   onClose?: (event: { nativeEvent: Record<string, never> }) => void;
