@@ -85,6 +85,14 @@ jest.mock('../../../hooks/api/useFeed', () => ({
     isFetchingNextPage: false,
     refetch: jest.fn().mockResolvedValue({}),
   }),
+  usePostThread: () => ({ data: null }),
+}));
+
+jest.mock('../../../hooks/api/useTopPosts', () => ({
+  useTopPosts: () => ({
+    data: null,
+    isLoading: false,
+  }),
 }));
 
 jest.mock('../../../hooks/api/usePosts', () => ({

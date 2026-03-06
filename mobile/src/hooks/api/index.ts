@@ -12,3 +12,4 @@ export * from './useFeedGenerators';
 export * from './useSearchPosts';
 export * from './useStarterPacks';
 export * from './useMessageSearch';
+export * from './useTopPosts';
