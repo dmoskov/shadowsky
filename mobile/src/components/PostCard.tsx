@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import {AppBskyFeedDefs, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
 import {Avatar} from './Avatar';
-import {formatDistanceToNow} from 'date-fns';
+import {formatDistanceToNow} from '../i18n/format-date';
 import {ReplyIcon, RepostIcon, HeartIcon, BookmarkIcon, MoreIcon, SendIcon, TranslateIcon} from './icons';
 import {RichText} from '../utils/rich-text';
 import {useNetwork} from '../contexts/NetworkContext';

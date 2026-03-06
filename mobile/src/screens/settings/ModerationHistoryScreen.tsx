@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import {useTheme} from '../../contexts/ThemeContext';
 import { ChevronLeftIcon, BanIcon, VolumeXIcon, FlagIcon, TrashIcon } from '../../components/icons';
-import {formatDistanceToNow} from 'date-fns';
+import {formatDistanceToNow} from '../../i18n/format-date';
 import {
   getAllEntries,
   getStats,

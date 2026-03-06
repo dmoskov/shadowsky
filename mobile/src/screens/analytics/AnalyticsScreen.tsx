@@ -8,7 +8,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { format } from "date-fns";
+import { format } from "../../i18n/format-date";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAppNavigation } from "../../hooks/useNavigation";

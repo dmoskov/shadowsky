@@ -1,4 +1,4 @@
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "../../i18n/format-date";
 import { Image } from "expo-image";
 import { useCallback, useEffect, useState } from "react";
 import {

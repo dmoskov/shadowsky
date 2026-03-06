@@ -10,8 +10,10 @@ import {
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { usePreferences } from "../../contexts/PreferencesContext";
+import { useTranslation } from "../../hooks/useTranslation";
 import { ChevronLeftIcon } from '../../components/icons';
 import {fontSize} from '../../utils/typography';
+import { SUPPORTED_LOCALES } from "../../i18n";
 
 interface AccessibilitySettingsScreenProps {
   navigation: {
@@ -25,6 +27,7 @@ export function AccessibilitySettingsScreen({
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { preferences, updatePreference } = usePreferences();
+  const { t, changeLanguage } = useTranslation();
 
   if (!preferences) {
     return (
@@ -202,6 +205,57 @@ export function AccessibilitySettingsScreen({
           </View>
         </View>
 
+        {/* Language Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t("settings.language_label")}</Text>
+
+          <View style={styles.settingCard}>
+            <Text style={styles.settingDescription}>
+              {t("settings.language_description")}
+            </Text>
+            <View style={styles.languageOptions}>
+              {SUPPORTED_LOCALES.map((locale) => {
+                const isSelected = (preferences.appLanguage ?? "system") === locale.code;
+                return (
+                  <TouchableOpacity
+                    key={locale.code}
+                    style={[
+                      styles.languageOption,
+                      isSelected && styles.languageOptionSelected,
+                    ]}
+                    onPress={() => {
+                      updatePreference("appLanguage", locale.code);
+                      changeLanguage(locale.code);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={locale.label}
+                    accessibilityState={{ selected: isSelected }}
+                  >
+                    <Text
+                      style={[
+                        styles.languageOptionLabel,
+                        isSelected && styles.languageOptionLabelSelected,
+                      ]}
+                    >
+                      {locale.nativeLabel}
+                    </Text>
+                    {locale.code !== "system" && (
+                      <Text
+                        style={[
+                          styles.languageOptionSub,
+                          isSelected && styles.languageOptionSubSelected,
+                        ]}
+                      >
+                        {locale.label}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+
         {/* Info Box */}
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
@@ -318,6 +372,38 @@ function createStyles(colors: any) {
     },
     optionButtonTextSelected: {
       color: "#ffffff",
+    },
+    languageOptions: {
+      marginTop: 12,
+      gap: 8,
+    },
+    languageOption: {
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 8,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.surface,
+    },
+    languageOptionSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    languageOptionLabel: {
+      fontSize: fontSize.callout,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    languageOptionLabelSelected: {
+      color: "#ffffff",
+    },
+    languageOptionSub: {
+      fontSize: fontSize.footnote,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    languageOptionSubSelected: {
+      color: "rgba(255, 255, 255, 0.7)",
     },
     infoBox: {
       backgroundColor: colors.surface,

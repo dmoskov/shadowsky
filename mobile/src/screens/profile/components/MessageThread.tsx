@@ -6,7 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
 } from "react-native";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "../../../i18n/format-date";
 import { DmMessage } from "../../../services/dm-service";
 import { InlineErrorBoundary } from "../../../components/ui/InlineErrorBoundary";
 import {fontSize} from '../../../utils/typography';
