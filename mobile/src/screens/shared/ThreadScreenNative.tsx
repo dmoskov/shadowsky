@@ -2,9 +2,6 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import {
   View,
   StyleSheet,
-  Alert,
-  ActionSheetIOS,
-  Platform,
 } from "react-native";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useRouter } from "expo-router";
@@ -433,89 +430,31 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
   const handleRepost = (event: { nativeEvent: { uri: string; cid: string; repostUri?: string } }) => {
     const { uri, cid, repostUri } = event.nativeEvent;
 
-    // If already reposted, just unrepost
     if (repostUri) {
+      // Unrepost — native UI already selected this via the repost button
       triggerHaptic("medium");
       deleteRepost.mutate({ repostUri, postUri: uri });
-      return;
-    }
-
-    // Get post data from thread for author info
-    const postNode = findPostInThread(uri);
-    const postAuthor = postNode?.post.author;
-    const postRecord = postNode?.post.record as any;
-
-    // Show menu: Repost, Quote, or Share
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['Cancel', 'Repost', 'Quote', 'Share'],
-          cancelButtonIndex: 0,
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 1) {
-            // Repost
-            triggerHaptic("medium");
-            repost.mutate({ uri, cid });
-          } else if (buttonIndex === 2) {
-            // Quote - navigate to compose
-            navigateToCompose({
-              quoteTo: {
-                uri,
-                cid,
-                author: {
-                  handle: postAuthor?.handle || '',
-                  displayName: postAuthor?.displayName || '',
-                  avatar: postAuthor?.avatar || '',
-                },
-                text: postRecord?.text?.substring(0, 150) || '',
-              },
-            });
-          } else if (buttonIndex === 3) {
-            // Share
-            handleShare(event);
-          }
-        }
-      );
     } else {
-      // Android - use Alert
-      Alert.alert(
-        'Repost',
-        'Choose an option',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Repost',
-            onPress: () => {
-              triggerHaptic("medium");
-              repost.mutate({ uri, cid });
-            },
-          },
-          {
-            text: 'Quote',
-            onPress: () => {
-              navigateToCompose({
-                quoteTo: {
-                  uri,
-                  cid,
-                  author: {
-                    handle: postAuthor?.handle || '',
-                    displayName: postAuthor?.displayName || '',
-                    avatar: postAuthor?.avatar || '',
-                  },
-                  text: postRecord?.text?.substring(0, 150) || '',
-                },
-              });
-            },
-          },
-          {
-            text: 'Share',
-            onPress: () => handleShare(event),
-          },
-        ],
-        { cancelable: true }
-      );
+      // Repost — native UI already confirmed via the Repost/Quote menu
+      triggerHaptic("medium");
+      repost.mutate({ uri, cid });
     }
+  };
+
+  const handleQuotePost = (event: { nativeEvent: { uri: string; cid: string; authorHandle: string; authorDisplayName?: string; authorAvatar?: string; text: string } }) => {
+    const { uri, cid, authorHandle, authorDisplayName, authorAvatar, text } = event.nativeEvent;
+    navigateToCompose({
+      quoteTo: {
+        uri,
+        cid,
+        author: {
+          handle: authorHandle,
+          displayName: authorDisplayName,
+          avatar: authorAvatar,
+        },
+        text: text?.substring(0, 150) || '',
+      },
+    });
   };
 
   const handleReply = useCallback((_event: { nativeEvent: { uri: string; cid: string; handle: string } }) => {
@@ -714,6 +653,7 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
         onPressQuoteCount={handlePressQuoteCount}
         onSummaryModeChange={handleSummaryModeChange}
         onTranslate={handleTranslate}
+        onQuotePost={handleQuotePost}
         replyToHandle={rootPostAuthor?.handle}
         replyToUri={postUri}
         replyToCid={thread && AppBskyFeedDefs.isThreadViewPost(thread) ? thread.post.cid : undefined}

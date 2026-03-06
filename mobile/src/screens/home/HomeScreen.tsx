@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useCallback, useEffect } from "react";
-import { View, StyleSheet, Alert, ActionSheetIOS, Platform, ScrollView, TouchableOpacity, Text, Animated } from "react-native";
+import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Animated } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useScrollToTop, DrawerActions, useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -266,85 +266,32 @@ export function HomeScreen() {
   const handleRepost = useCallback((event: { nativeEvent: { uri: string; cid: string; repostUri?: string } }) => {
     const { uri, cid, repostUri } = event.nativeEvent;
 
-    // If already reposted, just unrepost
     if (repostUri) {
+      // Unrepost — native UI already selected this via the repost button
       triggerHaptic("medium");
       deleteRepost.mutate({ repostUri, postUri: uri });
-      return;
-    }
-
-    // Get post data for quote option
-    const postData = postsByUri.get(uri);
-
-    // Show menu: Repost or Quote
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['Cancel', 'Repost', 'Quote'],
-          cancelButtonIndex: 0,
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 1) {
-            // Repost
-            triggerHaptic("medium");
-            repost.mutate({ uri, cid });
-          } else if (buttonIndex === 2 && postData) {
-            // Quote
-            const record = postData.post.record as any;
-            navigateToCompose({
-              quoteTo: {
-                uri: postData.post.uri,
-                cid: postData.post.cid,
-                author: {
-                  handle: postData.post.author.handle,
-                  displayName: postData.post.author.displayName,
-                  avatar: postData.post.author.avatar,
-                },
-                text: record?.text?.substring(0, 150) || '',
-              },
-            });
-          }
-        }
-      );
     } else {
-      // Android - use Alert
-      Alert.alert(
-        'Repost',
-        'Choose an option',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Repost',
-            onPress: () => {
-              triggerHaptic("medium");
-              repost.mutate({ uri, cid });
-            },
-          },
-          {
-            text: 'Quote',
-            onPress: () => {
-              if (postData) {
-                const record = postData.post.record as any;
-                navigateToCompose({
-                  quoteTo: {
-                    uri: postData.post.uri,
-                    cid: postData.post.cid,
-                    author: {
-                      handle: postData.post.author.handle,
-                      displayName: postData.post.author.displayName,
-                      avatar: postData.post.author.avatar,
-                    },
-                    text: record?.text?.substring(0, 150) || '',
-                  },
-                });
-              }
-            },
-          },
-        ],
-        { cancelable: true }
-      );
+      // Repost — native UI already confirmed via the Repost/Quote menu
+      triggerHaptic("medium");
+      repost.mutate({ uri, cid });
     }
-  }, [deleteRepost, postsByUri, repost, navigateToCompose]);
+  }, [deleteRepost, repost]);
+
+  const handleQuotePost = useCallback((event: { nativeEvent: { uri: string; cid: string; authorHandle: string; authorDisplayName?: string; authorAvatar?: string; text: string } }) => {
+    const { uri, cid, authorHandle, authorDisplayName, authorAvatar, text } = event.nativeEvent;
+    navigateToCompose({
+      quoteTo: {
+        uri,
+        cid,
+        author: {
+          handle: authorHandle,
+          displayName: authorDisplayName,
+          avatar: authorAvatar,
+        },
+        text: text?.substring(0, 150) || '',
+      },
+    });
+  }, [navigateToCompose]);
 
   const handleReply = useCallback((event: { nativeEvent: { uri: string; cid: string; handle: string } }) => {
     const { uri } = event.nativeEvent;
@@ -519,6 +466,7 @@ export function HomeScreen() {
             onLinkPress={handleLinkPress}
             onImagePress={handleImagePress}
             onQuotePress={handleQuotePress}
+            onQuotePost={handleQuotePost}
             onScroll={handleScroll}
             emptyMessage="No posts in your timeline yet"
           />

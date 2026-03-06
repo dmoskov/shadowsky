@@ -42,6 +42,7 @@ export type ThreadViewProps = ViewProps & {
   onLinkPress?: (event: { nativeEvent: { uri: string } }) => void;
   onImagePress?: (event: { nativeEvent: { images: string; index: number } }) => void;
   onQuotePress?: (event: { nativeEvent: { uri: string; handle: string } }) => void;
+  onQuotePost?: (event: { nativeEvent: { uri: string; cid: string; authorHandle: string; authorDisplayName?: string; authorAvatar?: string; text: string } }) => void;
 
   // Composer events (native -> JS)
   onSendReply?: (event: { nativeEvent: { text: string; replyToUri?: string; replyToCid?: string } }) => void;

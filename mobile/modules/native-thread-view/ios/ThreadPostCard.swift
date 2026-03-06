@@ -74,6 +74,7 @@ struct ThreadPostCard: View {
     let onLinkPress: ((String) -> Void)?
     let onImagePress: (([ImageEmbedData], Int) -> Void)?
     let onQuotePress: ((String, String) -> Void)?
+    let onQuotePost: (() -> Void)?
 
     // Optimistic local state for instant feedback
     @State private var likeOverride: Bool? = nil
@@ -187,19 +188,50 @@ struct ThreadPostCard: View {
                     action: onReply
                 )
 
-                // Repost
-                ActionButton(
-                    iconName: "arrow.2.squarepath",
-                    count: displayRepostCount,
-                    isActive: isReposted,
-                    color: .green,
-                    action: {
-                        repostOverride = !isReposted
-                        repostCountOverride = displayRepostCount + (isReposted ? -1 : 1)
-                        onRepost?()
-                    },
-                    onPressCount: onPressRepostCount
-                )
+                // Repost / Quote menu
+                if isReposted {
+                    // Already reposted — tap to undo repost
+                    ActionButton(
+                        iconName: "arrow.2.squarepath",
+                        count: displayRepostCount,
+                        isActive: true,
+                        color: .green,
+                        action: {
+                            repostOverride = false
+                            repostCountOverride = displayRepostCount - 1
+                            onRepost?()
+                        },
+                        onPressCount: onPressRepostCount
+                    )
+                } else {
+                    // Not reposted — show menu with Repost and Quote options
+                    Menu {
+                        Button {
+                            repostOverride = true
+                            repostCountOverride = displayRepostCount + 1
+                            onRepost?()
+                        } label: {
+                            Label("Repost", systemImage: "arrow.2.squarepath")
+                        }
+                        Button {
+                            onQuotePost?()
+                        } label: {
+                            Label("Quote Post", systemImage: "quote.bubble")
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.2.squarepath")
+                                .font(.body)
+                            if displayRepostCount > 0 {
+                                Text("\(displayRepostCount)")
+                                    .font(.subheadline)
+                            }
+                        }
+                        .foregroundColor(.secondary)
+                        .frame(minWidth: 48, minHeight: 48)
+                        .contentShape(Rectangle())
+                    }
+                }
 
                 // Like
                 ActionButton(
@@ -248,6 +280,11 @@ struct ThreadPostCard: View {
                 onRepost?()
             } label: {
                 Label(isReposted ? "Undo Repost" : "Repost", systemImage: "arrow.2.squarepath")
+            }
+            Button {
+                onQuotePost?()
+            } label: {
+                Label("Quote Post", systemImage: "quote.bubble")
             }
             Button {
                 likeOverride = !isLiked
@@ -382,6 +419,7 @@ struct ThreadReplyView: View {
     let onLinkPress: ((String) -> Void)?
     let onImagePress: (([ImageEmbedData], Int) -> Void)?
     let onQuotePress: ((String, String) -> Void)?
+    let onQuotePost: ((String, String, String, String?, String?, String) -> Void)? // (uri, cid, handle, displayName?, avatar?, text)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -488,6 +526,16 @@ struct ThreadReplyView: View {
                         },
                         onQuotePress: { uri, handle in
                             onQuotePress?(uri, handle)
+                        },
+                        onQuotePost: {
+                            onQuotePost?(
+                                node.post.uri,
+                                node.post.cid,
+                                node.post.author.handle,
+                                node.post.author.displayName,
+                                node.post.author.avatar,
+                                node.post.record.text
+                            )
                         }
                     )
                 }
@@ -518,7 +566,8 @@ struct ThreadReplyView: View {
                         onTranslate: onTranslate,
                         onLinkPress: onLinkPress,
                         onImagePress: onImagePress,
-                        onQuotePress: onQuotePress
+                        onQuotePress: onQuotePress,
+                        onQuotePost: onQuotePost
                     )
                 }
             }

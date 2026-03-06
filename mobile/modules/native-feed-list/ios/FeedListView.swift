@@ -79,6 +79,7 @@ struct FeedListView: View {
     let onImagePress: (([ImageEmbedData], Int) -> Void)?
     let onLinkPress: ((String) -> Void)?
     let onQuotePress: ((String, String) -> Void)?
+    let onQuotePost: ((String, String, String, String?, String?, String) -> Void)? // (uri, cid, handle, displayName?, avatar?, text)
     let onScroll: ((CGFloat) -> Void)?
 
     // MARK: - Body
@@ -172,7 +173,17 @@ struct FeedListView: View {
                             onReport: nil,
                             onImagePress: onImagePress,
                             onLinkPress: onLinkPress,
-                            onQuotePress: onQuotePress
+                            onQuotePress: onQuotePress,
+                            onQuotePost: {
+                                onQuotePost?(
+                                    converted.sourcePost.post.uri,
+                                    converted.sourcePost.post.cid,
+                                    converted.sourcePost.post.author.handle,
+                                    converted.sourcePost.post.author.displayName,
+                                    converted.sourcePost.post.author.avatar,
+                                    converted.sourcePost.post.record.text
+                                )
+                            }
                         )
                         .id(converted.id)
                         .accessibilityIdentifier("feed-post-\(index)")
@@ -578,6 +589,7 @@ struct FeedListView_Previews: PreviewProvider {
             onImagePress: { images, index in print("Image: \(index)") },
             onLinkPress: { url in print("Link: \(url)") },
             onQuotePress: { uri, handle in print("Quote: \(uri)") },
+            onQuotePost: { uri, cid, handle, displayName, avatar, text in print("QuotePost: \(uri)") },
             onScroll: { offset in print("Scroll: \(offset)") }
         )
     }
