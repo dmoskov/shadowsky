@@ -54,6 +54,7 @@ interface PostCardProps {
   onPressLikeCount?: () => void;
   onPressRepostCount?: () => void;
   onPressQuoteCount?: () => void;
+  onQuotePost?: () => void;
 }
 
 function PostCardComponent({
@@ -78,6 +79,7 @@ function PostCardComponent({
   onPressQuoteCount: _onPressQuoteCount,
   onReport: _onReport,
   currentUserDid,
+  onQuotePost,
 }: PostCardProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -131,6 +133,7 @@ function PostCardComponent({
   );
 
   const isLiked = useMemo(() => !!postView.viewer?.like, [postView.viewer?.like]);
+  const isReposted = useMemo(() => !!postView.viewer?.repost, [postView.viewer?.repost]);
 
   const isOwnPost = useMemo(() => currentUserDid === author.did, [currentUserDid, author.did]);
 
@@ -263,34 +266,71 @@ function PostCardComponent({
   const handleMorePress = useCallback(() => {
     if (Platform.OS !== 'ios') return;
     triggerHaptic('light');
-    if (isOwnPost) {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['Cancel', 'Delete Post'],
-          cancelButtonIndex: 0,
-          destructiveButtonIndex: 1,
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 1) handleDeletePost();
-        },
-      );
-    } else {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['Cancel', `Mute @${author.handle}`, `Block @${author.handle}`, 'Report Post'],
-          cancelButtonIndex: 0,
-          destructiveButtonIndex: [2, 3],
-        },
-        (buttonIndex) => {
-          switch (buttonIndex) {
-            case 1: handleMuteUser(); break;
-            case 2: handleBlockUser(); break;
-            case 3: handleReport(); break;
-          }
-        },
-      );
+
+    const options: string[] = ['Cancel'];
+    const handlers: Array<() => void> = [];
+    const destructiveIndices: number[] = [];
+
+    if (postText) {
+      options.push('Copy Text');
+      handlers.push(handleCopyText);
     }
-  }, [isOwnPost, author.handle, handleDeletePost, handleMuteUser, handleBlockUser, handleReport]);
+
+    options.push('Reply');
+    handlers.push(() => onReply?.());
+
+    options.push(isReposted ? 'Undo Repost' : 'Repost');
+    handlers.push(handleRepostPress);
+
+    if (onQuotePost) {
+      options.push('Quote Post');
+      handlers.push(onQuotePost);
+    }
+
+    options.push(isLiked ? 'Unlike' : 'Like');
+    handlers.push(handleLikePress);
+
+    options.push(isBookmarked ? 'Remove Bookmark' : 'Bookmark');
+    handlers.push(handleBookmarkPress);
+
+    options.push('Share');
+    handlers.push(handleShare);
+
+    if (showTranslateButton) {
+      options.push(isShowingTranslation ? 'Show Original' : 'Translate');
+      handlers.push(handleTranslate);
+    }
+
+    if (isOwnPost) {
+      options.push('Delete Post');
+      destructiveIndices.push(options.length - 1);
+      handlers.push(handleDeletePost);
+    } else {
+      options.push(`Mute @${author.handle}`);
+      handlers.push(handleMuteUser);
+
+      options.push(`Block @${author.handle}`);
+      destructiveIndices.push(options.length - 1);
+      handlers.push(handleBlockUser);
+
+      options.push('Report Post');
+      destructiveIndices.push(options.length - 1);
+      handlers.push(handleReport);
+    }
+
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        options,
+        cancelButtonIndex: 0,
+        destructiveButtonIndex: destructiveIndices,
+      },
+      (buttonIndex) => {
+        if (buttonIndex > 0 && buttonIndex <= handlers.length) {
+          handlers[buttonIndex - 1]();
+        }
+      },
+    );
+  }, [isOwnPost, isReposted, isLiked, isBookmarked, postText, showTranslateButton, isShowingTranslation, author.handle, handleDeletePost, handleMuteUser, handleBlockUser, handleReport, handleCopyText, onReply, handleRepostPress, onQuotePost, handleLikePress, handleBookmarkPress, handleShare, handleTranslate]);
 
   const handleLikePress = useCallback(() => {
     triggerHaptic('light');
@@ -328,14 +368,33 @@ function PostCardComponent({
 
   // Native context menu actions for long-press
   const contextMenuActions = useMemo(() => {
-    const actions: Array<{title: string; systemIcon?: string; destructive?: boolean}> = [
-      { title: 'Copy Text', systemIcon: 'doc.on.doc' },
+    const actions: Array<{title: string; systemIcon?: string; destructive?: boolean}> = [];
+
+    if (postText) {
+      actions.push({ title: 'Copy Text', systemIcon: 'doc.on.doc' });
+    }
+
+    actions.push(
       { title: 'Reply', systemIcon: 'arrowshape.turn.up.left' },
-      { title: 'Repost', systemIcon: 'arrow.2.squarepath' },
+      { title: isReposted ? 'Undo Repost' : 'Repost', systemIcon: 'arrow.2.squarepath' },
+    );
+
+    if (onQuotePost) {
+      actions.push({ title: 'Quote Post', systemIcon: 'quote.bubble' });
+    }
+
+    actions.push(
       { title: isLiked ? 'Unlike' : 'Like', systemIcon: isLiked ? 'heart.slash' : 'heart' },
       { title: isBookmarked ? 'Remove Bookmark' : 'Bookmark', systemIcon: isBookmarked ? 'bookmark.slash' : 'bookmark' },
       { title: 'Share', systemIcon: 'square.and.arrow.up' },
-    ];
+    );
+
+    if (showTranslateButton) {
+      actions.push({
+        title: isShowingTranslation ? 'Show Original' : 'Translate',
+        systemIcon: 'character.book.closed',
+      });
+    }
 
     if (isOwnPost) {
       actions.push({ title: 'Delete Post', systemIcon: 'trash', destructive: true });
@@ -348,7 +407,7 @@ function PostCardComponent({
     }
 
     return actions;
-  }, [isLiked, isBookmarked, isOwnPost, author.handle]);
+  }, [isLiked, isReposted, isBookmarked, isOwnPost, author.handle, postText, onQuotePost, showTranslateButton, isShowingTranslation]);
 
   const handleContextMenuAction = useCallback((e: NativeSyntheticEvent<ContextMenuOnPressNativeEvent>) => {
     const { name } = e.nativeEvent;
@@ -361,7 +420,11 @@ function PostCardComponent({
         onReply?.();
         break;
       case 'Repost':
+      case 'Undo Repost':
         handleRepostPress();
+        break;
+      case 'Quote Post':
+        onQuotePost?.();
         break;
       case 'Like':
       case 'Unlike':
@@ -374,6 +437,10 @@ function PostCardComponent({
       case 'Share':
         handleShare();
         break;
+      case 'Translate':
+      case 'Show Original':
+        handleTranslate();
+        break;
       case 'Delete Post':
         handleDeletePost();
         break;
@@ -385,7 +452,7 @@ function PostCardComponent({
         else if (name.startsWith('Block')) handleBlockUser();
         break;
     }
-  }, [onReply, handleRepostPress, handleLikePress, handleBookmarkPress, handleShare, handleDeletePost, handleMuteUser, handleBlockUser, handleReport, handleCopyText]);
+  }, [onReply, handleRepostPress, onQuotePost, handleLikePress, handleBookmarkPress, handleShare, handleTranslate, handleDeletePost, handleMuteUser, handleBlockUser, handleReport, handleCopyText]);
 
   // Memoized computed values
   const timestamp = useMemo(
