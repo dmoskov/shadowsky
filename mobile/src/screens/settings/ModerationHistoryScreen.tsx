@@ -1,4 +1,4 @@
-import React, {useState, useMemo, useCallback} from 'react';
+import React, {useState, useMemo, useCallback, useEffect} from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   Alert,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import {useTheme} from '../../contexts/ThemeContext';
 import { ChevronLeftIcon, BanIcon, VolumeXIcon, FlagIcon, TrashIcon } from '../../components/icons';
@@ -16,10 +17,16 @@ import {
   getAllEntries,
   getStats,
   clearAll,
+  syncBlocksFromApi,
+  syncMutesFromApi,
   ModerationHistoryEntry,
   ModerationActionType,
   ModerationHistoryStats,
 } from '../../services/moderation-history';
+import {
+  getBlocks as fetchApiBlocks,
+  getMutes as fetchApiMutes,
+} from '../../services/atproto/profiles';
 import {fontSize} from '../../utils/typography';
 
 interface ModerationHistoryScreenProps {
@@ -52,6 +59,61 @@ export function ModerationHistoryScreen({
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [refreshKey, setRefreshKey] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [syncing, setSyncing] = useState(true);
+
+  const syncFromApi = useCallback(async () => {
+    try {
+      // Fetch all blocked accounts (paginated)
+      const allBlocks: Array<{did: string; handle?: string; displayName?: string; blockUri: string}> = [];
+      let cursor: string | undefined;
+      do {
+        const result = await fetchApiBlocks(cursor);
+        for (const b of result.blocks) {
+          allBlocks.push({
+            did: b.did,
+            handle: b.handle,
+            displayName: b.displayName,
+            blockUri: b.viewer?.blocking || '',
+          });
+        }
+        cursor = result.cursor;
+      } while (cursor);
+
+      syncBlocksFromApi(allBlocks);
+
+      // Fetch all muted accounts (paginated)
+      const allMutes: Array<{did: string; handle?: string; displayName?: string}> = [];
+      cursor = undefined;
+      do {
+        const result = await fetchApiMutes(cursor);
+        for (const m of result.mutes) {
+          allMutes.push({
+            did: m.did,
+            handle: m.handle,
+            displayName: m.displayName,
+          });
+        }
+        cursor = result.cursor;
+      } while (cursor);
+
+      syncMutesFromApi(allMutes);
+    } catch {
+      // Silently fail — still show whatever is in local storage
+    }
+  }, []);
+
+  // Sync from API on mount
+  useEffect(() => {
+    let mounted = true;
+    setSyncing(true);
+    syncFromApi().finally(() => {
+      if (mounted) {
+        setRefreshKey((k) => k + 1);
+        setSyncing(false);
+      }
+    });
+    return () => { mounted = false; };
+  }, [syncFromApi]);
 
   // Read data synchronously from MMKV (fast, no async needed)
   const entries = useMemo(
@@ -64,11 +126,12 @@ export function ModerationHistoryScreen({
     [refreshKey],
   );
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
+    await syncFromApi();
     setRefreshKey((k) => k + 1);
     setRefreshing(false);
-  }, []);
+  }, [syncFromApi]);
 
   const handleClearAll = useCallback(() => {
     Alert.alert(
@@ -177,7 +240,14 @@ export function ModerationHistoryScreen({
           </View>
         </View>
 
-        {!hasEntries ? (
+        {syncing && !hasEntries ? (
+          <View style={styles.emptyContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={[styles.emptyTitle, {marginTop: 16}]}>
+              Loading moderation history...
+            </Text>
+          </View>
+        ) : !hasEntries ? (
           <>
             <View style={styles.emptyContainer}>
               <View style={styles.emptyIconPlaceholder}>
