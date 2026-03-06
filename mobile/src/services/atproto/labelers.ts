@@ -58,7 +58,39 @@ export interface LabelerInfo {
       }>;
     }>;
   };
+  category?: string;
 }
+
+/**
+ * Curated directory of well-known labelers organized by category.
+ */
+export interface LabelerDirectoryEntry {
+  did: string;
+  category: string;
+}
+
+export const LABELER_CATEGORIES = [
+  "All",
+  "Moderation",
+  "Safety",
+  "Identity",
+  "Community",
+  "Fun",
+] as const;
+
+export type LabelerCategory = (typeof LABELER_CATEGORIES)[number];
+
+export const CURATED_LABELERS: LabelerDirectoryEntry[] = [
+  { did: "did:plc:ar7c4by46qjdydhdevvrndac", category: "Moderation" },
+  { did: "did:plc:e4elbtctnfqocyfcml6h2lf7", category: "Moderation" },
+  { did: "did:plc:d2mkddsbmnrgr3domzg5qexf", category: "Safety" },
+  { did: "did:plc:4ugewi6aca52a62u62jccbl7", category: "Safety" },
+  { did: "did:plc:gqaoe3na6isc3zyvp7iuqpu7", category: "Safety" },
+  { did: "did:plc:l3nbhdfelt5d26btksecetxu", category: "Identity" },
+  { did: "did:plc:l624mewisyr6hymexmrjkprc", category: "Community" },
+  { did: "did:plc:2qawvcwumvgxmed6iy6pmt6l", category: "Community" },
+  { did: "did:plc:hysbs7znfgxyb4tsvetzo4sk", category: "Fun" },
+];
 
 /**
  * Labeler subscription preference
@@ -344,6 +376,122 @@ export async function getLabelerInfoBatch(
     });
   } catch (error) {
     logger.error("Failed to get labeler info batch:", error);
+    return [];
+  }
+}
+
+/**
+ * Get curated directory labelers with live info from the network.
+ * Optionally filter by category.
+ */
+export async function getDirectoryLabelers(
+  category?: LabelerCategory,
+): Promise<LabelerInfo[]> {
+  try {
+    const entries =
+      category && category !== "All"
+        ? CURATED_LABELERS.filter((e) => e.category === category)
+        : CURATED_LABELERS;
+
+    if (entries.length === 0) return [];
+
+    const dids = entries.map((e) => e.did);
+    const infos = await getLabelerInfoBatch(dids);
+
+    // Add category info
+    return infos.map((info) => {
+      const entry = entries.find((e) => e.did === info.did);
+      return { ...info, category: entry?.category };
+    });
+  } catch (error) {
+    logger.error("Failed to get directory labelers:", error);
+    return [];
+  }
+}
+
+/**
+ * Search for labelers by handle or name.
+ * Uses searchActors to find accounts, then validates them as labelers via getServices.
+ */
+export async function searchLabelers(
+  query: string,
+): Promise<LabelerInfo[]> {
+  try {
+    if (!query.trim()) return [];
+
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
+
+    const searchResponse = await rateLimited(
+      () =>
+        agent.app.bsky.actor.searchActors({
+          q: query,
+          limit: 25,
+        }),
+      ATProtoEndpointType.FEED,
+    );
+
+    if (
+      !searchResponse.data.actors ||
+      searchResponse.data.actors.length === 0
+    ) {
+      return [];
+    }
+
+    const dids = searchResponse.data.actors.map((a) => a.did);
+    const labelerResponse = await rateLimited(
+      () =>
+        agent.app.bsky.labeler.getServices({
+          dids,
+          detailed: true,
+        }),
+      ATProtoEndpointType.FEED,
+    );
+
+    if (!labelerResponse.data.views) return [];
+
+    return labelerResponse.data.views
+      .map((view) => {
+        if (
+          "$type" in view &&
+          view.$type === "app.bsky.labeler.defs#labelerViewDetailed"
+        ) {
+          const detailedView = view as AppBskyLabelerDefs.LabelerViewDetailed;
+          return {
+            did: detailedView.creator.did,
+            creator: {
+              did: detailedView.creator.did,
+              handle: detailedView.creator.handle,
+              displayName: detailedView.creator.displayName,
+              avatar: detailedView.creator.avatar,
+              description: detailedView.creator.description,
+            },
+            likeCount: detailedView.likeCount,
+            viewer: detailedView.viewer,
+            indexedAt: detailedView.indexedAt,
+            labels: detailedView.labels,
+            policies: detailedView.policies,
+          };
+        }
+        const basicView = view as AppBskyLabelerDefs.LabelerView;
+        return {
+          did: basicView.creator.did,
+          creator: {
+            did: basicView.creator.did,
+            handle: basicView.creator.handle,
+            displayName: basicView.creator.displayName,
+            avatar: basicView.creator.avatar,
+            description: basicView.creator.description,
+          },
+          likeCount: basicView.likeCount,
+          viewer: basicView.viewer,
+          indexedAt: basicView.indexedAt,
+          labels: basicView.labels,
+        };
+      })
+      .filter(Boolean) as LabelerInfo[];
+  } catch (error) {
+    logger.error("Failed to search labelers:", error);
     return [];
   }
 }

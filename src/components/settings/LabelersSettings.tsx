@@ -1,22 +1,25 @@
 /**
  * Labelers Settings Component
  *
- * Allows users to subscribe to third-party labelers and configure
- * per-label preferences for each labeler.
+ * Allows users to browse, search, and subscribe to third-party labelers
+ * and configure per-label preferences for each labeler.
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { Eye, EyeOff, Plus, Shield, Tag, X } from "lucide-react";
-import React, { useState } from "react";
+import { Eye, EyeOff, Plus, Search, Shield, Tag, X } from "lucide-react";
+import React, { useCallback, useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   getLabelerInfo,
   getLabelerLabelPreferences,
   getPopularLabelers,
   getSubscribedLabelers,
+  LABELER_CATEGORIES,
+  searchLabelers,
   setLabelerLabelPreference,
   subscribeToLabeler,
   unsubscribeFromLabeler,
+  type LabelerCategory,
   type LabelerInfo,
   type LabelerLabelPreference,
   type LabelerSubscription,
@@ -54,6 +57,85 @@ const COMMON_LABELS = [
   },
 ];
 
+/** Reusable labeler card for both directory and search results */
+const LabelerCard: React.FC<{
+  labeler: LabelerInfo;
+  isSubscribedTo: boolean;
+  isLoading: boolean;
+  onSubscribe: (did: string) => void;
+}> = ({ labeler, isSubscribedTo, isLoading, onSubscribe }) => (
+  <div
+    className="flex items-center gap-3 rounded-lg p-3"
+    style={{
+      backgroundColor: "var(--asph-bg-secondary)",
+      border: "1px solid var(--asph-border-primary)",
+    }}
+  >
+    {labeler.creator.avatar ? (
+      <img
+        src={labeler.creator.avatar}
+        alt=""
+        className="h-10 w-10 flex-shrink-0 rounded-full"
+      />
+    ) : (
+      <div
+        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
+        style={{ backgroundColor: "var(--asph-primary)" }}
+      >
+        {(labeler.creator.displayName || labeler.creator.handle || "?")
+          .charAt(0)
+          .toUpperCase()}
+      </div>
+    )}
+    <div className="min-w-0 flex-1">
+      <div
+        className="truncate font-medium"
+        style={{ color: "var(--asph-text-primary)" }}
+      >
+        {labeler.creator.displayName || labeler.creator.handle}
+      </div>
+      <div
+        className="truncate text-sm"
+        style={{ color: "var(--asph-text-secondary)" }}
+      >
+        @{labeler.creator.handle}
+      </div>
+      {labeler.creator.description && (
+        <div
+          className="mt-1 line-clamp-2 text-sm"
+          style={{ color: "var(--asph-text-tertiary)" }}
+        >
+          {labeler.creator.description}
+        </div>
+      )}
+      {labeler.likeCount != null && labeler.likeCount > 0 && (
+        <div
+          className="mt-1 text-xs"
+          style={{ color: "var(--asph-text-tertiary)" }}
+        >
+          {labeler.likeCount.toLocaleString()} likes
+        </div>
+      )}
+    </div>
+    <button
+      onClick={() => onSubscribe(labeler.did)}
+      disabled={isLoading || isSubscribedTo}
+      className="touch-target-sm flex-shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+      style={{
+        backgroundColor: isSubscribedTo
+          ? "var(--asph-bg-tertiary)"
+          : "var(--asph-primary)",
+        color: isSubscribedTo ? "var(--asph-text-primary)" : "white",
+        border: isSubscribedTo
+          ? "1px solid var(--asph-border-primary)"
+          : "none",
+      }}
+    >
+      {isSubscribedTo ? "Subscribed" : "Subscribe"}
+    </button>
+  </div>
+);
+
 export const LabelersSettings: React.FC = () => {
   const { agent } = useAuth();
 
@@ -65,6 +147,14 @@ export const LabelersSettings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [newLabelerDid, setNewLabelerDid] = useState("");
   const [expandedLabeler, setExpandedLabeler] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] =
+    useState<LabelerCategory>("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<LabelerInfo[] | null>(
+    null,
+  );
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch subscribed labelers
   const {
@@ -80,17 +170,16 @@ export const LabelersSettings: React.FC = () => {
     enabled: !!agent,
   });
 
-  // Fetch popular labelers
-  const { data: popularLabelers = [], isLoading: isLoadingPopular } = useQuery<
-    LabelerInfo[]
-  >({
-    queryKey: ["popularLabelers"],
-    queryFn: async () => {
-      if (!agent) return [];
-      return getPopularLabelers(agent);
-    },
-    enabled: !!agent,
-  });
+  // Fetch directory labelers filtered by category
+  const { data: directoryLabelers = [], isLoading: isLoadingDirectory } =
+    useQuery<LabelerInfo[]>({
+      queryKey: ["directoryLabelers", selectedCategory],
+      queryFn: async () => {
+        if (!agent) return [];
+        return getPopularLabelers(agent, selectedCategory);
+      },
+      enabled: !!agent,
+    });
 
   // Fetch labeler info for subscribed labelers
   const { data: labelerInfoMap = new Map() } = useQuery({
@@ -120,6 +209,34 @@ export const LabelersSettings: React.FC = () => {
     },
     enabled: !!agent && !!expandedLabeler,
   });
+
+  // Search handler with debounce
+  const handleSearchChange = useCallback(
+    (query: string) => {
+      setSearchQuery(query);
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+      if (!query.trim()) {
+        setSearchResults(null);
+        setIsSearching(false);
+        return;
+      }
+      setIsSearching(true);
+      searchTimeoutRef.current = setTimeout(async () => {
+        if (!agent) return;
+        try {
+          const results = await searchLabelers(agent, query);
+          setSearchResults(results);
+        } catch {
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 400);
+    },
+    [agent],
+  );
 
   // Subscribe to a labeler
   const handleSubscribe = async (labelerDid: string) => {
@@ -260,9 +377,145 @@ export const LabelersSettings: React.FC = () => {
           className="mt-1 text-sm"
           style={{ color: "var(--asph-text-secondary)" }}
         >
-          Subscribe to third-party moderation services to apply custom content
-          labels
+          Browse, search, and subscribe to content labeling services
         </p>
+      </div>
+
+      {/* Browse Labelers */}
+      <div>
+        <label
+          className="mb-2 flex items-center gap-2 text-sm font-medium"
+          style={{ color: "var(--asph-text-primary)" }}
+        >
+          <Search size={16} />
+          Browse Labelers
+        </label>
+
+        {/* Search input */}
+        <div className="relative mb-3">
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2"
+            style={{ color: "var(--asph-text-tertiary)" }}
+          />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search labelers by name or handle..."
+            className="w-full rounded-lg py-2 pl-10 pr-4 text-sm"
+            style={{
+              backgroundColor: "var(--asph-bg-secondary)",
+              color: "var(--asph-text-primary)",
+              border: "1px solid var(--asph-border-primary)",
+            }}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => handleSearchChange("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+              style={{ color: "var(--asph-text-tertiary)" }}
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        {/* Category filter pills (only shown when not searching) */}
+        {!searchQuery && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {LABELER_CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+                style={{
+                  backgroundColor:
+                    selectedCategory === cat
+                      ? "var(--asph-primary)"
+                      : "var(--asph-bg-secondary)",
+                  color:
+                    selectedCategory === cat
+                      ? "white"
+                      : "var(--asph-text-secondary)",
+                  border:
+                    selectedCategory === cat
+                      ? "1px solid var(--asph-primary)"
+                      : "1px solid var(--asph-border-primary)",
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Search results */}
+        {searchQuery ? (
+          isSearching ? (
+            <div
+              className="py-4 text-center text-sm"
+              style={{ color: "var(--asph-text-tertiary)" }}
+            >
+              Searching...
+            </div>
+          ) : searchResults && searchResults.length > 0 ? (
+            <div className="space-y-2">
+              <p
+                className="text-xs"
+                style={{ color: "var(--asph-text-tertiary)" }}
+              >
+                {searchResults.length} labeler
+                {searchResults.length !== 1 ? "s" : ""} found
+              </p>
+              {searchResults.map((labeler) => (
+                <LabelerCard
+                  key={labeler.did}
+                  labeler={labeler}
+                  isSubscribedTo={isSubscribed(labeler.did)}
+                  isLoading={isLoading}
+                  onSubscribe={handleSubscribe}
+                />
+              ))}
+            </div>
+          ) : searchResults !== null ? (
+            <div
+              className="py-4 text-center text-sm"
+              style={{ color: "var(--asph-text-tertiary)" }}
+            >
+              No labelers found for &ldquo;{searchQuery}&rdquo;. Not all
+              accounts are labelers &mdash; try a different search or browse the
+              directory below.
+            </div>
+          ) : null
+        ) : /* Directory listing */
+        isLoadingDirectory ? (
+          <div
+            className="py-4 text-center text-sm"
+            style={{ color: "var(--asph-text-tertiary)" }}
+          >
+            Loading labelers...
+          </div>
+        ) : directoryLabelers.length > 0 ? (
+          <div className="space-y-2">
+            {directoryLabelers.map((labeler) => (
+              <LabelerCard
+                key={labeler.did}
+                labeler={labeler}
+                isSubscribedTo={isSubscribed(labeler.did)}
+                isLoading={isLoading}
+                onSubscribe={handleSubscribe}
+              />
+            ))}
+          </div>
+        ) : (
+          <p
+            className="py-4 text-center text-sm"
+            style={{ color: "var(--asph-text-tertiary)" }}
+          >
+            No labelers available in this category
+          </p>
+        )}
       </div>
 
       {/* Add labeler by DID */}
@@ -272,13 +525,13 @@ export const LabelersSettings: React.FC = () => {
           style={{ color: "var(--asph-text-primary)" }}
         >
           <Plus size={16} />
-          Add Labeler
+          Add by DID
         </label>
         <p
           className="mb-3 text-sm"
           style={{ color: "var(--asph-text-secondary)" }}
         >
-          Subscribe to a labeler by entering its DID
+          Know a labeler&apos;s DID? Subscribe directly
         </p>
 
         <div className="flex gap-2">
@@ -348,31 +601,45 @@ export const LabelersSettings: React.FC = () => {
                 >
                   {/* Labeler header */}
                   <div className="flex items-center justify-between p-3">
-                    <div className="flex-1">
-                      <div
-                        className="font-medium"
-                        style={{ color: "var(--asph-text-primary)" }}
-                      >
-                        {info?.creator.displayName ||
-                          info?.creator.handle ||
-                          "Unknown Labeler"}
+                    <div className="flex items-center gap-3">
+                      {info?.creator.avatar ? (
+                        <img
+                          src={info.creator.avatar}
+                          alt=""
+                          className="h-8 w-8 flex-shrink-0 rounded-full"
+                        />
+                      ) : (
+                        <div
+                          className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+                          style={{ backgroundColor: "var(--asph-primary)" }}
+                        >
+                          {(
+                            info?.creator.displayName ||
+                            info?.creator.handle ||
+                            "?"
+                          )
+                            .charAt(0)
+                            .toUpperCase()}
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <div
+                          className="font-medium"
+                          style={{ color: "var(--asph-text-primary)" }}
+                        >
+                          {info?.creator.displayName ||
+                            info?.creator.handle ||
+                            "Unknown Labeler"}
+                        </div>
+                        {info?.creator.handle && (
+                          <div
+                            className="text-sm"
+                            style={{ color: "var(--asph-text-secondary)" }}
+                          >
+                            @{info.creator.handle}
+                          </div>
+                        )}
                       </div>
-                      {info?.creator.handle && (
-                        <div
-                          className="text-sm"
-                          style={{ color: "var(--asph-text-secondary)" }}
-                        >
-                          @{info.creator.handle}
-                        </div>
-                      )}
-                      {info?.creator.description && (
-                        <div
-                          className="mt-1 text-sm"
-                          style={{ color: "var(--asph-text-tertiary)" }}
-                        >
-                          {info.creator.description}
-                        </div>
-                      )}
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -423,6 +690,14 @@ export const LabelersSettings: React.FC = () => {
                         borderColor: "var(--asph-border-primary)",
                       }}
                     >
+                      {info?.creator.description && (
+                        <div
+                          className="mb-3 text-sm"
+                          style={{ color: "var(--asph-text-tertiary)" }}
+                        >
+                          {info.creator.description}
+                        </div>
+                      )}
                       <div
                         className="mb-2 flex items-center gap-2 text-sm font-medium"
                         style={{ color: "var(--asph-text-primary)" }}
@@ -496,93 +771,6 @@ export const LabelersSettings: React.FC = () => {
             style={{ color: "var(--asph-text-tertiary)" }}
           >
             No subscribed labelers
-          </p>
-        )}
-      </div>
-
-      {/* Popular Labelers */}
-      <div>
-        <label
-          className="mb-2 flex items-center gap-2 text-sm font-medium"
-          style={{ color: "var(--asph-text-primary)" }}
-        >
-          <Shield size={16} />
-          Discover Labelers
-        </label>
-        <p
-          className="mb-3 text-sm"
-          style={{ color: "var(--asph-text-secondary)" }}
-        >
-          Popular and recommended labelers you can subscribe to
-        </p>
-
-        {isLoadingPopular ? (
-          <div
-            className="text-center text-sm"
-            style={{ color: "var(--asph-text-tertiary)" }}
-          >
-            Loading labelers...
-          </div>
-        ) : popularLabelers.length > 0 ? (
-          <div className="space-y-2">
-            {popularLabelers.map((labeler) => (
-              <div
-                key={labeler.did}
-                className="flex items-center justify-between rounded-lg p-3"
-                style={{
-                  backgroundColor: "var(--asph-bg-secondary)",
-                  border: "1px solid var(--asph-border-primary)",
-                }}
-              >
-                <div className="flex-1">
-                  <div
-                    className="font-medium"
-                    style={{ color: "var(--asph-text-primary)" }}
-                  >
-                    {labeler.creator.displayName || labeler.creator.handle}
-                  </div>
-                  <div
-                    className="text-sm"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  >
-                    @{labeler.creator.handle}
-                  </div>
-                  {labeler.creator.description && (
-                    <div
-                      className="mt-1 text-sm"
-                      style={{ color: "var(--asph-text-tertiary)" }}
-                    >
-                      {labeler.creator.description}
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={() => handleSubscribe(labeler.did)}
-                  disabled={isLoading || isSubscribed(labeler.did)}
-                  className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
-                  style={{
-                    backgroundColor: isSubscribed(labeler.did)
-                      ? "var(--asph-bg-tertiary)"
-                      : "var(--asph-primary)",
-                    color: isSubscribed(labeler.did)
-                      ? "var(--asph-text-primary)"
-                      : "white",
-                    border: isSubscribed(labeler.did)
-                      ? "1px solid var(--asph-border-primary)"
-                      : "none",
-                  }}
-                >
-                  {isSubscribed(labeler.did) ? "Subscribed" : "Subscribe"}
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p
-            className="text-center text-sm"
-            style={{ color: "var(--asph-text-tertiary)" }}
-          >
-            No labelers available
           </p>
         )}
       </div>

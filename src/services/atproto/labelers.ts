@@ -42,6 +42,7 @@ export interface LabelerInfo {
     exp?: string;
     sig?: Uint8Array;
   }>;
+  category?: string;
 }
 
 /**
@@ -95,28 +96,218 @@ export async function getSubscribedLabelers(
 }
 
 /**
- * Get popular/recommended labelers
- * Note: AT Protocol doesn't have a built-in discovery API yet,
- * so this returns a curated list of known labelers
+ * Curated directory of well-known labelers organized by category.
+ * Since AT Protocol has no labeler discovery API, we maintain a directory
+ * of known labelers and fetch their live info via getServices.
+ */
+export interface LabelerDirectoryEntry {
+  did: string;
+  category: string;
+}
+
+export const LABELER_CATEGORIES = [
+  "All",
+  "Moderation",
+  "Safety",
+  "Identity",
+  "Community",
+  "Fun",
+] as const;
+
+export type LabelerCategory = (typeof LABELER_CATEGORIES)[number];
+
+export const CURATED_LABELERS: LabelerDirectoryEntry[] = [
+  // Moderation
+  {
+    did: "did:plc:ar7c4by46qjdydhdevvrndac",
+    category: "Moderation",
+  },
+  {
+    did: "did:plc:e4elbtctnfqocyfcml6h2lf7",
+    category: "Moderation",
+  },
+  {
+    did: "did:plc:d2mkddsbmnrgr3domzg5qexf",
+    category: "Safety",
+  },
+  // Safety
+  {
+    did: "did:plc:4ugewi6aca52a62u62jccbl7",
+    category: "Safety",
+  },
+  {
+    did: "did:plc:gqaoe3na6isc3zyvp7iuqpu7",
+    category: "Safety",
+  },
+  // Identity
+  {
+    did: "did:plc:l3nbhdfelt5d26btksecetxu",
+    category: "Identity",
+  },
+  // Community
+  {
+    did: "did:plc:l624mewisyr6hymexmrjkprc",
+    category: "Community",
+  },
+  {
+    did: "did:plc:2qawvcwumvgxmed6iy6pmt6l",
+    category: "Community",
+  },
+  // Fun
+  {
+    did: "did:plc:hysbs7znfgxyb4tsvetzo4sk",
+    category: "Fun",
+  },
+];
+
+/**
+ * Get curated directory labelers with live info from the network.
+ * Optionally filter by category.
  */
 export async function getPopularLabelers(
-  _agent: BskyAgent,
+  agent: BskyAgent,
+  category?: LabelerCategory,
 ): Promise<LabelerInfo[]> {
-  // Known popular labelers (these are real labeler DIDs on the network)
-  const knownLabelers = [
-    {
-      did: "did:plc:ar7c4by46qjdydhdevvrndac",
-      creator: {
-        did: "did:plc:ar7c4by46qjdydhdevvrndac",
-        handle: "moderation.bsky.app",
-        displayName: "Bluesky Moderation Service",
-        description: "Official Bluesky moderation labeler",
-      },
-      indexedAt: new Date().toISOString(),
-    },
-  ];
+  try {
+    const entries =
+      category && category !== "All"
+        ? CURATED_LABELERS.filter((e) => e.category === category)
+        : CURATED_LABELERS;
 
-  return knownLabelers;
+    if (entries.length === 0) return [];
+
+    const dids = entries.map((e) => e.did);
+    const response = await agent.app.bsky.labeler.getServices({
+      dids,
+      detailed: true,
+    });
+
+    if (!response.data.views) return [];
+
+    return response.data.views.map((view) => {
+      if (
+        "$type" in view &&
+        view.$type === "app.bsky.labeler.defs#labelerViewDetailed"
+      ) {
+        const detailedView = view as AppBskyLabelerDefs.LabelerViewDetailed;
+        const entry = entries.find((e) => e.did === detailedView.creator.did);
+        return {
+          did: detailedView.creator.did,
+          creator: {
+            did: detailedView.creator.did,
+            handle: detailedView.creator.handle,
+            displayName: detailedView.creator.displayName,
+            avatar: detailedView.creator.avatar,
+            description: detailedView.creator.description,
+          },
+          likeCount: detailedView.likeCount,
+          viewer: detailedView.viewer,
+          indexedAt: detailedView.indexedAt,
+          labels: detailedView.labels,
+          category: entry?.category,
+        };
+      }
+      const basicView = view as AppBskyLabelerDefs.LabelerView;
+      const entry = entries.find((e) => e.did === basicView.creator.did);
+      return {
+        did: basicView.creator.did,
+        creator: {
+          did: basicView.creator.did,
+          handle: basicView.creator.handle,
+          displayName: basicView.creator.displayName,
+          avatar: basicView.creator.avatar,
+          description: basicView.creator.description,
+        },
+        likeCount: basicView.likeCount,
+        viewer: basicView.viewer,
+        indexedAt: basicView.indexedAt,
+        labels: basicView.labels,
+        category: entry?.category,
+      };
+    });
+  } catch (error) {
+    logger.error("Failed to get popular labelers:", error);
+    return [];
+  }
+}
+
+/**
+ * Search for labelers by handle or name.
+ * Uses searchActors to find accounts, then validates them as labelers via getServices.
+ */
+export async function searchLabelers(
+  agent: BskyAgent,
+  query: string,
+): Promise<LabelerInfo[]> {
+  try {
+    if (!query.trim()) return [];
+
+    // Search for actors matching the query
+    const searchResponse = await agent.app.bsky.actor.searchActors({
+      q: query,
+      limit: 25,
+    });
+
+    if (
+      !searchResponse.data.actors ||
+      searchResponse.data.actors.length === 0
+    ) {
+      return [];
+    }
+
+    // Try to validate these actors as labelers via getServices
+    const dids = searchResponse.data.actors.map((a) => a.did);
+    const labelerResponse = await agent.app.bsky.labeler.getServices({
+      dids,
+      detailed: true,
+    });
+
+    if (!labelerResponse.data.views) return [];
+
+    // Only return actors that are actually labelers (getServices returns views for them)
+    return labelerResponse.data.views
+      .map((view) => {
+        if (
+          "$type" in view &&
+          view.$type === "app.bsky.labeler.defs#labelerViewDetailed"
+        ) {
+          const detailedView = view as AppBskyLabelerDefs.LabelerViewDetailed;
+          return {
+            did: detailedView.creator.did,
+            creator: {
+              did: detailedView.creator.did,
+              handle: detailedView.creator.handle,
+              displayName: detailedView.creator.displayName,
+              avatar: detailedView.creator.avatar,
+              description: detailedView.creator.description,
+            },
+            likeCount: detailedView.likeCount,
+            viewer: detailedView.viewer,
+            indexedAt: detailedView.indexedAt,
+            labels: detailedView.labels,
+          };
+        }
+        const basicView = view as AppBskyLabelerDefs.LabelerView;
+        return {
+          did: basicView.creator.did,
+          creator: {
+            did: basicView.creator.did,
+            handle: basicView.creator.handle,
+            displayName: basicView.creator.displayName,
+            avatar: basicView.creator.avatar,
+            description: basicView.creator.description,
+          },
+          likeCount: basicView.likeCount,
+          viewer: basicView.viewer,
+          indexedAt: basicView.indexedAt,
+          labels: basicView.labels,
+        };
+      })
+      .filter(Boolean) as LabelerInfo[];
+  } catch (error) {
+    logger.error("Failed to search labelers:", error);
+    return [];
+  }
 }
 
 /**

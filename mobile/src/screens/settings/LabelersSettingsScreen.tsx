@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
   Image,
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
-import { ChevronLeftIcon, ChevronDownIcon, ChevronUpIcon } from '../../components/icons';
+import { ChevronLeftIcon, ChevronDownIcon, ChevronUpIcon, SearchIcon, CloseIcon } from '../../components/icons';
 import {
   getSubscribedLabelers,
   subscribeToLabeler,
@@ -21,11 +21,15 @@ import {
   getLabelerInfoBatch,
   getLabelerLabelPreferences,
   setLabelerLabelPreference,
+  getDirectoryLabelers,
+  searchLabelers,
+  LABELER_CATEGORIES,
 } from "../../services/atproto/labelers";
 import type {
   LabelerInfo,
   LabelerSubscription,
   LabelerLabelPreference,
+  LabelerCategory,
 } from "../../services/atproto/labelers";
 import { createLogger } from "../../utils/logger";
 import {fontSize} from '../../utils/typography';
@@ -65,6 +69,15 @@ export function LabelersSettingsScreen({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
 
+  // Browse/search state
+  const [selectedCategory, setSelectedCategory] = useState<LabelerCategory>("All");
+  const [directoryLabelers, setDirectoryLabelers] = useState<LabelerInfo[]>([]);
+  const [isLoadingDirectory, setIsLoadingDirectory] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<LabelerInfo[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const loadLabelers = useCallback(async () => {
     try {
       const subs = await getSubscribedLabelers();
@@ -86,21 +99,79 @@ export function LabelersSettingsScreen({
     }
   }, []);
 
+  const loadDirectory = useCallback(async (category?: LabelerCategory) => {
+    setIsLoadingDirectory(true);
+    try {
+      const labelers = await getDirectoryLabelers(category);
+      setDirectoryLabelers(labelers);
+    } catch (error) {
+      logger.error("Failed to load directory:", error);
+    } finally {
+      setIsLoadingDirectory(false);
+    }
+  }, []);
+
   useEffect(() => {
     (async () => {
       setIsLoading(true);
-      await loadLabelers();
+      await Promise.all([loadLabelers(), loadDirectory()]);
       setIsLoading(false);
     })();
-  }, [loadLabelers]);
+  }, [loadLabelers, loadDirectory]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      loadDirectory(selectedCategory);
+    }
+  }, [selectedCategory, loadDirectory, isLoading]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await loadLabelers();
+    await Promise.all([loadLabelers(), loadDirectory(selectedCategory)]);
     setIsRefreshing(false);
-  }, [loadLabelers]);
+  }, [loadLabelers, loadDirectory, selectedCategory]);
 
-  const handleSubscribe = useCallback(async () => {
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    if (!query.trim()) {
+      setSearchResults(null);
+      setIsSearching(false);
+      return;
+    }
+    setIsSearching(true);
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const results = await searchLabelers(query);
+        setSearchResults(results);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
+  }, []);
+
+  const handleSubscribeFromBrowser = useCallback(
+    async (labelerDid: string) => {
+      if (subscriptions.some((s) => s.did === labelerDid)) {
+        return;
+      }
+
+      try {
+        await subscribeToLabeler(labelerDid);
+        await loadLabelers();
+      } catch (error) {
+        logger.error("Failed to subscribe:", error);
+        Alert.alert("Error", "Failed to subscribe to labeler. Please try again.");
+      }
+    },
+    [subscriptions, loadLabelers],
+  );
+
+  const handleSubscribeDid = useCallback(async () => {
     const trimmedDid = didInput.trim();
     if (!trimmedDid.startsWith("did:")) {
       Alert.alert(
@@ -171,7 +242,6 @@ export function LabelersSettingsScreen({
 
       setExpandedLabeler(did);
 
-      // Load label preferences for this labeler if not cached
       if (!labelPrefs.has(did)) {
         try {
           const prefs = await getLabelerLabelPreferences(did);
@@ -193,7 +263,6 @@ export function LabelersSettingsScreen({
       try {
         await setLabelerLabelPreference(labelerDid, label, visibility);
 
-        // Update local cache
         setLabelPrefs((prev) => {
           const updated = new Map(prev);
           const existing = updated.get(labelerDid) || [];
@@ -226,7 +295,6 @@ export function LabelersSettingsScreen({
       const pref = prefs.find((p) => p.label === label);
       if (pref) return pref.visibility;
 
-      // Check default from labeler policies
       const info = labelerDetails.get(labelerDid);
       const def = info?.policies?.labelValueDefinitions?.find(
         (d) => d.identifier === label,
@@ -238,6 +306,74 @@ export function LabelersSettingsScreen({
     },
     [labelPrefs, labelerDetails],
   );
+
+  const isSubscribed = useCallback(
+    (did: string) => subscriptions.some((s) => s.did === did),
+    [subscriptions],
+  );
+
+  const renderLabelerBrowseCard = (labeler: LabelerInfo) => {
+    const subscribed = isSubscribed(labeler.did);
+    return (
+      <View key={labeler.did} style={styles.browseCard}>
+        <View style={styles.browseCardContent}>
+          {labeler.creator.avatar ? (
+            <Image
+              source={{ uri: labeler.creator.avatar }}
+              style={styles.browseAvatar}
+            />
+          ) : (
+            <View style={styles.browseAvatarPlaceholder}>
+              <Text style={styles.avatarPlaceholderText}>
+                {(
+                  labeler.creator.displayName ||
+                  labeler.creator.handle ||
+                  "?"
+                )
+                  .charAt(0)
+                  .toUpperCase()}
+              </Text>
+            </View>
+          )}
+          <View style={styles.browseTextContainer}>
+            <Text style={styles.browseName} numberOfLines={1}>
+              {labeler.creator.displayName || labeler.creator.handle}
+            </Text>
+            <Text style={styles.browseHandle} numberOfLines={1}>
+              @{labeler.creator.handle}
+            </Text>
+            {labeler.creator.description ? (
+              <Text style={styles.browseDescription} numberOfLines={2}>
+                {labeler.creator.description}
+              </Text>
+            ) : null}
+            {labeler.likeCount != null && labeler.likeCount > 0 && (
+              <Text style={styles.browseLikes}>
+                {labeler.likeCount.toLocaleString()} likes
+              </Text>
+            )}
+          </View>
+        </View>
+        <TouchableOpacity
+          style={[
+            styles.browseSubscribeButton,
+            subscribed && styles.browseSubscribeButtonDisabled,
+          ]}
+          onPress={() => handleSubscribeFromBrowser(labeler.did)}
+          disabled={subscribed}
+        >
+          <Text
+            style={[
+              styles.browseSubscribeText,
+              subscribed && styles.browseSubscribeTextDisabled,
+            ]}
+          >
+            {subscribed ? "Subscribed" : "Subscribe"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   const renderLabelerCard = (sub: LabelerSubscription) => {
     const info = labelerDetails.get(sub.did);
@@ -415,19 +551,111 @@ export function LabelersSettingsScreen({
         }
       >
         <Text style={styles.description}>
-          Subscribe to labeling services that moderate content in your feeds.
-          Configure how each label type is displayed.
+          Browse, search, and subscribe to content labeling services.
         </Text>
 
-        {/* Add Labeler */}
+        {/* Browse Labelers */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Subscribe to Labeler</Text>
+          <Text style={styles.sectionTitle}>Browse Labelers</Text>
+
+          {/* Search input */}
+          <View style={styles.searchContainer}>
+            <SearchIcon size={16} color={colors.textSecondary} />
+            <TextInput
+              style={styles.searchInput}
+              value={searchQuery}
+              onChangeText={handleSearch}
+              placeholder="Search labelers by name or handle..."
+              placeholderTextColor={colors.textSecondary}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {searchQuery ? (
+              <TouchableOpacity onPress={() => handleSearch("")}>
+                <CloseIcon size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+
+          {/* Category filter pills (only when not searching) */}
+          {!searchQuery && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.categoryScroll}
+              contentContainerStyle={styles.categoryScrollContent}
+            >
+              {LABELER_CATEGORIES.map((cat) => (
+                <TouchableOpacity
+                  key={cat}
+                  style={[
+                    styles.categoryPill,
+                    selectedCategory === cat && styles.categoryPillActive,
+                  ]}
+                  onPress={() => setSelectedCategory(cat)}
+                >
+                  <Text
+                    style={[
+                      styles.categoryPillText,
+                      selectedCategory === cat && styles.categoryPillTextActive,
+                    ]}
+                  >
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+
+          {/* Search results or directory listing */}
+          {searchQuery ? (
+            isSearching ? (
+              <ActivityIndicator
+                size="small"
+                color={colors.primary}
+                style={styles.searchLoader}
+              />
+            ) : searchResults && searchResults.length > 0 ? (
+              <View>
+                <Text style={styles.resultCount}>
+                  {searchResults.length} labeler{searchResults.length !== 1 ? "s" : ""} found
+                </Text>
+                {searchResults.map(renderLabelerBrowseCard)}
+              </View>
+            ) : searchResults !== null ? (
+              <Text style={styles.emptyText}>
+                No labelers found for &ldquo;{searchQuery}&rdquo;. Not all accounts are labelers.
+              </Text>
+            ) : null
+          ) : isLoadingDirectory ? (
+            <ActivityIndicator
+              size="small"
+              color={colors.primary}
+              style={styles.searchLoader}
+            />
+          ) : directoryLabelers.length > 0 ? (
+            <View>
+              {directoryLabelers.map(renderLabelerBrowseCard)}
+            </View>
+          ) : (
+            <Text style={styles.emptyText}>
+              No labelers available in this category
+            </Text>
+          )}
+        </View>
+
+        {/* Add by DID */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Add by DID</Text>
+          <Text style={styles.sectionSubtitle}>
+            Know a labeler&apos;s DID? Subscribe directly.
+          </Text>
           <View style={styles.addRow}>
             <TextInput
               style={styles.input}
               value={didInput}
               onChangeText={setDidInput}
-              placeholder="Enter labeler DID (did:plc:...)"
+              placeholder="did:plc:..."
               placeholderTextColor={colors.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
@@ -438,7 +666,7 @@ export function LabelersSettingsScreen({
                 styles.addButton,
                 (isSubscribing || !didInput.trim()) && styles.addButtonDisabled,
               ]}
-              onPress={handleSubscribe}
+              onPress={handleSubscribeDid}
               disabled={isSubscribing || !didInput.trim()}
             >
               {isSubscribing ? (
@@ -462,7 +690,7 @@ export function LabelersSettingsScreen({
             />
           ) : subscriptions.length === 0 ? (
             <Text style={styles.emptyText}>
-              No labelers subscribed. Add a labeler DID above to get started.
+              No labelers subscribed. Browse the directory above or add a labeler DID to get started.
             </Text>
           ) : (
             subscriptions.map(renderLabelerCard)
@@ -533,6 +761,138 @@ function createStyles(colors: any) {
       color: colors.text,
       marginBottom: 12,
     },
+    sectionSubtitle: {
+      fontSize: fontSize.footnote,
+      color: colors.textSecondary,
+      marginBottom: 10,
+    },
+    // Search
+    searchContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginBottom: 10,
+    },
+    searchInput: {
+      flex: 1,
+      paddingVertical: 10,
+      paddingHorizontal: 8,
+      fontSize: fontSize.subheadline,
+      color: colors.text,
+    },
+    searchLoader: {
+      marginVertical: 16,
+    },
+    resultCount: {
+      fontSize: fontSize.caption1,
+      color: colors.textSecondary,
+      marginBottom: 8,
+    },
+    // Category pills
+    categoryScroll: {
+      marginBottom: 12,
+    },
+    categoryScrollContent: {
+      gap: 8,
+    },
+    categoryPill: {
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 16,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    categoryPillActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    categoryPillText: {
+      fontSize: fontSize.caption1,
+      fontWeight: "500",
+      color: colors.textSecondary,
+    },
+    categoryPillTextActive: {
+      color: colors.text,
+    },
+    // Browse cards
+    browseCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    browseCardContent: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+    },
+    browseAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      marginRight: 12,
+    },
+    browseAvatarPlaceholder: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.primary,
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: 12,
+    },
+    browseTextContainer: {
+      flex: 1,
+    },
+    browseName: {
+      fontSize: fontSize.subheadline,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    browseHandle: {
+      fontSize: fontSize.caption1,
+      color: colors.textSecondary,
+      marginTop: 1,
+    },
+    browseDescription: {
+      fontSize: fontSize.caption1,
+      color: colors.textSecondary,
+      marginTop: 4,
+      lineHeight: 16,
+    },
+    browseLikes: {
+      fontSize: fontSize.caption2,
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+    browseSubscribeButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      marginTop: 10,
+      alignSelf: "flex-end",
+    },
+    browseSubscribeButtonDisabled: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    browseSubscribeText: {
+      fontSize: fontSize.footnote,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    browseSubscribeTextDisabled: {
+      color: colors.textSecondary,
+    },
+    // DID input
     addRow: {
       flexDirection: "row",
       gap: 10,
@@ -570,6 +930,7 @@ function createStyles(colors: any) {
       color: colors.textSecondary,
       lineHeight: 20,
     },
+    // Subscribed labeler cards
     labelerCard: {
       backgroundColor: colors.surface,
       borderRadius: 12,
