@@ -497,29 +497,6 @@ function PostCardComponent({
     [author.displayName, author.handle, postPreviewText, postView.likeCount, postView.repostCount, postView.replyCount, timestamp]
   );
 
-  // 3D Touch peek preview for native context menu
-  const contextMenuPreview = useMemo(() => (
-    <View style={styles.previewContainer}>
-      <View style={styles.previewHeader}>
-        <Avatar uri={author.avatar} size={36} />
-        <View style={styles.previewAuthorInfo}>
-          <Text style={styles.previewDisplayName} numberOfLines={1}>
-            {author.displayName || author.handle}
-          </Text>
-          <Text style={styles.previewHandle} numberOfLines={1}>
-            @{author.handle}
-          </Text>
-        </View>
-      </View>
-      {postText ? (
-        <Text style={styles.previewText} numberOfLines={12}>
-          {postText}
-        </Text>
-      ) : null}
-      <Text style={styles.previewTimestamp}>{timestamp}</Text>
-    </View>
-  ), [author.avatar, author.displayName, author.handle, postText, timestamp, styles]);
-
   // Memoized content label checks
   const labels = useMemo(() => postView.labels || [], [postView.labels]);
   const hideContent = useMemo(() => shouldHideContent(labels), [shouldHideContent, labels]);
@@ -831,8 +808,7 @@ function PostCardComponent({
       actions={contextMenuActions}
       onPress={handleContextMenuAction}
       onPreviewPress={handleCardPress}
-      preview={contextMenuPreview}
-      previewBackgroundColor={colors.cardBackground}>
+>
       <TouchableOpacity
         ref={cardRef}
         style={styles.container}
