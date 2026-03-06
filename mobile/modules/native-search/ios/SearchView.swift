@@ -87,12 +87,17 @@ struct SearchView: View {
                             onQueryChange(searchText)
                         }
                         .onChangeCompat(of: searchText) { newValue in
+                            // Update state immediately so the view transitions
+                            // from trending to search mode without waiting for
+                            // the JS bridge round-trip.
+                            state.query = newValue
                             onQueryChange(newValue)
                         }
 
                     if !searchText.isEmpty {
                         Button(action: {
                             searchText = ""
+                            state.query = ""
                             onQueryChange("")
                         }) {
                             Image(systemName: "xmark.circle.fill")
@@ -110,6 +115,7 @@ struct SearchView: View {
                     Button("Cancel") {
                         isSearchFocused = false
                         searchText = ""
+                        state.query = ""
                         onQueryChange("")
                     }
                     .font(.body)
