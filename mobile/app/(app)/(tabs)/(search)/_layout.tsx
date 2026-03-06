@@ -23,7 +23,6 @@ export default function SearchLayout() {
         name="index"
         options={{
           title: "Search",
-          headerLargeTitle: true,
           headerLeft: () => <DrawerMenuButton />,
           headerStyle: { backgroundColor: colors.background },
           headerShadowVisible: false,
