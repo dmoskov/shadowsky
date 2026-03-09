@@ -4,6 +4,7 @@ import { Platform } from "react-native";
 interface VideoCompressorNativeModule {
   getVideoInfo(uri: string): Promise<VideoInfo>;
   compressVideo(uri: string, quality: string): Promise<CompressionResult>;
+  trimVideo(uri: string, options: TrimOptions): Promise<TrimResult>;
   cancelCompression(): void;
   cleanupTempFiles(): void;
   isPresetCompatible(uri: string, quality: string): Promise<boolean>;
@@ -39,7 +40,24 @@ export interface CompressionResult {
 
 export interface CompressionProgress {
   progress: number;
-  stage: "compressing" | "complete";
+  stage: "compressing" | "trimming" | "complete";
+}
+
+export interface TrimOptions {
+  /** Start time in seconds */
+  startTime: number;
+  /** End time in seconds */
+  endTime: number;
+  /** Compression quality preset. Default: "medium" */
+  quality?: CompressionQuality;
+}
+
+export interface TrimResult {
+  uri: string;
+  originalSize: number;
+  compressedSize: number;
+  duration: number;
+  mimeType: string;
 }
 
 export type CompressionQuality = "low" | "medium" | "high" | "highest";
@@ -70,6 +88,24 @@ export async function compressVideo(
     return null;
   }
   return await VideoCompressorModule.compressVideo(uri, quality);
+}
+
+/**
+ * Trim a video to a specific time range, with optional compression.
+ * Returns the trimmed file URI, size, and duration.
+ */
+export async function trimVideo(
+  uri: string,
+  options: TrimOptions,
+): Promise<TrimResult | null> {
+  if (Platform.OS !== "ios" || !VideoCompressorModule) {
+    return null;
+  }
+  return await VideoCompressorModule.trimVideo(uri, {
+    startTime: options.startTime,
+    endTime: options.endTime,
+    quality: options.quality || "medium",
+  });
 }
 
 /**

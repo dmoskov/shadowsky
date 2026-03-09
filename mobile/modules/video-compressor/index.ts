@@ -1,6 +1,7 @@
 export {
   getVideoInfo,
   compressVideo,
+  trimVideo,
   cancelCompression,
   cleanupTempFiles,
   isPresetCompatible,
@@ -12,4 +13,6 @@ export type {
   CompressionResult,
   CompressionProgress,
   CompressionQuality,
+  TrimOptions,
+  TrimResult,
 } from "./src/VideoCompressor";
