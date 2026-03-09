@@ -45,6 +45,7 @@ import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { useLinkPreview } from "../../hooks/useLinkPreview";
 import { useNetworkStatus } from "../../hooks/useNetworkStatus";
 import { useTranslation } from "../../hooks/useTranslation";
+import { useImageCompression } from "../../hooks/useImageCompression";
 import { useVideoCompression } from "../../hooks/useVideoCompression";
 import { useVideoPicker } from "../../hooks/useVideoPicker";
 import { generateAltText } from "../../services/ai-service";
@@ -100,6 +101,7 @@ export function ComposeScreenNative({
   // Hooks
   const createPost = useCreatePost();
   const imagePicker = useImagePicker();
+  const imageCompression = useImageCompression();
   const videoPicker = useVideoPicker();
   const videoCompression = useVideoCompression();
   const saveDraft = useSaveDraft();
@@ -1105,6 +1107,7 @@ export function ComposeScreenNative({
         isUploading={
           isUploading ||
           imagePicker.isUploading ||
+          imageCompression.isCompressing ||
           videoPicker.isUploading ||
           videoCompression.isCompressing
         }

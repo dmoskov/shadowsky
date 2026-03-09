@@ -12,6 +12,7 @@ import {
 import {Image} from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImageManipulator from 'expo-image-manipulator';
+import { compressImage } from '../../modules/image-compressor';
 import { useTheme } from "../contexts/ThemeContext";
 import { ImageAsset } from '../hooks/useImagePicker';
 
@@ -223,12 +224,32 @@ function ImageEditorInner({ images, onSave, onCancel, visible }: ImageEditorProp
         }
       );
 
+      // Post-process with native compression to ensure size fits within 1MB
+      const isPng = asset.mimeType === 'image/png';
+      const compressed = await compressImage(result.uri, {
+        quality: 0.85,
+        maxFileSize: 1_000_000,
+        maxDimension: 2000,
+        format: isPng ? 'png' : 'jpeg',
+      });
+
+      if (compressed) {
+        return {
+          uri: compressed.uri,
+          width: compressed.width,
+          height: compressed.height,
+          mimeType: compressed.mimeType,
+          fileSize: compressed.compressedSize,
+          altText: asset.altText,
+        };
+      }
+
       return {
         uri: result.uri,
         width: result.width,
         height: result.height,
         mimeType: asset.mimeType,
-        fileSize: undefined, // Will be calculated on upload
+        fileSize: undefined,
         altText: asset.altText,
       };
     } catch (error) {

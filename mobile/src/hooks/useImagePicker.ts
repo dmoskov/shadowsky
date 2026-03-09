@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { Alert } from 'react-native';
-
+import { compressImage } from '../../modules/image-compressor';
 
 import { createLogger } from '../utils/logger';
 
@@ -16,8 +16,72 @@ export interface ImageAsset {
 }
 
 const MAX_IMAGES = 4;
-const MAX_FILE_SIZE = 1024 * 1024; // 1MB in bytes
+const MAX_FILE_SIZE = 1_000_000; // 1MB in bytes
 const MAX_DIMENSIONS = 2000;
+const COMPRESS_THRESHOLD = 800_000; // Auto-compress if over 800KB
+
+/**
+ * Auto-compress an image if it exceeds size/dimension limits.
+ * Uses native ImageCompressor module on iOS for hardware-accelerated processing.
+ * Falls back to returning the original asset if native module is unavailable.
+ */
+async function autoCompressAsset(
+  asset: ImagePicker.ImagePickerAsset,
+  mimeType: string,
+): Promise<ImageAsset> {
+  const estimatedSize = asset.fileSize || (asset.width * asset.height * 4);
+  const needsCompression =
+    estimatedSize > COMPRESS_THRESHOLD ||
+    asset.width > MAX_DIMENSIONS ||
+    asset.height > MAX_DIMENSIONS;
+
+  if (!needsCompression) {
+    return {
+      uri: asset.uri,
+      width: asset.width,
+      height: asset.height,
+      mimeType,
+      fileSize: asset.fileSize,
+      altText: '',
+    };
+  }
+
+  try {
+    const isPng = mimeType === 'image/png';
+    const result = await compressImage(asset.uri, {
+      quality: 0.85,
+      maxFileSize: MAX_FILE_SIZE,
+      maxDimension: MAX_DIMENSIONS,
+      format: isPng ? 'png' : 'jpeg',
+    });
+
+    if (result) {
+      logger.log(
+        `Auto-compressed: ${Math.round((asset.fileSize || 0) / 1024)}KB -> ${Math.round(result.compressedSize / 1024)}KB`,
+      );
+      return {
+        uri: result.uri,
+        width: result.width,
+        height: result.height,
+        mimeType: result.mimeType,
+        fileSize: result.compressedSize,
+        altText: '',
+      };
+    }
+  } catch (error) {
+    logger.error('Auto-compression failed, using original:', error);
+  }
+
+  // Fallback: return original
+  return {
+    uri: asset.uri,
+    width: asset.width,
+    height: asset.height,
+    mimeType,
+    fileSize: asset.fileSize,
+    altText: '',
+  };
+}
 
 export function useImagePicker() {
   const [selectedImages, setSelectedImages] = useState<ImageAsset[]>([]);
@@ -57,29 +121,10 @@ export function useImagePicker() {
         return [];
       }
 
-      // Validate and process selected images
+      // Process selected images with auto-compression
       const newImages: ImageAsset[] = [];
 
       for (const asset of result.assets) {
-        // Check file size (estimate from dimensions if not available)
-        const estimatedSize = asset.fileSize || (asset.width * asset.height * 4); // Rough estimate
-
-        if (estimatedSize > MAX_FILE_SIZE) {
-          Alert.alert(
-            'Image Too Large',
-            `One or more images exceed the 1MB size limit and will be skipped. Please resize the image and try again.`
-          );
-          continue;
-        }
-
-        // Check if we need to warn about dimensions
-        if (asset.width > MAX_DIMENSIONS || asset.height > MAX_DIMENSIONS) {
-          Alert.alert(
-            'Large Image',
-            `Image dimensions exceed ${MAX_DIMENSIONS}x${MAX_DIMENSIONS}px. It may be compressed during upload.`
-          );
-        }
-
         // Get MIME type from URI or default to jpeg
         let mimeType = 'image/jpeg';
         if (asset.uri.toLowerCase().endsWith('.png')) {
@@ -88,14 +133,9 @@ export function useImagePicker() {
           mimeType = 'image/webp';
         }
 
-        newImages.push({
-          uri: asset.uri,
-          width: asset.width,
-          height: asset.height,
-          mimeType,
-          fileSize: asset.fileSize,
-          altText: '',
-        });
+        // Auto-compress if needed (replaces the old size-check-and-reject flow)
+        const compressed = await autoCompressAsset(asset, mimeType);
+        newImages.push(compressed);
       }
 
       // Only add to selected images if skipping editor
@@ -144,17 +184,6 @@ export function useImagePicker() {
 
       const asset = result.assets[0];
 
-      // Check file size
-      const estimatedSize = asset.fileSize || (asset.width * asset.height * 4);
-
-      if (estimatedSize > MAX_FILE_SIZE) {
-        Alert.alert(
-          'Image Too Large',
-          'The photo exceeds the 1MB size limit. Please try taking another photo.'
-        );
-        return null;
-      }
-
       // Determine MIME type
       let mimeType = 'image/jpeg';
       if (asset.uri.toLowerCase().endsWith('.png')) {
@@ -163,14 +192,8 @@ export function useImagePicker() {
         mimeType = 'image/webp';
       }
 
-      const newImage: ImageAsset = {
-        uri: asset.uri,
-        width: asset.width,
-        height: asset.height,
-        mimeType,
-        fileSize: asset.fileSize,
-        altText: '',
-      };
+      // Auto-compress if needed
+      const newImage = await autoCompressAsset(asset, mimeType);
 
       // Only add to selected images if skipping editor
       if (skipEditor) {
