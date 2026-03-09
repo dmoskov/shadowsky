@@ -205,6 +205,7 @@ export function LandingScreen() {
                   autoCapitalize="none"
                   autoCorrect={false}
                   keyboardType="email-address"
+                  textContentType="username"
                   editable={!isLoading}
                 />
                 <Text style={styles.helpText}>
@@ -246,6 +247,7 @@ export function LandingScreen() {
                   autoCapitalize="none"
                   autoCorrect={false}
                   keyboardType="email-address"
+                  textContentType="username"
                   editable={!isLoading}
                 />
               </View>
@@ -261,6 +263,7 @@ export function LandingScreen() {
                   secureTextEntry
                   autoCapitalize="none"
                   autoCorrect={false}
+                  textContentType="password"
                   editable={!isLoading}
                 />
                 <Text style={styles.helpText}>
@@ -292,6 +295,7 @@ export function LandingScreen() {
                     autoCapitalize="none"
                     autoCorrect={false}
                     keyboardType="url"
+                    textContentType="URL"
                     editable={!isLoading}
                   />
                   <Text style={styles.helpText}>
