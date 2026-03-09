@@ -12,6 +12,8 @@
       <string>applinks:staging.bsky.app</string>
       <string>applinks:asphodel.is</string>
       <string>applinks:main.asphodel.is</string>
+      <string>webcredentials:shadowsky.io</string>
+      <string>webcredentials:asphodel.is</string>
     </array>
     <key>com.apple.security.application-groups</key>
     <array>
