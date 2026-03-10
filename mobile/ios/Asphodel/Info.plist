@@ -10,6 +10,39 @@
     <string>Asphodel</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIcons</key>
+    <dict>
+      <key>CFBundleAlternateIcons</key>
+      <dict>
+        <key>light</key>
+        <dict>
+          <key>CFBundleIconFiles</key>
+          <array>
+            <string>icon-light</string>
+          </array>
+          <key>UIPrerenderedIcon</key>
+          <true/>
+        </dict>
+        <key>mono</key>
+        <dict>
+          <key>CFBundleIconFiles</key>
+          <array>
+            <string>icon-mono</string>
+          </array>
+          <key>UIPrerenderedIcon</key>
+          <true/>
+        </dict>
+        <key>pride</key>
+        <dict>
+          <key>CFBundleIconFiles</key>
+          <array>
+            <string>icon-pride</string>
+          </array>
+          <key>UIPrerenderedIcon</key>
+          <true/>
+        </dict>
+      </dict>
+    </dict>
     <key>CFBundleIdentifier</key>
     <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
     <key>CFBundleInfoDictionaryVersion</key>
