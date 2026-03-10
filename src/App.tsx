@@ -135,15 +135,31 @@ function AppContent() {
   // Warn before closing tab/window if there are unsynced offline mutations
   usePendingMutationsWarning();
 
-  // Check if user needs onboarding
+  // Check if user needs onboarding (user-specific)
   useEffect(() => {
-    if (isAuthenticated && agent) {
-      const isComplete = onboardingService.isCompleted();
-      setNeedsOnboarding(!isComplete);
-      // Initialize onboarding service with agent
+    if (isAuthenticated && agent && session?.did) {
       onboardingService.setAgent(agent);
+      onboardingService.setCurrentUser(session.did);
+
+      // If already marked complete in local storage, skip
+      if (onboardingService.isCompleted()) {
+        setNeedsOnboarding(false);
+        return;
+      }
+
+      // For users with no saved state, check if they're existing users
+      // (already following people) to avoid showing onboarding to returning users
+      onboardingService.isExistingUser().then((isExisting) => {
+        if (isExisting) {
+          // Auto-complete onboarding for existing users
+          onboardingService.markCompleted();
+          setNeedsOnboarding(false);
+        } else {
+          setNeedsOnboarding(true);
+        }
+      });
     }
-  }, [isAuthenticated, agent]);
+  }, [isAuthenticated, agent, session?.did]);
 
   // Check if we're on the home route
   const isHomeRoute =

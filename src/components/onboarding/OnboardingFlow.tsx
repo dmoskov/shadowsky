@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useViewTransitionNavigate } from "../../hooks/useViewTransitionNavigate";
 import { onboardingService } from "../../services/onboarding-service";
+import { CompleteScreen } from "./CompleteScreen";
 import { FeedsScreen } from "./FeedsScreen";
 import { FollowsScreen } from "./FollowsScreen";
 import { PreferencesScreen } from "./PreferencesScreen";
@@ -13,7 +14,8 @@ type OnboardingStep =
   | "topics"
   | "follows"
   | "feeds"
-  | "preferences";
+  | "preferences"
+  | "complete";
 
 interface OnboardingFlowProps {
   onComplete?: () => void;
@@ -47,6 +49,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         "follows",
         "feeds",
         "preferences",
+        "complete",
       ];
       if (state.currentStep < steps.length) {
         setCurrentStep(steps[state.currentStep]);
@@ -54,19 +57,22 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     }
   }, [navigate]);
 
-  const handleWelcomeContinue = () => {
-    onboardingService.updateState({ currentStep: 1 });
-    setCurrentStep("topics");
-  };
-
-  const handleWelcomeSkip = () => {
-    // Skip entire onboarding
+  const finishOnboarding = () => {
     onboardingService.markCompleted();
     if (onComplete) {
       onComplete();
     } else {
       navigate("/home");
     }
+  };
+
+  const handleWelcomeContinue = () => {
+    onboardingService.updateState({ currentStep: 1 });
+    setCurrentStep("topics");
+  };
+
+  const handleWelcomeSkip = () => {
+    finishOnboarding();
   };
 
   const handleTopicsContinue = (selectedTopics: string[]) => {
@@ -132,15 +138,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     showAdultContent: boolean;
   }) => {
     onboardingService.updateState({
+      currentStep: 5,
       contentPreferences: preferences,
     });
-    onboardingService.markCompleted();
-
-    if (onComplete) {
-      onComplete();
-    } else {
-      navigate("/home");
-    }
+    setCurrentStep("complete");
   };
 
   const handlePreferencesBack = () => {
@@ -194,6 +195,17 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
           onBack={handlePreferencesBack}
         />
       );
+
+    case "complete": {
+      const state = onboardingService.getState();
+      return (
+        <CompleteScreen
+          followedCount={state.followedUsers.length}
+          feedCount={state.selectedFeeds.length}
+          onGoHome={finishOnboarding}
+        />
+      );
+    }
 
     default:
       return null;
