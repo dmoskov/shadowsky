@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Text, TouchableOpacity, View, Image, Alert, Platform, StyleSheet } from "react-native";
 import { usePreferences } from "../../../contexts/PreferencesContext";
 import { useTheme } from "../../../contexts/ThemeContext";
@@ -17,25 +17,29 @@ export function AppearanceSection() {
   const { colors: themeColors } = useTheme();
   const styles = createSectionStyles(themeColors);
   const [activeIcon, setActiveIcon] = useState<string | null>(null);
+  const [supported, setSupported] = useState(false);
 
-  const handleIconChange = useCallback(async (iconKey: string | null) => {
+  useEffect(() => {
     if (Platform.OS !== "ios") return;
     try {
-      const { default: ExpoAlternateIcon } = // @ts-ignore — optional dependency
-      await import("expo-alternate-icon").catch(() => ({ default: null }));
-      if (!ExpoAlternateIcon) {
-        // Fallback: use native UIApplication API via NativeModules
-        const { NativeModules } = require("react-native");
-        if (NativeModules.UIManager) {
-          // expo doesn't have alternate icon module — use direct API
-          Alert.alert("Icon Changed", `App icon will update to ${iconKey || "default"} on next launch.`);
-        }
-      }
-      setActiveIcon(iconKey);
-    } catch (e) {
-      Alert.alert("Error", "Could not change app icon");
+      const { supportsAlternateIcons, getAlternateIconName } = require("../../../../modules/alternate-icon");
+      setSupported(supportsAlternateIcons());
+      setActiveIcon(getAlternateIconName());
+    } catch {
+      // Module not available
     }
   }, []);
+
+  const handleIconChange = useCallback(async (iconKey: string | null) => {
+    if (iconKey === activeIcon) return;
+    try {
+      const { setAlternateIcon } = require("../../../../modules/alternate-icon");
+      await setAlternateIcon(iconKey);
+      setActiveIcon(iconKey);
+    } catch (e: any) {
+      Alert.alert("Error", e?.message || "Could not change app icon");
+    }
+  }, [activeIcon]);
 
   if (!preferences) return null;
 
@@ -67,7 +71,7 @@ export function AppearanceSection() {
         </View>
       </SettingRow>
 
-      {Platform.OS === "ios" && (
+      {Platform.OS === "ios" && supported && (
         <SettingRow label="App Icon">
           <View style={iconStyles.iconGrid}>
             {ICON_VARIANTS.map((variant) => (

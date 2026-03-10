@@ -29,12 +29,23 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "applinks:asphodel.is",
       "applinks:main.asphodel.is",
     ],
-    alternateIcons: {
-        light: './assets/alternate-icons/icon-light.png',
-        mono: './assets/alternate-icons/icon-mono.png',
-        pride: './assets/alternate-icons/icon-pride.png',
-      },
-      infoPlist: {
+    infoPlist: {
+        CFBundleIcons: {
+          CFBundleAlternateIcons: {
+            light: {
+              CFBundleIconFiles: ["icon-light"],
+              UIPrerenderedIcon: true,
+            },
+            mono: {
+              CFBundleIconFiles: ["icon-mono"],
+              UIPrerenderedIcon: true,
+            },
+            pride: {
+              CFBundleIconFiles: ["icon-pride"],
+              UIPrerenderedIcon: true,
+            },
+          },
+        },
       UIBackgroundModes: ["remote-notification"],
       NSCameraUsageDescription: "Take photos for posts and profile",
       NSPhotoLibraryUsageDescription: "Select photos and videos to share",
@@ -77,6 +88,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundler: "metro",
   },
   plugins: [
+    "./plugins/withAlternateIcons",
     "expo-router",
     [
       "expo-notifications",
