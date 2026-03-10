@@ -4,7 +4,7 @@ import { useLocation } from "react-router";
 import { AccountSwitcher } from "./AccountSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
-import butterflyIcon from "/butterfly-icon.svg";
+import appIcon from "/butterfly-icon.svg";
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -41,7 +41,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
 
           <div className="flex items-center gap-2.5">
             <img
-              src={butterflyIcon}
+              src={appIcon}
               alt="Asphodel Logo"
               className="h-7 w-7 self-center"
             />

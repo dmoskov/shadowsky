@@ -1,6 +1,6 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 import React from "react";
-import butterflyIcon from "/butterfly-icon.svg";
+import appIcon from "/butterfly-icon.svg";
 
 interface WelcomeScreenProps {
   onContinue: () => void;
@@ -20,7 +20,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         {/* Logo and Welcome */}
         <div className="mb-8 flex flex-col items-center justify-center gap-4">
           <img
-            src={butterflyIcon}
+            src={appIcon}
             alt="Asphodel Logo"
             className="h-24 w-24 rounded-xl shadow-lg"
           />

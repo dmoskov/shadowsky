@@ -14,7 +14,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { ATProtoError } from "../types/errors";
-import butterflyIcon from "/butterfly-icon.svg";
+import appIcon from "/butterfly-icon.svg";
 
 type LoginMode = "oauth" | "app-password";
 
@@ -175,7 +175,7 @@ export const LandingPage: React.FC = () => {
             <div className="mb-8 text-center lg:text-left">
               <div className="mb-4 flex items-center justify-center gap-3 lg:justify-start">
                 <img
-                  src={butterflyIcon}
+                  src={appIcon}
                   alt="Asphodel Logo"
                   className="h-16 w-16 rounded-xl shadow-md"
                 />
