@@ -40,6 +40,7 @@ export const AT_PROTO_COLLECTIONS = {
   BOOKMARK_COLLECTIONS: "com.shadowsky.bookmarkCollections", // Singleton: collection definitions + mappings
   LIST: "com.shadowsky.list", // Individual list records
   PIN: "com.shadowsky.pin", // Pinned posts on profile
+  SCHEDULED_POST: "com.shadowsky.scheduledPost", // Individual scheduled post records (keyed by TID)
 } as const;
 
 // AT Protocol record keys (for singleton records)

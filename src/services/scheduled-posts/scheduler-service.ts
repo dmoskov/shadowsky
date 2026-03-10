@@ -446,6 +446,7 @@ class SchedulerService {
 
     this.syncInterval = setInterval(() => {
       this.syncFromServer();
+      this.syncFromAtProto();
     }, 30000); // Every 30 seconds
   }
 

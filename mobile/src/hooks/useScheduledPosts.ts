@@ -2,20 +2,22 @@
  * Hook for managing scheduled posts
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AppState, AppStateStatus } from "react-native";
 import {
   ScheduledPost,
   ScheduledPostInput,
-  getScheduledPosts,
   addScheduledPost,
-  updateScheduledPost,
   deleteScheduledPost,
-} from '../services/scheduled-posts';
+  getScheduledPosts,
+  updateScheduledPost,
+} from "../services/scheduled-posts";
 
 export function useScheduledPosts() {
   const [posts, setPosts] = useState<ScheduledPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
 
   const loadPosts = useCallback(async () => {
     try {
@@ -25,12 +27,16 @@ export function useScheduledPosts() {
 
       // Sort by scheduled time (earliest first)
       const sortedPosts = loadedPosts.sort(
-        (a, b) => a.scheduledTime.getTime() - b.scheduledTime.getTime()
+        (a, b) => a.scheduledTime.getTime() - b.scheduledTime.getTime(),
       );
 
       setPosts(sortedPosts);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to load scheduled posts'));
+      setError(
+        err instanceof Error
+          ? err
+          : new Error("Failed to load scheduled posts"),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -40,42 +46,77 @@ export function useScheduledPosts() {
     loadPosts();
   }, [loadPosts]);
 
-  const addPost = useCallback(async (input: ScheduledPostInput) => {
-    try {
-      const newPost = await addScheduledPost(input);
-      await loadPosts(); // Reload to maintain sort order
-      return newPost;
-    } catch (err) {
-      throw err instanceof Error ? err : new Error('Failed to add scheduled post');
-    }
+  // Re-sync from AT Proto when app comes to foreground
+  useEffect(() => {
+    const subscription = AppState.addEventListener(
+      "change",
+      (nextState: AppStateStatus) => {
+        if (
+          appStateRef.current.match(/inactive|background/) &&
+          nextState === "active"
+        ) {
+          loadPosts();
+        }
+        appStateRef.current = nextState;
+      },
+    );
+
+    return () => {
+      subscription.remove();
+    };
   }, [loadPosts]);
 
-  const updatePost = useCallback(async (
-    id: string,
-    updates: Partial<Pick<ScheduledPost, 'text' | 'scheduledTime'>>
-  ) => {
-    try {
-      const updatedPost = await updateScheduledPost(id, updates);
-      if (updatedPost) {
+  const addPost = useCallback(
+    async (input: ScheduledPostInput) => {
+      try {
+        const newPost = await addScheduledPost(input);
         await loadPosts(); // Reload to maintain sort order
+        return newPost;
+      } catch (err) {
+        throw err instanceof Error
+          ? err
+          : new Error("Failed to add scheduled post");
       }
-      return updatedPost;
-    } catch (err) {
-      throw err instanceof Error ? err : new Error('Failed to update scheduled post');
-    }
-  }, [loadPosts]);
+    },
+    [loadPosts],
+  );
 
-  const deletePost = useCallback(async (id: string) => {
-    try {
-      const success = await deleteScheduledPost(id);
-      if (success) {
-        await loadPosts();
+  const updatePost = useCallback(
+    async (
+      id: string,
+      updates: Partial<Pick<ScheduledPost, "text" | "scheduledTime">>,
+    ) => {
+      try {
+        const updatedPost = await updateScheduledPost(id, updates);
+        if (updatedPost) {
+          await loadPosts(); // Reload to maintain sort order
+        }
+        return updatedPost;
+      } catch (err) {
+        throw err instanceof Error
+          ? err
+          : new Error("Failed to update scheduled post");
       }
-      return success;
-    } catch (err) {
-      throw err instanceof Error ? err : new Error('Failed to delete scheduled post');
-    }
-  }, [loadPosts]);
+    },
+    [loadPosts],
+  );
+
+  const deletePost = useCallback(
+    async (id: string) => {
+      try {
+        const success = await deleteScheduledPost(id);
+        if (success) {
+          await loadPosts();
+        }
+        return success;
+      } catch (err) {
+        throw err instanceof Error
+          ? err
+          : new Error("Failed to delete scheduled post");
+      }
+    },
+    [loadPosts],
+  );
 
   return {
     posts,
