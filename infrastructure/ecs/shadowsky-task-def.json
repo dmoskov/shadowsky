@@ -26,7 +26,10 @@
       "environment": [
         {"name": "PORT", "value": "3002"},
         {"name": "WS_PORT", "value": "3001"},
-        {"name": "NODE_ENV", "value": "production"}
+        {"name": "NODE_ENV", "value": "production"},
+        {"name": "ENABLE_FIREHOSE", "value": "true"},
+        {"name": "TRENDING_TABLE_NAME", "value": "shadowsky-trending-production"},
+        {"name": "FIREHOSE_SAMPLE_RATE", "value": "1"}
       ],
       "secrets": [
         {
