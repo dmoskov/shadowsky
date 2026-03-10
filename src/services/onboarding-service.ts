@@ -104,11 +104,30 @@ export const TOPIC_CATEGORIES: TopicCategory[] = [
 ];
 
 export class OnboardingService {
-  private readonly STORAGE_KEY = "shadowsky_onboarding_state";
+  private readonly STORAGE_KEY_PREFIX = "@shadowsky/onboarding";
   private agent: BskyAgent | null = null;
+  private currentDid: string | null = null;
 
   setAgent(agent: BskyAgent | null) {
     this.agent = agent;
+  }
+
+  /**
+   * Set the current user DID for user-specific storage.
+   * Must be called before any state operations.
+   */
+  setCurrentUser(did: string | null) {
+    this.currentDid = did;
+  }
+
+  /**
+   * Get the storage key for the current user
+   */
+  private getStorageKey(): string {
+    if (this.currentDid) {
+      return `${this.STORAGE_KEY_PREFIX}:${this.currentDid}`;
+    }
+    return `${this.STORAGE_KEY_PREFIX}:anonymous`;
   }
 
   /**
@@ -116,7 +135,7 @@ export class OnboardingService {
    */
   getState(): OnboardingState {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
+      const stored = localStorage.getItem(this.getStorageKey());
       if (stored) {
         return JSON.parse(stored) as OnboardingState;
       }
@@ -152,7 +171,7 @@ export class OnboardingService {
         ...updates,
         lastUpdated: new Date().toISOString(),
       };
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(newState));
+      localStorage.setItem(this.getStorageKey(), JSON.stringify(newState));
       logger.log("Updated onboarding state:", newState);
     } catch (error) {
       logger.error("Failed to update onboarding state:", error);
@@ -171,11 +190,33 @@ export class OnboardingService {
 
   /**
    * Check if user has completed onboarding.
-   * Always returns true — NUX is disabled until the bug causing it to
-   * re-appear unexpectedly is resolved.
+   * Returns true if user has explicitly completed or skipped onboarding.
    */
   isCompleted(): boolean {
-    return true;
+    const state = this.getState();
+    return state.completed;
+  }
+
+  /**
+   * Check if the user is an existing user who should skip onboarding.
+   * Detects existing users by checking if they're already following accounts.
+   */
+  async isExistingUser(): Promise<boolean> {
+    if (!this.agent) return false;
+
+    try {
+      const session = this.agent.session;
+      if (!session?.did) return false;
+
+      // Check if user is already following people — if so, they're not new
+      const profile = await this.agent.getProfile({ actor: session.did });
+      const followsCount = profile.data.followsCount ?? 0;
+      return followsCount > 0;
+    } catch (error) {
+      logger.error("Failed to check if existing user:", error);
+      // If we can't determine, don't show onboarding (safe default)
+      return true;
+    }
   }
 
   /**
@@ -183,7 +224,7 @@ export class OnboardingService {
    */
   reset(): void {
     try {
-      localStorage.removeItem(this.STORAGE_KEY);
+      localStorage.removeItem(this.getStorageKey());
       logger.log("Onboarding state reset");
     } catch (error) {
       logger.error("Failed to reset onboarding state:", error);
