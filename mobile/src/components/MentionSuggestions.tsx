@@ -75,17 +75,17 @@ function createStyles(colors: any) {
   return StyleSheet.create({
     container: {
       position: "absolute",
-      bottom: 0,
+      bottom: "100%",
       left: 0,
       right: 0,
       backgroundColor: colors.surface,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
       maxHeight: 250,
       shadowColor: colors.borderDark,
       shadowOffset: {
         width: 0,
-        height: -2,
+        height: 2,
       },
       shadowOpacity: 0.25,
       shadowRadius: 3.84,

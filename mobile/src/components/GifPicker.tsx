@@ -16,6 +16,8 @@ import {
   FlatList,
   ActivityIndicator,
   useWindowDimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -225,6 +227,11 @@ function GifPickerInner({
       transparent={false}
       onRequestClose={onClose}
     >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+      >
       <View style={[styles.container, { paddingTop: insets.top }]}>
         {/* Header */}
         <View style={styles.header}>
@@ -274,6 +281,7 @@ function GifPickerInner({
           </Text>
         </View>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

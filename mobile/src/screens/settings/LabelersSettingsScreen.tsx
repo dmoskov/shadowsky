@@ -11,6 +11,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
 import { ChevronLeftIcon, ChevronDownIcon, ChevronUpIcon, SearchIcon, CloseIcon } from '../../components/icons';
@@ -607,6 +609,10 @@ export function LabelersSettingsScreen({
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -819,6 +825,7 @@ export function LabelersSettingsScreen({
           </Text>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

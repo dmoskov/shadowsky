@@ -8,6 +8,8 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useBookmarkCollections } from '../hooks/useBookmarkCollections';
 import { BookmarkCollection, COLLECTION_COLORS } from '../services/bookmark-collections';
@@ -127,6 +129,10 @@ function CollectionManagerInner({
   };
 
   return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
@@ -360,6 +366,7 @@ function CollectionManagerInner({
         </View>
       )}
     </View>
+    </KeyboardAvoidingView>
   );
 }
 

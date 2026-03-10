@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
   Alert,
   useWindowDimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 import { BlurOverlay } from "./BlurOverlay";
@@ -88,6 +90,11 @@ function AppealLabelModalInner({
       animationType="slide"
       onRequestClose={handleClose}
     >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+      >
       <View style={styles.backdrop}>
         <BlurOverlay intensity={25} />
         <View style={[styles.container, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 }]}>
@@ -177,6 +184,7 @@ function AppealLabelModalInner({
           )}
         </View>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

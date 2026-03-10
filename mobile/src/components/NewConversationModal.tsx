@@ -9,6 +9,8 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { AppBskyActorDefs } from "@atproto/api";
 import { searchActors } from "../services/atproto/profiles";
@@ -173,6 +175,11 @@ function NewConversationModalInner({
       presentationStyle="pageSheet"
       onRequestClose={handleClose}
     >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+      >
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -230,6 +237,7 @@ function NewConversationModalInner({
           />
         )}
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

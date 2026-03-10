@@ -204,11 +204,10 @@ function createStyles(colors: any) {
     suggestionsContainer: {
       backgroundColor: colors.surface,
       borderRadius: 8,
-      marginTop: 4,
       borderWidth: 1,
       borderColor: colors.surfaceElevated,
+      maxHeight: 200,
       overflow: "hidden",
-      maxHeight: 250,
     },
     suggestionRow: {
       flexDirection: "row",
