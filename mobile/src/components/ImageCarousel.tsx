@@ -265,7 +265,18 @@ function ImageCarouselInner({
                 <Text style={styles.counterText}>
                   {currentIndex + 1} / {images.length}
                 </Text>
-              </Animated.View>
+      
+          {/* Alt text display */}
+          {images[currentIndex]?.alt ? (
+            <View style={styles.galleryAltContainer}>
+              <Text style={styles.galleryAltLabel}>ALT</Text>
+              <Text style={styles.galleryAltBodyText} numberOfLines={3}>
+                {images[currentIndex].alt}
+              </Text>
+            </View>
+          ) : null}
+
+        </Animated.View>
             )}
 
             {/* Close button */}
@@ -507,6 +518,35 @@ function createStyles(colors: any) {
       color: colors.text,
       fontSize: fontSize.subheadline,
       lineHeight: 20,
+    },
+    galleryAltContainer: {
+      position: 'absolute',
+      bottom: 80,
+      alignSelf: 'center',
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 8,
+      maxWidth: '90%',
+      gap: 8,
+    },
+    galleryAltLabel: {
+      color: '#fff',
+      fontSize: 11,
+      fontWeight: '700',
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      overflow: 'hidden',
+    },
+    galleryAltBodyText: {
+      color: '#fff',
+      fontSize: 13,
+      lineHeight: 18,
+      flex: 1,
     },
   });
 }

@@ -28,7 +28,7 @@ export function AnalyticsScreen() {
   const router = useRouter();
   const { account } = useAuth();
   const { colors } = useTheme();
-  const { navigateToProfile } = useAppNavigation();
+  const { navigateToProfile, navigateToThread } = useAppNavigation();
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
   const [analysisRequested, setAnalysisRequested] = useState(false);
 
@@ -63,6 +63,12 @@ export function AnalyticsScreen() {
 
   const handleMentionPress = (handle: string, _did: string) => {
     navigateToProfile(handle);
+  };
+
+  const handlePostPress = (uri: string, handle: string, did: string) => {
+    const parts = uri.split('/');
+    const postId = parts[parts.length - 1];
+    navigateToThread(handle, postId, did);
   };
 
   const handleHashtagPress = (tag: string) => {
@@ -307,6 +313,7 @@ export function AnalyticsScreen() {
               <View style={styles.topPostContent}>
                 <PostCard
                   post={post}
+                  onPress={() => handlePostPress(post.post.uri, post.post.author.handle, post.post.author.did)}
                   onMentionPress={handleMentionPress}
                   onHashtagPress={handleHashtagPress}
                 />

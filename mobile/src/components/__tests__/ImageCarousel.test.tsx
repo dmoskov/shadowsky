@@ -47,6 +47,14 @@ jest.mock('react-native-reanimated', () => {
   return {
     __esModule: true,
     default: Animated,
+    useSharedValue: (init: number) => ({ value: init }),
+    useAnimatedStyle: () => ({}),
+    withTiming: (val: number) => val,
+    withSpring: (val: number) => val,
+    withDecay: () => 0,
+    runOnJS: (fn: Function) => fn,
+    interpolate: (val: number) => val,
+    Easing: { out: () => ({}), cubic: {} },
     FadeIn: {duration: () => ({})},
     FadeOut: {duration: () => ({})},
   };
@@ -193,8 +201,8 @@ describe('ImageCarousel', () => {
 
   describe('alt text', () => {
     it('renders ALT badge when current image has alt text', () => {
-      const {getByText} = render(<ImageCarousel {...defaultProps} />);
-      expect(getByText('ALT')).toBeTruthy();
+      const {getAllByText} = render(<ImageCarousel {...defaultProps} />);
+      expect(getAllByText('ALT').length).toBeGreaterThan(0);
     });
 
     it('does not render ALT badge when current image lacks alt text', () => {

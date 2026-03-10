@@ -8,7 +8,6 @@ import {
   subscribeToLabeler,
   unsubscribeFromLabeler,
   type LabelerCategory,
-  type LabelerInfo,
 } from '../../services/atproto/labelers';
 
 /**

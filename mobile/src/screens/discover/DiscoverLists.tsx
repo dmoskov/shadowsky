@@ -171,7 +171,7 @@ export function DiscoverLists() {
             let you follow curated groups of accounts.
           </Text>
         </View>
-      ) : isLoading && !actors?.length ? (
+      ) : isLoading && !actors ? (
         <View style={styles.loadingContainer}>
           <PostCardSkeleton />
           <PostCardSkeleton />
