@@ -1,6 +1,5 @@
 import * as Localization from "expo-localization";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import React, {
   useCallback,
   useEffect,

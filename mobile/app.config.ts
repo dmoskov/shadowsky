@@ -29,7 +29,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "applinks:asphodel.is",
       "applinks:main.asphodel.is",
     ],
-    infoPlist: {
+    alternateIcons: {
+        light: './assets/alternate-icons/icon-light.png',
+        mono: './assets/alternate-icons/icon-mono.png',
+        pride: './assets/alternate-icons/icon-pride.png',
+      },
+      infoPlist: {
       UIBackgroundModes: ["remote-notification"],
       NSCameraUsageDescription: "Take photos for posts and profile",
       NSPhotoLibraryUsageDescription: "Select photos and videos to share",
