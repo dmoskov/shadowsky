@@ -107,15 +107,15 @@ export function PersonTypeahead({
             }
           }}
           onBlur={() => {
-            // Delay hiding suggestions to allow tap events on suggestions
-            // to fire before the list disappears. On iOS the keyboard
-            // dismissal can race with touch handling, so we use a longer
-            // delay and also guard against hiding during an active selection.
+            // Delay hiding suggestions — on iOS, KAV layout changes and
+            // suggestion taps can both trigger blur events. Use a longer
+            // delay and check that we're not mid-selection AND that the
+            // input doesn't still have text worth showing suggestions for.
             setTimeout(() => {
               if (!selectingRef.current) {
                 setShowSuggestions(false);
               }
-            }, 300);
+            }, 500);
           }}
           autoCapitalize="none"
           autoCorrect={false}
