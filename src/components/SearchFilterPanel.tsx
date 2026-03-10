@@ -13,13 +13,13 @@ import {
   X,
 } from "lucide-react";
 import React, { useCallback, useMemo } from "react";
-import { UserTypeahead } from "./UserTypeahead";
 import {
   defaultFilters,
   type DatePreset,
   type MediaType,
   type SearchFilters,
 } from "../hooks/useSearch";
+import { UserTypeahead } from "./UserTypeahead";
 
 interface SearchFilterPanelProps {
   filters: SearchFilters;
@@ -100,8 +100,11 @@ const EngagementSlider: React.FC<{
         value={valueToSlider(value)}
         onChange={(e) => onChange(sliderToValue(parseInt(e.target.value, 10)))}
         className="asph-slider w-full"
-        style={{ "--slider-progress": `${valueToSlider(value)}%` } as React.CSSProperties}
-        style={{ "--slider-progress": `${valueToSlider(value)}%` } as React.CSSProperties}
+        style={
+          {
+            "--slider-progress": `${valueToSlider(value)}%`,
+          } as React.CSSProperties
+        }
       />
     </div>
   );
@@ -518,35 +521,35 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
           </label>
           <div className="space-y-2">
             <div className="flex flex-wrap gap-2">
-            {filters.fromUsers.map((user, i) => (
-              <div
-                key={`from-user-${user}-${i}`}
-                className="flex min-h-[44px] items-center gap-1.5 rounded-md border px-3 py-2 text-xs"
-                style={{
-                  backgroundColor: "var(--asph-bg-secondary)",
-                  borderColor: "var(--asph-border-primary)",
-                  color: "var(--asph-text-primary)",
-                }}
-              >
-                <span>@{user}</span>
-                <button
-                  onClick={() =>
-                    updateFilter(
-                      "fromUsers",
-                      filters.fromUsers.filter((_, idx) => idx !== i),
-                    )
-                  }
-                  className="touch-target ml-1 flex h-6 w-6 items-center justify-center rounded hover:bg-gray-200/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 dark:hover:bg-gray-700/60"
-                  aria-label={`Remove @${user}`}
+              {filters.fromUsers.map((user, i) => (
+                <div
+                  key={`from-user-${user}-${i}`}
+                  className="flex min-h-[44px] items-center gap-1.5 rounded-md border px-3 py-2 text-xs"
                   style={{
-                    // @ts-expect-error CSS custom property for focus ring
-                    "--tw-ring-color": "var(--asph-primary)",
+                    backgroundColor: "var(--asph-bg-secondary)",
+                    borderColor: "var(--asph-border-primary)",
+                    color: "var(--asph-text-primary)",
                   }}
                 >
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
+                  <span>@{user}</span>
+                  <button
+                    onClick={() =>
+                      updateFilter(
+                        "fromUsers",
+                        filters.fromUsers.filter((_, idx) => idx !== i),
+                      )
+                    }
+                    className="touch-target ml-1 flex h-6 w-6 items-center justify-center rounded hover:bg-gray-200/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 dark:hover:bg-gray-700/60"
+                    aria-label={`Remove @${user}`}
+                    style={{
+                      // @ts-expect-error CSS custom property for focus ring
+                      "--tw-ring-color": "var(--asph-primary)",
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
             </div>
             <UserTypeahead
               onSelectUser={(handle) => {
