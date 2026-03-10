@@ -12,7 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import {
   analyzePosts,
@@ -1021,10 +1021,15 @@ export const UserAnalytics: React.FC = () => {
         {postsData?.topPosts && postsData.topPosts.length > 0 ? (
           <div className="space-y-4">
             {postsData.topPosts.map((post, index) => (
-              <div
+              <Link
                 key={post.uri}
+                to={`/thread/${post.author.handle}/${post.uri.split("/").pop()}`}
                 className="flex gap-4 rounded-lg p-4 transition-all hover:bg-opacity-50"
-                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
+                style={{
+                  backgroundColor: "var(--asph-bg-tertiary)",
+                  textDecoration: "none",
+                  color: "inherit",
+                }}
               >
                 <div
                   className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold"
@@ -1095,7 +1100,7 @@ export const UserAnalytics: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (
