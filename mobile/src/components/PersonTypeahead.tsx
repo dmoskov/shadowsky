@@ -21,6 +21,8 @@ interface PersonTypeaheadProps {
   onSelectPerson: (handle: string) => void;
   placeholder?: string;
   maxSuggestions?: number;
+  /** Called when suggestions become visible — parent can scroll to this component */
+  onSuggestionsVisible?: () => void;
 }
 
 export function PersonTypeahead({
@@ -29,6 +31,7 @@ export function PersonTypeahead({
   onSelectPerson,
   placeholder = "e.g. alice.bsky.social",
   maxSuggestions = 5,
+  onSuggestionsVisible,
 }: PersonTypeaheadProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -78,7 +81,9 @@ export function PersonTypeahead({
   const handleChangeText = (text: string) => {
     const cleaned = text.replace(/^@/, "");
     onChangeText(cleaned);
-    setShowSuggestions(cleaned.length >= 2);
+    const shouldShow = cleaned.length >= 2;
+    setShowSuggestions(shouldShow);
+    if (shouldShow) onSuggestionsVisible?.();
   };
 
   const handleClear = () => {
@@ -204,9 +209,15 @@ function createStyles(colors: any) {
     suggestionsContainer: {
       backgroundColor: colors.surface,
       borderRadius: 8,
+      marginTop: 4,
       borderWidth: 1,
       borderColor: colors.surfaceElevated,
       maxHeight: 200,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 4,
       overflow: "hidden",
     },
     suggestionRow: {

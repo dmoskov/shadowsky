@@ -142,6 +142,9 @@ function SearchFilterSheetInner({
   }, [draft]);
 
   // Active filter chips
+  const scrollViewRef = React.useRef<ScrollView>(null);
+  const typeaheadRef = React.useRef<View>(null);
+
   const activeChips = useMemo(() => {
     const chips: Array<{ key: string; label: string; onRemove: () => void }> =
       [];
@@ -248,7 +251,9 @@ function SearchFilterSheetInner({
             </View>
 
             <ScrollView
+              ref={scrollViewRef}
               style={styles.content}
+              contentContainerStyle={{ paddingBottom: 250 }}
               showsVerticalScrollIndicator={false}
               keyboardDismissMode="on-drag"
               keyboardShouldPersistTaps="handled"
@@ -360,16 +365,28 @@ function SearchFilterSheetInner({
                 <PersonIcon size={16} color={colors.textSecondary} />
                 <Text style={styles.sectionLabel}>From User</Text>
               </View>
-              <PersonTypeahead
-                value={draft.author || ""}
-                onChangeText={(text) => {
-                  updateDraft({ author: text || undefined });
-                }}
-                onSelectPerson={(handle) => {
-                  updateDraft({ author: handle });
-                }}
-                placeholder="e.g. alice.bsky.social"
-              />
+              <View ref={typeaheadRef} onLayout={() => {}}>
+                <PersonTypeahead
+                  value={draft.author || ""}
+                  onChangeText={(text) => {
+                    updateDraft({ author: text || undefined });
+                  }}
+                  onSelectPerson={(handle) => {
+                    updateDraft({ author: handle });
+                  }}
+                  placeholder="e.g. alice.bsky.social"
+                  onSuggestionsVisible={() => {
+                    // Scroll down to show suggestions when they appear
+                    typeaheadRef.current?.measureLayout(
+                      scrollViewRef.current?.getInnerViewNode?.() as any,
+                      (_x, y) => {
+                        scrollViewRef.current?.scrollTo({ y: y - 60, animated: true });
+                      },
+                      () => {},
+                    );
+                  }}
+                />
+              </View>
 
               {/* Language */}
               <View style={styles.sectionHeader}>
