@@ -7,6 +7,7 @@ import { RouteSkeletonFallback } from "../components/ui/RouteSkeletonFallback";
 import { Bookmarks } from "../components/Bookmarks";
 import { Composer } from "../components/Composer";
 import { DirectMessages } from "../components/DirectMessages";
+import { Discover } from "../components/Discover";
 import { Lists } from "../components/Lists";
 import { ListTimeline } from "../components/ListTimeline";
 import { Notifications } from "../components/Notifications";
@@ -114,6 +115,14 @@ export function AppRoutes() {
           element={
             <ErrorBoundary componentName="Bookmarks">
               <Bookmarks />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/discover"
+          element={
+            <ErrorBoundary componentName="Discover">
+              <Discover />
             </ErrorBoundary>
           }
         />

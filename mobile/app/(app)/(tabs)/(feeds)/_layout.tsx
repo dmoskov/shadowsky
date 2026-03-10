@@ -25,7 +25,7 @@ export default function FeedsLayout() {
             headerLargeTitle: true,
           }}
         />
-        <Stack.Screen name="discover" options={{ title: "Discover Feeds" }} />
+        <Stack.Screen name="discover" options={{ title: "Discover" }} />
         <Stack.Screen
           name="thread/[postId]"
           options={{
