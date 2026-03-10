@@ -17,6 +17,7 @@ export default function TabsLayout() {
         screenOptions={{
           headerShown: false,
           lazy: true,
+          animation: "fade",
           tabBarStyle: isMultiColumn ? { display: "none" } : undefined,
           tabBarActiveTintColor: colors.info,
           tabBarInactiveTintColor: colors.textTertiary,

@@ -82,6 +82,10 @@ struct ThreadPostCard: View {
     @State private var repostOverride: Bool? = nil
     @State private var repostCountOverride: Int? = nil
 
+    // Micro-interaction animation state
+    @State private var likeScale: CGFloat = 1.0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     private var isLiked: Bool { likeOverride ?? (node.post.viewer?.like != nil) }
     private var displayLikeCount: Int { likeCountOverride ?? node.post.likeCount }
     private var isReposted: Bool { repostOverride ?? (node.post.viewer?.repost != nil) }
@@ -246,11 +250,24 @@ struct ThreadPostCard: View {
                     isActive: isLiked,
                     color: .red,
                     action: {
+                        let wasLiked = isLiked
                         likeOverride = !isLiked
                         likeCountOverride = displayLikeCount + (isLiked ? -1 : 1)
+                        if !wasLiked && !reduceMotion {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.4)) {
+                                likeScale = 1.35
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                    likeScale = 1.0
+                                }
+                            }
+                        }
                         onLike?()
                     },
-                    onPressCount: onPressLikeCount
+                    onPressCount: onPressLikeCount,
+                    iconScale: likeScale
                 )
 
                 Spacer()
@@ -355,6 +372,7 @@ struct ActionButton: View {
     let color: Color
     let action: (() -> Void)?
     let onPressCount: (() -> Void)?
+    var iconScale: CGFloat = 1.0
 
     init(
         iconName: String,
@@ -362,7 +380,8 @@ struct ActionButton: View {
         isActive: Bool,
         color: Color,
         action: (() -> Void)?,
-        onPressCount: (() -> Void)? = nil
+        onPressCount: (() -> Void)? = nil,
+        iconScale: CGFloat = 1.0
     ) {
         self.iconName = iconName
         self.count = count
@@ -370,6 +389,7 @@ struct ActionButton: View {
         self.color = color
         self.action = action
         self.onPressCount = onPressCount
+        self.iconScale = iconScale
     }
 
     var body: some View {
@@ -379,6 +399,7 @@ struct ActionButton: View {
             HStack(spacing: 4) {
                 Image(systemName: iconName)
                     .font(.body)
+                    .scaleEffect(iconScale)
                 if count > 0 {
                     Text("\(count)")
                         .font(.subheadline)

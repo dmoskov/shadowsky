@@ -144,6 +144,7 @@ struct NotificationListView: View {
     @ObservedObject var props: NotificationListProps
     @StateObject private var state = NotificationListState()
     @State private var activeFilter: NotificationListFilter = .all
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Event handlers
     let onRefresh: (() -> Void)?
@@ -155,6 +156,14 @@ struct NotificationListView: View {
     let onLinkPress: ((String) -> Void)?
     let onAppear: (() -> Void)?
     let onAnalyticsPress: (() -> Void)?
+
+    /// Discrete state for driving skeleton→content crossfade
+    private var notificationDisplayState: Int {
+        if props.isLoading && state.processedNotifications.isEmpty { return 0 }
+        if (props.error != nil || state.decodeError != nil) && state.processedNotifications.isEmpty { return 1 }
+        if state.processedNotifications.isEmpty { return 2 }
+        return 3
+    }
 
     // Filtered notifications
     private var filteredNotifications: [ProcessedNotificationUIModel] {
@@ -205,14 +214,19 @@ struct NotificationListView: View {
                 if props.isLoading && state.processedNotifications.isEmpty {
                     NotificationSkeletonListView()
                         .frame(maxHeight: .infinity, alignment: .top)
+                        .transition(.opacity)
                 } else if let error = props.error ?? state.decodeError, state.processedNotifications.isEmpty {
                     errorView(error)
+                        .transition(.opacity)
                 } else if state.processedNotifications.isEmpty {
                     emptyView
+                        .transition(.opacity)
                 } else {
                     notificationScrollView
+                        .transition(.opacity)
                 }
             }
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: notificationDisplayState)
         }
         .background(Color(UIColor.systemBackground))
         .onAppear {
@@ -282,6 +296,7 @@ struct NotificationListView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .refreshable {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             onRefresh?()
         }
     }

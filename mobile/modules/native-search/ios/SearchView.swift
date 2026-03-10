@@ -247,6 +247,7 @@ struct SearchView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .refreshable {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 onRefresh()
             }
             .onChangeCompat(of: state.scrollToTopTrigger) { _ in
@@ -335,6 +336,7 @@ struct SearchView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .refreshable {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 onRefresh()
             }
             .onChangeCompat(of: state.scrollToTopTrigger) { _ in

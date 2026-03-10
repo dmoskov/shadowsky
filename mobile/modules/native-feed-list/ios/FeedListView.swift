@@ -61,6 +61,9 @@ struct FeedListView: View {
     @State private var firstVisiblePostId: String? = nil
     @State private var scrollProxy: ScrollViewProxy? = nil
 
+    // Accessibility
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     // Configuration (observable to avoid full rootView replacement)
     @ObservedObject var props: FeedListProps
 
@@ -84,18 +87,31 @@ struct FeedListView: View {
 
     // MARK: - Body
 
+    /// Discrete state for driving skeleton→content crossfade
+    private var feedDisplayState: Int {
+        if feedState.convertedPosts.isEmpty && (props.isLoading || !feedState.hasReceivedData) { return 0 }
+        if (props.error != nil || feedState.decodeError != nil) && feedState.convertedPosts.isEmpty { return 1 }
+        if feedState.convertedPosts.isEmpty { return 2 }
+        return 3
+    }
+
     var body: some View {
         ZStack {
             if feedState.convertedPosts.isEmpty && (props.isLoading || !feedState.hasReceivedData) {
                 loadingView
+                    .transition(.opacity)
             } else if let error = props.error ?? feedState.decodeError, feedState.convertedPosts.isEmpty {
                 errorView(error)
+                    .transition(.opacity)
             } else if feedState.convertedPosts.isEmpty {
                 emptyView
+                    .transition(.opacity)
             } else {
                 feedScrollView
+                    .transition(.opacity)
             }
         }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: feedDisplayState)
         .accessibilityIdentifier("feed-list")
         .background(Color(UIColor.systemBackground))
         .onAppear {
@@ -186,6 +202,10 @@ struct FeedListView: View {
                             }
                         )
                         .id(converted.id)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .top).combined(with: .opacity),
+                            removal: .identity
+                        ))
                         .accessibilityIdentifier("feed-post-\(index)")
                         .onAppear {
                             visiblePostIds.insert(converted.id)
@@ -223,6 +243,8 @@ struct FeedListView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .refreshable {
+                // Haptic confirmation at pull-to-refresh threshold
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 // Clear tracked position so refresh shows content from top
                 firstVisiblePostId = nil
                 visiblePostIds.removeAll()
@@ -489,9 +511,22 @@ class FeedState: ObservableObject {
             return Self.convertPost(newPost)
         }
 
-        posts = newPosts
-        convertedPosts = newConverted
-        hasReceivedData = true
+        // Detect if new posts were prepended (real-time updates) vs full refresh
+        let isPrepend = !posts.isEmpty && !newPosts.isEmpty
+            && newPosts.first?.post.uri != posts.first?.post.uri
+            && newPosts.contains(where: { $0.post.uri == posts.first?.post.uri })
+
+        if isPrepend {
+            withAnimation(.easeOut(duration: 0.3)) {
+                posts = newPosts
+                convertedPosts = newConverted
+                hasReceivedData = true
+            }
+        } else {
+            posts = newPosts
+            convertedPosts = newConverted
+            hasReceivedData = true
+        }
     }
 
     /// Convert a single SerializedFeedViewPost to ConvertedFeedPost.
