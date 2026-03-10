@@ -173,6 +173,8 @@ export function DevPerformanceOverlay() {
   });
   const monitor = useRef<PerformanceMonitor | null>(null);
   const rafId = useRef<number | null>(null);
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const updateMetrics = useCallback(() => {
     if (!monitor.current) return;
@@ -239,7 +241,11 @@ export function DevPerformanceOverlay() {
 
     // Clear flash after animation
     if (fpsFlash || memoryFlash || longTasksFlash) {
-      setTimeout(() => {
+      if (flashTimerRef.current) {
+        clearTimeout(flashTimerRef.current);
+      }
+      flashTimerRef.current = setTimeout(() => {
+        flashTimerRef.current = null;
         setState((prev) => ({
           fps: { ...prev.fps, flash: false },
           memory: { ...prev.memory, flash: false },
@@ -277,11 +283,20 @@ export function DevPerformanceOverlay() {
     };
 
     // Start with slight delay to get initial readings
-    setTimeout(() => {
+    startTimerRef.current = setTimeout(() => {
+      startTimerRef.current = null;
       rafId.current = requestAnimationFrame(tick);
     }, 100);
 
     return () => {
+      if (startTimerRef.current) {
+        clearTimeout(startTimerRef.current);
+        startTimerRef.current = null;
+      }
+      if (flashTimerRef.current) {
+        clearTimeout(flashTimerRef.current);
+        flashTimerRef.current = null;
+      }
       if (rafId.current) {
         cancelAnimationFrame(rafId.current);
       }

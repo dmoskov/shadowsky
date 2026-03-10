@@ -141,6 +141,8 @@ class APICacheService {
   private offlineCallbacks: Set<OfflineStatusCallback> = new Set();
   private lastOnlineAt: number | null = null;
   private isInitialized = false;
+  private boundOnlineHandler: (() => void) | null = null;
+  private boundOfflineHandler: (() => void) | null = null;
 
   private constructor() {
     // Private constructor for singleton
@@ -163,13 +165,11 @@ class APICacheService {
     this.db = new APICacheDB();
     await this.db.open();
 
-    // Set up online/offline event listeners
-    window.addEventListener("online", () =>
-      this.handleOnlineStatusChange(true),
-    );
-    window.addEventListener("offline", () =>
-      this.handleOnlineStatusChange(false),
-    );
+    // Set up online/offline event listeners (store bound refs for cleanup)
+    this.boundOnlineHandler = () => this.handleOnlineStatusChange(true);
+    this.boundOfflineHandler = () => this.handleOnlineStatusChange(false);
+    window.addEventListener("online", this.boundOnlineHandler);
+    window.addEventListener("offline", this.boundOfflineHandler);
 
     // Track last online time
     if (navigator.onLine) {
@@ -178,6 +178,22 @@ class APICacheService {
 
     this.isInitialized = true;
     logger.info("API Cache Service initialized with IndexedDB");
+  }
+
+  /**
+   * Clean up event listeners and resources
+   */
+  destroy(): void {
+    if (this.boundOnlineHandler) {
+      window.removeEventListener("online", this.boundOnlineHandler);
+      this.boundOnlineHandler = null;
+    }
+    if (this.boundOfflineHandler) {
+      window.removeEventListener("offline", this.boundOfflineHandler);
+      this.boundOfflineHandler = null;
+    }
+    this.offlineCallbacks.clear();
+    this.isInitialized = false;
   }
 
   /**
