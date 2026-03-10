@@ -5,29 +5,22 @@
  * hardware-accelerated compression. Automatically ensures images fit within
  * Bluesky's 1MB upload limit by progressively reducing quality and dimensions.
  */
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   compressImage,
   cleanupTempFiles,
   getImageInfo,
-  onCompressionProgress,
 } from "../../modules/image-compressor";
 import type {
   CompressOptions,
-  CompressionResult,
-  ImageInfo,
 } from "../../modules/image-compressor";
 import { createLogger } from "../utils/logger";
-
 const logger = createLogger("ImageCompression");
-
 // Bluesky image limits
 const MAX_IMAGE_SIZE = 1_000_000; // 1MB
 const MAX_IMAGE_DIMENSION = 2000; // 2000px per side
 const COMPRESSION_THRESHOLD = 800_000; // Compress if over 800KB (leave buffer)
 const DEFAULT_QUALITY = 0.85;
-
 export type ImageCompressionStatus =
   | "idle"
   | "analyzing"
@@ -35,7 +28,6 @@ export type ImageCompressionStatus =
   | "complete"
   | "skipped"
   | "error";
-
 export interface ImageCompressionState {
   status: ImageCompressionStatus;
   progress: number; // 0-1
@@ -43,7 +35,6 @@ export interface ImageCompressionState {
   totalCount: number;
   error: string | null;
 }
-
 const initialState: ImageCompressionState = {
   status: "idle",
   progress: 0,
@@ -51,7 +42,6 @@ const initialState: ImageCompressionState = {
   totalCount: 0,
   error: null,
 };
-
 export interface CompressedImage {
   uri: string;
   width: number;
@@ -61,7 +51,6 @@ export interface CompressedImage {
   compressedSize: number;
   wasCompressed: boolean;
 }
-
 export interface UseImageCompressionOptions {
   /** JPEG quality 0.0–1.0. Default: 0.85 */
   quality?: number;
@@ -70,7 +59,6 @@ export interface UseImageCompressionOptions {
   /** Max dimension per side. Default: 2000 */
   maxDimension?: number;
 }
-
 export function useImageCompression(
   options: UseImageCompressionOptions = {},
 ) {
@@ -79,17 +67,14 @@ export function useImageCompression(
     maxFileSize = MAX_IMAGE_SIZE,
     maxDimension = MAX_IMAGE_DIMENSION,
   } = options;
-
   const [state, setState] = useState<ImageCompressionState>(initialState);
   const processingRef = useRef(false);
-
   // Clean up temp files on unmount
   useEffect(() => {
     return () => {
       cleanupTempFiles();
     };
   }, []);
-
   /**
    * Check if an image needs compression based on file size or dimensions.
    */
@@ -102,7 +87,6 @@ export function useImageCompression(
     },
     [maxDimension],
   );
-
   /**
    * Compress a single image.
    * Returns the compressed URI and metadata, or the original if compression
@@ -119,7 +103,6 @@ export function useImageCompression(
       let actualSize = fileSize;
       let actualWidth = width;
       let actualHeight = height;
-
       if (!actualSize || !actualWidth || !actualHeight) {
         const info = await getImageInfo(uri);
         if (info) {
@@ -128,7 +111,6 @@ export function useImageCompression(
           actualHeight = actualHeight || info.height;
         }
       }
-
       // Check if compression is needed
       if (!shouldCompress(actualSize, actualWidth, actualHeight)) {
         return {
@@ -141,20 +123,16 @@ export function useImageCompression(
           wasCompressed: false,
         };
       }
-
       // Determine output format
       const isPng = uri.toLowerCase().endsWith(".png");
       const format = isPng ? "png" : "jpeg";
-
       const compressOptions: CompressOptions = {
         quality,
         maxFileSize,
         maxDimension,
         format,
       };
-
       const result = await compressImage(uri, compressOptions);
-
       if (!result) {
         // Native module not available, return original
         logger.warn("Native image compression not available, using original");
@@ -168,16 +146,13 @@ export function useImageCompression(
           wasCompressed: false,
         };
       }
-
       const ratio =
         result.compressedSize > 0
           ? result.originalSize / result.compressedSize
           : 1;
-
       logger.log(
         `Image compressed: ${Math.round(result.originalSize / 1024)}KB -> ${Math.round(result.compressedSize / 1024)}KB (${ratio.toFixed(1)}x)`,
       );
-
       return {
         uri: result.uri,
         width: result.width,
@@ -190,7 +165,6 @@ export function useImageCompression(
     },
     [quality, maxFileSize, maxDimension, shouldCompress],
   );
-
   /**
    * Compress multiple images (batch processing).
    * Processes sequentially to avoid memory pressure.
@@ -216,7 +190,6 @@ export function useImageCompression(
           wasCompressed: false,
         }));
       }
-
       processingRef.current = true;
       setState({
         status: "analyzing",
@@ -225,9 +198,7 @@ export function useImageCompression(
         totalCount: images.length,
         error: null,
       });
-
       const results: CompressedImage[] = [];
-
       try {
         for (let i = 0; i < images.length; i++) {
           setState((prev) => ({
@@ -236,7 +207,6 @@ export function useImageCompression(
             progress: i / images.length,
             processedCount: i,
           }));
-
           const img = images[i];
           const result = await compressSingle(
             img.uri,
@@ -246,7 +216,6 @@ export function useImageCompression(
           );
           results.push(result);
         }
-
         setState({
           status: "complete",
           progress: 1,
@@ -254,7 +223,6 @@ export function useImageCompression(
           totalCount: images.length,
           error: null,
         });
-
         processingRef.current = false;
         return results;
       } catch (error) {
@@ -263,20 +231,17 @@ export function useImageCompression(
             ? error.message
             : "Failed to compress images";
         logger.error("Image compression batch failed:", error);
-
         setState((prev) => ({
           ...prev,
           status: "error",
           error: errorMessage,
         }));
-
         processingRef.current = false;
         throw error;
       }
     },
     [compressSingle],
   );
-
   /**
    * Reset compression state.
    */
@@ -284,7 +249,6 @@ export function useImageCompression(
     processingRef.current = false;
     setState(initialState);
   }, []);
-
   /**
    * Get a human-readable status message.
    */
@@ -306,7 +270,6 @@ export function useImageCompression(
         return "";
     }
   }, [state]);
-
   return {
     // State
     state,
@@ -314,12 +277,10 @@ export function useImageCompression(
       state.status === "compressing" || state.status === "analyzing",
     isComplete: state.status === "complete" || state.status === "skipped",
     isError: state.status === "error",
-
     // Actions
     compressSingle,
     compressBatch,
     reset,
-
     // Utilities
     shouldCompress,
     getStatusMessage,
