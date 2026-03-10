@@ -440,41 +440,48 @@ body::-webkit-scrollbar-thumb:hover {
   appearance: none;
   height: 6px;
   border-radius: 3px;
-  background: var(--asph-border-primary);
+  background: linear-gradient(to right,
+    var(--asph-primary) 0%,
+    var(--asph-primary) var(--slider-progress, 0%),
+    var(--asph-bg-tertiary, rgba(128, 128, 128, 0.3)) var(--slider-progress, 0%),
+    var(--asph-bg-tertiary, rgba(128, 128, 128, 0.3)) 100%);
   outline: none;
   cursor: pointer;
+  margin: 8px 0;
 }
 
 .asph-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: var(--asph-primary);
   cursor: pointer;
-  border: 2px solid var(--asph-bg-primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  transition: transform 0.15s ease;
+  border: 2.5px solid var(--asph-bg-primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .asph-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
+  transform: scale(1.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .asph-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: var(--asph-primary);
   cursor: pointer;
-  border: 2px solid var(--asph-bg-primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  transition: transform 0.15s ease;
+  border: 2.5px solid var(--asph-bg-primary);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .asph-slider::-moz-range-thumb:hover {
-  transform: scale(1.1);
+  transform: scale(1.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .asph-slider::-moz-range-track {

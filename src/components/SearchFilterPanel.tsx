@@ -99,6 +99,8 @@ const EngagementSlider: React.FC<{
         value={valueToSlider(value)}
         onChange={(e) => onChange(sliderToValue(parseInt(e.target.value, 10)))}
         className="asph-slider w-full"
+        style={{ "--slider-progress": `${valueToSlider(value)}%` } as React.CSSProperties}
+        style={{ "--slider-progress": `${valueToSlider(value)}%` } as React.CSSProperties}
       />
     </div>
   );
@@ -544,27 +546,12 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
                 </button>
               </div>
             ))}
-            <input
-              type="text"
-              placeholder="Add user..."
-              className="min-h-[44px] w-32 rounded-md border px-3 py-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
-              style={{
-                backgroundColor: "var(--asph-bg-secondary)",
-                borderColor: "var(--asph-border-primary)",
-                color: "var(--asph-text-primary)",
-                // @ts-expect-error CSS custom property for focus ring
-                "--tw-ring-color": "var(--asph-primary)",
+            </div>
+            <UserTypeahead
+              onSelectUser={(handle) => {
+                updateFilter("fromUsers", [...filters.fromUsers, handle]);
               }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                  e.preventDefault();
-                  const newUser = e.currentTarget.value
-                    .trim()
-                    .replace(/^@/, "");
-                  updateFilter("fromUsers", [...filters.fromUsers, newUser]);
-                  e.currentTarget.value = "";
-                }
-              }}
+              placeholder="Search users..."
             />
           </div>
         </div>
