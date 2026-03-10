@@ -11,8 +11,8 @@ import MobileCoreServices
 import UniformTypeIdentifiers
 
 public class SpotlightSearchModule: Module {
-    private let domainProfile = "io.shadowsky.profile"
-    private let domainPost = "io.shadowsky.post"
+    private let domainProfile = "is.asphodel.profile"
+    private let domainPost = "is.asphodel.post"
     private let maxIndexedItems = 500
 
     public func definition() -> ModuleDefinition {

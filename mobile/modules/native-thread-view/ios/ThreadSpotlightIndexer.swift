@@ -14,7 +14,7 @@ final class ThreadSpotlightIndexer {
 
     static let shared = ThreadSpotlightIndexer()
 
-    private let domainIdentifier = "io.shadowsky.thread"
+    private let domainIdentifier = "is.asphodel.thread"
 
     private init() {}
 
