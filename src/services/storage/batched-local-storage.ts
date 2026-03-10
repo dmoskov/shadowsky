@@ -65,6 +65,9 @@ class BatchedLocalStorage {
   };
   private isAvailable: boolean;
   private flushPromise: Promise<void> | null = null;
+  private boundBeforeUnload: (() => void) | null = null;
+  private boundPageHide: (() => void) | null = null;
+  private boundVisibilityChange: (() => void) | null = null;
 
   constructor(debounceMs: number = DEFAULT_DEBOUNCE_MS) {
     this.debounceMs = debounceMs;
@@ -72,14 +75,16 @@ class BatchedLocalStorage {
 
     // Flush on page unload to prevent data loss
     if (typeof window !== "undefined") {
-      window.addEventListener("beforeunload", () => this.flushSync());
-      window.addEventListener("pagehide", () => this.flushSync());
-      // Also flush when tab becomes hidden (mobile background)
-      document.addEventListener("visibilitychange", () => {
+      this.boundBeforeUnload = () => this.flushSync();
+      this.boundPageHide = () => this.flushSync();
+      this.boundVisibilityChange = () => {
         if (document.visibilityState === "hidden") {
           this.flushSync();
         }
-      });
+      };
+      window.addEventListener("beforeunload", this.boundBeforeUnload);
+      window.addEventListener("pagehide", this.boundPageHide);
+      document.addEventListener("visibilitychange", this.boundVisibilityChange);
     }
   }
 
@@ -363,6 +368,33 @@ class BatchedLocalStorage {
   }
 
   /**
+   * Clean up event listeners and pending timers
+   */
+  destroy(): void {
+    if (this.flushTimeout) {
+      clearTimeout(this.flushTimeout);
+      this.flushTimeout = null;
+    }
+    if (typeof window !== "undefined") {
+      if (this.boundBeforeUnload) {
+        window.removeEventListener("beforeunload", this.boundBeforeUnload);
+        this.boundBeforeUnload = null;
+      }
+      if (this.boundPageHide) {
+        window.removeEventListener("pagehide", this.boundPageHide);
+        this.boundPageHide = null;
+      }
+      if (this.boundVisibilityChange) {
+        document.removeEventListener(
+          "visibilitychange",
+          this.boundVisibilityChange,
+        );
+        this.boundVisibilityChange = null;
+      }
+    }
+  }
+
+  /**
    * Get current batch statistics
    */
   getStats(): BatchStats {
@@ -441,6 +473,7 @@ export function getBatchedStorage(): BatchedLocalStorage {
 export function resetBatchedStorage(): void {
   if (instance) {
     instance.flushSync();
+    instance.destroy();
   }
   instance = null;
 }

@@ -28,21 +28,27 @@ export function useMediaPreload(
   useEffect(() => {
     if (!enabled) return;
 
+    let cancelled = false;
+
     if (!initPromise.current) {
       initPromise.current = (async () => {
         try {
           const cache = MediaCacheService.getInstance();
           await cache.init();
-          mediaCache.current = cache;
-          debug.log("[MediaPreload] Initialized");
+          if (!cancelled) {
+            mediaCache.current = cache;
+            debug.log("[MediaPreload] Initialized");
+          }
         } catch (error) {
-          debug.error("[MediaPreload] Failed to initialize:", error);
+          if (!cancelled) {
+            debug.error("[MediaPreload] Failed to initialize:", error);
+          }
         }
       })();
     }
 
     return () => {
-      // Cleanup is handled by the singleton
+      cancelled = true;
     };
   }, [enabled]);
 
@@ -51,6 +57,8 @@ export function useMediaPreload(
     if (!enabled || !mediaCache.current || !posts || posts.length === 0) {
       return;
     }
+
+    let cancelled = false;
 
     const preloadUpcoming = async () => {
       const startIndex = Math.max(0, currentIndex);
@@ -75,7 +83,7 @@ export function useMediaPreload(
         preloadedIndices.current.add(i);
       }
 
-      if (urlsToPreload.length > 0 && mediaCache.current) {
+      if (urlsToPreload.length > 0 && mediaCache.current && !cancelled) {
         debug.log(
           `[MediaPreload] Preloading ${urlsToPreload.length} media items for indices ${startIndex}-${endIndex}`,
         );
@@ -83,12 +91,18 @@ export function useMediaPreload(
         try {
           await mediaCache.current.preloadMedia(urlsToPreload);
         } catch (error) {
-          debug.error("[MediaPreload] Error preloading media:", error);
+          if (!cancelled) {
+            debug.error("[MediaPreload] Error preloading media:", error);
+          }
         }
       }
     };
 
     preloadUpcoming();
+
+    return () => {
+      cancelled = true;
+    };
   }, [posts, currentIndex, enabled, lookahead, preloadVideos]);
 
   // Clear preloaded indices when posts change

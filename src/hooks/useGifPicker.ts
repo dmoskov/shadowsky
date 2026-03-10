@@ -4,7 +4,7 @@
  * Manages GIF search, selection, and integration with composer
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { TenorGif } from "../services/tenor";
 import {
   getBestGifUrl,
@@ -30,6 +30,15 @@ export function useGifPicker() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedGif, setSelectedGif] = useState<SelectedGif | null>(null);
+  const mountedRef = useRef(true);
+
+  // Track mounted state to prevent setState after unmount
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Load trending GIFs when picker opens
   useEffect(() => {
@@ -43,14 +52,17 @@ export function useGifPicker() {
       setLoading(true);
       setError(null);
       const results = await getTrending(20);
+      if (!mountedRef.current) return;
       setTrending(results);
     } catch (err) {
-      console.error("Error loading trending GIFs:", err);
+      if (!mountedRef.current) return;
       setError(
         err instanceof Error ? err.message : "Failed to load trending GIFs",
       );
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -64,12 +76,15 @@ export function useGifPicker() {
       setLoading(true);
       setError(null);
       const results = await searchGifs(query, 20);
+      if (!mountedRef.current) return;
       setGifs(results);
     } catch (err) {
-      console.error("Error searching GIFs:", err);
+      if (!mountedRef.current) return;
       setError(err instanceof Error ? err.message : "Failed to search GIFs");
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 

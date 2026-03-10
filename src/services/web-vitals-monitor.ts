@@ -101,6 +101,7 @@ class WebVitalsMonitor {
   private analyticsEnabled = true;
   private pendingAnalytics: Map<string, Metric> = new Map();
   private analyticsFlushTimer: ReturnType<typeof setTimeout> | null = null;
+  private boundVisibilityHandler: (() => void) | null = null;
 
   private constructor() {
     this.metrics = this.createEmptyMetrics();
@@ -292,12 +293,33 @@ class WebVitalsMonitor {
     });
 
     // Save metrics to history and flush analytics when page is about to unload
-    window.addEventListener("visibilitychange", () => {
+    this.boundVisibilityHandler = () => {
       if (document.visibilityState === "hidden") {
         this.forceFlushAnalytics();
         this.saveCurrentMetrics();
       }
-    });
+    };
+    window.addEventListener("visibilitychange", this.boundVisibilityHandler);
+  }
+
+  /**
+   * Clean up event listeners and pending timers
+   */
+  destroy(): void {
+    if (this.boundVisibilityHandler) {
+      window.removeEventListener(
+        "visibilitychange",
+        this.boundVisibilityHandler,
+      );
+      this.boundVisibilityHandler = null;
+    }
+    if (this.analyticsFlushTimer) {
+      clearTimeout(this.analyticsFlushTimer);
+      this.analyticsFlushTimer = null;
+    }
+    this.callbacks.clear();
+    this.pendingAnalytics.clear();
+    this.isInitialized = false;
   }
 
   /**
