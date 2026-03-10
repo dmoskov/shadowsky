@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { User, X, Loader2 } from "lucide-react";
+import { User, Loader2 } from "lucide-react";
 
 interface UserTypeaheadProps {
   onSelectUser: (handle: string) => void;

@@ -99,9 +99,6 @@ const EngagementSlider: React.FC<{
         value={valueToSlider(value)}
         onChange={(e) => onChange(sliderToValue(parseInt(e.target.value, 10)))}
         className="asph-slider w-full"
-        style={{
-          accentColor: "var(--asph-primary)",
-        }}
       />
     </div>
   );
@@ -516,7 +513,8 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
             <User size={12} />
             From Users
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
             {filters.fromUsers.map((user, i) => (
               <div
                 key={`from-user-${user}-${i}`}

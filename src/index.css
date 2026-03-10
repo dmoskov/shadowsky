@@ -438,9 +438,9 @@ body::-webkit-scrollbar-thumb:hover {
 .asph-slider {
   -webkit-appearance: none;
   appearance: none;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--asph-bg-tertiary);
+  height: 6px;
+  border-radius: 3px;
+  background: var(--asph-border-primary);
   outline: none;
   cursor: pointer;
 }
@@ -478,9 +478,9 @@ body::-webkit-scrollbar-thumb:hover {
 }
 
 .asph-slider::-moz-range-track {
-  height: 4px;
-  border-radius: 2px;
-  background: var(--asph-bg-tertiary);
+  height: 6px;
+  border-radius: 3px;
+  background: var(--asph-border-primary);
 }
 
 /* Reduced motion for slider thumb hover */
