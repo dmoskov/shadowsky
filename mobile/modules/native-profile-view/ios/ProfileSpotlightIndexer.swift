@@ -15,7 +15,7 @@ final class ProfileSpotlightIndexer {
 
     static let shared = ProfileSpotlightIndexer()
 
-    private let domainIdentifier = "io.shadowsky.profile"
+    private let domainIdentifier = "is.asphodel.profile"
 
     private init() {}
 

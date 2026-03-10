@@ -22,6 +22,7 @@ import {
   MessageCircle,
   MoreHorizontal,
   Pin,
+  QrCode,
   Repeat2,
   Rss,
   Share2,
@@ -37,6 +38,7 @@ import { useParams, useSearchParams } from "react-router";
 import { List, ListImperativeAPI, useDynamicRowHeight } from "react-window";
 import { AddToListModal } from "../components/AddToListModal";
 import { PostCard } from "../components/PostCard";
+import { ProfileQRCodeModal } from "../components/ProfileQRCodeModal";
 import { ReportModal } from "../components/ReportModal";
 import { ThreadModal } from "../components/ThreadModal";
 import { DomainVerifiedBadge } from "../components/ui/DomainVerifiedBadge";
@@ -144,6 +146,7 @@ export default function ProfilePage() {
   const [openThreadToQuote, setOpenThreadToQuote] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showAddToListModal, setShowAddToListModal] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
   const [analysisRequested, setAnalysisRequested] = useState(false);
 
   const profileMenuButtonRef = useRef<HTMLButtonElement>(null);
@@ -903,6 +906,41 @@ export default function ProfilePage() {
                             <Sparkles className="h-4 w-4" />
                             Analyze Profile
                           </button>
+                          <button
+                            onClick={() => {
+                              setShowProfileMenu(false);
+                              setShowQRCode(true);
+                            }}
+                            className="touch-target-sm flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            style={{ color: "var(--asph-text-primary)" }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--asph-bg-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
+                            }
+                          >
+                            <QrCode className="h-4 w-4" />
+                            QR Code
+                          </button>
+                          <button
+                            onClick={handleShare}
+                            className="touch-target-sm flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            style={{ color: "var(--asph-text-primary)" }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--asph-bg-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
+                            }
+                          >
+                            <Share2 className="h-4 w-4" />
+                            Share Profile
+                          </button>
                         </>
                       ) : (
                         <>
@@ -921,6 +959,25 @@ export default function ProfilePage() {
                           >
                             <Share2 className="h-4 w-4" />
                             Share Profile
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowProfileMenu(false);
+                              setShowQRCode(true);
+                            }}
+                            className="touch-target-sm flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            style={{ color: "var(--asph-text-primary)" }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--asph-bg-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
+                            }
+                          >
+                            <QrCode className="h-4 w-4" />
+                            QR Code
                           </button>
                           <button
                             onClick={handleOpenInBluesky}
@@ -1962,6 +2019,16 @@ export default function ProfilePage() {
             avatar: profile.avatar,
           }}
           onClose={() => setShowAddToListModal(false)}
+        />
+      )}
+
+      {profile && (
+        <ProfileQRCodeModal
+          isOpen={showQRCode}
+          onClose={() => setShowQRCode(false)}
+          handle={profile.handle}
+          displayName={profile.displayName}
+          avatar={profile.avatar}
         />
       )}
     </div>

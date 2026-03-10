@@ -18,7 +18,7 @@ const CLIENT_METADATA = {
   logo_uri: 'https://shadowsky.io/butterfly-icon.svg',
   tos_uri: 'https://shadowsky.io/terms',
   policy_uri: 'https://shadowsky.io/privacy',
-  redirect_uris: ['io.shadowsky:/oauth-callback' as const],
+  redirect_uris: ['is.asphodel:/oauth-callback' as const],
   scope: 'atproto transition:generic',
   grant_types: ['authorization_code' as const, 'refresh_token' as const],
   response_types: ['code' as const],

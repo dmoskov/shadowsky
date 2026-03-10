@@ -55,6 +55,8 @@ import { preferencesService } from "../../services/preferences";
 import { triggerHaptic } from "../../utils/haptics";
 import { createLogger } from "../../utils/logger";
 import { fontSize } from "../../utils/typography";
+import { GifPicker } from "../../components/GifPicker";
+import { EmojiPickerModal } from "../../components/EmojiPickerModal";
 import type { ComposeScreenProps } from "./ComposeTypes";
 
 const logger = createLogger("ComposeScreenNative");
@@ -722,9 +724,23 @@ export function ComposeScreenNative({
     gifPicker.selectedGif,
   ]);
 
+  const handleGifSelect = useCallback(
+    (gif: import("../../services/tenor").TenorGif) => {
+      gifPicker.selectGif(gif);
+    },
+    [gifPicker.selectGif],
+  );
+
   const handleEmojiPicker = useCallback(() => {
     emojiPicker.open();
   }, []);
+
+  const handleEmojiSelect = useCallback(
+    (emoji: string) => {
+      setText((prev) => prev + emoji);
+    },
+    [],
+  );
 
   const handleRemoveMedia = useCallback(
     (event: { nativeEvent: { index: number } }) => {
@@ -1179,6 +1195,23 @@ export function ComposeScreenNative({
             { text: "Cancel", style: "cancel" },
           ]);
         }}
+      />
+
+      <GifPicker
+        visible={gifPicker.isVisible}
+        onSelectGif={handleGifSelect}
+        onClose={gifPicker.close}
+        gifs={gifPicker.gifs}
+        loading={gifPicker.loading}
+        error={gifPicker.error}
+        searchQuery={gifPicker.searchQuery}
+        onSearch={gifPicker.search}
+      />
+
+      <EmojiPickerModal
+        visible={emojiPicker.isVisible}
+        onSelectEmoji={handleEmojiSelect}
+        onClose={emojiPicker.close}
       />
     </View>
   );

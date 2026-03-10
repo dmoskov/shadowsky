@@ -15,9 +15,9 @@ const fs = require("fs");
  * 3. Sets up the correct build settings for the extension
  */
 
-const APP_GROUP_ID = "group.io.shadowsky.app";
+const APP_GROUP_ID = "group.is.asphodel.app";
 const SHARE_EXT_NAME = "ShareExtension";
-const SHARE_EXT_BUNDLE_ID = "io.shadowsky.app.ShareExtension";
+const SHARE_EXT_BUNDLE_ID = "is.asphodel.app.ShareExtension";
 
 // Deterministic UUIDs for Share Extension (so config plugin is idempotent)
 const SE_PRODUCT_REF = "SHARE_EXT_PRODUCT_001";
@@ -60,7 +60,9 @@ const withShareExtension = (config) => {
     // Check if ShareExtension files exist
     const shareExtDir = path.join(projectRoot, "ios", SHARE_EXT_NAME);
     if (!fs.existsSync(shareExtDir)) {
-      console.warn(`⚠️  ShareExtension directory not found at ${shareExtDir}`);
+      console.log(
+        `ℹ️  ShareExtension: skipping — source directory not yet created at ${shareExtDir}`
+      );
       return config;
     }
 

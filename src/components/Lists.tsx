@@ -1,14 +1,15 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
   Edit2,
   List as ListIcon,
+  Loader2,
   MoreVertical,
   Plus,
   Trash2,
   Users,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
 import { useToast } from "../contexts/ToastContext";
@@ -32,20 +33,42 @@ export const Lists: React.FC = () => {
   const [menuOpenForList, setMenuOpenForList] = useState<string | null>(null);
 
   const {
-    data: lists,
+    data,
     isLoading,
     error,
-  } = useQuery({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ["lists"],
-    queryFn: async () => {
+    queryFn: async ({ pageParam }) => {
       if (!agent) {
         throw new Error("Not authenticated");
       }
       await blueskyListService.initialize(agent);
-      return blueskyListService.getMyLists();
+      return blueskyListService.getMyListsPage({ cursor: pageParam });
     },
+    getNextPageParam: (lastPage) => lastPage.cursor,
+    initialPageParam: undefined as string | undefined,
     enabled: !!agent,
   });
+
+  const lists = useMemo(
+    () => data?.pages.flatMap((page) => page.lists) ?? [],
+    [data],
+  );
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !hasNextPage || isFetchingNextPage) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    if (scrollHeight - scrollTop - clientHeight < 300) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleCreateList = async (name: string, description?: string) => {
     if (!agent) return;
@@ -187,6 +210,8 @@ export const Lists: React.FC = () => {
       )}
 
       <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
         className="asph-scrollbar flex-1 overflow-y-auto p-4"
         aria-labelledby="lists-heading"
       >
@@ -292,6 +317,17 @@ export const Lists: React.FC = () => {
             </article>
           ))}
         </div>
+        {isFetchingNextPage && (
+          <div className="flex items-center justify-center py-4">
+            <Loader2
+              className="h-5 w-5 animate-spin text-asph-text-secondary"
+              aria-hidden="true"
+            />
+            <span className="ml-2 text-sm text-asph-text-secondary">
+              Loading more lists...
+            </span>
+          </div>
+        )}
       </div>
 
       {showCreateModal && (

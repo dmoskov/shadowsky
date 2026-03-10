@@ -96,7 +96,8 @@ function withAlternateIcons(config) {
       project.hash.project.objects["PBXFileReference"][fileRef] = {
         isa: "PBXFileReference",
         lastKnownFileType: "image.png",
-        path: iconFile,
+        name: iconFile,
+        path: filePath,
         sourceTree: '"<group>"',
       };
       project.hash.project.objects["PBXFileReference"][`${fileRef}_comment`] =
