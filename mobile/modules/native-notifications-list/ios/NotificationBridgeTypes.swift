@@ -1,16 +1,25 @@
 //
 // NotificationBridgeTypes.swift
-// NotificationBridge
+// NativeNotificationsList
 //
 // Swift Codable structs for AT Protocol notification data.
 // These types match the TypeScript serialization format from
 // src/services/notification-bridge/serializer.ts
 //
-// All types are public for cross-module access (e.g., NativeNotificationsList).
+// Originally from the NotificationBridge module, inlined here
+// after its removal.
 //
 
 import Foundation
 import FeedBridge
+
+// MARK: - Notification Names (formerly on NotificationBridgeModule)
+
+enum NotificationBridgeNotifications {
+    static let dataUpdated = Notification.Name("NotificationBridgeDataUpdated")
+    static let dataCleared = Notification.Name("NotificationBridgeDataCleared")
+    static let decodeError = Notification.Name("NotificationBridgeDecodeError")
+}
 
 // MARK: - Serialized Author
 
@@ -299,7 +308,6 @@ public struct SerializedNotificationData: Codable {
             let notifData = try JSONDecoder().decode(SerializedNotificationData.self, from: data)
             return LenientNotificationDecodeResult(data: notifData, skippedCount: 0)
         } catch {
-            // Lenient fallback: decode metadata+cursor, then try each notification individually
             struct PartialData: Codable {
                 let metadata: NotificationUpdateMetadata
                 let cursor: String?
@@ -307,21 +315,17 @@ public struct SerializedNotificationData: Codable {
 
             let partial = try JSONDecoder().decode(PartialData.self, from: data)
 
-            // Re-decode full JSON to get raw notifications
             var decodedNotifications: [ProcessedSerializedNotification] = []
             var skipped = 0
             if let jsonObject = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                let notificationsArray = jsonObject["notifications"] as? [[String: Any]] {
-                for (index, notifDict) in notificationsArray.enumerated() {
+                for (_, notifDict) in notificationsArray.enumerated() {
                     do {
                         let notifData = try JSONSerialization.data(withJSONObject: notifDict)
                         let notification = try JSONDecoder().decode(ProcessedSerializedNotification.self, from: notifData)
                         decodedNotifications.append(notification)
                     } catch {
                         skipped += 1
-                        #if DEBUG
-                        print("[NotificationBridge] Skipping notification at index \(index): \(error.localizedDescription)")
-                        #endif
                     }
                 }
             }
@@ -338,7 +342,6 @@ public struct SerializedNotificationData: Codable {
 
 // MARK: - Lenient Decode Result
 
-/// Result of a lenient decode operation, including the count of skipped items
 public struct LenientNotificationDecodeResult {
     public let data: SerializedNotificationData
     public let skippedCount: Int

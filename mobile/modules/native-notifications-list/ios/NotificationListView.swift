@@ -10,7 +10,6 @@
 import SwiftUI
 import ExpoModulesCore
 import FeedBridge
-import NotificationBridge
 import ExpoSwiftUIFeed
 
 // MARK: - Notification List Props
@@ -36,7 +35,7 @@ class NotificationListState: ObservableObject {
 
     func startObserving() {
         notificationDataObserver = NotificationCenter.default.addObserver(
-            forName: NotificationBridgeModule.notificationDataUpdatedNotification,
+            forName: NotificationBridgeNotifications.dataUpdated,
             object: nil,
             queue: .main
         ) { [weak self] notification in
@@ -47,7 +46,7 @@ class NotificationListState: ObservableObject {
         }
 
         clearDataObserver = NotificationCenter.default.addObserver(
-            forName: NotificationBridgeModule.notificationDataClearedNotification,
+            forName: NotificationBridgeNotifications.dataCleared,
             object: nil,
             queue: .main
         ) { [weak self] _ in
@@ -57,7 +56,7 @@ class NotificationListState: ObservableObject {
 
         // Observe decode errors from bridge
         decodeErrorObserver = NotificationCenter.default.addObserver(
-            forName: NotificationBridgeModule.notificationDecodeErrorNotification,
+            forName: NotificationBridgeNotifications.decodeError,
             object: nil,
             queue: .main
         ) { [weak self] notification in
