@@ -12,6 +12,9 @@ const mediaRoutes = require("./routes/media");
 const utilityRoutes = require("./routes/utility");
 const pushRoutes = require("./routes/push-notifications");
 const loggingRoutes = require("./routes/logging");
+const trendingRoutes = require("./routes/trending");
+const { initTrendingRoutes } = require("./routes/trending");
+const { createTrendingService } = require("./firehose");
 
 // Load environment variables from parent directory's .env file
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
@@ -137,6 +140,7 @@ app.use("/api/v1", apiVersionHeader("v1"), mediaRoutes);
 app.use("/api/v1", apiVersionHeader("v1"), utilityRoutes);
 app.use("/api/v1", apiVersionHeader("v1"), pushRoutes);
 app.use("/api/v1", apiVersionHeader("v1"), loggingRoutes);
+app.use("/api/v1", apiVersionHeader("v1"), trendingRoutes);
 
 // =============================================================================
 // Backward-Compatible Unversioned Routes
@@ -150,6 +154,24 @@ app.use("/api", apiVersionHeader("v1"), mediaRoutes);
 app.use("/api", apiVersionHeader("v1"), utilityRoutes);
 app.use("/api", apiVersionHeader("v1"), pushRoutes);
 app.use("/api", apiVersionHeader("v1"), loggingRoutes);
+app.use("/api", apiVersionHeader("v1"), trendingRoutes);
+
+// =============================================================================
+// Firehose Trending Service
+// =============================================================================
+// Start the firehose consumer for trending topic aggregation
+const enableFirehose = process.env.ENABLE_FIREHOSE !== "false";
+let trendingServiceInstance = null;
+
+if (enableFirehose) {
+  try {
+    trendingServiceInstance = createTrendingService();
+    initTrendingRoutes(trendingServiceInstance);
+    console.log("[Trending] Firehose trending service started");
+  } catch (err) {
+    console.error("[Trending] Failed to start firehose service:", err.message);
+  }
+}
 
 // Create HTTP server for Express app
 const httpServer = http.createServer(app);
@@ -186,6 +208,10 @@ httpServer.listen(PORT, () => {
   console.log(`  - GET  /api/v1/push-subscriptions`);
   console.log(`  - POST /api/v1/push-notification/send`);
   console.log(`  - GET  /api/v1/push-notification/stats`);
+  console.log(`  Trending:`);
+  console.log(`  - GET  /api/v1/trending`);
+  console.log(`  - GET  /api/v1/trending/all`);
+  console.log(`  - GET  /api/v1/trending/stats`);
   console.log(
     `\nAPI Configuration:`,
     process.env.ANTHROPIC_API_KEY
@@ -237,6 +263,10 @@ wsHttpServer.listen(WS_PORT, () => {
 // Graceful shutdown
 process.on("SIGTERM", () => {
   console.log("\nSIGTERM received, shutting down gracefully...");
+  if (trendingServiceInstance) {
+    trendingServiceInstance.shutdown();
+    console.log("Trending service stopped");
+  }
   wsServer.close();
   httpServer.close(() => {
     console.log("HTTP server closed");
@@ -249,6 +279,10 @@ process.on("SIGTERM", () => {
 
 process.on("SIGINT", () => {
   console.log("\nSIGINT received, shutting down gracefully...");
+  if (trendingServiceInstance) {
+    trendingServiceInstance.shutdown();
+    console.log("Trending service stopped");
+  }
   wsServer.close();
   httpServer.close(() => {
     console.log("HTTP server closed");
