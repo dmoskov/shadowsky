@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useCallback, useMemo } from "react";
+import { UserTypeahead } from "./UserTypeahead";
 import {
   defaultFilters,
   type DatePreset,
