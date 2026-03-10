@@ -798,4 +798,203 @@ describe("OAuthService", () => {
       }).not.toThrow();
     });
   });
+
+  describe("Session management lifecycle", () => {
+    it("should transition to unauthenticated state when onDelete fires", async () => {
+      await oauthService.init();
+      expect(oauthService.isAuthenticated()).toBe(true);
+
+      capturedOnDelete!("did:plc:test123", new Error("Token revoked"));
+
+      expect(oauthService.isAuthenticated()).toBe(false);
+      expect(oauthService.getSession()).toBeNull();
+      expect(oauthService.getAgent()).toBeNull();
+    });
+
+    it("should clear all state fields when onDelete fires", async () => {
+      const deletedCallback = vi.fn();
+      oauthService.addEventListener("deleted", deletedCallback);
+
+      await oauthService.init();
+      capturedOnDelete!("did:plc:test123", new Error("Expired"));
+
+      expect(oauthService.getState()).toEqual({
+        session: null,
+        agent: null,
+        did: null,
+        handle: null,
+      });
+      expect(deletedCallback).toHaveBeenCalledWith({
+        sub: "did:plc:test123",
+        cause: expect.any(Error),
+      });
+    });
+
+    it("should allow re-initialization after state reset", async () => {
+      await oauthService.init();
+      expect(oauthService.isAuthenticated()).toBe(true);
+
+      // Reset service to simulate a fresh state
+      // @ts-expect-error - accessing private property for testing
+      oauthService.client = null;
+      // @ts-expect-error - accessing private property for testing
+      oauthService.currentSession = null;
+      // @ts-expect-error - accessing private property for testing
+      oauthService.currentAgent = null;
+      // @ts-expect-error - accessing private property for testing
+      oauthService.initPromise = null;
+
+      const newSession = {
+        did: "did:plc:new456",
+        signOut: vi.fn().mockResolvedValue(undefined),
+      };
+      mockOAuthClient.init = vi.fn().mockResolvedValue({ session: newSession });
+
+      const result = await oauthService.init();
+      expect(result?.did).toBe("did:plc:new456");
+      expect(oauthService.isAuthenticated()).toBe(true);
+    });
+
+    it("should complete successfully when signOut is called during init", async () => {
+      // Start init without awaiting, then signOut before init resolves
+      const initPromise = oauthService.init();
+
+      // currentSession is still null here (init hasn't resolved yet)
+      await oauthService.signOut();
+      expect(oauthService.isAuthenticated()).toBe(false);
+
+      // init eventually resolves and sets the session
+      const result = await initPromise;
+      expect(result?.did).toBe("did:plc:test123");
+      expect(oauthService.isAuthenticated()).toBe(true);
+    });
+
+    it("should handle multiple sequential signOut calls idempotently", async () => {
+      await oauthService.init();
+
+      await oauthService.signOut();
+      await oauthService.signOut();
+      await oauthService.signOut();
+
+      // signOut on the session only called once (first call), rest are no-ops
+      expect(mockSession.signOut).toHaveBeenCalledTimes(1);
+      expect(oauthService.isAuthenticated()).toBe(false);
+    });
+
+    it("should support full cycle: init → signOut → reset → re-init with new session", async () => {
+      const firstResult = await oauthService.init();
+      expect(firstResult?.did).toBe("did:plc:test123");
+
+      await oauthService.signOut();
+      expect(oauthService.isAuthenticated()).toBe(false);
+
+      // Reset initPromise to allow re-initialization
+      // @ts-expect-error - accessing private property for testing
+      oauthService.initPromise = null;
+
+      const newSession = {
+        did: "did:plc:newuser",
+        signOut: vi.fn().mockResolvedValue(undefined),
+      };
+      mockOAuthClient.init = vi.fn().mockResolvedValue({ session: newSession });
+
+      const secondResult = await oauthService.init();
+      expect(secondResult?.did).toBe("did:plc:newuser");
+      expect(oauthService.isAuthenticated()).toBe(true);
+    });
+
+    it("should set session but return null did when session has no did field", async () => {
+      const sessionWithoutDid = {
+        signOut: vi.fn().mockResolvedValue(undefined),
+      };
+      mockOAuthClient.init = vi
+        .fn()
+        .mockResolvedValue({ session: sessionWithoutDid });
+
+      const result = await oauthService.init();
+
+      expect(result).toBeDefined();
+      expect(result?.session).toBe(sessionWithoutDid);
+      expect(result?.did).toBeNull();
+      // Session object is non-null, so isAuthenticated is true
+      expect(oauthService.isAuthenticated()).toBe(true);
+    });
+
+    it("should emit events in correct order across lifecycle transitions", async () => {
+      const events: string[] = [];
+
+      oauthService.addEventListener("session", (state) => {
+        events.push(state.did ? `session:${state.did}` : "session:null");
+      });
+      oauthService.addEventListener("deleted", (event) => {
+        events.push(`deleted:${event.sub}`);
+      });
+
+      await oauthService.init();
+      capturedOnDelete!("did:plc:test123", new Error("Revoked"));
+      await oauthService.signOut();
+
+      expect(events).toEqual([
+        "session:did:plc:test123", // from init
+        "deleted:did:plc:test123", // from onDelete
+        "session:null", // from signOut
+      ]);
+    });
+
+    it("should not call removed listener in subsequent emissions", async () => {
+      const removedCallback = vi.fn().mockImplementation(() => {
+        oauthService.removeEventListener("session", removedCallback);
+      });
+      const persistentCallback = vi.fn();
+
+      oauthService.addEventListener("session", removedCallback);
+      oauthService.addEventListener("session", persistentCallback);
+
+      // First emission (from init) — both are called; removedCallback removes itself
+      await oauthService.init();
+      expect(removedCallback).toHaveBeenCalledTimes(1);
+      expect(persistentCallback).toHaveBeenCalledTimes(1);
+
+      // Second emission — removedCallback should no longer be registered
+      // @ts-expect-error - accessing private method for testing
+      oauthService.emitEvent("session", oauthService.getState());
+      expect(removedCallback).toHaveBeenCalledTimes(1); // unchanged
+      expect(persistentCallback).toHaveBeenCalledTimes(2);
+    });
+
+    it("should receive deleted events when listener is added after init", async () => {
+      // onDelete is wired up during init
+      await oauthService.init();
+
+      // Add the listener afterwards
+      const lateCallback = vi.fn();
+      oauthService.addEventListener("deleted", lateCallback);
+
+      capturedOnDelete!("did:plc:test123", new Error("Revoked"));
+
+      expect(lateCallback).toHaveBeenCalledWith({
+        sub: "did:plc:test123",
+        cause: expect.any(Error),
+      });
+    });
+
+    it("should reset initPromise after unexpected error so subsequent calls can retry", async () => {
+      mockOAuthClient.init = vi
+        .fn()
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockResolvedValueOnce({ session: mockSession });
+
+      // First call should fail
+      await expect(oauthService.init()).rejects.toThrow("Network error");
+
+      // initPromise must be null so the service can be retried
+      // @ts-expect-error - accessing private property for testing
+      expect(oauthService.initPromise).toBeNull();
+
+      // Second call should succeed
+      const result = await oauthService.init();
+      expect(result?.did).toBe("did:plc:test123");
+      expect(oauthService.isAuthenticated()).toBe(true);
+    });
+  });
 });
