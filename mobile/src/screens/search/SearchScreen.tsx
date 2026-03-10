@@ -279,7 +279,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   const handlePostPress = (post: AppBskyFeedDefs.FeedViewPost) => {
     const postAuthor = post.post.author.handle;
     const postId = post.post.uri.split("/").pop();
-    router.push(`/(app)/(tabs)/(search)/profile/${postAuthor}/post/${postId}`);
+    router.push(`/(app)/(tabs)/(search)/thread/${postId}?handle=${postAuthor}&did=${encodeURIComponent(post.post.author.did)}`);
   };
 
   const handleHistoryItemPress = (query: string) => {

@@ -60,7 +60,9 @@ const withShareExtension = (config) => {
     // Check if ShareExtension files exist
     const shareExtDir = path.join(projectRoot, "ios", SHARE_EXT_NAME);
     if (!fs.existsSync(shareExtDir)) {
-      console.warn(`⚠️  ShareExtension directory not found at ${shareExtDir}`);
+      console.log(
+        `ℹ️  ShareExtension: skipping — source directory not yet created at ${shareExtDir}`
+      );
       return config;
     }
 

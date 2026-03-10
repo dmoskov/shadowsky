@@ -67,8 +67,8 @@ const withWidgetExtension = (config) => {
     // Check if WidgetExtension files exist
     const widgetExtDir = path.join(projectRoot, "ios", WIDGET_EXT_NAME);
     if (!fs.existsSync(widgetExtDir)) {
-      console.warn(
-        `⚠️  WidgetExtension directory not found at ${widgetExtDir}`
+      console.log(
+        `ℹ️  WidgetExtension: skipping — source directory not yet created at ${widgetExtDir}`
       );
       return config;
     }

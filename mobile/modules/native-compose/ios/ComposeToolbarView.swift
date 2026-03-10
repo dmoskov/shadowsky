@@ -57,9 +57,7 @@ struct ComposeToolbarView: View {
                     action: onVideoPicker
                 )
 
-                toolbarButton(
-                    icon: "gift",
-                    label: "Add GIF",
+                gifButton(
                     disabled: hasImages || hasVideo,
                     action: onGifPicker
                 )
@@ -147,6 +145,19 @@ struct ComposeToolbarView: View {
     private var languageLabel: String {
         if selectedLanguages.isEmpty { return "EN" }
         return selectedLanguages.map { $0.uppercased().prefix(2) }.joined(separator: ", ")
+    }
+
+    @ViewBuilder
+    private func gifButton(disabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text("GIF")
+                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .foregroundColor(disabled ? Color(.systemGray4) : .secondary)
+                .frame(width: 30, height: 30)
+                .contentShape(Rectangle())
+        }
+        .disabled(disabled)
+        .accessibilityLabel("Add GIF")
     }
 
     @ViewBuilder

@@ -6,49 +6,85 @@ const fs = require("fs");
  * Config plugin to add PrivacyInfo.xcprivacy to the iOS project
  * Required for iOS 17+ App Store submission
  *
- * This plugin ensures the privacy manifest is properly included in the Xcode project
- * and declares the app's use of required reason APIs:
+ * This plugin generates the privacy manifest in the app target directory,
+ * declaring the app's use of required reason APIs:
  * - NSPrivacyAccessedAPICategoryUserDefaults (AsyncStorage)
  * - NSPrivacyAccessedAPICategoryFileTimestamp (file operations)
  * - NSPrivacyAccessedAPICategoryDiskSpace (cache size calculation)
  * - NSPrivacyAccessedAPICategorySystemBootTime (performance/analytics)
  */
+
+const PRIVACY_MANIFEST_CONTENT = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>NSPrivacyCollectedDataTypes</key>
+  <array/>
+  <key>NSPrivacyTracking</key>
+  <false/>
+  <key>NSPrivacyTrackingDomains</key>
+  <array/>
+  <key>NSPrivacyAccessedAPITypes</key>
+  <array>
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>CA92.1</string>
+      </array>
+    </dict>
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>C617.1</string>
+      </array>
+    </dict>
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>E174.1</string>
+      </array>
+    </dict>
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>35F9.1</string>
+      </array>
+    </dict>
+  </array>
+</dict>
+</plist>`;
+
 const withPrivacyManifest = (config) => {
   return withXcodeProject(config, async (config) => {
-    const xcodeProject = config.modResults;
     const projectRoot = config.modRequest.projectRoot;
+    const appTargetName = config.modRequest.projectName || config.name;
 
-    // Path to the privacy manifest file
-    const privacyManifestPath = "PrivacyInfo.xcprivacy";
     const privacyManifestFullPath = path.join(
       projectRoot,
       "ios",
-      privacyManifestPath
+      appTargetName,
+      "PrivacyInfo.xcprivacy"
     );
 
-    // Check if privacy manifest file exists
+    // Create the privacy manifest if it doesn't exist
     if (!fs.existsSync(privacyManifestFullPath)) {
-      console.warn(
-        `⚠️  PrivacyInfo.xcprivacy not found at ${privacyManifestFullPath}`
-      );
-      return config;
-    }
-
-    // Get the app target name (usually matches the app name)
-    const targets = xcodeProject.getFirstTarget();
-    const targetName = targets ? targets.firstTarget.name : config.name;
-
-    // Add the privacy manifest to the project if it's not already there
-    const file = xcodeProject.addResourceFile(
-      privacyManifestPath,
-      { target: targetName },
-      xcodeProject.getFirstProject().uuid
-    );
-
-    if (file) {
-      console.log("✅ PrivacyInfo.xcprivacy added to Xcode project");
+      const dir = path.dirname(privacyManifestFullPath);
+      if (fs.existsSync(dir)) {
+        fs.writeFileSync(privacyManifestFullPath, PRIVACY_MANIFEST_CONTENT);
+        console.log("✅ PrivacyInfo.xcprivacy created");
+      } else {
+        console.warn(`⚠️  Target directory not found: ${dir}`);
+      }
     } else {
-      console.log("ℹ️  PrivacyInfo.xcprivacy already exists in Xcode project");
+      console.log("ℹ️  PrivacyInfo.xcprivacy already exists");
     }
 
     return config;
