@@ -363,7 +363,11 @@ PODS:
   - hermes-engine (0.81.5):
     - hermes-engine/Pre-built (= 0.81.5)
   - hermes-engine/Pre-built (0.81.5)
+  - ImageCompressor (1.0.0):
+    - ExpoModulesCore
   - JOSESwift (2.4.0)
+  - KeyboardShortcuts (1.0.0):
+    - ExpoModulesCore
   - libavif/core (1.0.0)
   - libavif/libdav1d (1.0.0):
     - libavif/core
@@ -2493,6 +2497,8 @@ DEPENDENCIES:
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
   - FeedBridge (from `../modules/feed-bridge/ios`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
+  - ImageCompressor (from `../modules/image-compressor/ios`)
+  - KeyboardShortcuts (from `../modules/keyboard-shortcuts/ios`)
   - LowPowerMode (from `../modules/low-power-mode/ios`)
   - NativeCompose (from `../modules/native-compose/ios`)
   - NativeFeedList (from `../modules/native-feed-list/ios`)
@@ -2697,6 +2703,10 @@ EXTERNAL SOURCES:
   hermes-engine:
     :podspec: "../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2025-07-07-RNv0.81.0-e0fc67142ec0763c6b6153ca2bf96df815539782
+  ImageCompressor:
+    :path: "../modules/image-compressor/ios"
+  KeyboardShortcuts:
+    :path: "../modules/keyboard-shortcuts/ios"
   LowPowerMode:
     :path: "../modules/low-power-mode/ios"
   NativeCompose:
@@ -2928,7 +2938,9 @@ SPEC CHECKSUMS:
   FBLazyVector: e95a291ad2dadb88e42b06e0c5fb8262de53ec12
   FeedBridge: 9a076c557998bc5a6abda0d6bd3ad8271f18e345
   hermes-engine: 9f4dfe93326146a1c99eb535b1cb0b857a3cd172
+  ImageCompressor: 37839f79f0936c068a2228d48bae885f0452ad56
   JOSESwift: 7ff178bb9173ff42c6e990929a9f2fa702a34f69
+  KeyboardShortcuts: 9257e870f6bba36e5ab0825ec86178877850b798
   libavif: 5f8e715bea24debec477006f21ef9e95432e254d
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
@@ -3028,6 +3040,6 @@ SPEC CHECKSUMS:
   WidgetDataBridge: afa1a7cb02957b72691b357aeefb66e7fab37d67
   Yoga: 5934998fbeaef7845dbf698f698518695ab4cd1a
 
-PODFILE CHECKSUM: 31419ecccd292df7f85459038328838af9ee0246
+PODFILE CHECKSUM: fa7f22d8a19d4a85be13967d7124af558737c324
 
 COCOAPODS: 1.16.2
