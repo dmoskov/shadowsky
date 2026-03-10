@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   NativeComposeView,
   setGeneratedAltText,
@@ -68,6 +69,7 @@ export function ComposeScreenNative({
   sharedImages,
 }: ComposeScreenProps = {}) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { t } = useTranslation();
   usePreferences();
@@ -979,7 +981,7 @@ export function ComposeScreenNative({
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Content Warning & Threadgate toolbar */}
       <View style={styles.composeToolbar}>
         <TouchableOpacity
