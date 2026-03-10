@@ -159,14 +159,20 @@ function serializeEmbed(embed: EmbedView | undefined): SerializedEmbed | undefin
 
     case 'app.bsky.embed.video#view': {
       const videoView = embed as AppBskyEmbedVideo.View;
-      if (!videoView.cid) return undefined;
+      // Handle both flat (cid at top level) and nested (cid under .video) structures
+      const vid = (videoView as any).video;
+      const cid = videoView.cid || vid?.cid;
+      const playlist = videoView.playlist || vid?.playlist;
+      const thumbnail = videoView.thumbnail || vid?.thumbnail;
+      const aspectRatio = videoView.aspectRatio || vid?.aspectRatio;
+      if (!cid) return undefined;
       return {
         $type: 'app.bsky.embed.video#view',
         video: {
-          cid: videoView.cid,
-          playlist: videoView.playlist,
-          thumbnail: videoView.thumbnail,
-          aspectRatio: videoView.aspectRatio,
+          cid,
+          playlist,
+          thumbnail,
+          aspectRatio,
         },
       };
     }
