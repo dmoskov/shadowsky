@@ -47,6 +47,16 @@ struct ComposeTextEditor: View {
                 }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button(action: { isFocused = false }) {
+                    Image(systemName: "keyboard.chevron.compact.down")
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("Dismiss keyboard")
+            }
+        }
     }
 }
 
@@ -94,6 +104,7 @@ struct ThreadPostEditor: View {
                     .frame(minHeight: 60, maxHeight: 120)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 2)
+                    .focused($isFocused)
                     .disabled(!isEnabled)
                     .modifier(HideScrollContentBackground())
                     .onChangeCompat(of: text) { newValue in
@@ -106,6 +117,16 @@ struct ThreadPostEditor: View {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(text.count > maxChars ? Color.red.opacity(0.5) : Color(.systemGray4), lineWidth: 0.5)
             )
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button(action: { isFocused = false }) {
+                    Image(systemName: "keyboard.chevron.compact.down")
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("Dismiss keyboard")
+            }
         }
     }
 }
