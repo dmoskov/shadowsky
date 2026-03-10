@@ -100,9 +100,7 @@ const EngagementSlider: React.FC<{
         value={valueToSlider(value)}
         onChange={(e) => onChange(sliderToValue(parseInt(e.target.value, 10)))}
         className="asph-slider w-full"
-        style={{ "--slider-progress": `${valueToSlider(value)}%` } as React.CSSProperties}
-        style={{ "--slider-progress": `${valueToSlider(value)}%` } as React.CSSProperties}
-      />
+        style={{ "--slider-progress": `${valueToSlider(value)}%` } as React.CSSProperties} />
     </div>
   );
 };
@@ -517,7 +515,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
             From Users
           </label>
           <div className="space-y-2">
-            <div className="flex flex-wrap gap-2">
+            <div className="space-y-2">
             {filters.fromUsers.map((user, i) => (
               <div
                 key={`from-user-${user}-${i}`}
@@ -549,7 +547,7 @@ export const SearchFilterPanel: React.FC<SearchFilterPanelProps> = ({
             ))}
             </div>
             <UserTypeahead
-              onSelectUser={(handle) => {
+              onSelectUser={(handle: string) => {
                 updateFilter("fromUsers", [...filters.fromUsers, handle]);
               }}
               placeholder="Search users..."
