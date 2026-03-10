@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import { Loader2, User } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { User, Loader2 } from "lucide-react";
 
 interface UserTypeaheadProps {
   onSelectUser: (handle: string) => void;
@@ -193,7 +193,10 @@ export const UserTypeahead: React.FC<UserTypeaheadProps> = ({
                   className="flex h-7 w-7 items-center justify-center rounded-full"
                   style={{ backgroundColor: "var(--asph-bg-secondary)" }}
                 >
-                  <User size={14} style={{ color: "var(--asph-text-tertiary)" }} />
+                  <User
+                    size={14}
+                    style={{ color: "var(--asph-text-tertiary)" }}
+                  />
                 </div>
               )}
               <div className="min-w-0 flex-1">
