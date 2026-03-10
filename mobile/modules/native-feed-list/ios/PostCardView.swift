@@ -66,6 +66,11 @@ struct PostCardView: View {
     @State private var repostCountOverride: Int? = nil
     @State private var bookmarkOverride: Bool? = nil
 
+    // Micro-interaction animation state
+    @State private var likeScale: CGFloat = 1.0
+    @State private var bookmarkScale: CGFloat = 1.0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     // Computed values that prefer local overrides, falling back to props
     private var isLiked: Bool { likeOverride ?? (post.post.viewer?.like != nil) }
     private var displayLikeCount: Int { likeCountOverride ?? post.post.likeCount }
@@ -255,9 +260,22 @@ struct PostCardView: View {
                     count: displayLikeCount,
                     isActive: isLiked,
                     activeColor: .red,
+                    iconScale: likeScale,
                     action: {
+                        let wasLiked = isLiked
                         likeOverride = !isLiked
                         likeCountOverride = displayLikeCount + (isLiked ? -1 : 1)
+                        if !wasLiked && !reduceMotion {
+                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.4)) {
+                                likeScale = 1.35
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                    likeScale = 1.0
+                                }
+                            }
+                        }
                         onLike?()
                     }
                 )
@@ -269,8 +287,20 @@ struct PostCardView: View {
                     count: 0,
                     isActive: displayBookmarked,
                     activeColor: .blue,
+                    iconScale: bookmarkScale,
                     action: {
+                        let wasBookmarked = displayBookmarked
                         bookmarkOverride = !displayBookmarked
+                        if !wasBookmarked && !reduceMotion {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.4)) {
+                                bookmarkScale = 1.25
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                    bookmarkScale = 1.0
+                                }
+                            }
+                        }
                         onBookmark?()
                     }
                 )
@@ -404,11 +434,12 @@ struct PostCardView: View {
     /// Action button with 48pt minimum tap target.
     /// Uses .buttonStyle(.plain) to prevent SwiftUI's default button style
     /// from interfering with tap detection inside ScrollView.
-    private func actionButton(icon: String, count: Int, isActive: Bool, activeColor: Color, action: @escaping () -> Void) -> some View {
+    private func actionButton(icon: String, count: Int, isActive: Bool, activeColor: Color, iconScale: CGFloat = 1.0, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: icon)
                     .font(.body)
+                    .scaleEffect(iconScale)
                 if count > 0 {
                     Text(formatCount(count))
                         .font(.subheadline)

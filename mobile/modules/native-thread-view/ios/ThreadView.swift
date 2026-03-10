@@ -276,6 +276,7 @@ struct ThreadView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .refreshable {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 onRefresh?()
             }
             .onChangeCompat(of: threadState.rootPost?.post.uri) { _ in

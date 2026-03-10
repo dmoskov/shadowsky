@@ -242,6 +242,7 @@ struct ConversationListView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .refreshable {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             onRefresh?()
         }
     }
