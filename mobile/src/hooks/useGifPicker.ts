@@ -13,6 +13,7 @@ const logger = createLogger('Usegifpicker');
 import {
   getBestGifUrl,
   getGifDimensions,
+  getGifEmbedUrl,
   getTrending,
   searchGifs,
 } from "../services/tenor";
@@ -24,6 +25,9 @@ export interface SelectedGif {
   width: number;
   height: number;
   tenorUrl: string; // Original Tenor page URL
+  contentDescription: string;
+  previewUrl: string; // Static preview frame for thumbnail upload
+  displayUrl: string; // Lightweight tinygif for compose preview
 }
 
 export function useGifPicker() {
@@ -87,16 +91,21 @@ export function useGifPicker() {
   );
 
   const selectGif = useCallback((gif: TenorGif) => {
-    const url = getBestGifUrl(gif);
+    const url = getGifEmbedUrl(gif);
+    const displayUrl = getBestGifUrl(gif);
     const dimensions = getGifDimensions(gif);
+    const previewUrl = gif.media_formats.preview?.url || '';
 
     setSelectedGif({
       id: gif.id,
       url,
+      displayUrl,
       title: gif.title || gif.content_description,
       width: dimensions.width,
       height: dimensions.height,
       tenorUrl: gif.url,
+      contentDescription: gif.content_description || gif.title || '',
+      previewUrl,
     });
   }, []);
 

@@ -300,9 +300,9 @@ export function ComposeScreenNative({
     if (gifPicker.selectedGif) {
       media.push({
         id: "gif-0",
-        uri: gifPicker.selectedGif.url,
+        uri: gifPicker.selectedGif.displayUrl || gifPicker.selectedGif.url,
         mimeType: "image/gif",
-        altText: gifPicker.selectedGif.title,
+        altText: gifPicker.selectedGif.contentDescription || gifPicker.selectedGif.title,
         width: 0,
         height: 0,
         isVideo: false,
@@ -506,7 +506,8 @@ export function ComposeScreenNative({
           postOptions.external = {
             uri: gifPicker.selectedGif.url,
             title: gifPicker.selectedGif.title,
-            description: "GIF from Tenor",
+            description: `ALT: ${gifPicker.selectedGif.contentDescription}`,
+            thumb: gifPicker.selectedGif.previewUrl || undefined,
           };
         } else if (linkPreview.metadata) {
           postOptions.external = {

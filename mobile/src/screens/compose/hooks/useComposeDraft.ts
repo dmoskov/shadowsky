@@ -482,7 +482,8 @@ export function useComposeDraft(props: ComposeScreenProps = {}) {
         postOptions.external = {
           uri: gifPicker.selectedGif.url,
           title: gifPicker.selectedGif.title,
-          description: "GIF from Tenor",
+          description: `ALT: ${gifPicker.selectedGif.contentDescription}`,
+          thumb: gifPicker.selectedGif.previewUrl || undefined,
         };
       } else if (linkPreview.metadata) {
         postOptions.external = {

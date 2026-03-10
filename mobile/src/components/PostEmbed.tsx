@@ -3,8 +3,10 @@ import {Text} from 'react-native';
 import {AppBskyFeedDefs, AppBskyEmbedImages, AppBskyEmbedExternal, AppBskyEmbedRecord, AppBskyEmbedRecordWithMedia, AppBskyEmbedVideo} from '@atproto/api';
 import {ImageEmbed} from './ImageEmbed';
 import {ExternalLinkEmbed} from './ExternalLinkEmbed';
+import {GifEmbed} from './GifEmbed';
 import {QuoteEmbed} from './QuoteEmbed';
 import {VideoEmbed} from './VideoEmbed';
+import {isTenorGifUri} from '../services/tenor';
 import {InlineErrorBoundary} from './ui/InlineErrorBoundary';
 import {fontSize} from '../utils/typography';
 
@@ -45,6 +47,19 @@ export function PostEmbed({
   }
 
   if (AppBskyEmbedExternal.isView(embed)) {
+    if (isTenorGifUri(embed.external.uri)) {
+      return (
+        <InlineErrorBoundary fallback={embedFallback} context="GifEmbed">
+          <GifEmbed
+            uri={embed.external.uri}
+            thumb={embed.external.thumb}
+            description={embed.external.description}
+            title={embed.external.title}
+            isVisible={isVisible}
+          />
+        </InlineErrorBoundary>
+      );
+    }
     return (
       <InlineErrorBoundary fallback={embedFallback} context="ExternalLinkEmbed">
         <ExternalLinkEmbed external={embed.external} onPress={onLinkPress} />

@@ -154,7 +154,7 @@ export function ComposeMediaPreview({
       <View style={styles.gifPreviewContainer}>
         <View style={styles.gifPreviewWrapper}>
           <Image
-            source={{ uri: selectedGif.url }}
+            source={{ uri: selectedGif.displayUrl || selectedGif.url }}
             style={styles.gifPreview}
             contentFit="cover"
             cachePolicy="memory-disk"

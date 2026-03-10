@@ -148,6 +148,56 @@ export function getBestGifUrl(gif: TenorGif): string {
 }
 
 /**
+ * Check if a URI is a Tenor GIF (from our app or the official Bluesky app)
+ */
+export function isTenorGifUri(uri: string): boolean {
+  try {
+    const url = new URL(uri);
+    return url.hostname === 'media.tenor.com' || url.hostname === 't.gifs.bsky.app';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get the full-quality GIF embed URL proxied through Bluesky CDN with dimensions.
+ * Matches the official Bluesky app convention of appending ?hh=HEIGHT&ww=WIDTH.
+ */
+export function getGifEmbedUrl(gif: TenorGif): string {
+  const format = gif.media_formats.gif;
+  if (!format?.url) return getBestGifUrl(gif);
+
+  const proxied = tenorUrlToBskyGifUrl(format.url);
+  if (!proxied) return getBestGifUrl(gif);
+
+  const dims = format.dims;
+  if (dims && dims[0] > 0 && dims[1] > 0) {
+    const separator = proxied.includes('?') ? '&' : '?';
+    return `${proxied}${separator}hh=${dims[1]}&ww=${dims[0]}`;
+  }
+  return proxied;
+}
+
+/**
+ * Parse width/height from ?hh=&ww= query params in a GIF embed URI
+ */
+export function parseTenorGifDimensions(uri: string): { width: number; height: number } | null {
+  try {
+    const url = new URL(uri);
+    const ww = url.searchParams.get('ww');
+    const hh = url.searchParams.get('hh');
+    if (ww && hh) {
+      const width = parseInt(ww, 10);
+      const height = parseInt(hh, 10);
+      if (width > 0 && height > 0) return { width, height };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Get GIF dimensions
  */
 export function getGifDimensions(gif: TenorGif): { width: number; height: number } {

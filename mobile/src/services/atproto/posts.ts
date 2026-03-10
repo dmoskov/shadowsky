@@ -16,6 +16,7 @@ export interface CreatePostOptions {
     uri: string;
     title: string;
     description: string;
+    thumb?: string;
   };
   reply?: {
     root: {uri: string; cid: string};
@@ -127,13 +128,24 @@ export async function createPost(options: CreatePostOptions) {
         };
       } else if (hasExternal && options.external) {
         // External embed only (e.g., GIFs from Tenor)
+        const externalEmbed: any = {
+          uri: options.external.uri,
+          title: options.external.title,
+          description: options.external.description,
+        };
+
+        if (options.external.thumb) {
+          try {
+            const thumbBlob = await uploadImage(options.external.thumb);
+            externalEmbed.thumb = thumbBlob;
+          } catch {
+            // Thumbnail upload failure is non-fatal
+          }
+        }
+
         record.embed = {
           $type: 'app.bsky.embed.external',
-          external: {
-            uri: options.external.uri,
-            title: options.external.title,
-            description: options.external.description,
-          },
+          external: externalEmbed,
         };
       }
 
