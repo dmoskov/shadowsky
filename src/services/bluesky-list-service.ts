@@ -142,6 +142,38 @@ class BlueskyListService {
     }
   }
 
+  async getMyListsPage(
+    options: {
+      limit?: number;
+      cursor?: string;
+    } = {},
+  ): Promise<{ lists: BlueskyList[]; cursor?: string }> {
+    this.ensureInitialized();
+
+    const did = this.agent!.session?.did;
+    if (!did) throw new Error("No session");
+
+    const response = await this.agent!.app.bsky.graph.getLists({
+      actor: did,
+      limit: options.limit || 50,
+      cursor: options.cursor,
+    });
+
+    return {
+      lists: response.data.lists.map((list) => ({
+        uri: list.uri,
+        cid: list.cid,
+        name: list.name,
+        description: list.description,
+        avatar: list.avatar,
+        listItemCount: list.listItemCount,
+        indexedAt: list.indexedAt,
+        viewer: list.viewer,
+      })),
+      cursor: response.data.cursor,
+    };
+  }
+
   async getList(uri: string): Promise<BlueskyList | null> {
     this.ensureInitialized();
 
