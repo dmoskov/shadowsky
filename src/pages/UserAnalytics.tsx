@@ -13,12 +13,19 @@ import {
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
+import { EngagementHeatmap } from "../components/analytics/EngagementHeatmap";
+import { PostingTimeRecommendations } from "../components/analytics/PostingTimeRecommendations";
 import { useAuth } from "../contexts/AuthContext";
+import { usePostingTimeRecommendations } from "../hooks/usePostingTimeRecommendations";
 import {
   analyzePosts,
   type OptimalTimeRecommendation,
   type PostAnalysisPost,
 } from "../services/anthropic";
+import {
+  cacheAnalysis,
+  fromApiResponse,
+} from "../services/posting-time-recommendations";
 import { proxifyBskyImage } from "../utils/image-proxy";
 
 type DateRange = "24h" | "7d" | "30d" | "90d";
@@ -392,6 +399,39 @@ export const UserAnalytics: React.FC = () => {
   const maxPostsPerDay = useMemo(() => {
     return Math.max(1, ...postFrequencyData.map((d) => d.posts));
   }, [postFrequencyData]);
+
+  // Compute posting time recommendations from local post data
+  const localPostTimingData = useMemo(
+    () =>
+      postsData?.posts?.map((p) => ({
+        createdAt: p.createdAt,
+        likes: p.likes,
+        reposts: p.reposts,
+        replies: p.replies,
+      })),
+    [postsData],
+  );
+  const postingTimeRecs = usePostingTimeRecommendations(localPostTimingData);
+
+  // When API analysis returns optimalPostingTimes, cache them too
+  useMemo(() => {
+    if (analysisData?.optimalPostingTimes && postsData?.totalPosts) {
+      const apiAnalysis = fromApiResponse(
+        analysisData.optimalPostingTimes,
+        postsData.totalPosts,
+      );
+      cacheAnalysis(apiAnalysis);
+    }
+  }, [analysisData?.optimalPostingTimes, postsData?.totalPosts]);
+
+  const dateRangeLabel =
+    dateRange === "24h"
+      ? "24 hours"
+      : dateRange === "7d"
+        ? "7 days"
+        : dateRange === "30d"
+          ? "30 days"
+          : "90 days";
 
   const isLoading = isLoadingProfile || isLoadingPosts;
 
@@ -1003,6 +1043,25 @@ export const UserAnalytics: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Posting Time Recommendations */}
+      {postingTimeRecs && postingTimeRecs.recommendations.length > 0 && (
+        <PostingTimeRecommendations
+          analysis={postingTimeRecs}
+          dateRangeLabel={dateRangeLabel}
+        />
+      )}
+
+      {/* Engagement Heatmap */}
+      {postingTimeRecs &&
+        postingTimeRecs.heatmapData.some((row) =>
+          row.some((val) => val > 0),
+        ) && (
+          <EngagementHeatmap
+            heatmapData={postingTimeRecs.heatmapData}
+            recommendations={postingTimeRecs.recommendations}
+          />
+        )}
 
       <div
         className="asph-card p-6"

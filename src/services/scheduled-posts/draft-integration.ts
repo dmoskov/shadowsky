@@ -6,6 +6,7 @@
  */
 
 import { ThreadDraft } from "../drafts";
+import { getDataDrivenPostingTimes } from "../posting-time-recommendations";
 import {
   CreateScheduledPostInput,
   ScheduledPost,
@@ -180,14 +181,20 @@ export function getDraftScheduledTime(draft: ThreadDraft): Date | null {
 }
 
 /**
- * Calculate suggested optimal posting times based on engagement patterns
- * This is a simple implementation - could be enhanced with AI recommendations
+ * Calculate suggested optimal posting times based on engagement patterns.
+ * Uses cached engagement data when available, falls back to common posting times.
  */
 export function getSuggestedPostingTimes(): Date[] {
+  // Try to use data-driven recommendations from cached analysis
+  const dataDrivenTimes = getDataDrivenPostingTimes();
+  if (dataDrivenTimes.length > 0) {
+    return dataDrivenTimes;
+  }
+
   const now = new Date();
   const suggestions: Date[] = [];
 
-  // Add some common good posting times
+  // Fallback: common good posting times
   const goodHours = [8, 12, 17, 20]; // 8am, 12pm, 5pm, 8pm
 
   for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
