@@ -3,12 +3,11 @@
 //  NativeNotificationsList
 //
 //  UI model types for rendering notifications in the native list.
-//  These are converted from NotificationBridge's serialized types.
+//  These are converted from the serialized bridge types.
 //
 
 import Foundation
 import FeedBridge
-import NotificationBridge
 
 // MARK: - Notification Reason
 
@@ -195,7 +194,7 @@ extension NotificationUIModel {
             ?? Date()
         let timestamp = Self.formatRelativeTime(from: date)
 
-        // Import Facet type from FeedBridge via NotificationBridge's re-export
+        // Facet type from FeedBridge
         let facets: [Facet]? = serialized.record?.facets
 
         return NotificationUIModel(
