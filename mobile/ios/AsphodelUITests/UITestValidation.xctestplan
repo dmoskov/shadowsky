@@ -84,7 +84,21 @@
         "ExternalLinkEmbedTests",
         "PostEmbedDispatcherTests",
         "CachedAsyncImageTests",
-        "PostEmbedDataFactoryTests"
+        "PostEmbedDataFactoryTests",
+        "SearchTypesTests",
+        "ComposeStateTests",
+        "ComposeMentionSuggestionTests",
+        "MediaAttachmentTests",
+        "ReplyContextTests",
+        "QuoteContextTests",
+        "DraftDataTests",
+        "LanguageUtilsParsingTests",
+        "TranslationStateTests",
+        "PostTranslationManagerTests",
+        "NotificationReasonTests",
+        "NotificationListFilterMatchingTests",
+        "ProfileBridgeTypesTests",
+        "MessageParsingEdgeCaseTests"
       ]
     }
   ],
