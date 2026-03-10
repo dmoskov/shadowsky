@@ -183,7 +183,7 @@ struct MessageThreadView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
             }
-            .scrollDismissesKeyboard(.interactively)
+            .scrollDismissesKeyboardCompat()
             .onChangeCompat(of: dataState.messages.count) { _ in
                 // Scroll to bottom when new messages arrive
                 scrollToBottom(proxy: proxy)

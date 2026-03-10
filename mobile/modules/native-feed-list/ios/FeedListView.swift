@@ -241,7 +241,7 @@ struct FeedListView: View {
             .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
                 onScroll?(value)
             }
-            .scrollDismissesKeyboard(.interactively)
+            .scrollDismissesKeyboardCompat()
             .refreshable {
                 // Haptic confirmation at pull-to-refresh threshold
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()

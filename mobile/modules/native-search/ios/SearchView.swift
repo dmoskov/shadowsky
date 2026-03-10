@@ -245,7 +245,7 @@ struct SearchView: View {
                     }
                 }
             }
-            .scrollDismissesKeyboard(.interactively)
+            .scrollDismissesKeyboardCompat()
             .refreshable {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 onRefresh()
@@ -334,7 +334,7 @@ struct SearchView: View {
                     }
                 }
             }
-            .scrollDismissesKeyboard(.interactively)
+            .scrollDismissesKeyboardCompat()
             .refreshable {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 onRefresh()
@@ -504,7 +504,7 @@ struct SearchView: View {
             }
             .padding(.top, 16)
         }
-        .scrollDismissesKeyboard(.interactively)
+        .scrollDismissesKeyboardCompat()
     }
 
     private var trendingSkeletonView: some View {
@@ -608,7 +608,7 @@ struct SearchView: View {
                     }
                 }
             }
-            .scrollDismissesKeyboard(.interactively)
+            .scrollDismissesKeyboardCompat()
         }
     }
 

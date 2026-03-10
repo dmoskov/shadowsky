@@ -12,4 +12,15 @@ extension View {
             self.onChange(of: value) { newValue in action(newValue) }
         }
     }
+
+    /// Compatibility wrapper for `.scrollDismissesKeyboard(.interactively)`.
+    /// Only available on iOS 16.0+; on earlier versions this is a no-op.
+    @ViewBuilder
+    func scrollDismissesKeyboardCompat() -> some View {
+        if #available(iOS 16.0, *) {
+            self.scrollDismissesKeyboard(.interactively)
+        } else {
+            self
+        }
+    }
 }

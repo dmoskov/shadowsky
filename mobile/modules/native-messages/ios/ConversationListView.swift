@@ -240,7 +240,7 @@ struct ConversationListView: View {
                 }
             }
         }
-        .scrollDismissesKeyboard(.interactively)
+        .scrollDismissesKeyboardCompat()
         .refreshable {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             onRefresh?()

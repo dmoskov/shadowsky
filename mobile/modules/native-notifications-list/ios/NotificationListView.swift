@@ -294,7 +294,7 @@ struct NotificationListView: View {
             .frame(maxWidth: LayoutConstants.maxContentWidth)
             .frame(maxWidth: .infinity)
         }
-        .scrollDismissesKeyboard(.interactively)
+        .scrollDismissesKeyboardCompat()
         .refreshable {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             onRefresh?()

@@ -283,7 +283,7 @@ struct ComposeView: View {
                 }
             }
         }
-        .scrollDismissesKeyboard(.interactively)
+        .scrollDismissesKeyboardCompat()
     }
 
     // MARK: - Thread Mode Content
@@ -362,7 +362,7 @@ struct ComposeView: View {
             }
             .padding(.vertical, 8)
         }
-        .scrollDismissesKeyboard(.interactively)
+        .scrollDismissesKeyboardCompat()
     }
 
     // MARK: - Quote Preview
