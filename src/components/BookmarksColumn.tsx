@@ -38,6 +38,7 @@ import {
   SaveToCollectionDropdown,
 } from "./bookmark-collections";
 import { ImageGallery } from "./ImageGallery";
+import { ImageGrid } from "./ImageGrid";
 import { PostActionBar } from "./PostActionBar";
 import { ThreadModal } from "./ThreadModal";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
@@ -379,49 +380,31 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
       const imageEmbed = embed as {
         images: Array<{ thumb: string; fullsize: string; alt?: string }>;
       };
-      const handleImageClick = (e: React.MouseEvent, index: number) => {
-        e.stopPropagation();
-        const images: Array<{ thumb: string; fullsize: string; alt?: string }> =
-          [];
-        for (const img of imageEmbed.images) {
-          const thumb = proxifyBskyImage(img.thumb);
-          const fullsize = proxifyBskyImage(img.fullsize);
-          if (thumb && fullsize) {
-            images.push({ thumb, fullsize, alt: img.alt });
-          }
-        }
-        setGalleryImages(images);
-        setGalleryIndex(index);
-      };
 
       return (
-        <div
-          className={`mt-2 grid gap-1 ${imageEmbed.images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
-        >
-          {imageEmbed.images.map((img: any, idx: number) => {
-            const imgAspectRatio = img.aspectRatio
-              ? img.aspectRatio.width / img.aspectRatio.height
-              : undefined;
-            return (
-              <div
-                key={`bookmark-img-${img.thumb}-${idx}`}
-                className="relative overflow-hidden rounded-lg bg-asph-bg-tertiary"
-                style={{
-                  aspectRatio: imgAspectRatio,
-                }}
-              >
-                <img
-                  src={proxifyBskyImage(img.thumb)}
-                  alt={img.alt || ""}
-                  className="h-auto max-h-80 w-full cursor-pointer object-contain hover:opacity-95"
-                  onClick={(e) => handleImageClick(e, idx)}
-                  width={img.aspectRatio?.width}
-                  height={img.aspectRatio?.height}
-                />
-              </div>
-            );
-          })}
-        </div>
+        <ImageGrid
+          images={imageEmbed.images.map((img: any) => ({
+            thumb: img.thumb,
+            fullsize: img.fullsize,
+            alt: img.alt,
+          }))}
+          onImageClick={(index) => {
+            const mapped: Array<{
+              thumb: string;
+              fullsize: string;
+              alt?: string;
+            }> = [];
+            for (const img of imageEmbed.images) {
+              const thumb = proxifyBskyImage(img.thumb);
+              const fullsize = proxifyBskyImage(img.fullsize);
+              if (thumb && fullsize) {
+                mapped.push({ thumb, fullsize, alt: img.alt });
+              }
+            }
+            setGalleryImages(mapped);
+            setGalleryIndex(index);
+          }}
+        />
       );
     }
 

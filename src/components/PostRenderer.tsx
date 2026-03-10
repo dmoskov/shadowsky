@@ -13,7 +13,6 @@ import {
   Reply,
   Rss,
   Shield,
-  Sparkles,
   Users,
 } from "lucide-react";
 import React, { memo } from "react";
@@ -32,12 +31,11 @@ import { createLogger } from "../utils/logger";
 import { isValidUrl } from "../utils/security";
 import { parseBskyUrl } from "../utils/url-helpers";
 import { extractFirstLinkUrl } from "./composer/utils";
-import { ImageGallery } from "./ImageGallery";
+import { ImageGrid } from "./ImageGrid";
 import { GateIndicator } from "./ReplyControls";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
-import { LabelBadge, getContentWarningLabels } from "./ui/LabelBadge";
+import { LabelBadge } from "./ui/LabelBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
-import { ProgressiveImage } from "./ui/ProgressiveImage";
 import { RichText } from "./ui/RichText";
 import { VideoPlayer } from "./VideoPlayer";
 
@@ -53,17 +51,6 @@ function getThreadRootUri(post: AppBskyFeedDefs.PostView): string {
     | { reply?: { root: { uri: string } } }
     | undefined;
   return record?.reply?.root?.uri || post.uri;
-}
-
-// Check if content has sensitive labels that should be blurred
-const hasSensitiveLabels = (labels?: Array<{ val: string }>): boolean => {
-  if (!labels || labels.length === 0) return false;
-  const warningLabels = getContentWarningLabels(labels);
-  return warningLabels.length > 0;
-};
-
-async function loadAnthropicService() {
-  return await import("../services/anthropic");
 }
 
 // Component to detect and render Bluesky URLs as embedded quotes
@@ -195,25 +182,15 @@ const BskyUrlEmbed: React.FC<{
           </ProfileHoverCard>
         </div>
         <p className="text-sm">{record?.text || ""}</p>
-        {quotedPost.embed && (
-          <div className="mt-2">
-            {(quotedPost.embed as any).images && (
-              <div className="grid grid-cols-2 gap-1">
-                {(quotedPost.embed as any).images
-                  .slice(0, 4)
-                  .map((img: any, i: number) => (
-                    <img
-                      key={`quote-img-${img.thumb}-${i}`}
-                      src={proxifyBskyImage(img.thumb) || ""}
-                      alt={img.alt || ""}
-                      className="h-32 w-full rounded object-cover"
-                      width={img.aspectRatio?.width}
-                      height={img.aspectRatio?.height}
-                    />
-                  ))}
-              </div>
-            )}
-          </div>
+        {quotedPost.embed && (quotedPost.embed as any).images && (
+          <ImageGrid
+            images={(quotedPost.embed as any).images.map((img: any) => ({
+              thumb: img.thumb,
+              fullsize: img.fullsize,
+              alt: img.alt,
+            }))}
+            className="mt-2"
+          />
         )}
       </div>
     </div>
@@ -418,22 +395,6 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
   const record = post.record as any;
   const rootUri = getThreadRootUri(post);
   const isThreadMutedState = isThreadMuted(rootUri);
-  const [galleryImages, setGalleryImages] = React.useState<Array<{
-    thumb: string;
-    fullsize: string;
-    alt?: string;
-  }> | null>(null);
-  const [galleryIndex, setGalleryIndex] = React.useState(0);
-  const [generatedAltTexts, setGeneratedAltTexts] = React.useState<
-    Record<number, string>
-  >({});
-  const [generatingAltText, setGeneratingAltText] = React.useState<
-    Record<number, boolean>
-  >({});
-  const [showAltText, setShowAltText] = React.useState<Record<number, boolean>>(
-    {},
-  );
-  const [showSensitiveMedia, setShowSensitiveMedia] = React.useState(false);
   const { getProfilePrefetchHandlers, getThreadPrefetchHandlers } =
     useRoutePrefetch();
 
@@ -461,37 +422,6 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
     postLangs: record?.langs as string[] | undefined,
   });
 
-  const openImageGallery = (images: any[], index: number) => {
-    setGalleryImages(
-      images.map((img: any) => ({
-        thumb: proxifyBskyImage(img.thumb) || "",
-        fullsize: proxifyBskyImage(img.fullsize) || "",
-        alt: img.alt,
-      })),
-    );
-    setGalleryIndex(index);
-  };
-
-  const handleGenerateAltText = async (imageUrl: string, index: number) => {
-    setGeneratingAltText((prev) => ({ ...prev, [index]: true }));
-    try {
-      // Pass the URL directly to the backend which will handle fetching
-      const anthropicService = await loadAnthropicService();
-      const altText = await anthropicService.generateAltText(imageUrl);
-
-      setGeneratedAltTexts((prev) => ({ ...prev, [index]: altText }));
-      setShowAltText((prev) => ({ ...prev, [index]: true }));
-    } catch (error) {
-      // Show user-friendly error message
-      logger.error("Error generating alt text:", error);
-      alert(
-        error instanceof Error ? error.message : "Failed to generate alt text",
-      );
-    } finally {
-      setGeneratingAltText((prev) => ({ ...prev, [index]: false }));
-    }
-  };
-
   const renderEmbed = (embed: any) => {
     if (!embed) return null;
 
@@ -509,143 +439,15 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
 
     // Images
     if (embed.images) {
-      const labels = (post as any).labels;
-      // Use simple label-based sensitivity check (blur by default, never completely hide)
-      const blurMedia = hasSensitiveLabels(labels);
-
-      // Determine grid layout based on image count
-      const gridClass =
-        embed.images.length === 1
-          ? "grid-cols-1"
-          : embed.images.length === 2
-            ? "grid-cols-2"
-            : embed.images.length === 3
-              ? "grid-cols-3"
-              : "grid-cols-2";
-
       return (
-        <div className={`relative mt-2`}>
-          <div className={`grid gap-1 ${gridClass}`}>
-            {embed.images.map((image: any, index: number) => {
-              // Special layout for 3 images: first image takes 2/3, others 1/3 each
-              const isThreeImageLayout = embed.images.length === 3;
-              const colSpan =
-                isThreeImageLayout && index === 0
-                  ? "col-span-2 row-span-2"
-                  : "";
-
-              const currentAltText = generatedAltTexts[index] || image.alt;
-              const hasAltText = currentAltText && currentAltText.length > 0;
-
-              // Extract aspect ratio from image metadata
-              const imageAspectRatio = image.aspectRatio
-                ? image.aspectRatio.width / image.aspectRatio.height
-                : isThreeImageLayout && index === 0
-                  ? 1
-                  : 16 / 9;
-
-              return (
-                <div
-                  key={`post-image-${image.thumb}-${index}`}
-                  className={`group relative ${colSpan}`}
-                >
-                  <div
-                    className="relative w-full cursor-pointer overflow-hidden rounded-xl"
-                    style={{
-                      backgroundColor: "var(--asph-bg-tertiary)",
-                      aspectRatio: imageAspectRatio,
-                      maxHeight:
-                        isThreeImageLayout && index === 0 ? "500px" : "350px",
-                    }}
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      openImageGallery(embed.images, index);
-                    }}
-                  >
-                    <ProgressiveImage
-                      src={
-                        proxifyBskyImage(image.fullsize || image.thumb) || ""
-                      }
-                      placeholderSrc={proxifyBskyImage(image.thumb) || ""}
-                      alt={currentAltText || ""}
-                      aspectRatio={imageAspectRatio}
-                      width={image.aspectRatio?.width}
-                      height={image.aspectRatio?.height}
-                      className="h-full w-full object-contain hover:opacity-90"
-                      style={{
-                        filter:
-                          blurMedia && !showSensitiveMedia
-                            ? "blur(20px)"
-                            : "none",
-                      }}
-                    />
-                  </div>
-
-                  {/* Alt text overlay */}
-                  {hasAltText && showAltText[index] && (
-                    <div className="absolute bottom-0 left-0 right-0 rounded-b-lg bg-black bg-opacity-70 p-2 text-xs text-white">
-                      {currentAltText}
-                    </div>
-                  )}
-
-                  {/* Alt text generation button */}
-                  <button
-                    className="touch-target-icon absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (hasAltText && !generatedAltTexts[index]) {
-                        // Toggle showing existing alt text
-                        setShowAltText((prev) => ({
-                          ...prev,
-                          [index]: !prev[index],
-                        }));
-                      } else if (!hasAltText) {
-                        // Generate new alt text
-                        handleGenerateAltText(
-                          proxifyBskyImage(image.fullsize) ||
-                            proxifyBskyImage(image.thumb) ||
-                            "",
-                          index,
-                        );
-                      }
-                    }}
-                    disabled={generatingAltText[index]}
-                    title={hasAltText ? "Toggle alt text" : "Generate alt text"}
-                  >
-                    {generatingAltText[index] ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    ) : (
-                      <Sparkles size={16} />
-                    )}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-          {blurMedia && !showSensitiveMedia && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowSensitiveMedia(true);
-                }}
-                className="touch-target-sm rounded-lg px-6 py-3 text-sm font-medium shadow-lg transition-colors"
-                style={{
-                  backgroundColor: "var(--asph-bg-primary)",
-                  color: "var(--asph-text-primary)",
-                  border: "2px solid var(--asph-border-primary)",
-                }}
-              >
-                <LabelBadge
-                  labels={labels || []}
-                  showContentWarningsOnly={true}
-                  size="sm"
-                />{" "}
-                - Click to Show
-              </button>
-            </div>
-          )}
-        </div>
+        <ImageGrid
+          images={(embed as any).images.map((img: any) => ({
+            thumb: img.thumb,
+            fullsize: img.fullsize,
+            alt: img.alt,
+          }))}
+          labels={(post as any).labels}
+        />
       );
     }
 
@@ -1130,6 +932,19 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                 facets={quotedPost.value?.facets}
               />
             </p>
+            {(quotedPost as any).embeds?.[0] &&
+              "images" in (quotedPost as any).embeds[0] && (
+                <ImageGrid
+                  images={(quotedPost as any).embeds[0].images.map(
+                    (img: any) => ({
+                      thumb: img.thumb,
+                      fullsize: img.fullsize,
+                      alt: img.alt,
+                    }),
+                  )}
+                  className="mt-2"
+                />
+              )}
           </div>
         </div>
       );
@@ -1592,15 +1407,6 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
           </div>
         </div>
       </Link>
-
-      {/* Image Gallery Modal */}
-      {galleryImages && (
-        <ImageGallery
-          images={galleryImages}
-          initialIndex={galleryIndex}
-          onClose={() => setGalleryImages(null)}
-        />
-      )}
     </>
   );
 };

@@ -105,12 +105,17 @@ export const DirectMessages: React.FC = () => {
   // Apply minimum duration to prevent loading flash
   const loadingConversations = useMinDuration(loadingConversationsRaw, 300);
 
-  // Handle errors - only set error if there's an actual error, not just undefined data
+  // Handle errors - distinguish permission errors from generic ones
   useEffect(() => {
     if (conversationsError) {
-      setChatError(
-        `Error loading conversations: ${conversationsError.message || "Unknown error"}. This usually means your app password needs chat permissions.`,
-      );
+      const errorMessage = conversationsError.message || "Unknown error";
+      if (errorMessage.includes("permission") || errorMessage.includes("403")) {
+        setChatError(
+          'Direct Messages require an app password with chat permissions. To use DMs: 1) Go to Settings > App Passwords on Bluesky, 2) Create a new app password with "Direct Messages" enabled, 3) Log out of shadowsky and log back in with your handle and the new app password.',
+        );
+      } else {
+        setChatError(`Error loading conversations: ${errorMessage}`);
+      }
     } else {
       setChatError(null);
     }

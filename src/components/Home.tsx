@@ -17,7 +17,6 @@ import {
   Reply,
   Rss,
   Shield,
-  Sparkles,
   Star,
   TrendingUp,
   Users,
@@ -46,10 +45,11 @@ import { rateLimitedFeedFetch } from "../services/rate-limiter";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { lazyWithRetry } from "../utils/lazyWithRetry";
 import { createLogger } from "../utils/logger";
+import { ImageGrid } from "./ImageGrid";
 import { PostActionBar } from "./PostActionBar";
 import { Spinner } from "./ui/LoadingState";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
-import { ProgressiveImage } from "./ui/ProgressiveImage";
+
 import { RichText } from "./ui/RichText";
 import { FeedSkeleton, PostSkeleton } from "./ui/SkeletonLoader";
 
@@ -1643,124 +1643,23 @@ export const Home: React.FC<HomeProps> = React.memo(
         if (!embed) return null;
 
         if (embed.$type === "app.bsky.embed.images#view") {
-          const handleImageClick = (e: React.MouseEvent, index: number) => {
-            e.stopPropagation();
-            const images = (embed.images || []).map((img: EmbedImage) => ({
-              thumb: proxifyBskyImage(img.thumb) || "",
-              fullsize: proxifyBskyImage(img.fullsize || img.thumb) || "",
-              alt: img.alt || "",
-            }));
-            setGalleryImages(images);
-            setGalleryIndex(index);
-          };
-
-          // Determine grid layout based on image count
-          const images = embed.images || [];
-          const gridClass =
-            images.length === 1
-              ? "grid-cols-1"
-              : images.length === 2
-                ? "grid-cols-2"
-                : images.length === 3
-                  ? "grid-cols-3"
-                  : "grid-cols-2";
-
           return (
-            <div className={`mt-2 grid gap-1 ${gridClass}`}>
-              {(embed.images || []).map((img: EmbedImage, idx: number) => {
-                // Special layout for 3 images: first image takes 2/3, others 1/3 each
-                const isThreeImageLayout = (embed.images || []).length === 3;
-                const colSpan =
-                  isThreeImageLayout && idx === 0
-                    ? "col-span-2 row-span-2"
-                    : "";
-
-                const postKey = postUri || "";
-                const currentAltText =
-                  generatedAltTexts[postKey]?.[idx] || img.alt;
-                const hasAltText = currentAltText && currentAltText.length > 0;
-                const isGenerating = generatingAltText[postKey]?.[idx];
-                const shouldShowAlt = showAltText[postKey]?.[idx];
-
-                return (
-                  <div
-                    key={`home-img-${img.thumb}-${idx}`}
-                    className={`group relative cursor-pointer overflow-hidden rounded-lg ${colSpan}`}
-                    onClick={(e) => handleImageClick(e, idx)}
-                    style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
-                  >
-                    {/* Image container with max height to prevent tall images */}
-                    <div
-                      className="relative w-full"
-                      style={{
-                        paddingBottom: 0, // Remove padding-based aspect ratio
-                        maxHeight:
-                          isThreeImageLayout && idx === 0 ? "500px" : "350px",
-                      }}
-                    >
-                      <ProgressiveImage
-                        src={proxifyBskyImage(img.fullsize || img.thumb) || ""}
-                        placeholderSrc={proxifyBskyImage(img.thumb) || ""}
-                        alt={currentAltText || ""}
-                        className="h-auto w-full"
-                        style={{ maxHeight: "inherit" }}
-                        priority={postIndex !== undefined && postIndex < 8}
-                      />
-                    </div>
-
-                    {/* Alt text overlay */}
-                    {hasAltText && shouldShowAlt && (
-                      <div className="absolute bottom-0 left-0 right-0 rounded-b-lg bg-black bg-opacity-70 p-2 text-xs text-white">
-                        {currentAltText}
-                      </div>
-                    )}
-
-                    {/* Alt text generation button */}
-                    {postUri && (
-                      <button
-                        className="touch-target-icon absolute right-2 top-2 z-10 rounded-full bg-black bg-opacity-60 p-1.5 text-white opacity-0 transition-all hover:bg-opacity-80 group-hover:opacity-100"
-                        onClick={(e) => {
-                          e.stopPropagation();
-
-                          if (
-                            hasAltText &&
-                            !generatedAltTexts[postKey]?.[idx]
-                          ) {
-                            // Toggle showing existing alt text
-                            setShowAltText((prev) => ({
-                              ...prev,
-                              [postKey]: {
-                                ...prev[postKey],
-                                [idx]: !shouldShowAlt,
-                              },
-                            }));
-                          } else if (!hasAltText) {
-                            // Generate new alt text
-                            handleGenerateAltText(
-                              proxifyBskyImage(img.fullsize) ||
-                                proxifyBskyImage(img.thumb) ||
-                                "",
-                              postUri,
-                              idx,
-                            );
-                          }
-                        }}
-                        disabled={isGenerating}
-                        title={
-                          hasAltText ? "Toggle alt text" : "Generate alt text"
-                        }
-                      >
-                        {isGenerating ? (
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                        ) : (
-                          <Sparkles size={16} />
-                        )}
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <ImageGrid
+              images={(embed.images || []).map((img: EmbedImage) => ({
+                thumb: img.thumb,
+                fullsize: img.fullsize || img.thumb,
+                alt: img.alt,
+              }))}
+              onImageClick={(index) => {
+                const images = (embed.images || []).map((img: EmbedImage) => ({
+                  thumb: proxifyBskyImage(img.thumb) || "",
+                  fullsize: proxifyBskyImage(img.fullsize || img.thumb) || "",
+                  alt: img.alt || "",
+                }));
+                setGalleryImages(images);
+                setGalleryIndex(index);
+              }}
+            />
           );
         }
 

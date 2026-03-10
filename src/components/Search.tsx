@@ -5,7 +5,6 @@ import { format, formatDistanceToNow, subDays, subMonths } from "date-fns";
 import {
   ArrowLeft,
   Calendar,
-  ExternalLink,
   Filter,
   Globe,
   Hash,
@@ -25,6 +24,7 @@ import { getFollowerCacheDB } from "../services/follower-cache-db";
 import { getProfileCacheService } from "../services/profile-cache-service";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { constructAtUri, parseBskyUrl } from "../utils/url-helpers";
+import { ImageGrid } from "./ImageGrid";
 import { ThreadViewer } from "./ThreadViewer";
 import { EmptyState } from "./ui/EmptyState";
 import { SearchResultSkeleton, ThreadSkeleton } from "./ui/SkeletonLoader";
@@ -731,21 +731,6 @@ export const Search: React.FC = () => {
               <ArrowLeft size={16} />
               Back to search
             </button>
-            {selectedPostUri && (
-              <a
-                href={`https://bsky.app/profile/${threadPosts[0]?.author?.handle || "unknown"}/post/${selectedPostUri.split("/").pop()}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm transition-all"
-                style={{
-                  backgroundColor: "var(--asph-primary)",
-                  color: "white",
-                }}
-              >
-                View on Bluesky
-                <ExternalLink size={14} />
-              </a>
-            )}
           </div>
           {isLoadingThread ? (
             <div
@@ -1951,56 +1936,18 @@ export const Search: React.FC = () => {
                             if (images.length === 0) return null;
 
                             return (
-                              <div className="mt-3">
-                                <div
-                                  className={`grid gap-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
-                                >
-                                  {images.slice(0, 4).map((img) => (
-                                    <img
-                                      key={img.thumb}
-                                      src={proxifyBskyImage(img.thumb)}
-                                      alt={img.alt || ""}
-                                      className="w-full cursor-pointer rounded-lg border object-cover transition-opacity hover:opacity-90"
-                                      style={{
-                                        borderColor:
-                                          "var(--asph-border-primary)",
-                                        height:
-                                          images.length === 1
-                                            ? "200px"
-                                            : "120px",
-                                        maxHeight: "300px",
-                                      }}
-                                      loading="lazy"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        window.open(
-                                          img.fullsize,
-                                          "_blank",
-                                          "noopener,noreferrer",
-                                        );
-                                      }}
-                                    />
-                                  ))}
-                                </div>
-                              </div>
+                              <ImageGrid
+                                images={images.map((img) => ({
+                                  thumb: img.thumb,
+                                  fullsize: img.fullsize,
+                                  alt: img.alt,
+                                }))}
+                                className="mt-3"
+                              />
                             );
                           })()}
 
                           <div className="mt-2 flex items-center gap-3">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                window.open(
-                                  `https://bsky.app/profile/${post.author?.handle || "unknown"}/post/${post.uri.split("/").pop()}`,
-                                  "_blank",
-                                  "noopener,noreferrer",
-                                );
-                              }}
-                              style={{ color: "var(--asph-primary)" }}
-                            >
-                              View on Bluesky
-                              <ExternalLink size={12} />
-                            </button>
                             <span
                               className="touch-target-sm flex items-center gap-1 text-xs hover:underline"
                               style={{ color: "var(--asph-text-tertiary)" }}

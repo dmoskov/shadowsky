@@ -43,6 +43,7 @@ import {
   ReplyIcon,
   RepostIcon,
 } from "./icons";
+import { ImageGrid } from "./ImageGrid";
 import {
   AggregatedNotificationItem,
   aggregateNotifications,
@@ -1561,39 +1562,14 @@ const NotificationItem: React.FC<NotificationItemProps> = React.memo(
               if (images.length === 0) return null;
 
               return (
-                <div className="mt-2">
-                  <div
-                    className={`grid gap-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}
-                  >
-                    {images.slice(0, 4).map((img: any, idx) => {
-                      const imgAspectRatio = img.aspectRatio
-                        ? img.aspectRatio.width / img.aspectRatio.height
-                        : images.length === 1
-                          ? 16 / 9
-                          : 1;
-                      return (
-                        <div
-                          key={`notif-feed-img-${img.thumb}-${idx}`}
-                          className="relative overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
-                          style={{
-                            borderColor: "var(--asph-border-primary)",
-                            aspectRatio: imgAspectRatio,
-                            maxHeight: images.length === 1 ? "200px" : "120px",
-                          }}
-                        >
-                          <img
-                            src={proxifyBskyImage(img.thumb)}
-                            alt={img.alt || ""}
-                            className="h-full w-full object-contain"
-                            loading="lazy"
-                            width={img.aspectRatio?.width}
-                            height={img.aspectRatio?.height}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                <ImageGrid
+                  images={images.map((img) => ({
+                    thumb: img.thumb,
+                    fullsize: img.fullsize,
+                    alt: img.alt,
+                  }))}
+                  className="mt-3"
+                />
               );
             })()}
           </div>

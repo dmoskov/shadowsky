@@ -7,35 +7,35 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1302E22271F74670AD715E26 /* icon-pride.png in Resources */ = {isa = PBXBuildFile; fileRef = 4884A35DEFFE4DCAA65AE243 /* icon-pride.png */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		1B9A673502927E08BF3283E4 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DA054F269B5DF4A379E7E01 /* ExpoModulesProvider.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		51D26ADF23064D2054B3C788 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FD5B14A8B473F16EE89F01E9 /* PrivacyInfo.xcprivacy */; };
-		55F33DF3288627EC9605DD20 /* libPods-Asphodel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AF6391F4FAB8C2CCFCF24EC /* libPods-Asphodel.a */; };
-		609A6971E92A47379DFFC66C /* icon-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 0B73F39793E0468082A16760 /* icon-light.png */; };
-		7336F84219A0476E8EFD8ADB /* icon-mono.png in Resources */ = {isa = PBXBuildFile; fileRef = 82CF620B94EC470B80EE8C26 /* icon-mono.png */; };
+		55E2192B0193405F868E35A4 /* icon-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 07E7B99E272F4E448D1DDFE4 /* icon-light.png */; };
+		69095CA3FD6CA9C291B28B58 /* libPods-Asphodel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D2B8A497A26D76046AAC4749 /* libPods-Asphodel.a */; };
+		847A567E48454090AB697204 /* icon-pride.png in Resources */ = {isa = PBXBuildFile; fileRef = A72D845CAFF04707A2D37AF0 /* icon-pride.png */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		F8B1DB944A71308880D0ED2A /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FFD42D1E898AC1C311CCB61 /* ExpoModulesProvider.swift */; };
+		F28D02161979138FD6CC42BA /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E66D19DC754372235A6DE879 /* PrivacyInfo.xcprivacy */; };
+		FB817E67CE2D4EF88D7DAFCF /* icon-mono.png in Resources */ = {isa = PBXBuildFile; fileRef = 7F269946D08940059DD4BD06 /* icon-mono.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0B73F39793E0468082A16760 /* icon-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-light.png"; sourceTree = "<group>"; };
+		07E7B99E272F4E448D1DDFE4 /* icon-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-light.png"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* Asphodel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Asphodel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Asphodel/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Asphodel/Info.plist; sourceTree = "<group>"; };
-		2AF6391F4FAB8C2CCFCF24EC /* libPods-Asphodel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Asphodel.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		36D4647D668FDBB00E6CA6ED /* Pods-Asphodel.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Asphodel.debug.xcconfig"; path = "Target Support Files/Pods-Asphodel/Pods-Asphodel.debug.xcconfig"; sourceTree = "<group>"; };
-		4884A35DEFFE4DCAA65AE243 /* icon-pride.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-pride.png"; sourceTree = "<group>"; };
-		5FFD42D1E898AC1C311CCB61 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Asphodel/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		82CF620B94EC470B80EE8C26 /* icon-mono.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-mono.png"; sourceTree = "<group>"; };
+		7DA054F269B5DF4A379E7E01 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Asphodel/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		7F269946D08940059DD4BD06 /* icon-mono.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-mono.png"; sourceTree = "<group>"; };
+		A5227F29BC79BFDE131F0FCF /* Pods-Asphodel.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Asphodel.release.xcconfig"; path = "Target Support Files/Pods-Asphodel/Pods-Asphodel.release.xcconfig"; sourceTree = "<group>"; };
+		A72D845CAFF04707A2D37AF0 /* icon-pride.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-pride.png"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Asphodel/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B1F16186894AE88A17EB6AE6 /* Pods-Asphodel.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Asphodel.release.xcconfig"; path = "Target Support Files/Pods-Asphodel/Pods-Asphodel.release.xcconfig"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
+		D2B8A497A26D76046AAC4749 /* libPods-Asphodel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Asphodel.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E66D19DC754372235A6DE879 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Asphodel/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Asphodel/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Asphodel-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Asphodel-Bridging-Header.h"; path = "Asphodel/Asphodel-Bridging-Header.h"; sourceTree = "<group>"; };
-		FD5B14A8B473F16EE89F01E9 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Asphodel/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		F4B87499B70F2885C5FC83E5 /* Pods-Asphodel.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Asphodel.debug.xcconfig"; path = "Target Support Files/Pods-Asphodel/Pods-Asphodel.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -43,21 +43,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				55F33DF3288627EC9605DD20 /* libPods-Asphodel.a in Frameworks */,
+				69095CA3FD6CA9C291B28B58 /* libPods-Asphodel.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		09B1D96E8C03BCF72E3D2B3C /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				3760639E2D5C014B8AEF565D /* Asphodel */,
-			);
-			name = ExpoModulesProviders;
-			sourceTree = "<group>";
-		};
 		13B07FAE1A68108700A75B9A /* Asphodel */ = {
 			isa = PBXGroup;
 			children = (
@@ -67,10 +59,10 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				0B73F39793E0468082A16760 /* icon-light.png */,
-				82CF620B94EC470B80EE8C26 /* icon-mono.png */,
-				4884A35DEFFE4DCAA65AE243 /* icon-pride.png */,
-				FD5B14A8B473F16EE89F01E9 /* PrivacyInfo.xcprivacy */,
+				07E7B99E272F4E448D1DDFE4 /* icon-light.png */,
+				7F269946D08940059DD4BD06 /* icon-mono.png */,
+				A72D845CAFF04707A2D37AF0 /* icon-pride.png */,
+				E66D19DC754372235A6DE879 /* PrivacyInfo.xcprivacy */,
 			);
 			name = Asphodel;
 			sourceTree = "<group>";
@@ -79,27 +71,17 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				2AF6391F4FAB8C2CCFCF24EC /* libPods-Asphodel.a */,
+				D2B8A497A26D76046AAC4749 /* libPods-Asphodel.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		3760639E2D5C014B8AEF565D /* Asphodel */ = {
+		4E430EBAE65EF26E940C0DEE /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				5FFD42D1E898AC1C311CCB61 /* ExpoModulesProvider.swift */,
+				AF0558ED454CCC70E03F60AE /* Asphodel */,
 			);
-			name = Asphodel;
-			sourceTree = "<group>";
-		};
-		6D03DD04596B6769A8DBEB6F /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				36D4647D668FDBB00E6CA6ED /* Pods-Asphodel.debug.xcconfig */,
-				B1F16186894AE88A17EB6AE6 /* Pods-Asphodel.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -116,8 +98,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				6D03DD04596B6769A8DBEB6F /* Pods */,
-				09B1D96E8C03BCF72E3D2B3C /* ExpoModulesProviders */,
+				8EB85891FD03BAEB2B9871B3 /* Pods */,
+				4E430EBAE65EF26E940C0DEE /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -130,6 +112,24 @@
 				13B07F961A680F5B00A75B9A /* Asphodel.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		8EB85891FD03BAEB2B9871B3 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				F4B87499B70F2885C5FC83E5 /* Pods-Asphodel.debug.xcconfig */,
+				A5227F29BC79BFDE131F0FCF /* Pods-Asphodel.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		AF0558ED454CCC70E03F60AE /* Asphodel */ = {
+			isa = PBXGroup;
+			children = (
+				7DA054F269B5DF4A379E7E01 /* ExpoModulesProvider.swift */,
+			);
+			name = Asphodel;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -149,13 +149,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Asphodel" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				25C35B8E53D9CBBED74658B3 /* [Expo] Configure project */,
+				CB6D439FAD31C619B69A9FF6 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				8093FFD51B246343E96C825D /* [CP] Embed Pods Frameworks */,
+				2C7251DE467577883E4C0D9D /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -205,10 +205,10 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				609A6971E92A47379DFFC66C /* icon-light.png in Resources */,
-				7336F84219A0476E8EFD8ADB /* icon-mono.png in Resources */,
-				1302E22271F74670AD715E26 /* icon-pride.png in Resources */,
-				51D26ADF23064D2054B3C788 /* PrivacyInfo.xcprivacy in Resources */,
+				55E2192B0193405F868E35A4 /* icon-light.png in Resources */,
+				FB817E67CE2D4EF88D7DAFCF /* icon-mono.png in Resources */,
+				847A567E48454090AB697204 /* icon-pride.png in Resources */,
+				F28D02161979138FD6CC42BA /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -254,29 +254,27 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		25C35B8E53D9CBBED74658B3 /* [Expo] Configure project */ = {
+		2C7251DE467577883E4C0D9D /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-			);
 			inputPaths = (
-				"$(SRCROOT)/.xcode.env",
-				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/Asphodel/Asphodel.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-Asphodel/expo-configure-project.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-Asphodel/Pods-Asphodel-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
 			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
+			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-Asphodel/ExpoModulesProvider.swift",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Asphodel/expo-configure-project.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Asphodel/Pods-Asphodel-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -330,27 +328,29 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Asphodel/Pods-Asphodel-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		8093FFD51B246343E96C825D /* [CP] Embed Pods Frameworks */ = {
+		CB6D439FAD31C619B69A9FF6 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Asphodel/Pods-Asphodel-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			inputFileListPaths = (
 			);
-			name = "[CP] Embed Pods Frameworks";
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/Asphodel/Asphodel.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-Asphodel/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-Asphodel/ExpoModulesProvider.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Asphodel/Pods-Asphodel-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Asphodel/expo-configure-project.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -360,7 +360,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				F8B1DB944A71308880D0ED2A /* ExpoModulesProvider.swift in Sources */,
+				1B9A673502927E08BF3283E4 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -369,7 +369,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 36D4647D668FDBB00E6CA6ED /* Pods-Asphodel.debug.xcconfig */;
+			baseConfigurationReference = F4B87499B70F2885C5FC83E5 /* Pods-Asphodel.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -405,7 +405,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B1F16186894AE88A17EB6AE6 /* Pods-Asphodel.release.xcconfig */;
+			baseConfigurationReference = A5227F29BC79BFDE131F0FCF /* Pods-Asphodel.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
