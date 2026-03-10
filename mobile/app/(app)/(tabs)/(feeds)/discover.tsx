@@ -1,5 +1,5 @@
-import { FeedDiscoveryScreen } from "../../../../src/screens/feeds/FeedDiscoveryScreen";
+import { DiscoverScreen } from "../../../../src/screens/discover/DiscoverScreen";
 
 export default function FeedDiscoverRoute() {
-  return <FeedDiscoveryScreen />;
+  return <DiscoverScreen />;
 }

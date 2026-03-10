@@ -1,4 +1,4 @@
-import { Clock, ExternalLink, PenSquare } from "lucide-react";
+import { Clock, Compass, ExternalLink, PenSquare } from "lucide-react";
 import React from "react";
 import { NavLink } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
@@ -35,6 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems = [
     { path: "/", label: "Home", icon: HomeIcon },
     { path: "/search", label: "Search", icon: SearchIcon },
+    { path: "/discover", label: "Discover", icon: Compass },
     {
       path: "/notifications",
       label: "Notifications",
