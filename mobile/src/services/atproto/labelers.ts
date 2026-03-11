@@ -81,15 +81,20 @@ export const LABELER_CATEGORIES = [
 export type LabelerCategory = (typeof LABELER_CATEGORIES)[number];
 
 export const CURATED_LABELERS: LabelerDirectoryEntry[] = [
-  { did: "did:plc:ar7c4by46qjdydhdevvrndac", category: "Moderation" },
-  { did: "did:plc:e4elbtctnfqocyfcml6h2lf7", category: "Moderation" },
-  { did: "did:plc:d2mkddsbmnrgr3domzg5qexf", category: "Safety" },
-  { did: "did:plc:4ugewi6aca52a62u62jccbl7", category: "Safety" },
-  { did: "did:plc:gqaoe3na6isc3zyvp7iuqpu7", category: "Safety" },
-  { did: "did:plc:l3nbhdfelt5d26btksecetxu", category: "Identity" },
-  { did: "did:plc:l624mewisyr6hymexmrjkprc", category: "Community" },
-  { did: "did:plc:2qawvcwumvgxmed6iy6pmt6l", category: "Community" },
-  { did: "did:plc:hysbs7znfgxyb4tsvetzo4sk", category: "Fun" },
+  // Moderation
+  { did: "did:plc:ar7c4by46qjdydhdevvrndac", category: "Moderation" }, // Bluesky Moderation Service
+  { did: "did:plc:e4elbtctnfqocyfcml6h2lf7", category: "Moderation" }, // Skywatch Blue
+  { did: "did:plc:yojwcfgpkxq35sv5wioglqad", category: "Moderation" }, // Perisai
+  // Safety
+  { did: "did:plc:4ugewi6aca52a62u62jccbl7", category: "Safety" }, // Anti-Transphobia
+  { did: "did:plc:gqaoe3na6isc3zyvp7iuqpu7", category: "Safety" }, // Art Theft Labeler
+  // Identity
+  { did: "did:plc:l3nbhdfelt5d26btksecetxu", category: "Identity" }, // Pronoun Picker
+  // Community
+  { did: "did:plc:l624mewisyr6hymexmrjkprc", category: "Community" }, // Content Creator Labeler
+  { did: "did:plc:2qawvcwumvgxmed6iy6pmt6l", category: "Community" }, // SonaSky
+  // Fun
+  { did: "did:plc:hysbs7znfgxyb4tsvetzo4sk", category: "Fun" }, // TTRPG Class Identifier
 ];
 
 /**
