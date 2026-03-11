@@ -8,7 +8,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   runtimeVersion: "0.7.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
-  scheme: ["shadowsky", "bsky", "is.asphodel.app", "is.asphodel"],
+  scheme: ["shadowsky", "bsky", "io.shadowsky.app", "is.asphodel"],
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   splash: {
@@ -18,7 +18,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     supportsTablet: true,
-    bundleIdentifier: "is.asphodel.app",
+    bundleIdentifier: "io.shadowsky.app",
     // @ts-expect-error deploymentTarget is valid for EAS builds but not in ExpoConfig type
     deploymentTarget: "16.0",
     associatedDomains: [
@@ -65,7 +65,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#0a0a0f",
     },
-    package: "is.asphodel.app",
+    package: "io.shadowsky.app",
     permissions: [
       "RECEIVE_BOOT_COMPLETED",
     ],

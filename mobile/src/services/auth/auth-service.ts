@@ -19,6 +19,9 @@ import {
   clearActiveSessionDid,
   migrateTokensToSecureStore,
 } from './secure-token-storage';
+import {createLogger} from '../../utils/logger';
+
+const logger = createLogger('AuthService');
 // Lazy-load oauth-expo to avoid crashing when the native module
 // ExpoAtprotoOAuthClient isn't available (e.g. Expo Go or missing native build).
 function getOAuthModule(): typeof import('./oauth-expo') {
@@ -239,6 +242,11 @@ async function resumeAppPasswordSession(activeDid: string): Promise<StoredSessio
  * Refresh the user's profile data in the background after session resume.
  * Updates stored session with latest handle/displayName/avatar without
  * blocking the cold start path.
+ *
+ * IMPORTANT: This must never call signOut() — it runs fire-and-forget during
+ * startup. A transient network failure here should NOT destroy stored
+ * credentials. The periodic session validity check will handle truly
+ * expired sessions.
  */
 async function refreshProfileInBackground(session: StoredSession): Promise<void> {
   try {
@@ -259,9 +267,9 @@ async function refreshProfileInBackground(session: StoredSession): Promise<void>
     const client = getAtProtoClient();
 
     // For OAuth sessions, the library handles token refresh automatically.
-    // If the profile fetch still failed, the session is truly invalid.
+    // If the profile fetch failed, it may be a transient issue — don't sign out.
     if (client.isOAuthSession()) {
-      await signOut();
+      logger.error('Background profile refresh failed for OAuth session (non-fatal)');
       return;
     }
 
@@ -280,7 +288,8 @@ async function refreshProfileInBackground(session: StoredSession): Promise<void>
         active: session.active,
       });
     } catch {
-      await signOut();
+      // Don't sign out — let periodic session checks handle expired sessions
+      logger.error('Background token refresh failed (non-fatal, will retry on next check)');
     }
   }
 }

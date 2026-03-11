@@ -1,4 +1,4 @@
-package io.shadowsky.app
+package `is`.asphodel.app
 
 import android.os.Build
 import android.os.Bundle

@@ -278,7 +278,7 @@ describe('auth-service', () => {
       expect(mockClient.refreshSession).toHaveBeenCalled();
     });
 
-    it('should sign out in background if session refresh fails', async () => {
+    it('should NOT sign out when background refresh fails (non-fatal)', async () => {
       mockSecureStorage.getActiveSessionDid.mockResolvedValue(mockSessionData.did);
       mockSecureStorage.getSessionTokens.mockResolvedValue({
         did: mockSessionData.did,
@@ -299,9 +299,9 @@ describe('auth-service', () => {
       // Allow background refreshProfileInBackground to settle
       await new Promise(resolve => setTimeout(resolve, 50));
 
-      // Sign out should delete tokens from SecureStore
-      expect(mockSecureStorage.clearActiveSessionDid).toHaveBeenCalled();
-      expect(clientModule.resetAtProtoClient).toHaveBeenCalled();
+      // Background refresh failure is non-fatal — should NOT sign out.
+      // Periodic session validity checks will handle truly expired sessions.
+      expect(mockSecureStorage.clearActiveSessionDid).not.toHaveBeenCalled();
     });
   });
 

@@ -10,7 +10,6 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { captureException } from "../utils/error-reporting";
 
@@ -142,7 +141,6 @@ function getRetryDelay(error: ApiError): number {
 
 export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
   const { showToast } = useToast();
-  const { signOut } = useAuth();
   const queryClient = useQueryClient();
 
   const handleError = useCallback(
@@ -209,21 +207,23 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
       }
 
       // Handle authentication errors (401)
+      // Note: BskyAgent handles token refresh internally on 401. If a 401
+      // still reaches here, it may be transient (network issue during the
+      // agent's internal refresh). Don't immediately destroy the session —
+      // the periodic session validity checks will handle truly expired tokens.
       if (isAuthError(error)) {
         if (options.onAuthError) {
           options.onAuthError();
         } else if (options.onSessionExpired) {
           options.onSessionExpired();
         } else {
-          // Try to handle auth error automatically
+          logger.error('401 auth error received — will be handled by session validity checks');
           if (!options.silent) {
-            showToast("Session expired. Please log in again.", {
-              type: "error",
-              duration: 5000,
+            showToast("Authentication error. Retrying...", {
+              type: "warning",
+              duration: 3000,
             });
           }
-          // Logout user
-          signOut();
         }
         return;
       }
@@ -293,7 +293,6 @@ export const useErrorHandler = (options: ErrorHandlerOptions = {}) => {
       options.fallback,
       options.silent,
       showToast,
-      signOut,
       queryClient,
     ],
   );

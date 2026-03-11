@@ -70,6 +70,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refreshSessionRef = useRef<() => Promise<void>>(undefined);
   const checkSessionValidityRef = useRef<() => Promise<void>>(undefined);
   const setupSessionRefreshRef = useRef<() => void>(undefined);
+  const loadSessionRef = useRef<() => Promise<void>>(undefined);
 
   const clearTimers = useCallback(() => {
     if (refreshTimerRef.current) {
@@ -103,12 +104,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const client = getAtProtoClient();
       const agent = client.getAgent();
       await agent.getProfile({ actor: session.did });
+      // Reset counter on success
+      consecutiveValidityFailures.current = 0;
     } catch {
       try {
         // Use ref to get latest refreshSession to avoid stale closures
         await refreshSessionRef.current?.();
+        consecutiveValidityFailures.current = 0;
       } catch {
-        await signOut();
+        consecutiveValidityFailures.current += 1;
+        logger.error(
+          `Session validity check failed (${consecutiveValidityFailures.current}/${MAX_CONSECUTIVE_FAILURES})`,
+        );
+        if (consecutiveValidityFailures.current >= MAX_CONSECUTIVE_FAILURES) {
+          logger.error('Max consecutive validity failures reached, signing out');
+          await signOut();
+        }
       }
     }
   }, [session, signOut]);
@@ -116,22 +127,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refreshSession = useCallback(async () => {
     if (!session) return;
 
-    try {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
-      const currentSession = agent.session;
+    const client = getAtProtoClient();
+    const agent = client.getAgent();
+    const currentSession = agent.session;
 
-      if (currentSession) {
-        const updatedSession: StoredSession = {
-          ...session,
-          accessJwt: currentSession.accessJwt,
-          refreshJwt: currentSession.refreshJwt,
-        };
+    if (currentSession) {
+      const updatedSession: StoredSession = {
+        ...session,
+        accessJwt: currentSession.accessJwt,
+        refreshJwt: currentSession.refreshJwt,
+      };
 
-        if (
-          updatedSession.accessJwt !== session.accessJwt ||
-          updatedSession.refreshJwt !== session.refreshJwt
-        ) {
+      if (
+        updatedSession.accessJwt !== session.accessJwt ||
+        updatedSession.refreshJwt !== session.refreshJwt
+      ) {
+        try {
           await saveSessionTokens(updatedSession.did, {
             did: updatedSession.did,
             handle: updatedSession.handle,
@@ -141,14 +152,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
             emailConfirmed: updatedSession.emailConfirmed,
             active: updatedSession.active,
           });
-          setSession(updatedSession);
+        } catch (error) {
+          // SecureStore write failed — tokens are still valid in memory,
+          // don't destroy the session over a storage hiccup
+          logger.error('Failed to persist refreshed tokens (non-fatal):', error);
         }
+        setSession(updatedSession);
       }
-    } catch (error) {
-      await signOut();
-      throw error;
     }
-  }, [session, signOut]);
+  }, [session]);
 
   const setupSessionRefresh = useCallback(() => {
     clearTimers();
@@ -217,11 +229,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     (nextAppState: AppStateStatus) => {
       if (
         appStateRef.current.match(/inactive|background/) &&
-        nextAppState === "active" &&
-        session
+        nextAppState === "active"
       ) {
-        // Use ref to get latest callback and avoid stale closures
-        checkSessionValidityRef.current?.();
+        if (session) {
+          // Use ref to get latest callback and avoid stale closures
+          checkSessionValidityRef.current?.();
+        } else {
+          // No session — try restoring again (may have failed on first attempt
+          // due to locked keychain or transient error)
+          loadSessionRef.current?.();
+        }
       }
       appStateRef.current = nextAppState;
     },
@@ -244,6 +261,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(false);
     }
   }, []);
+
+  // Keep loadSessionRef in sync (declared after loadSession to avoid
+  // block-scoped variable reference error)
+  useEffect(() => {
+    loadSessionRef.current = loadSession;
+  }, [loadSession]);
 
   const loadAccounts = useCallback(async () => {
     try {

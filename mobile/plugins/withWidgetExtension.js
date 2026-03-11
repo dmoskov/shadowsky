@@ -14,9 +14,9 @@ const fs = require("fs");
  * 3. Configures build settings for the extension (WidgetKit + SwiftUI)
  */
 
-const APP_GROUP_ID = "group.is.asphodel.app";
+const APP_GROUP_ID = "group.io.shadowsky.app";
 const WIDGET_EXT_NAME = "WidgetExtension";
-const WIDGET_EXT_BUNDLE_ID = "is.asphodel.app.WidgetExtension";
+const WIDGET_EXT_BUNDLE_ID = "io.shadowsky.app.WidgetExtension";
 
 // Deterministic UUIDs for Widget Extension (so config plugin is idempotent)
 const WE_PRODUCT_REF = "WIDGET_EXT_PRODUCT_01";
