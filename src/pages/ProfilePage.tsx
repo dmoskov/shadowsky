@@ -44,6 +44,7 @@ import { ThreadModal } from "../components/ThreadModal";
 import { DomainVerifiedBadge } from "../components/ui/DomainVerifiedBadge";
 import { EmptyState } from "../components/ui/EmptyState";
 import { LabelBadge } from "../components/ui/LabelBadge";
+import { PanEngagementBadge } from "../components/ui/PanEngagementBadge";
 import { RichText } from "../components/ui/RichText";
 import {
   FeedSkeleton,
@@ -52,6 +53,7 @@ import {
   SkeletonLoader,
 } from "../components/ui/SkeletonLoader";
 import { UserListModal } from "../components/UserListModal";
+import { partitionPanLabels } from "../config/pan-labeler";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
@@ -1132,11 +1134,25 @@ export default function ProfilePage() {
               )}
             </div>
             {/* Show profile labels if present */}
-            {profile.labels && profile.labels.length > 0 && (
-              <div className="mt-2">
-                <LabelBadge labels={profile.labels} maxDisplay={3} size="md" />
-              </div>
-            )}
+            {profile.labels &&
+              profile.labels.length > 0 &&
+              (() => {
+                const { panLabels, otherLabels } = partitionPanLabels(
+                  profile.labels,
+                );
+                return (
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    {otherLabels.length > 0 && (
+                      <LabelBadge
+                        labels={otherLabels}
+                        maxDisplay={3}
+                        size="md"
+                      />
+                    )}
+                    <PanEngagementBadge labels={panLabels} />
+                  </div>
+                );
+              })()}
           </div>
 
           {/* Bio with rich text rendering */}

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 interface TooltipProps {
-  content: string;
+  content: React.ReactNode;
   children: React.ReactNode;
   delay?: number;
   className?: string;

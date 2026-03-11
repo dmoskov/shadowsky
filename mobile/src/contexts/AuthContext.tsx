@@ -29,6 +29,8 @@ import { preferencesService } from "../services/preferences";
 import { addBreadcrumb, setUser, clearUser } from "../utils/error-reporting";
 
 
+import { subscribeToLabeler } from "../services/atproto/labelers";
+import { PAN_LABELER_DID } from "../config/pan-labeler";
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('AuthContext');
@@ -254,6 +256,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // block the loading gate on a non-critical side-effect)
         setUser(restoredSession.did).catch(() => {});
         addBreadcrumb("auth", "Session restored on app start");
+        // Auto-subscribe to pan engagement labeler (fire-and-forget)
+        subscribeToLabeler(PAN_LABELER_DID).catch(() => {});
       }
     } catch {
       // Session restore failed
@@ -319,6 +323,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Set user context for error tracking
       await setUser(newSession.did);
       addBreadcrumb("auth", "User signed in with password");
+      // Auto-subscribe to pan engagement labeler (fire-and-forget)
+      subscribeToLabeler(PAN_LABELER_DID).catch(() => {});
     } finally {
       setIsLoading(false);
     }
@@ -333,6 +339,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       await setUser(newSession.did);
       addBreadcrumb("auth", "User signed in with OAuth");
+      // Auto-subscribe to pan engagement labeler (fire-and-forget)
+      subscribeToLabeler(PAN_LABELER_DID).catch(() => {});
     } finally {
       setIsLoading(false);
     }

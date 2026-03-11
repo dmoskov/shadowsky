@@ -7,6 +7,7 @@ import { fontSize } from "../utils/typography";
 interface ProfileLabelBadgesProps {
   labels?: Array<{ val: string; src: string }>;
   profileDid?: string;
+  maxDisplay?: number;
 }
 
 const LABEL_DISPLAY_NAMES: Record<string, string> = {
@@ -29,7 +30,7 @@ function getSeverityColor(val: string): "danger" | "warning" | "info" {
   return "info";
 }
 
-export function ProfileLabelBadges({ labels, profileDid }: ProfileLabelBadgesProps) {
+export function ProfileLabelBadges({ labels, profileDid, maxDisplay = 3 }: ProfileLabelBadgesProps) {
   const { colors } = useTheme();
 
   const visibleLabels = useMemo(() => {
@@ -43,9 +44,12 @@ export function ProfileLabelBadges({ labels, profileDid }: ProfileLabelBadgesPro
 
   if (visibleLabels.length === 0) return null;
 
+  const displayedLabels = visibleLabels.slice(0, maxDisplay);
+  const remainingCount = visibleLabels.length - displayedLabels.length;
+
   return (
     <View style={styles.container}>
-      {visibleLabels.map((label, index) => {
+      {displayedLabels.map((label, index) => {
         const severity = getSeverityColor(label.val);
         const isSelfLabeled = label.src === profileDid;
         const displayName = LABEL_DISPLAY_NAMES[label.val.toLowerCase()] || label.val;
@@ -72,6 +76,16 @@ export function ProfileLabelBadges({ labels, profileDid }: ProfileLabelBadgesPro
           </View>
         );
       })}
+      {remainingCount > 0 && (
+        <View
+          style={[styles.badge, { borderColor: colors.textSecondary }]}
+          accessibilityLabel={`${remainingCount} more label${remainingCount > 1 ? "s" : ""}`}
+        >
+          <Text style={[styles.badgeText, { color: colors.textSecondary }]}>
+            +{remainingCount}
+          </Text>
+        </View>
+      )}
     </View>
   );
 }

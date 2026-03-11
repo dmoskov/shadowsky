@@ -17,9 +17,11 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { PAN_LABELER_DID } from "../config/pan-labeler";
 import { AccountManager } from "../services/account-manager";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { atProtoClient, ATProtoClient } from "../services/atproto";
+import { subscribeToLabeler } from "../services/atproto/labelers";
 import {
   bookmarkService,
   initializeBookmarkService,
@@ -357,6 +359,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               await Promise.all([
                 initializeBookmarkService(agent),
                 initializeDataServices(agent),
+                subscribeToLabeler(agent, PAN_LABELER_DID).catch(() => {}),
               ]);
               throwIfAborted();
 
@@ -436,6 +439,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             await Promise.all([
               initializeBookmarkService(managedClient.agent),
               initializeDataServices(managedClient.agent),
+              subscribeToLabeler(managedClient.agent, PAN_LABELER_DID).catch(
+                () => {},
+              ),
             ]);
             throwIfAborted();
 
@@ -606,6 +612,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           await initializeDataServices(managedClient.agent);
           dmService.setAgent(managedClient.agent);
         }
+
+        // Auto-subscribe to pan engagement labeler (fire-and-forget)
+        subscribeToLabeler(managedClient.agent, PAN_LABELER_DID).catch(
+          () => {},
+        );
 
         // Fetch profile data and store account
         try {

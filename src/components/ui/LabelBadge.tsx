@@ -222,23 +222,25 @@ export const LabelBadge: React.FC<LabelBadgeProps> = ({
   return (
     <div className={`flex flex-wrap items-center gap-1.5 ${className}`}>
       {visibleLabels.map((val) => {
-        const def = LABEL_DEFINITIONS[val] || LABEL_DEFINITIONS["!warn"] || {};
+        const def = LABEL_DEFINITIONS[val];
+        const label = def?.label || val;
+        const color = def?.color || "#6b7280";
+        const bgColor = def?.bgColor || "rgba(107, 114, 128, 0.1)";
+        const borderColor = def?.borderColor || "rgba(107, 114, 128, 0.3)";
+        const description = def?.description || `Label: ${val}`;
+        const icon = def?.icon || <Shield size={12} />;
         return (
-          <Tooltip
-            key={val}
-            content={def.description || `Label: ${val}`}
-            delay={300}
-          >
+          <Tooltip key={val} content={description} delay={300}>
             <span
               className={`inline-flex items-center rounded-full font-medium transition-all hover:scale-105 ${sizeClasses[size]}`}
               style={{
-                color: def.color || "#6b7280",
-                backgroundColor: def.bgColor || "rgba(107, 114, 128, 0.1)",
-                border: `1px solid ${def.borderColor || "rgba(107, 114, 128, 0.3)"}`,
+                color,
+                backgroundColor: bgColor,
+                border: `1px solid ${borderColor}`,
               }}
             >
-              {def.icon}
-              <span>{def.label || val}</span>
+              {icon}
+              <span>{label}</span>
             </span>
           </Tooltip>
         );
@@ -310,7 +312,7 @@ export const LabelIndicator: React.FC<{
   const tooltipContent = displayLabels
     .map((val) => {
       const def = LABEL_DEFINITIONS[val];
-      return def ? `${def.label}: ${def.description}` : val;
+      return def ? `${def.label}: ${def.description}` : `Label: ${val}`;
     })
     .join("\n");
 

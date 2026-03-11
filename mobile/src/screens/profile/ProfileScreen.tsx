@@ -24,6 +24,8 @@ import { ReportModal } from "../../components/ReportModal";
 import { ProfileSkeleton } from "../../components/ProfileSkeleton";
 import { MoreVerticalIcon, SendIcon, PinIcon } from "../../components/icons";
 import { ProfileLabelBadges } from "../../components/ProfileLabelBadges";
+import { PanEngagementBadge } from "../../components/PanEngagementBadge";
+import { partitionPanLabels } from "../../config/pan-labeler";
 import { TopPostsShowcase } from "../../components/TopPostsShowcase";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useAuth } from "../../contexts/AuthContext";
@@ -460,10 +462,19 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           )}
 
           {/* Content Labels */}
-          <ProfileLabelBadges
-            labels={profile.labels?.map((l) => ({ val: l.val, src: l.src }))}
-            profileDid={profile.did}
-          />
+          {(() => {
+            const allLabels = profile.labels?.map((l) => ({ val: l.val, src: l.src })) ?? [];
+            const { panLabels, otherLabels } = partitionPanLabels(allLabels);
+            return (
+              <>
+                <ProfileLabelBadges
+                  labels={otherLabels.length > 0 ? otherLabels : undefined}
+                  profileDid={profile.did}
+                />
+                <PanEngagementBadge labels={panLabels} />
+              </>
+            );
+          })()}
         </View>
 
         {/* Bio */}

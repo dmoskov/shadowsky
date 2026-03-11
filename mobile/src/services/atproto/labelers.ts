@@ -20,6 +20,8 @@ const logger = createLogger("LabelersService");
  */
 export interface LabelerInfo {
   did: string;
+  uri?: string;
+  cid?: string;
   creator: {
     did: string;
     handle: string;
@@ -75,6 +77,7 @@ export const LABELER_CATEGORIES = [
   "Safety",
   "Identity",
   "Community",
+  "Analytics",
   "Fun",
 ] as const;
 
@@ -93,6 +96,9 @@ export const CURATED_LABELERS: LabelerDirectoryEntry[] = [
   // Community
   { did: "did:plc:l624mewisyr6hymexmrjkprc", category: "Community" }, // Content Creator Labeler
   { did: "did:plc:2qawvcwumvgxmed6iy6pmt6l", category: "Community" }, // SonaSky
+  { did: "did:plc:saslbwamakedc4h6c5bmshvz", category: "Community" }, // Hailey's Labeler (@labeler.hailey.at)
+  // Analytics
+  { did: "did:web:labeler.pan.shadowsky.io", category: "Analytics" }, // Pan Engagement Labeler
   // Fun
   { did: "did:plc:hysbs7znfgxyb4tsvetzo4sk", category: "Fun" }, // TTRPG Class Identifier
 ];
@@ -281,6 +287,8 @@ export async function getLabelerInfo(
       const detailedView = view as AppBskyLabelerDefs.LabelerViewDetailed;
       return {
         did: labelerDid,
+        uri: detailedView.uri,
+        cid: detailedView.cid,
         creator: {
           did: detailedView.creator.did,
           handle: detailedView.creator.handle,
@@ -299,6 +307,8 @@ export async function getLabelerInfo(
     const basicView = view as AppBskyLabelerDefs.LabelerView;
     return {
       did: labelerDid,
+      uri: basicView.uri,
+      cid: basicView.cid,
       creator: {
         did: basicView.creator.did,
         handle: basicView.creator.handle,
@@ -348,6 +358,8 @@ export async function getLabelerInfoBatch(
         const detailedView = view as AppBskyLabelerDefs.LabelerViewDetailed;
         return {
           did: detailedView.creator.did,
+          uri: detailedView.uri,
+          cid: detailedView.cid,
           creator: {
             did: detailedView.creator.did,
             handle: detailedView.creator.handle,
@@ -366,6 +378,8 @@ export async function getLabelerInfoBatch(
       const basicView = view as AppBskyLabelerDefs.LabelerView;
       return {
         did: basicView.creator.did,
+        uri: basicView.uri,
+        cid: basicView.cid,
         creator: {
           did: basicView.creator.did,
           handle: basicView.creator.handle,
@@ -464,6 +478,8 @@ export async function searchLabelers(
           const detailedView = view as AppBskyLabelerDefs.LabelerViewDetailed;
           return {
             did: detailedView.creator.did,
+            uri: detailedView.uri,
+            cid: detailedView.cid,
             creator: {
               did: detailedView.creator.did,
               handle: detailedView.creator.handle,
@@ -481,6 +497,8 @@ export async function searchLabelers(
         const basicView = view as AppBskyLabelerDefs.LabelerView;
         return {
           did: basicView.creator.did,
+          uri: basicView.uri,
+          cid: basicView.cid,
           creator: {
             did: basicView.creator.did,
             handle: basicView.creator.handle,
@@ -693,4 +711,33 @@ export async function getModerationLists(): Promise<
     logger.error("Failed to get moderation lists:", error);
     return [];
   }
+}
+
+/**
+ * Like a labeler service
+ * Returns the URI of the created like record
+ */
+export async function likeLabeler(
+  labelerUri: string,
+  labelerCid: string,
+): Promise<string> {
+  const client = getAtProtoClient();
+  const agent = client.getAgent();
+  const response = await rateLimited(
+    () => agent.like(labelerUri, labelerCid),
+    ATProtoEndpointType.RECORD,
+  );
+  return response.uri;
+}
+
+/**
+ * Unlike a labeler service
+ */
+export async function unlikeLabeler(likeUri: string): Promise<void> {
+  const client = getAtProtoClient();
+  const agent = client.getAgent();
+  await rateLimited(
+    () => agent.deleteLike(likeUri),
+    ATProtoEndpointType.RECORD,
+  );
 }

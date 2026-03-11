@@ -5,8 +5,8 @@
  * and configure per-label preferences for each labeler.
  */
 
-import { useQuery } from "@tanstack/react-query";
-import { Eye, EyeOff, Plus, Search, Shield, Tag, X } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Eye, EyeOff, Heart, Plus, Search, Shield, Tag, X } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -15,9 +15,11 @@ import {
   getPopularLabelers,
   getSubscribedLabelers,
   LABELER_CATEGORIES,
+  likeLabeler,
   searchLabelers,
   setLabelerLabelPreference,
   subscribeToLabeler,
+  unlikeLabeler,
   unsubscribeFromLabeler,
   type LabelerCategory,
   type LabelerInfo,
@@ -63,81 +65,93 @@ const LabelerCard: React.FC<{
   isSubscribedTo: boolean;
   isLoading: boolean;
   onSubscribe: (did: string) => void;
-}> = ({ labeler, isSubscribedTo, isLoading, onSubscribe }) => (
-  <div
-    className="flex items-center gap-3 rounded-lg p-3"
-    style={{
-      backgroundColor: "var(--asph-bg-secondary)",
-      border: "1px solid var(--asph-border-primary)",
-    }}
-  >
-    {labeler.creator.avatar ? (
-      <img
-        src={labeler.creator.avatar}
-        alt=""
-        className="h-10 w-10 flex-shrink-0 rounded-full"
-      />
-    ) : (
-      <div
-        className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
-        style={{ backgroundColor: "var(--asph-primary)" }}
-      >
-        {(labeler.creator.displayName || labeler.creator.handle || "?")
-          .charAt(0)
-          .toUpperCase()}
-      </div>
-    )}
-    <div className="min-w-0 flex-1">
-      <div
-        className="truncate font-medium"
-        style={{ color: "var(--asph-text-primary)" }}
-      >
-        {labeler.creator.displayName || labeler.creator.handle}
-      </div>
-      <div
-        className="truncate text-sm"
-        style={{ color: "var(--asph-text-secondary)" }}
-      >
-        @{labeler.creator.handle}
-      </div>
-      {labeler.creator.description && (
-        <div
-          className="mt-1 line-clamp-2 text-sm"
-          style={{ color: "var(--asph-text-tertiary)" }}
-        >
-          {labeler.creator.description}
-        </div>
-      )}
-      {labeler.likeCount != null && labeler.likeCount > 0 && (
-        <div
-          className="mt-1 text-xs"
-          style={{ color: "var(--asph-text-tertiary)" }}
-        >
-          {labeler.likeCount.toLocaleString()} likes
-        </div>
-      )}
-    </div>
-    <button
-      onClick={() => onSubscribe(labeler.did)}
-      disabled={isLoading || isSubscribedTo}
-      className="touch-target-sm flex-shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+  onLike: (labeler: LabelerInfo) => void;
+}> = ({ labeler, isSubscribedTo, isLoading, onSubscribe, onLike }) => {
+  const isLiked = !!labeler.viewer?.like;
+  return (
+    <div
+      className="flex items-center gap-3 rounded-lg p-3"
       style={{
-        backgroundColor: isSubscribedTo
-          ? "var(--asph-bg-tertiary)"
-          : "var(--asph-primary)",
-        color: isSubscribedTo ? "var(--asph-text-primary)" : "white",
-        border: isSubscribedTo
-          ? "1px solid var(--asph-border-primary)"
-          : "none",
+        backgroundColor: "var(--asph-bg-secondary)",
+        border: "1px solid var(--asph-border-primary)",
       }}
     >
-      {isSubscribedTo ? "Subscribed" : "Subscribe"}
-    </button>
-  </div>
-);
+      {labeler.creator.avatar ? (
+        <img
+          src={labeler.creator.avatar}
+          alt=""
+          className="h-10 w-10 flex-shrink-0 rounded-full"
+        />
+      ) : (
+        <div
+          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
+          style={{ backgroundColor: "var(--asph-primary)" }}
+        >
+          {(labeler.creator.displayName || labeler.creator.handle || "?")
+            .charAt(0)
+            .toUpperCase()}
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <div
+          className="truncate font-medium"
+          style={{ color: "var(--asph-text-primary)" }}
+        >
+          {labeler.creator.displayName || labeler.creator.handle}
+        </div>
+        <div
+          className="truncate text-sm"
+          style={{ color: "var(--asph-text-secondary)" }}
+        >
+          @{labeler.creator.handle}
+        </div>
+        {labeler.creator.description && (
+          <div
+            className="mt-1 line-clamp-2 text-sm"
+            style={{ color: "var(--asph-text-tertiary)" }}
+          >
+            {labeler.creator.description}
+          </div>
+        )}
+        <div className="mt-1 flex items-center gap-3">
+          <button
+            onClick={() => onLike(labeler)}
+            disabled={isLoading}
+            className="flex items-center gap-1 text-xs transition-colors hover:opacity-80 disabled:opacity-50"
+            style={{ color: isLiked ? "#ec4899" : "var(--asph-text-tertiary)" }}
+          >
+            <Heart size={14} fill={isLiked ? "#ec4899" : "none"} />
+            <span>
+              {labeler.likeCount != null
+                ? labeler.likeCount.toLocaleString()
+                : "0"}
+            </span>
+          </button>
+        </div>
+      </div>
+      <button
+        onClick={() => onSubscribe(labeler.did)}
+        disabled={isLoading || isSubscribedTo}
+        className="touch-target-sm flex-shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+        style={{
+          backgroundColor: isSubscribedTo
+            ? "var(--asph-bg-tertiary)"
+            : "var(--asph-primary)",
+          color: isSubscribedTo ? "var(--asph-text-primary)" : "white",
+          border: isSubscribedTo
+            ? "1px solid var(--asph-border-primary)"
+            : "none",
+        }}
+      >
+        {isSubscribedTo ? "Subscribed" : "Subscribe"}
+      </button>
+    </div>
+  );
+};
 
 export const LabelersSettings: React.FC = () => {
   const { agent } = useAuth();
+  const queryClient = useQueryClient();
 
   // State
   const [message, setMessage] = useState<{
@@ -237,6 +251,30 @@ export const LabelersSettings: React.FC = () => {
     },
     [agent],
   );
+
+  // Like/unlike a labeler
+  const handleLike = async (labeler: LabelerInfo) => {
+    if (!agent || !labeler.uri || !labeler.cid) return;
+
+    setIsLoading(true);
+    try {
+      if (labeler.viewer?.like) {
+        await unlikeLabeler(agent, labeler.viewer.like);
+      } else {
+        await likeLabeler(agent, labeler.uri, labeler.cid);
+      }
+      // Refetch to update like counts and viewer state
+      await queryClient.invalidateQueries({ queryKey: ["directoryLabelers"] });
+      await refetchSubscribed();
+    } catch {
+      setMessage({
+        type: "error",
+        text: "Failed to update like. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Subscribe to a labeler
   const handleSubscribe = async (labelerDid: string) => {
@@ -475,6 +513,7 @@ export const LabelersSettings: React.FC = () => {
                   isSubscribedTo={isSubscribed(labeler.did)}
                   isLoading={isLoading}
                   onSubscribe={handleSubscribe}
+                  onLike={handleLike}
                 />
               ))}
             </div>
@@ -505,6 +544,7 @@ export const LabelersSettings: React.FC = () => {
                 isSubscribedTo={isSubscribed(labeler.did)}
                 isLoading={isLoading}
                 onSubscribe={handleSubscribe}
+                onLike={handleLike}
               />
             ))}
           </div>

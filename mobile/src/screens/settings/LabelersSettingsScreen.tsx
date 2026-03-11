@@ -15,7 +15,7 @@ import {
   Platform,
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
-import { ChevronLeftIcon, ChevronDownIcon, ChevronUpIcon, SearchIcon, CloseIcon } from '../../components/icons';
+import { ChevronLeftIcon, ChevronDownIcon, ChevronUpIcon, SearchIcon, CloseIcon, HeartIcon } from '../../components/icons';
 import {
   getSubscribedLabelers,
   subscribeToLabeler,
@@ -26,6 +26,8 @@ import {
   getDirectoryLabelers,
   searchLabelers,
   getModerationLists,
+  likeLabeler,
+  unlikeLabeler,
   LABELER_CATEGORIES,
 } from "../../services/atproto/labelers";
 import type {
@@ -178,6 +180,25 @@ export function LabelersSettingsScreen({
       }
     }, 400);
   }, []);
+
+  const handleLike = useCallback(
+    async (labeler: LabelerInfo) => {
+      if (!labeler.uri || !labeler.cid) return;
+
+      try {
+        if (labeler.viewer?.like) {
+          await unlikeLabeler(labeler.viewer.like);
+        } else {
+          await likeLabeler(labeler.uri, labeler.cid);
+        }
+        // Refresh data to update like counts
+        await Promise.all([loadLabelers(), loadDirectory(selectedCategory)]);
+      } catch (error) {
+        logger.error("Failed to update like:", error);
+      }
+    },
+    [loadLabelers, loadDirectory, selectedCategory],
+  );
 
   const handleSubscribeFromBrowser = useCallback(
     async (labelerDid: string) => {
@@ -377,11 +398,24 @@ export function LabelersSettingsScreen({
               </Text>
             ) : null}
             <View style={styles.browseMetaRow}>
-              {labeler.likeCount != null && labeler.likeCount > 0 && (
-                <Text style={styles.browseLikes}>
-                  {labeler.likeCount.toLocaleString()} likes
+              <TouchableOpacity
+                style={styles.likeButton}
+                onPress={() => handleLike(labeler)}
+                accessibilityRole="button"
+                accessibilityLabel={labeler.viewer?.like ? "Unlike labeler" : "Like labeler"}
+              >
+                <HeartIcon
+                  size={14}
+                  color={labeler.viewer?.like ? "#ec4899" : colors.textSecondary}
+                  filled={!!labeler.viewer?.like}
+                />
+                <Text style={[
+                  styles.browseLikes,
+                  labeler.viewer?.like && { color: "#ec4899" },
+                ]}>
+                  {labeler.likeCount != null ? labeler.likeCount.toLocaleString() : "0"}
                 </Text>
-              )}
+              </TouchableOpacity>
               {(standardLabelCount > 0 || customLabelCount > 0) && (
                 <Text style={styles.browseLabelCount}>
                   {standardLabelCount + customLabelCount} label{standardLabelCount + customLabelCount !== 1 ? "s" : ""}
@@ -498,10 +532,25 @@ export function LabelersSettingsScreen({
               </Text>
             ) : null}
 
-            {info?.likeCount != null && (
-              <Text style={styles.likeCount}>
-                {info.likeCount.toLocaleString()} likes
-              </Text>
+            {info && (
+              <TouchableOpacity
+                style={styles.likeButton}
+                onPress={() => handleLike(info)}
+                accessibilityRole="button"
+                accessibilityLabel={info.viewer?.like ? "Unlike labeler" : "Like labeler"}
+              >
+                <HeartIcon
+                  size={16}
+                  color={info.viewer?.like ? "#ec4899" : colors.textSecondary}
+                  filled={!!info.viewer?.like}
+                />
+                <Text style={[
+                  styles.likeCount,
+                  info.viewer?.like && { color: "#ec4899" },
+                ]}>
+                  {info.likeCount != null ? info.likeCount.toLocaleString() : "0"} likes
+                </Text>
+              </TouchableOpacity>
             )}
 
             {labelDefs.length > 0 && (
@@ -989,6 +1038,12 @@ function createStyles(colors: any) {
       flexDirection: "row",
       gap: 12,
       marginTop: 4,
+      alignItems: "center",
+    },
+    likeButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
     },
     browseLikes: {
       fontSize: fontSize.caption2,
