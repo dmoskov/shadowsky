@@ -228,6 +228,9 @@ export function AnalyticsScreen() {
         timeRange={timeRange}
         isLoading={isLoading}
         isRefreshing={isRefreshing}
+        analysisRequested={analysisRequested}
+        isLoadingAnalysis={isLoadingAnalysis}
+        analysisData={analysisData}
         onTimeRangeChange={(e) => setTimeRange(e.nativeEvent.range as TimeRange)}
         onPostPress={(e) => {
           const { uri, handle, did } = e.nativeEvent;
@@ -239,6 +242,7 @@ export function AnalyticsScreen() {
         }}
         onRefresh={() => refetch()}
         onScroll={(e) => handleChromeScroll(e.nativeEvent.y)}
+        onAnalyzeRequest={() => setAnalysisRequested(true)}
         style={{ flex: 1 }}
       />
     );

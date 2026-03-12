@@ -10,7 +10,12 @@ struct AnalyticsMetricsData {
     var followersCount: Int = 0
     var followsCount: Int = 0
     var postsCount: Int = 0
+    var impressions: Int = 0
     var engagementRate: Double = 0
+
+    var totalEngagement: Int {
+        likesReceived + repostsReceived + repliesReceived
+    }
 }
 
 struct DailyEngagementData: Identifiable {
@@ -43,6 +48,42 @@ struct TopPostData: Identifiable {
     let replyCount: Int
 }
 
+// MARK: - AI Analysis Models
+
+struct AIAnalysisData {
+    let summary: String
+    let contentThemes: [ContentThemeData]
+    let writingStyle: WritingStyleData
+    let engagementPatterns: EngagementPatternsData
+    let optimalTimes: [OptimalTimeRec]
+}
+
+struct ContentThemeData {
+    let theme: String
+    let description: String
+    let frequency: String
+    let examples: [String]
+}
+
+struct WritingStyleData {
+    let tone: String
+    let characteristics: [String]
+    let voiceDescription: String
+}
+
+struct EngagementPatternsData {
+    let topPerformers: [String]
+    let strengths: [String]
+    let observations: [String]
+}
+
+struct OptimalTimeRec {
+    let hour: Int
+    let dayOfWeek: Int
+    let avgEngagement: Int
+    let confidence: String
+}
+
 // MARK: - View Model
 
 class AnalyticsViewModel: ObservableObject {
@@ -53,6 +94,9 @@ class AnalyticsViewModel: ObservableObject {
     @Published var timeRange: String = "7d"
     @Published var isLoading: Bool = false
     @Published var isRefreshing: Bool = false
+    @Published var analysisRequested: Bool = false
+    @Published var isLoadingAnalysis: Bool = false
+    @Published var aiAnalysis: AIAnalysisData? = nil
 
     func parseMetrics(json: String) {
         guard let data = json.data(using: .utf8),
@@ -68,6 +112,7 @@ class AnalyticsViewModel: ObservableObject {
                 followersCount: dict["followersCount"] as? Int ?? 0,
                 followsCount: dict["followsCount"] as? Int ?? 0,
                 postsCount: dict["postsCount"] as? Int ?? 0,
+                impressions: dict["impressions"] as? Int ?? 0,
                 engagementRate: dict["engagementRate"] as? Double ?? 0
             )
 
@@ -120,6 +165,60 @@ class AnalyticsViewModel: ObservableObject {
                     replyCount: postData["replyCount"] as? Int ?? 0
                 )
             }
+        }
+    }
+
+    func parseAnalysis(json: String) {
+        guard let data = json.data(using: .utf8),
+              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+
+            let themes = (dict["contentThemes"] as? [[String: Any]] ?? []).map { t in
+                ContentThemeData(
+                    theme: t["theme"] as? String ?? "",
+                    description: t["description"] as? String ?? "",
+                    frequency: t["frequency"] as? String ?? "",
+                    examples: t["examples"] as? [String] ?? []
+                )
+            }
+
+            let style = dict["writingStyle"] as? [String: Any] ?? [:]
+            let writingStyle = WritingStyleData(
+                tone: style["tone"] as? String ?? "",
+                characteristics: style["characteristics"] as? [String] ?? [],
+                voiceDescription: style["voiceDescription"] as? String ?? ""
+            )
+
+            let patterns = dict["engagementPatterns"] as? [String: Any] ?? [:]
+            let engagementPatterns = EngagementPatternsData(
+                topPerformers: patterns["topPerformers"] as? [String] ?? [],
+                strengths: patterns["contentStrengths"] as? [String] ?? [],
+                observations: (patterns["observations"] as? [String]) ?? (patterns["suggestions"] as? [String]) ?? []
+            )
+
+            var optimalTimes: [OptimalTimeRec] = []
+            if let opt = dict["optimalPostingTimes"] as? [String: Any],
+               let recs = opt["recommendations"] as? [[String: Any]] {
+                optimalTimes = recs.map { r in
+                    OptimalTimeRec(
+                        hour: r["hour"] as? Int ?? 0,
+                        dayOfWeek: r["dayOfWeek"] as? Int ?? -1,
+                        avgEngagement: r["avgEngagement"] as? Int ?? 0,
+                        confidence: r["confidence"] as? String ?? "low"
+                    )
+                }
+            }
+
+            self.aiAnalysis = AIAnalysisData(
+                summary: dict["summary"] as? String ?? "",
+                contentThemes: themes,
+                writingStyle: writingStyle,
+                engagementPatterns: engagementPatterns,
+                optimalTimes: optimalTimes
+            )
+            self.isLoadingAnalysis = false
         }
     }
 }

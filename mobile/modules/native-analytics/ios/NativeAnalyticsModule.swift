@@ -11,6 +11,9 @@ public class NativeAnalyticsModule: Module {
             Prop("topPostsJSON") { (view: NativeAnalyticsExpoView, json: String) in
                 view.updateTopPosts(json: json)
             }
+            Prop("analysisJSON") { (view: NativeAnalyticsExpoView, json: String) in
+                view.updateAnalysis(json: json)
+            }
             Prop("timeRange") { (view: NativeAnalyticsExpoView, range: String) in
                 view.timeRange = range
             }
@@ -20,8 +23,14 @@ public class NativeAnalyticsModule: Module {
             Prop("isRefreshing") { (view: NativeAnalyticsExpoView, refreshing: Bool) in
                 view.isRefreshing = refreshing
             }
+            Prop("isLoadingAnalysis") { (view: NativeAnalyticsExpoView, loading: Bool) in
+                view.isLoadingAnalysis = loading
+            }
+            Prop("analysisRequested") { (view: NativeAnalyticsExpoView, requested: Bool) in
+                view.analysisRequested = requested
+            }
 
-            Events("onTimeRangeChange", "onPostPress", "onRefresh", "onScroll")
+            Events("onTimeRangeChange", "onPostPress", "onRefresh", "onScroll", "onAnalyzeRequest")
         }
     }
 }

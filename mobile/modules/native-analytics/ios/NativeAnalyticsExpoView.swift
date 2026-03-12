@@ -6,12 +6,15 @@ class NativeAnalyticsExpoView: ExpoView {
     private let onPostPress = EventDispatcher()
     private let onRefresh = EventDispatcher()
     private let onScroll = EventDispatcher()
+    private let onAnalyzeRequest = EventDispatcher()
 
     private var hostController: UIHostingController<AnalyticsView>?
     private let viewModel = AnalyticsViewModel()
 
     var isLoading: Bool = false { didSet { viewModel.isLoading = isLoading } }
     var isRefreshing: Bool = false { didSet { viewModel.isRefreshing = isRefreshing } }
+    var isLoadingAnalysis: Bool = false { didSet { viewModel.isLoadingAnalysis = isLoadingAnalysis } }
+    var analysisRequested: Bool = false { didSet { viewModel.analysisRequested = analysisRequested } }
     var timeRange: String = "7d" { didSet { viewModel.timeRange = timeRange } }
 
     func updateMetrics(json: String) {
@@ -20,6 +23,10 @@ class NativeAnalyticsExpoView: ExpoView {
 
     func updateTopPosts(json: String) {
         viewModel.parseTopPosts(json: json)
+    }
+
+    func updateAnalysis(json: String) {
+        viewModel.parseAnalysis(json: json)
     }
 
     required init(appContext: AppContext? = nil) {
@@ -38,6 +45,9 @@ class NativeAnalyticsExpoView: ExpoView {
             },
             onScroll: { [weak self] offset in
                 self?.onScroll(["y": offset])
+            },
+            onAnalyzeRequest: { [weak self] in
+                self?.onAnalyzeRequest([:])
             }
         )
 

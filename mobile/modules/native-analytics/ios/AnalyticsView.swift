@@ -9,6 +9,7 @@ struct AnalyticsView: View {
     let onPostPress: (String, String, String) -> Void
     let onRefresh: () -> Void
     let onScroll: (CGFloat) -> Void
+    let onAnalyzeRequest: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -33,6 +34,8 @@ struct AnalyticsView: View {
                 postingFrequencyChart
                 bestTimesCard
                 topPostsSection
+                summaryBar
+                aiAnalysisSection
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 100)
@@ -99,7 +102,7 @@ struct AnalyticsView: View {
             metricCard(title: "Posts", value: formatNumber(viewModel.metrics.postsCount), icon: "text.bubble.fill", color: .indigo)
             metricCard(title: "Likes", value: formatNumber(viewModel.metrics.likesReceived), icon: "heart.fill", color: .red)
             metricCard(title: "Reposts", value: formatNumber(viewModel.metrics.repostsReceived), icon: "arrow.2.squarepath", color: .green)
-            metricCard(title: "Replies", value: formatNumber(viewModel.metrics.repliesReceived), icon: "bubble.left.fill", color: .orange)
+            metricCard(title: "Engagement", value: String(format: "%.1f", viewModel.metrics.engagementRate), icon: "chart.line.uptrend.xyaxis", color: .purple)
         }
     }
 
@@ -301,7 +304,6 @@ struct AnalyticsView: View {
 
     private func topPostRow(post: TopPostData, rank: Int) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            // Rank badge
             Text("\(rank)")
                 .font(.caption.weight(.bold))
                 .foregroundColor(.white)
@@ -310,14 +312,12 @@ struct AnalyticsView: View {
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 6) {
-                // Post text
                 Text(post.text)
                     .font(.subheadline)
                     .lineLimit(3)
                     .foregroundColor(.primary)
                     .multilineTextAlignment(.leading)
 
-                // Engagement stats
                 HStack(spacing: 16) {
                     Label(formatNumber(post.likeCount), systemImage: "heart.fill")
                         .foregroundColor(.red)
@@ -338,6 +338,325 @@ struct AnalyticsView: View {
         .padding(.vertical, 4)
     }
 
+    // MARK: - Summary Bar
+
+    private var summaryBar: some View {
+        Group {
+            if viewModel.metrics.postsCount > 0 {
+                VStack(spacing: 10) {
+                    Text(summaryText)
+                        .font(.footnote)
+                        .foregroundColor(subtle)
+
+                    HStack(spacing: 24) {
+                        VStack(spacing: 2) {
+                            Text(formatNumber(viewModel.metrics.totalEngagement))
+                                .font(.title3.weight(.bold).monospacedDigit())
+                                .foregroundColor(.primary)
+                            Text("total engagement")
+                                .font(.caption2)
+                                .foregroundColor(subtle)
+                        }
+                        VStack(spacing: 2) {
+                            Text(String(format: "%.1f", viewModel.metrics.engagementRate))
+                                .font(.title3.weight(.bold).monospacedDigit())
+                                .foregroundColor(.primary)
+                            Text("avg per post")
+                                .font(.caption2)
+                                .foregroundColor(subtle)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(16)
+                .background(card)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+    }
+
+    private var summaryText: String {
+        let count = viewModel.metrics.postsCount
+        switch viewModel.timeRange {
+        case "24h": return "Showing \(count) posts from the last 24 hours"
+        case "7d": return "Showing \(count) posts from the last 7 days"
+        case "30d": return "Showing \(count) posts from the last 30 days"
+        case "90d": return "Showing \(count) posts from the last 90 days"
+        default: return "Showing \(count) posts"
+        }
+    }
+
+    // MARK: - AI Content Analysis
+
+    private var aiAnalysisSection: some View {
+        Group {
+            if viewModel.metrics.postsCount > 0 {
+                VStack(alignment: .leading, spacing: 12) {
+                    // Header with Analyze button
+                    HStack {
+                        Text("AI Content Analysis")
+                            .font(.headline)
+                        Spacer()
+                        if !viewModel.analysisRequested {
+                            Button {
+                                onAnalyzeRequest()
+                            } label: {
+                                Text("Analyze")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(Color.accentColor)
+                                    .clipShape(Capsule())
+                            }
+                        }
+                    }
+
+                    if !viewModel.analysisRequested {
+                        // Placeholder
+                        VStack(spacing: 8) {
+                            Image(systemName: "sparkles")
+                                .font(.largeTitle)
+                                .foregroundColor(.purple.opacity(0.6))
+                            Text("Get AI-Powered Insights")
+                                .font(.callout.weight(.semibold))
+                            Text("Discover content themes, writing style patterns, and engagement insights from your posts")
+                                .font(.footnote)
+                                .foregroundColor(subtle)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 24)
+                        .background(card.opacity(0.5))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    } else if viewModel.isLoadingAnalysis {
+                        // Loading
+                        VStack(spacing: 12) {
+                            ProgressView()
+                            Text("Analyzing your posts...")
+                                .font(.subheadline.weight(.medium))
+                            Text("This may take a moment")
+                                .font(.caption)
+                                .foregroundColor(subtle)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 32)
+                        .background(card.opacity(0.5))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    } else if let analysis = viewModel.aiAnalysis {
+                        // Results
+                        aiResultsView(analysis)
+                    }
+                }
+                .padding(16)
+                .background(card)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func aiResultsView(_ analysis: AIAnalysisData) -> some View {
+        // Summary
+        aiCard(title: "Summary") {
+            Text(analysis.summary)
+                .font(.footnote)
+                .foregroundColor(.secondary)
+                .lineSpacing(4)
+        }
+
+        // Content Themes
+        aiCard(title: "Content Themes") {
+            ForEach(analysis.contentThemes, id: \.theme) { theme in
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(theme.theme)
+                            .font(.subheadline.weight(.semibold))
+                        Spacer()
+                        Text(theme.frequency)
+                            .font(.caption2.weight(.medium))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(frequencyColor(theme.frequency))
+                            .clipShape(Capsule())
+                    }
+                    Text(theme.description)
+                        .font(.footnote)
+                        .foregroundColor(.secondary)
+                    ForEach(theme.examples, id: \.self) { example in
+                        Text("\u{201C}\(example)\u{201D}")
+                            .font(.caption)
+                            .foregroundColor(subtle)
+                            .italic()
+                            .lineLimit(2)
+                            .padding(.leading, 12)
+                    }
+                }
+                .padding(.bottom, 8)
+            }
+        }
+
+        // Writing Style
+        aiCard(title: "Writing Style") {
+            labeledSection("TONE", content: analysis.writingStyle.tone)
+            labeledSection("CHARACTERISTICS") {
+                ForEach(analysis.writingStyle.characteristics, id: \.self) { char in
+                    HStack(alignment: .top, spacing: 6) {
+                        Text("•").foregroundColor(.green)
+                        Text(char).font(.footnote).foregroundColor(.secondary)
+                    }
+                }
+            }
+            labeledSection("VOICE", content: analysis.writingStyle.voiceDescription)
+        }
+
+        // Engagement Insights
+        aiCard(title: "Engagement Insights") {
+            if !analysis.engagementPatterns.topPerformers.isEmpty {
+                labeledSection("TOP PERFORMERS") {
+                    ForEach(analysis.engagementPatterns.topPerformers, id: \.self) { item in
+                        HStack(alignment: .top, spacing: 6) {
+                            Text("★").foregroundColor(.orange)
+                            Text(item).font(.footnote).foregroundColor(.secondary)
+                        }
+                    }
+                }
+            }
+            if !analysis.engagementPatterns.strengths.isEmpty {
+                labeledSection("YOUR STRENGTHS") {
+                    ForEach(analysis.engagementPatterns.strengths, id: \.self) { item in
+                        HStack(alignment: .top, spacing: 6) {
+                            Text("✓").foregroundColor(.green)
+                            Text(item).font(.footnote).foregroundColor(.secondary)
+                        }
+                    }
+                }
+            }
+            if !analysis.engagementPatterns.observations.isEmpty {
+                labeledSection("OBSERVATIONS") {
+                    ForEach(analysis.engagementPatterns.observations, id: \.self) { item in
+                        HStack(alignment: .top, spacing: 6) {
+                            Text("•").foregroundColor(.purple)
+                            Text(item).font(.footnote).foregroundColor(.secondary)
+                        }
+                    }
+                }
+            }
+        }
+
+        // Optimal Posting Times
+        if !analysis.optimalTimes.isEmpty {
+            aiCard(title: "AI-Recommended Posting Times") {
+                ForEach(Array(analysis.optimalTimes.enumerated()), id: \.offset) { index, rec in
+                    optimalTimeRow(rec: rec, index: index)
+                }
+            }
+        }
+
+        // Hide button
+        Button {
+            viewModel.analysisRequested = false
+        } label: {
+            Text("Hide Analysis")
+                .font(.subheadline)
+                .foregroundColor(subtle)
+                .frame(maxWidth: .infinity)
+                .padding(12)
+                .background(card.opacity(0.5))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+    }
+
+    private func aiCard<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+            content()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(colorScheme == .dark ? Color(white: 0.08) : Color(white: 0.97))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func labeledSection(_ label: String, content: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.caption2.weight(.medium))
+                .foregroundColor(subtle)
+                .tracking(0.5)
+            Text(content)
+                .font(.footnote)
+                .foregroundColor(.secondary)
+                .lineSpacing(3)
+        }
+        .padding(.bottom, 4)
+    }
+
+    @ViewBuilder
+    private func labeledSection<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.caption2.weight(.medium))
+                .foregroundColor(subtle)
+                .tracking(0.5)
+            content()
+        }
+        .padding(.bottom, 4)
+    }
+
+    private func optimalTimeRow(rec: OptimalTimeRec, index: Int) -> some View {
+        let dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        let hourStr = rec.hour == 0 ? "12:00 AM" : rec.hour == 12 ? "12:00 PM" : rec.hour < 12 ? "\(rec.hour):00 AM" : "\(rec.hour - 12):00 PM"
+        let confidenceColor: Color = rec.confidence == "high" ? .green : rec.confidence == "medium" ? .yellow : .secondary
+
+        return HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(index == 0 ? "Best Time" : "#\(index + 1)")
+                    .font(.caption)
+                    .foregroundColor(subtle)
+                Text(hourStr)
+                    .font(.headline.weight(.bold))
+                Text(rec.dayOfWeek == -1 ? "Any day" : dayNames[rec.dayOfWeek])
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(rec.confidence)
+                    .font(.caption2.weight(.medium))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
+                    .background(confidenceColor)
+                    .clipShape(Capsule())
+                Text("~\(rec.avgEngagement) avg")
+                    .font(.caption)
+                    .foregroundColor(.accentColor)
+            }
+        }
+        .padding(12)
+        .background(
+            index == 0
+                ? Color.accentColor.opacity(0.08)
+                : Color.clear
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(index == 0 ? Color.accentColor : Color.clear, lineWidth: 1)
+        )
+    }
+
+    private func frequencyColor(_ freq: String) -> Color {
+        switch freq {
+        case "primary": return .blue
+        case "regular": return .purple
+        default: return .secondary
+        }
+    }
+
     // MARK: - Helpers
 
     private func formatNumber(_ n: Int) -> String {
@@ -353,7 +672,6 @@ struct AnalyticsView: View {
     }
 
     private func shortDate(_ dateStr: String) -> String {
-        // "2026-03-10" → "3/10"
         let parts = dateStr.split(separator: "-")
         guard parts.count == 3,
               let month = Int(parts[1]),
