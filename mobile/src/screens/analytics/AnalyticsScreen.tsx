@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 import { format } from "../../i18n/format-date";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useScrollChrome } from "../../contexts/ScrollChromeContext";
 import { useAppNavigation } from "../../hooks/useNavigation";
 import { useUserAnalytics } from "../../hooks/api/useAnalytics";
 import { usePostAnalysis } from "../../hooks/api/useAnalytics";
@@ -28,6 +29,7 @@ export function AnalyticsScreen() {
   const router = useRouter();
   const { account } = useAuth();
   const { colors } = useTheme();
+  const { handleScroll: handleChromeScroll } = useScrollChrome();
   const { navigateToProfile, navigateToThread } = useAppNavigation();
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
   const [analysisRequested, setAnalysisRequested] = useState(false);
@@ -213,6 +215,8 @@ export function AnalyticsScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
+      onScroll={(e) => handleChromeScroll(e.nativeEvent.contentOffset.y)}
+      scrollEventThrottle={16}
       keyboardDismissMode="on-drag"
       refreshControl={
         <RefreshControl
