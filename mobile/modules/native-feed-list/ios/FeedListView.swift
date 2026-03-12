@@ -128,15 +128,6 @@ struct FeedListView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    // Invisible scroll offset tracker
-                    GeometryReader { geo in
-                        Color.clear.preference(
-                            key: ScrollOffsetPreferenceKey.self,
-                            value: -geo.frame(in: .named("feedScroll")).minY
-                        )
-                    }
-                    .frame(height: 0)
-
                     // Post items - uses pre-computed conversions
                     ForEach(Array(feedState.convertedPosts.enumerated()), id: \.element.id) { index, converted in
                         PostCardView(
@@ -236,6 +227,14 @@ struct FeedListView: View {
                 }
                 .frame(maxWidth: LayoutConstants.maxContentWidth)
                 .frame(maxWidth: .infinity)
+                .background(
+                    GeometryReader { geo in
+                        Color.clear.preference(
+                            key: ScrollOffsetPreferenceKey.self,
+                            value: -geo.frame(in: .named("feedScroll")).minY
+                        )
+                    }
+                )
             }
             .coordinateSpace(name: "feedScroll")
             .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in

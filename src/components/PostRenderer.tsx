@@ -956,23 +956,48 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
       const externalUri = embed.external.uri;
       const isUriValid = isValidUrl(externalUri);
 
+      const isGif =
+        externalUri?.toLowerCase().includes(".gif") ||
+        externalUri?.includes("tenor.com") ||
+        externalUri?.includes("giphy.com") ||
+        externalUri?.includes("t.gifs.bsky.app");
+
+      const handleExternalClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (externalUri && isUriValid) {
+          const parsed = parseBskyUrl(externalUri);
+          if (parsed && parsed.postId && parsed.handle) {
+            navigate(`/thread/${parsed.handle}/${parsed.postId}`);
+          } else {
+            window.open(externalUri, "_blank", "noopener,noreferrer");
+          }
+        }
+      };
+
+      if (isGif) {
+        return (
+          <div
+            className="relative mt-2 cursor-pointer overflow-hidden rounded-lg"
+            onClick={handleExternalClick}
+          >
+            <img
+              src={externalUri}
+              alt={embed.external.title || "GIF"}
+              className="w-full object-contain"
+              style={{ maxHeight: "400px" }}
+              loading="lazy"
+            />
+            <div className="absolute bottom-2 left-2 rounded bg-black/70 px-2 py-0.5 text-xs font-bold text-white">
+              GIF
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div
           className="embed-card-refined relative mt-2 cursor-pointer p-2.5"
-          onClick={(e) => {
-            e.stopPropagation();
-            if (externalUri && isUriValid) {
-              // Check if it's a Bluesky URL
-              const parsed = parseBskyUrl(externalUri);
-              if (parsed && parsed.postId && parsed.handle) {
-                // Navigate internally to the thread view
-                navigate(`/thread/${parsed.handle}/${parsed.postId}`);
-              } else {
-                // Open external links in a new tab with security attributes
-                window.open(externalUri, "_blank", "noopener,noreferrer");
-              }
-            }
-          }}
+          onClick={handleExternalClick}
         >
           {embed.external.thumb && (
             <img

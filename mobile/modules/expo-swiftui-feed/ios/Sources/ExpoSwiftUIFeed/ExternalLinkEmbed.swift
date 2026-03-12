@@ -25,6 +25,18 @@ struct ExternalLinkEmbed: View {
     }
 
     var body: some View {
+        if isTenorGif(external.uri), let gifURL = URL(string: external.uri) {
+            AnimatedGifEmbed(
+                url: gifURL,
+                aspectRatio: parseTenorAspectRatio(from: external.uri),
+                onPress: onPress
+            )
+        } else {
+            linkCardView
+        }
+    }
+
+    private var linkCardView: some View {
         Button(action: handlePress) {
             VStack(spacing: 0) {
                 // Thumbnail
@@ -102,6 +114,25 @@ struct ExternalLinkEmbed: View {
                 UIApplication.shared.open(url)
             }
         }
+    }
+
+    private func isTenorGif(_ uri: String) -> Bool {
+        uri.contains("media.tenor.com") || uri.contains("t.gifs.bsky.app")
+    }
+
+    /// Parse width/height from Tenor-style URL query parameters (?hh=HEIGHT&ww=WIDTH)
+    /// and return the aspect ratio (width / height).
+    private func parseTenorAspectRatio(from urlString: String) -> CGFloat? {
+        guard let components = URLComponents(string: urlString),
+              let queryItems = components.queryItems else {
+            return nil
+        }
+        let hh = queryItems.first(where: { $0.name == "hh" })?.value.flatMap { Double($0) }
+        let ww = queryItems.first(where: { $0.name == "ww" })?.value.flatMap { Double($0) }
+        guard let width = ww, let height = hh, height > 0 else {
+            return nil
+        }
+        return CGFloat(width / height)
     }
 
     private func getDomain(from urlString: String) -> String {

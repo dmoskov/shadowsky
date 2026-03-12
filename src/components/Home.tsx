@@ -1666,16 +1666,45 @@ export const Home: React.FC<HomeProps> = React.memo(
         if (embed.$type === "app.bsky.embed.external#view") {
           const external = embed.external;
           if (!external) return null;
+
+          const isGif =
+            external.uri?.toLowerCase().includes(".gif") ||
+            external.uri?.includes("tenor.com") ||
+            external.uri?.includes("giphy.com") ||
+            external.uri?.includes("t.gifs.bsky.app");
+
+          const handleClick = (e: React.MouseEvent) => {
+            e.stopPropagation();
+            if (external.uri) {
+              window.open(external.uri, "_blank", "noopener,noreferrer");
+            }
+          };
+
+          if (isGif) {
+            return (
+              <div
+                className="relative mt-2 cursor-pointer overflow-hidden rounded-lg"
+                onClick={handleClick}
+              >
+                <img
+                  src={external.uri}
+                  alt={external.title || "GIF"}
+                  className="w-full object-contain"
+                  style={{ maxHeight: "400px" }}
+                  loading="lazy"
+                />
+                <div className="absolute bottom-2 left-2 rounded bg-black/70 px-2 py-0.5 text-xs font-bold text-white">
+                  GIF
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div
               className="mt-2 cursor-pointer rounded-lg border p-2.5 transition-opacity hover:opacity-90"
               style={{ borderColor: "var(--asph-border-primary)" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (external.uri) {
-                  window.open(external.uri, "_blank", "noopener,noreferrer");
-                }
-              }}
+              onClick={handleClick}
             >
               {external.thumb && (
                 <img
