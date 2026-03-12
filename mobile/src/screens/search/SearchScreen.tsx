@@ -16,7 +16,9 @@ import { useSearchActors } from "../../hooks/api/useProfile";
 import { useSearchPosts } from "../../hooks/api/useSearchPosts";
 import { Avatar } from "../../components/Avatar";
 import { FeedList } from "../../components/FeedList";
-import { NativeFeedList } from "../../../modules/native-feed-list";
+import { NativeFeedList as _NativeFeedList } from "../../../modules/native-feed-list";
+
+const NativeFeedList = Platform.OS === "ios" ? _NativeFeedList : null;
 import { useScrollChrome } from "../../contexts/ScrollChromeContext";
 import { PostCardSkeleton } from "../../components/PostCardSkeleton";
 import { TrendingTopics } from "../../components/TrendingTopics";
@@ -591,7 +593,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
               }
             />
           ) : (
-            Platform.OS === "ios" ? (
+            NativeFeedList ? (
               <NativeFeedList
                 query={enhancedSearchQuery}
                 onPostPress={handleNativePostPress}

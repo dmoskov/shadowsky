@@ -4,6 +4,15 @@ import { mockTheme } from '../../../components/__tests__/test-utils';
 
 // ─── Module mocks ──────────────────────────────────────────
 
+
+jest.mock('../../../../modules/native-feed-list', () => ({
+  NativeFeedList: null,
+}));
+
+jest.mock('../../../../modules/native-search', () => ({
+  NativeSearchView: null,
+}));
+
 jest.mock('../../../contexts/ThemeContext', () => ({
   useTheme: () => mockTheme,
 }));
