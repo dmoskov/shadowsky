@@ -16,7 +16,7 @@ import SwiftUI
 /// changes instead of replacing the entire rootView on every prop update.
 class ProfileProps: ObservableObject {
     @Published var isOwnProfile: Bool = false
-    @Published var isLoadingProfile: Bool = false
+    @Published var isLoadingProfile: Bool = true  // Default true to show skeleton before React sets state
     @Published var isRefreshing: Bool = false
     @Published var isFollowPending: Bool = false
     @Published var isMessagePending: Bool = false

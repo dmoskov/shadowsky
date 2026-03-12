@@ -54,7 +54,7 @@ if (USE_NATIVE_MESSAGES) {
 export function MessagesScreen() {
   const { colors } = useTheme();
   const { navigateToProfile } = useAppNavigation();
-  const { session } = useAuth();
+  const { session, isOAuth } = useAuth();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [selectedConversation, setSelectedConversation] = useState<
@@ -70,6 +70,32 @@ export function MessagesScreen() {
   const [showNewConversationModalNative, setShowNewConversationModalNative] = useState(false);
 
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  // OAuth sessions can't access DMs — Bluesky hasn't added chat scopes yet
+  if (isOAuth) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.permissionErrorContainer}>
+          <View style={{marginBottom: 16}}>
+            <ChatBubbleIcon size={64} color={colors.primary} />
+          </View>
+          <Text style={styles.permissionErrorTitle}>
+            Direct Messages Coming Soon
+          </Text>
+          <Text style={styles.permissionErrorText}>
+            DMs aren't available yet for OAuth sign-ins. Bluesky is working on adding chat permissions to their OAuth scopes.
+          </Text>
+          <Text style={styles.permissionErrorSteps}>
+            In the meantime, you can access DMs by signing in with an app password:{"\n"}
+            {"\n"}
+            1. Go to bsky.app \u2192 Settings \u2192 App Passwords{"\n"}
+            2. Create a new app password{"\n"}
+            3. Sign in to ShadowSky with your handle + app password
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   // On iOS, render the native SwiftUI messages view
   if (USE_NATIVE_MESSAGES && NativeMessagesComponent) {
