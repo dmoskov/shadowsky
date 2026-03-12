@@ -5,7 +5,23 @@ import { expect, test } from "@playwright/test";
  *
  * These tests verify core functionality without requiring authentication.
  * They run in CI to catch regressions in the application's core flows.
+ *
+ * Note: The app shows a loading spinner while auth initializes (up to 10s).
+ * Tests that check for landing page UI elements must wait for the form to
+ * appear, not just for network requests to settle.
  */
+
+/** Wait for the landing page to fully render past the auth loading state. */
+async function waitForLandingPage(page: import("@playwright/test").Page) {
+  await page.waitForLoadState("networkidle");
+  // Auth context shows a spinner while checking localStorage for session.
+  // Wait for the actual login form to appear in the DOM.
+  await page
+    .waitForSelector('button[type="submit"], form, [role="form"]', {
+      timeout: 15000,
+    })
+    .catch(() => {});
+}
 
 test.describe("Application Load", () => {
   test("app loads without JavaScript errors", async ({ page }) => {
@@ -48,7 +64,7 @@ test.describe("Application Load", () => {
 test.describe("Landing Page", () => {
   test("landing page renders correctly", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await waitForLandingPage(page);
 
     // Check for Asphodel branding
     await expect(page.getByText("Asphodel")).toBeVisible();
@@ -61,7 +77,7 @@ test.describe("Landing Page", () => {
 
   test("login form elements are present", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await waitForLandingPage(page);
 
     // Check for login mode toggle buttons
     const oauthButton = page.getByRole("button", { name: /oauth/i });
@@ -79,7 +95,7 @@ test.describe("Landing Page", () => {
 
   test("OAuth login form has handle input", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await waitForLandingPage(page);
 
     // Try to switch to OAuth mode if available
     const oauthButton = page.getByRole("button", { name: /oauth/i });
@@ -104,7 +120,7 @@ test.describe("Landing Page", () => {
 
   test("App Password login form has required fields", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await waitForLandingPage(page);
 
     // Switch to App Password mode
     const appPasswordButton = page.getByRole("button", {
@@ -127,7 +143,7 @@ test.describe("Landing Page", () => {
 
   test("submit button is present and initially enabled", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await waitForLandingPage(page);
 
     // Look for submit button
     const submitButton = page.locator('button[type="submit"]');
@@ -138,7 +154,7 @@ test.describe("Landing Page", () => {
 test.describe("UI Components", () => {
   test("logo is displayed", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await waitForLandingPage(page);
 
     // Check for logo image
     const logo = page.locator('img[alt*="Asphodel" i], img[alt*="Logo" i]');
@@ -147,13 +163,7 @@ test.describe("UI Components", () => {
 
   test("feature highlights are displayed", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
-
-    // Wait for the landing page to render past the auth loading state
-    // (app shows a loading spinner while checking localStorage for existing session)
-    await page
-      .waitForSelector(".asph-card, [class*='feature']", { timeout: 15000 })
-      .catch(() => {});
+    await waitForLandingPage(page);
 
     // Check for feature section elements (cards or list items describing features)
     const featureSection = page.locator(".asph-card, [class*='feature']");
@@ -165,7 +175,7 @@ test.describe("UI Components", () => {
 
   test("dark theme is applied by default", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await waitForLandingPage(page);
 
     // Check that CSS variables for theme are applied
     const bgColor = await page.evaluate(() => {
@@ -183,7 +193,7 @@ test.describe("Responsive Design", () => {
   test("mobile viewport renders correctly", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await waitForLandingPage(page);
 
     // Asphodel branding should still be visible
     await expect(page.getByText("Asphodel").first()).toBeVisible();
@@ -196,7 +206,7 @@ test.describe("Responsive Design", () => {
   test("tablet viewport renders correctly", async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await waitForLandingPage(page);
 
     await expect(page.getByText("Asphodel").first()).toBeVisible();
   });
@@ -204,7 +214,7 @@ test.describe("Responsive Design", () => {
   test("desktop viewport renders correctly", async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await waitForLandingPage(page);
 
     await expect(page.getByText("Asphodel").first()).toBeVisible();
   });
@@ -213,7 +223,7 @@ test.describe("Responsive Design", () => {
 test.describe("Error Handling", () => {
   test("form shows error on invalid submission", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await waitForLandingPage(page);
 
     // Switch to App Password mode for testable form
     const appPasswordButton = page.getByRole("button", {
@@ -251,11 +261,7 @@ test.describe("Error Handling", () => {
 test.describe("Accessibility", () => {
   test("page has proper heading structure", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
-
-    // Wait for the landing page to render past the auth loading state
-    // (app shows a loading spinner while checking localStorage for existing session)
-    await page.waitForSelector("h1, h2", { timeout: 15000 }).catch(() => {});
+    await waitForLandingPage(page);
 
     // Should have at least one h1 or h2 heading
     const headings = page.locator("h1, h2");
@@ -267,7 +273,7 @@ test.describe("Accessibility", () => {
     page,
   }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await waitForLandingPage(page);
 
     // Check that inputs have labels, aria-labels, or placeholders
     const inputs = page.locator("input");
@@ -290,11 +296,7 @@ test.describe("Accessibility", () => {
 
   test("interactive elements are keyboard accessible", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
-
-    // Wait for the landing page to render past the auth loading state so
-    // interactive elements (buttons, inputs) are present in the DOM
-    await page.waitForSelector("button, input, a[href]", { timeout: 15000 });
+    await waitForLandingPage(page);
 
     // Click the body to ensure the document has focus before tabbing.
     // In headless browsers the page may not have focus until interaction.
