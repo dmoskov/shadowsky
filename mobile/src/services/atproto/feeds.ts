@@ -120,7 +120,7 @@ export async function getActorLikes(
 /**
  * Get a single post thread with replies
  */
-export async function getPostThread(uri: string, depth: number = 6) {
+export async function getPostThread(uri: string, depth: number = 6, parentHeight: number = 80) {
   return rateLimited(async () => {
     const client = getAtProtoClient();
     const agent = client.getAgent();
@@ -128,6 +128,7 @@ export async function getPostThread(uri: string, depth: number = 6) {
     const response = await agent.getPostThread({
       uri,
       depth,
+      parentHeight,
     });
 
     return response.data.thread;
