@@ -21,6 +21,13 @@ export default function AnalyticsLayout() {
           headerLeft: () => <HeaderBackButton />,
         }}
       />
+      <Stack.Screen
+        name="thread/[postId]"
+        options={{
+          title: "Thread",
+          headerLeft: () => <HeaderBackButton />,
+        }}
+      />
     </Stack>
   );
 }

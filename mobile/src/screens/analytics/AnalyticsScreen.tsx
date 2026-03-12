@@ -30,7 +30,7 @@ export function AnalyticsScreen() {
   const { account } = useAuth();
   const { colors } = useTheme();
   const { handleScroll: handleChromeScroll } = useScrollChrome();
-  const { navigateToProfile, navigateToThread } = useAppNavigation();
+  const { navigateToProfile } = useAppNavigation();
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
   const [analysisRequested, setAnalysisRequested] = useState(false);
 
@@ -70,7 +70,11 @@ export function AnalyticsScreen() {
   const handlePostPress = (uri: string, handle: string, did: string) => {
     const parts = uri.split('/');
     const postId = parts[parts.length - 1];
-    navigateToThread(handle, postId, did);
+    // Navigate within the analytics stack (not back to home tab)
+    router.push({
+      pathname: '/(app)/analytics/thread/' + postId,
+      params: { handle, did },
+    });
   };
 
   const handleHashtagPress = (tag: string) => {
