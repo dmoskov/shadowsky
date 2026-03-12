@@ -1,4 +1,4 @@
-package `is`.asphodel.app
+package io.shadowsky.app
 
 import android.app.Application
 import android.content.res.Configuration
