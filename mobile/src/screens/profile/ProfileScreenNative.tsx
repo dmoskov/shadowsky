@@ -27,6 +27,7 @@ import { AddToListModal } from "../../components/AddToListModal";
 import { ReportModal } from "../../components/ReportModal";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useScrollChrome } from "../../contexts/ScrollChromeContext";
 import { useToast } from "../../contexts/ToastContext";
 import { useLightbox } from "../../contexts/LightboxContext";
 import type { LightboxImage } from "../../contexts/LightboxContext";
@@ -99,6 +100,7 @@ function ProfileScreenNativeIOS({
   onNavigateToMessages,
 }: ProfileScreenProps) {
   const { colors } = useTheme();
+  const { handleScroll: handleChromeScroll } = useScrollChrome();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { navigateToThread, navigateToProfile, navigateToCompose } = useAppNavigation();
@@ -685,6 +687,7 @@ function ProfileScreenNativeIOS({
 
       {/* Native SwiftUI feed list — replaces RN FlatList + PostCard */}
       <NativeFeedList
+        onScroll={(e: { nativeEvent: { y: number } }) => handleChromeScroll(e.nativeEvent.y)}
         query={activeQuery}
         bookmarkedPostUris={bookmarkedPostUris}
         isOnline={isConnected}

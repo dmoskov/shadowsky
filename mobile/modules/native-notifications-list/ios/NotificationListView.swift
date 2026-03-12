@@ -155,6 +155,7 @@ struct NotificationListView: View {
     let onLinkPress: ((String) -> Void)?
     let onAppear: (() -> Void)?
     let onAnalyticsPress: (() -> Void)?
+    let onScroll: ((CGFloat) -> Void)?
 
     /// Discrete state for driving skeleton→content crossfade
     private var notificationDisplayState: Int {
@@ -241,6 +242,13 @@ struct NotificationListView: View {
 
     private var notificationScrollView: some View {
         ScrollView {
+            GeometryReader { geo in
+                Color.clear.preference(
+                    key: ScrollOffsetPreferenceKey.self,
+                    value: -geo.frame(in: .named("notifScroll")).origin.y
+                )
+            }
+            .frame(height: 0)
             LazyVStack(spacing: 0) {
                 if filteredNotifications.isEmpty && activeFilter != .all {
                     // Empty filtered results — auto-load more if possible
@@ -294,6 +302,10 @@ struct NotificationListView: View {
             .frame(maxWidth: .infinity)
         }
         .scrollDismissesKeyboardCompat()
+        .coordinateSpace(name: "notifScroll")
+        .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
+            onScroll?(offset)
+        }
         .refreshable {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             onRefresh?()
@@ -404,5 +416,15 @@ struct NotificationListView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(Color(UIColor.secondarySystemBackground))
+    }
+}
+
+
+// MARK: - Scroll offset tracking
+
+private struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }

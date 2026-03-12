@@ -63,6 +63,7 @@ class NotificationListViewWrapper: ExpoView {
     private let onLinkPress = EventDispatcher()
     private let onAppear = EventDispatcher()
     private let onAnalyticsPress = EventDispatcher()
+    private let onScroll = EventDispatcher()
 
     private var hostingController: UIHostingController<NotificationListView>?
 
@@ -130,6 +131,9 @@ class NotificationListViewWrapper: ExpoView {
             },
             onAppear: { [weak self] in
                 self?.onAppear([:])
+            },
+            onScroll: { [weak self] offset in
+                self?.onScroll(["y": offset])
             },
             onAnalyticsPress: { [weak self] in
                 self?.onAnalyticsPress([:])

@@ -127,7 +127,7 @@ function getHandleFromUri(uri: string): string {
 
 // MARK: - High-level Component with Data Bridge
 
-export const NativeNotificationsList = forwardRef<any, ViewProps>(
+export const NativeNotificationsList = forwardRef<any, ViewProps & { onScroll?: (event: { nativeEvent: { y: number } }) => void }>(
   (props, ref) => {
     const router = useRouter();
     const notificationsQuery = useNotifications();
