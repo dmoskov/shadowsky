@@ -132,11 +132,11 @@ class NotificationListViewWrapper: ExpoView {
             onAppear: { [weak self] in
                 self?.onAppear([:])
             },
-            onScroll: { [weak self] offset in
-                self?.onScroll(["y": offset])
-            },
             onAnalyticsPress: { [weak self] in
                 self?.onAnalyticsPress([:])
+            },
+            onScroll: { [weak self] offset in
+                self?.onScroll(["y": offset])
             }
         )
     }

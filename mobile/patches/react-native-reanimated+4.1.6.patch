@@ -1,0 +1,16 @@
+diff --git a/node_modules/react-native-reanimated/lib/module/hook/useAnimatedStyle.js b/node_modules/react-native-reanimated/lib/module/hook/useAnimatedStyle.js
+index 1c246bf..2327eb6 100644
+--- a/node_modules/react-native-reanimated/lib/module/hook/useAnimatedStyle.js
++++ b/node_modules/react-native-reanimated/lib/module/hook/useAnimatedStyle.js
+@@ -349,9 +349,9 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
+         isAnimationRunning: false
+       }),
+       viewDescriptors: makeViewDescriptorsSet(),
+-      styleUpdaterContainer: {
++      styleUpdaterContainer: Object.seal({
+         current: undefined
+-      }
++      })
+     };
+   }
+   const {

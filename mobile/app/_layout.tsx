@@ -22,6 +22,9 @@ LogBox.ignoreLogs([
   // library's built-in ponyfill works correctly.
   "Uint8Array.fromBase64",
   "Intl.Segmenter is not available",
+  // Reanimated 4.x + New Architecture: frozen object mutation in dev mode
+  // Known issue: https://github.com/software-mansion/react-native-reanimated/issues/8454
+  "You attempted to set the key `current`",
 ]);
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ErrorBoundary from "../src/components/ErrorBoundary";

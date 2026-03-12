@@ -24,7 +24,8 @@
     "update:development": "eas update --branch development --message",
     "update:preview": "eas update --branch preview --message",
     "update:testflight": "eas update --branch testflight --message",
-    "update:production": "eas update --branch production --message"
+    "update:production": "eas update --branch production --message",
+    "postinstall": "npx patch-package"
   },
   "dependencies": {
     "@atproto/api": "^0.19.3",

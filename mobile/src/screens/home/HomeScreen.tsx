@@ -343,7 +343,8 @@ export function HomeScreen() {
       <Animated.View
         style={[
           styles.collapsibleWrapper,
-          { bottom: -totalHeaderHeight, transform: headerAnimatedStyle.transform },
+          { bottom: -totalHeaderHeight },
+          headerAnimatedStyle,
         ]}
       >
         {/* Custom collapsible header */}
