@@ -8,6 +8,11 @@ import {
   RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Platform } from "react-native";
+import { NativeAnalyticsView as _NativeAnalyticsView } from "../../../modules/native-analytics";
+
+// Use native view on iOS when available (null in tests/Android)
+const NativeAnalyticsView = Platform.OS === "ios" ? _NativeAnalyticsView : null;
 import { format } from "../../i18n/format-date";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -213,6 +218,29 @@ export function AnalyticsScreen() {
           </Text>
         </View>
       </View>
+    );
+  }
+
+  if (NativeAnalyticsView) {
+    return (
+      <NativeAnalyticsView
+        metrics={analytics}
+        timeRange={timeRange}
+        isLoading={isLoading}
+        isRefreshing={isRefreshing}
+        onTimeRangeChange={(e) => setTimeRange(e.nativeEvent.range as TimeRange)}
+        onPostPress={(e) => {
+          const { uri, handle, did } = e.nativeEvent;
+          const postId = uri.split("/").pop();
+          router.push({
+            pathname: "/(app)/analytics/thread/" + postId,
+            params: { handle, did },
+          });
+        }}
+        onRefresh={() => refetch()}
+        onScroll={(e) => handleChromeScroll(e.nativeEvent.y)}
+        style={{ flex: 1 }}
+      />
     );
   }
 

@@ -12,6 +12,11 @@ jest.mock("../../../contexts/AuthContext", () => ({
   useAuth: () => ({ account: { did: "did:plc:myself" } }),
 }));
 
+jest.mock("../../../../modules/native-analytics", () => ({
+  NativeAnalyticsView: null,
+}));
+
+
 const mockRouterPush = jest.fn();
 jest.mock("expo-router", () => ({
   useRouter: () => ({
