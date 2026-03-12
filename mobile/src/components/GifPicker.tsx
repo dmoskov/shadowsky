@@ -138,41 +138,6 @@ function GifPickerInner({
 
   const renderHeader = () => (
     <View>
-      {/* Search bar */}
-      <View style={styles.searchContainer}>
-        <SearchIcon size={20} color={colors.textTertiary} />
-        <TextInput
-          ref={searchInputRef}
-          style={styles.searchInput}
-          placeholder="Search GIFs..."
-          placeholderTextColor={colors.textTertiary}
-          value={localSearchQuery}
-          onChangeText={handleSearchChange}
-          autoCapitalize="none"
-          autoCorrect={false}
-          spellCheck={false}
-          returnKeyType="search"
-          accessibilityLabel="Search GIFs"
-        />
-        {localSearchQuery.length > 0 && (
-          <TouchableOpacity
-            onPress={() => {
-              setLocalSearchQuery("");
-              onSearch("");
-              if (debounceTimerRef.current) {
-                clearTimeout(debounceTimerRef.current);
-              }
-            }}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            style={{ minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}
-            accessibilityLabel="Clear search"
-            accessibilityRole="button"
-          >
-            <CloseIcon size={18} color={colors.textTertiary} />
-          </TouchableOpacity>
-        )}
-      </View>
-
       {/* Error message */}
       {!hasApiKey && (
         <View style={styles.messageContainer}>
@@ -245,11 +210,48 @@ function GifPickerInner({
           </TouchableOpacity>
         </View>
 
+        {/* Search bar — fixed above FlatList to maintain keyboard focus */}
+        <View style={styles.searchContainer}>
+          <SearchIcon size={20} color={colors.textTertiary} />
+          <TextInput
+            ref={searchInputRef}
+            style={styles.searchInput}
+            placeholder="Search GIFs..."
+            placeholderTextColor={colors.textTertiary}
+            value={localSearchQuery}
+            onChangeText={handleSearchChange}
+            autoCapitalize="none"
+            autoCorrect={false}
+            spellCheck={false}
+            returnKeyType="search"
+            accessibilityLabel="Search GIFs"
+          />
+          {localSearchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => {
+                setLocalSearchQuery("");
+                onSearch("");
+                if (debounceTimerRef.current) {
+                  clearTimeout(debounceTimerRef.current);
+                }
+                searchInputRef.current?.focus();
+              }}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              style={{ minWidth: 44, minHeight: 44, alignItems: "center", justifyContent: "center" }}
+              accessibilityLabel="Clear search"
+              accessibilityRole="button"
+            >
+              <CloseIcon size={18} color={colors.textTertiary} />
+            </TouchableOpacity>
+          )}
+        </View>
+
         {/* GIF grid */}
         <FlatList
           key={`gif-grid-${numCols}`}
           data={gifs}
-          keyboardDismissMode="on-drag"
+          keyboardDismissMode="none"
+          keyboardShouldPersistTaps="always"
           renderItem={renderGifItem}
           keyExtractor={(item) => item.id}
           numColumns={numCols}
