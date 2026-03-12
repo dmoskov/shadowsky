@@ -8,28 +8,45 @@ const path = require("path");
 
 /**
  * Expo config plugin that:
- * 1. Copies alternate icon PNGs into the Xcode project
+ * 1. Copies alternate icon PNGs (all sizes) into the Xcode project
  * 2. Registers them in Info.plist under CFBundleIcons
+ *
+ * Each alternate icon needs multiple sizes:
+ * - 120x120 (iPhone 60pt @2x)
+ * - 152x152 (iPad 76pt @2x)
+ * - 167x167 (iPad Pro 83.5pt @2x)
+ * - 180x180 (iPhone 60pt @3x)
+ * - 1024x1024 (App Store)
  */
+
+const ICON_VARIANTS = ["light", "mono", "pride"];
+const ICON_SIZES = [120, 152, 167, 180];
+
+function getIconFiles(variant) {
+  const files = [`icon-${variant}.png`];
+  for (const size of ICON_SIZES) {
+    files.push(`icon-${variant}-${size}.png`);
+  }
+  return files;
+}
+
 function withAlternateIcons(config) {
   // Add icons to Info.plist
   config = withInfoPlist(config, (config) => {
+    const alternateIcons = {};
+    for (const variant of ICON_VARIANTS) {
+      alternateIcons[variant] = {
+        CFBundleIconFiles: [
+          `icon-${variant}`,
+          ...ICON_SIZES.map((size) => `icon-${variant}-${size}`),
+        ],
+        UIPrerenderedIcon: true,
+      };
+    }
+
     config.modResults.CFBundleIcons = {
       ...(config.modResults.CFBundleIcons || {}),
-      CFBundleAlternateIcons: {
-        light: {
-          CFBundleIconFiles: ["icon-light"],
-          UIPrerenderedIcon: true,
-        },
-        mono: {
-          CFBundleIconFiles: ["icon-mono"],
-          UIPrerenderedIcon: true,
-        },
-        pride: {
-          CFBundleIconFiles: ["icon-pride"],
-          UIPrerenderedIcon: true,
-        },
-      },
+      CFBundleAlternateIcons: alternateIcons,
     };
     return config;
   });
@@ -39,17 +56,18 @@ function withAlternateIcons(config) {
     "ios",
     async (config) => {
       const iconsDir = path.resolve(__dirname, "../assets/alternate-icons");
-      const icons = ["icon-light.png", "icon-mono.png", "icon-pride.png"];
       const projectName = config.modRequest.projectName;
       const appDir = path.join(
         config.modRequest.platformProjectRoot,
         projectName
       );
 
-      for (const iconFile of icons) {
-        const src = path.join(iconsDir, iconFile);
-        if (fs.existsSync(src)) {
-          fs.copyFileSync(src, path.join(appDir, iconFile));
+      for (const variant of ICON_VARIANTS) {
+        for (const iconFile of getIconFiles(variant)) {
+          const src = path.join(iconsDir, iconFile);
+          if (fs.existsSync(src)) {
+            fs.copyFileSync(src, path.join(appDir, iconFile));
+          }
         }
       }
 
@@ -61,7 +79,12 @@ function withAlternateIcons(config) {
   config = withXcodeProject(config, (config) => {
     const project = config.modResults;
     const projectName = config.modRequest.projectName;
-    const icons = ["icon-light.png", "icon-mono.png", "icon-pride.png"];
+
+    // Collect all icon files
+    const allIconFiles = [];
+    for (const variant of ICON_VARIANTS) {
+      allIconFiles.push(...getIconFiles(variant));
+    }
 
     // Find the app group by iterating PBXGroup entries
     const pbxGroupSection = project.hash.project.objects["PBXGroup"];
@@ -86,7 +109,7 @@ function withAlternateIcons(config) {
       }
     }
 
-    for (const iconFile of icons) {
+    for (const iconFile of allIconFiles) {
       const filePath = `${projectName}/${iconFile}`;
 
       // Add file reference

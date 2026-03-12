@@ -19,6 +19,10 @@
           <key>CFBundleIconFiles</key>
           <array>
             <string>icon-light</string>
+            <string>icon-light-120</string>
+            <string>icon-light-152</string>
+            <string>icon-light-167</string>
+            <string>icon-light-180</string>
           </array>
           <key>UIPrerenderedIcon</key>
           <true/>
@@ -28,6 +32,10 @@
           <key>CFBundleIconFiles</key>
           <array>
             <string>icon-mono</string>
+            <string>icon-mono-120</string>
+            <string>icon-mono-152</string>
+            <string>icon-mono-167</string>
+            <string>icon-mono-180</string>
           </array>
           <key>UIPrerenderedIcon</key>
           <true/>
@@ -37,6 +45,10 @@
           <key>CFBundleIconFiles</key>
           <array>
             <string>icon-pride</string>
+            <string>icon-pride-120</string>
+            <string>icon-pride-152</string>
+            <string>icon-pride-167</string>
+            <string>icon-pride-180</string>
           </array>
           <key>UIPrerenderedIcon</key>
           <true/>
