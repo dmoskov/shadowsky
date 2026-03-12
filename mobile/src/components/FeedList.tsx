@@ -21,6 +21,7 @@ import {triggerHaptic} from '../utils/haptics';
 import {filterMutedPosts} from '../utils/content-filter';
 import {useImagePrefetch} from '../hooks/useImagePrefetch';
 import {useScrollReporter} from '../hooks/useScrollState';
+import {useScrollChrome} from '../contexts/ScrollChromeContext';
 
 interface FeedListProps {
   posts: AppBskyFeedDefs.FeedViewPost[];
@@ -80,6 +81,7 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
   const { preferences } = usePreferences();
   const { setActiveVideoUri, isAutoplayEnabled } = useVideoAutoplay();
   const {onScrollBeginDrag, onMomentumScrollEnd, onScrollEndDrag} = useScrollReporter();
+  const { handleScroll: handleChromeScroll } = useScrollChrome();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   // Track which post URIs are currently visible.
@@ -221,6 +223,8 @@ export const FeedList = forwardRef<FlatList, FeedListProps>(function FeedList({
           />
         ) : undefined
       }
+      onScroll={(e) => handleChromeScroll(e.nativeEvent.contentOffset.y)}
+      scrollEventThrottle={16}
       onScrollBeginDrag={onScrollBeginDrag}
       onMomentumScrollEnd={onMomentumScrollEnd}
       onScrollEndDrag={onScrollEndDrag}

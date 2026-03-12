@@ -16,6 +16,7 @@ import { useSearchActors } from "../../hooks/api/useProfile";
 import { useSearchPosts } from "../../hooks/api/useSearchPosts";
 import { Avatar } from "../../components/Avatar";
 import { FeedList } from "../../components/FeedList";
+import { useScrollChrome } from "../../contexts/ScrollChromeContext";
 import { PostCardSkeleton } from "../../components/PostCardSkeleton";
 import { TrendingTopics } from "../../components/TrendingTopics";
 import { SearchFilterSheet, type SearchFilterValues } from "../../components/SearchFilterSheet";
@@ -76,6 +77,7 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   const nativeScrollRef = useRef<any>({
     scrollToTop: () => setNativeScrollTrigger(prev => prev + 1),
   });
+  const { handleScroll: handleChromeScroll } = useScrollChrome();
   const scrollRef = useRef<FlatList>(null);
 
   // Register scroll-to-top for this screen (handles tab re-tap)
@@ -447,6 +449,8 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
             </TouchableOpacity>
           </View>
           <FlatList
+            onScroll={(e) => handleChromeScroll(e.nativeEvent.contentOffset.y)}
+            scrollEventThrottle={16}
             data={searchHistory}
             keyExtractor={(item, index) => `${item}-${index}`}
             renderItem={renderHistoryItem}
@@ -546,6 +550,8 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
             </View>
           ) : activeTab === "people" ? (
             <FlatList
+            onScroll={(e) => handleChromeScroll(e.nativeEvent.contentOffset.y)}
+            scrollEventThrottle={16}
               ref={scrollRef}
               data={actors || []}
               keyExtractor={(item) => item.did}

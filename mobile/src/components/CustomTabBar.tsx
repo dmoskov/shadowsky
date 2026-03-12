@@ -1,15 +1,15 @@
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { StackActions } from "@react-navigation/native";
 import { BlurView } from "expo-blur";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
-  Animated,
   Pressable,
   StyleSheet,
   Text,
   useColorScheme,
   View,
 } from "react-native";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePreferences } from "../contexts/PreferencesContext";
 import { useScrollChrome } from "../contexts/ScrollChromeContext";
@@ -72,19 +72,9 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const [customizerVisible, setCustomizerVisible] = useState(false);
-  const { chromeVisible, showChrome } = useScrollChrome();
+  const { showChrome, tabBarAnimatedStyle } = useScrollChrome();
 
-  // Animate tab bar slide in/out
-  const tabBarTranslateY = useRef(new Animated.Value(0)).current;
-  const TAB_BAR_HEIGHT = 60 + Math.max(insets.bottom, 8);
-
-  useEffect(() => {
-    Animated.timing(tabBarTranslateY, {
-      toValue: chromeVisible ? 0 : TAB_BAR_HEIGHT,
-      duration: 220,
-      useNativeDriver: true,
-    }).start();
-  }, [chromeVisible, tabBarTranslateY, TAB_BAR_HEIGHT]);
+  // Tab bar animation is driven by ScrollChromeContext via reanimated
 
   const tabBarItems = preferences?.tabBarItems ?? [
     "home",
@@ -162,8 +152,8 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             borderTopColor: colors.border,
             paddingBottom: Math.max(insets.bottom, 8),
             overflow: "hidden",
-            transform: [{ translateY: tabBarTranslateY }],
           },
+          tabBarAnimatedStyle,
         ]}
       >
         <BlurView

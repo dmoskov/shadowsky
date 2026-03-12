@@ -24,7 +24,8 @@ import { openLink } from "../../utils/browser";
 import { sharePost } from "../../utils/share";
 import { useLightbox } from "../../contexts/LightboxContext";
 import type { LightboxImage } from "../../contexts/LightboxContext";
-import { useScrollChrome } from "../../contexts/ScrollChromeContext";
+import { useAnimatedStyle, interpolate } from "react-native-reanimated";
+import { useScrollChrome, useHeaderAnimatedStyle } from "../../contexts/ScrollChromeContext";
 import { createLogger } from "../../utils/logger";
 import {fontSize} from '../../utils/typography';
 import {AppBskyFeedPost} from '@atproto/api';
@@ -33,7 +34,6 @@ const logger = createLogger('HomeScreen');
 
 const NAV_BAR_HEIGHT = 44;
 const FEED_PICKER_HEIGHT = 52;
-const SCROLL_THRESHOLD = 10;
 
 /**
  * Extract post ID (rkey) from AT Protocol URI
@@ -70,66 +70,23 @@ export function HomeScreen() {
   const { openLightbox } = useLightbox();
   const queryClient = useQueryClient();
   const scrollRef = useRef<any>(null);
-  const { chromeVisible, onScrollActivity, showChrome } = useScrollChrome();
+  const { chromeHideProgress, handleScroll: onChromeScroll, showChrome } = useScrollChrome();
 
-  // Collapsible header animation
+  // Collapsible header animation (driven by ScrollChromeContext)
   const totalHeaderHeight = insets.top + NAV_BAR_HEIGHT + FEED_PICKER_HEIGHT;
-  const headerTranslateY = useRef(new Animated.Value(0)).current;
   const lastScrollY = useRef(0);
-  const isHeaderHidden = useRef(false);
+  const headerAnimatedStyle = useHeaderAnimatedStyle(totalHeaderHeight);
 
-  // FAB animation
-  const fabOpacity = useRef(new Animated.Value(1)).current;
-
-  // Sync header + FAB animations with chrome visibility from context
-  useEffect(() => {
-    if (chromeVisible && isHeaderHidden.current) {
-      isHeaderHidden.current = false;
-      Animated.parallel([
-        Animated.timing(headerTranslateY, {
-          toValue: 0,
-          duration: 220,
-          useNativeDriver: true,
-        }),
-        Animated.timing(fabOpacity, {
-          toValue: 1,
-          duration: 220,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else if (!chromeVisible && !isHeaderHidden.current) {
-      isHeaderHidden.current = true;
-      Animated.parallel([
-        Animated.timing(headerTranslateY, {
-          toValue: -totalHeaderHeight,
-          duration: 220,
-          useNativeDriver: true,
-        }),
-        Animated.timing(fabOpacity, {
-          toValue: 0,
-          duration: 220,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [chromeVisible, headerTranslateY, fabOpacity, totalHeaderHeight]);
+  // FAB fades with chrome
+  const fabAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(chromeHideProgress.value, [0, 1], [1, 0]),
+  }));
 
   const handleScroll = useCallback((event: { nativeEvent: { y: number } }) => {
     const y = event.nativeEvent.y;
-    const diff = y - lastScrollY.current;
     lastScrollY.current = y;
-
-    // Always show chrome when near top
-    if (y <= SCROLL_THRESHOLD) {
-      showChrome();
-      return;
-    }
-
-    // Any meaningful scroll activity hides chrome and resets idle timer
-    if (Math.abs(diff) > SCROLL_THRESHOLD) {
-      onScrollActivity();
-    }
-  }, [showChrome, onScrollActivity]);
+    onChromeScroll(y);
+  }, [onChromeScroll]);
 
   // Compute bookmarked post URIs for the native feed list
   const bookmarkedPostUris = useMemo(() => {
@@ -386,7 +343,7 @@ export function HomeScreen() {
       <Animated.View
         style={[
           styles.collapsibleWrapper,
-          { bottom: -totalHeaderHeight, transform: [{ translateY: headerTranslateY }] },
+          { bottom: -totalHeaderHeight, transform: headerAnimatedStyle.transform },
         ]}
       >
         {/* Custom collapsible header */}
@@ -499,10 +456,11 @@ export function HomeScreen() {
       <Animated.View
         style={[
           styles.fab,
-          { backgroundColor: colors.primary, bottom: insets.bottom + 20, opacity: fabOpacity },
+          { backgroundColor: colors.primary, bottom: insets.bottom + 20 },
           elevation.high,
+          fabAnimatedStyle,
         ]}
-        pointerEvents={chromeVisible ? "auto" : "none"}
+        pointerEvents="auto"
       >
         <TouchableOpacity
           testID="compose-fab"
