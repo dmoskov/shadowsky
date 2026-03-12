@@ -1,41 +1,38 @@
-<!-- Asphodel Flower Icon — Minimalist 6-petal design -->
+<!-- ShadowSky Icon — Butterfly Alighting on Asphodel -->
+<!-- Petal curves: refined Beziers with geometric control points -->
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <!-- Dark navy background -->
   <rect width="512" height="512" rx="96" fill="#161a2e"/>
 
-  <!-- Flower centered at 256,256 -->
-  <g transform="translate(256,256)">
+  <g transform="translate(256,262) rotate(35)">
 
-    <!-- Petal 1 — Lavender (top, 0°) -->
-    <path d="M0,-30 C-42,-60 -58,-140 0,-180 C58,-140 42,-60 0,-30Z" fill="#c4b5e0" opacity="0.9"/>
-
-    <!-- Petal 2 — Blush pink (60°) -->
-    <g transform="rotate(60)">
-      <path d="M0,-30 C-42,-60 -58,-140 0,-180 C58,-140 42,-60 0,-30Z" fill="#e8b4c8" opacity="0.9"/>
-    </g>
-
-    <!-- Petal 3 — Soft gold (120°) -->
-    <g transform="rotate(120)">
-      <path d="M0,-30 C-42,-60 -58,-140 0,-180 C58,-140 42,-60 0,-30Z" fill="#e8d5a0" opacity="0.9"/>
-    </g>
-
-    <!-- Petal 4 — Pale mint (180°) -->
+    <!-- Flower petals (white pair, drawn first = behind) -->
     <g transform="rotate(180)">
-      <path d="M0,-30 C-42,-60 -58,-140 0,-180 C58,-140 42,-60 0,-30Z" fill="#a8d8c8" opacity="0.9"/>
+      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#e8e0d0"/>
     </g>
-
-    <!-- Petal 5 — Soft sky blue (240°) -->
     <g transform="rotate(240)">
-      <path d="M0,-30 C-42,-60 -58,-140 0,-180 C58,-140 42,-60 0,-30Z" fill="#a8c4e0" opacity="0.9"/>
+      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#e8e0d0"/>
     </g>
 
-    <!-- Petal 6 — Pale peach (300°) -->
-    <g transform="rotate(300)">
-      <path d="M0,-30 C-42,-60 -58,-140 0,-180 C58,-140 42,-60 0,-30Z" fill="#e8c8a8" opacity="0.9"/>
+    <!-- Flower petals (pink pair, overlapping white) -->
+    <g transform="rotate(278)">
+      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#d8a0b8"/>
+    </g>
+    <g transform="rotate(142)">
+      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#d8a0b8"/>
     </g>
 
-    <!-- Center circle — small solid dot -->
-    <circle r="22" fill="#ede0c8"/>
+    <!-- Butterfly wings (blue pair) -->
+    <g transform="rotate(0)">
+      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#5a9ec0"/>
+    </g>
+    <g transform="rotate(60)">
+      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#8ec4e0"/>
+    </g>
+
+    <!-- Stem (between cream petals, extending away from butterfly) -->
+    <g transform="rotate(210)">
+      <path d="M0,-25 Q10,-120 -5,-200" stroke="#c0a898" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    </g>
 
   </g>
 </svg>
