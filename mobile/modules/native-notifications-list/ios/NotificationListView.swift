@@ -15,7 +15,7 @@ import ExpoSwiftUIFeed
 // MARK: - Notification List Props
 
 class NotificationListProps: ObservableObject {
-    @Published var isLoading: Bool = false
+    @Published var isLoading: Bool = true  // Default true to show skeleton until React sets actual state
     @Published var isRefreshing: Bool = false
     @Published var isLoadingMore: Bool = false
     @Published var error: String? = nil
@@ -25,6 +25,7 @@ class NotificationListProps: ObservableObject {
 // MARK: - Notification List State
 
 class NotificationListState: ObservableObject {
+    @Published var hasReceivedData: Bool = false
     @Published var processedNotifications: [ProcessedNotificationUIModel] = []
     @Published var counts: [String: Int] = [:]
     @Published var decodeError: String? = nil
@@ -41,6 +42,7 @@ class NotificationListState: ObservableObject {
         ) { [weak self] notification in
             if let data = notification.userInfo?["notificationData"] as? SerializedNotificationData {
                 self?.decodeError = nil // Clear error on successful data
+                self?.hasReceivedData = true
                 self?.updateNotifications(data)
             }
         }
@@ -50,6 +52,7 @@ class NotificationListState: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
+            self?.hasReceivedData = true
             self?.processedNotifications = []
             self?.counts = [:]
         }
@@ -159,8 +162,12 @@ struct NotificationListView: View {
 
     /// Discrete state for driving skeleton→content crossfade
     private var notificationDisplayState: Int {
+        // 0 = skeleton, 1 = error, 2 = empty, 3 = content
         if props.isLoading && state.processedNotifications.isEmpty { return 0 }
         if (props.error != nil || state.decodeError != nil) && state.processedNotifications.isEmpty { return 1 }
+        // Don't show empty state until we've actually received data from React
+        // This prevents a flash of "No notifications" before the first load completes
+        if state.processedNotifications.isEmpty && !state.hasReceivedData { return 0 }
         if state.processedNotifications.isEmpty { return 2 }
         return 3
     }
@@ -229,6 +236,12 @@ struct NotificationListView: View {
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: notificationDisplayState)
         }
         .background(Color(UIColor.systemBackground))
+        .onChange(of: props.isLoading) { newValue in
+            // When loading finishes (true → false), mark data as received
+            if !newValue {
+                state.hasReceivedData = true
+            }
+        }
         .onAppear {
             state.startObserving()
             onAppear?()
