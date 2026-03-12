@@ -3,6 +3,7 @@ import Charts
 
 // MARK: - Main Analytics View
 
+@available(iOS 16.0, *)
 struct AnalyticsView: View {
     @ObservedObject var viewModel: AnalyticsViewModel
     let onTimeRangeChange: (String) -> Void

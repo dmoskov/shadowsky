@@ -8,7 +8,7 @@ class NativeAnalyticsExpoView: ExpoView {
     private let onScroll = EventDispatcher()
     private let onAnalyzeRequest = EventDispatcher()
 
-    private var hostController: UIHostingController<AnalyticsView>?
+    private var hostController: UIViewController?
     private let viewModel = AnalyticsViewModel()
 
     var isLoading: Bool = false { didSet { viewModel.isLoading = isLoading } }
@@ -31,6 +31,8 @@ class NativeAnalyticsExpoView: ExpoView {
 
     required init(appContext: AppContext? = nil) {
         super.init(appContext: appContext)
+
+        guard #available(iOS 16.0, *) else { return }
 
         let view = AnalyticsView(
             viewModel: viewModel,
