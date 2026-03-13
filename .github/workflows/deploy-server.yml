@@ -60,7 +60,7 @@ jobs:
           CLUSTER_STATUS=$(aws ecs describe-clusters \
             --clusters $ECS_CLUSTER \
             --query 'clusters[0].status' \
-            --output text 2>/dev/null)
+            --output text 2>/dev/null || echo "MISSING")
 
           if [ "$CLUSTER_STATUS" != "ACTIVE" ]; then
             echo "⚠️ ECS cluster '$ECS_CLUSTER' is not active (status: $CLUSTER_STATUS) — creating..."
@@ -105,7 +105,7 @@ jobs:
             --cluster $ECS_CLUSTER \
             --services $ECS_SERVICE \
             --query 'failures[0].reason' \
-            --output text 2>/dev/null)
+            --output text 2>/dev/null || echo "MISSING")
 
           if [ "$SERVICE_STATUS" = "MISSING" ]; then
             echo "⚠️ ECS service does not exist — creating it..."
@@ -123,7 +123,7 @@ jobs:
             # Use existing SG or create one
             SG_ID=$(aws ec2 describe-security-groups \
               --filters Name=group-name,Values=shadowsky-api-sg Name=vpc-id,Values=$VPC_ID \
-              --query 'SecurityGroups[0].GroupId' --output text 2>/dev/null)
+              --query 'SecurityGroups[0].GroupId' --output text 2>/dev/null || echo "MISSING")
 
             if [ "$SG_ID" = "None" ] || [ -z "$SG_ID" ]; then
               SG_ID=$(aws ec2 create-security-group \
