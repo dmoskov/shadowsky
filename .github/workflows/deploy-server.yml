@@ -55,6 +55,25 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Ensure ECS cluster exists
+        run: |
+          CLUSTER_STATUS=$(aws ecs describe-clusters \
+            --clusters $ECS_CLUSTER \
+            --query 'clusters[0].status' \
+            --output text 2>/dev/null)
+
+          if [ "$CLUSTER_STATUS" != "ACTIVE" ]; then
+            echo "⚠️ ECS cluster '$ECS_CLUSTER' is not active (status: $CLUSTER_STATUS) — creating..."
+            aws ecs create-cluster \
+              --cluster-name $ECS_CLUSTER \
+              --capacity-providers FARGATE FARGATE_SPOT \
+              --default-capacity-provider-strategy capacityProvider=FARGATE,weight=1 \
+              --query 'cluster.status' --output text
+            echo "✅ ECS cluster created"
+          else
+            echo "✅ ECS cluster '$ECS_CLUSTER' is active"
+          fi
+
       - name: Register new ECS task definition
         id: task-def
         run: |
