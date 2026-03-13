@@ -43,9 +43,9 @@ export const setCookie = (
     else if (hostname.includes("shadowsky.io")) {
       domain = ".shadowsky.io";
     }
-    // Handle asophodel.is domains
-    else if (hostname.includes("asophodel.is")) {
-      domain = ".asophodel.is";
+    // Handle asphodel.is domains
+    else if (hostname.includes("asphodel.is")) {
+      domain = ".asphodel.is";
     }
     // Handle AWS Amplify domains
     else if (hostname.includes("amplifyapp.com")) {
@@ -109,9 +109,9 @@ export const deleteCookie = (name: string) => {
     if (hostname.includes("shadowsky.io")) {
       document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;Domain=.shadowsky.io;`;
     }
-    // Delete for asophodel.is
-    else if (hostname.includes("asophodel.is")) {
-      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;Domain=.asophodel.is;`;
+    // Delete for asphodel.is
+    else if (hostname.includes("asphodel.is")) {
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;Domain=.asphodel.is;`;
     }
     // Delete for Amplify domains
     else if (hostname.includes("amplifyapp.com")) {

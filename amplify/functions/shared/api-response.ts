@@ -182,8 +182,8 @@ export const DEFAULT_CORS_CONFIG: CorsConfig = {
     "https://main.shadowsky.io",
     "https://shadowsky.io",
     "https://www.shadowsky.io",
-    "https://asophodel.is",
-    "https://www.asophodel.is",
+    "https://asphodel.is",
+    "https://www.asphodel.is",
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:5175",
@@ -249,9 +249,9 @@ export function buildCorsHeaders(
     headers["Access-Control-Allow-Origin"] = requestOrigin;
   } else if (
     requestOrigin.match(/^https?:\/\/.*\.shadowsky\.io$/) ||
-    requestOrigin.match(/^https?:\/\/.*\.asophodel\.is$/)
+    requestOrigin.match(/^https?:\/\/.*\.asphodel\.is$/)
   ) {
-    // Allow any subdomain of shadowsky.io or asophodel.is
+    // Allow any subdomain of shadowsky.io or asphodel.is
     headers["Access-Control-Allow-Origin"] = requestOrigin;
   } else {
     // Default to first allowed origin if request origin not recognized

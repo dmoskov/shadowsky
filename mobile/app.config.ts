@@ -8,7 +8,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   runtimeVersion: "0.7.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
-  scheme: ["shadowsky", "bsky", "io.shadowsky.app", "is.asphodel"],
+  scheme: ["shadowsky", "bsky", "io.shadowsky.app", "io.shadowsky"],
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
   splash: {

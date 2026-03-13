@@ -38,14 +38,14 @@ app.use(
         "https://main.shadowsky.io",
         "https://shadowsky.io",
         "https://www.shadowsky.io",
-        "https://asophodel.is",
-        "https://www.asophodel.is",
+        "https://asphodel.is",
+        "https://www.asphodel.is",
       ];
 
-      // Allow any subdomain of shadowsky.io or asophodel.is
+      // Allow any subdomain of shadowsky.io or asphodel.is
       if (
         origin.match(/^https:\/\/.*\.shadowsky\.io$/) ||
-        origin.match(/^https:\/\/.*\.asophodel\.is$/) ||
+        origin.match(/^https:\/\/.*\.asphodel\.is$/) ||
         allowedOrigins.includes(origin)
       ) {
         callback(null, true);

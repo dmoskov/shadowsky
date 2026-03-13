@@ -43,7 +43,7 @@
         <data android:scheme="shadowsky"/>
         <data android:scheme="bsky"/>
         <data android:scheme="io.shadowsky.app"/>
-        <data android:scheme="is.asphodel"/>
+        <data android:scheme="io.shadowsky"/>
         <data android:scheme="exp+shadowsky"/>
       </intent-filter>
       <intent-filter android:autoVerify="true" data-generated="true">
