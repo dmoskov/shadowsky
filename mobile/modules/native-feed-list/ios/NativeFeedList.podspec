@@ -14,6 +14,7 @@ Pod::Spec.new do |s|
   s.dependency 'FeedBridge'
   s.dependency 'ExpoSwiftUIFeed'
   s.dependency 'RichTextView'
+  s.dependency 'SDWebImage', '~> 5.21.0'
 
   s.source_files = '**/*.{h,m,mm,swift,cpp}'
 end
