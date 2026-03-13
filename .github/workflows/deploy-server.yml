@@ -99,6 +99,22 @@ jobs:
           echo "task-definition-arn=$NEW_ARN" >> "$GITHUB_OUTPUT"
           echo "✅ Registered task definition: $NEW_ARN"
 
+      - name: Ensure ECS cluster exists
+        run: |
+          CLUSTER_STATUS=$(aws ecs describe-clusters \
+            --clusters $ECS_CLUSTER \
+            --query 'clusters[0].status' \
+            --output text 2>/dev/null)
+
+          if [ "$CLUSTER_STATUS" != "ACTIVE" ]; then
+            echo "⚠️ Cluster '$ECS_CLUSTER' not active (status: $CLUSTER_STATUS) — creating..."
+            aws ecs create-cluster --cluster-name $ECS_CLUSTER \
+              --query 'cluster.status' --output text
+            echo "✅ Cluster created"
+          else
+            echo "✅ Cluster '$ECS_CLUSTER' is active"
+          fi
+
       - name: Create or update ECS service
         run: |
           SERVICE_STATUS=$(aws ecs describe-services \
