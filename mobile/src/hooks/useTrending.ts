@@ -1,5 +1,8 @@
 /**
- * Hook for fetching and managing trending topics and trends
+ * Hook for fetching and managing trending topics and trends.
+ *
+ * Primary source: Pan's firehose-powered trending API
+ * Fallback: Bluesky's native getTrendingTopics
  */
 
 import { useQuery } from "@tanstack/react-query";
@@ -9,6 +12,7 @@ import {
   TRENDING_CACHE_TTL,
   type Trend,
   type TrendingTopic,
+  type TrendsResponse,
 } from "../services/trending-service";
 
 interface UseTrendingTopicsOptions {
@@ -19,11 +23,12 @@ interface UseTrendingTopicsOptions {
 
 interface UseTrendsOptions {
   limit?: number;
+  hours?: number;
   enabled?: boolean;
 }
 
 /**
- * Hook to fetch trending topics (simpler format with topics and suggested feeds)
+ * Hook to fetch trending topics (simpler format — backward compat)
  */
 export function useTrendingTopics(options: UseTrendingTopicsOptions = {}) {
   const { limit = 10, viewer, enabled = true } = options;
@@ -39,14 +44,15 @@ export function useTrendingTopics(options: UseTrendingTopicsOptions = {}) {
 }
 
 /**
- * Hook to fetch trends (detailed format with actors and post counts)
+ * Hook to fetch rich trends from Pan (with velocity, author counts, sample posts).
+ * Automatically falls back to Bluesky if Pan is unreachable.
  */
 export function useTrends(options: UseTrendsOptions = {}) {
-  const { limit = 10, enabled = true } = options;
+  const { limit = 20, hours = 6, enabled = true } = options;
 
   return useQuery({
-    queryKey: ["trends", limit],
-    queryFn: () => getTrends(limit),
+    queryKey: ["trends", limit, hours],
+    queryFn: () => getTrends(limit, hours),
     staleTime: TRENDING_CACHE_TTL,
     gcTime: TRENDING_CACHE_TTL * 2,
     enabled,
@@ -55,38 +61,48 @@ export function useTrends(options: UseTrendsOptions = {}) {
 }
 
 /**
- * Combined hook for both trending topics and trends
+ * Combined hook — the main one to use.
+ * Returns rich trends when available, simple topics as fallback.
  */
 export function useTrendingData(options: UseTrendingTopicsOptions = {}) {
-  const { limit = 10, viewer, enabled = true } = options;
+  const { limit = 20, viewer, enabled = true } = options;
 
-  const trendingTopicsQuery = useTrendingTopics({ limit, viewer, enabled });
   const trendsQuery = useTrends({ limit, enabled });
 
+  // Only fetch simple topics if trends failed or returned from Bluesky fallback
+  // with no actual trend data
+  const needsTopicsFallback =
+    trendsQuery.isError ||
+    (trendsQuery.data?.trends.length === 0 && !trendsQuery.isLoading);
+
+  const trendingTopicsQuery = useTrendingTopics({
+    limit,
+    viewer,
+    enabled: enabled && needsTopicsFallback,
+  });
+
   return {
-    // Trending topics (simpler format)
+    // Rich trends (Pan or Bluesky detailed)
+    trends: trendsQuery.data?.trends ?? [],
+    source: trendsQuery.data?.source ?? null,
+    isLoadingTrends: trendsQuery.isLoading,
+    trendsError: trendsQuery.error,
+
+    // Simple topics (fallback only)
     topics: trendingTopicsQuery.data?.topics ?? [],
     suggested: trendingTopicsQuery.data?.suggested ?? [],
     isLoadingTopics: trendingTopicsQuery.isLoading,
     topicsError: trendingTopicsQuery.error,
 
-    // Detailed trends
-    trends: trendsQuery.data?.trends ?? [],
-    isLoadingTrends: trendsQuery.isLoading,
-    trendsError: trendsQuery.error,
+    // Combined
+    isLoading: trendsQuery.isLoading || (needsTopicsFallback && trendingTopicsQuery.isLoading),
+    error: trendsQuery.error || trendingTopicsQuery.error,
 
-    // Combined loading state
-    isLoading: trendingTopicsQuery.isLoading || trendsQuery.isLoading,
-    error: trendingTopicsQuery.error || trendsQuery.error,
-
-    // Refetch functions
-    refetchTopics: trendingTopicsQuery.refetch,
-    refetchTrends: trendsQuery.refetch,
     refetchAll: () => {
-      trendingTopicsQuery.refetch();
       trendsQuery.refetch();
+      if (needsTopicsFallback) trendingTopicsQuery.refetch();
     },
   };
 }
 
-export type { Trend, TrendingTopic };
+export type { Trend, TrendingTopic, TrendsResponse };

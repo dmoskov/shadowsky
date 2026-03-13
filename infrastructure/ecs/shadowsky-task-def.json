@@ -1,7 +1,9 @@
 {
   "family": "shadowsky-api-server",
   "networkMode": "awsvpc",
-  "requiresCompatibilities": ["FARGATE"],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
   "cpu": "256",
   "memory": "512",
   "executionRoleArn": "arn:aws:iam::181691141781:role/ecsTaskExecutionRole",
@@ -24,12 +26,26 @@
         }
       ],
       "environment": [
-        {"name": "PORT", "value": "3002"},
-        {"name": "WS_PORT", "value": "3001"},
-        {"name": "NODE_ENV", "value": "production"},
-        {"name": "ENABLE_FIREHOSE", "value": "true"},
-        {"name": "TRENDING_TABLE_NAME", "value": "shadowsky-trending-production"},
-        {"name": "FIREHOSE_SAMPLE_RATE", "value": "1"}
+        {
+          "name": "PORT",
+          "value": "3002"
+        },
+        {
+          "name": "WS_PORT",
+          "value": "3001"
+        },
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "TRENDING_TABLE_NAME",
+          "value": "shadowsky-trending-production"
+        },
+        {
+          "name": "FIREHOSE_SAMPLE_RATE",
+          "value": "1"
+        }
       ],
       "secrets": [
         {
@@ -47,7 +63,10 @@
         }
       },
       "healthCheck": {
-        "command": ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3002/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""],
+        "command": [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://localhost:3002/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""
+        ],
         "interval": 30,
         "timeout": 5,
         "retries": 3,
@@ -56,7 +75,13 @@
     }
   ],
   "tags": [
-    {"key": "Project", "value": "shadowsky"},
-    {"key": "Environment", "value": "production"}
+    {
+      "key": "Project",
+      "value": "shadowsky"
+    },
+    {
+      "key": "Environment",
+      "value": "production"
+    }
   ]
 }

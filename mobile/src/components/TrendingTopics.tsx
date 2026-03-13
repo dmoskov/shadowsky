@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
@@ -11,14 +10,22 @@ import { useTheme } from "../contexts/ThemeContext";
 import type {
   TrendingTopic,
   Trend,
+  TrendStatus,
 } from "../services/trending-service";
-import {fontSize} from '../utils/typography';
+import { velocityEmoji } from "../services/trending-service";
+import { fontSize } from "../utils/typography";
 
 interface TrendingTopicsProps {
   topics?: TrendingTopic[];
   trends?: Trend[];
   onTopicClick: (topic: string) => void;
   isLoading?: boolean;
+}
+
+function formatCount(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+  return String(n);
 }
 
 export function TrendingTopics({
@@ -44,23 +51,10 @@ export function TrendingTopics({
     );
   }
 
-  // Prefer detailed trends if available, fall back to simple topics
-  const displayItems =
-    trends.length > 0
-      ? trends.map((t) => ({
-          topic: t.displayName || t.topic,
-          isHot: t.status === "hot",
-          postCount: t.postCount,
-          category: t.category,
-        }))
-      : topics.map((t) => ({
-          topic: t.topic,
-          isHot: false,
-          postCount: undefined,
-          category: undefined,
-        }));
+  // Prefer detailed trends from Pan, fall back to simple Bluesky topics
+  const hasTrends = trends.length > 0;
 
-  if (displayItems.length === 0) {
+  if (!hasTrends && topics.length === 0) {
     return null;
   }
 
@@ -71,40 +65,88 @@ export function TrendingTopics({
         <Text style={styles.headerText}>Trending Now</Text>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        style={styles.scrollView}
-      >
-        {displayItems.map((item, index) => (
-          <TouchableOpacity
-            key={`${item.topic}-${index}`}
-            style={[
-              styles.topicChip,
-              item.isHot && styles.topicChipHot,
-            ]}
-            onPress={() => onTopicClick(item.topic)}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel={`Trending topic: ${item.topic}${item.postCount ? `, ${item.postCount} posts` : ''}`}
-          >
-            <Text style={styles.topicIcon}>
-              {item.isHot ? "\uD83D\uDD25" : "#"}
-            </Text>
-            <Text style={styles.topicText} numberOfLines={1}>
-              {item.topic}
-            </Text>
-            {item.postCount != null && item.postCount > 0 && (
-              <Text style={styles.postCount}>
-                {item.postCount >= 1000
-                  ? `${(item.postCount / 1000).toFixed(1)}k`
-                  : item.postCount}
+      {hasTrends ? (
+        <View style={styles.trendsList}>
+          {trends.slice(0, 10).map((trend, index) => (
+            <TouchableOpacity
+              key={`${trend.topic}-${index}`}
+              style={styles.trendRow}
+              onPress={() => onTopicClick(trend.topic)}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`Trending topic: ${trend.topic}${trend.authorCount ? `, ${trend.authorCount} people talking` : ""}`}
+            >
+              <View style={styles.trendRank}>
+                <Text style={styles.trendRankText}>{index + 1}</Text>
+              </View>
+
+              <View style={styles.trendContent}>
+                <View style={styles.trendTitleRow}>
+                  <Text style={styles.trendEmoji}>
+                    {velocityEmoji(trend.status as TrendStatus)}
+                  </Text>
+                  <Text style={styles.trendTopic} numberOfLines={1}>
+                    {trend.displayName || trend.topic}
+                  </Text>
+                  {(trend.status === "surging" || trend.status === "hot") && (
+                    <View
+                      style={[
+                        styles.velocityBadge,
+                        trend.status === "surging"
+                          ? styles.velocityBadgeSurging
+                          : styles.velocityBadgeHot,
+                      ]}
+                    >
+                      <Text style={styles.velocityBadgeText}>
+                        {trend.status === "surging" ? "Surging" : "Hot"}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                <View style={styles.trendMeta}>
+                  {trend.authorCount != null && trend.authorCount > 0 && (
+                    <Text style={styles.trendMetaText}>
+                      {formatCount(trend.authorCount)} people talking
+                    </Text>
+                  )}
+                  {trend.postCount != null &&
+                    trend.postCount > 0 &&
+                    trend.authorCount != null && (
+                      <Text style={styles.trendMetaSeparator}>·</Text>
+                    )}
+                  {trend.postCount != null && trend.postCount > 0 && (
+                    <Text style={styles.trendMetaText}>
+                      {formatCount(trend.postCount)} posts
+                    </Text>
+                  )}
+                </View>
+              </View>
+
+              <Text style={styles.chevron}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : (
+        // Fallback: simple horizontal chip scroll (Bluesky data)
+        <View style={styles.chipScroll}>
+          {topics.map((t, index) => (
+            <TouchableOpacity
+              key={`${t.topic}-${index}`}
+              style={styles.topicChip}
+              onPress={() => onTopicClick(t.topic)}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`Trending topic: ${t.topic}`}
+            >
+              <Text style={styles.chipHash}>#</Text>
+              <Text style={styles.chipText} numberOfLines={1}>
+                {t.topic}
               </Text>
-            )}
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -133,12 +175,90 @@ function createStyles(colors: any) {
       paddingVertical: 16,
       alignItems: "center",
     },
-    scrollView: {
-      flexGrow: 0,
-      flexShrink: 0,
+
+    // ─── Rich trends list (Pan data) ─────────────
+    trendsList: {
       paddingHorizontal: 16,
     },
-    scrollContent: {
+    trendRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.borderLight,
+    },
+    trendRank: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: colors.surfaceElevated,
+      alignItems: "center",
+      justifyContent: "center",
+      marginRight: 12,
+    },
+    trendRankText: {
+      color: colors.textSecondary,
+      fontSize: fontSize.caption1,
+      fontWeight: "700",
+    },
+    trendContent: {
+      flex: 1,
+    },
+    trendTitleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    trendEmoji: {
+      fontSize: fontSize.subheadline,
+    },
+    trendTopic: {
+      color: colors.text,
+      fontSize: fontSize.callout,
+      fontWeight: "600",
+      flexShrink: 1,
+    },
+    velocityBadge: {
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 10,
+    },
+    velocityBadgeSurging: {
+      backgroundColor: "rgba(239, 68, 68, 0.15)",
+    },
+    velocityBadgeHot: {
+      backgroundColor: "rgba(245, 158, 11, 0.15)",
+    },
+    velocityBadgeText: {
+      fontSize: fontSize.caption2,
+      fontWeight: "600",
+      color: colors.text,
+    },
+    trendMeta: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginTop: 2,
+      gap: 4,
+    },
+    trendMetaText: {
+      color: colors.textTertiary,
+      fontSize: fontSize.caption1,
+    },
+    trendMetaSeparator: {
+      color: colors.textTertiary,
+      fontSize: fontSize.caption1,
+    },
+    chevron: {
+      color: colors.textTertiary,
+      fontSize: fontSize.title3,
+      marginLeft: 8,
+    },
+
+    // ─── Fallback chip scroll (Bluesky data) ─────
+    chipScroll: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      paddingHorizontal: 16,
       gap: 8,
     },
     topicChip: {
@@ -150,25 +270,17 @@ function createStyles(colors: any) {
       paddingHorizontal: 12,
       borderWidth: 1,
       borderColor: colors.borderLight,
-      gap: 6,
+      gap: 4,
     },
-    topicChipHot: {
-      borderColor: colors.primary,
-      backgroundColor: "rgba(201, 168, 76, 0.1)",
-    },
-    topicIcon: {
+    chipHash: {
       fontSize: fontSize.subheadline,
+      color: colors.textSecondary,
     },
-    topicText: {
+    chipText: {
       color: colors.text,
       fontSize: fontSize.subheadline,
       fontWeight: "500",
       maxWidth: 120,
-    },
-    postCount: {
-      color: colors.textTertiary,
-      fontSize: fontSize.caption1,
-      marginLeft: 4,
     },
   });
 }
