@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import {TouchableOpacity, Text, StyleSheet, ActivityIndicator, Alert} from 'react-native';
 import {useFollowUser, useUnfollowUser} from '../hooks/api/useProfile';
 import { useTheme } from "../contexts/ThemeContext";
+import { triggerHaptic } from '../utils/haptics';
 import {fontSize} from '../utils/typography';
 
 interface FollowButtonProps {
@@ -27,6 +28,7 @@ export function FollowButton({
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const handlePress = () => {
+    triggerHaptic('light');
     if (isFollowing && followUri) {
       const message = handle
         ? `Are you sure you want to unfollow @${handle}?`

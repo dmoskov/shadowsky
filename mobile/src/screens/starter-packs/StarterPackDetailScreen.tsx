@@ -15,6 +15,7 @@ import {useAppNavigation} from '../../hooks/useNavigation';
 import {AppBskyGraphDefs} from '@atproto/api';
 import {useTheme} from '../../contexts/ThemeContext';
 import {Avatar} from '../../components/Avatar';
+import {ErrorState} from '../../components/ErrorState';
 import {SkeletonShimmer} from '../../components/SkeletonShimmer';
 
 import { createLogger } from '../../utils/logger';
@@ -162,14 +163,7 @@ export function StarterPackDetailScreen({
   }
 
   if (error || !starterPack) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Failed to load starter pack</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
-      </View>
-    );
+    return <ErrorState message="Failed to load starter pack" onRetry={() => refetch()} />;
   }
 
   const record = starterPack.record as { name?: string; description?: string };

@@ -11,6 +11,7 @@ import {AppBskyFeedDefs} from '@atproto/api';
 import {usePostQuotes} from '../../hooks/api/usePosts';
 import {PostCard} from '../../components/PostCard';
 import {PostCardSkeleton} from '../../components/PostCardSkeleton';
+import {ErrorState} from '../../components/ErrorState';
 import {useTheme} from '../../contexts/ThemeContext';
 import {fontSize} from '../../utils/typography';
 
@@ -115,11 +116,7 @@ export function QuotesScreen({
     }
 
     if (error) {
-      return (
-        <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>Failed to load quotes</Text>
-        </View>
-      );
+      return <ErrorState message="Failed to load quotes" onRetry={() => refetch()} />;
     }
 
     return (

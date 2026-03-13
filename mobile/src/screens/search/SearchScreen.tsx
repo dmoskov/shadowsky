@@ -300,9 +300,13 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
     router.push("/(app)/(tabs)/(search)/profile/" + event.nativeEvent.handle);
   }, [router]);
 
-  const handleNativeBookmark = useCallback((_event: { nativeEvent: { uri: string } }) => {
-    // Bookmark toggle — just use the bookmark hook
-  }, []);
+  const handleNativeBookmark = useCallback((event: { nativeEvent: { uri: string } }) => {
+    const { uri } = event.nativeEvent;
+    const feedViewPost = posts.find(p => p.post.uri === uri);
+    if (feedViewPost) {
+      toggleBookmark(feedViewPost.post);
+    }
+  }, [posts, toggleBookmark]);
 
   const handleHistoryItemPress = (query: string) => {
     setSearchQuery(query);

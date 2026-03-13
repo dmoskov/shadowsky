@@ -9,6 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import {UserListSkeleton} from "../../components/UserListSkeleton";
+import {ErrorState} from '../../components/ErrorState';
 import {useLists} from '../../hooks/api';
 import {useAppNavigation} from '../../hooks/useNavigation';
 import {AppBskyGraphDefs} from '@atproto/api';
@@ -82,17 +83,7 @@ export function ListsScreen() {
     }
 
     if (error) {
-      return (
-        <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>Failed to load lists</Text>
-          <Text style={styles.errorSubtext}>
-            {error instanceof Error ? error.message : 'Unknown error'}
-          </Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      );
+      return <ErrorState message="Failed to load lists" onRetry={() => refetch()} />;
     }
 
     return (

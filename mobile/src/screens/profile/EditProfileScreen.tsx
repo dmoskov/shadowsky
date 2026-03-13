@@ -16,6 +16,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useProfile, useUpdateProfile } from '../../hooks/api/useProfile';
 import { useImagePicker, ImageAsset } from '../../hooks/useImagePicker';
 import { ImageEditor } from '../../components/ImageEditor';
+import { ErrorState } from '../../components/ErrorState';
 import { useTheme } from '../../contexts/ThemeContext';
 
 
@@ -135,13 +136,7 @@ export function EditProfileScreen({ onSave, onCancel }: EditProfileScreenProps) 
   }
 
   if (!profile) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Failed to load profile</Text>
-        </View>
-      </View>
-    );
+    return <ErrorState message="Failed to load profile" />;
   }
 
   const displayNameRemaining = MAX_DISPLAY_NAME_LENGTH - displayName.length;

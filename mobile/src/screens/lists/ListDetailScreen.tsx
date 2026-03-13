@@ -22,6 +22,7 @@ import {useAuth} from '../../contexts/AuthContext';
 import {AppBskyGraphDefs} from '@atproto/api';
 import {useTheme} from '../../contexts/ThemeContext';
 import {EditListModal} from '../../components/EditListModal';
+import {ErrorState} from '../../components/ErrorState';
 import {UserListSkeleton} from '../../components/UserListSkeleton';
 import {fontSize} from '../../utils/typography';
 
@@ -225,17 +226,7 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
     }
 
     if (error) {
-      return (
-        <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>Failed to load members</Text>
-          <Text style={styles.errorSubtext}>
-            {error instanceof Error ? error.message : 'Unknown error'}
-          </Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-            <Text style={styles.retryButtonText}>Retry</Text>
-          </TouchableOpacity>
-        </View>
-      );
+      return <ErrorState message="Failed to load members" onRetry={() => refetch()} />;
     }
 
     return (

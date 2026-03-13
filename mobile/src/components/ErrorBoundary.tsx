@@ -1,8 +1,8 @@
-import React, { Component, ReactNode } from "react";
+import React, { Component, ReactNode, useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import * as Updates from "expo-updates";
 import { captureException } from "../utils/error-reporting";
-import { colors } from "../constants/theme";
+import { useTheme } from "../contexts/ThemeContext";
 
 import { createLogger } from "../utils/logger";
 import {fontSize} from '../utils/typography';
@@ -81,6 +81,8 @@ function ErrorFallback({
   errorId: string;
   onReload: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const isDevelopment = __DEV__;
 
   return (
@@ -118,92 +120,84 @@ function ErrorFallback({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.borderDark,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  content: {
-    maxWidth: 500,
-    width: "100%",
-  },
-  title: {
-    fontSize: fontSize.title2,
-    fontWeight: "bold",
-    color: colors.text,
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  message: {
-    fontSize: fontSize.callout,
-    color: colors.textSecondary,
-    marginBottom: 12,
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  errorId: {
-    fontSize: fontSize.caption1,
-    color: colors.textTertiary,
-    marginBottom: 24,
-    textAlign: "center",
-    fontFamily: "monospace",
-  },
-  errorDetails: {
-    backgroundColor: colors.errorBackground,
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: colors.errorBorder,
-  },
-  errorTitle: {
-    fontSize: fontSize.subheadline,
-    fontWeight: "600",
-    color: colors.errorBorder,
-    marginBottom: 8,
-  },
-  errorMessage: {
-    fontSize: fontSize.footnote,
-    color: colors.text,
-    marginBottom: 8,
-    fontFamily: "monospace",
-  },
-  errorStack: {
-    fontSize: fontSize.caption2,
-    color: colors.textSecondary,
-    fontFamily: "monospace",
-    lineHeight: 16,
-  },
-  buttons: {
-    gap: 12,
-  },
-  button: {
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  primaryButton: {
-    backgroundColor: colors.info,
-  },
-  primaryButtonText: {
-    fontSize: fontSize.callout,
-    fontWeight: "600",
-    color: colors.text,
-  },
-  secondaryButton: {
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  secondaryButtonText: {
-    fontSize: fontSize.callout,
-    fontWeight: "600",
-    color: colors.textSecondary,
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.borderDark,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 20,
+    },
+    content: {
+      maxWidth: 500,
+      width: "100%",
+    },
+    title: {
+      fontSize: fontSize.title2,
+      fontWeight: "bold",
+      color: colors.text,
+      marginBottom: 12,
+      textAlign: "center",
+    },
+    message: {
+      fontSize: fontSize.callout,
+      color: colors.textSecondary,
+      marginBottom: 12,
+      textAlign: "center",
+      lineHeight: 22,
+    },
+    errorId: {
+      fontSize: fontSize.caption1,
+      color: colors.textTertiary,
+      marginBottom: 24,
+      textAlign: "center",
+      fontFamily: "monospace",
+    },
+    errorDetails: {
+      backgroundColor: colors.errorBackground,
+      borderRadius: 8,
+      padding: 16,
+      marginBottom: 24,
+      borderWidth: 1,
+      borderColor: colors.errorBorder,
+    },
+    errorTitle: {
+      fontSize: fontSize.subheadline,
+      fontWeight: "600",
+      color: colors.errorBorder,
+      marginBottom: 8,
+    },
+    errorMessage: {
+      fontSize: fontSize.footnote,
+      color: colors.text,
+      marginBottom: 8,
+      fontFamily: "monospace",
+    },
+    errorStack: {
+      fontSize: fontSize.caption2,
+      color: colors.textSecondary,
+      fontFamily: "monospace",
+      lineHeight: 16,
+    },
+    buttons: {
+      gap: 12,
+    },
+    button: {
+      paddingVertical: 14,
+      paddingHorizontal: 24,
+      borderRadius: 8,
+      alignItems: "center",
+    },
+    primaryButton: {
+      backgroundColor: colors.info,
+    },
+    primaryButtonText: {
+      fontSize: fontSize.callout,
+      fontWeight: "600",
+      color: colors.text,
+    },
+  });
+}
 
 export default ErrorBoundaryClass;

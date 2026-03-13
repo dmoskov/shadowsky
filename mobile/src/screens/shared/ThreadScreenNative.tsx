@@ -18,6 +18,7 @@ import { sharePost } from "../../utils/share";
 import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useToast } from "../../contexts/ToastContext";
 import { triggerHaptic } from "../../utils/haptics";
+import { InlineErrorBoundary } from '../../components/ui/InlineErrorBoundary';
 import { createLogger } from '../../utils/logger';
 import { NativeThreadView, setTranslationResult, setTranslationError, setMentionSearchResults, setReplySent, setThreadData, clearThreadData } from '../../../modules/native-thread-view';
 import { translatePost } from '../../services/translation-service';
@@ -688,6 +689,7 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri, onNav
   // loading state via the isLoading prop instead of swapping views.
   return (
     <View style={styles.container}>
+      <InlineErrorBoundary context="NativeThreadView">
       <NativeThreadView
         style={styles.threadView}
         isLoading={isLoading}
@@ -737,6 +739,7 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri, onNav
         onOpenEmojiPicker={handleOpenEmojiPicker}
         onMentionSearchQuery={handleMentionSearchQuery}
       />
+      </InlineErrorBoundary>
     </View>
   );
 }

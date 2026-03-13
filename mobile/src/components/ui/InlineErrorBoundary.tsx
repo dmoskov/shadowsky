@@ -1,7 +1,8 @@
-import React, { Component, ReactNode } from "react";
+import React, { Component, ReactNode, useMemo } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { captureException } from "../../utils/error-reporting";
 import { createLogger } from "../../utils/logger";
+import { useTheme } from "../../contexts/ThemeContext";
 import {fontSize} from '../../utils/typography';
 
 const logger = createLogger("InlineErrorBoundary");
@@ -84,48 +85,59 @@ class InlineErrorBoundary extends Component<
 
     // Default compact fallback
     return (
-      <View style={styles.container}>
-        <Text style={styles.message}>Content unavailable</Text>
-        {this.props.onRetry && (
-          <TouchableOpacity
-            onPress={this.handleRetry}
-            style={styles.retryButton}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Try again"
-          >
-            <Text style={styles.retryText}>Try again</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      <InlineErrorFallback onRetry={this.props.onRetry ? this.handleRetry : undefined} />
     );
   }
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    opacity: 0.6,
-  },
-  message: {
-    fontSize: fontSize.footnote,
-    color: "#8899a6",
-  },
-  retryButton: {
-    marginTop: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: "#38444d",
-  },
-  retryText: {
-    fontSize: fontSize.caption1,
-    color: "#8899a6",
-  },
-});
+function InlineErrorFallback({ onRetry }: { onRetry?: () => void }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.message}>Content unavailable</Text>
+      {onRetry && (
+        <TouchableOpacity
+          onPress={onRetry}
+          style={styles.retryButton}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Try again"
+        >
+          <Text style={styles.retryText}>Try again</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      padding: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      opacity: 0.6,
+    },
+    message: {
+      fontSize: fontSize.footnote,
+      color: colors.textSecondary,
+    },
+    retryButton: {
+      marginTop: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    retryText: {
+      fontSize: fontSize.caption1,
+      color: colors.textSecondary,
+    },
+  });
+}
 
 export { InlineErrorBoundary };
 export default InlineErrorBoundary;

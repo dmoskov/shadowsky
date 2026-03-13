@@ -26,6 +26,7 @@ import {
   StarterPackData,
   ProfileTab,
 } from "../../../modules/native-profile-view/src/NativeProfileViewTypes";
+import { ErrorState } from "../../components/ErrorState";
 import { MyProfileScreen } from "./MyProfileScreen";
 import { ProfileAIInsights } from "../../components/ProfileAIInsights";
 import { InlineErrorBoundary } from "../../components/ui/InlineErrorBoundary";
@@ -353,13 +354,7 @@ function MyProfileScreenNativeIOS({
   ]);
 
   if (!account) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Not authenticated</Text>
-        </View>
-      </View>
-    );
+    return <ErrorState message="Not authenticated" />;
   }
 
   return (

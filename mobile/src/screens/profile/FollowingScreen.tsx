@@ -13,6 +13,7 @@ import {useFollows} from '../../hooks/api/useProfile';
 import {Avatar} from '../../components/Avatar';
 import {FollowButton} from '../../components/FollowButton';
 import {UserListSkeleton} from '../../components/UserListSkeleton';
+import {ErrorState} from '../../components/ErrorState';
 import {useTheme} from '../../contexts/ThemeContext';
 import {useAuth} from '../../contexts/AuthContext';
 import {fontSize} from '../../utils/typography';
@@ -97,11 +98,7 @@ export function FollowingScreen({actor, onNavigateToProfile}: FollowingScreenPro
     }
 
     if (error) {
-      return (
-        <View style={styles.centerContainer}>
-          <Text style={styles.errorText}>Failed to load following</Text>
-        </View>
-      );
+      return <ErrorState message="Failed to load following" onRetry={() => refetch()} />;
     }
 
     return (
