@@ -100,14 +100,7 @@ function classifyVelocity(countRatio: number): TrendStatus {
   return "stable";
 }
 
-function velocityEmoji(status: TrendStatus): string {
-  switch (status) {
-    case "surging": return "🚀";
-    case "hot": return "🔥";
-    case "rising": return "📈";
-    default: return "#";
-  }
-}
+
 
 // ─── Pan API Fetch ────────────────────────────────────────
 
@@ -277,4 +270,4 @@ export async function getTrendingTopics(
 
 // ─── Utility exports ──────────────────────────────────────
 
-export { classifyVelocity, velocityEmoji };
+export { classifyVelocity };

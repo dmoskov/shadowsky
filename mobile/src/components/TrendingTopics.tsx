@@ -10,9 +10,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import type {
   TrendingTopic,
   Trend,
-  TrendStatus,
 } from "../services/trending-service";
-import { velocityEmoji } from "../services/trending-service";
 import { fontSize } from "../utils/typography";
 
 interface TrendingTopicsProps {
@@ -41,11 +39,10 @@ export function TrendingTopics({
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerIcon}>{"\uD83D\uDD25"}</Text>
-          <Text style={styles.headerText}>Trending</Text>
+          <Text style={styles.headerText}>Explore topics</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={colors.primary} />
+          <ActivityIndicator size="small" color={colors.textTertiary} />
         </View>
       </View>
     );
@@ -61,8 +58,7 @@ export function TrendingTopics({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerIcon}>{"\uD83D\uDD25"}</Text>
-        <Text style={styles.headerText}>Trending Now</Text>
+        <Text style={styles.headerText}>Explore topics</Text>
       </View>
 
       {hasTrends ? (
@@ -74,40 +70,17 @@ export function TrendingTopics({
               onPress={() => onTopicClick(trend.topic)}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel={`Trending topic: ${trend.topic}${trend.authorCount ? `, ${trend.authorCount} people talking` : ""}`}
+              accessibilityLabel={`Topic: ${trend.topic}${trend.authorCount ? `, ${trend.authorCount} people` : ""}`}
             >
-              <View style={styles.trendRank}>
-                <Text style={styles.trendRankText}>{index + 1}</Text>
-              </View>
-
               <View style={styles.trendContent}>
-                <View style={styles.trendTitleRow}>
-                  <Text style={styles.trendEmoji}>
-                    {velocityEmoji(trend.status as TrendStatus)}
-                  </Text>
-                  <Text style={styles.trendTopic} numberOfLines={1}>
-                    {trend.displayName || trend.topic}
-                  </Text>
-                  {(trend.status === "surging" || trend.status === "hot") && (
-                    <View
-                      style={[
-                        styles.velocityBadge,
-                        trend.status === "surging"
-                          ? styles.velocityBadgeSurging
-                          : styles.velocityBadgeHot,
-                      ]}
-                    >
-                      <Text style={styles.velocityBadgeText}>
-                        {trend.status === "surging" ? "Surging" : "Hot"}
-                      </Text>
-                    </View>
-                  )}
-                </View>
+                <Text style={styles.trendTopic} numberOfLines={1}>
+                  {trend.displayName || trend.topic}
+                </Text>
 
                 <View style={styles.trendMeta}>
                   {trend.authorCount != null && trend.authorCount > 0 && (
                     <Text style={styles.trendMetaText}>
-                      {formatCount(trend.authorCount)} people talking
+                      {formatCount(trend.authorCount)} people
                     </Text>
                   )}
                   {trend.postCount != null &&
@@ -128,7 +101,7 @@ export function TrendingTopics({
           ))}
         </View>
       ) : (
-        // Fallback: simple horizontal chip scroll (Bluesky data)
+        // Fallback: simple chip layout (Bluesky data)
         <View style={styles.chipScroll}>
           {topics.map((t, index) => (
             <TouchableOpacity
@@ -137,9 +110,8 @@ export function TrendingTopics({
               onPress={() => onTopicClick(t.topic)}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel={`Trending topic: ${t.topic}`}
+              accessibilityLabel={`Topic: ${t.topic}`}
             >
-              <Text style={styles.chipHash}>#</Text>
               <Text style={styles.chipText} numberOfLines={1}>
                 {t.topic}
               </Text>
@@ -157,19 +129,15 @@ function createStyles(colors: any) {
       marginVertical: 12,
     },
     header: {
-      flexDirection: "row",
-      alignItems: "center",
       paddingHorizontal: 16,
       marginBottom: 12,
     },
-    headerIcon: {
-      fontSize: fontSize.callout,
-      marginRight: 6,
-    },
     headerText: {
       color: colors.textSecondary,
-      fontSize: fontSize.subheadline,
-      fontWeight: "600",
+      fontSize: fontSize.footnote,
+      fontWeight: "500",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
     },
     loadingContainer: {
       paddingVertical: 16,
@@ -183,61 +151,22 @@ function createStyles(colors: any) {
     trendRow: {
       flexDirection: "row",
       alignItems: "center",
-      paddingVertical: 12,
+      paddingVertical: 14,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.borderLight,
-    },
-    trendRank: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      backgroundColor: colors.surfaceElevated,
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: 12,
-    },
-    trendRankText: {
-      color: colors.textSecondary,
-      fontSize: fontSize.caption1,
-      fontWeight: "700",
     },
     trendContent: {
       flex: 1,
     },
-    trendTitleRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-    },
-    trendEmoji: {
-      fontSize: fontSize.subheadline,
-    },
     trendTopic: {
       color: colors.text,
       fontSize: fontSize.callout,
-      fontWeight: "600",
-      flexShrink: 1,
-    },
-    velocityBadge: {
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 10,
-    },
-    velocityBadgeSurging: {
-      backgroundColor: "rgba(239, 68, 68, 0.15)",
-    },
-    velocityBadgeHot: {
-      backgroundColor: "rgba(245, 158, 11, 0.15)",
-    },
-    velocityBadgeText: {
-      fontSize: fontSize.caption2,
-      fontWeight: "600",
-      color: colors.text,
+      fontWeight: "500",
     },
     trendMeta: {
       flexDirection: "row",
       alignItems: "center",
-      marginTop: 2,
+      marginTop: 3,
       gap: 4,
     },
     trendMetaText: {
@@ -254,7 +183,7 @@ function createStyles(colors: any) {
       marginLeft: 8,
     },
 
-    // ─── Fallback chip scroll (Bluesky data) ─────
+    // ─── Fallback chip layout (Bluesky data) ─────
     chipScroll: {
       flexDirection: "row",
       flexWrap: "wrap",
@@ -262,25 +191,18 @@ function createStyles(colors: any) {
       gap: 8,
     },
     topicChip: {
-      flexDirection: "row",
-      alignItems: "center",
       backgroundColor: colors.surfaceElevated,
       borderRadius: 20,
       paddingVertical: 8,
-      paddingHorizontal: 12,
+      paddingHorizontal: 14,
       borderWidth: 1,
       borderColor: colors.borderLight,
-      gap: 4,
-    },
-    chipHash: {
-      fontSize: fontSize.subheadline,
-      color: colors.textSecondary,
     },
     chipText: {
       color: colors.text,
       fontSize: fontSize.subheadline,
       fontWeight: "500",
-      maxWidth: 120,
+      maxWidth: 140,
     },
   });
 }
