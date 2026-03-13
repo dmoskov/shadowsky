@@ -170,13 +170,24 @@ struct PostCardView: View {
 
                 // Embed (images, video, links, quotes)
                 if let embed = post.post.record.embed {
-                    PostEmbed(
-                        embed: embed,
-                        onImagePress: onImagePress,
-                        onLinkPress: onLinkPress,
-                        onQuotePress: onQuotePress,
-                        blurImages: false
-                    )
+                    if case .external(let external) = embed.embedType,
+                       isGifURL(external.uri),
+                       let gifURL = URL(string: external.uri) {
+                        // Render animated GIF natively instead of static link card
+                        NativeFeedAnimatedGifEmbed(
+                            url: gifURL,
+                            aspectRatio: parseGifAspectRatio(from: external.uri),
+                            onPress: onLinkPress
+                        )
+                    } else {
+                        PostEmbed(
+                            embed: embed,
+                            onImagePress: onImagePress,
+                            onLinkPress: onLinkPress,
+                            onQuotePress: onQuotePress,
+                            blurImages: false
+                        )
+                    }
                 }
             }
             .contentShape(Rectangle())
