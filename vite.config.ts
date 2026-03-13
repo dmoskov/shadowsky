@@ -1,7 +1,7 @@
 /**
- * Vite Configuration
+ * Vite+ Configuration
  *
- * This is the main Vite configuration file. It has been refactored to reduce churn
+ * This is the main Vite+ configuration file. It has been refactored to reduce churn
  * by extracting specific concerns into separate modules:
  *
  * - config/vite/plugins.ts - Custom Vite plugins
@@ -24,7 +24,7 @@ import {
 } from "./config/vite/plugins.js";
 import { previewConfig, serverConfig } from "./config/vite/server.js";
 
-// https://vitejs.dev/config/
+// https://viteplus.dev/
 export default defineConfig({
   base: "/",
   build: buildConfig,
