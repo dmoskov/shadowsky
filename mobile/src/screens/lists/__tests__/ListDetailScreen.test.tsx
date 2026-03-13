@@ -408,7 +408,7 @@ describe('ListDetailScreen', () => {
 
       fireEvent.press(getByText('Alice'));
       expect(mockRouterPush).toHaveBeenCalledWith(
-        '/(app)/(tabs)/(home)/profile/alice.bsky.social',
+        '/(app)/lists/profile/alice.bsky.social',
       );
     });
   });
