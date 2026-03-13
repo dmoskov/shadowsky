@@ -18,7 +18,6 @@ import {AggregatedNotificationItem} from '../../components/AggregatedNotificatio
 import {NotificationTabBar, NotificationFilter} from '../../components/NotificationTabBar';
 import {ErrorState} from '../../components/ErrorState';
 import { EmptyState } from '../../components/EmptyState';
-import {useAppNavigation} from '../../hooks/useNavigation';
 import {InlineErrorBoundary} from '../../components/ui/InlineErrorBoundary';
 import {AppBskyNotificationListNotifications} from '@atproto/api';
 import {usePreferences} from '../../contexts/PreferencesContext';
@@ -66,7 +65,6 @@ export function NotificationsScreen() {
   const notifOfflineStatus = useOfflineFeedStatus();
 
   const markNotificationsSeen = useMarkNotificationsSeen();
-  const {navigateToProfile, navigateToThread} = useAppNavigation();
   const scrollRef = useRef<FlatList>(null);
 
   // Filter state
@@ -159,14 +157,14 @@ export function NotificationsScreen() {
 
   const handleMentionPress = useCallback(
     (handle: string, _did: string) => {
-      navigateToProfile(handle);
+      router.push(`/(app)/(tabs)/(notifications)/profile/${handle}`);
     },
-    [navigateToProfile],
+    [router],
   );
 
   const handleHashtagPress = useCallback(
     (tag: string) => {
-      router.push({pathname: '/(tabs)/(search)', params: {q: '#' + tag}} as any);
+      router.push({pathname: '/(app)/(tabs)/(search)', params: {q: '#' + tag}} as any);
     },
     [router],
   );
@@ -176,7 +174,7 @@ export function NotificationsScreen() {
       const reason = notification.reason;
 
       if (reason === 'follow') {
-        navigateToProfile(notification.author.handle);
+        router.push(`/(app)/(tabs)/(notifications)/profile/${notification.author.handle}`);
         return;
       }
 
@@ -187,27 +185,31 @@ export function NotificationsScreen() {
       ) {
         const postId = getPostIdFromUri(notification.reasonSubject);
         const did = getHandleFromUri(notification.reasonSubject);
-        navigateToThread(notification.author.handle, postId, did || undefined);
+        router.push(
+          `/(app)/(tabs)/(notifications)/thread/${postId}?handle=${did}&did=${encodeURIComponent(did || '')}`,
+        );
         return;
       }
 
       // For starterpack-joined, navigate to the author's profile
       if (reason === 'starterpack-joined') {
-        navigateToProfile(notification.author.handle);
+        router.push(`/(app)/(tabs)/(notifications)/profile/${notification.author.handle}`);
         return;
       }
 
       // For reply/mention/quote, navigate to the notification post itself
       if (reason === 'reply' || reason === 'mention' || reason === 'quote') {
         const postId = getPostIdFromUri(notification.uri);
-        navigateToThread(notification.author.handle, postId, notification.author.did);
+        router.push(
+          `/(app)/(tabs)/(notifications)/thread/${postId}?handle=${notification.author.handle}&did=${encodeURIComponent(notification.author.did)}`,
+        );
         return;
       }
 
       // Fallback: navigate to author profile
-      navigateToProfile(notification.author.handle);
+      router.push(`/(app)/(tabs)/(notifications)/profile/${notification.author.handle}`);
     },
-    [navigateToProfile, navigateToThread],
+    [router],
   );
 
   const handleFilterChange = useCallback((filter: NotificationFilter) => {

@@ -208,7 +208,7 @@ export function ListDetailScreen({listUri}: ListDetailScreenProps) {
 
   const handleProfilePress = useCallback(
     (handle: string) => {
-      router.push(`/(app)/(tabs)/(home)/profile/${handle}`);
+      router.push(`/(app)/lists/profile/${handle}`);
     },
     [router]
   );

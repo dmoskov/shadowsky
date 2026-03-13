@@ -242,7 +242,7 @@ function MyProfileScreenNativeIOS({
   const handleHashtagPress = useCallback(
     (tag: string) => {
       router.push({
-        pathname: "/(tabs)/(search)",
+        pathname: "/(app)/(tabs)/(search)",
         params: { q: "#" + tag },
       } as any);
     },

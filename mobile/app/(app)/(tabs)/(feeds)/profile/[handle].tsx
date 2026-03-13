@@ -13,11 +13,11 @@ export default function ProfileRoute() {
   }
 
   const handleNavigateToFollowers = (actor: string) => {
-    router.push(`/(app)/(tabs)/(profile)/followers/${actor}`);
+    router.push(`/(app)/(tabs)/(feeds)/followers/${actor}`);
   };
 
   const handleNavigateToFollowing = (actor: string) => {
-    router.push(`/(app)/(tabs)/(profile)/following/${actor}`);
+    router.push(`/(app)/(tabs)/(feeds)/following/${actor}`);
   };
 
   const handleNavigateToMessages = (_conversationId: string) => {
@@ -45,6 +45,13 @@ export default function ProfileRoute() {
     [router],
   );
 
+  const handleNavigateToHashtag = useCallback(
+    (tag: string) => {
+      router.push({ pathname: "/(app)/(tabs)/(search)", params: { q: "#" + tag } } as any);
+    },
+    [router],
+  );
+
   return (
     <ProfileScreenNative
       handle={handle}
@@ -53,6 +60,7 @@ export default function ProfileRoute() {
       onNavigateToMessages={handleNavigateToMessages}
       onNavigateToPost={handleNavigateToPost}
       onNavigateToProfile={handleNavigateToProfile}
+      onNavigateToHashtag={handleNavigateToHashtag}
     />
   );
 }

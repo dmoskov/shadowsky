@@ -303,7 +303,7 @@ export function HomeScreen() {
 
   const handleHashtagPress = useCallback((event: { nativeEvent: { tag: string } }) => {
     const { tag } = event.nativeEvent;
-    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } } as any);
+    router.push({ pathname: '/(app)/(tabs)/(search)', params: { q: '#' + tag } } as any);
   }, [router]);
 
   const handleBookmark = useCallback((event: { nativeEvent: { uri: string } }) => {

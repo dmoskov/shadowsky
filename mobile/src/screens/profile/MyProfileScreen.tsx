@@ -147,7 +147,7 @@ export function MyProfileScreen({
   }, [onNavigateToProfile]);
 
   const handleHashtagPress = useCallback((tag: string) => {
-    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } } as any);
+    router.push({ pathname: '/(app)/(tabs)/(search)', params: { q: '#' + tag } } as any);
   }, [router]);
 
   const handleRefresh = async () => {

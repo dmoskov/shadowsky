@@ -39,6 +39,14 @@ export default function HomeLayout() {
           name="starter-pack/[uri]"
           options={{ title: "Starter Pack" }}
         />
+        <Stack.Screen
+          name="followers/[actor]"
+          options={{ title: "Followers" }}
+        />
+        <Stack.Screen
+          name="following/[actor]"
+          options={{ title: "Following" }}
+        />
       </Stack>
     </ScreenErrorBoundary>
   );

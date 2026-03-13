@@ -21,8 +21,7 @@ export default function UserProfileRoute() {
   };
 
   const handleNavigateToMessages = (_conversationId: string) => {
-    // Navigate to messages screen - the conversation will be available in the list
-    router.push('/(app)/messages');
+    router.push("/(app)/messages");
   };
 
   const handleNavigateToPost = useCallback(
@@ -46,6 +45,13 @@ export default function UserProfileRoute() {
     [router],
   );
 
+  const handleNavigateToHashtag = useCallback(
+    (tag: string) => {
+      router.push({ pathname: "/(app)/(tabs)/(search)", params: { q: "#" + tag } } as any);
+    },
+    [router],
+  );
+
   return (
     <ProfileScreenNative
       handle={handle}
@@ -54,6 +60,7 @@ export default function UserProfileRoute() {
       onNavigateToMessages={handleNavigateToMessages}
       onNavigateToPost={handleNavigateToPost}
       onNavigateToProfile={handleNavigateToProfile}
+      onNavigateToHashtag={handleNavigateToHashtag}
     />
   );
 }

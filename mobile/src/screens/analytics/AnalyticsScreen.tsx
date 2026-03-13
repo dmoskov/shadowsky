@@ -17,7 +17,6 @@ import { format } from "../../i18n/format-date";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useScrollChrome } from "../../contexts/ScrollChromeContext";
-import { useAppNavigation } from "../../hooks/useNavigation";
 import { useUserAnalytics } from "../../hooks/api/useAnalytics";
 import { usePostAnalysis } from "../../hooks/api/useAnalytics";
 import { TimeRange } from "../../services/atproto/analytics";
@@ -35,7 +34,6 @@ export function AnalyticsScreen() {
   const { account } = useAuth();
   const { colors } = useTheme();
   const { handleScroll: handleChromeScroll } = useScrollChrome();
-  const { navigateToProfile } = useAppNavigation();
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
   const [analysisRequested, setAnalysisRequested] = useState(false);
 
@@ -69,7 +67,7 @@ export function AnalyticsScreen() {
   } = usePostAnalysis(postsForAI, analysisRequested);
 
   const handleMentionPress = (handle: string, _did: string) => {
-    navigateToProfile(handle);
+    router.push(`/(app)/(tabs)/(home)/profile/${handle}`);
   };
 
   const handlePostPress = (uri: string, handle: string, did: string) => {
@@ -84,7 +82,7 @@ export function AnalyticsScreen() {
 
   const handleHashtagPress = (tag: string) => {
     router.push({
-      pathname: "/(tabs)/(search)",
+      pathname: "/(app)/(tabs)/(search)",
       params: { q: "#" + tag },
     } as any);
   };

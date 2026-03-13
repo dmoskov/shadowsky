@@ -45,6 +45,13 @@ export default function ProfileRoute() {
     [router],
   );
 
+  const handleNavigateToHashtag = useCallback(
+    (tag: string) => {
+      router.push({ pathname: "/(app)/(tabs)/(search)", params: { q: "#" + tag } } as any);
+    },
+    [router],
+  );
+
   return (
     <ProfileScreenNative
       handle={handle}
@@ -53,6 +60,7 @@ export default function ProfileRoute() {
       onNavigateToMessages={handleNavigateToMessages}
       onNavigateToPost={handleNavigateToPost}
       onNavigateToProfile={handleNavigateToProfile}
+      onNavigateToHashtag={handleNavigateToHashtag}
     />
   );
 }

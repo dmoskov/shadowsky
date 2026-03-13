@@ -126,6 +126,9 @@ interface ThreadScreenProps {
   postId: string;
   did?: string;
   focusedReplyUri?: string;
+  onNavigateToPost?: (uri: string) => void;
+  onNavigateToProfile?: (handle: string) => void;
+  onNavigateToHashtag?: (tag: string) => void;
 }
 
 /**
@@ -228,7 +231,7 @@ function getSummaryFormat(postCount: number, totalEngagement: number): ThreadSum
   return "brief";
 }
 
-export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: ThreadScreenProps) {
+export function ThreadScreenNative({ handle, postId, did, focusedReplyUri, onNavigateToPost, onNavigateToProfile, onNavigateToHashtag }: ThreadScreenProps) {
   const { colors } = useTheme();
   const { preferences } = usePreferences();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -431,11 +434,19 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
 
   const handlePostPress = (event: { nativeEvent: { uri: string; handle: string } }) => {
     const { uri } = event.nativeEvent;
-    navigateToThreadFromUri(uri, navigateToThread);
+    if (onNavigateToPost) {
+      onNavigateToPost(uri);
+    } else {
+      navigateToThreadFromUri(uri, navigateToThread);
+    }
   };
 
   const handleProfilePress = (event: { nativeEvent: { handle: string } }) => {
-    navigateToProfile(event.nativeEvent.handle);
+    if (onNavigateToProfile) {
+      onNavigateToProfile(event.nativeEvent.handle);
+    } else {
+      navigateToProfile(event.nativeEvent.handle);
+    }
   };
 
   const handleLike = (event: { nativeEvent: { uri: string; cid: string; likeUri?: string } }) => {
@@ -539,11 +550,19 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
   };
 
   const handleMentionPress = (event: { nativeEvent: { handle: string; did: string } }) => {
-    navigateToProfile(event.nativeEvent.handle);
+    if (onNavigateToProfile) {
+      onNavigateToProfile(event.nativeEvent.handle);
+    } else {
+      navigateToProfile(event.nativeEvent.handle);
+    }
   };
 
   const handleHashtagPress = (event: { nativeEvent: { tag: string } }) => {
-    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + event.nativeEvent.tag } } as any);
+    if (onNavigateToHashtag) {
+      onNavigateToHashtag(event.nativeEvent.tag);
+    } else {
+      router.push({ pathname: '/(app)/(tabs)/(search)', params: { q: '#' + event.nativeEvent.tag } } as any);
+    }
   };
 
   const handlePressLikeCount = (event: { nativeEvent: { uri: string } }) => {
@@ -689,8 +708,20 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri }: Thr
         onMentionPress={handleMentionPress}
         onHashtagPress={handleHashtagPress}
         onShare={handleShare}
-        onNavigateToParent={(event) => navigateToThreadFromUri(event.nativeEvent.uri, navigateToThread)}
-        onNavigateToRoot={(event) => navigateToThreadFromUri(event.nativeEvent.uri, navigateToThread)}
+        onNavigateToParent={(event) => {
+          if (onNavigateToPost) {
+            onNavigateToPost(event.nativeEvent.uri);
+          } else {
+            navigateToThreadFromUri(event.nativeEvent.uri, navigateToThread);
+          }
+        }}
+        onNavigateToRoot={(event) => {
+          if (onNavigateToPost) {
+            onNavigateToPost(event.nativeEvent.uri);
+          } else {
+            navigateToThreadFromUri(event.nativeEvent.uri, navigateToThread);
+          }
+        }}
         onPressLikeCount={handlePressLikeCount}
         onPressRepostCount={handlePressRepostCount}
         onPressQuoteCount={handlePressQuoteCount}

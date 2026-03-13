@@ -1,16 +1,59 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback } from "react";
 import { useRequiredParam } from "../../../../../src/hooks/useRequiredParam";
 import { ThreadScreenNative } from "../../../../../src/screens/shared/ThreadScreenNative";
 import { ErrorState } from "../../../../../src/components/ErrorState";
 
 export default function ThreadRoute() {
   const { value: postId, isValid } = useRequiredParam("postId");
-  const { handle, did, focusUri } = useLocalSearchParams<{ handle?: string; did?: string; focusUri?: string }>();
+  const { handle, did, focusUri } = useLocalSearchParams<{
+    handle?: string;
+    did?: string;
+    focusUri?: string;
+  }>();
+  const router = useRouter();
 
   if (!isValid || !postId) {
     return <ErrorState message="Missing post ID" />;
   }
 
-  return <ThreadScreenNative postId={postId} handle={handle || ""} did={did}
-      focusedReplyUri={focusUri} />;
+  const handleNavigateToPost = useCallback(
+    (uri: string) => {
+      const parts = uri.split("/");
+      const rkey = parts[parts.length - 1];
+      const postDid = parts[2] || "";
+      if (rkey) {
+        router.push(
+          `/(app)/(tabs)/(notifications)/thread/${rkey}?handle=${postDid}&did=${encodeURIComponent(postDid)}`,
+        );
+      }
+    },
+    [router],
+  );
+
+  const handleNavigateToProfile = useCallback(
+    (profileHandle: string) => {
+      router.push(`/(app)/(tabs)/(notifications)/profile/${profileHandle}`);
+    },
+    [router],
+  );
+
+  const handleNavigateToHashtag = useCallback(
+    (tag: string) => {
+      router.push({ pathname: "/(app)/(tabs)/(search)", params: { q: "#" + tag } } as any);
+    },
+    [router],
+  );
+
+  return (
+    <ThreadScreenNative
+      postId={postId}
+      handle={handle || ""}
+      did={did}
+      focusedReplyUri={focusUri}
+      onNavigateToPost={handleNavigateToPost}
+      onNavigateToProfile={handleNavigateToProfile}
+      onNavigateToHashtag={handleNavigateToHashtag}
+    />
+  );
 }

@@ -27,17 +27,17 @@ export default function PostQuotesRoute() {
   const decodedUri = decodeURIComponent(uri);
 
   const handleNavigateToProfile = (handle: string) => {
-    router.push(`/(app)/(tabs)/(home)/profile/${handle}`);
+    router.push(`/(app)/post/profile/${handle}`);
   };
 
   const handleNavigateToPost = (postUri: string, handle: string) => {
-    // Extract post ID from URI (last part after the last /)
-    const postId = postUri.split('/').pop();
+    const parts = postUri.split('/');
+    const postId = parts[parts.length - 1];
+    const did = parts[2] || "";
     if (postId) {
-      router.push({
-        pathname: '/(app)/(tabs)/(home)/thread/[postId]',
-        params: {postId, handle},
-      });
+      router.push(
+        `/(app)/post/thread/${postId}?handle=${handle}&did=${encodeURIComponent(did)}`,
+      );
     }
   };
 

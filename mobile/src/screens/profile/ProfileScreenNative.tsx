@@ -81,6 +81,7 @@ interface ProfileScreenProps {
   onNavigateToFollowers?: (actor: string) => void;
   onNavigateToFollowing?: (actor: string) => void;
   onNavigateToMessages?: (conversationId: string) => void;
+  onNavigateToHashtag?: (tag: string) => void;
 }
 
 export function ProfileScreenNative(props: ProfileScreenProps) {
@@ -98,6 +99,7 @@ function ProfileScreenNativeIOS({
   onNavigateToFollowers,
   onNavigateToFollowing,
   onNavigateToMessages,
+  onNavigateToHashtag,
 }: ProfileScreenProps) {
   const { colors } = useTheme();
   const { handleScroll: handleChromeScroll } = useScrollChrome();
@@ -591,8 +593,12 @@ function ProfileScreenNativeIOS({
 
   const handleHashtagPress = useCallback((event: { nativeEvent: { tag: string } }) => {
     const { tag } = event.nativeEvent;
-    router.push({ pathname: '/(tabs)/(search)', params: { q: '#' + tag } } as any);
-  }, [router]);
+    if (onNavigateToHashtag) {
+      onNavigateToHashtag(tag);
+    } else {
+      router.push({ pathname: '/(app)/(tabs)/(search)', params: { q: '#' + tag } } as any);
+    }
+  }, [onNavigateToHashtag, router]);
 
   const handleShare = useCallback((event: { nativeEvent: { uri: string } }) => {
     const { uri } = event.nativeEvent;
@@ -618,11 +624,15 @@ function ProfileScreenNativeIOS({
   }, [colors]);
 
   const handleQuotePress = useCallback((event: { nativeEvent: { uri: string; handle: string } }) => {
-    const { uri, handle: quoteHandle } = event.nativeEvent;
-    const postId = getPostIdFromUri(uri);
-    const did = getDidFromUri(uri);
-    navigateToThread(quoteHandle, postId, did || undefined);
-  }, [navigateToThread]);
+    const { uri } = event.nativeEvent;
+    if (onNavigateToPost) {
+      onNavigateToPost(uri);
+    } else {
+      const postId = getPostIdFromUri(uri);
+      const did = getDidFromUri(uri);
+      navigateToThread(event.nativeEvent.handle, postId, did || undefined);
+    }
+  }, [onNavigateToPost, navigateToThread]);
 
   const handleQuotePost = useCallback((event: { nativeEvent: { uri: string; cid: string; authorHandle: string; authorDisplayName?: string; authorAvatar?: string; text: string } }) => {
     const { uri, cid, authorHandle, authorDisplayName, authorAvatar, text } = event.nativeEvent;

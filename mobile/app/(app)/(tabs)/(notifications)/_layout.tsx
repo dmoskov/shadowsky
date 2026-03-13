@@ -37,6 +37,14 @@ export default function NotificationsLayout() {
         }}
       />
       <Stack.Screen name="profile/[handle]" options={{ title: "Profile" }} />
+      <Stack.Screen
+        name="followers/[actor]"
+        options={{ title: "Followers" }}
+      />
+      <Stack.Screen
+        name="following/[actor]"
+        options={{ title: "Following" }}
+      />
     </Stack>
     </ScreenErrorBoundary>
   );

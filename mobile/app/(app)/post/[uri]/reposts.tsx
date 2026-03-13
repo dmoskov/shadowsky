@@ -14,7 +14,7 @@ export default function PostRepostsRoute() {
   const decodedUri = decodeURIComponent(uri);
 
   const handleNavigateToProfile = (handle: string) => {
-    router.push(`/(app)/(tabs)/(home)/profile/${handle}`);
+    router.push(`/(app)/post/profile/${handle}`);
   };
 
   return (
