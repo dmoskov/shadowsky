@@ -72,6 +72,7 @@
   border-radius: 0.75rem;
   border: 1px solid var(--asph-border-primary);
   overflow: hidden;
+  background-color: var(--asph-bg-secondary);
   transition:
     border-color var(--transition-fast) var(--ease-default),
     box-shadow var(--transition-fast) var(--ease-out),

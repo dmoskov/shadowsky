@@ -773,7 +773,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-4xl">
+    <div className="mx-auto w-full max-w-4xl" style={{ backgroundColor: "var(--asph-bg-primary)" }}>
       {/* Profile Header */}
       <div className="relative overflow-hidden rounded-xl">
         {/* Banner */}
