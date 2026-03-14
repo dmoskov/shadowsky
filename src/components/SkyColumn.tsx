@@ -9,10 +9,9 @@ import React, {
 } from "react";
 import { useErrorTracking } from "../hooks/useErrorTracking";
 import { useScrollContainerGPU } from "../hooks/useGPUAcceleration";
+import { useNetworkWeather } from "../hooks/useNetworkWeather";
 import { useRAFScroll } from "../hooks/useRAFScroll";
 import { columnService } from "../services/column-service";
-import { WeatherBar } from "./WeatherBar";
-import { useNetworkWeather } from "../hooks/useNetworkWeather";
 import type { ScrollState } from "../services/scroll-batching-service";
 import { useStorageErrorManager } from "../services/storage/storage-error-manager";
 import type { Column } from "../types/column";
@@ -25,6 +24,7 @@ import { NotificationsFeed } from "./NotificationsFeed";
 import { SearchColumn } from "./SearchColumn";
 import { TrendingColumn } from "./TrendingColumn";
 import { VisualTimeline } from "./VisualTimeline";
+import { WeatherBar } from "./WeatherBar";
 
 interface SkyColumnProps {
   column: Column;
@@ -401,7 +401,9 @@ const SkyColumn = memo(
               }}
               className="gpu-scroll-container asph-scrollbar h-full overflow-y-auto overflow-x-hidden"
             >
-              {column.type === "feed" && <WeatherBar weather={networkWeather} />}
+              {column.type === "feed" && (
+                <WeatherBar weather={networkWeather} />
+              )}
               {content}
             </div>
             {/* Fade overlays positioned outside the scroll container */}
