@@ -11,7 +11,6 @@ import { useMemo, useState } from "react";
 import type {
   NetworkWeatherState,
   WeatherHue,
-  Narrative,
 } from "../services/network-weather";
 import { WEATHER_COLORS } from "../services/network-weather";
 import { generateWeatherReport } from "../services/weather-report";
@@ -21,7 +20,14 @@ interface Props {
 }
 
 const HUE_POOL: WeatherHue[] = [
-  "indigo", "rust", "ochre", "sage", "slate", "sienna", "charcoal", "ivory",
+  "indigo",
+  "rust",
+  "ochre",
+  "sage",
+  "slate",
+  "sienna",
+  "charcoal",
+  "ivory",
 ];
 
 function assignHue(name: string, index: number): WeatherHue {

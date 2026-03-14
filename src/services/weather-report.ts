@@ -7,14 +7,14 @@ import type { NetworkWeatherState, WeatherHue } from "./network-weather";
 import { WEATHER_CACHE_TTL } from "./network-weather";
 
 const HUE_DESCRIPTORS: Record<WeatherHue, string[]> = {
-  indigo:   ["technical", "analytical", "scientific"],
-  rust:     ["creative", "cultural", "artistic"],
-  ochre:    ["communal", "celebratory", "warm"],
-  sage:     ["learning", "curious", "exploratory"],
-  slate:    ["structural", "political", "institutional"],
-  sienna:   ["personal", "intimate", "reflective"],
+  indigo: ["technical", "analytical", "scientific"],
+  rust: ["creative", "cultural", "artistic"],
+  ochre: ["communal", "celebratory", "warm"],
+  sage: ["learning", "curious", "exploratory"],
+  slate: ["structural", "political", "institutional"],
+  sienna: ["personal", "intimate", "reflective"],
   charcoal: ["contested", "tense", "debated"],
-  ivory:    ["meta", "platform-aware", "self-referential"],
+  ivory: ["meta", "platform-aware", "self-referential"],
 };
 
 /** Deterministic pick — uses a seed to always return the same word for the same state */
@@ -28,23 +28,31 @@ function describeHue(hue: WeatherHue): string {
 }
 
 function describeEnergy(energy: number): string {
-  if (energy < 0.3) return seededPick(["quiet", "gentle", "calm"], _seed);
-  if (energy < 0.65) return seededPick(["steady", "active", "alive"], _seed);
-  return seededPick(["buzzing", "energetic", "intense"], _seed);
+  if (energy < 0.3) return seededPick(["quiet", "gentle", "calm"], _seed++);
+  if (energy < 0.65) return seededPick(["steady", "active", "alive"], _seed++);
+  return seededPick(["buzzing", "energetic", "intense"], _seed++);
 }
 
 export function generateWeatherReport(weather: NetworkWeatherState): string {
   _seed = Math.floor(weather.timestamp / WEATHER_CACHE_TTL); // Same seed for same 5-min window
-  const emergent = weather.emergence?.emergentThreads?.filter(t => t.isEmergent) ?? [];
+  const emergent =
+    weather.emergence?.emergentThreads?.filter((t) => t.isEmergent) ?? [];
   if (emergent.length > 0) {
     const top = emergent[0];
-    const age = top.ageMinutes < 60 ? `${top.ageMinutes}m` : `${Math.round(top.ageMinutes / 60)}h`;
+    const age =
+      top.ageMinutes < 60
+        ? `${top.ageMinutes}m`
+        : `${Math.round(top.ageMinutes / 60)}h`;
     return `Something is forming around ${top.token} — growing fast with diverse voices · ${age}`;
   }
 
   if (weather.narratives && weather.narratives.narratives.length >= 3) {
-    const warp = weather.narratives.narratives.filter(n => n.threadType === "warp");
-    const weft = weather.narratives.narratives.filter(n => n.threadType === "weft");
+    const warp = weather.narratives.narratives.filter(
+      (n) => n.threadType === "warp",
+    );
+    const weft = weather.narratives.narratives.filter(
+      (n) => n.threadType === "weft",
+    );
     const topWarp = warp[0]?.name ?? "conversation";
     const topWeft = weft[0]?.name ?? "threads";
     const energy = describeEnergy(weather.energy);
