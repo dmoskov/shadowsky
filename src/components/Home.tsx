@@ -156,7 +156,6 @@ interface SavedFeed {
   type: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FeedPageItem = any;
 
 interface FeedPage {
@@ -295,7 +294,6 @@ export const Home: React.FC<HomeProps> = React.memo(
           columnService.updateColumnFeedPreference(columnId, initialFeedUri);
         }
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally not including selectedFeed to avoid infinite loop
     }, [initialFeedUri, columnId]);
 
     // Stability-focused caching: warm up cache for instant first load
@@ -919,7 +917,6 @@ export const Home: React.FC<HomeProps> = React.memo(
 
     // Memoize post rendering to prevent unnecessary re-renders
     const PostItem = React.memo(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ({ item, index }: { item: any; index: number }) => {
         const post = item.post;
         const isFocused = focusedPostIndex === index;

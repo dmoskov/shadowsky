@@ -305,7 +305,6 @@ export function useDebounceOnInteraction<
   // Update ref when fn changes
   useEffect(() => {
     fnRef.current = fn;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   useEffect(() => {
@@ -321,7 +320,6 @@ export function useDebounceOnInteraction<
       );
       debouncedFn();
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [options?.delayMs],
   );
 }
