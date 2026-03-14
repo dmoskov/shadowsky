@@ -9,7 +9,6 @@ import React, {
 } from "react";
 import { useErrorTracking } from "../hooks/useErrorTracking";
 import { useScrollContainerGPU } from "../hooks/useGPUAcceleration";
-import { useNetworkWeather } from "../hooks/useNetworkWeather";
 import { useRAFScroll } from "../hooks/useRAFScroll";
 import { columnService } from "../services/column-service";
 import type { ScrollState } from "../services/scroll-batching-service";
@@ -24,7 +23,6 @@ import { NotificationsFeed } from "./NotificationsFeed";
 import { SearchColumn } from "./SearchColumn";
 import { TrendingColumn } from "./TrendingColumn";
 import { VisualTimeline } from "./VisualTimeline";
-import { WeatherBar } from "./WeatherBar";
 
 interface SkyColumnProps {
   column: Column;
@@ -50,7 +48,6 @@ const SkyColumn = memo(
     const { logError } = useErrorTracking();
     const [hasScrollTop, setHasScrollTop] = useState(false);
     const [hasScrollBottom, setHasScrollBottom] = useState(false);
-    const { data: networkWeather } = useNetworkWeather(column.type === "feed");
     const [currentFeedLabel, setCurrentFeedLabel] = useState<string>("");
     const [feedOptions, setFeedOptions] = useState<any[]>([]);
     const [refreshCounter, setRefreshCounter] = useState(0);

@@ -44,6 +44,7 @@ import { ColumnMigrationNotice } from "./components/ColumnMigrationNotice";
 import { CommandPalette } from "./components/CommandPalette";
 import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
 import { NetworkWeatherBackground } from "./components/NetworkWeatherBackground";
+import { WeatherBar } from "./components/WeatherBar";
 import { OnboardingFlow } from "./components/onboarding";
 import { StatusBar } from "./components/StatusBar";
 import { SwipeIndicator } from "./components/SwipeIndicator";
@@ -278,6 +279,7 @@ function AppContent() {
           />
         </InlineErrorBoundary>
         <NetworkWeatherBackground weather={networkWeather} />
+        <WeatherBar weather={networkWeather} />
         <main
           id="main-content"
           role="main"
