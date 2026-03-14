@@ -27,6 +27,8 @@ import type { LightboxImage } from "../../contexts/LightboxContext";
 import { useAnimatedStyle, interpolate } from "react-native-reanimated";
 import { useScrollChrome, useHeaderAnimatedStyle } from "../../contexts/ScrollChromeContext";
 import { createLogger } from "../../utils/logger";
+import { NetworkWeatherCanvas } from "../../components/NetworkWeatherCanvas";
+import { useNetworkWeather } from "../../hooks/useNetworkWeather";
 import {fontSize} from '../../utils/typography';
 import {AppBskyFeedPost} from '@atproto/api';
 
@@ -55,6 +57,7 @@ function getDidFromUri(uri: string): string {
 
 export function HomeScreen() {
   const { colors } = useTheme();
+  const { data: networkWeather } = useNetworkWeather();
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -340,6 +343,7 @@ export function HomeScreen() {
 
   return (
     <View testID="home-screen" style={styles.container}>
+      <NetworkWeatherCanvas weather={networkWeather} />
       <Animated.View
         style={[
           styles.collapsibleWrapper,
