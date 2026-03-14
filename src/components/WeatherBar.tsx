@@ -51,7 +51,8 @@ export function WeatherBar({ weather }: Props) {
     [weather],
   );
 
-  if (!weather || !report) return null;
+  // Hide entirely when running on fallback data (Pan API not connected)
+  if (!weather || !report || weather.source === "fallback") return null;
 
   const narratives = weather.narratives?.narratives ?? [];
 
