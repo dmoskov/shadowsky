@@ -46,6 +46,7 @@ import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
 import { lazyWithRetry } from "../utils/lazyWithRetry";
 import { createLogger } from "../utils/logger";
 import { ImageGrid } from "./ImageGrid";
+import { NetworkWeatherLayer } from "./NetworkWeatherLayer";
 import { PostActionBar } from "./PostActionBar";
 import { Spinner } from "./ui/LoadingState";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
@@ -2316,51 +2317,53 @@ export const Home: React.FC<HomeProps> = React.memo(
         tabIndex={-1}
         style={{ outline: "none" }}
       >
-        <div
-          className="mx-auto max-w-2xl px-3 sm:px-4"
-          ref={postsContainerRef}
-          style={{
-            // Performance optimizations for mobile
-            contain: "layout style paint",
-          }}
-        >
+        <NetworkWeatherLayer>
           <div
-            className="divide-y divide-gray-100 dark:divide-gray-950"
-            role="feed"
-            aria-label="Posts"
+            className="mx-auto max-w-2xl px-3 sm:px-4"
+            ref={postsContainerRef}
+            style={{
+              // Performance optimizations for mobile
+              contain: "layout style paint",
+            }}
           >
-            {visibleItems.map((item, index) => (
-              <div
-                key={`${item.post.uri}-page${item._pageIndex}-item${item._itemIndex}`}
-                className="content-enter"
-                style={
-                  {
-                    animationDelay: `${Math.min(index * 30, 300)}ms`,
-                  } as React.CSSProperties
-                }
-              >
-                <PostItem item={item} index={index} />
+            <div
+              className="divide-y divide-gray-100 dark:divide-gray-950"
+              role="feed"
+              aria-label="Posts"
+            >
+              {visibleItems.map((item, index) => (
+                <div
+                  key={`${item.post.uri}-page${item._pageIndex}-item${item._itemIndex}`}
+                  className="content-enter"
+                  style={
+                    {
+                      animationDelay: `${Math.min(index * 30, 300)}ms`,
+                    } as React.CSSProperties
+                  }
+                >
+                  <PostItem item={item} index={index} />
+                </div>
+              ))}
+            </div>
+
+            {isFetchingNextPage && (
+              <div>
+                <PostSkeleton compact aria-label="Loading more posts" />
+                <PostSkeleton compact aria-label="Loading more posts" />
               </div>
-            ))}
+            )}
+
+            {/* Progressive loader sentinel */}
+            {hasMore && (
+              <div ref={progressiveLoadRef}>
+                <PostSkeleton compact aria-label="Loading more posts" />
+              </div>
+            )}
+
+            {/* Infinite scroll sentinel */}
+            <div ref={loadMoreRef} className="h-20" />
           </div>
-
-          {isFetchingNextPage && (
-            <div>
-              <PostSkeleton compact aria-label="Loading more posts" />
-              <PostSkeleton compact aria-label="Loading more posts" />
-            </div>
-          )}
-
-          {/* Progressive loader sentinel */}
-          {hasMore && (
-            <div ref={progressiveLoadRef}>
-              <PostSkeleton compact aria-label="Loading more posts" />
-            </div>
-          )}
-
-          {/* Infinite scroll sentinel */}
-          <div ref={loadMoreRef} className="h-20" />
-        </div>
+        </NetworkWeatherLayer>
 
         <Suspense fallback={null}>
           <FeedDiscovery

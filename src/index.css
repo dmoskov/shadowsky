@@ -7,6 +7,8 @@
 @import "./styles/placeholder-system.css";
 /* View Transitions API route animations */
 @import "./styles/view-transitions.css";
+/* Network Weather plaid morph animations */
+@import "./styles/network-weather.css";
 
 @tailwind base;
 @tailwind components;
