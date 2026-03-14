@@ -1,6 +1,8 @@
 import SwiftUI
 import SDWebImage
-import ExpoSwiftUIFeed
+
+/// Maximum content width for readable text on iPad (matches ExpoSwiftUIFeed.LayoutConstants)
+private let maxContentWidth: CGFloat = 700
 
 /// A UIViewRepresentable that wraps SDAnimatedImageView to render animated GIFs in SwiftUI.
 ///
@@ -68,7 +70,7 @@ struct NativeFeedAnimatedGifEmbed: View {
         guard let ratio = aspectRatio, ratio > 0 else {
             return 300
         }
-        let availableWidth = min(UIScreen.main.bounds.width - 32, LayoutConstants.maxContentWidth)
+        let availableWidth = min(UIScreen.main.bounds.width - 32, maxContentWidth)
         return min(max(availableWidth / ratio, 150), 600)
     }
 
