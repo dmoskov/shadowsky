@@ -49,6 +49,8 @@ import { SwipeIndicator } from "./components/SwipeIndicator";
 import { FloatingActionButton } from "./components/ui/FloatingActionButton";
 import { getKeyboardShortcuts } from "./config/keyboardShortcuts";
 import { AppRoutes } from "./config/routes";
+import { NetworkWeatherBackground } from "./components/NetworkWeatherBackground";
+import { useNetworkWeather } from "./hooks/useNetworkWeather";
 import { onboardingService } from "./services/onboarding-service";
 
 // Keep lazy loading only for rarely-used dev/debug tools
@@ -162,6 +164,8 @@ function AppContent() {
   }, [isAuthenticated, agent, session?.did]);
 
   // Check if we're on the home route
+  const { data: networkWeather } = useNetworkWeather();
+
   const isHomeRoute =
     location.pathname === "/" || location.pathname === "/home";
 
@@ -273,6 +277,7 @@ function AppContent() {
             isCollapsed={isSidebarCollapsed}
           />
         </InlineErrorBoundary>
+        <NetworkWeatherBackground weather={networkWeather} />
         <main
           id="main-content"
           role="main"

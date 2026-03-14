@@ -72,6 +72,7 @@ export function useTrendingData(options: UseTrendingTopicsOptions = {}) {
 
     // Detailed trends
     trends: trendsQuery.data?.trends ?? [],
+    source: trendsQuery.data?.source ?? null,
     isLoadingTrends: trendsQuery.isLoading,
     trendsError: trendsQuery.error,
 
