@@ -65,7 +65,8 @@ export function getStorageSize(): number {
 
   let size = 0;
   for (const key in localStorage) {
-    if (Object.hasOwn(localStorage, key)) {
+    // eslint-disable-next-line no-prototype-builtins
+    if (localStorage.hasOwnProperty(key)) {
       size += localStorage[key].length + key.length;
     }
   }

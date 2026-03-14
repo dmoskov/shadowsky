@@ -138,6 +138,7 @@ describe("PostStorageDB", () => {
 
       const retrieved = await db.getPost("at://did:plc:test/post/cached");
       expect(retrieved).not.toBeNull();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((retrieved as any)._cachedAt).toBeUndefined();
     });
 
@@ -246,6 +247,7 @@ describe("PostStorageDB", () => {
       const retrieved = await db.getPosts(uris);
 
       for (const post of retrieved) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         expect((post as any)._cachedAt).toBeUndefined();
       }
     });

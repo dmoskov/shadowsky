@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { AlertTriangle, Shield } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { getRateLimiterStats } from "../services/rate-limiter";

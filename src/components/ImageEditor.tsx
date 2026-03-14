@@ -674,6 +674,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
     }
     // Only trigger on selectedAspectRatio change - cropArea and isCropping
     // are read but shouldn't trigger re-runs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAspectRatio]);
 
   return (

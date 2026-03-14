@@ -462,6 +462,7 @@ describe('Error Recovery - API Error Handling', () => {
         onmessage: ((event: { data: string }) => void) | null = null;
         constructor(url: string) {
           this.url = url;
+          // eslint-disable-next-line @typescript-eslint/no-this-alias
           mockWs = this;
           // Simulate open on next microtask
           Promise.resolve().then(() => {

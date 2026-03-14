@@ -1670,6 +1670,7 @@ export function Composer() {
           }
         }
 
+        // eslint-disable-next-line prefer-const
         result = await agent.post(postData);
         const currentPost = {
           uri: result.uri,

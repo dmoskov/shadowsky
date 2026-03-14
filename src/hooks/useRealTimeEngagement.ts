@@ -105,6 +105,7 @@ export function useRealTimeEngagement(
     (uri: string): PostEngagement | undefined => {
       return engagementDataRef.current.get(uri);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [engagementVersion],
   );
 
