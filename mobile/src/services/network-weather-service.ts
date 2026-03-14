@@ -10,6 +10,13 @@
 
 import { fetchWithTimeout } from "../utils/with-timeout";
 import { createLogger } from "../utils/logger";
+import {
+  detectEmergence,
+  type EmergenceState,
+  type EmergentThread,
+} from "./emergence-detection-service";
+
+export type { EmergenceState, EmergentThread };
 
 const logger = createLogger("NetworkWeather");
 
@@ -37,6 +44,8 @@ export interface NetworkWeatherState {
   source: "pan" | "fallback";
   /** When this was computed */
   timestamp: number;
+  /** Emergent threads — forming conversations detected by temporal comparison */
+  emergence: EmergenceState | null;
 }
 
 export type WeatherHue =
@@ -72,6 +81,7 @@ const DEFAULT_STATE: NetworkWeatherState = {
   secondaryHue: "sage",
   source: "fallback",
   timestamp: Date.now(),
+  emergence: null,
 };
 
 // ─── Pan Fetch ────────────────────────────────────────────
@@ -206,6 +216,9 @@ export async function fetchNetworkWeather(): Promise<NetworkWeatherState> {
       secondaryHue = dominantHue === "sage" ? "indigo" : "sage";
     }
 
+    // Emergence detection: compare current topics to previous snapshot
+    const emergence = trending.length > 0 ? detectEmergence(trending) : null;
+
     return {
       warmth,
       energy,
@@ -214,6 +227,7 @@ export async function fetchNetworkWeather(): Promise<NetworkWeatherState> {
       secondaryHue,
       source: "pan",
       timestamp: Date.now(),
+      emergence,
     };
   } catch (error) {
     logger.warn("Failed to fetch network weather:", error);

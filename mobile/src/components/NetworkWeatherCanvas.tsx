@@ -10,11 +10,12 @@
  *
  * v0.1: Ambient gradient from sentiment
  * v0.2: Two-tone plaid from top narratives
+ * v0.6: Emergence pulse — slow brightness wave along forming threads
  *
  * See: docs/vision/network-weather.md
  */
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { StyleSheet, useWindowDimensions } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 import {
@@ -103,12 +104,59 @@ function computeThreadLayout(
   };
 }
 
+// ─── Emergence Pulse ────────────────────────────────────
+
+/** Duration of one full pulse cycle in ms (slow, like a fiber catching light) */
+const PULSE_CYCLE_MS = 4000;
+
+/**
+ * Compute pulse brightness at a given phase (0-1).
+ * Shape: a single soft bell curve — rises smoothly, peaks, fades back.
+ * Not a sine wave — more like a single "catch" of light.
+ */
+function pulseWave(phase: number): number {
+  // Gaussian-like: peak at 0.5, tails at 0 and 1
+  const x = (phase - 0.5) * 2; // -1 to 1
+  return Math.exp(-3 * x * x);
+}
+
 export function NetworkWeatherCanvas({
   weather,
   revealProgress = 0,
 }: NetworkWeatherCanvasProps) {
   const { width, height } = useWindowDimensions();
   const { isDark } = useTheme();
+
+  // Emergence pulse animation phase (0-1, cycles slowly)
+  const hasEmergence =
+    weather?.emergence?.emergentThreads?.some((t) => t.isEmergent) ?? false;
+  const [pulsePhase, setPulsePhase] = useState(0);
+  const animFrameRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!hasEmergence) {
+      setPulsePhase(0);
+      return;
+    }
+
+    startTimeRef.current = Date.now();
+
+    const tick = () => {
+      const elapsed = Date.now() - startTimeRef.current;
+      const phase = (elapsed % PULSE_CYCLE_MS) / PULSE_CYCLE_MS;
+      setPulsePhase(phase);
+      animFrameRef.current = requestAnimationFrame(tick);
+    };
+
+    animFrameRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (animFrameRef.current != null) {
+        cancelAnimationFrame(animFrameRef.current);
+      }
+    };
+  }, [hasEmergence]);
 
   if (!Canvas || !Rect || !vec) {
     return null;
@@ -131,12 +179,12 @@ export function NetworkWeatherCanvas({
       const warmthShifted = lerpColor(
         primary,
         getHueColor("ochre", isDark),
-        weather.warmth * 0.3
+        weather.warmth * 0.3,
       );
       const desaturated = lerpColor(
         warmthShifted,
         isDark ? "rgb(30, 30, 30)" : "rgb(210, 210, 210)",
-        (1 - weather.conviction) * 0.4
+        (1 - weather.conviction) * 0.4,
       );
 
       return {
@@ -153,12 +201,29 @@ export function NetworkWeatherCanvas({
       };
     }
 
-    // v0.2 mode: two-tone plaid weave
-    const warp = computeThreadLayout(weather.dominantHue, weather.energy, isDark);
-    const weft = computeThreadLayout(weather.secondaryHue, weather.energy, isDark);
+    // v0.2+ mode: two-tone plaid weave
+    const warp = computeThreadLayout(
+      weather.dominantHue,
+      weather.energy,
+      isDark,
+    );
+    const weft = computeThreadLayout(
+      weather.secondaryHue,
+      weather.energy,
+      isDark,
+    );
 
     // Background tint
     const bgColor = isDark ? "rgb(12, 12, 16)" : "rgb(242, 240, 237)";
+
+    // Emergence pulse: compute brightness boost for weft bands
+    const emergentThreads = weather.emergence?.emergentThreads ?? [];
+    const maxPulseIntensity = emergentThreads.reduce(
+      (max, t) => (t.isEmergent ? Math.max(max, t.pulseIntensity) : max),
+      0,
+    );
+    const pulseBoost =
+      maxPulseIntensity > 0 ? pulseWave(pulsePhase) * maxPulseIntensity : 0;
 
     // Build the plaid elements
     const warpBands = warp.bands.map((band, i) => {
@@ -177,6 +242,10 @@ export function NetworkWeatherCanvas({
       );
     });
 
+    // Weft bands get the emergence pulse — a subtle brightness boost
+    const weftBaseOpacity = 0.4 + revealProgress * 0.3;
+    const weftPulseOpacity = weftBaseOpacity + pulseBoost * 0.2;
+
     const weftBands = weft.bands.map((band, i) => {
       const y = band.center * height - (band.width * height) / 2;
       const h = band.width * height;
@@ -188,7 +257,7 @@ export function NetworkWeatherCanvas({
           width={width}
           height={h}
           color={weft.color}
-          opacity={0.4 + revealProgress * 0.3}
+          opacity={weftPulseOpacity}
         />
       );
     });
@@ -196,6 +265,9 @@ export function NetworkWeatherCanvas({
     // Crossings: where warp meets weft, draw a multiply-blended rect
     const crossings: React.ReactNode[] = [];
     const crossColor = multiplyColors(warp.color, weft.color);
+    const crossBaseOpacity = 0.6 + revealProgress * 0.3;
+    const crossPulseOpacity = crossBaseOpacity + pulseBoost * 0.15;
+
     for (const wb of warp.bands) {
       for (const hb of weft.bands) {
         const x = wb.center * width - (wb.width * width) / 2;
@@ -210,8 +282,34 @@ export function NetworkWeatherCanvas({
             width={w}
             height={h}
             color={crossColor}
-            opacity={0.6 + revealProgress * 0.3}
-          />
+            opacity={crossPulseOpacity}
+          />,
+        );
+      }
+    }
+
+    // v0.6: Emergence pulse overlay — a faint bright band that travels
+    // along the weft thread, like light catching a fiber
+    const emergencePulseElements: React.ReactNode[] = [];
+    if (maxPulseIntensity > 0 && pulseBoost > 0.05) {
+      const pulseColor = isDark ? "rgb(255, 255, 240)" : "rgb(255, 252, 235)";
+      // The pulse travels horizontally across the weft band
+      const pulseX = pulsePhase * width;
+      const pulseWidth = width * 0.15; // 15% of screen wide "shimmer"
+
+      for (const band of weft.bands) {
+        const y = band.center * height - (band.width * height) / 2;
+        const h = band.width * height;
+        emergencePulseElements.push(
+          <Rect
+            key={`pulse-${band.center}`}
+            x={pulseX - pulseWidth / 2}
+            y={y}
+            width={pulseWidth}
+            height={h}
+            color={pulseColor}
+            opacity={pulseBoost * maxPulseIntensity * 0.12}
+          />,
         );
       }
     }
@@ -227,14 +325,19 @@ export function NetworkWeatherCanvas({
           {weftBands}
           {/* Crossings — where communities meet */}
           {crossings}
+          {/* Emergence pulse — light catching the forming fiber */}
+          {emergencePulseElements}
         </>
       ),
       opacity: Math.min(0.35, finalOpacity),
     };
-  }, [weather, isDark, revealProgress, width, height]);
+  }, [weather, isDark, revealProgress, width, height, pulsePhase]);
 
   return (
-    <Canvas style={[styles.canvas, { width, height, opacity }]} pointerEvents="none">
+    <Canvas
+      style={[styles.canvas, { width, height, opacity }]}
+      pointerEvents="none"
+    >
       {elements}
       <Blur blur={30} />
     </Canvas>

@@ -23,3 +23,4 @@ export function useNetworkWeather(enabled: boolean = true) {
 }
 
 export type { NetworkWeatherState };
+export type { EmergenceState, EmergentThread } from "../services/network-weather-service";
