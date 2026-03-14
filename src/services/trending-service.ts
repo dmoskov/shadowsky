@@ -77,10 +77,18 @@ interface PanTrendingResponse {
 
 // ─── Pan Fetch ────────────────────────────────────────────
 
+/** Cache Pan failures to avoid hammering both Pan and Bluesky fallback */
+let panFailedUntil = 0;
+
 async function fetchFromPan(
   path: string,
   params: Record<string, string | number> = {},
 ): Promise<any> {
+  // Skip Pan entirely if it failed recently
+  if (Date.now() < panFailedUntil) {
+    throw new Error("Pan API recently failed — skipping");
+  }
+
   const query = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) {
     query.set(k, String(v));
@@ -102,6 +110,8 @@ async function fetchFromPan(
       continue;
     }
   }
+  // Cache failure for 5 minutes
+  panFailedUntil = Date.now() + 5 * 60 * 1000;
   throw new Error("All Pan API endpoints unreachable");
 }
 
@@ -159,36 +169,6 @@ export async function getTrends(limit: number = 20): Promise<TrendsResponse> {
     }
   } catch {
     // Fall through
-  }
-
-  // Final fallback: simple topics
-  try {
-    const params = new URLSearchParams();
-    params.set("limit", Math.min(Math.max(1, limit), 25).toString());
-
-    const response = await fetch(
-      `${BLUESKY_API_BASE}/app.bsky.unspecced.getTrendingTopics?${params.toString()}`,
-      { headers: { Accept: "application/json" } },
-    );
-
-    if (response.ok) {
-      const data = await response.json();
-      return {
-        trends: [
-          ...(data.topics || []).map((t: any) => ({
-            topic: t.topic,
-            displayName: t.topic,
-          })),
-          ...(data.suggested || []).map((t: any) => ({
-            topic: t.topic,
-            displayName: t.topic,
-          })),
-        ],
-        source: "bluesky",
-      };
-    }
-  } catch {
-    // Nothing worked
   }
 
   return { trends: [], source: "bluesky" };

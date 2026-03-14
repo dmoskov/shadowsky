@@ -4,6 +4,7 @@
  */
 
 import type { NetworkWeatherState, WeatherHue } from "./network-weather";
+import { WEATHER_CACHE_TTL } from "./network-weather";
 
 const HUE_DESCRIPTORS: Record<WeatherHue, string[]> = {
   indigo:   ["technical", "analytical", "scientific"],
@@ -16,12 +17,14 @@ const HUE_DESCRIPTORS: Record<WeatherHue, string[]> = {
   ivory:    ["meta", "platform-aware", "self-referential"],
 };
 
-function pick<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+/** Deterministic pick — uses a seed to always return the same word for the same state */
+let _seed = 0;
+function seededPick<T>(arr: T[], seed: number): T {
+  return arr[Math.abs(seed) % arr.length];
 }
 
 function describeHue(hue: WeatherHue): string {
-  return pick(HUE_DESCRIPTORS[hue]);
+  return seededPick(HUE_DESCRIPTORS[hue], _seed++);
 }
 
 function describeEnergy(energy: number): string {
@@ -31,6 +34,7 @@ function describeEnergy(energy: number): string {
 }
 
 export function generateWeatherReport(weather: NetworkWeatherState): string {
+  _seed = Math.floor(weather.timestamp / WEATHER_CACHE_TTL); // Same seed for same 5-min window
   const emergent = weather.emergence?.emergentThreads?.filter(t => t.isEmergent) ?? [];
   if (emergent.length > 0) {
     const top = emergent[0];

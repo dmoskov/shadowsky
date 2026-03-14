@@ -109,7 +109,11 @@ interface PanTrendingTopic {
 
 // ─── Fetch Helpers ────────────────────────────────────────
 
+let panFailedUntil = 0;
+
 async function fetchPan(path: string): Promise<any> {
+  if (Date.now() < panFailedUntil) return null;
+
   for (const baseUrl of PAN_API_URLS) {
     try {
       const controller = new AbortController();
@@ -125,6 +129,7 @@ async function fetchPan(path: string): Promise<any> {
       continue;
     }
   }
+  panFailedUntil = Date.now() + 5 * 60 * 1000;
   return null;
 }
 

@@ -30,21 +30,24 @@ const ENERGY_WORDS = {
   high: ["buzzing", "energetic", "intense", "surging"],
 };
 
-function pick<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+/** Deterministic pick — uses a seed so the same weather state always produces the same text */
+let _seed = 0;
+function seededPick<T>(arr: T[], seed: number): T {
+  return arr[Math.abs(seed) % arr.length];
 }
 
 function describeHue(hue: WeatherHue): string {
-  return pick(HUE_DESCRIPTORS[hue]);
+  return seededPick(HUE_DESCRIPTORS[hue], _seed++);
 }
 
 function describeEnergy(energy: number): string {
-  if (energy < 0.3) return pick(ENERGY_WORDS.low);
-  if (energy < 0.65) return pick(ENERGY_WORDS.medium);
-  return pick(ENERGY_WORDS.high);
+  if (energy < 0.3) return seededPick(ENERGY_WORDS.low, _seed);
+  if (energy < 0.65) return seededPick(ENERGY_WORDS.medium, _seed);
+  return seededPick(ENERGY_WORDS.high, _seed);
 }
 
 export function generateWeatherReport(weather: NetworkWeatherState): string {
+  _seed = Math.floor(weather.timestamp / 300000); // Same seed for same 5-min window
   // Emergence takes priority
   const emergent = weather.emergence?.emergentThreads?.filter(t => t.isEmergent) ?? [];
   if (emergent.length > 0) {
