@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface UseIntersectionLoaderOptions {
   threshold?: number;
@@ -52,21 +52,39 @@ export function useIntersectionLoader<T>(
     };
   }, [visibleCount, items.length, increment, threshold, rootMargin]);
 
-  // Reset visible count when items change significantly (e.g., feed switch)
+  // Reset visible count only when feed fundamentally changes (e.g., feed switch)
+  // Use a stable identity key to avoid resetting on background refetches
+  // which create new object references for the same data.
+  const getItemKey = useCallback(
+    (item: T): string => {
+      if (item && typeof item === "object" && "post" in item) {
+        return (item as { post: { uri: string } }).post.uri;
+      }
+      return String(item);
+    },
+    [],
+  );
+
+  const firstItemKeyRef = useRef<string>("");
   const itemsLengthRef = useRef(items.length);
-  const firstItemRef = useRef(items[0]);
   useEffect(() => {
-    // Only reset if the items list has fundamentally changed (not just a new reference)
-    const firstItemChanged = items[0] !== firstItemRef.current;
+    const currentKey = items.length > 0 ? getItemKey(items[0]) : "";
     const lengthChangedSignificantly =
       Math.abs(items.length - itemsLengthRef.current) >
-      itemsLengthRef.current * 0.5;
-    if (firstItemChanged || lengthChangedSignificantly) {
+      Math.max(itemsLengthRef.current * 0.5, 10);
+
+    // Only reset if the first item's identity changed (feed switch)
+    // NOT on background refetches that return the same posts
+    if (firstItemKeyRef.current && currentKey && currentKey !== firstItemKeyRef.current) {
+      setVisibleCount(initialLoad);
+    } else if (lengthChangedSignificantly && items.length < itemsLengthRef.current) {
+      // Only reset on significant shrink (page cleanup), not growth
       setVisibleCount(initialLoad);
     }
+
+    firstItemKeyRef.current = currentKey;
     itemsLengthRef.current = items.length;
-    firstItemRef.current = items[0];
-  }, [items.length, items[0], initialLoad]);
+  }, [items, initialLoad, getItemKey]);
 
   return {
     visibleItems: items.slice(0, visibleCount),
