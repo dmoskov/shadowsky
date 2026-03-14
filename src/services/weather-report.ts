@@ -28,9 +28,9 @@ function describeHue(hue: WeatherHue): string {
 }
 
 function describeEnergy(energy: number): string {
-  if (energy < 0.3) return pick(["quiet", "gentle", "calm"]);
-  if (energy < 0.65) return pick(["steady", "active", "alive"]);
-  return pick(["buzzing", "energetic", "intense"]);
+  if (energy < 0.3) return seededPick(["quiet", "gentle", "calm"], _seed);
+  if (energy < 0.65) return seededPick(["steady", "active", "alive"], _seed);
+  return seededPick(["buzzing", "energetic", "intense"], _seed);
 }
 
 export function generateWeatherReport(weather: NetworkWeatherState): string {
