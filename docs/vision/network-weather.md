@@ -2,7 +2,7 @@
 
 ## The Idea
 
-When you look out a window, you don't read a dashboard about the weather. You *see* it. The light has a quality. The sky has a texture. You know something about the day before you think about it.
+When you look out a window, you don't read a dashboard about the weather. You _see_ it. The light has a quality. The sky has a texture. You know something about the day before you think about it.
 
 Network Weather gives you that same ambient understanding of a social network. The background of ShadowSky is a living woven textile — a plaid whose threads are the currents of collective attention, whose crossings are the places where communities meet, and whose overall texture tells you something true about what it feels like out there right now.
 
@@ -17,6 +17,7 @@ You never need to look at it directly. But over days of using the app, you devel
 Each thread in the weave is a **narrative current** — not a hashtag, but a cluster of meaning. Pan's firehose detects these as groups of related conversations that share authors, language patterns, and reference chains. At any moment there might be 5-12 active currents.
 
 A thread has:
+
 - **Color** — derived from the character of the conversation (see palette below)
 - **Width** — proportional to the volume of participation (unique authors, not post count — we don't want spam to widen a thread)
 - **Opacity** — how concentrated vs. diffuse the conversation is (author_diversity_ratio). A thread that's mostly one community talking to itself is more opaque; a thread that's spread across many disconnected groups is more translucent.
@@ -47,16 +48,16 @@ The colors should feel like natural dyes on woven cloth — earthy, warm, with d
 
 ### Base Hues (mapped to conversation character)
 
-| Hue | Character | Signal |
-|-----|-----------|--------|
-| **Ochre / amber** | Communal, celebratory, connective | High positive sentiment + high author diversity |
-| **Warm rust** | Creative, expressive, cultural | Art/music/media content clusters |
-| **Deep indigo** | Analytical, technical, building | Code/science/technology clusters |
-| **Sage green** | Growth, learning, discovery | Educational content, questions, shared resources |
-| **Slate blue-grey** | Structural, political, institutional | Policy/governance discussions |
-| **Sienna** | Personal, vulnerable, intimate | Personal stories, support threads |
-| **Charcoal** | Conflict, tension, contested | High sentiment variance, disagreement within cluster |
-| **Ivory / cream** | Meta, reflective, about-the-network | Discussions about the platform itself |
+| Hue                 | Character                            | Signal                                               |
+| ------------------- | ------------------------------------ | ---------------------------------------------------- |
+| **Ochre / amber**   | Communal, celebratory, connective    | High positive sentiment + high author diversity      |
+| **Warm rust**       | Creative, expressive, cultural       | Art/music/media content clusters                     |
+| **Deep indigo**     | Analytical, technical, building      | Code/science/technology clusters                     |
+| **Sage green**      | Growth, learning, discovery          | Educational content, questions, shared resources     |
+| **Slate blue-grey** | Structural, political, institutional | Policy/governance discussions                        |
+| **Sienna**          | Personal, vulnerable, intimate       | Personal stories, support threads                    |
+| **Charcoal**        | Conflict, tension, contested         | High sentiment variance, disagreement within cluster |
+| **Ivory / cream**   | Meta, reflective, about-the-network  | Discussions about the platform itself                |
 
 The mapping isn't rigid — it's derived from content signals (language patterns, sentiment distribution, topic classification) and blends continuously. A conversation about the politics of technology would be a crossing of slate and indigo, producing a deep teal.
 
@@ -74,7 +75,7 @@ Saturation maps to **conviction** — how strongly held are the opinions in the 
 
 ### Resting State (Layer 0)
 
-The plaid is almost invisible — a subtle texture behind the feed, like the weave of fine linen. You might not notice it consciously. It influences the *feeling* of using the app without demanding attention. The feed content sits on top of it. The texture shifts slowly — over minutes, not seconds.
+The plaid is almost invisible — a subtle texture behind the feed, like the weave of fine linen. You might not notice it consciously. It influences the _feeling_ of using the app without demanding attention. The feed content sits on top of it. The texture shifts slowly — over minutes, not seconds.
 
 ### Glance (Layer 1)
 
@@ -88,19 +89,20 @@ Pull down further (past the refresh threshold, into a dedicated gesture zone) an
 - The width and color of each thread clearly visible
 - The crossings highlighted — tap one to see the bridging conversations
 - A subtle animation showing how the plaid has changed over the last few hours — threads widening, narrowing, new ones appearing, old ones fading
-- At the top, a single line of text — the "weather report" — a poetic one-sentence summary generated from the data: *"A wide conversation about platform governance is meeting a burst of creative energy around the solstice."*
+- At the top, a single line of text — the "weather report" — a poetic one-sentence summary generated from the data: _"A wide conversation about platform governance is meeting a burst of creative energy around the solstice."_
 
 ### Deep Dive (Layer 3)
 
 Tap any thread to enter it. The plaid zooms into that thread's perspective:
 
 - The seed posts that started the narrative
-- The key voices (not "influencers" — the people whose posts got the most *replies*, not likes — the ones generating conversation)
+- The key voices (not "influencers" — the people whose posts got the most _replies_, not likes — the ones generating conversation)
 - The sentiment arc — how the conversation's emotional texture has evolved over hours
 - The related threads — which other conversations are crossing this one
 - A reading list — the most substantive posts in this narrative, sorted by depth of engagement (reply depth, not like count)
 
 Tap a crossing point to see the bridge:
+
 - Posts that explicitly connect the two narratives
 - Authors who are active in both conversations
 - How the crossing evolved — did one narrative absorb the other, or did they create something new?
@@ -121,7 +123,7 @@ The plaid has two modes, toggled by a very simple gesture (maybe a two-finger ta
 
 **Personal view** — the plaid filters to only show conversations involving people you follow. The same threads may appear but with different widths (your community might be disproportionately focused on one narrative), different crossings (your network might bridge things that the global network doesn't), and some threads might be missing entirely (things happening that your network isn't part of).
 
-The transition between global and personal should be a smooth morph — threads widening, narrowing, appearing, disappearing. The *difference* between the two views is itself informative: "oh, my network is completely ignoring the biggest global conversation" or "the thing my feed is full of is actually very niche."
+The transition between global and personal should be a smooth morph — threads widening, narrowing, appearing, disappearing. The _difference_ between the two views is itself informative: "oh, my network is completely ignoring the biggest global conversation" or "the thing my feed is full of is actually very niche."
 
 A possible third mode: **the gap** — a differential view that highlights only the threads present in global but absent in personal, and vice versa. This is the "what am I missing?" and "what do I know that others don't?" view.
 
@@ -132,6 +134,7 @@ A possible third mode: **the gap** — a differential view that highlights only 
 ### What We Need from Pan
 
 **Currently available:**
+
 - `/api/trending/topics` — volume, author counts, velocity ratios → thread width + emergence detection
 - `/api/trending/timeline` — temporal evolution → thread animation
 - `/api/narratives` — narrative clustering → thread identity and crossing detection
@@ -140,6 +143,7 @@ A possible third mode: **the gap** — a differential view that highlights only 
 - `/api/communities` — community dynamics → crossing brightness
 
 **New signals needed:**
+
 - **Cross-narrative author overlap** — which authors appear in multiple narrative clusters? This drives crossing brightness. Could be a new endpoint: `/api/narratives/crossings`
 - **Narrative character classification** — mapping clusters to the palette. Could use language pattern analysis (technical vocabulary → indigo, emotional vocabulary → sienna, etc.). Pan's NLP pipeline could add this.
 - **Personal filtering** — given a set of followed DIDs, filter all signals to that social graph. Privacy-sensitive. Options:
@@ -176,12 +180,14 @@ Pan firehose → narrative clusters + metrics
 ### Technical Approach
 
 **@shopify/react-native-skia** is the rendering engine. It gives us:
+
 - GPU-accelerated 2D drawing on both iOS and Android
 - Shader support for the color blending at crossings
 - Smooth animation primitives
 - Canvas compositing behind React Native views
 
 The plaid itself is drawn as:
+
 1. A set of vertical rectangles (warp threads) with varying width, color, opacity
 2. A set of horizontal rectangles (weft threads) with varying width, color, opacity
 3. At each crossing, a blend mode that mixes the two thread colors (multiply blend is closest to how actual dye crossings work in textiles)
@@ -196,30 +202,36 @@ Animation: When the data updates (every 5 min), the threads animate to their new
 
 This system is explicitly not engagement-optimized. It doesn't tell you what to click. It doesn't create FOMO. It doesn't have numbers that go up.
 
-It's an **understanding tool**. Its purpose is to make you wiser about the information environment you're swimming in. The most successful outcome is a user who *doesn't* open a thread because the plaid told them everything they needed to know — "there's a big contentious thing happening, it's not relevant to me, I can move on with my day."
+It's an **understanding tool**. Its purpose is to make you wiser about the information environment you're swimming in. The most successful outcome is a user who _doesn't_ open a thread because the plaid told them everything they needed to know — "there's a big contentious thing happening, it's not relevant to me, I can move on with my day."
 
 The aesthetic should feel like a **craft object** — something made with care, that rewards sustained attention but doesn't punish inattention. A hand-woven blanket doesn't notify you. It's just there, being beautiful, and if you look closely you see the pattern that tells you something about where it came from.
 
-The network weather plaid tells you something about where *you* are — in the stream of human conversation, right now.
+The network weather plaid tells you something about where _you_ are — in the stream of human conversation, right now.
 
 ---
 
 ## Milestones
 
 ### v0.1 — Ambient Gradient
+
 Single ambient color behind the feed, derived from dominant sentiment. Just warmth/coolness. Proves the data pipeline and rendering.
 
 ### v0.2 — Two-Tone Weave
+
 Two dominant narratives rendered as crossing bands. Simple plaid. Pull-down reveals labels.
 
 ### v0.3 — Full Textile
+
 All active narratives rendered. Color palette active. Crossings blend. Animation on data updates.
 
 ### v0.4 — Interaction
+
 Pull-to-reveal gesture. Tap threads for narrative detail. Tap crossings for bridge posts.
 
 ### v0.5 — Personal View
+
 Global vs. personal toggle. Gap view. Social graph filtering via Pan.
 
 ### v0.6 — Emergence Pulse
+
 New thread detection with subtle animation. The plaid becomes predictive — showing you what's forming, not just what's formed.
