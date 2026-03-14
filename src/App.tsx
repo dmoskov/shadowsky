@@ -43,13 +43,13 @@ import { BackgroundNotificationLoader } from "./components/BackgroundNotificatio
 import { ColumnMigrationNotice } from "./components/ColumnMigrationNotice";
 import { CommandPalette } from "./components/CommandPalette";
 import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
+import { NetworkWeatherBackground } from "./components/NetworkWeatherBackground";
 import { OnboardingFlow } from "./components/onboarding";
 import { StatusBar } from "./components/StatusBar";
 import { SwipeIndicator } from "./components/SwipeIndicator";
 import { FloatingActionButton } from "./components/ui/FloatingActionButton";
 import { getKeyboardShortcuts } from "./config/keyboardShortcuts";
 import { AppRoutes } from "./config/routes";
-import { NetworkWeatherBackground } from "./components/NetworkWeatherBackground";
 import { useNetworkWeather } from "./hooks/useNetworkWeather";
 import { onboardingService } from "./services/onboarding-service";
 

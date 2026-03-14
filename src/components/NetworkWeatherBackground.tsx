@@ -8,12 +8,12 @@
  * See: docs/vision/network-weather.md
  */
 
-import { useMemo, useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   WEATHER_COLORS,
+  type Narrative,
   type NetworkWeatherState,
   type WeatherHue,
-  type Narrative,
 } from "../services/network-weather";
 
 interface Props {
@@ -35,7 +35,14 @@ function hexToRgba(hex: string, alpha: number): string {
 // ─── Hue Assignment ───────────────────────────────────────
 
 const HUE_POOL: WeatherHue[] = [
-  "indigo", "rust", "ochre", "sage", "slate", "sienna", "charcoal", "ivory",
+  "indigo",
+  "rust",
+  "ochre",
+  "sage",
+  "slate",
+  "sienna",
+  "charcoal",
+  "ivory",
 ];
 
 function assignHue(name: string, index: number): WeatherHue {
@@ -49,7 +56,12 @@ function assignHue(name: string, index: number): WeatherHue {
 // ─── Gradient Builders ────────────────────────────────────
 
 function buildThreadGradient(
-  threads: Array<{ position: number; width: number; color: string; opacity: number }>,
+  threads: Array<{
+    position: number;
+    width: number;
+    color: string;
+    opacity: number;
+  }>,
   direction: "to right" | "to bottom",
 ): string {
   if (threads.length === 0) return "transparent";
@@ -78,11 +90,16 @@ function layoutNarrativeThreads(
   isDark: boolean,
   energy: number,
 ): Array<{ position: number; width: number; color: string; opacity: number }> {
-  const filtered = narratives.filter(n => n.threadType === axis);
+  const filtered = narratives.filter((n) => n.threadType === axis);
   if (filtered.length === 0) return [];
 
   const totalWeight = filtered.reduce((s, n) => s + n.authorWeight, 0);
-  const bands: Array<{ position: number; width: number; color: string; opacity: number }> = [];
+  const bands: Array<{
+    position: number;
+    width: number;
+    color: string;
+    opacity: number;
+  }> = [];
   let cursor = 0.05;
   const available = 0.9;
 
@@ -90,7 +107,8 @@ function layoutNarrativeThreads(
     const n = filtered[i];
     const fraction = n.authorWeight / totalWeight;
     const width = Math.max(0.03, Math.min(0.18, fraction * available * 0.6));
-    const gap = (available - width * filtered.length) / Math.max(1, filtered.length);
+    const gap =
+      (available - width * filtered.length) / Math.max(1, filtered.length);
     const position = cursor + width / 2;
     const hue = assignHue(n.name, i);
 
@@ -118,7 +136,10 @@ export function NetworkWeatherBackground({ weather }: Props) {
     weather?.emergence?.emergentThreads?.some((t) => t.isEmergent) ?? false;
 
   useEffect(() => {
-    if (!hasEmergence) { setPulsePhase(0); return; }
+    if (!hasEmergence) {
+      setPulsePhase(0);
+      return;
+    }
     const start = Date.now();
     const CYCLE_MS = 8000;
     const tick = () => {
@@ -133,14 +154,26 @@ export function NetworkWeatherBackground({ weather }: Props) {
     if (!weather) return { background: "transparent", opacity: 0 };
 
     const baseOpacity = 0.06 + weather.energy * 0.06;
-    const emergencePulse = hasEmergence ? Math.sin(pulsePhase * Math.PI * 2) * 0.02 : 0;
+    const emergencePulse = hasEmergence
+      ? Math.sin(pulsePhase * Math.PI * 2) * 0.02
+      : 0;
     const opacity = Math.min(0.18, baseOpacity + emergencePulse);
     const narrativeData = weather.narratives;
 
     // ── Full Textile (v0.3) ──────────────────────
     if (narrativeData && narrativeData.narratives.length >= 3) {
-      const warpThreads = layoutNarrativeThreads(narrativeData.narratives, "warp", isDark, weather.energy);
-      const weftThreads = layoutNarrativeThreads(narrativeData.narratives, "weft", isDark, weather.energy);
+      const warpThreads = layoutNarrativeThreads(
+        narrativeData.narratives,
+        "warp",
+        isDark,
+        weather.energy,
+      );
+      const weftThreads = layoutNarrativeThreads(
+        narrativeData.narratives,
+        "weft",
+        isDark,
+        weather.energy,
+      );
 
       const warpGradient = buildThreadGradient(warpThreads, "to right");
       const weftGradient = buildThreadGradient(weftThreads, "to bottom");
