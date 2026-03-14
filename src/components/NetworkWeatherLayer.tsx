@@ -14,7 +14,7 @@
  */
 
 import React from "react";
-import { useNetworkWeather } from "../hooks/useNetworkWeather";
+import { useNetworkWeatherPlaid } from "../hooks/useNetworkWeatherPlaid";
 import { NetworkWeatherPlaid } from "./NetworkWeatherPlaid";
 
 interface NetworkWeatherLayerProps {
@@ -27,7 +27,7 @@ export const NetworkWeatherLayer: React.FC<NetworkWeatherLayerProps> = ({
   children,
   visibility = 0.15,
 }) => {
-  const weather = useNetworkWeather();
+  const weather = useNetworkWeatherPlaid();
 
   return (
     <div className="relative">
