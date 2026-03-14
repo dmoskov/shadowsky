@@ -188,10 +188,23 @@ export async function fetchNetworkWeather(): Promise<NetworkWeatherState> {
       variance
     );
 
-    // Secondary hue from second trending topic's character
-    const secondaryHue = trending.length >= 2
-      ? classifyHue(undefined, rawSentiment * 0.5, variance * 0.8)
-      : dominantHue === "sage" ? "indigo" : "sage";
+    // Secondary hue: derive from second trending topic
+    // Use the velocity pattern to pick a contrasting hue
+    let secondaryHue: WeatherHue;
+    if (trending.length >= 2) {
+      const secondTopic = trending[1];
+      const ratio = secondTopic.metrics.count_ratio;
+      // High velocity emergent topics get warmer hues
+      if (ratio > 3) secondaryHue = "rust";
+      else if (ratio > 1.5) secondaryHue = "ochre";
+      else secondaryHue = "sage";
+      // Avoid matching the dominant hue
+      if (secondaryHue === dominantHue) {
+        secondaryHue = dominantHue === "sage" ? "indigo" : "sage";
+      }
+    } else {
+      secondaryHue = dominantHue === "sage" ? "indigo" : "sage";
+    }
 
     return {
       warmth,
