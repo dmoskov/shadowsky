@@ -11,6 +11,8 @@ import { useErrorTracking } from "../hooks/useErrorTracking";
 import { useScrollContainerGPU } from "../hooks/useGPUAcceleration";
 import { useRAFScroll } from "../hooks/useRAFScroll";
 import { columnService } from "../services/column-service";
+import { WeatherBar } from "./WeatherBar";
+import { useNetworkWeather } from "../hooks/useNetworkWeather";
 import type { ScrollState } from "../services/scroll-batching-service";
 import { useStorageErrorManager } from "../services/storage/storage-error-manager";
 import type { Column } from "../types/column";
@@ -48,6 +50,7 @@ const SkyColumn = memo(
     const { logError } = useErrorTracking();
     const [hasScrollTop, setHasScrollTop] = useState(false);
     const [hasScrollBottom, setHasScrollBottom] = useState(false);
+    const { data: networkWeather } = useNetworkWeather(column.type === "feed");
     const [currentFeedLabel, setCurrentFeedLabel] = useState<string>("");
     const [feedOptions, setFeedOptions] = useState<any[]>([]);
     const [refreshCounter, setRefreshCounter] = useState(0);
@@ -398,6 +401,7 @@ const SkyColumn = memo(
               }}
               className="gpu-scroll-container asph-scrollbar h-full overflow-y-auto overflow-x-hidden"
             >
+              {column.type === "feed" && <WeatherBar weather={networkWeather} />}
               {content}
             </div>
             {/* Fade overlays positioned outside the scroll container */}

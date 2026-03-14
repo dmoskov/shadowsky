@@ -28,6 +28,8 @@ import { useAnimatedStyle, interpolate } from "react-native-reanimated";
 import { useScrollChrome, useHeaderAnimatedStyle } from "../../contexts/ScrollChromeContext";
 import { createLogger } from "../../utils/logger";
 import { NetworkWeatherCanvas } from "../../components/NetworkWeatherCanvas";
+import { WeatherRevealOverlay } from "../../components/WeatherRevealOverlay";
+import { useWeatherReveal } from "../../hooks/useWeatherReveal";
 import { useNetworkWeather } from "../../hooks/useNetworkWeather";
 import {fontSize} from '../../utils/typography';
 import {AppBskyFeedPost} from '@atproto/api';
@@ -58,6 +60,10 @@ function getDidFromUri(uri: string): string {
 export function HomeScreen() {
   const { colors } = useTheme();
   const { data: networkWeather } = useNetworkWeather();
+  const {
+    revealProgress,
+    dismiss: dismissWeather,
+  } = useWeatherReveal(!!networkWeather);
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -343,7 +349,14 @@ export function HomeScreen() {
 
   return (
     <View testID="home-screen" style={styles.container}>
-      <NetworkWeatherCanvas weather={networkWeather} />
+      <NetworkWeatherCanvas weather={networkWeather} revealProgress={revealProgress.value} />
+      {networkWeather && (
+        <WeatherRevealOverlay
+          weather={networkWeather}
+          revealProgress={revealProgress.value}
+          onDismiss={dismissWeather}
+        />
+      )}
       <Animated.View
         style={[
           styles.collapsibleWrapper,
