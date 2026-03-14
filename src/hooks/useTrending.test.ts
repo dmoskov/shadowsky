@@ -61,6 +61,7 @@ const mockTrendsResponse: TrendsResponse = {
       postCount: 2500,
     },
   ],
+  source: "bluesky",
 };
 
 const createWrapper = () => {

@@ -9,10 +9,7 @@
  *   - api.shadowsky.io/api/trending/topics (alias)
  */
 
-const PAN_API_URLS = [
-  "https://api.asphodel.is",
-  "https://api.shadowsky.io",
-];
+const PAN_API_URLS = ["https://api.asphodel.is", "https://api.shadowsky.io"];
 const BLUESKY_API_BASE = "https://public.api.bsky.app/xrpc";
 
 export interface TrendingTopic {
@@ -113,9 +110,7 @@ async function fetchFromPan(
 /**
  * Fetch trends from Pan, fall back to Bluesky.
  */
-export async function getTrends(
-  limit: number = 20,
-): Promise<TrendsResponse> {
+export async function getTrends(limit: number = 20): Promise<TrendsResponse> {
   // Try Pan first
   try {
     const panData: PanTrendingResponse = await fetchFromPan(
