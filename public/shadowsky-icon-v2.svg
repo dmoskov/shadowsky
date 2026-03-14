@@ -1,37 +1,50 @@
 <!-- ShadowSky Icon — Butterfly Alighting on Asphodel -->
-<!-- Petal curves: refined Beziers with geometric control points -->
+<!-- Refined: evened spacing, brighter forewings, wider hindwing crescents -->
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <rect width="512" height="512" rx="96" fill="#161a2e"/>
 
   <g transform="translate(256,262) rotate(35)">
 
-    <!-- Flower petals (white pair, drawn first = behind) -->
-    <g transform="rotate(180)">
+    <!-- Flower petals (cream pair, drawn first = behind) -->
+    <g transform="rotate(175)">
       <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#e8e0d0"/>
     </g>
-    <g transform="rotate(240)">
+    <g transform="rotate(245)">
       <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#e8e0d0"/>
     </g>
 
-    <!-- Flower petals (pink pair, overlapping white) -->
-    <g transform="rotate(278)">
+    <!-- Flower petals (pink pair, overlapping cream) -->
+    <g transform="rotate(275)">
       <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#d8a0b8"/>
     </g>
-    <g transform="rotate(142)">
+    <g transform="rotate(145)">
       <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#d8a0b8"/>
     </g>
 
-    <!-- Butterfly wings (blue pair) -->
-    <g transform="rotate(0)">
-      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#5a9ec0"/>
+    <!-- Butterfly hindwings (pale pair, scaled down, behind forewings) -->
+    <g transform="rotate(336) scale(0.91)">
+      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#e4eaf2"/>
     </g>
-    <g transform="rotate(60)">
-      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#8ec4e0"/>
+    <g transform="rotate(84) scale(0.91)">
+      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#e4eaf2"/>
     </g>
 
-    <!-- Stem (between cream petals, extending away from butterfly) -->
+    <!-- Butterfly forewings (blue pair, full size) -->
+    <g transform="rotate(355)">
+      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#5fb5d8"/>
+    </g>
+    <g transform="rotate(65)">
+      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#5fb5d8"/>
+    </g>
+
+    <!-- Butterfly body (along 30° axis) -->
+    <g transform="rotate(30)">
+      <path d="M0,-10 Q1.2,-32 0,-54" stroke="#c8d8e8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    </g>
+
+    <!-- Stem (extending away from butterfly) -->
     <g transform="rotate(210)">
-      <path d="M0,-25 Q10,-120 -5,-200" stroke="#c0a898" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path d="M0,-25 Q8,-115 -4,-195" stroke="#c0a898" stroke-width="3" fill="none" stroke-linecap="round"/>
     </g>
 
   </g>
