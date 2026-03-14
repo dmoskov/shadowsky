@@ -398,9 +398,6 @@ const SkyColumn = memo(
               }}
               className="gpu-scroll-container asph-scrollbar h-full overflow-y-auto overflow-x-hidden"
             >
-              {column.type === "feed" && (
-                <WeatherBar weather={networkWeather} />
-              )}
               {content}
             </div>
             {/* Fade overlays positioned outside the scroll container */}
