@@ -16,6 +16,8 @@
     "dev": "vp dev",
     "dev:all": "./dev-all.sh",
     "dev:api": "node server/api-server.js",
+    "check": "vp check",
+    "check:fix": "vp check --fix",
     "fix": "wireit",
     "fix:format": "wireit",
     "fix:lint": "wireit",
@@ -67,7 +69,6 @@
   "devDependencies": {
     "@aws-amplify/backend-cli": "^1.8.2",
     "@axe-core/playwright": "^4.11.1",
-    "@eslint/js": "^9.39.4",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.58.2",
     "@testing-library/jest-dom": "^6.9.1",
@@ -80,31 +81,18 @@
     "autoprefixer": "^10.4.27",
     "axe-core": "^4.11.0",
     "esbuild": "^0.27.3",
-    "eslint": "^9.39.4",
-    "eslint-plugin-react-hooks": "^5.2.0",
     "fake-indexeddb": "^6.2.5",
-    "globals": "^16.3.0",
     "jsdom": "^26.1.0",
     "postcss": "^8.5.8",
-    "prettier": "^3.8.1",
-    "prettier-plugin-organize-imports": "^4.2.0",
-    "prettier-plugin-tailwindcss": "^0.7.2",
     "rollup-plugin-visualizer": "^6.0.11",
     "tailwindcss": "^3.4.19",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.0",
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
     "vite-plus": "^0.1.11",
     "vitest": "^3.2.4",
     "wireit": "^0.14.12",
     "zod": "^3.25.76"
-  },
-  "prettier": {
-    "plugins": [
-      "prettier-plugin-organize-imports",
-      "prettier-plugin-tailwindcss"
-    ]
   },
   "wireit": {
     "build": {
@@ -139,10 +127,10 @@
       ]
     },
     "fix:format": {
-      "command": "prettier --cache --write '*.{html,js,md,ts,yml}' '.github/workflows/*.yml' 'docs/**/*.md' 'server/**/*.js' 'src/**/*.{ts,tsx,css}' 'tests/**/*.{js,md,ts}'"
+      "command": "vp check --fix --no-lint"
     },
     "fix:lint": {
-      "command": "eslint --color --cache --fix src '*.{js,ts}'"
+      "command": "vp check --fix --no-fmt"
     },
     "test": {
       "dependencies": [
@@ -162,7 +150,7 @@
       ]
     },
     "test:format": {
-      "command": "prettier --cache --check '*.{html,js,md,ts,yml}' '.github/workflows/*.yml' 'docs/**/*.md' 'server/**/*.js' 'src/**/*.{ts,tsx,css}' 'tests/**/*.{js,md,ts}'",
+      "command": "vp check --no-lint",
       "files": [
         "*.{html,js,md,ts,yml}",
         ".github/workflows/*.yml",
@@ -173,11 +161,11 @@
       ]
     },
     "test:lint": {
-      "command": "eslint --color --cache src '*.{js,ts}'",
+      "command": "vp check --no-fmt",
       "files": [
         "*.{js,ts}",
         "src/**/*.{ts,tsx}",
-        "eslint.config.js"
+        "vite.config.ts"
       ],
       "output": []
     },
