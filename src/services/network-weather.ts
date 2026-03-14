@@ -35,6 +35,7 @@ export interface NetworkWeatherState {
   source: "pan" | "fallback";
   timestamp: number;
   emergence: EmergenceState | null;
+  narratives: NarrativeState | null;
 }
 
 export interface EmergentThread {
@@ -48,6 +49,28 @@ export interface EmergentThread {
 export interface EmergenceState {
   emergentThreads: EmergentThread[];
   timestamp: number;
+}
+
+export interface Narrative {
+  id: string;
+  name: string;
+  authorCount: number;
+  authorWeight: number;
+  threadType: "warp" | "weft";
+}
+
+export interface NarrativeCrossing {
+  narrativeA: string;
+  narrativeB: string;
+  sharedAuthors: number;
+  overlapRatio: number;
+}
+
+export interface NarrativeState {
+  narratives: Narrative[];
+  crossings: NarrativeCrossing[];
+  timestamp: number;
+  source: "pan" | "empty";
 }
 
 // ─── Color Palette (natural dye colors) ───────────────────
@@ -129,6 +152,47 @@ function classifyHue(
   return "sage";
 }
 
+// ─── Narrative Fetch ──────────────────────────────────
+
+async function fetchNarrativeCrossings(): Promise<NarrativeState> {
+  const resp = await fetchPan("/api/narratives/crossings?min_overlap=0.05&min_shared=1&limit=50");
+  if (!resp?.crossings?.length) {
+    return { narratives: [], crossings: [], timestamp: Date.now(), source: "empty" };
+  }
+
+  const narrativeMap = new Map<string, { id: string; name: string; sharedTotal: number }>();
+  for (const c of resp.crossings) {
+    for (const n of [c.narrative_a, c.narrative_b]) {
+      const ex = narrativeMap.get(n.id);
+      if (ex) ex.sharedTotal += c.shared_authors;
+      else narrativeMap.set(n.id, { id: n.id, name: n.name, sharedTotal: c.shared_authors });
+    }
+  }
+
+  const maxShared = Math.max(...Array.from(narrativeMap.values()).map(n => n.sharedTotal), 1);
+  const narratives: Narrative[] = Array.from(narrativeMap.values())
+    .map(n => ({
+      id: n.id, name: n.name,
+      authorCount: n.sharedTotal,
+      authorWeight: n.sharedTotal / maxShared,
+      threadType: "warp" as const,
+    }))
+    .sort((a, b) => b.authorWeight - a.authorWeight);
+
+  const midpoint = Math.ceil(narratives.length / 2);
+  narratives.forEach((n, i) => { n.threadType = i < midpoint ? "warp" : "weft"; });
+
+  return {
+    narratives,
+    crossings: resp.crossings.map((c: any) => ({
+      narrativeA: c.narrative_a.id, narrativeB: c.narrative_b.id,
+      sharedAuthors: c.shared_authors, overlapRatio: c.overlap_ratio,
+    })),
+    timestamp: Date.now(),
+    source: "pan",
+  };
+}
+
 // ─── Emergence Detection (in-memory) ─────────────────────
 
 const previousSnapshots = new Map<string, { timestamp: number; countRatio: number }>();
@@ -179,13 +243,15 @@ const DEFAULT_STATE: NetworkWeatherState = {
   source: "fallback",
   timestamp: Date.now(),
   emergence: null,
+  narratives: null,
 };
 
 export async function fetchNetworkWeather(): Promise<NetworkWeatherState> {
   try {
-    const [sentimentResp, trendingResp] = await Promise.all([
+    const [sentimentResp, trendingResp, narrativeState] = await Promise.all([
       fetchPan("/api/sentiment/latest"),
       fetchPan("/api/trending/topics?limit=10&hours=6"),
+      fetchNarrativeCrossings(),
     ]);
 
     const sentiment: PanSentiment | null = sentimentResp?.data || sentimentResp;
@@ -230,6 +296,7 @@ export async function fetchNetworkWeather(): Promise<NetworkWeatherState> {
       source: "pan",
       timestamp: Date.now(),
       emergence,
+      narratives: narrativeState.source === "pan" ? narrativeState : null,
     };
   } catch {
     return { ...DEFAULT_STATE, timestamp: Date.now() };

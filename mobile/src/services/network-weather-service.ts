@@ -10,6 +10,7 @@
 
 import { fetchWithTimeout } from "../utils/with-timeout";
 import { createLogger } from "../utils/logger";
+import { fetchNarratives, type NarrativeState } from "./narrative-service";
 import {
   detectEmergence,
   type EmergenceState,
@@ -17,6 +18,7 @@ import {
 } from "./emergence-detection-service";
 
 export type { EmergenceState, EmergentThread };
+export type { NarrativeState, Narrative, NarrativeCrossing } from './narrative-service';
 
 const logger = createLogger("NetworkWeather");
 
@@ -46,6 +48,8 @@ export interface NetworkWeatherState {
   timestamp: number;
   /** Emergent threads — forming conversations detected by temporal comparison */
   emergence: EmergenceState | null;
+  /** Narrative clusters and their crossings from Pan (v0.3+) */
+  narratives: NarrativeState | null;
 }
 
 export type WeatherHue =
@@ -82,6 +86,7 @@ const DEFAULT_STATE: NetworkWeatherState = {
   source: "fallback",
   timestamp: Date.now(),
   emergence: null,
+  narratives: null,
 };
 
 // ─── Pan Fetch ────────────────────────────────────────────
@@ -167,9 +172,10 @@ function classifyHue(category?: string, sentiment?: number, variance?: number): 
 
 export async function fetchNetworkWeather(): Promise<NetworkWeatherState> {
   try {
-    const [sentiment, trending] = await Promise.all([
+    const [sentiment, trending, narrativeState] = await Promise.all([
       fetchPanSentiment(),
       fetchPanTrending(),
+      fetchNarratives(),
     ]);
 
     if (!sentiment && trending.length === 0) {
@@ -228,6 +234,7 @@ export async function fetchNetworkWeather(): Promise<NetworkWeatherState> {
       source: "pan",
       timestamp: Date.now(),
       emergence,
+      narratives: narrativeState.source === "pan" ? narrativeState : null,
     };
   } catch (error) {
     logger.warn("Failed to fetch network weather:", error);
