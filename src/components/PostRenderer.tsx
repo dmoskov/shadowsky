@@ -1036,9 +1036,9 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
         className={`post-renderer block p-4 no-underline ${compact ? "compact" : ""} ${record?.reply?.parent ? "is-reply" : ""} post-hover-refined cursor-pointer`}
         style={{ color: "inherit" }}
         onClickCapture={(e: React.MouseEvent) => {
-          // Prevent link navigation when clicking interactive children (buttons)
+          // Prevent link navigation when clicking interactive children
           const target = e.target as HTMLElement;
-          if (target.closest('button, [role="button"]')) {
+          if (target.closest('button, [role="button"], [data-clickable]')) {
             e.preventDefault();
           }
         }}

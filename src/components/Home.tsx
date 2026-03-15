@@ -956,7 +956,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                 target.closest('[role="button"]') ||
                 target.closest("button") ||
                 target.closest("a") ||
-                target.closest("[onClick]") ||
+                target.closest("[data-clickable]") ||
                 target.tagName === "BUTTON" ||
                 target.tagName === "A";
 
@@ -1082,6 +1082,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                     }
                     alt={post.author.handle}
                     className="h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
+                    data-clickable="profile"
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/profile/${post.author.handle}`);
@@ -1093,8 +1094,9 @@ export const Home: React.FC<HomeProps> = React.memo(
                   <div className="flex items-center gap-2">
                     <ProfileHoverCard handle={post.author.handle}>
                       <span
-                        className="cursor-pointer font-semibold hover:underline"
+                        className="cursor-pointer font-semibold hover:underline inline-flex items-center min-h-[44px]"
                         style={{ color: "var(--asph-text-primary)" }}
+                        data-clickable="profile"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`/profile/${post.author.handle}`);
@@ -1122,6 +1124,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                     <ProfileHoverCard handle={post.author.handle}>
                       <span
                         className="cursor-pointer hover:underline"
+                        data-clickable="profile"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`/profile/${post.author.handle}`);
@@ -1133,6 +1136,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                     ·{" "}
                     <span
                       className="cursor-pointer hover:underline"
+                      data-clickable="thread"
                       onClick={(e) => {
                         e.stopPropagation();
                         const postId = post.uri.split("/").pop();
@@ -2186,6 +2190,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                 {/* Quote post content */}
                 <div
                   className="cursor-pointer p-3"
+                  data-clickable="quote"
                   onClick={(e) => {
                     e.stopPropagation();
                     if (quotedPost.uri && quotedPost.author) {
