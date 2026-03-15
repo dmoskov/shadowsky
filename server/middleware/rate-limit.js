@@ -134,19 +134,19 @@ function rateLimit(options = {}) {
  * Preconfigured rate limiters for different endpoint types
  */
 
-// Strict rate limiting for expensive AI endpoints (5 requests per minute)
+// Rate limiting for AI endpoints (30 requests per minute)
 const aiEndpointLimiter = rateLimit({
   windowMs: 60000,
-  maxRequests: 5,
+  maxRequests: 30,
   keyPrefix: "ai",
   message:
     "AI generation rate limit exceeded. Please wait before making more requests.",
 });
 
-// Moderate rate limiting for semi-expensive endpoints (20 requests per minute)
+// Moderate rate limiting for semi-expensive endpoints (60 requests per minute)
 const moderateLimiter = rateLimit({
   windowMs: 60000,
-  maxRequests: 20,
+  maxRequests: 60,
   keyPrefix: "moderate",
   message: "Rate limit exceeded. Please slow down.",
 });
