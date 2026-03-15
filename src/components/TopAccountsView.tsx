@@ -159,7 +159,7 @@ export const TopAccountsView: React.FC<TopAccountsViewProps> = ({
       return await cacheService.getCacheStats();
     },
     enabled: !!agent,
-    refetchInterval: isVisible ? 30 * 1000 : false, // Refresh every 30 seconds, paused when tab hidden
+    refetchInterval: isVisible ? 120 * 1000 : false, // Refresh every 2 minutes, paused when tab hidden
   });
 
   // Enrich account stats with follower counts and filter

@@ -52,9 +52,9 @@ export const DirectMessagesColumn: React.FC = () => {
       return false; // Don't poll when tab is hidden
     }
     if (isUserInactive()) {
-      return 30000; // 30 seconds when inactive
+      return 60000; // 60 seconds when inactive
     }
-    return 5000; // 5 seconds when active
+    return 15000; // 15 seconds when active
   }, [isTabVisible, isUserInactive]);
 
   // Set up visibility change handler

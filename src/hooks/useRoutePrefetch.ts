@@ -69,7 +69,7 @@ export function useRoutePrefetch() {
    */
   const prefetchProfile = useCallback(
     (handle: string) => {
-      if (!agent || !handle) return;
+      if (!agent || !handle || isTouchDevice) return;
 
       // Cancel any existing pending prefetch for this handle
       const existingTimer = pendingPrefetchRef.current.get(`profile:${handle}`);
@@ -124,9 +124,13 @@ export function useRoutePrefetch() {
    * Implements hover intent detection with 150ms delay.
    * Call this on mouseEnter of thread links (timestamps, etc.)
    */
+  const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
   const prefetchThread = useCallback(
     (postUri: string) => {
-      if (!agent || !postUri) return;
+      // Skip hover prefetch on touch devices — it fires on every tap
+      // and wastes API quota against Bluesky's rate limits
+      if (!agent || !postUri || isTouchDevice) return;
 
       // Cancel any existing pending prefetch for this thread
       const existingTimer = pendingPrefetchRef.current.get(`thread:${postUri}`);

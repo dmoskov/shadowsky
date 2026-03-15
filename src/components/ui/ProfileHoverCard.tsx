@@ -49,8 +49,13 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
     const queryClient = useQueryClient();
     const { prefetchProfile } = useRoutePrefetch();
 
+    const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
     useEffect(() => {
       if (isHovering) {
+        // On touch devices, hover cards are useless and waste API calls
+        if (isTouchDevice) return;
+
         // Clear any pending hide timeout
         if (hideTimeoutRef.current) {
           clearTimeout(hideTimeoutRef.current);
