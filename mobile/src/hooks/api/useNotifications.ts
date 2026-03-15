@@ -27,6 +27,15 @@ export function useNotifications() {
     refetchInterval,
     refetchIntervalInBackground: false,
     maxPages: 10,
+    retry: (failureCount, error) => {
+      // Don't retry rate limit errors — let the user retry manually
+      const msg = (error as Error)?.message?.toLowerCase() ?? '';
+      if (msg.includes('rate limit') || msg.includes('429')) {
+        return false;
+      }
+      return failureCount < 2;
+    },
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
   });
 }
 

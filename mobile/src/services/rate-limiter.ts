@@ -347,12 +347,17 @@ export class ATProtoRateLimiter {
   }
 
   /**
-   * Enable adaptive mode: reduce all limits by 50% and schedule circuit breaker probe
+   * Enable adaptive mode: reduce all limits by 50% and schedule circuit breaker probe.
+   * Capped at 3 consecutive extensions to prevent getting stuck indefinitely.
    */
   private enableAdaptiveMode(): void {
     if (this.isInAdaptiveMode()) {
-      // Already in adaptive mode — if a probe just failed, don't reset the timer
-      // just extend the outer deadline
+      // Cap extensions to prevent the circuit breaker from getting stuck
+      if (this.adaptiveState.consecutiveProbeFailures >= 3) {
+        logger.log('Circuit breaker: max probe failures reached, forcing recovery');
+        this.disableAdaptiveMode();
+        return;
+      }
       this.adaptiveState.adaptiveModeUntil = Date.now() + CIRCUIT_BREAKER_MAX_PROBE_MS;
       return;
     }

@@ -132,9 +132,12 @@ export function NotificationsScreen() {
       );
     }
     if (isError) {
+      const isRateLimited = error?.message?.toLowerCase().includes('rate limit') ||
+        error?.message?.includes('429') ||
+        error?.message?.includes('timed out');
       return (
         <ErrorState
-          message={error?.message || 'Failed to load notifications'}
+          message={isRateLimited ? 'Too many requests — try again in a moment' : (error?.message || 'Failed to load notifications')}
           onRetry={() => refetch()}
         />
       );
