@@ -853,7 +853,9 @@ export const Home: React.FC<HomeProps> = React.memo(
     // Only trim when user is near the bottom (not scrolled into old content)
     React.useEffect(() => {
       if (data?.pages && data.pages.length > MOBILE_CONFIG.MAX_PAGES) {
-        const scrollRatio = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight || 1);
+        const scrollRatio =
+          window.scrollY /
+          (document.documentElement.scrollHeight - window.innerHeight || 1);
         // Only trim old pages if user is in the bottom half of content
         // This prevents scroll jumps when reading older posts
         if (scrollRatio > 0.5) {

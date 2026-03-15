@@ -55,15 +55,12 @@ export function useIntersectionLoader<T>(
   // Reset visible count only when feed fundamentally changes (e.g., feed switch)
   // Use a stable identity key to avoid resetting on background refetches
   // which create new object references for the same data.
-  const getItemKey = useCallback(
-    (item: T): string => {
-      if (item && typeof item === "object" && "post" in item) {
-        return (item as { post: { uri: string } }).post.uri;
-      }
-      return String(item);
-    },
-    [],
-  );
+  const getItemKey = useCallback((item: T): string => {
+    if (item && typeof item === "object" && "post" in item) {
+      return (item as { post: { uri: string } }).post.uri;
+    }
+    return String(item);
+  }, []);
 
   const firstItemKeyRef = useRef<string>("");
   const itemsLengthRef = useRef(items.length);
@@ -75,9 +72,16 @@ export function useIntersectionLoader<T>(
 
     // Only reset if the first item's identity changed (feed switch)
     // NOT on background refetches that return the same posts
-    if (firstItemKeyRef.current && currentKey && currentKey !== firstItemKeyRef.current) {
+    if (
+      firstItemKeyRef.current &&
+      currentKey &&
+      currentKey !== firstItemKeyRef.current
+    ) {
       setVisibleCount(initialLoad);
-    } else if (lengthChangedSignificantly && items.length < itemsLengthRef.current) {
+    } else if (
+      lengthChangedSignificantly &&
+      items.length < itemsLengthRef.current
+    ) {
       // Only reset on significant shrink (page cleanup), not growth
       setVisibleCount(initialLoad);
     }
