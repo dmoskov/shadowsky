@@ -836,7 +836,6 @@ export default function SkyDeck() {
                                 if (uri.includes("bsky.app/starter-pack/")) {
                                   // Extract the handle and rkey from starter pack URL
                                   const match = uri.match(
-                                    // eslint-disable-next-line no-useless-escape
                                     /starter-pack\/([^\/]+)\/([^\/\?]+)/,
                                   );
                                   if (match) {
