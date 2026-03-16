@@ -389,6 +389,8 @@ PODS:
     - libwebp/sharpyuv
   - LowPowerMode (1.0.0):
     - ExpoModulesCore
+  - NativeAnalytics (1.0.0):
+    - ExpoModulesCore
   - NativeCompose (1.0.0):
     - ExpoModulesCore
   - NativeFeedList (1.0.0):
@@ -396,6 +398,7 @@ PODS:
     - ExpoSwiftUIFeed
     - FeedBridge
     - RichTextView
+    - SDWebImage (~> 5.21.0)
   - NativeMessages (1.0.0):
     - ExpoModulesCore
   - NativeNotificationsList (1.0.0):
@@ -2499,6 +2502,7 @@ DEPENDENCIES:
   - ImageCompressor (from `../modules/image-compressor/ios`)
   - KeyboardShortcuts (from `../modules/keyboard-shortcuts/ios`)
   - LowPowerMode (from `../modules/low-power-mode/ios`)
+  - NativeAnalytics (from `../modules/native-analytics/ios`)
   - NativeCompose (from `../modules/native-compose/ios`)
   - NativeFeedList (from `../modules/native-feed-list/ios`)
   - NativeMessages (from `../modules/native-messages/ios`)
@@ -2709,6 +2713,8 @@ EXTERNAL SOURCES:
     :path: "../modules/keyboard-shortcuts/ios"
   LowPowerMode:
     :path: "../modules/low-power-mode/ios"
+  NativeAnalytics:
+    :path: "../modules/native-analytics/ios"
   NativeCompose:
     :path: "../modules/native-compose/ios"
   NativeFeedList:
@@ -2944,8 +2950,9 @@ SPEC CHECKSUMS:
   libdav1d: 23581a4d8ec811ff171ed5e2e05cd27bad64c39f
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   LowPowerMode: 157c69ed9967177f803fb9499b29591efff5ffd3
+  NativeAnalytics: f107225d10b68cc4e6597c8b64abb3fe9fc14352
   NativeCompose: 84f4994c150a13da10677f6b66885e729466278f
-  NativeFeedList: d7adafc2ce4df71e7ac29b4b0a5b915dfbab9439
+  NativeFeedList: 48d165bcc57283052d574e4ea207f054c27511bb
   NativeMessages: 5f8dc1ea49db758a9b5f6d5dcb036099530e9114
   NativeNotificationsList: dd60666fa323be50569b0bdfaebf30e57e2c36ff
   NativeProfileView: aab8865f3dd1ac2532bb6fd74eaebe7efca107b9

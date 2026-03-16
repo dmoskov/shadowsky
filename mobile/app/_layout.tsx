@@ -25,6 +25,10 @@ LogBox.ignoreLogs([
   // Reanimated 4.x + New Architecture: frozen object mutation in dev mode
   // Known issue: https://github.com/software-mansion/react-native-reanimated/issues/8454
   "You attempted to set the key `current`",
+  // Reanimated strict mode warnings — reading shared values during render
+  // is harmless in our usage (drawer/tab animations). Suppress the noise.
+  "Reading from `value` during component render",
+  "strict` mode",
 ]);
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ErrorBoundary from "../src/components/ErrorBoundary";
