@@ -7,7 +7,7 @@
  * See: docs/vision/network-weather.md
  */
 
-const PAN_API_URLS = ["https://api.asphodel.is", "https://api.shadowsky.io"];
+const PAN_API_URLS = ["https://api.shadowsky.io", "https://api.asphodel.is"];
 
 export const WEATHER_CACHE_TTL = 5 * 60 * 1000;
 
