@@ -64,12 +64,12 @@ export function bundleAnalyzerPlugin(enabled?: boolean): Plugin | false {
   const shouldAnalyze = enabled ?? process.env.ANALYZE === "true";
 
   return shouldAnalyze
-    ? visualizer({
+    ? (visualizer({
         filename: "bundle-stats.html",
         open: false,
         gzipSize: true,
         brotliSize: true,
         template: "treemap", // treemap, sunburst, or network
-      })
+      }) as unknown as Plugin)
     : false;
 }
