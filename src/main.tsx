@@ -1,6 +1,5 @@
 // Polyfill requestIdleCallback for Safari/iOS
 if (typeof window !== "undefined" && !("requestIdleCallback" in window)) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).requestIdleCallback = (
     callback: IdleRequestCallback,
     options?: IdleRequestOptions,
@@ -16,7 +15,6 @@ if (typeof window !== "undefined" && !("requestIdleCallback" in window)) {
       Math.min(timeout, 1),
     );
   };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any).cancelIdleCallback = (handle: number): void => {
     window.clearTimeout(handle);
   };

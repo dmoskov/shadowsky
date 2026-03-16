@@ -262,7 +262,6 @@ function RootLayout() {
               // the MMKV-backed query cache before children could render.
               if (__DEV__) {
                 const elapsed = Date.now() - startupTimestamp;
-                // eslint-disable-next-line no-console
                 console.log(`[Startup] Query cache restored in ${elapsed}ms`);
               }
             }}
