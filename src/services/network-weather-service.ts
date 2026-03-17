@@ -22,7 +22,7 @@ import type {
 
 // ─── Pan API ─────────────────────────────────────────────
 
-const PAN_API_URLS = ["https://api.asphodel.is", "https://api.shadowsky.io"];
+const PAN_API_URLS = ["https://api.shadowsky.io", "https://api.asphodel.is"];
 
 const FETCH_TIMEOUT = 8000;
 

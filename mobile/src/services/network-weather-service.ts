@@ -23,8 +23,8 @@ export type { NarrativeState, Narrative, NarrativeCrossing } from './narrative-s
 const logger = createLogger("NetworkWeather");
 
 const PAN_API_URLS = [
-  "https://api.asphodel.is",
   "https://api.shadowsky.io",
+  "https://api.asphodel.is",
 ];
 
 export const WEATHER_CACHE_TTL = 5 * 60 * 1000; // 5 min

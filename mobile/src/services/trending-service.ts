@@ -5,8 +5,8 @@
  * Falls back to Bluesky's native getTrendingTopics if Pan is unreachable.
  *
  * Pan endpoints (same AWS account, no API key needed):
- *   - api.asphodel.is/api/trending/topics
- *   - api.shadowsky.io/api/trending/topics (alias)
+ *   - api.shadowsky.io/api/trending/topics (primary)
+ *   - api.asphodel.is/api/trending/topics (fallback)
  */
 
 import { getAtProtoClient } from "./atproto/client";
@@ -18,8 +18,8 @@ const logger = createLogger("TrendingService");
 
 // Pan API base URLs — try primary first, fall back to alias
 const PAN_API_URLS = [
-  "https://api.asphodel.is",
   "https://api.shadowsky.io",
+  "https://api.asphodel.is",
 ];
 
 export const TRENDING_CACHE_TTL = 5 * 60 * 1000; // 5 minutes (matches Pan's cache)

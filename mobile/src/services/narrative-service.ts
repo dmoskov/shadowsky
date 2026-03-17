@@ -13,8 +13,8 @@ import { createLogger } from "../utils/logger";
 const logger = createLogger("NarrativeService");
 
 const PAN_API_URLS = [
-  "https://api.asphodel.is",
   "https://api.shadowsky.io",
+  "https://api.asphodel.is",
 ];
 
 // ─── Types ────────────────────────────────────────────────

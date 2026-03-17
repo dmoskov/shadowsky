@@ -5,11 +5,11 @@
  * Falls back to Bluesky's native getTrendingTopics if Pan is unreachable.
  *
  * Pan endpoints (same AWS account, no API key needed):
- *   - api.asphodel.is/api/trending/topics
- *   - api.shadowsky.io/api/trending/topics (alias)
+ *   - api.shadowsky.io/api/trending/topics (primary)
+ *   - api.asphodel.is/api/trending/topics (fallback)
  */
 
-const PAN_API_URLS = ["https://api.asphodel.is", "https://api.shadowsky.io"];
+const PAN_API_URLS = ["https://api.shadowsky.io", "https://api.asphodel.is"];
 const BLUESKY_API_BASE = "https://public.api.bsky.app/xrpc";
 
 export interface TrendingTopic {
