@@ -8,6 +8,11 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState, useRef } from "react";
 import { Appearance, InteractionManager, LogBox, Platform, AppState, AppStateStatus } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { configureReanimatedLogger, ReanimatedLogLevel } from "react-native-reanimated";
+
+// Disable Reanimated strict mode warnings (reading shared values during render
+// in drawer/tab animations). These spam the console and are harmless.
+configureReanimatedLogger({ level: ReanimatedLogLevel.warn, strict: false });
 
 // Suppress known harmless warnings from dependencies
 LogBox.ignoreLogs([
@@ -25,10 +30,6 @@ LogBox.ignoreLogs([
   // Reanimated 4.x + New Architecture: frozen object mutation in dev mode
   // Known issue: https://github.com/software-mansion/react-native-reanimated/issues/8454
   "You attempted to set the key `current`",
-  // Reanimated strict mode warnings — reading shared values during render
-  // is harmless in our usage (drawer/tab animations). Suppress the noise.
-  "Reading from `value` during component render",
-  "strict` mode",
 ]);
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import ErrorBoundary from "../src/components/ErrorBoundary";
