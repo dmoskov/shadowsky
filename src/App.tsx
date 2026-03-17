@@ -167,8 +167,6 @@ function AppContent() {
   // Check if we're on the home route
   const { data: networkWeather } = useNetworkWeather();
 
-  const isHomeRoute =
-    location.pathname === "/" || location.pathname === "/home";
 
   // Initialize swipe navigation for mobile
   const swipeHandlers = useSwipeNavigation();
@@ -269,7 +267,7 @@ function AppContent() {
       {/* Offline/reconnection status indicator */}
       <ConnectedOfflineIndicator position="top" />
       <div
-        className={`relative flex ${isHomeRoute ? "" : "mx-auto 2xl:max-w-[1536px]"}`}
+        className="relative flex mx-auto 2xl:max-w-[1536px]"
       >
         <InlineErrorBoundary componentName="Sidebar">
           <Sidebar
