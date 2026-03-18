@@ -61,14 +61,15 @@ export function WeatherBar({ weather }: Props) {
       className="cursor-pointer select-none border-b px-4 py-2 transition-all duration-500"
       style={{
         borderColor: "var(--asph-border-primary)",
-        backgroundColor: "var(--asph-bg-secondary)",
+        backgroundColor: "var(--asph-bg-primary)",
+        borderTop: "2px solid var(--asph-primary)",
       }}
       onClick={() => setExpanded(!expanded)}
     >
       {/* Report line */}
       <p
-        className="text-xs leading-relaxed"
-        style={{ color: "var(--asph-text-tertiary)" }}
+        className="text-sm leading-relaxed font-medium"
+        style={{ color: "var(--asph-text-secondary)" }}
       >
         {report}
       </p>
