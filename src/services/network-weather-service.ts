@@ -216,7 +216,7 @@ function generateWeatherReport(threads: NarrativeThread[]): string {
 export async function fetchGlobalTextile(): Promise<TextileState> {
   try {
     const response = (await fetchFromPan(
-      "/api/narratives",
+      "/api/narratives/crossings",
     )) as PanNarrativesResponse;
     return transformToTextile(response);
   } catch {

@@ -58,18 +58,17 @@ export function WeatherBar({ weather }: Props) {
 
   return (
     <div
-      className="cursor-pointer select-none border-b px-4 py-2 transition-all duration-500"
+      className="cursor-pointer select-none px-4 py-3 transition-all duration-500"
       style={{
-        borderColor: "var(--asph-border-primary)",
-        backgroundColor: "var(--asph-bg-primary)",
-        borderTop: "2px solid var(--asph-primary)",
+        backgroundColor: "var(--asph-primary)",
+        color: "white",
       }}
       onClick={() => setExpanded(!expanded)}
     >
       {/* Report line */}
       <p
         className="text-sm leading-relaxed font-medium"
-        style={{ color: "var(--asph-text-secondary)" }}
+        style={{ color: "white", opacity: 0.95 }}
       >
         {report}
       </p>
@@ -94,13 +93,13 @@ export function WeatherBar({ weather }: Props) {
                   className="inline-block h-1.5 w-1.5 rounded-full"
                   style={{ backgroundColor: color }}
                 />
-                <span style={{ color: "var(--asph-text-secondary)" }}>
+                <span style={{ color: "white", opacity: 0.9 }}>
                   {n.name}
                 </span>
                 {n.threadType === "weft" && (
                   <span
                     className="text-[9px] font-semibold uppercase tracking-wider"
-                    style={{ color: "var(--asph-text-tertiary)" }}
+                    style={{ color: "white", opacity: 0.7 }}
                   >
                     emergent
                   </span>
