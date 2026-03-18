@@ -104,7 +104,7 @@ export const NetworkWeatherPlaid: React.FC<NetworkWeatherPlaidProps> = ({
   onCycleView,
   onSetView,
   isLoading = false,
-  visibility = 1,
+  visibility = 0.15,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

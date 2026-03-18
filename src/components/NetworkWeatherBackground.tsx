@@ -157,7 +157,7 @@ export function NetworkWeatherBackground({ weather }: Props) {
     const emergencePulse = hasEmergence
       ? Math.sin(pulsePhase * Math.PI * 2) * 0.02
       : 0;
-    const opacity = Math.min(0.18, baseOpacity + emergencePulse);
+    const opacity = Math.min(0.07, baseOpacity + emergencePulse);
     const narrativeData = weather.narratives;
 
     // ── Full Textile (v0.3) ──────────────────────
@@ -226,7 +226,7 @@ export function NetworkWeatherBackground({ weather }: Props) {
       style={{
         ...style,
         transition: "opacity 15s ease, background 15s ease",
-        filter: "blur(40px)",
+        filter: "blur(80px)",
       }}
       aria-hidden="true"
     />
