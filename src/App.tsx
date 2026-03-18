@@ -266,6 +266,7 @@ function AppContent() {
       </InlineErrorBoundary>
       {/* Offline/reconnection status indicator */}
       <ConnectedOfflineIndicator position="top" />
+      <WeatherBar weather={networkWeather} />
       <div
         className="relative flex mx-auto 2xl:max-w-[1536px]"
       >
@@ -277,7 +278,6 @@ function AppContent() {
           />
         </InlineErrorBoundary>
         <NetworkWeatherBackground weather={networkWeather} />
-        <WeatherBar weather={networkWeather} />
         <main
           id="main-content"
           role="main"
