@@ -510,6 +510,18 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       return;
     }
 
+    // Don't attempt localhost connections when running in production
+    if (
+      wsUrl.includes("localhost") &&
+      typeof window !== "undefined" &&
+      window.location.hostname !== "localhost"
+    ) {
+      debug.warn(
+        "🔌 [WebSocket] VITE_WS_URL points to localhost but app is running in production, WebSocket disabled",
+      );
+      return;
+    }
+
     // Pass token or DID via config for authentication
     // - App-password users: send JWT token, server polls notifications
     // - OAuth users: send DID only (no raw JWT available), client polls notifications

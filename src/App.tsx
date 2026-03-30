@@ -40,6 +40,7 @@ import { removeTrailingSlash } from "./utils/removeTrailingSlash";
 
 // Static imports for core components
 import { BackgroundNotificationLoader } from "./components/BackgroundNotificationLoader";
+import { RealtimeUpdatesLoader } from "./components/RealtimeUpdatesLoader";
 import { ColumnMigrationNotice } from "./components/ColumnMigrationNotice";
 import { CommandPalette } from "./components/CommandPalette";
 import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
@@ -259,6 +260,11 @@ function AppContent() {
       <InlineErrorBoundary componentName="BackgroundNotificationLoader" silent>
         <Suspense fallback={null}>
           <BackgroundNotificationLoader />
+        </Suspense>
+      </InlineErrorBoundary>
+      <InlineErrorBoundary componentName="RealtimeUpdatesLoader" silent>
+        <Suspense fallback={null}>
+          <RealtimeUpdatesLoader />
         </Suspense>
       </InlineErrorBoundary>
       <InlineErrorBoundary componentName="Header">

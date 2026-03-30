@@ -118,10 +118,10 @@ export class JetstreamService {
     try {
       // Build query parameters for filtering
       const params = new URLSearchParams();
-      params.set("wantedCollections", "app.bsky.feed.post");
-      params.set("wantedCollections", "app.bsky.feed.like");
-      params.set("wantedCollections", "app.bsky.feed.repost");
-      params.set("wantedCollections", "app.bsky.graph.follow");
+      params.append("wantedCollections", "app.bsky.feed.post");
+      params.append("wantedCollections", "app.bsky.feed.like");
+      params.append("wantedCollections", "app.bsky.feed.repost");
+      params.append("wantedCollections", "app.bsky.graph.follow");
 
       const url = `${this.JETSTREAM_URL}?${params.toString()}`;
       this.ws = new WebSocket(url);
