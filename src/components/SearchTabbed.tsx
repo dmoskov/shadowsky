@@ -1287,7 +1287,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   <div className="space-y-2">
                     {filters.hashtags.map((tag, i) => (
                       <div
-                        key={`hashtag-${tag}-${i}`}
+                        key={`hashtag-${i}`}
                         className="flex items-center gap-2"
                       >
                         <input
@@ -1345,7 +1345,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   </label>
                   <div className="space-y-2">
                     {filters.from.map((user, i) => (
-                      <div key={`from-user-${user}-${i}`} className="relative">
+                      <div key={`from-${i}`} className="relative">
                         <div className="flex items-center gap-2">
                           <input
                             ref={(el) => (inputRefs.current[`from-${i}`] = el)}
@@ -1515,7 +1515,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   <div className="space-y-2">
                     {filters.mentions.map((user, i) => (
                       <div
-                        key={`mention-user-${user}-${i}`}
+                        key={`mention-${i}`}
                         className="relative"
                       >
                         <div className="flex items-center gap-2">

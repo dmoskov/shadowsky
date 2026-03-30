@@ -7,59 +7,59 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1244096F03177351423C346C /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7E7A747631F524CFAD6CD0B /* ExpoModulesProvider.swift */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		1F9DFA4A92304DFAB3CE8C23 /* icon-light-180.png in Resources */ = {isa = PBXBuildFile; fileRef = F730FB7B0FA449648FC56E7C /* icon-light-180.png */; };
-		35927C6FBC1C417B8AA02C1A /* icon-pride-152.png in Resources */ = {isa = PBXBuildFile; fileRef = 014C52E3B44D4F2883433F59 /* icon-pride-152.png */; };
+		16789855F23D4796BD64D256 /* icon-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 6DE746BFCC45466194A58ACF /* icon-light.png */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		4960FBCC2CEE4BE9B3E76EC3 /* icon-mono-180.png in Resources */ = {isa = PBXBuildFile; fileRef = 1837B12635614AE79370740D /* icon-mono-180.png */; };
-		54059D08D6A6485A8213B80E /* icon-light-152.png in Resources */ = {isa = PBXBuildFile; fileRef = 848EEA929FC14A8C845E5D7C /* icon-light-152.png */; };
-		6AC6E009C71B4B8C8266540D /* icon-pride.png in Resources */ = {isa = PBXBuildFile; fileRef = 2DB7F4EAFA6242498F5AA573 /* icon-pride.png */; };
-		6C4E9A862DD04CF89886B064 /* icon-mono-167.png in Resources */ = {isa = PBXBuildFile; fileRef = DE2754C0E1BC4CCFADD7EA79 /* icon-mono-167.png */; };
-		73EFA82E0EED47A58F34660A /* icon-pride-180.png in Resources */ = {isa = PBXBuildFile; fileRef = 5F45CCEF230043AE94F22C52 /* icon-pride-180.png */; };
-		8DB575D4D80C481F913E346E /* icon-light-120.png in Resources */ = {isa = PBXBuildFile; fileRef = BF97328E23754EF0B7F11356 /* icon-light-120.png */; };
-		8FD6DEDDA15EC25E142F1563 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 8266E39027983C601D93B683 /* PrivacyInfo.xcprivacy */; };
-		97DDA8DAF69E478FAF0B1583 /* icon-mono.png in Resources */ = {isa = PBXBuildFile; fileRef = 2CE84BD82B5848E1895A7DF0 /* icon-mono.png */; };
-		A2744F63C4E74DAFADA60667 /* icon-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 4A943D9335EF47D8AE98339A /* icon-light.png */; };
-		B03AE817EFA4411686B2541E /* icon-pride-167.png in Resources */ = {isa = PBXBuildFile; fileRef = 6745CF339D0349758025AD60 /* icon-pride-167.png */; };
+		4EC0D9BD5C9448C5975C44E7 /* icon-pride.png in Resources */ = {isa = PBXBuildFile; fileRef = 3F9B06A255AD47E1B7B6D73C /* icon-pride.png */; };
+		4F6F8AEF6CC54D66BDB4BD67 /* icon-pride-167.png in Resources */ = {isa = PBXBuildFile; fileRef = DF0B9105065440569513C52A /* icon-pride-167.png */; };
+		61DE30430FF34A7E857A197B /* icon-light-167.png in Resources */ = {isa = PBXBuildFile; fileRef = D118B45AA03A49299168DFC9 /* icon-light-167.png */; };
+		71C2B06C336047B0A8748579 /* icon-light-152.png in Resources */ = {isa = PBXBuildFile; fileRef = 4184AE68BB144E889B7A72C3 /* icon-light-152.png */; };
+		7FC032BF76CBF20676011D84 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7511231C9D6DC01613D92A12 /* ExpoModulesProvider.swift */; };
+		8EE35A3901BA45119258817A /* icon-mono-180.png in Resources */ = {isa = PBXBuildFile; fileRef = 5BD23555AC864ED1A74236CD /* icon-mono-180.png */; };
+		8F826BE5FB1C492499BCF597 /* icon-pride-152.png in Resources */ = {isa = PBXBuildFile; fileRef = 943D2E98E83349778B8D53B4 /* icon-pride-152.png */; };
+		91C8EBA0C00D43A885A424E1 /* icon-pride-180.png in Resources */ = {isa = PBXBuildFile; fileRef = 5AF7FF218A52439486DA819C /* icon-pride-180.png */; };
+		AB567CAC4E3D4FCA9ED4A803 /* icon-light-120.png in Resources */ = {isa = PBXBuildFile; fileRef = 541DE930AAFB42DD8B6B38EC /* icon-light-120.png */; };
+		AD0F6E332AD748EE9741E217 /* icon-mono-152.png in Resources */ = {isa = PBXBuildFile; fileRef = B7F1CDAACFC04F0693896607 /* icon-mono-152.png */; };
+		B92D6293E3A04057966DCF4B /* icon-mono-120.png in Resources */ = {isa = PBXBuildFile; fileRef = E61C17EB8E7744BA83CD752D /* icon-mono-120.png */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		C6CCB5A765734AE391FB7C20 /* icon-light-167.png in Resources */ = {isa = PBXBuildFile; fileRef = A3528E440790456496169973 /* icon-light-167.png */; };
-		D8F3A4E63F594CA3A944AAE6 /* icon-mono-120.png in Resources */ = {isa = PBXBuildFile; fileRef = D54F347663CB44FD895EDC94 /* icon-mono-120.png */; };
-		D9820D33A13C41B8AB6E79D1 /* icon-mono-152.png in Resources */ = {isa = PBXBuildFile; fileRef = E80E20AA9AA24DB181CFF37C /* icon-mono-152.png */; };
-		DDCA23C75548AE1AC3084668 /* libPods-Asphodel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 825CBB9C92C13C42C7B36E53 /* libPods-Asphodel.a */; };
+		BFFE18AA0C324D06B6647105 /* icon-pride-120.png in Resources */ = {isa = PBXBuildFile; fileRef = C0444A08CC5A4144933CD151 /* icon-pride-120.png */; };
+		C11AFA8CB60E42DC40F4A255 /* libPods-Asphodel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 96E10E2F73625F1A5F9069CF /* libPods-Asphodel.a */; };
+		D81405D7CCBD4CF0A214C7E1 /* icon-mono-167.png in Resources */ = {isa = PBXBuildFile; fileRef = 7EE8E3BBEEE74053ABBCCEA7 /* icon-mono-167.png */; };
+		DAF1484D22B540B8A6FD4470 /* icon-mono.png in Resources */ = {isa = PBXBuildFile; fileRef = CD8CBCF1E39B43A28D3BD0B5 /* icon-mono.png */; };
+		F0C51A9556B2475683A6BAFC /* icon-light-180.png in Resources */ = {isa = PBXBuildFile; fileRef = 35E231EE799E49F686AEE281 /* icon-light-180.png */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		F196B951D7414B71B5ED013F /* icon-pride-120.png in Resources */ = {isa = PBXBuildFile; fileRef = 3913CF7DED6B472CB1001163 /* icon-pride-120.png */; };
+		F28422759661ABFF3E32E3AF /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B4EB427D7CD85984D470A5B3 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		014C52E3B44D4F2883433F59 /* icon-pride-152.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-152.png"; path = "Asphodel/icon-pride-152.png"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* Asphodel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Asphodel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Asphodel/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Asphodel/Info.plist; sourceTree = "<group>"; };
-		1837B12635614AE79370740D /* icon-mono-180.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-180.png"; path = "Asphodel/icon-mono-180.png"; sourceTree = "<group>"; };
-		2CE84BD82B5848E1895A7DF0 /* icon-mono.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono.png"; path = "Asphodel/icon-mono.png"; sourceTree = "<group>"; };
-		2DB7F4EAFA6242498F5AA573 /* icon-pride.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride.png"; path = "Asphodel/icon-pride.png"; sourceTree = "<group>"; };
-		3913CF7DED6B472CB1001163 /* icon-pride-120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-120.png"; path = "Asphodel/icon-pride-120.png"; sourceTree = "<group>"; };
-		4A943D9335EF47D8AE98339A /* icon-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light.png"; path = "Asphodel/icon-light.png"; sourceTree = "<group>"; };
-		5F45CCEF230043AE94F22C52 /* icon-pride-180.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-180.png"; path = "Asphodel/icon-pride-180.png"; sourceTree = "<group>"; };
-		6745CF339D0349758025AD60 /* icon-pride-167.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-167.png"; path = "Asphodel/icon-pride-167.png"; sourceTree = "<group>"; };
-		825CBB9C92C13C42C7B36E53 /* libPods-Asphodel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Asphodel.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		8266E39027983C601D93B683 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Asphodel/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		848EEA929FC14A8C845E5D7C /* icon-light-152.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-152.png"; path = "Asphodel/icon-light-152.png"; sourceTree = "<group>"; };
-		A3528E440790456496169973 /* icon-light-167.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-167.png"; path = "Asphodel/icon-light-167.png"; sourceTree = "<group>"; };
-		A7E7A747631F524CFAD6CD0B /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Asphodel/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		2921B66174A7149A6D763644 /* Pods-Asphodel.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Asphodel.release.xcconfig"; path = "Target Support Files/Pods-Asphodel/Pods-Asphodel.release.xcconfig"; sourceTree = "<group>"; };
+		2F5747F145235E71801359ED /* Pods-Asphodel.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Asphodel.debug.xcconfig"; path = "Target Support Files/Pods-Asphodel/Pods-Asphodel.debug.xcconfig"; sourceTree = "<group>"; };
+		35E231EE799E49F686AEE281 /* icon-light-180.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-180.png"; path = "Asphodel/icon-light-180.png"; sourceTree = "<group>"; };
+		3F9B06A255AD47E1B7B6D73C /* icon-pride.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride.png"; path = "Asphodel/icon-pride.png"; sourceTree = "<group>"; };
+		4184AE68BB144E889B7A72C3 /* icon-light-152.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-152.png"; path = "Asphodel/icon-light-152.png"; sourceTree = "<group>"; };
+		541DE930AAFB42DD8B6B38EC /* icon-light-120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-120.png"; path = "Asphodel/icon-light-120.png"; sourceTree = "<group>"; };
+		5AF7FF218A52439486DA819C /* icon-pride-180.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-180.png"; path = "Asphodel/icon-pride-180.png"; sourceTree = "<group>"; };
+		5BD23555AC864ED1A74236CD /* icon-mono-180.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-180.png"; path = "Asphodel/icon-mono-180.png"; sourceTree = "<group>"; };
+		6DE746BFCC45466194A58ACF /* icon-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light.png"; path = "Asphodel/icon-light.png"; sourceTree = "<group>"; };
+		7511231C9D6DC01613D92A12 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Asphodel/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		7EE8E3BBEEE74053ABBCCEA7 /* icon-mono-167.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-167.png"; path = "Asphodel/icon-mono-167.png"; sourceTree = "<group>"; };
+		943D2E98E83349778B8D53B4 /* icon-pride-152.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-152.png"; path = "Asphodel/icon-pride-152.png"; sourceTree = "<group>"; };
+		96E10E2F73625F1A5F9069CF /* libPods-Asphodel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Asphodel.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Asphodel/SplashScreen.storyboard; sourceTree = "<group>"; };
-		B2A98198A922BDFE0F79ED36 /* Pods-Asphodel.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Asphodel.debug.xcconfig"; path = "Target Support Files/Pods-Asphodel/Pods-Asphodel.debug.xcconfig"; sourceTree = "<group>"; };
+		B4EB427D7CD85984D470A5B3 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Asphodel/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B7F1CDAACFC04F0693896607 /* icon-mono-152.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-152.png"; path = "Asphodel/icon-mono-152.png"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		BF97328E23754EF0B7F11356 /* icon-light-120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-120.png"; path = "Asphodel/icon-light-120.png"; sourceTree = "<group>"; };
-		D54F347663CB44FD895EDC94 /* icon-mono-120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-120.png"; path = "Asphodel/icon-mono-120.png"; sourceTree = "<group>"; };
-		DC7A0D08C88B9B8EAAF3B738 /* Pods-Asphodel.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Asphodel.release.xcconfig"; path = "Target Support Files/Pods-Asphodel/Pods-Asphodel.release.xcconfig"; sourceTree = "<group>"; };
-		DE2754C0E1BC4CCFADD7EA79 /* icon-mono-167.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-167.png"; path = "Asphodel/icon-mono-167.png"; sourceTree = "<group>"; };
-		E80E20AA9AA24DB181CFF37C /* icon-mono-152.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-152.png"; path = "Asphodel/icon-mono-152.png"; sourceTree = "<group>"; };
+		C0444A08CC5A4144933CD151 /* icon-pride-120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-120.png"; path = "Asphodel/icon-pride-120.png"; sourceTree = "<group>"; };
+		CD8CBCF1E39B43A28D3BD0B5 /* icon-mono.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono.png"; path = "Asphodel/icon-mono.png"; sourceTree = "<group>"; };
+		D118B45AA03A49299168DFC9 /* icon-light-167.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-167.png"; path = "Asphodel/icon-light-167.png"; sourceTree = "<group>"; };
+		DF0B9105065440569513C52A /* icon-pride-167.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-167.png"; path = "Asphodel/icon-pride-167.png"; sourceTree = "<group>"; };
+		E61C17EB8E7744BA83CD752D /* icon-mono-120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-120.png"; path = "Asphodel/icon-mono-120.png"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Asphodel/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Asphodel-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Asphodel-Bridging-Header.h"; path = "Asphodel/Asphodel-Bridging-Header.h"; sourceTree = "<group>"; };
-		F730FB7B0FA449648FC56E7C /* icon-light-180.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-180.png"; path = "Asphodel/icon-light-180.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,13 +67,23 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DDCA23C75548AE1AC3084668 /* libPods-Asphodel.a in Frameworks */,
+				C11AFA8CB60E42DC40F4A255 /* libPods-Asphodel.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1398BEA21FAD06AD3E2B19C8 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				2F5747F145235E71801359ED /* Pods-Asphodel.debug.xcconfig */,
+				2921B66174A7149A6D763644 /* Pods-Asphodel.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		13B07FAE1A68108700A75B9A /* Asphodel */ = {
 			isa = PBXGroup;
 			children = (
@@ -83,30 +93,22 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				4A943D9335EF47D8AE98339A /* icon-light.png */,
-				BF97328E23754EF0B7F11356 /* icon-light-120.png */,
-				848EEA929FC14A8C845E5D7C /* icon-light-152.png */,
-				A3528E440790456496169973 /* icon-light-167.png */,
-				F730FB7B0FA449648FC56E7C /* icon-light-180.png */,
-				2CE84BD82B5848E1895A7DF0 /* icon-mono.png */,
-				D54F347663CB44FD895EDC94 /* icon-mono-120.png */,
-				E80E20AA9AA24DB181CFF37C /* icon-mono-152.png */,
-				DE2754C0E1BC4CCFADD7EA79 /* icon-mono-167.png */,
-				1837B12635614AE79370740D /* icon-mono-180.png */,
-				2DB7F4EAFA6242498F5AA573 /* icon-pride.png */,
-				3913CF7DED6B472CB1001163 /* icon-pride-120.png */,
-				014C52E3B44D4F2883433F59 /* icon-pride-152.png */,
-				6745CF339D0349758025AD60 /* icon-pride-167.png */,
-				5F45CCEF230043AE94F22C52 /* icon-pride-180.png */,
-				8266E39027983C601D93B683 /* PrivacyInfo.xcprivacy */,
-			);
-			name = Asphodel;
-			sourceTree = "<group>";
-		};
-		170AFDED953FFEF381BA4830 /* Asphodel */ = {
-			isa = PBXGroup;
-			children = (
-				A7E7A747631F524CFAD6CD0B /* ExpoModulesProvider.swift */,
+				6DE746BFCC45466194A58ACF /* icon-light.png */,
+				541DE930AAFB42DD8B6B38EC /* icon-light-120.png */,
+				4184AE68BB144E889B7A72C3 /* icon-light-152.png */,
+				D118B45AA03A49299168DFC9 /* icon-light-167.png */,
+				35E231EE799E49F686AEE281 /* icon-light-180.png */,
+				CD8CBCF1E39B43A28D3BD0B5 /* icon-mono.png */,
+				E61C17EB8E7744BA83CD752D /* icon-mono-120.png */,
+				B7F1CDAACFC04F0693896607 /* icon-mono-152.png */,
+				7EE8E3BBEEE74053ABBCCEA7 /* icon-mono-167.png */,
+				5BD23555AC864ED1A74236CD /* icon-mono-180.png */,
+				3F9B06A255AD47E1B7B6D73C /* icon-pride.png */,
+				C0444A08CC5A4144933CD151 /* icon-pride-120.png */,
+				943D2E98E83349778B8D53B4 /* icon-pride-152.png */,
+				DF0B9105065440569513C52A /* icon-pride-167.png */,
+				5AF7FF218A52439486DA819C /* icon-pride-180.png */,
+				B4EB427D7CD85984D470A5B3 /* PrivacyInfo.xcprivacy */,
 			);
 			name = Asphodel;
 			sourceTree = "<group>";
@@ -115,17 +117,25 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				825CBB9C92C13C42C7B36E53 /* libPods-Asphodel.a */,
+				96E10E2F73625F1A5F9069CF /* libPods-Asphodel.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		5AE632CEC3E3688F3EC1191B /* ExpoModulesProviders */ = {
+		34ABFEB8C723CDB8D7110433 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				170AFDED953FFEF381BA4830 /* Asphodel */,
+				3EA7220CCEB5F36203FC046F /* Asphodel */,
 			);
 			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		3EA7220CCEB5F36203FC046F /* Asphodel */ = {
+			isa = PBXGroup;
+			children = (
+				7511231C9D6DC01613D92A12 /* ExpoModulesProvider.swift */,
+			);
+			name = Asphodel;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -142,8 +152,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				F58C76C6CDBAE48617064B68 /* Pods */,
-				5AE632CEC3E3688F3EC1191B /* ExpoModulesProviders */,
+				1398BEA21FAD06AD3E2B19C8 /* Pods */,
+				34ABFEB8C723CDB8D7110433 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -167,16 +177,6 @@
 			path = Asphodel/Supporting;
 			sourceTree = "<group>";
 		};
-		F58C76C6CDBAE48617064B68 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				B2A98198A922BDFE0F79ED36 /* Pods-Asphodel.debug.xcconfig */,
-				DC7A0D08C88B9B8EAAF3B738 /* Pods-Asphodel.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -185,13 +185,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Asphodel" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				ABA003384645F1317F81EBB2 /* [Expo] Configure project */,
+				9A09A478E2A9B4ED11011E4F /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				4C2783D7C3EA695E60D7882A /* [CP] Embed Pods Frameworks */,
+				BB2BA6B4BAB2B9DBAF134827 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -243,22 +243,22 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				A2744F63C4E74DAFADA60667 /* icon-light.png in Resources */,
-				8DB575D4D80C481F913E346E /* icon-light-120.png in Resources */,
-				54059D08D6A6485A8213B80E /* icon-light-152.png in Resources */,
-				C6CCB5A765734AE391FB7C20 /* icon-light-167.png in Resources */,
-				1F9DFA4A92304DFAB3CE8C23 /* icon-light-180.png in Resources */,
-				97DDA8DAF69E478FAF0B1583 /* icon-mono.png in Resources */,
-				D8F3A4E63F594CA3A944AAE6 /* icon-mono-120.png in Resources */,
-				D9820D33A13C41B8AB6E79D1 /* icon-mono-152.png in Resources */,
-				6C4E9A862DD04CF89886B064 /* icon-mono-167.png in Resources */,
-				4960FBCC2CEE4BE9B3E76EC3 /* icon-mono-180.png in Resources */,
-				6AC6E009C71B4B8C8266540D /* icon-pride.png in Resources */,
-				F196B951D7414B71B5ED013F /* icon-pride-120.png in Resources */,
-				35927C6FBC1C417B8AA02C1A /* icon-pride-152.png in Resources */,
-				B03AE817EFA4411686B2541E /* icon-pride-167.png in Resources */,
-				73EFA82E0EED47A58F34660A /* icon-pride-180.png in Resources */,
-				8FD6DEDDA15EC25E142F1563 /* PrivacyInfo.xcprivacy in Resources */,
+				16789855F23D4796BD64D256 /* icon-light.png in Resources */,
+				AB567CAC4E3D4FCA9ED4A803 /* icon-light-120.png in Resources */,
+				71C2B06C336047B0A8748579 /* icon-light-152.png in Resources */,
+				61DE30430FF34A7E857A197B /* icon-light-167.png in Resources */,
+				F0C51A9556B2475683A6BAFC /* icon-light-180.png in Resources */,
+				DAF1484D22B540B8A6FD4470 /* icon-mono.png in Resources */,
+				B92D6293E3A04057966DCF4B /* icon-mono-120.png in Resources */,
+				AD0F6E332AD748EE9741E217 /* icon-mono-152.png in Resources */,
+				D81405D7CCBD4CF0A214C7E1 /* icon-mono-167.png in Resources */,
+				8EE35A3901BA45119258817A /* icon-mono-180.png in Resources */,
+				4EC0D9BD5C9448C5975C44E7 /* icon-pride.png in Resources */,
+				BFFE18AA0C324D06B6647105 /* icon-pride-120.png in Resources */,
+				8F826BE5FB1C492499BCF597 /* icon-pride-152.png in Resources */,
+				4F6F8AEF6CC54D66BDB4BD67 /* icon-pride-167.png in Resources */,
+				91C8EBA0C00D43A885A424E1 /* icon-pride-180.png in Resources */,
+				F28422759661ABFF3E32E3AF /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -302,28 +302,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		4C2783D7C3EA695E60D7882A /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Asphodel/Pods-Asphodel-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Asphodel/Pods-Asphodel-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
@@ -380,7 +358,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Asphodel/Pods-Asphodel-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		ABA003384645F1317F81EBB2 /* [Expo] Configure project */ = {
+		9A09A478E2A9B4ED11011E4F /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -404,6 +382,28 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-Asphodel/expo-configure-project.sh\"\n";
 		};
+		BB2BA6B4BAB2B9DBAF134827 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Asphodel/Pods-Asphodel-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Asphodel/Pods-Asphodel-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -412,7 +412,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				1244096F03177351423C346C /* ExpoModulesProvider.swift in Sources */,
+				7FC032BF76CBF20676011D84 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -421,7 +421,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = B2A98198A922BDFE0F79ED36 /* Pods-Asphodel.debug.xcconfig */;
+			baseConfigurationReference = 2F5747F145235E71801359ED /* Pods-Asphodel.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -460,7 +460,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = DC7A0D08C88B9B8EAAF3B738 /* Pods-Asphodel.release.xcconfig */;
+			baseConfigurationReference = 2921B66174A7149A6D763644 /* Pods-Asphodel.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
