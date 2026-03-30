@@ -11,7 +11,7 @@
   "containerDefinitions": [
     {
       "name": "api-server",
-      "image": "181691141781.dkr.ecr.us-west-1.amazonaws.com/shadowsky/api-server:latest",
+      "image": "181691141781.dkr.ecr.us-east-1.amazonaws.com/shadowsky-api-server:latest",
       "essential": true,
       "portMappings": [
         {
@@ -50,14 +50,14 @@
       "secrets": [
         {
           "name": "ANTHROPIC_API_KEY",
-          "valueFrom": "arn:aws:secretsmanager:us-west-1:181691141781:secret:anthropic-api-key-88hbTt"
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:181691141781:secret:anthropic-api-key-88hbTt"
         }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
           "awslogs-group": "/ecs/shadowsky-api-server",
-          "awslogs-region": "us-west-1",
+          "awslogs-region": "us-east-1",
           "awslogs-stream-prefix": "ecs",
           "awslogs-create-group": "true"
         }

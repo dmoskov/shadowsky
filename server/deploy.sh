@@ -5,9 +5,9 @@
 set -e
 
 # Configuration
-AWS_REGION="us-west-1"
+AWS_REGION="us-east-1"
 AWS_ACCOUNT_ID="181691141781"
-ECR_REPO="shadowsky/api-server"
+ECR_REPO="shadowsky-api-server"
 ECS_CLUSTER="shadowsky-cluster"
 ECS_SERVICE="shadowsky-api-server"
 IMAGE_TAG="latest"

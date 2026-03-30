@@ -1,0 +1,13 @@
+# Copy this file to terraform.tfvars and customize
+
+aws_region        = "us-east-1"
+environment       = "production"
+vpc_cidr          = "10.3.0.0/16"
+api_image_tag     = "latest"
+api_cpu           = 256
+api_memory        = 512
+api_desired_count = 1
+
+# CloudFront aliases - set these after removing aliases from old distributions
+# cloudfront_aliases_shadowsky = ["shadowsky.io", "www.shadowsky.io"]
+# cloudfront_aliases_asphodel  = ["asphodel.is", "www.asphodel.is"]

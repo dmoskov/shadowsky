@@ -70,3 +70,9 @@ bundle-stats.html
 # Allow stub amplify_outputs.json for builds, but ignore the generated ones in amplify/
 amplify/amplify_outputs*
 amplifyconfiguration*
+
+# Terraform
+infra/site/.terraform/
+infra/site/terraform.tfstate*
+infra/site/*.tfvars
+infra/site/*.zip
