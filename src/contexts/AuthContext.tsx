@@ -389,6 +389,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               return;
             }
           }
+        } else {
+          // No existing OAuth session, but still check if OAuth is available
+          // so the login UI can enable the OAuth button. Loads the ~328KB client
+          // in the background without blocking the auth flow.
+          oauthService
+            .init()
+            .then(() => {
+              if (!signal.aborted) {
+                setIsOAuthAvailable(oauthService.isAvailable());
+              }
+            })
+            .catch(() => {});
         }
 
         // Fall back to legacy app password session
