@@ -47,7 +47,7 @@
     "@types/react-window": "^1.8.8",
     "aws-amplify": "^6.16.3",
     "date-fns": "^3.0.0",
-    "dexie": "^4.3.0",
+    "dexie": "^4.4.1",
     "dompurify": "3.3.3",
     "hls.js": "^1.6.7",
     "html2canvas": "^1.4.1",
@@ -61,7 +61,7 @@
     "react-router": "^7.13.1",
     "react-swipeable": "^7.0.2",
     "react-window": "^2.2.3",
-    "web-vitals": "^5.1.0",
+    "web-vitals": "^5.2.0",
     "workbox-window": "^7.4.0"
   },
   "devDependencies": {
@@ -88,7 +88,7 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
-    "vite-plus": "^0.1.13",
+    "vite-plus": "^0.1.14",
     "vitest": "^3.2.4",
     "wireit": "^0.14.12",
     "zod": "^3.25.76"
