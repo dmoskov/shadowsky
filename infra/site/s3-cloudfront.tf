@@ -81,6 +81,13 @@ resource "aws_cloudfront_function" "spa_rewrite" {
     function handler(event) {
       var request = event.request;
       var uri = request.uri;
+      var host = request.headers.host ? request.headers.host.value : '';
+
+      // Serve domain-specific OAuth client metadata
+      if (uri === '/client-metadata.json' && (host === 'asphodel.is' || host === 'www.asphodel.is')) {
+        request.uri = '/client-metadata-asphodel.json';
+        return request;
+      }
 
       // If the URI has a file extension, serve it as-is
       if (uri.match(/\.[a-zA-Z0-9]+$/)) {
