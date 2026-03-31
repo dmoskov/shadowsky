@@ -39,13 +39,17 @@ frontend:
       commands:
         # Create a 404.html that redirects to index.html for client-side routing
         - cp dist/index.html dist/404.html
-        # Invalidate CloudFront cache to ensure fresh content is served
+        # Sync to S3 and invalidate CloudFront (prod branch only)
         - |
-          if [ -n "$CLOUDFRONT_DISTRIBUTION_ID" ]; then
-            echo "Invalidating CloudFront cache for distribution: $CLOUDFRONT_DISTRIBUTION_ID"
-            aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*" || echo "CloudFront invalidation failed (check IAM permissions)"
+          if [ "$AWS_BRANCH" = "prod" ]; then
+            echo "Syncing to S3..."
+            aws s3 sync dist/ s3://shadowsky-frontend-181691141781/ --delete
+            echo "Invalidating CloudFront caches..."
+            aws cloudfront create-invalidation --distribution-id E23PU8CFBQFK81 --paths "/*" || echo "shadowsky invalidation failed"
+            aws cloudfront create-invalidation --distribution-id EMRRAFHTOF28N --paths "/*" || echo "asphodel invalidation failed"
+            echo "Deploy to S3/CloudFront complete."
           else
-            echo "CLOUDFRONT_DISTRIBUTION_ID not set, skipping cache invalidation"
+            echo "Skipping S3 deploy (branch: $AWS_BRANCH)"
           fi
   artifacts:
     baseDirectory: dist
