@@ -82,8 +82,23 @@ resource "aws_cloudfront_function" "spa_rewrite" {
       var request = event.request;
       var uri = request.uri;
       var host = request.headers.host ? request.headers.host.value : '';
+      var qs = Object.keys(request.querystring).length > 0
+        ? '?' + Object.keys(request.querystring).map(function(k) {
+            var v = request.querystring[k];
+            return v.value ? k + '=' + v.value : k;
+          }).join('&')
+        : '';
 
-      // Serve domain-specific OAuth client metadata
+      // Redirect shadowsky.io → asphodel.is
+      if (host === 'shadowsky.io' || host === 'www.shadowsky.io') {
+        return {
+          statusCode: 301,
+          statusDescription: 'Moved Permanently',
+          headers: { location: { value: 'https://asphodel.is' + uri + qs } }
+        };
+      }
+
+      // Serve domain-specific OAuth client metadata for asphodel.is
       if (uri === '/client-metadata.json' && (host === 'asphodel.is' || host === 'www.asphodel.is')) {
         request.uri = '/client-metadata-asphodel.json';
         return request;
