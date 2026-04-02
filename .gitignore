@@ -76,3 +76,4 @@ infra/site/.terraform/
 infra/site/terraform.tfstate*
 infra/site/*.tfvars
 infra/site/*.zip
+infra/site/tfplan
