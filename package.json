@@ -34,7 +34,7 @@
     "test:unit:watch": "vitest watch"
   },
   "dependencies": {
-    "@atproto/api": "^0.19.12",
+    "@atproto/api": "^0.19.17",
     "@atproto/oauth-client-browser": "^0.3.42",
     "@aws-sdk/client-cloudwatch-logs": "^3.1042.0",
     "@ffmpeg/ffmpeg": "^0.12.15",
