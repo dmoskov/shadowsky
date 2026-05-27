@@ -1,5 +1,5 @@
 import { AtpAgent } from "@atproto/api";
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyNotificationListNotifications } from "@atproto/api";
 import { mapATProtoError } from "@bsky/shared";
 import { rateLimitedNotificationFetch } from "../rate-limiter";
 
@@ -17,7 +17,7 @@ export class NotificationService {
     priority?: boolean,
     limit: number = 100,
   ): Promise<{
-    notifications: Notification[];
+    notifications: AppBskyNotificationListNotifications.Notification[];
     cursor?: string;
   }> {
     return rateLimitedNotificationFetch(async () => {

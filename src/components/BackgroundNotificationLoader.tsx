@@ -1,4 +1,4 @@
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyNotificationListNotifications } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { subDays } from "date-fns";
@@ -254,7 +254,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
           // Prefetch posts for reply notifications
           if (agent) {
             const replyNotifications = allNotifications.filter(
-              (n: Notification) => n.reason === "reply",
+              (n: AppBskyNotificationListNotifications.Notification) => n.reason === "reply",
             );
             if (replyNotifications.length > 0) {
               await prefetchNotificationPosts(replyNotifications, agent);
@@ -325,7 +325,7 @@ export const BackgroundNotificationLoader: React.FC = () => {
         // Prefetch posts for new reply notifications
         if (agent) {
           const replyNotifications = allNotifications.filter(
-            (n: Notification) => n.reason === "reply",
+            (n: AppBskyNotificationListNotifications.Notification) => n.reason === "reply",
           );
           if (replyNotifications.length > 0) {
             await prefetchNotificationPosts(replyNotifications, agent);

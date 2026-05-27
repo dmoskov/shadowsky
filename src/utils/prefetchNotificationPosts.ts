@@ -1,5 +1,4 @@
-import type { AppBskyFeedDefs, BskyAgent } from "@atproto/api";
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyFeedDefs, AppBskyNotificationListNotifications, BskyAgent } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { rateLimitedPostFetch } from "../services/rate-limiter";
 import { PostCache } from "./postCache";
@@ -11,7 +10,7 @@ type Post = AppBskyFeedDefs.PostView;
  * Focuses on reply notifications which are used in the Conversations tab
  */
 export async function prefetchNotificationPosts(
-  notifications: Notification[],
+  notifications: AppBskyNotificationListNotifications.Notification[],
   agent: BskyAgent,
   onProgress?: (fetched: number, total: number) => void,
 ): Promise<void> {
@@ -99,7 +98,7 @@ export async function prefetchNotificationPosts(
  * Extract root post URIs from reply notifications for thread reconstruction
  */
 export async function extractRootPostUris(
-  notifications: Notification[],
+  notifications: AppBskyNotificationListNotifications.Notification[],
   agent: BskyAgent,
 ): Promise<string[]> {
   const rootUris = new Set<string>();
@@ -158,7 +157,7 @@ export async function extractRootPostUris(
  * Prefetch root posts for conversation threads
  */
 export async function prefetchRootPosts(
-  notifications: Notification[],
+  notifications: AppBskyNotificationListNotifications.Notification[],
   agent: BskyAgent,
 ): Promise<void> {
   const rootUris = await extractRootPostUris(notifications, agent);

@@ -1,4 +1,4 @@
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyNotificationListNotifications } from "@atproto/api";
 import { formatDistanceToNow } from "date-fns";
 import { MessageCircle } from "lucide-react";
 import React from "react";
@@ -32,14 +32,14 @@ export const RecentCommentsTable: React.FC = () => {
     const cutoffDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     const comments = allNotifications
-      .filter((notif: Notification) => {
+      .filter((notif: AppBskyNotificationListNotifications.Notification) => {
         return (
           notif.reason === "reply" &&
           new Date(notif.indexedAt) > cutoffDate &&
           (notif.record as any)?.text
         );
       })
-      .map((notif: Notification) => ({
+      .map((notif: AppBskyNotificationListNotifications.Notification) => ({
         uri: notif.uri,
         author: {
           did: notif.author.did,

@@ -1,4 +1,4 @@
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyNotificationListNotifications } from "@atproto/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -264,7 +264,7 @@ const NotificationsFeedComponent: React.FC = () => {
         postUriToRoot.set(post.uri, rootUri);
       });
 
-      filtered = filtered.filter((n: Notification) => {
+      filtered = filtered.filter((n: AppBskyNotificationListNotifications.Notification) => {
         // Get the post URI for this notification
         let postUri: string | undefined;
         if (n.reason === "repost" || n.reason === "like") {
@@ -295,7 +295,7 @@ const NotificationsFeedComponent: React.FC = () => {
         const postsWithImages = new Set(
           posts.filter(postHasImages).map((post) => post.uri),
         );
-        filtered = filtered.filter((n: Notification) => {
+        filtered = filtered.filter((n: AppBskyNotificationListNotifications.Notification) => {
           if (!["like", "repost", "reply", "quote"].includes(n.reason))
             return false;
           // For reposts and likes, use reasonSubject which contains the original post URI
@@ -328,7 +328,7 @@ const NotificationsFeedComponent: React.FC = () => {
         replies: ["reply"],
         quotes: ["quote"],
       };
-      filtered = filtered.filter((n: Notification) =>
+      filtered = filtered.filter((n: AppBskyNotificationListNotifications.Notification) =>
         filterMap[
           filter as Exclude<
             NotificationFilter,
@@ -340,14 +340,14 @@ const NotificationsFeedComponent: React.FC = () => {
 
     // Filter for notifications from people you follow
     if (filter === "from-following" && followingSet) {
-      filtered = filtered.filter((n: Notification) =>
+      filtered = filtered.filter((n: AppBskyNotificationListNotifications.Notification) =>
         followingSet.has(n.author.did),
       );
     }
 
     // Removed unread only filter
     // if (showUnreadOnly) {
-    //   filtered = filtered.filter((n: Notification) => !n.isRead)
+    //   filtered = filtered.filter((n: AppBskyNotificationListNotifications.Notification) => !n.isRead)
     // }
 
     return filtered;
@@ -376,7 +376,7 @@ const NotificationsFeedComponent: React.FC = () => {
     };
 
     // Count notifications by type
-    notifications?.forEach((n: Notification) => {
+    notifications?.forEach((n: AppBskyNotificationListNotifications.Notification) => {
       switch (n.reason) {
         case "like":
           counts.likes++;
@@ -409,7 +409,7 @@ const NotificationsFeedComponent: React.FC = () => {
       const postsWithImages = new Set(
         posts.filter(postHasImages).map((post) => post.uri),
       );
-      notifications.forEach((n: Notification) => {
+      notifications.forEach((n: AppBskyNotificationListNotifications.Notification) => {
         if (["like", "repost", "reply", "quote"].includes(n.reason)) {
           const postUri =
             (n.reason === "repost" || n.reason === "like") && n.reasonSubject
@@ -946,7 +946,7 @@ const NotificationsFeedComponent: React.FC = () => {
           })()
         ) : (
           // Show regular notifications for mentions, replies, and images tabs (no aggregation)
-          filteredNotifications.map((notification: Notification, index) => {
+          filteredNotifications.map((notification: AppBskyNotificationListNotifications.Notification, index) => {
             const notificationKey = `${notification.uri}-${notification.indexedAt}`;
             return (
               <NotificationItem
@@ -1157,7 +1157,7 @@ function getNotificationText(reason: string): string {
 }
 
 interface NotificationItemProps {
-  notification: Notification;
+  notification: AppBskyNotificationListNotifications.Notification;
   postMap: Map<string, any>;
   getNotificationIcon: (reason: string) => React.ReactNode;
   showTypeLabel?: boolean;

@@ -1,9 +1,9 @@
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyNotificationListNotifications } from "@atproto/api";
 import { debug } from "@bsky/shared";
 
 export interface BatchedNotificationUpdate {
-  notifications: Notification[];
-  added: Notification[];
+  notifications: AppBskyNotificationListNotifications.Notification[];
+  added: AppBskyNotificationListNotifications.Notification[];
   removed: string[];
   updatedCount: number;
   batchId: string;
@@ -37,8 +37,8 @@ type BatchListener = (update: BatchedNotificationUpdate) => void;
 export class NotificationBatchingService {
   private static instance: NotificationBatchingService;
   private config: NotificationBatchingConfig;
-  private pendingNotifications: Map<string, Notification> = new Map();
-  private currentNotifications: Map<string, Notification> = new Map();
+  private pendingNotifications: Map<string, AppBskyNotificationListNotifications.Notification> = new Map();
+  private currentNotifications: Map<string, AppBskyNotificationListNotifications.Notification> = new Map();
   private batchTimer: ReturnType<typeof setTimeout> | null = null;
   private listeners: Set<BatchListener> = new Set();
   private batchCounter = 0;
@@ -85,11 +85,11 @@ export class NotificationBatchingService {
     });
   }
 
-  private getNotificationKey(notification: Notification): string {
+  private getNotificationKey(notification: AppBskyNotificationListNotifications.Notification): string {
     return `${notification.uri}-${notification.indexedAt}`;
   }
 
-  queueNotifications(notifications: Notification[]): void {
+  queueNotifications(notifications: AppBskyNotificationListNotifications.Notification[]): void {
     if (notifications.length === 0) return;
 
     const now = Date.now();
@@ -148,8 +148,8 @@ export class NotificationBatchingService {
     const batchId = `batch-${++this.batchCounter}-${Date.now()}`;
     const pendingArray = Array.from(this.pendingNotifications.values());
 
-    const added: Notification[] = [];
-    const updated: Notification[] = [];
+    const added: AppBskyNotificationListNotifications.Notification[] = [];
+    const updated: AppBskyNotificationListNotifications.Notification[] = [];
 
     pendingArray.forEach((notification) => {
       const key = this.getNotificationKey(notification);
@@ -181,14 +181,14 @@ export class NotificationBatchingService {
     this.notifyListeners(update);
   }
 
-  processFullUpdate(notifications: Notification[]): BatchedNotificationUpdate {
+  processFullUpdate(notifications: AppBskyNotificationListNotifications.Notification[]): BatchedNotificationUpdate {
     const batchId = `full-${++this.batchCounter}-${Date.now()}`;
 
     const newKeys = new Set(
       notifications.map((n) => this.getNotificationKey(n)),
     );
 
-    const added: Notification[] = [];
+    const added: AppBskyNotificationListNotifications.Notification[] = [];
     const removed: string[] = [];
 
     notifications.forEach((notification) => {
@@ -226,7 +226,7 @@ export class NotificationBatchingService {
     return update;
   }
 
-  private getSortedNotifications(): Notification[] {
+  private getSortedNotifications(): AppBskyNotificationListNotifications.Notification[] {
     return Array.from(this.currentNotifications.values()).sort(
       (a, b) =>
         new Date(b.indexedAt).getTime() - new Date(a.indexedAt).getTime(),
@@ -234,9 +234,9 @@ export class NotificationBatchingService {
   }
 
   groupNotificationsByType(
-    notifications: Notification[],
-  ): Map<string, Notification[]> {
-    const groups = new Map<string, Notification[]>();
+    notifications: AppBskyNotificationListNotifications.Notification[],
+  ): Map<string, AppBskyNotificationListNotifications.Notification[]> {
+    const groups = new Map<string, AppBskyNotificationListNotifications.Notification[]>();
 
     if (!this.config.enableGrouping) {
       groups.set("all", notifications);
@@ -266,7 +266,7 @@ export class NotificationBatchingService {
   }
 
   getGroupedCounts(
-    notifications: Notification[],
+    notifications: AppBskyNotificationListNotifications.Notification[],
   ): Map<string, { count: number; latestTimestamp: string }> {
     const groups = this.groupNotificationsByType(notifications);
     const counts = new Map<
@@ -289,7 +289,7 @@ export class NotificationBatchingService {
     return counts;
   }
 
-  getCurrentNotifications(): Notification[] {
+  getCurrentNotifications(): AppBskyNotificationListNotifications.Notification[] {
     return this.getSortedNotifications();
   }
 

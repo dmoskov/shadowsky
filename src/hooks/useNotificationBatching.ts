@@ -1,4 +1,4 @@
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyNotificationListNotifications } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -14,12 +14,12 @@ export interface UseNotificationBatchingOptions {
 }
 
 export interface UseNotificationBatchingResult {
-  batchedNotifications: Notification[];
+  batchedNotifications: AppBskyNotificationListNotifications.Notification[];
   pendingCount: number;
   isBatching: boolean;
   lastBatchUpdate: BatchedNotificationUpdate | null;
-  processNotifications: (notifications: Notification[]) => void;
-  getGroupedNotifications: () => Map<string, Notification[]>;
+  processNotifications: (notifications: AppBskyNotificationListNotifications.Notification[]) => void;
+  getGroupedNotifications: () => Map<string, AppBskyNotificationListNotifications.Notification[]>;
   stats: {
     totalProcessed: number;
     batchCount: number;
@@ -29,13 +29,13 @@ export interface UseNotificationBatchingResult {
 }
 
 export function useNotificationBatching(
-  sourceNotifications: Notification[],
+  sourceNotifications: AppBskyNotificationListNotifications.Notification[],
   options: UseNotificationBatchingOptions = {},
 ): UseNotificationBatchingResult {
   const { enabled = true, config, onBatchUpdate } = options;
 
   const [batchedNotifications, setBatchedNotifications] = useState<
-    Notification[]
+    AppBskyNotificationListNotifications.Notification[]
   >([]);
   const [lastBatchUpdate, setLastBatchUpdate] =
     useState<BatchedNotificationUpdate | null>(null);
@@ -141,7 +141,7 @@ export function useNotificationBatching(
   }, [enabled]);
 
   const processNotifications = useCallback(
-    (notifications: Notification[]) => {
+    (notifications: AppBskyNotificationListNotifications.Notification[]) => {
       if (!enabled || !serviceRef.current) {
         setBatchedNotifications(notifications);
         return;
@@ -156,7 +156,7 @@ export function useNotificationBatching(
 
   const getGroupedNotifications = useCallback(() => {
     if (!serviceRef.current) {
-      const defaultMap = new Map<string, Notification[]>();
+      const defaultMap = new Map<string, AppBskyNotificationListNotifications.Notification[]>();
       defaultMap.set("all", batchedNotifications);
       return defaultMap;
     }
@@ -191,20 +191,20 @@ export function useNotificationBatching(
 }
 
 export function useBatchedNotificationTransition(
-  notifications: Notification[],
+  notifications: AppBskyNotificationListNotifications.Notification[],
   options: {
     transitionDuration?: number;
     enableAnimation?: boolean;
   } = {},
 ): {
-  displayNotifications: Notification[];
+  displayNotifications: AppBskyNotificationListNotifications.Notification[];
   isTransitioning: boolean;
   newNotificationIds: Set<string>;
 } {
   const { transitionDuration = 300, enableAnimation = true } = options;
 
   const [displayNotifications, setDisplayNotifications] =
-    useState<Notification[]>(notifications);
+    useState<AppBskyNotificationListNotifications.Notification[]>(notifications);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [newNotificationIds, setNewNotificationIds] = useState<Set<string>>(
     new Set(),

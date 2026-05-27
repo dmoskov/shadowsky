@@ -10,7 +10,7 @@
  */
 
 import type { AppBskyFeedDefs } from "@atproto/api";
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyNotificationListNotifications } from "@atproto/api";
 import React, {
   createContext,
   useCallback,
@@ -38,7 +38,7 @@ type Post = AppBskyFeedDefs.PostView;
 
 export interface ThreadNode {
   post: Post;
-  notification?: Notification;
+  notification?: AppBskyNotificationListNotifications.Notification;
   children: ThreadNode[];
   depth: number;
   isRoot?: boolean;
@@ -123,7 +123,7 @@ export interface ThreadContextValue
 
 export interface ThreadProviderProps {
   posts: Post[];
-  notifications?: Notification[];
+  notifications?: AppBskyNotificationListNotifications.Notification[];
   rootUri?: string;
   initialHighlightUri?: string;
   initialFoldDepth?: number;
@@ -167,7 +167,7 @@ function calculateComplexityLevel(
 
 function buildThreadTree(
   posts: Post[],
-  notifications: Notification[],
+  notifications: AppBskyNotificationListNotifications.Notification[],
   rootUri?: string,
 ): {
   threadTree: ThreadNode[];
@@ -179,7 +179,7 @@ function buildThreadTree(
   const nodeMap = new Map<string, ThreadNode>();
   const rootNodes: ThreadNode[] = [];
 
-  const notificationMap = new Map<string, Notification>();
+  const notificationMap = new Map<string, AppBskyNotificationListNotifications.Notification>();
   notifications.forEach((notification) => {
     if (notification?.uri) {
       notificationMap.set(notification.uri, notification);

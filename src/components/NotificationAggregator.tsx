@@ -1,5 +1,7 @@
-import type { AppBskyFeedDefs } from "@atproto/api";
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type {
+  AppBskyFeedDefs,
+  AppBskyNotificationListNotifications,
+} from "@atproto/api";
 import { formatDistanceToNow } from "date-fns";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import React from "react";
@@ -19,26 +21,26 @@ export interface AggregatedNotification {
     avatar?: string;
   }>;
   latestTimestamp: string;
-  notifications: Notification[];
+  notifications: AppBskyNotificationListNotifications.Notification[];
   /** The target post URI for likes/reposts (reasonSubject) */
   targetPostUri?: string;
 }
 
 export interface SingleNotification {
   type: "single";
-  notification: Notification;
+  notification: AppBskyNotificationListNotifications.Notification;
 }
 
 export type ProcessedNotification = AggregatedNotification | SingleNotification;
 
 export function aggregateNotifications(
-  notifications: Notification[],
+  notifications: AppBskyNotificationListNotifications.Notification[],
 ): ProcessedNotification[] {
   const processed: ProcessedNotification[] = [];
   const aggregationWindow = 24 * 60 * 60 * 1000; // 24 hours in milliseconds for better grouping
 
   // Group notifications by reason and target post (for post-specific grouping)
-  const groups = new Map<string, Notification[]>();
+  const groups = new Map<string, AppBskyNotificationListNotifications.Notification[]>();
 
   notifications.forEach((notification) => {
     // Only aggregate certain types
@@ -97,8 +99,8 @@ export function aggregateNotifications(
     // Check if we should aggregate
     if (groupNotifications.length >= minAggregationCount) {
       // Find time clusters
-      const clusters: Notification[][] = [];
-      let currentCluster: Notification[] = [groupNotifications[0]];
+      const clusters: AppBskyNotificationListNotifications.Notification[][] = [];
+      let currentCluster: AppBskyNotificationListNotifications.Notification[] = [groupNotifications[0]];
 
       for (let i = 1; i < groupNotifications.length; i++) {
         const timeDiff =

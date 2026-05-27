@@ -3,8 +3,7 @@
  * Handles compression, size monitoring, and intelligent data management
  */
 
-import type { ProfileViewBasic } from "@atproto/api/dist/client/types/app/bsky/actor/defs";
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyActorDefs, AppBskyNotificationListNotifications } from "@atproto/api";
 import { debug } from "@bsky/shared";
 
 // Type for notification record which can have text
@@ -109,7 +108,7 @@ export class StorageManager {
    * Compress notification data by removing non-essential fields
    */
   static compressNotification(
-    notification: Notification,
+    notification: AppBskyNotificationListNotifications.Notification,
   ): CompressedNotification {
     return {
       uri: notification.uri,
@@ -130,9 +129,7 @@ export class StorageManager {
         : undefined,
       isRead: notification.isRead,
       indexedAt: notification.indexedAt,
-      labels: notification.labels?.map((label) =>
-        typeof label === "string" ? label : label.val,
-      ),
+      labels: notification.labels?.map((label) => label.val),
     };
   }
 
@@ -141,7 +138,7 @@ export class StorageManager {
    */
   static decompressNotification(
     compressed: CompressedNotification,
-  ): Partial<Notification> {
+  ): Partial<AppBskyNotificationListNotifications.Notification> {
     return {
       uri: compressed.uri,
       cid: compressed.cid,
@@ -161,15 +158,15 @@ export class StorageManager {
         },
         labels: [],
         createdAt: "",
-      } as ProfileViewBasic,
-    } as Partial<Notification>;
+      } as AppBskyActorDefs.ProfileViewBasic,
+    } as Partial<AppBskyNotificationListNotifications.Notification>;
   }
 
   /**
    * Optimize stored notifications to fit within size limits
    */
   static optimizeNotificationStorage(
-    notifications: Notification[],
+    notifications: AppBskyNotificationListNotifications.Notification[],
     targetSize: number = TARGET_STORAGE_SIZE,
   ): CompressedNotification[] {
     const compressed: CompressedNotification[] = [];
@@ -296,7 +293,7 @@ export class StorageManager {
    * Intelligently prune notification data to stay within limits
    */
   static pruneNotifications(
-    pages: Array<{ notifications: Notification[]; cursor?: string }>,
+    pages: Array<{ notifications: AppBskyNotificationListNotifications.Notification[]; cursor?: string }>,
     maxSize: number = TARGET_STORAGE_SIZE,
   ): Array<{ notifications: CompressedNotification[]; cursor?: string }> {
     // Flatten all notifications

@@ -1,4 +1,4 @@
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyNotificationListNotifications } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
@@ -14,7 +14,7 @@ import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 
 interface TopAccountsViewProps {
-  notifications: Notification[];
+  notifications: AppBskyNotificationListNotifications.Notification[];
   minFollowerCount: number;
   onConfigClick: () => void;
 }

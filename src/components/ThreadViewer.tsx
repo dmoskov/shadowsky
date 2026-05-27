@@ -1,5 +1,7 @@
-import type { AppBskyFeedDefs } from "@atproto/api";
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type {
+  AppBskyFeedDefs,
+  AppBskyNotificationListNotifications,
+} from "@atproto/api";
 import { formatDistanceToNow } from "date-fns";
 import {
   ChevronDown,
@@ -58,7 +60,7 @@ type Post = AppBskyFeedDefs.PostView;
 
 export interface ThreadViewerProps {
   posts: Post[];
-  notifications?: Notification[];
+  notifications?: AppBskyNotificationListNotifications.Notification[];
   rootUri?: string;
   highlightUri?: string;
   onPostClick?: (post: Post, action?: "reply" | "quote") => void;

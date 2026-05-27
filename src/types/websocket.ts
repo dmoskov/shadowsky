@@ -1,4 +1,4 @@
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyNotificationListNotifications } from "@atproto/api";
 
 export enum WebSocketEventType {
   // Connection events
@@ -39,7 +39,7 @@ export interface WebSocketEvent {
 
 export interface NewNotificationEvent extends WebSocketEvent {
   type: WebSocketEventType.NEW_NOTIFICATION;
-  notification: Notification;
+  notification: AppBskyNotificationListNotifications.Notification;
 }
 
 export interface NotificationCountEvent extends WebSocketEvent {

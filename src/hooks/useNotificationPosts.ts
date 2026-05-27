@@ -1,5 +1,4 @@
-import type { AppBskyFeedDefs } from "@atproto/api";
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyFeedDefs, AppBskyNotificationListNotifications } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
@@ -14,7 +13,7 @@ type Post = AppBskyFeedDefs.PostView;
  * This is used to get full post data including embeds for image filtering
  */
 export function useNotificationPosts(
-  notifications: Notification[] | undefined,
+  notifications: AppBskyNotificationListNotifications.Notification[] | undefined,
 ) {
   const { session, agent } = useAuth();
   const queryClient = useQueryClient();

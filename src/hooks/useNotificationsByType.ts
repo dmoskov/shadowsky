@@ -1,4 +1,4 @@
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyNotificationListNotifications } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
@@ -45,7 +45,7 @@ export function useNotificationsByType(
       // (AT Protocol doesn't support server-side filtering by reason)
       if (reasons && reasons.length > 0) {
         const filteredNotifications = result.notifications.filter(
-          (n: Notification) => reasons.includes(n.reason as NotificationReason),
+          (n: AppBskyNotificationListNotifications.Notification) => reasons.includes(n.reason as NotificationReason),
         );
 
         return {

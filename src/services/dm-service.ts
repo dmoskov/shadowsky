@@ -1,4 +1,4 @@
-import type { BskyAgent } from "@atproto/api";
+import type { BlobRef, BskyAgent } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { API_RETRY_OPTIONS, fetchWithRetry } from "../utils/retry";
 
@@ -296,7 +296,7 @@ class DmService {
   async uploadBlob(
     data: Uint8Array,
     mimeType: string,
-  ): Promise<{ ref: { $link: string }; mimeType: string; size: number }> {
+  ): Promise<BlobRef> {
     if (!this.agent) {
       throw new Error("Not authenticated");
     }

@@ -1,4 +1,4 @@
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyNotificationListNotifications } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import {
   useInfiniteQuery,
@@ -209,7 +209,7 @@ export function useMarkNotificationsRead() {
           oldData:
             | {
                 pages: Array<{
-                  notifications: Notification[];
+                  notifications: AppBskyNotificationListNotifications.Notification[];
                   cursor?: string;
                 }>;
                 pageParams: unknown[];
@@ -223,7 +223,7 @@ export function useMarkNotificationsRead() {
             pages: oldData.pages.map((page) => ({
               ...page,
               notifications: page.notifications.map(
-                (notification: Notification) => ({
+                (notification: AppBskyNotificationListNotifications.Notification) => ({
                   ...notification,
                   isRead: true,
                 }),
@@ -239,7 +239,7 @@ export function useMarkNotificationsRead() {
   });
 }
 
-export function getNotificationText(notification: Notification): string {
+export function getNotificationText(notification: AppBskyNotificationListNotifications.Notification): string {
   const author =
     notification.author?.displayName ||
     `@${notification.author?.handle || "unknown"}`;

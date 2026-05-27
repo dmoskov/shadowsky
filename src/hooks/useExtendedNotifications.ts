@@ -1,11 +1,11 @@
-import type { Notification } from "@atproto/api/dist/client/types/app/bsky/notification/listNotifications";
+import type { AppBskyNotificationListNotifications } from "@atproto/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../contexts/AuthContext";
 import { NotificationCacheService } from "../services/notification-cache-service";
 
 interface ExtendedNotificationsData {
   pages: Array<{
-    notifications: Notification[];
+    notifications: AppBskyNotificationListNotifications.Notification[];
     cursor?: string;
   }>;
   pageParams: Array<string | undefined>;
