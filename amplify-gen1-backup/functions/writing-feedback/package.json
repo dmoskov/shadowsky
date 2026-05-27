@@ -1,8 +1,0 @@
-{
-  "name": "writing-feedback",
-  "version": "1.0.0",
-  "type": "module",
-  "description": "Amplify function for providing writing feedback",
-  "main": "handler.js",
-  "dependencies": {}
-}
