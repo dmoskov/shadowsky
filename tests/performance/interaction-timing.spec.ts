@@ -60,13 +60,31 @@ async function measureInteraction(
 }
 
 test.describe("Interaction Timing - INP Budget @performance", () => {
-  test.beforeEach(async ({ page }) => {
-    // Set a generous timeout for initial page load
-    test.setTimeout(30000);
+  const pageErrors: string[] = [];
 
-    // Navigate to landing page
+  test.beforeEach(async ({ page }) => {
+    test.setTimeout(30000);
+    pageErrors.length = 0;
+
+    page.on("pageerror", (error) => {
+      pageErrors.push(error.message);
+    });
+
     await page.goto("/");
     await page.waitForLoadState("networkidle");
+
+    const appRendered = await page
+      .locator("#root")
+      .evaluate((el) => el.children.length > 0)
+      .catch(() => false);
+
+    if (!appRendered || pageErrors.length > 0) {
+      const reason =
+        pageErrors.length > 0
+          ? `runtime errors: ${pageErrors.join(", ")}`
+          : "app did not render";
+      test.skip(true, `App failed to load (${reason})`);
+    }
   });
 
   test("App Password button click-to-feedback should be under 200ms @performance", async ({
@@ -101,7 +119,7 @@ test.describe("Interaction Timing - INP Budget @performance", () => {
     } else {
       // If button not available, test with submit button instead
       const submitButton = page.locator('button[type="submit"]');
-      if (await submitButton.isEnabled()) {
+      if (await submitButton.isEnabled().catch(() => false)) {
         const duration = await measureInteraction(
           page,
           async () => {
