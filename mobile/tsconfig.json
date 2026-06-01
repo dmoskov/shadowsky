@@ -4,6 +4,11 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    // Resolve the symlinked @bsky/core workspace package's own imports (notably
+    // @atproto/api) from mobile/node_modules rather than the package's realpath
+    // in the repo root. This dedupes @atproto/api to mobile's single copy so the
+    // shared services' BskyAgent type matches mobile's.
+    "preserveSymlinks": true,
     "paths": {
       "@/*": ["./src/*"]
     }

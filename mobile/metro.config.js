@@ -89,6 +89,22 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     return { type: 'sourceFile', filePath: coreJsShim };
   }
 
+  // Dedupe @atproto/api to mobile's single copy. The shared @bsky/core package
+  // (symlinked from the repo root) also imports @atproto/api; without this,
+  // Metro would bundle a second copy from the root tree. Force every importer to
+  // mobile/node_modules/@atproto/api so BlobRef/agent identities match the
+  // tsconfig `preserveSymlinks` behavior. Fail-safe: falls through on error.
+  if (moduleName === '@atproto/api' || moduleName.startsWith('@atproto/api/')) {
+    try {
+      const filePath = require.resolve(moduleName, {
+        paths: [path.join(__dirname, 'node_modules')],
+      });
+      return { type: 'sourceFile', filePath };
+    } catch {
+      // fall through to default resolution
+    }
+  }
+
   // Resolve multiformats and uint8arrays via their exports map directly.
   // This prevents Metro's browser field redirect from rewriting the specifier
   // to an internal CJS path that isn't in the exports map.
