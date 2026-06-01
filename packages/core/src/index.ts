@@ -13,3 +13,5 @@ export * from "./logger";
 export * from "./atproto/services";
 export * as profiles from "./atproto/profiles";
 export * as feeds from "./atproto/feeds";
+export * as notifications from "./atproto/notifications";
+export * as starterPacks from "./atproto/starter-packs";

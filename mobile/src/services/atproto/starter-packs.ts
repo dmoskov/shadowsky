@@ -1,53 +1,24 @@
+import {starterPacks as coreStarterPacks} from '@bsky/core';
 import {getAtProtoClient} from './client';
-import {AppBskyGraphDefs} from '@atproto/api';
 import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
 
-/**
- * Get a starter pack by AT-URI
- */
-export async function getStarterPack(
-  starterPackUri: string
-): Promise<AppBskyGraphDefs.StarterPackView> {
-  return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
+const agent = () => getAtProtoClient().getAgent();
 
-      const response = await agent.app.bsky.graph.getStarterPack({
-        starterPack: starterPackUri,
-      });
-      return response.data.starterPack;
-    },
-    ATProtoEndpointType.FEED
+/**
+ * The AT Protocol calls live in @bsky/core; these thin wrappers add mobile's
+ * singleton agent + per-endpoint rateLimited throttling.
+ */
+
+export async function getStarterPack(starterPackUri: string) {
+  return rateLimited(
+    () => coreStarterPacks.getStarterPack(agent(), starterPackUri),
+    ATProtoEndpointType.FEED,
   );
 }
 
-/**
- * Get starter packs created by an actor
- */
-export async function getActorStarterPacks(
-  actor: string,
-  cursor?: string
-): Promise<{
-  starterPacks: AppBskyGraphDefs.StarterPackViewBasic[];
-  cursor?: string;
-}> {
+export async function getActorStarterPacks(actor: string, cursor?: string) {
   return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
-
-      const response = await agent.app.bsky.graph.getActorStarterPacks({
-        actor,
-        limit: 50,
-        cursor,
-      });
-
-      return {
-        starterPacks: response.data.starterPacks,
-        cursor: response.data.cursor,
-      };
-    },
-    ATProtoEndpointType.FEED
+    () => coreStarterPacks.getActorStarterPacks(agent(), actor, cursor),
+    ATProtoEndpointType.FEED,
   );
 }
