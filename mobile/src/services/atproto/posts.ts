@@ -1,6 +1,10 @@
+import {interactions as coreInteractions} from '@bsky/core';
 import {getAtProtoClient} from './client';
 import {RichText, AppBskyFeedPost} from '@atproto/api';
 import {rateLimited, ATProtoEndpointType} from '../rate-limiter';
+
+// Singleton agent accessor for the wrappers that delegate to @bsky/core.
+const postsAgent = () => getAtProtoClient().getAgent();
 
 export interface CreatePostOptions {
   text: string;
@@ -203,12 +207,7 @@ export async function createPost(options: CreatePostOptions) {
  */
 export async function deletePost(uri: string) {
   return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
-
-      await agent.deletePost(uri);
-    },
+    () => coreInteractions.deletePost(postsAgent(), uri),
     ATProtoEndpointType.RECORD,
   );
 }
@@ -218,13 +217,7 @@ export async function deletePost(uri: string) {
  */
 export async function likePost(uri: string, cid: string) {
   return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
-
-      const response = await agent.like(uri, cid);
-      return response;
-    },
+    () => coreInteractions.likePost(postsAgent(), uri, cid),
     ATProtoEndpointType.RECORD,
   );
 }
@@ -234,12 +227,7 @@ export async function likePost(uri: string, cid: string) {
  */
 export async function unlikePost(likeUri: string) {
   return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
-
-      await agent.deleteLike(likeUri);
-    },
+    () => coreInteractions.unlikePost(postsAgent(), likeUri),
     ATProtoEndpointType.RECORD,
   );
 }
@@ -249,13 +237,7 @@ export async function unlikePost(likeUri: string) {
  */
 export async function repost(uri: string, cid: string) {
   return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
-
-      const response = await agent.repost(uri, cid);
-      return response;
-    },
+    () => coreInteractions.repost(postsAgent(), uri, cid),
     ATProtoEndpointType.RECORD,
   );
 }
@@ -265,12 +247,7 @@ export async function repost(uri: string, cid: string) {
  */
 export async function deleteRepost(repostUri: string) {
   return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
-
-      await agent.deleteRepost(repostUri);
-    },
+    () => coreInteractions.deleteRepost(postsAgent(), repostUri),
     ATProtoEndpointType.RECORD,
   );
 }
@@ -389,21 +366,7 @@ export async function createThread(
  */
 export async function getLikes(uri: string, cursor?: string) {
   return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
-
-      const response = await agent.getLikes({
-        uri,
-        limit: 50,
-        cursor,
-      });
-
-      return {
-        likes: response.data.likes,
-        cursor: response.data.cursor,
-      };
-    },
+    () => coreInteractions.getLikes(postsAgent(), uri, cursor),
     ATProtoEndpointType.FEED,
   );
 }
@@ -413,21 +376,7 @@ export async function getLikes(uri: string, cursor?: string) {
  */
 export async function getRepostsByPost(uri: string, cursor?: string) {
   return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
-
-      const response = await agent.getRepostedBy({
-        uri,
-        limit: 50,
-        cursor,
-      });
-
-      return {
-        repostedBy: response.data.repostedBy,
-        cursor: response.data.cursor,
-      };
-    },
+    () => coreInteractions.getRepostedBy(postsAgent(), uri, cursor),
     ATProtoEndpointType.FEED,
   );
 }
@@ -437,21 +386,7 @@ export async function getRepostsByPost(uri: string, cursor?: string) {
  */
 export async function getQuotesByPost(uri: string, cursor?: string) {
   return rateLimited(
-    async () => {
-      const client = getAtProtoClient();
-      const agent = client.getAgent();
-
-      const response = await agent.app.bsky.feed.getQuotes({
-        uri,
-        limit: 50,
-        cursor,
-      });
-
-      return {
-        posts: response.data.posts,
-        cursor: response.data.cursor,
-      };
-    },
+    () => coreInteractions.getQuotes(postsAgent(), uri, cursor),
     ATProtoEndpointType.FEED,
   );
 }
