@@ -1,6 +1,10 @@
 import { AppBskyFeedDefs, AppBskyFeedDefs as FeedDefs } from "@atproto/api";
+import { feeds as coreFeeds } from "@bsky/core";
 import { ATProtoEndpointType, rateLimited } from "../rate-limiter";
 import { getAtProtoClient } from "./client";
+
+// Singleton agent accessor for the thin wrappers that delegate to @bsky/core.
+const agent = () => getAtProtoClient().getAgent();
 
 export interface FeedOptions {
   limit?: number;
@@ -28,20 +32,10 @@ export interface FeedResponse {
 export async function getTimeline(
   options: FeedOptions = {},
 ): Promise<FeedResponse> {
-  return rateLimited(async () => {
-    const client = getAtProtoClient();
-    const agent = client.getAgent();
-
-    const response = await agent.getTimeline({
-      limit: options.limit || 50,
-      cursor: options.cursor,
-    });
-
-    return {
-      feed: response.data.feed,
-      cursor: response.data.cursor,
-    };
-  }, ATProtoEndpointType.FEED);
+  return rateLimited(
+    () => coreFeeds.getTimeline(agent(), options),
+    ATProtoEndpointType.FEED,
+  );
 }
 
 /**
@@ -51,21 +45,10 @@ export async function getFeed(
   feedUri: string,
   options: FeedOptions = {},
 ): Promise<FeedResponse> {
-  return rateLimited(async () => {
-    const client = getAtProtoClient();
-    const agent = client.getAgent();
-
-    const response = await agent.app.bsky.feed.getFeed({
-      feed: feedUri,
-      limit: options.limit || 50,
-      cursor: options.cursor,
-    });
-
-    return {
-      feed: response.data.feed,
-      cursor: response.data.cursor,
-    };
-  }, ATProtoEndpointType.FEED);
+  return rateLimited(
+    () => coreFeeds.getFeed(agent(), feedUri, options),
+    ATProtoEndpointType.FEED,
+  );
 }
 
 /**
@@ -75,22 +58,10 @@ export async function getAuthorFeed(
   actor: string,
   options: AuthorFeedOptions = {},
 ): Promise<FeedResponse> {
-  return rateLimited(async () => {
-    const client = getAtProtoClient();
-    const agent = client.getAgent();
-
-    const response = await agent.getAuthorFeed({
-      actor,
-      limit: options.limit || 50,
-      cursor: options.cursor,
-      filter: options.filter,
-    });
-
-    return {
-      feed: response.data.feed,
-      cursor: response.data.cursor,
-    };
-  }, ATProtoEndpointType.FEED);
+  return rateLimited(
+    () => coreFeeds.getAuthorFeed(agent(), actor, options),
+    ATProtoEndpointType.FEED,
+  );
 }
 
 /**
@@ -100,39 +71,24 @@ export async function getActorLikes(
   actor: string,
   options: FeedOptions = {},
 ): Promise<FeedResponse> {
-  return rateLimited(async () => {
-    const client = getAtProtoClient();
-    const agent = client.getAgent();
-
-    const response = await agent.getActorLikes({
-      actor,
-      limit: options.limit || 50,
-      cursor: options.cursor,
-    });
-
-    return {
-      feed: response.data.feed,
-      cursor: response.data.cursor,
-    };
-  }, ATProtoEndpointType.FEED);
+  return rateLimited(
+    () => coreFeeds.getActorLikes(agent(), actor, options),
+    ATProtoEndpointType.FEED,
+  );
 }
 
 /**
  * Get a single post thread with replies
  */
-export async function getPostThread(uri: string, depth: number = 6, parentHeight: number = 80) {
-  return rateLimited(async () => {
-    const client = getAtProtoClient();
-    const agent = client.getAgent();
-
-    const response = await agent.getPostThread({
-      uri,
-      depth,
-      parentHeight,
-    });
-
-    return response.data.thread;
-  }, ATProtoEndpointType.FEED);
+export async function getPostThread(
+  uri: string,
+  depth: number = 6,
+  parentHeight: number = 80,
+) {
+  return rateLimited(
+    () => coreFeeds.getPostThread(agent(), uri, depth, parentHeight),
+    ATProtoEndpointType.FEED,
+  );
 }
 
 export interface SearchPostsOptions extends FeedOptions {
@@ -154,35 +110,10 @@ export async function searchPosts(
   query: string,
   options: SearchPostsOptions = {},
 ): Promise<FeedResponse> {
-  return rateLimited(async () => {
-    const client = getAtProtoClient();
-    const agent = client.getAgent();
-
-    const response = await agent.app.bsky.feed.searchPosts({
-      q: query,
-      limit: options.limit || 50,
-      cursor: options.cursor,
-      sort: options.sort,
-      since: options.since,
-      until: options.until,
-      mentions: options.mentions,
-      author: options.author,
-      lang: options.lang,
-      domain: options.domain,
-      url: options.url,
-      tag: options.tag,
-    });
-
-    return {
-      feed: response.data.posts.map((post) => ({
-        post,
-        reply: undefined,
-        reason: undefined,
-        feedContext: undefined,
-      })) as AppBskyFeedDefs.FeedViewPost[],
-      cursor: response.data.cursor,
-    };
-  }, ATProtoEndpointType.FEED);
+  return rateLimited(
+    () => coreFeeds.searchPosts(agent(), query, options),
+    ATProtoEndpointType.FEED,
+  );
 }
 
 export interface FeedGeneratorResponse {
