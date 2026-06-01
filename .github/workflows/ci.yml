@@ -31,6 +31,8 @@ jobs:
           cache: npm
       - uses: google/wireit@setup-github-actions-caching/v2
       - run: npm ci
+      - name: Check @atproto/api version lockstep (web/mobile/core)
+        run: node scripts/check-atproto-version.mjs
       - run: npm test
       - name: Run unit tests with coverage
         run: npm run test:unit -- --coverage

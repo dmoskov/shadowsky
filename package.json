@@ -11,6 +11,7 @@
     "build": "wireit",
     "build:app": "wireit",
     "build:ci": "wireit",
+    "check:atproto-version": "node scripts/check-atproto-version.mjs",
     "deps:check": "npm outdated || true",
     "deps:audit": "npm audit --production",
     "deps:audit:all": "npm audit",
