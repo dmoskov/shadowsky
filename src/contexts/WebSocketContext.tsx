@@ -80,7 +80,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const statsIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Refs for debounced notification updates
-  const pendingNotificationsRef = useRef<AppBskyNotificationListNotifications.Notification[]>([]);
+  const pendingNotificationsRef = useRef<
+    AppBskyNotificationListNotifications.Notification[]
+  >([]);
   const notificationDebounceTimerRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
@@ -177,7 +179,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       { queryKey: ["notifications"] },
       (oldData: unknown) => {
         const data = oldData as
-          | { pages?: Array<{ notifications: AppBskyNotificationListNotifications.Notification[] }> }
+          | {
+              pages?: Array<{
+                notifications: AppBskyNotificationListNotifications.Notification[];
+              }>;
+            }
           | undefined;
         if (!data?.pages) return oldData;
 
@@ -237,7 +243,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         { queryKey: ["notifications"] },
         (oldData: unknown) => {
           const data = oldData as
-            | { pages?: Array<{ notifications: AppBskyNotificationListNotifications.Notification[] }> }
+            | {
+                pages?: Array<{
+                  notifications: AppBskyNotificationListNotifications.Notification[];
+                }>;
+              }
             | undefined;
           if (!data?.pages) return oldData;
 
@@ -698,7 +708,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   );
 };
 
-function getNotificationBody(notification: AppBskyNotificationListNotifications.Notification): string {
+function getNotificationBody(
+  notification: AppBskyNotificationListNotifications.Notification,
+): string {
   const author =
     notification.author.displayName || `@${notification.author.handle}`;
 

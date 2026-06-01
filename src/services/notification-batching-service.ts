@@ -37,8 +37,14 @@ type BatchListener = (update: BatchedNotificationUpdate) => void;
 export class NotificationBatchingService {
   private static instance: NotificationBatchingService;
   private config: NotificationBatchingConfig;
-  private pendingNotifications: Map<string, AppBskyNotificationListNotifications.Notification> = new Map();
-  private currentNotifications: Map<string, AppBskyNotificationListNotifications.Notification> = new Map();
+  private pendingNotifications: Map<
+    string,
+    AppBskyNotificationListNotifications.Notification
+  > = new Map();
+  private currentNotifications: Map<
+    string,
+    AppBskyNotificationListNotifications.Notification
+  > = new Map();
   private batchTimer: ReturnType<typeof setTimeout> | null = null;
   private listeners: Set<BatchListener> = new Set();
   private batchCounter = 0;
@@ -85,11 +91,15 @@ export class NotificationBatchingService {
     });
   }
 
-  private getNotificationKey(notification: AppBskyNotificationListNotifications.Notification): string {
+  private getNotificationKey(
+    notification: AppBskyNotificationListNotifications.Notification,
+  ): string {
     return `${notification.uri}-${notification.indexedAt}`;
   }
 
-  queueNotifications(notifications: AppBskyNotificationListNotifications.Notification[]): void {
+  queueNotifications(
+    notifications: AppBskyNotificationListNotifications.Notification[],
+  ): void {
     if (notifications.length === 0) return;
 
     const now = Date.now();
@@ -181,7 +191,9 @@ export class NotificationBatchingService {
     this.notifyListeners(update);
   }
 
-  processFullUpdate(notifications: AppBskyNotificationListNotifications.Notification[]): BatchedNotificationUpdate {
+  processFullUpdate(
+    notifications: AppBskyNotificationListNotifications.Notification[],
+  ): BatchedNotificationUpdate {
     const batchId = `full-${++this.batchCounter}-${Date.now()}`;
 
     const newKeys = new Set(
@@ -236,7 +248,10 @@ export class NotificationBatchingService {
   groupNotificationsByType(
     notifications: AppBskyNotificationListNotifications.Notification[],
   ): Map<string, AppBskyNotificationListNotifications.Notification[]> {
-    const groups = new Map<string, AppBskyNotificationListNotifications.Notification[]>();
+    const groups = new Map<
+      string,
+      AppBskyNotificationListNotifications.Notification[]
+    >();
 
     if (!this.config.enableGrouping) {
       groups.set("all", notifications);

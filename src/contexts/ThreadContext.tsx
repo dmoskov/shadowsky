@@ -179,7 +179,10 @@ function buildThreadTree(
   const nodeMap = new Map<string, ThreadNode>();
   const rootNodes: ThreadNode[] = [];
 
-  const notificationMap = new Map<string, AppBskyNotificationListNotifications.Notification>();
+  const notificationMap = new Map<
+    string,
+    AppBskyNotificationListNotifications.Notification
+  >();
   notifications.forEach((notification) => {
     if (notification?.uri) {
       notificationMap.set(notification.uri, notification);

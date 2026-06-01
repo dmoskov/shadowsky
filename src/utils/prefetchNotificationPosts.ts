@@ -1,4 +1,8 @@
-import type { AppBskyFeedDefs, AppBskyNotificationListNotifications, BskyAgent } from "@atproto/api";
+import type {
+  AppBskyFeedDefs,
+  AppBskyNotificationListNotifications,
+  BskyAgent,
+} from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { rateLimitedPostFetch } from "../services/rate-limiter";
 import { PostCache } from "./postCache";

@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.7.4",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "analyze": "ANALYZE=true npm run build:app && open bundle-stats.html",
     "build": "wireit",
@@ -36,6 +39,7 @@
   "dependencies": {
     "@atproto/api": "^0.20.5",
     "@atproto/oauth-client-browser": "^0.4.0",
+    "@bsky/core": "*",
     "@aws-sdk/client-cloudwatch-logs": "^3.1053.0",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
@@ -51,7 +55,6 @@
     "dompurify": "3.4.5",
     "hls.js": "^1.6.16",
     "html2canvas": "^1.4.1",
-    "idb": "^8.0.3",
     "idb-keyval": "^6.2.4",
     "lucide-react": "^0.577.0",
     "nanoid": "^5.1.11",
@@ -126,10 +129,12 @@
       ]
     },
     "fix:format": {
-      "command": "echo 'Format fixing migrated to vp \u2014 run npx vp fmt locally'",
+      "command": "npx oxfmt src packages",
       "files": [
+        ".oxfmtrc.json",
         "*.{html,js,md,ts,yml}",
-        "src/**/*.{ts,tsx,css}"
+        "src/**/*.{ts,tsx,css}",
+        "packages/**/*.{ts,tsx}"
       ]
     },
     "fix:lint": {
@@ -157,10 +162,12 @@
       ]
     },
     "test:format": {
-      "command": "echo 'Format checking migrated to vp \u2014 skipped pending full CI verification'",
+      "command": "npx oxfmt --check src packages",
       "files": [
+        ".oxfmtrc.json",
         "*.{html,js,md,ts,yml}",
-        "src/**/*.{ts,tsx,css}"
+        "src/**/*.{ts,tsx,css}",
+        "packages/**/*.{ts,tsx}"
       ]
     },
     "test:lint": {

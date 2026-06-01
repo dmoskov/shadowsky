@@ -40,7 +40,10 @@ export function aggregateNotifications(
   const aggregationWindow = 24 * 60 * 60 * 1000; // 24 hours in milliseconds for better grouping
 
   // Group notifications by reason and target post (for post-specific grouping)
-  const groups = new Map<string, AppBskyNotificationListNotifications.Notification[]>();
+  const groups = new Map<
+    string,
+    AppBskyNotificationListNotifications.Notification[]
+  >();
 
   notifications.forEach((notification) => {
     // Only aggregate certain types
@@ -99,8 +102,10 @@ export function aggregateNotifications(
     // Check if we should aggregate
     if (groupNotifications.length >= minAggregationCount) {
       // Find time clusters
-      const clusters: AppBskyNotificationListNotifications.Notification[][] = [];
-      let currentCluster: AppBskyNotificationListNotifications.Notification[] = [groupNotifications[0]];
+      const clusters: AppBskyNotificationListNotifications.Notification[][] =
+        [];
+      let currentCluster: AppBskyNotificationListNotifications.Notification[] =
+        [groupNotifications[0]];
 
       for (let i = 1; i < groupNotifications.length; i++) {
         const timeDiff =

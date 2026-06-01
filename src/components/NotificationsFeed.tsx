@@ -264,29 +264,31 @@ const NotificationsFeedComponent: React.FC = () => {
         postUriToRoot.set(post.uri, rootUri);
       });
 
-      filtered = filtered.filter((n: AppBskyNotificationListNotifications.Notification) => {
-        // Get the post URI for this notification
-        let postUri: string | undefined;
-        if (n.reason === "repost" || n.reason === "like") {
-          postUri = n.reasonSubject;
-        } else if (
-          n.reason === "reply" ||
-          n.reason === "mention" ||
-          n.reason === "quote"
-        ) {
-          postUri = n.uri;
-        }
+      filtered = filtered.filter(
+        (n: AppBskyNotificationListNotifications.Notification) => {
+          // Get the post URI for this notification
+          let postUri: string | undefined;
+          if (n.reason === "repost" || n.reason === "like") {
+            postUri = n.reasonSubject;
+          } else if (
+            n.reason === "reply" ||
+            n.reason === "mention" ||
+            n.reason === "quote"
+          ) {
+            postUri = n.uri;
+          }
 
-        // If we have the post URI and can determine its root, check if muted
-        if (postUri && postUriToRoot.has(postUri)) {
-          const rootUri = postUriToRoot.get(postUri)!;
-          return !isThreadMuted(rootUri);
-        }
+          // If we have the post URI and can determine its root, check if muted
+          if (postUri && postUriToRoot.has(postUri)) {
+            const rootUri = postUriToRoot.get(postUri)!;
+            return !isThreadMuted(rootUri);
+          }
 
-        // If we don't have the post data yet, keep the notification
-        // (it will be filtered once posts are loaded)
-        return true;
-      });
+          // If we don't have the post data yet, keep the notification
+          // (it will be filtered once posts are loaded)
+          return true;
+        },
+      );
     }
 
     if (filter === "images") {
@@ -295,16 +297,18 @@ const NotificationsFeedComponent: React.FC = () => {
         const postsWithImages = new Set(
           posts.filter(postHasImages).map((post) => post.uri),
         );
-        filtered = filtered.filter((n: AppBskyNotificationListNotifications.Notification) => {
-          if (!["like", "repost", "reply", "quote"].includes(n.reason))
-            return false;
-          // For reposts and likes, use reasonSubject which contains the original post URI
-          const postUri =
-            (n.reason === "repost" || n.reason === "like") && n.reasonSubject
-              ? n.reasonSubject
-              : n.uri;
-          return postsWithImages.has(postUri);
-        });
+        filtered = filtered.filter(
+          (n: AppBskyNotificationListNotifications.Notification) => {
+            if (!["like", "repost", "reply", "quote"].includes(n.reason))
+              return false;
+            // For reposts and likes, use reasonSubject which contains the original post URI
+            const postUri =
+              (n.reason === "repost" || n.reason === "like") && n.reasonSubject
+                ? n.reasonSubject
+                : n.uri;
+            return postsWithImages.has(postUri);
+          },
+        );
       } else {
         // While posts are loading, show empty
         filtered = [];
@@ -328,20 +332,22 @@ const NotificationsFeedComponent: React.FC = () => {
         replies: ["reply"],
         quotes: ["quote"],
       };
-      filtered = filtered.filter((n: AppBskyNotificationListNotifications.Notification) =>
-        filterMap[
-          filter as Exclude<
-            NotificationFilter,
-            "all" | "images" | "top-accounts" | "from-following"
-          >
-        ].includes(n.reason),
+      filtered = filtered.filter(
+        (n: AppBskyNotificationListNotifications.Notification) =>
+          filterMap[
+            filter as Exclude<
+              NotificationFilter,
+              "all" | "images" | "top-accounts" | "from-following"
+            >
+          ].includes(n.reason),
       );
     }
 
     // Filter for notifications from people you follow
     if (filter === "from-following" && followingSet) {
-      filtered = filtered.filter((n: AppBskyNotificationListNotifications.Notification) =>
-        followingSet.has(n.author.did),
+      filtered = filtered.filter(
+        (n: AppBskyNotificationListNotifications.Notification) =>
+          followingSet.has(n.author.did),
       );
     }
 
@@ -376,50 +382,54 @@ const NotificationsFeedComponent: React.FC = () => {
     };
 
     // Count notifications by type
-    notifications?.forEach((n: AppBskyNotificationListNotifications.Notification) => {
-      switch (n.reason) {
-        case "like":
-          counts.likes++;
-          break;
-        case "repost":
-          counts.reposts++;
-          break;
-        case "follow":
-          counts.follows++;
-          break;
-        case "mention":
-          counts.mentions++;
-          break;
-        case "reply":
-          counts.replies++;
-          break;
-        case "quote":
-          counts.quotes++;
-          break;
-      }
+    notifications?.forEach(
+      (n: AppBskyNotificationListNotifications.Notification) => {
+        switch (n.reason) {
+          case "like":
+            counts.likes++;
+            break;
+          case "repost":
+            counts.reposts++;
+            break;
+          case "follow":
+            counts.follows++;
+            break;
+          case "mention":
+            counts.mentions++;
+            break;
+          case "reply":
+            counts.replies++;
+            break;
+          case "quote":
+            counts.quotes++;
+            break;
+        }
 
-      // Count notifications from people you follow
-      if (followingSet && followingSet.has(n.author.did)) {
-        counts["from-following"]++;
-      }
-    });
+        // Count notifications from people you follow
+        if (followingSet && followingSet.has(n.author.did)) {
+          counts["from-following"]++;
+        }
+      },
+    );
 
     // Count notifications with images
     if (posts && posts.length > 0) {
       const postsWithImages = new Set(
         posts.filter(postHasImages).map((post) => post.uri),
       );
-      notifications.forEach((n: AppBskyNotificationListNotifications.Notification) => {
-        if (["like", "repost", "reply", "quote"].includes(n.reason)) {
-          const postUri =
-            (n.reason === "repost" || n.reason === "like") && n.reasonSubject
-              ? n.reasonSubject
-              : n.uri;
-          if (postsWithImages.has(postUri)) {
-            counts.images++;
+      notifications.forEach(
+        (n: AppBskyNotificationListNotifications.Notification) => {
+          if (["like", "repost", "reply", "quote"].includes(n.reason)) {
+            const postUri =
+              (n.reason === "repost" || n.reason === "like") && n.reasonSubject
+                ? n.reasonSubject
+                : n.uri;
+            if (postsWithImages.has(postUri)) {
+              counts.images++;
+            }
           }
-        }
-      });
+        },
+      );
     }
 
     // For top-accounts, we'd need to implement the logic to count notifications from high-follower accounts
@@ -946,26 +956,31 @@ const NotificationsFeedComponent: React.FC = () => {
           })()
         ) : (
           // Show regular notifications for mentions, replies, and images tabs (no aggregation)
-          filteredNotifications.map((notification: AppBskyNotificationListNotifications.Notification, index) => {
-            const notificationKey = `${notification.uri}-${notification.indexedAt}`;
-            return (
-              <NotificationItem
-                key={`${notificationKey}-${index}`}
-                notification={notification}
-                postMap={postMap}
-                getNotificationIcon={getNotificationIcon}
-                showTypeLabel={filter === "all"}
-                isFetchingMore={isFetchingMore}
-                fetchedPosts={fetchedPosts}
-                totalPosts={totalPosts}
-                setSelectedPostUri={setSelectedPostUri}
-                markAsRead={markAsRead}
-                isNew={
-                  isTransitioning && newNotificationIds.has(notificationKey)
-                }
-              />
-            );
-          })
+          filteredNotifications.map(
+            (
+              notification: AppBskyNotificationListNotifications.Notification,
+              index,
+            ) => {
+              const notificationKey = `${notification.uri}-${notification.indexedAt}`;
+              return (
+                <NotificationItem
+                  key={`${notificationKey}-${index}`}
+                  notification={notification}
+                  postMap={postMap}
+                  getNotificationIcon={getNotificationIcon}
+                  showTypeLabel={filter === "all"}
+                  isFetchingMore={isFetchingMore}
+                  fetchedPosts={fetchedPosts}
+                  totalPosts={totalPosts}
+                  setSelectedPostUri={setSelectedPostUri}
+                  markAsRead={markAsRead}
+                  isNew={
+                    isTransitioning && newNotificationIds.has(notificationKey)
+                  }
+                />
+              );
+            },
+          )
         )}
 
         {/* Loading more indicator */}

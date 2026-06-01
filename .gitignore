@@ -64,6 +64,10 @@ test-results/
 *.tsbuildinfo
 .eslintcache
 bundle-stats.html
+accessibility-report.json
+
+# Stale package manager lockfile (npm is canonical, see package.json packageManager)
+bun.lockb
 
 # amplify
 .amplify

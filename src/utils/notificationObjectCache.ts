@@ -8,7 +8,10 @@ const NOTIFICATION_OBJECT_CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days - 
 interface CachedNotificationData {
   version: string;
   timestamp: number;
-  notifications: Record<string, AppBskyNotificationListNotifications.Notification>; // URI -> Notification mapping
+  notifications: Record<
+    string,
+    AppBskyNotificationListNotifications.Notification
+  >; // URI -> Notification mapping
 }
 
 /**
@@ -20,7 +23,9 @@ export class NotificationObjectCache {
     return `${NOTIFICATION_OBJECT_CACHE_KEY}${NOTIFICATION_OBJECT_CACHE_VERSION}`;
   }
 
-  static save(notifications: AppBskyNotificationListNotifications.Notification[]): void {
+  static save(
+    notifications: AppBskyNotificationListNotifications.Notification[],
+  ): void {
     try {
       const cacheKey = this.getCacheKey();
 
@@ -120,7 +125,9 @@ export class NotificationObjectCache {
     return { cached, missing };
   }
 
-  static getNotification(uri: string): AppBskyNotificationListNotifications.Notification | null {
+  static getNotification(
+    uri: string,
+  ): AppBskyNotificationListNotifications.Notification | null {
     const cachedData = this.load();
     if (!cachedData) return null;
 
@@ -185,7 +192,10 @@ export class NotificationObjectCache {
     const cutoffTime = cutoffDate.getTime();
 
     let removedCount = 0;
-    const newNotifications: Record<string, AppBskyNotificationListNotifications.Notification> = {};
+    const newNotifications: Record<
+      string,
+      AppBskyNotificationListNotifications.Notification
+    > = {};
 
     Object.entries(data.notifications).forEach(([uri, notification]) => {
       const notificationDate = new Date(notification.indexedAt).getTime();

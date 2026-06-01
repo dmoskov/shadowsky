@@ -35,7 +35,10 @@ export class NotificationCache {
    * Save notifications to localStorage (NO rate limiting - local operation only)
    */
   static save(
-    pages: Array<{ notifications: AppBskyNotificationListNotifications.Notification[]; cursor?: string }>,
+    pages: Array<{
+      notifications: AppBskyNotificationListNotifications.Notification[];
+      cursor?: string;
+    }>,
     priority?: boolean,
   ): void {
     const timestamp = new Date().toLocaleTimeString();
@@ -305,7 +308,9 @@ export class NotificationCache {
           ...page,
           notifications: page.notifications.map(
             (n) =>
-              StorageManager.decompressNotification(n as any) as AppBskyNotificationListNotifications.Notification,
+              StorageManager.decompressNotification(
+                n as any,
+              ) as AppBskyNotificationListNotifications.Notification,
           ),
         }));
       }

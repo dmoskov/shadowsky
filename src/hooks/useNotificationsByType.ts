@@ -45,7 +45,8 @@ export function useNotificationsByType(
       // (AT Protocol doesn't support server-side filtering by reason)
       if (reasons && reasons.length > 0) {
         const filteredNotifications = result.notifications.filter(
-          (n: AppBskyNotificationListNotifications.Notification) => reasons.includes(n.reason as NotificationReason),
+          (n: AppBskyNotificationListNotifications.Notification) =>
+            reasons.includes(n.reason as NotificationReason),
         );
 
         return {

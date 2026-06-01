@@ -30,7 +30,6 @@ public class ShareIntentModule: Module {
                 if age > 300 { // 5 minutes
                     // Stale content, clear it
                     userDefaults.removeObject(forKey: "SharedContent")
-                    userDefaults.synchronize()
                     return nil
                 }
             }
@@ -44,7 +43,6 @@ public class ShareIntentModule: Module {
                 return
             }
             userDefaults.removeObject(forKey: "SharedContent")
-            userDefaults.synchronize()
 
             // Also clean up shared images
             self.cleanupSharedImages()

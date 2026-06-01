@@ -99,27 +99,7 @@ export function clearOldData(prefix: string, maxAge: number) {
   }
 }
 
-// Formatting utilities
-export function formatCount(count: number): string {
-  if (count < 1000) return count.toString();
-  if (count < 1000000) return `${(count / 1000).toFixed(1)}K`;
-  return `${(count / 1000000).toFixed(1)}M`;
-}
-
-export function formatDate(date: string | Date): string {
-  const d = new Date(date);
-  const now = new Date();
-  const diff = now.getTime() - d.getTime();
-
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
-
-  if (seconds < 60) return "just now";
-  if (minutes < 60) return `${minutes}m`;
-  if (hours < 24) return `${hours}h`;
-  if (days < 7) return `${days}d`;
-
-  return d.toLocaleDateString();
-}
+// Formatting utilities — now sourced from the shared @bsky/core package.
+// `formatDate` keeps its historical relative-time meaning here for backward
+// compatibility with existing @bsky/shared consumers.
+export { formatCount, formatRelativeTime as formatDate } from "@bsky/core";

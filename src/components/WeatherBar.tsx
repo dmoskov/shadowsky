@@ -93,9 +93,7 @@ export function WeatherBar({ weather }: Props) {
                   className="inline-block h-1.5 w-1.5 rounded-full"
                   style={{ backgroundColor: color }}
                 />
-                <span style={{ color: "white", opacity: 0.9 }}>
-                  {n.name}
-                </span>
+                <span style={{ color: "white", opacity: 0.9 }}>{n.name}</span>
                 {n.threadType === "weft" && (
                   <span
                     className="text-[9px] font-semibold uppercase tracking-wider"

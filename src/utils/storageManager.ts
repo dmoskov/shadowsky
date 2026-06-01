@@ -3,7 +3,10 @@
  * Handles compression, size monitoring, and intelligent data management
  */
 
-import type { AppBskyActorDefs, AppBskyNotificationListNotifications } from "@atproto/api";
+import type {
+  AppBskyActorDefs,
+  AppBskyNotificationListNotifications,
+} from "@atproto/api";
 import { debug } from "@bsky/shared";
 
 // Type for notification record which can have text
@@ -293,7 +296,10 @@ export class StorageManager {
    * Intelligently prune notification data to stay within limits
    */
   static pruneNotifications(
-    pages: Array<{ notifications: AppBskyNotificationListNotifications.Notification[]; cursor?: string }>,
+    pages: Array<{
+      notifications: AppBskyNotificationListNotifications.Notification[];
+      cursor?: string;
+    }>,
     maxSize: number = TARGET_STORAGE_SIZE,
   ): Array<{ notifications: CompressedNotification[]; cursor?: string }> {
     // Flatten all notifications

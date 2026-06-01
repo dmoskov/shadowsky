@@ -18,8 +18,13 @@ export interface UseNotificationBatchingResult {
   pendingCount: number;
   isBatching: boolean;
   lastBatchUpdate: BatchedNotificationUpdate | null;
-  processNotifications: (notifications: AppBskyNotificationListNotifications.Notification[]) => void;
-  getGroupedNotifications: () => Map<string, AppBskyNotificationListNotifications.Notification[]>;
+  processNotifications: (
+    notifications: AppBskyNotificationListNotifications.Notification[],
+  ) => void;
+  getGroupedNotifications: () => Map<
+    string,
+    AppBskyNotificationListNotifications.Notification[]
+  >;
   stats: {
     totalProcessed: number;
     batchCount: number;
@@ -156,7 +161,10 @@ export function useNotificationBatching(
 
   const getGroupedNotifications = useCallback(() => {
     if (!serviceRef.current) {
-      const defaultMap = new Map<string, AppBskyNotificationListNotifications.Notification[]>();
+      const defaultMap = new Map<
+        string,
+        AppBskyNotificationListNotifications.Notification[]
+      >();
       defaultMap.set("all", batchedNotifications);
       return defaultMap;
     }
@@ -204,7 +212,9 @@ export function useBatchedNotificationTransition(
   const { transitionDuration = 300, enableAnimation = true } = options;
 
   const [displayNotifications, setDisplayNotifications] =
-    useState<AppBskyNotificationListNotifications.Notification[]>(notifications);
+    useState<AppBskyNotificationListNotifications.Notification[]>(
+      notifications,
+    );
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [newNotificationIds, setNewNotificationIds] = useState<Set<string>>(
     new Set(),

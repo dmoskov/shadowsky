@@ -1,3 +1,4 @@
+import { formatCount } from "@bsky/core";
 import { getProfileService } from "@bsky/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useRef, useState } from "react";
@@ -49,7 +50,8 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
     const queryClient = useQueryClient();
     const { prefetchProfile } = useRoutePrefetch();
 
-    const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    const isTouchDevice =
+      "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
     useEffect(() => {
       if (isHovering) {
@@ -189,15 +191,6 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
       } catch (err) {
         console.error("Error toggling follow:", err);
       }
-    };
-
-    const formatCount = (count: number): string => {
-      if (count >= 1000000) {
-        return `${(count / 1000000).toFixed(1)}M`;
-      } else if (count >= 1000) {
-        return `${(count / 1000).toFixed(1)}K`;
-      }
-      return count.toString();
     };
 
     const isOwnProfile = session?.handle === handle;

@@ -223,7 +223,9 @@ export function useMarkNotificationsRead() {
             pages: oldData.pages.map((page) => ({
               ...page,
               notifications: page.notifications.map(
-                (notification: AppBskyNotificationListNotifications.Notification) => ({
+                (
+                  notification: AppBskyNotificationListNotifications.Notification,
+                ) => ({
                   ...notification,
                   isRead: true,
                 }),
@@ -239,7 +241,9 @@ export function useMarkNotificationsRead() {
   });
 }
 
-export function getNotificationText(notification: AppBskyNotificationListNotifications.Notification): string {
+export function getNotificationText(
+  notification: AppBskyNotificationListNotifications.Notification,
+): string {
   const author =
     notification.author?.displayName ||
     `@${notification.author?.handle || "unknown"}`;

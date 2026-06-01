@@ -1,4 +1,4 @@
-import { BskyAgent } from "@atproto/api";
+import { BlobRef, BskyAgent } from "@atproto/api";
 import { withRetry } from "../utils/with-retry";
 import { fetchWithTimeout } from "../utils/with-timeout";
 import { rateLimited, ATProtoEndpointType } from './rate-limiter';
@@ -298,7 +298,7 @@ class DmService {
     );
   }
 
-  async uploadBlob(uri: string): Promise<{ ref: { $link: string }; mimeType: string; size: number }> {
+  async uploadBlob(uri: string): Promise<BlobRef> {
     if (!this.agent) {
       throw new Error("Not authenticated");
     }

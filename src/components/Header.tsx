@@ -19,9 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
         borderBottom: "1px solid var(--asph-border-primary)",
       }}
     >
-      <div
-        className="flex h-full items-center justify-between px-4 mx-auto 2xl:max-w-[1536px]"
-      >
+      <div className="flex h-full items-center justify-between px-4 mx-auto 2xl:max-w-[1536px]">
         <div className="flex items-center gap-4">
           <button
             onClick={onMenuToggle}

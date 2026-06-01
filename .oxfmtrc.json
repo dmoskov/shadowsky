@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 80,
+  "tabWidth": 2,
+  "semi": true,
+  "singleQuote": false,
+  "trailingComma": "all",
+  "ignorePatterns": [
+    "mobile/**",
+    "**/node_modules/**",
+    "dist/**",
+    "coverage/**",
+    "packages/*/dist/**",
+    "**/*.md"
+  ]
+}

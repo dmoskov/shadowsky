@@ -1,8 +1,4 @@
-import {
-  AppBskyActorDefs,
-  AppBskyFeedDefs,
-  RichText as BskyRichText,
-} from "@atproto/api";
+import { AppBskyFeedDefs, RichText as BskyRichText } from "@atproto/api";
 import { getProfileService } from "@bsky/shared";
 import {
   useInfiniteQuery,
@@ -59,56 +55,17 @@ import { useToast } from "../contexts/ToastContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { useTopPosts } from "../hooks/useTopPosts";
 import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
-import { analyzePosts } from "../services/anthropic";
 import { getFollowerCacheDB } from "../services/follower-cache-db";
 import { moderationHistoryDB } from "../services/moderation-history-db";
 import { shareProfile } from "../services/share-service";
 import { proxifyBskyImage } from "../utils/image-proxy";
-
-const formatCount = (count: number): string => {
-  if (count >= 1000000) {
-    return `${(count / 1000000).toFixed(1)}M`;
-  } else if (count >= 1000) {
-    return `${(count / 1000).toFixed(1)}K`;
-  }
-  return count.toString();
-};
-
-interface ProfileData {
-  did: string;
-  handle: string;
-  displayName?: string;
-  description?: string;
-  avatar?: string;
-  banner?: string;
-  followersCount?: number;
-  followsCount?: number;
-  postsCount?: number;
-  createdAt?: string;
-  indexedAt?: string;
-  labels?: AppBskyActorDefs.ProfileViewDetailed["labels"];
-  associated?: AppBskyActorDefs.ProfileAssociated;
-  pinnedPost?: { uri: string; cid: string };
-  verification?: AppBskyActorDefs.VerificationState;
-  viewer?: {
-    following?: string;
-    followedBy?: string;
-    muted?: boolean;
-    blockedBy?: boolean;
-    blocking?: string;
-    knownFollowers?: AppBskyActorDefs.KnownFollowers;
-  };
-}
-
-type ProfileTab = "posts" | "replies" | "media" | "likes" | "top";
-
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
-};
+import {
+  formatCount,
+  formatJoinDate,
+  type ProfileData,
+  type ProfileTab,
+} from "./ProfilePage.types";
+import { useProfileAnalysis } from "./useProfileAnalysis";
 
 // Store scroll positions for each profile/tab combination
 const scrollPositions = new Map<string, number>();
@@ -299,103 +256,14 @@ export default function ProfilePage() {
     [postsData],
   );
 
-  // Transform posts already in memory for quick haiku analysis
-  const postsInMemory = posts
-    .filter((item) => {
-      const isRepost = item.reason?.$type === "app.bsky.feed.defs#reasonRepost";
-      return !isRepost;
-    })
-    .map((item) => ({
-      text: (item.post.record as { text?: string })?.text || "",
-      createdAt: item.post.indexedAt,
-      likes: item.post.likeCount || 0,
-      reposts: item.post.repostCount || 0,
-      replies: item.post.replyCount || 0,
-    }));
-
-  // Quick haiku analysis using posts already in memory (instant start)
+  // Two-stage AI profile analysis (haiku → sonnet); see useProfileAnalysis
   const {
-    data: haikuAnalysis,
-    isLoading: isLoadingHaiku,
-    error: haikuError,
-  } = useQuery({
-    queryKey: ["profile-analysis-haiku", handle],
-    queryFn: async () => {
-      if (postsInMemory.length === 0) throw new Error("No posts in memory");
-      return await analyzePosts(postsInMemory, "haiku");
-    },
-    staleTime: 30 * 60 * 1000,
-    enabled: analysisRequested && postsInMemory.length > 0,
-  });
-
-  // Fetch more posts for deeper Sonnet analysis (in parallel)
-  const { data: postsForSonnet, isLoading: isLoadingPostsForSonnet } = useQuery(
-    {
-      queryKey: ["profile-posts-for-sonnet", handle],
-      queryFn: async () => {
-        if (!agent || !handle) throw new Error("No handle to analyze");
-
-        const allPosts: AppBskyFeedDefs.FeedViewPost[] = [];
-        let fetchCursor: string | undefined;
-        const maxPages = 4; // Fetch up to 200 posts for deeper analysis
-
-        for (let page = 0; page < maxPages; page++) {
-          const response = await agent.getAuthorFeed({
-            actor: handle,
-            limit: 50,
-            cursor: fetchCursor,
-          });
-
-          const filteredPosts = response.data.feed.filter((item) => {
-            const isRepost =
-              item.reason?.$type === "app.bsky.feed.defs#reasonRepost";
-            return !isRepost;
-          });
-
-          allPosts.push(...filteredPosts);
-          fetchCursor = response.data.cursor;
-          if (!fetchCursor) break;
-        }
-
-        if (allPosts.length === 0) {
-          throw new Error("No posts available for analysis");
-        }
-
-        return allPosts.map((item) => ({
-          text: (item.post.record as { text?: string })?.text || "",
-          createdAt: item.post.indexedAt,
-          likes: item.post.likeCount || 0,
-          reposts: item.post.repostCount || 0,
-          replies: item.post.replyCount || 0,
-        }));
-      },
-      staleTime: 30 * 60 * 1000,
-      enabled: analysisRequested && !!handle && !!agent,
-    },
-  );
-
-  // Full sonnet analysis with more posts (detailed)
-  const {
-    data: sonnetAnalysis,
-    isLoading: isLoadingSonnet,
-    error: sonnetError,
-  } = useQuery({
-    queryKey: ["profile-analysis-sonnet", handle],
-    queryFn: async () => {
-      if (!postsForSonnet) throw new Error("Posts not loaded");
-      return await analyzePosts(postsForSonnet, "sonnet");
-    },
-    staleTime: 30 * 60 * 1000,
-    enabled: !!postsForSonnet,
-  });
-
-  // Use haiku if available, then upgrade to sonnet when ready
-  const analysisData = sonnetAnalysis || haikuAnalysis;
-  const isLoadingAnalysis =
-    (isLoadingHaiku && !haikuAnalysis) ||
-    (isLoadingPostsForSonnet && isLoadingSonnet && !haikuAnalysis);
-  // Show error if both haiku and sonnet fail (or sonnet fails after haiku succeeds)
-  const analysisError = sonnetError || haikuError;
+    analysisData,
+    isLoadingAnalysis,
+    analysisError,
+    haikuAnalysis,
+    sonnetAnalysis,
+  } = useProfileAnalysis(handle, posts, analysisRequested);
 
   // Pinned post
   const { data: pinnedPostData } = useQuery({
@@ -1181,7 +1049,7 @@ export default function ProfilePage() {
                 style={{ color: "var(--asph-text-secondary)" }}
               >
                 <Calendar className="h-3.5 w-3.5" />
-                <span>Joined {formatDate(profile.createdAt)}</span>
+                <span>Joined {formatJoinDate(profile.createdAt)}</span>
               </div>
             )}
             {/* Associated feeds */}

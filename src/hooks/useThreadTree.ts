@@ -5,7 +5,10 @@
  * Calculates complexity metrics and provides navigation helpers.
  */
 
-import type { AppBskyFeedDefs, AppBskyNotificationListNotifications } from "@atproto/api";
+import type {
+  AppBskyFeedDefs,
+  AppBskyNotificationListNotifications,
+} from "@atproto/api";
 import { useMemo } from "react";
 import type { ThreadNode } from "../contexts/ThreadContext";
 import { calculateComplexityFromPosts } from "../services/thread-complexity-scorer";
@@ -29,7 +32,10 @@ export interface UseThreadTreeReturn {
   maxThreadDepth: number;
   branchCount: number;
   complexityScore: ReturnType<typeof calculateComplexityFromPosts>;
-  notificationMap: Map<string, AppBskyNotificationListNotifications.Notification>;
+  notificationMap: Map<
+    string,
+    AppBskyNotificationListNotifications.Notification
+  >;
 }
 
 /**
@@ -45,7 +51,10 @@ export function useThreadTree({
 }: UseThreadTreeOptions): UseThreadTreeReturn {
   // Create a map of notifications by URI
   const notificationMap = useMemo(() => {
-    const map = new Map<string, AppBskyNotificationListNotifications.Notification>();
+    const map = new Map<
+      string,
+      AppBskyNotificationListNotifications.Notification
+    >();
     notifications.forEach((notification) => {
       if (notification?.uri) {
         map.set(notification.uri, notification);

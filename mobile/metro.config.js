@@ -5,6 +5,17 @@ const { getDefaultConfig } = require('expo/metro-config');
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
+// Monorepo: allow Metro to resolve the shared @bsky/core workspace package,
+// installed as a `file:../packages/core` dependency (symlinked into
+// mobile/node_modules). Metro only follows symlinks into watched folders, so we
+// add packages/ to watchFolders. Purely additive — mobile keeps its own
+// node_modules and hierarchical lookup, so the @atproto shim below is
+// unaffected. See docs/SHARED_PACKAGE_MIGRATION.md.
+config.watchFolders = [
+  ...(config.watchFolders ?? []),
+  path.resolve(__dirname, '..', 'packages'),
+];
+
 // Fix package exports resolution for @atproto dependencies.
 // multiformats and uint8arrays use "exports" field with ESM/CJS conditions.
 // Metro's legacy "browser" field processing in redirectModulePath() conflicts

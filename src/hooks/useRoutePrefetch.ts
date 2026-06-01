@@ -124,7 +124,8 @@ export function useRoutePrefetch() {
    * Implements hover intent detection with 150ms delay.
    * Call this on mouseEnter of thread links (timestamps, etc.)
    */
-  const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  const isTouchDevice =
+    "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
   const prefetchThread = useCallback(
     (postUri: string) => {

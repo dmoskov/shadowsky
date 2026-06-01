@@ -230,7 +230,9 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
         // Helper to add/update user interaction
         const addInteraction = (
-          author: AppBskyActorDefs.ProfileView | AppBskyActorDefs.ProfileViewBasic,
+          author:
+            | AppBskyActorDefs.ProfileView
+            | AppBskyActorDefs.ProfileViewBasic,
           type: "likes" | "replies" | "reposts",
         ) => {
           const key = author.handle;
@@ -475,7 +477,8 @@ export const NotificationsAnalytics: React.FC = React.memo(
         }
 
         // Otherwise, fetch fresh data based on the selected time range
-        const allNotifications: AppBskyNotificationListNotifications.Notification[] = [];
+        const allNotifications: AppBskyNotificationListNotifications.Notification[] =
+          [];
         let cursor: string | undefined;
 
         // Determine how far back to fetch based on time range
@@ -543,7 +546,8 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
       const cutoffDate = subHours(now, timeRangeHours[timeRange]);
       const filteredNotifications = notifications.notifications.filter(
-        (n: AppBskyNotificationListNotifications.Notification) => new Date(n.indexedAt) >= cutoffDate,
+        (n: AppBskyNotificationListNotifications.Notification) =>
+          new Date(n.indexedAt) >= cutoffDate,
       );
 
       console.log("📊 Analytics filtering:", {
@@ -671,51 +675,56 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
       // Count notifications by bucket and type
 
-      filteredNotifications.forEach((notification: AppBskyNotificationListNotifications.Notification) => {
-        // Parse the UTC timestamp and it will automatically convert to local timezone
-        const notifDate = new Date(notification.indexedAt);
-        const bucket = buckets.find(
-          (b) => notifDate >= b.startDate && notifDate < b.endDate,
-        );
+      filteredNotifications.forEach(
+        (notification: AppBskyNotificationListNotifications.Notification) => {
+          // Parse the UTC timestamp and it will automatically convert to local timezone
+          const notifDate = new Date(notification.indexedAt);
+          const bucket = buckets.find(
+            (b) => notifDate >= b.startDate && notifDate < b.endDate,
+          );
 
-        if (bucket) {
-          bucket.total++;
-          switch (notification.reason) {
-            case "like":
-              bucket.likes++;
-              break;
-            case "repost":
-              bucket.reposts++;
-              break;
-            case "follow":
-              bucket.follows++;
-              break;
-            case "reply":
-              bucket.replies++;
-              break;
-            case "mention":
-              bucket.mentions++;
-              break;
+          if (bucket) {
+            bucket.total++;
+            switch (notification.reason) {
+              case "like":
+                bucket.likes++;
+                break;
+              case "repost":
+                bucket.reposts++;
+                break;
+              case "follow":
+                bucket.follows++;
+                break;
+              case "reply":
+                bucket.replies++;
+                break;
+              case "mention":
+                bucket.mentions++;
+                break;
+            }
           }
-        }
-      });
+        },
+      );
 
       // Find most active users (use filtered notifications, excluding subscription notifications)
       const userActivity = new Map<string, number>();
-      filteredNotifications.forEach((notification: AppBskyNotificationListNotifications.Notification) => {
-        // Exclude starterpack-joined notifications from "Top Users Engaging"
-        if (notification.reason !== "starterpack-joined") {
-          const key = notification.author.handle;
-          userActivity.set(key, (userActivity.get(key) || 0) + 1);
-        }
-      });
+      filteredNotifications.forEach(
+        (notification: AppBskyNotificationListNotifications.Notification) => {
+          // Exclude starterpack-joined notifications from "Top Users Engaging"
+          if (notification.reason !== "starterpack-joined") {
+            const key = notification.author.handle;
+            userActivity.set(key, (userActivity.get(key) || 0) + 1);
+          }
+        },
+      );
 
       const topUsers = Array.from(userActivity.entries())
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5)
         .map(([handle, count]) => {
           const user = filteredNotifications.find(
-            (n: AppBskyNotificationListNotifications.Notification) => n.author.handle === handle,
+            (n: AppBskyNotificationListNotifications.Notification) =>
+              n.author.handle === handle,
           )?.author;
           return { handle, count, user };
         });
@@ -725,7 +734,10 @@ export const NotificationsAnalytics: React.FC = React.memo(
       const uniqueUsers =
         filteredNotifications.length > 0
           ? new Set(
-              filteredNotifications.map((n: AppBskyNotificationListNotifications.Notification) => n.author.did),
+              filteredNotifications.map(
+                (n: AppBskyNotificationListNotifications.Notification) =>
+                  n.author.did,
+              ),
             ).size
           : 0;
       const hourSpan = Math.max(
@@ -755,26 +767,32 @@ export const NotificationsAnalytics: React.FC = React.memo(
         // Get notifications from the last 24 hours for "recent" stats
         const oneDayAgo = subDays(new Date(), 1);
         const recentNotifications = notifications.notifications.filter(
-          (n: AppBskyNotificationListNotifications.Notification) => new Date(n.indexedAt) >= oneDayAgo,
+          (n: AppBskyNotificationListNotifications.Notification) =>
+            new Date(n.indexedAt) >= oneDayAgo,
         );
 
         const counts = {
           total: recentNotifications.length,
           unread: 0, // Extended data doesn't include read status
           likes: recentNotifications.filter(
-            (n: AppBskyNotificationListNotifications.Notification) => n.reason === "like",
+            (n: AppBskyNotificationListNotifications.Notification) =>
+              n.reason === "like",
           ).length,
           reposts: recentNotifications.filter(
-            (n: AppBskyNotificationListNotifications.Notification) => n.reason === "repost",
+            (n: AppBskyNotificationListNotifications.Notification) =>
+              n.reason === "repost",
           ).length,
           follows: recentNotifications.filter(
-            (n: AppBskyNotificationListNotifications.Notification) => n.reason === "follow",
+            (n: AppBskyNotificationListNotifications.Notification) =>
+              n.reason === "follow",
           ).length,
           mentions: recentNotifications.filter(
-            (n: AppBskyNotificationListNotifications.Notification) => n.reason === "mention",
+            (n: AppBskyNotificationListNotifications.Notification) =>
+              n.reason === "mention",
           ).length,
           replies: recentNotifications.filter(
-            (n: AppBskyNotificationListNotifications.Notification) => n.reason === "reply",
+            (n: AppBskyNotificationListNotifications.Notification) =>
+              n.reason === "reply",
           ).length,
         };
 
@@ -790,19 +808,24 @@ export const NotificationsAnalytics: React.FC = React.memo(
           (n: AppBskyNotificationListNotifications.Notification) => !n.isRead,
         ).length,
         likes: currentStats.notifications.filter(
-          (n: AppBskyNotificationListNotifications.Notification) => n.reason === "like",
+          (n: AppBskyNotificationListNotifications.Notification) =>
+            n.reason === "like",
         ).length,
         reposts: currentStats.notifications.filter(
-          (n: AppBskyNotificationListNotifications.Notification) => n.reason === "repost",
+          (n: AppBskyNotificationListNotifications.Notification) =>
+            n.reason === "repost",
         ).length,
         follows: currentStats.notifications.filter(
-          (n: AppBskyNotificationListNotifications.Notification) => n.reason === "follow",
+          (n: AppBskyNotificationListNotifications.Notification) =>
+            n.reason === "follow",
         ).length,
         mentions: currentStats.notifications.filter(
-          (n: AppBskyNotificationListNotifications.Notification) => n.reason === "mention",
+          (n: AppBskyNotificationListNotifications.Notification) =>
+            n.reason === "mention",
         ).length,
         replies: currentStats.notifications.filter(
-          (n: AppBskyNotificationListNotifications.Notification) => n.reason === "reply",
+          (n: AppBskyNotificationListNotifications.Notification) =>
+            n.reason === "reply",
         ).length,
       };
 

@@ -168,7 +168,6 @@ function AppContent() {
   // Check if we're on the home route
   const { data: networkWeather } = useNetworkWeather();
 
-
   // Initialize swipe navigation for mobile
   const swipeHandlers = useSwipeNavigation();
 
@@ -273,9 +272,7 @@ function AppContent() {
       {/* Offline/reconnection status indicator */}
       <ConnectedOfflineIndicator position="top" />
       <WeatherBar weather={networkWeather} />
-      <div
-        className="relative flex mx-auto 2xl:max-w-[1536px]"
-      >
+      <div className="relative flex mx-auto 2xl:max-w-[1536px]">
         <InlineErrorBoundary componentName="Sidebar">
           <Sidebar
             isOpen={isSidebarOpen}

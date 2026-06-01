@@ -313,20 +313,17 @@ export function useCombinedRefs<T extends HTMLElement>(
     ((element: T | null) => void) | React.RefObject<T | null> | null
   >
 ): (element: T | null) => void {
-  return useCallback(
-    (element: T | null) => {
-      refs.forEach((ref) => {
-        if (!ref) return;
+  return useCallback((element: T | null) => {
+    refs.forEach((ref) => {
+      if (!ref) return;
 
-        if (typeof ref === "function") {
-          ref(element);
-        } else if ("current" in ref) {
-          (ref as React.MutableRefObject<T | null>).current = element;
-        }
-      });
-    },
-    refs,
-  );
+      if (typeof ref === "function") {
+        ref(element);
+      } else if ("current" in ref) {
+        (ref as React.MutableRefObject<T | null>).current = element;
+      }
+    });
+  }, refs);
 }
 
 // Re-export types for convenience

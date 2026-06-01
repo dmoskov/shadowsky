@@ -21,13 +21,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
@@ -52,11 +46,12 @@ import {
   buildSearchQuery,
   parseFacetedFiltersFromParams,
   serializeFacetedFiltersToParams,
-  type SavedSearch,
   type SearchFilters,
   type SearchTab,
   type UserSuggestion,
 } from "./search/search-utils";
+import { useSavedSearches } from "./search/useSavedSearches";
+import { useSearchHistory } from "./search/useSearchHistory";
 
 export const SearchTabbed: React.FC = React.memo(() => {
   const { agent } = useAuth();
@@ -141,87 +136,13 @@ export const SearchTabbed: React.FC = React.memo(() => {
   const [highlightPostUri, setHighlightPostUri] = useState<string | null>(null);
   const [isLoadingThread, setIsLoadingThread] = useState(false);
 
-  // Search history management
-  const [searchHistory, setSearchHistory] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem("bsky-search-history");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Search history management (localStorage-backed)
+  const { searchHistory, addToSearchHistory, clearSearchHistory } =
+    useSearchHistory();
 
-  const addToSearchHistory = (query: string) => {
-    if (!query.trim()) return;
-
-    setSearchHistory((prev) => {
-      const filtered = prev.filter((q) => q !== query);
-      const updated = [query, ...filtered].slice(0, 10);
-      try {
-        localStorage.setItem("bsky-search-history", JSON.stringify(updated));
-      } catch (error) {
-        debug.error("Failed to save search history:", error);
-      }
-      return updated;
-    });
-  };
-
-  const clearSearchHistory = () => {
-    setSearchHistory([]);
-    try {
-      localStorage.removeItem("bsky-search-history");
-    } catch (error) {
-      debug.error("Failed to clear search history:", error);
-    }
-  };
-
-  // Saved searches management
-  const [savedSearches, setSavedSearches] = useState<SavedSearch[]>(() => {
-    try {
-      const saved = localStorage.getItem("bsky-saved-searches");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const saveSearch = useCallback((query: string) => {
-    if (!query.trim()) return;
-
-    setSavedSearches((prev) => {
-      // Don't add duplicates
-      if (prev.some((s) => s.query === query)) return prev;
-
-      const newSearch: SavedSearch = {
-        id: `saved-${Date.now()}`,
-        query: query.trim(),
-        createdAt: Date.now(),
-      };
-      const updated = [newSearch, ...prev].slice(0, 20);
-      try {
-        localStorage.setItem("bsky-saved-searches", JSON.stringify(updated));
-      } catch (error) {
-        debug.error("Failed to save search:", error);
-      }
-      return updated;
-    });
-  }, []);
-
-  const removeSavedSearch = useCallback((id: string) => {
-    setSavedSearches((prev) => {
-      const updated = prev.filter((s) => s.id !== id);
-      try {
-        localStorage.setItem("bsky-saved-searches", JSON.stringify(updated));
-      } catch (error) {
-        debug.error("Failed to remove saved search:", error);
-      }
-      return updated;
-    });
-  }, []);
-
-  const isSearchSaved = useMemo(() => {
-    return savedSearches.some((s) => s.query === filters.query.trim());
-  }, [savedSearches, filters.query]);
+  // Saved searches management (localStorage-backed)
+  const { savedSearches, saveSearch, removeSavedSearch, isSearchSaved } =
+    useSavedSearches(filters.query);
 
   // Main search bar typeahead state
   const [showMainTypeahead, setShowMainTypeahead] = useState(false);
@@ -1514,10 +1435,7 @@ export const SearchTabbed: React.FC = React.memo(() => {
                   </label>
                   <div className="space-y-2">
                     {filters.mentions.map((user, i) => (
-                      <div
-                        key={`mention-${i}`}
-                        className="relative"
-                      >
+                      <div key={`mention-${i}`} className="relative">
                         <div className="flex items-center gap-2">
                           <input
                             ref={(el) =>

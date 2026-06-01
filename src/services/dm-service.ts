@@ -293,10 +293,7 @@ class DmService {
     }
   }
 
-  async uploadBlob(
-    data: Uint8Array,
-    mimeType: string,
-  ): Promise<BlobRef> {
+  async uploadBlob(data: Uint8Array, mimeType: string): Promise<BlobRef> {
     if (!this.agent) {
       throw new Error("Not authenticated");
     }

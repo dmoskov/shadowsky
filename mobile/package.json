@@ -28,8 +28,9 @@
     "postinstall": "npx patch-package"
   },
   "dependencies": {
-    "@atproto/api": "^0.19.3",
+    "@atproto/api": "^0.20.7",
     "@atproto/oauth-client-expo": "^0.0.10",
+    "@bsky/core": "file:../packages/core",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "11.4.1",
     "@react-navigation/drawer": "^7.3.5",

@@ -254,7 +254,8 @@ export const BackgroundNotificationLoader: React.FC = () => {
           // Prefetch posts for reply notifications
           if (agent) {
             const replyNotifications = allNotifications.filter(
-              (n: AppBskyNotificationListNotifications.Notification) => n.reason === "reply",
+              (n: AppBskyNotificationListNotifications.Notification) =>
+                n.reason === "reply",
             );
             if (replyNotifications.length > 0) {
               await prefetchNotificationPosts(replyNotifications, agent);
@@ -325,7 +326,8 @@ export const BackgroundNotificationLoader: React.FC = () => {
         // Prefetch posts for new reply notifications
         if (agent) {
           const replyNotifications = allNotifications.filter(
-            (n: AppBskyNotificationListNotifications.Notification) => n.reason === "reply",
+            (n: AppBskyNotificationListNotifications.Notification) =>
+              n.reason === "reply",
           );
           if (replyNotifications.length > 0) {
             await prefetchNotificationPosts(replyNotifications, agent);
