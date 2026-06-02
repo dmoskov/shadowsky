@@ -325,6 +325,20 @@ export const handler = async (event: CloudFrontRequestEvent): Promise<CloudFront
   const request = event.Records[0].cf.request;
   const uri = request.uri;
   const userAgent = request.headers['user-agent']?.[0]?.value;
+  const host = request.headers['host']?.[0]?.value || '';
+
+  // Serve the asphodel-specific AT Protocol OAuth client metadata on asphodel.is
+  // hosts. The S3 origin holds both client-metadata.json (shadowsky, client_id
+  // = shadowsky.io) and client-metadata-asphodel.json (client_id = asphodel.is).
+  // AT Protocol requires the served metadata's client_id to equal the fetched
+  // URL, so requests for /client-metadata.json on asphodel.is must return the
+  // asphodel document. Host-aware so the same function is safe on the shadowsky
+  // distribution (no rewrite there). Applies to all user agents, before the
+  // crawler/OG handling below.
+  if (uri === '/client-metadata.json' && host.endsWith('asphodel.is')) {
+    request.uri = '/client-metadata-asphodel.json';
+    return request;
+  }
 
   // Only process for crawlers
   if (!isCrawler(userAgent)) {
