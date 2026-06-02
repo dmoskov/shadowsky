@@ -25,7 +25,11 @@ import {
   vi,
   type Mock,
 } from "vitest";
-import { hasExistingOAuthSession, oauthService } from "./oauth-service";
+import {
+  canonicalClientMetadataDomain,
+  hasExistingOAuthSession,
+  oauthService,
+} from "./oauth-service";
 
 // Mock the logger to suppress output during tests
 vi.mock("../utils/logger", () => ({
@@ -996,5 +1000,28 @@ describe("OAuthService", () => {
       expect(result?.did).toBe("did:plc:test123");
       expect(oauthService.isAuthenticated()).toBe(true);
     });
+  });
+});
+
+describe("canonicalClientMetadataDomain", () => {
+  it("maps asphodel staging subdomains to the apex", () => {
+    expect(canonicalClientMetadataDomain("main.asphodel.is")).toBe(
+      "asphodel.is",
+    );
+    expect(canonicalClientMetadataDomain("preview.asphodel.is")).toBe(
+      "asphodel.is",
+    );
+  });
+
+  it("maps shadowsky staging subdomains to the apex", () => {
+    expect(canonicalClientMetadataDomain("main.shadowsky.io")).toBe(
+      "shadowsky.io",
+    );
+  });
+
+  it("leaves canonical apex and unrelated hosts unchanged", () => {
+    expect(canonicalClientMetadataDomain("asphodel.is")).toBe("asphodel.is");
+    expect(canonicalClientMetadataDomain("shadowsky.io")).toBe("shadowsky.io");
+    expect(canonicalClientMetadataDomain("example.com")).toBe("example.com");
   });
 });

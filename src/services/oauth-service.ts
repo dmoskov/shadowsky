@@ -105,6 +105,20 @@ async function loadOAuthClient(): Promise<
   return OAuthClientModule;
 }
 
+/**
+ * Map a hostname to the domain whose client-metadata it should use.
+ *
+ * AT Protocol requires the served metadata's `client_id` to equal the fetched
+ * URL, which a per-subdomain static file can't satisfy. Staging subdomains
+ * (e.g. main.asphodel.is, main.shadowsky.io) therefore use their canonical
+ * domain's metadata, which registers the staging callback in its redirect_uris.
+ */
+export function canonicalClientMetadataDomain(hostname: string): string {
+  if (hostname.endsWith(".asphodel.is")) return "asphodel.is";
+  if (hostname.endsWith(".shadowsky.io")) return "shadowsky.io";
+  return hostname;
+}
+
 // Determine the client ID based on environment
 function getClientId(): string {
   const hostname = window.location.hostname;
@@ -116,8 +130,7 @@ function getClientId(): string {
     return `${window.location.origin}/proxy-client-metadata`;
   }
 
-  // Production
-  return `https://${hostname}/client-metadata.json`;
+  return `https://${canonicalClientMetadataDomain(hostname)}/client-metadata.json`;
 }
 
 export interface OAuthState {

@@ -7,7 +7,8 @@
   "tos_uri": "https://asphodel.is/terms",
   "policy_uri": "https://asphodel.is/privacy",
   "redirect_uris": [
-    "https://asphodel.is/oauth/callback"
+    "https://asphodel.is/oauth/callback",
+    "https://main.asphodel.is/oauth/callback"
   ],
   "scope": "atproto transition:generic",
   "grant_types": ["authorization_code", "refresh_token"],
