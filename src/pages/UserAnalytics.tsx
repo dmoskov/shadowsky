@@ -27,6 +27,11 @@ import {
   fromApiResponse,
 } from "../services/posting-time-recommendations";
 import { proxifyBskyImage } from "../utils/image-proxy";
+import {
+  buildEngagementChartData,
+  buildPostFrequencyData,
+  computePostingTimeAnalysis,
+} from "./user-analytics-utils";
 
 type DateRange = "24h" | "7d" | "30d" | "90d";
 
@@ -258,143 +263,24 @@ export const UserAnalytics: React.FC = () => {
       analysisRequested && !!postsData?.posts && postsData.posts.length > 0,
   });
 
-  const engagementChartData = useMemo(() => {
-    if (!postsData?.dailyEngagement) return [];
-
-    const data = [];
-
-    if (dateRange === "24h") {
-      // Show hourly data for 24-hour view
-      for (let i = 23; i >= 0; i--) {
-        const date = new Date();
-        date.setHours(date.getHours() - i);
-        const dateKey = format(date, "yyyy-MM-dd-HH");
-        const hourData = postsData.dailyEngagement[dateKey] || {
-          likes: 0,
-          reposts: 0,
-          replies: 0,
-          posts: 0,
-        };
-        data.push({
-          date: format(date, "ha"), // e.g., "2pm"
-          total: hourData.likes + hourData.reposts + hourData.replies,
-          likes: hourData.likes,
-          reposts: hourData.reposts,
-          replies: hourData.replies,
-        });
-      }
-    } else {
-      // Show daily data for other views
-      const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : 90;
-
-      for (let i = days - 1; i >= 0; i--) {
-        const date = subDays(new Date(), i);
-        const dateKey = format(date, "yyyy-MM-dd");
-        const dayData = postsData.dailyEngagement[dateKey] || {
-          likes: 0,
-          reposts: 0,
-          replies: 0,
-          posts: 0,
-        };
-        data.push({
-          date: format(date, dateRange === "7d" ? "EEE" : "M/d"),
-          total: dayData.likes + dayData.reposts + dayData.replies,
-          likes: dayData.likes,
-          reposts: dayData.reposts,
-          replies: dayData.replies,
-        });
-      }
-    }
-
-    return data;
-  }, [postsData, dateRange]);
+  const engagementChartData = useMemo(
+    () => buildEngagementChartData(postsData?.dailyEngagement, dateRange),
+    [postsData, dateRange],
+  );
 
   const maxEngagement = useMemo(() => {
     return Math.max(1, ...engagementChartData.map((d) => d.total));
   }, [engagementChartData]);
 
-  const postingTimeAnalysis = useMemo(() => {
-    if (!postsData?.posts) return null;
+  const postingTimeAnalysis = useMemo(
+    () => computePostingTimeAnalysis(postsData?.posts),
+    [postsData],
+  );
 
-    const hourCounts = new Array(24).fill(0);
-    const hourEngagement = new Array(24).fill(0);
-
-    postsData.posts.forEach((post) => {
-      const hour = new Date(post.createdAt).getHours();
-      hourCounts[hour]++;
-      hourEngagement[hour] += post.totalEngagement;
-    });
-
-    const avgEngagementByHour = hourEngagement.map((total, hour) =>
-      hourCounts[hour] > 0 ? total / hourCounts[hour] : 0,
-    );
-
-    const maxEngagementHour = avgEngagementByHour.reduce(
-      (maxIdx, val, idx, arr) => (val > arr[maxIdx] ? idx : maxIdx),
-      0,
-    );
-
-    const maxPostsHour = hourCounts.reduce(
-      (maxIdx, val, idx, arr) => (val > arr[maxIdx] ? idx : maxIdx),
-      0,
-    );
-
-    return {
-      hourCounts,
-      avgEngagementByHour,
-      maxEngagementHour,
-      maxPostsHour,
-      maxCount: Math.max(...hourCounts, 1),
-      maxAvgEngagement: Math.max(...avgEngagementByHour, 1),
-    };
-  }, [postsData]);
-
-  const postFrequencyData = useMemo(() => {
-    if (!postsData?.dailyEngagement) return [];
-
-    const data = [];
-
-    if (dateRange === "24h") {
-      // Show hourly data for 24-hour view
-      for (let i = 23; i >= 0; i--) {
-        const date = new Date();
-        date.setHours(date.getHours() - i);
-        const dateKey = format(date, "yyyy-MM-dd-HH");
-        const hourData = postsData.dailyEngagement[dateKey] || {
-          posts: 0,
-          originalPosts: 0,
-          replyPosts: 0,
-        };
-        data.push({
-          date: format(date, "ha"), // e.g., "2pm"
-          posts: hourData.posts,
-          originalPosts: hourData.originalPosts,
-          replyPosts: hourData.replyPosts,
-        });
-      }
-    } else {
-      // Show daily data for other views
-      const days = dateRange === "7d" ? 7 : dateRange === "30d" ? 30 : 90;
-
-      for (let i = days - 1; i >= 0; i--) {
-        const date = subDays(new Date(), i);
-        const dateKey = format(date, "yyyy-MM-dd");
-        const dayData = postsData.dailyEngagement[dateKey] || {
-          posts: 0,
-          originalPosts: 0,
-          replyPosts: 0,
-        };
-        data.push({
-          date: format(date, dateRange === "7d" ? "EEE" : "M/d"),
-          posts: dayData.posts,
-          originalPosts: dayData.originalPosts,
-          replyPosts: dayData.replyPosts,
-        });
-      }
-    }
-
-    return data;
-  }, [postsData, dateRange]);
+  const postFrequencyData = useMemo(
+    () => buildPostFrequencyData(postsData?.dailyEngagement, dateRange),
+    [postsData, dateRange],
+  );
 
   const maxPostsPerDay = useMemo(() => {
     return Math.max(1, ...postFrequencyData.map((d) => d.posts));
