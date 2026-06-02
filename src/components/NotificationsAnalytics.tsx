@@ -20,6 +20,7 @@ import { useExtendedNotifications } from "../hooks/useExtendedNotifications";
 import { usePageVisibility } from "../hooks/usePageVisibility";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { BackgroundNotificationLoader } from "./BackgroundNotificationLoader";
+import { useUserActivityStats } from "./useUserActivityStats";
 
 type TimeRange = "1d" | "3d" | "7d" | "4w";
 
@@ -80,135 +81,8 @@ export const NotificationsAnalytics: React.FC = React.memo(
     // Check if we have extended data available (from memory or IndexedDB)
     const { extendedData, hasExtendedData } = useExtendedNotifications();
 
-    // Query for user's own activity
-    const { data: userActivity } = useQuery({
-      queryKey: ["user-activity", session?.handle, timeRange],
-      queryFn: async () => {
-        if (!agent || !session?.handle) throw new Error("Not authenticated");
-
-        const cutoffDate =
-          timeRange === "1d"
-            ? subDays(new Date(), 1)
-            : timeRange === "3d"
-              ? subDays(new Date(), 3)
-              : timeRange === "7d"
-                ? subDays(new Date(), 7)
-                : subDays(new Date(), 28);
-
-        // Fetch user's recent posts to analyze their activity
-
-        // Fetch multiple pages if needed to cover the time range
-        let allPosts: AppBskyFeedDefs.FeedViewPost[] = [];
-        let cursor: string | undefined;
-        let fetchedEnough = false;
-        const maxPages = 5; // Limit to prevent excessive API calls
-
-        for (let page = 0; page < maxPages && !fetchedEnough; page++) {
-          const response = await agent.getAuthorFeed({
-            actor: session.handle,
-            limit: 100,
-            cursor,
-          });
-
-          allPosts = allPosts.concat(response.data.feed);
-          cursor = response.data.cursor;
-
-          // Check if we've fetched posts older than our cutoff
-          if (response.data.feed.length > 0) {
-            const oldestInBatch =
-              response.data.feed[response.data.feed.length - 1];
-            const oldestDate = new Date(oldestInBatch.post.indexedAt);
-            if (oldestDate < cutoffDate || !cursor) {
-              fetchedEnough = true;
-            }
-          } else {
-            fetchedEnough = true;
-          }
-        }
-
-        const posts = { data: { feed: allPosts } };
-
-        // Count likes, reposts, and replies from the posts
-        // NOTE: This counts TOTAL engagement on posts made in the time range,
-        // not NEW engagement received during the time range
-        let totalLikes = 0;
-        let totalReposts = 0;
-        let totalReplies = 0;
-        let postsInTimeRange = 0;
-
-        // Track top posts for debugging
-        const topPosts: Array<{
-          text: string;
-          likes: number;
-          reposts: number;
-          replies: number;
-          date: string;
-          uri: string;
-          author?: string;
-          isRepost?: boolean;
-        }> = [];
-
-        for (const item of posts.data.feed) {
-          const postDate = new Date(item.post.indexedAt);
-
-          // Skip reposts - we only want engagement on posts authored by the user
-          const isRepost =
-            item.reason?.$type === "app.bsky.feed.defs#reasonRepost";
-          if (isRepost) {
-            continue;
-          }
-
-          if (postDate >= cutoffDate) {
-            postsInTimeRange++;
-            const likes = item.post.likeCount || 0;
-            const reposts = item.post.repostCount || 0;
-            const replies = item.post.replyCount || 0;
-
-            totalLikes += likes;
-            totalReposts += reposts;
-            totalReplies += replies;
-
-            // Track posts with significant engagement
-            if (likes > 1000 || reposts > 100) {
-              const author = item.post.author;
-              const recordText =
-                typeof item.post.record === "object" &&
-                item.post.record !== null &&
-                "text" in item.post.record &&
-                typeof item.post.record.text === "string"
-                  ? item.post.record.text
-                  : "";
-              topPosts.push({
-                text: recordText.substring(0, 100) || "[No text]",
-                likes,
-                reposts,
-                replies,
-                date: postDate.toISOString(),
-                uri: item.post.uri,
-                author: `@${author.handle}`,
-                isRepost: false,
-              });
-            }
-          }
-        }
-
-        // Also fetch user's profile to get follower/following counts
-        const profile = await agent.getProfile({ actor: session.handle });
-
-        return {
-          postsCount: postsInTimeRange,
-          likesReceived: totalLikes,
-          repostsReceived: totalReposts,
-          repliesReceived: totalReplies,
-          followersCount: profile.data.followersCount || 0,
-          followingCount: profile.data.followsCount || 0,
-          postsTotal: profile.data.postsCount || 0,
-        };
-      },
-      staleTime: 0, // Always refetch when query key changes
-      gcTime: 5 * 60 * 1000,
-      refetchOnWindowFocus: false,
-    });
+    // Query for user's own activity (see useUserActivityStats)
+    const { data: userActivity } = useUserActivityStats(timeRange);
 
     // Query for users the current user engages with most
     const { data: topUsersSent } = useQuery({
