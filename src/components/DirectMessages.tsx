@@ -15,6 +15,7 @@ import { getDmSearchDB } from "../services/dm-search-db";
 import { dmService, type DmConversation } from "../services/dm-service";
 import { DMMessage } from "./DMMessage";
 import { DmSearch } from "./DmSearch";
+import { EmptyState } from "./ui/EmptyState";
 import {
   ConversationListSkeleton,
   MessageListSkeleton,
@@ -437,12 +438,7 @@ export const DirectMessages: React.FC = () => {
               aria-label="Loading conversations"
             />
           ) : !conversations || conversations.length === 0 ? (
-            <div
-              className="p-4 text-center"
-              style={{ color: "var(--asph-text-secondary)" }}
-            >
-              No conversations yet
-            </div>
+            <EmptyState variant="messages" compact />
           ) : (
             conversations.map((conversation: DmConversation) => {
               const otherMember = getOtherMember(conversation);
@@ -606,12 +602,12 @@ export const DirectMessages: React.FC = () => {
               {loadingMessages ? (
                 <MessageListSkeleton count={5} aria-label="Loading messages" />
               ) : combinedMessages.length === 0 ? (
-                <div
-                  className="text-center"
-                  style={{ color: "var(--asph-text-secondary)" }}
-                >
-                  No messages yet. Start the conversation!
-                </div>
+                <EmptyState
+                  variant="messages"
+                  compact
+                  title="No messages yet"
+                  message="Start the conversation!"
+                />
               ) : (
                 <>
                   {combinedMessages.map((message) => {

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, Users } from "lucide-react";
 import React from "react";
 import { proxifyBskyImage } from "../../utils/image-proxy";
-import { LoadingState } from "../ui/LoadingState";
+import { LoadingSkeleton } from "../ui/LoadingSkeleton";
 
 interface SearchTabUsersProps {
   activeSearchQuery: string;
@@ -37,15 +37,7 @@ export const SearchTabUsers: React.FC<SearchTabUsersProps> = React.memo(
 
     // Show loading state
     if (isLoadingUsers) {
-      return (
-        <LoadingState
-          variant="spinner"
-          size="lg"
-          message="Searching..."
-          centered
-          className="py-6"
-        />
-      );
+      return <LoadingSkeleton variant="userList" count={6} />;
     }
 
     // Show error state

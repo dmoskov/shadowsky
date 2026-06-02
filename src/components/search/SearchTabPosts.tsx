@@ -6,7 +6,7 @@ import React, { useMemo } from "react";
 import type { SearchFilters as FacetedSearchFilters } from "../../hooks/useSearch";
 import { proxifyBskyImage } from "../../utils/image-proxy";
 import { ImageGrid } from "../ImageGrid";
-import { LoadingState } from "../ui/LoadingState";
+import { LoadingSkeleton } from "../ui/LoadingSkeleton";
 import { ProfileHoverCard } from "../ui/ProfileHoverCard";
 import {
   filterByMediaType,
@@ -103,15 +103,7 @@ export const SearchTabPosts: React.FC<SearchTabPostsProps> = React.memo(
 
     // Show loading state
     if (isLoadingPosts) {
-      return (
-        <LoadingState
-          variant="spinner"
-          size="lg"
-          message="Searching..."
-          centered
-          className="py-6"
-        />
-      );
+      return <LoadingSkeleton variant="search" />;
     }
 
     // Show error state

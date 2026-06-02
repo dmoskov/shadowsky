@@ -9,6 +9,7 @@ import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
+import { EmptyState } from "./ui/EmptyState";
 import { UserListSkeleton } from "./ui/SkeletonLoader";
 
 interface UserListModalProps {
@@ -223,12 +224,7 @@ export function UserListModal({
           {loading ? (
             <UserListSkeleton count={5} aria-label="Loading users" />
           ) : users.length === 0 ? (
-            <div
-              className="p-8 text-center text-asph-text-tertiary"
-              role="status"
-            >
-              No {type} yet
-            </div>
+            <EmptyState variant={type} compact />
           ) : (
             <>
               {users.map((user, index) => (

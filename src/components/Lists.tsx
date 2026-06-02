@@ -20,6 +20,7 @@ import {
 } from "../services/bluesky-list-service";
 import { CreateListModal } from "./CreateListModal";
 import { EditListModal } from "./EditListModal";
+import { EmptyState } from "./ui/EmptyState";
 import { ListItemSkeleton } from "./ui/SkeletonLoader";
 
 export const Lists: React.FC = () => {
@@ -187,26 +188,17 @@ export const Lists: React.FC = () => {
       )}
 
       {!isLoading && !error && lists?.length === 0 && (
-        <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
-          <ListIcon
-            className="h-12 w-12 text-asph-text-tertiary"
-            aria-hidden="true"
-          />
-          <p className="mb-2 mt-4 text-base font-medium text-asph-text-primary">
-            No lists yet
-          </p>
-          <p className="mb-4 text-sm text-asph-text-secondary">
-            Create lists to organize accounts into custom groups
-          </p>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="touch-target-sm flex cursor-pointer items-center gap-2 rounded-full bg-asph-primary px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:opacity-90"
-            aria-label="Create your first list"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Create Your First List
-          </button>
-        </div>
+        <EmptyState
+          title="No lists yet"
+          message="Create lists to organize accounts into custom groups"
+          actions={[
+            {
+              label: "Create Your First List",
+              onClick: () => setShowCreateModal(true),
+              icon: Plus,
+            },
+          ]}
+        />
       )}
 
       <div

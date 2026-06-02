@@ -50,6 +50,7 @@ import {
 } from "./notifications-filter";
 import { ThreadModal } from "./ThreadModal";
 import { TopAccountsView } from "./TopAccountsView";
+import { EmptyState } from "./ui/EmptyState";
 import { NotificationSkeleton } from "./ui/SkeletonLoader";
 
 const NotificationsFeedComponent: React.FC = () => {
@@ -688,14 +689,7 @@ const NotificationsFeedComponent: React.FC = () => {
             ))}
           </div>
         ) : filteredNotifications.length === 0 ? (
-          <div
-            className="p-6 text-center sm:p-12"
-            style={{ color: "var(--asph-text-tertiary)" }}
-          >
-            <div className="mb-4 text-5xl opacity-20">📭</div>
-            <p className="text-lg">No notifications to show</p>
-            <p className="mt-2 text-sm">Check back later for updates</p>
-          </div>
+          <EmptyState variant="notifications" />
         ) : [
             "all",
             "likes",

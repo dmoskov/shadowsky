@@ -18,3 +18,5 @@ export * as starterPacks from "./atproto/starter-packs";
 export * as lists from "./atproto/lists";
 export * as interactions from "./atproto/interactions";
 export * as labelers from "./atproto/labelers";
+export * as postgate from "./atproto/postgate";
+export * as threadgate from "./atproto/threadgate";
