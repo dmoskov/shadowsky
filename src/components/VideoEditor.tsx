@@ -34,6 +34,11 @@ import {
   loadFFmpegInstance,
   type VideoMetadata,
 } from "../utils/video-compression";
+import {
+  formatTime,
+  getTextOverlayStyle,
+  type TextPosition,
+} from "./video-editor-utils";
 
 // Video filter presets with CSS filter values (matching ImageEditor style)
 const VIDEO_FILTER_PRESETS = {
@@ -108,15 +113,6 @@ const SPEED_OPTIONS = [
 ] as const;
 
 // Text overlay position presets
-type TextPosition =
-  | "top-left"
-  | "top-center"
-  | "top-right"
-  | "center"
-  | "bottom-left"
-  | "bottom-center"
-  | "bottom-right";
-
 interface TextOverlay {
   id: string;
   text: string;
@@ -254,12 +250,6 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
   }, [isPlaying, trim.start, trim.end]);
 
   // Format time as MM:SS
-  const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
   // Handle timeline interactions
   const handleTimelineMouseDown = (
     e: React.MouseEvent,
@@ -389,48 +379,6 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
   };
 
   // Get CSS position for text overlay
-  const getTextOverlayStyle = (position: TextPosition): React.CSSProperties => {
-    const baseStyle: React.CSSProperties = {
-      position: "absolute",
-      padding: "8px 16px",
-      maxWidth: "80%",
-    };
-
-    switch (position) {
-      case "top-left":
-        return { ...baseStyle, top: "10%", left: "5%" };
-      case "top-center":
-        return {
-          ...baseStyle,
-          top: "10%",
-          left: "50%",
-          transform: "translateX(-50%)",
-        };
-      case "top-right":
-        return { ...baseStyle, top: "10%", right: "5%" };
-      case "center":
-        return {
-          ...baseStyle,
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-        };
-      case "bottom-left":
-        return { ...baseStyle, bottom: "10%", left: "5%" };
-      case "bottom-center":
-        return {
-          ...baseStyle,
-          bottom: "10%",
-          left: "50%",
-          transform: "translateX(-50%)",
-        };
-      case "bottom-right":
-        return { ...baseStyle, bottom: "10%", right: "5%" };
-      default:
-        return baseStyle;
-    }
-  };
-
   // Check if any edits were made
   const hasEdits = useMemo(() => {
     if (!metadata) return false;
