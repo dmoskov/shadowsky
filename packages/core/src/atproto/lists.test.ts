@@ -8,11 +8,9 @@ function stubAgent(overrides: { getList?: unknown } = {}) {
     app: {
       bsky: {
         graph: {
-          getLists: vi
-            .fn()
-            .mockResolvedValue({
-              data: { lists: [{ uri: "l1" }], cursor: "c" },
-            }),
+          getLists: vi.fn().mockResolvedValue({
+            data: { lists: [{ uri: "l1" }], cursor: "c" },
+          }),
           getList:
             overrides.getList ??
             vi.fn().mockResolvedValue({

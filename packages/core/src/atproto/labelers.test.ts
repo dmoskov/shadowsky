@@ -13,17 +13,13 @@ function stubAgent(opts: { preferences?: unknown[] } = {}) {
     app: {
       bsky: {
         actor: {
-          getPreferences: vi
-            .fn()
-            .mockResolvedValue({
-              data: { preferences: opts.preferences ?? [] },
-            }),
+          getPreferences: vi.fn().mockResolvedValue({
+            data: { preferences: opts.preferences ?? [] },
+          }),
           putPreferences,
-          searchActors: vi
-            .fn()
-            .mockResolvedValue({
-              data: { actors: [{ did: "did:plc:found" }] },
-            }),
+          searchActors: vi.fn().mockResolvedValue({
+            data: { actors: [{ did: "did:plc:found" }] },
+          }),
         },
         labeler: {
           getServices: vi.fn().mockResolvedValue({
