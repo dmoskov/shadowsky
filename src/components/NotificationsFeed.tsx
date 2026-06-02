@@ -48,23 +48,15 @@ import {
   AggregatedNotificationItem,
   aggregateNotifications,
 } from "./NotificationAggregator";
+import {
+  filterNotifications,
+  type NotificationFilter,
+} from "./notifications-filter";
 import { ThreadModal } from "./ThreadModal";
 import { TopAccountsView } from "./TopAccountsView";
 import { DomainVerifiedBadgeInline } from "./ui/DomainVerifiedBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { NotificationSkeleton } from "./ui/SkeletonLoader";
-
-type NotificationFilter =
-  | "all"
-  | "likes"
-  | "reposts"
-  | "follows"
-  | "mentions"
-  | "replies"
-  | "quotes"
-  | "images"
-  | "top-accounts"
-  | "from-following";
 
 const NotificationsFeedComponent: React.FC = () => {
   const navigate = useViewTransitionNavigate();
@@ -245,126 +237,17 @@ const NotificationsFeedComponent: React.FC = () => {
   // Removed automatic loading of 3 pages - let intersection observer handle it
   // This was causing the UI to flicker as it loaded 3 times automatically
 
-  const filteredNotifications = React.useMemo(() => {
-    if (!notifications || notifications.length === 0) {
-      return [];
-    }
-
-    let filtered = [...notifications];
-
-    // Filter out notifications from muted threads
-    // We check against the fetched posts to determine thread roots
-    if (posts && posts.length > 0) {
-      const postUriToRoot = new Map<string, string>();
-      posts.forEach((post) => {
-        const record = post.record as
-          | { reply?: { root: { uri: string } } }
-          | undefined;
-        const rootUri = record?.reply?.root?.uri || post.uri;
-        postUriToRoot.set(post.uri, rootUri);
-      });
-
-      filtered = filtered.filter(
-        (n: AppBskyNotificationListNotifications.Notification) => {
-          // Get the post URI for this notification
-          let postUri: string | undefined;
-          if (n.reason === "repost" || n.reason === "like") {
-            postUri = n.reasonSubject;
-          } else if (
-            n.reason === "reply" ||
-            n.reason === "mention" ||
-            n.reason === "quote"
-          ) {
-            postUri = n.uri;
-          }
-
-          // If we have the post URI and can determine its root, check if muted
-          if (postUri && postUriToRoot.has(postUri)) {
-            const rootUri = postUriToRoot.get(postUri)!;
-            return !isThreadMuted(rootUri);
-          }
-
-          // If we don't have the post data yet, keep the notification
-          // (it will be filtered once posts are loaded)
-          return true;
-        },
-      );
-    }
-
-    if (filter === "images") {
-      // Filter notifications that have posts with images
-      if (posts && posts.length > 0) {
-        const postsWithImages = new Set(
-          posts.filter(postHasImages).map((post) => post.uri),
-        );
-        filtered = filtered.filter(
-          (n: AppBskyNotificationListNotifications.Notification) => {
-            if (!["like", "repost", "reply", "quote"].includes(n.reason))
-              return false;
-            // For reposts and likes, use reasonSubject which contains the original post URI
-            const postUri =
-              (n.reason === "repost" || n.reason === "like") && n.reasonSubject
-                ? n.reasonSubject
-                : n.uri;
-            return postsWithImages.has(postUri);
-          },
-        );
-      } else {
-        // While posts are loading, show empty
-        filtered = [];
-      }
-    } else if (
-      filter !== "all" &&
-      filter !== "top-accounts" &&
-      filter !== "from-following"
-    ) {
-      const filterMap: Record<
-        Exclude<
-          NotificationFilter,
-          "all" | "images" | "top-accounts" | "from-following"
-        >,
-        string[]
-      > = {
-        likes: ["like"],
-        reposts: ["repost"],
-        follows: ["follow"],
-        mentions: ["mention"],
-        replies: ["reply"],
-        quotes: ["quote"],
-      };
-      filtered = filtered.filter(
-        (n: AppBskyNotificationListNotifications.Notification) =>
-          filterMap[
-            filter as Exclude<
-              NotificationFilter,
-              "all" | "images" | "top-accounts" | "from-following"
-            >
-          ].includes(n.reason),
-      );
-    }
-
-    // Filter for notifications from people you follow
-    if (filter === "from-following" && followingSet) {
-      filtered = filtered.filter(
-        (n: AppBskyNotificationListNotifications.Notification) =>
-          followingSet.has(n.author.did),
-      );
-    }
-
-    // Removed unread only filter
-    // if (showUnreadOnly) {
-    //   filtered = filtered.filter((n: AppBskyNotificationListNotifications.Notification) => !n.isRead)
-    // }
-
-    return filtered;
-  }, [
-    notifications?.length,
-    notifications,
-    filter,
-    posts,
-    followingSet,
-    isThreadMuted,
-  ]);
+  const filteredNotifications = React.useMemo(
+    () =>
+      filterNotifications(
+        notifications,
+        posts,
+        filter,
+        followingSet,
+        isThreadMuted,
+      ),
+    [notifications, filter, posts, followingSet, isThreadMuted],
+  );
 
   // Calculate counts for each filter type
   const filterCounts = React.useMemo(() => {
