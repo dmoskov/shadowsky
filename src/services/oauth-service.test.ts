@@ -27,6 +27,7 @@ import {
 } from "vitest";
 import {
   canonicalClientMetadataDomain,
+  clientMetadataFile,
   hasExistingOAuthSession,
   oauthService,
 } from "./oauth-service";
@@ -1023,5 +1024,30 @@ describe("canonicalClientMetadataDomain", () => {
     expect(canonicalClientMetadataDomain("asphodel.is")).toBe("asphodel.is");
     expect(canonicalClientMetadataDomain("shadowsky.io")).toBe("shadowsky.io");
     expect(canonicalClientMetadataDomain("example.com")).toBe("example.com");
+  });
+});
+
+describe("clientMetadataFile", () => {
+  it("serves the asphodel-specific metadata for the asphodel apex", () => {
+    expect(clientMetadataFile("asphodel.is")).toBe(
+      "client-metadata-asphodel.json",
+    );
+  });
+
+  it("serves the default metadata for shadowsky and other domains", () => {
+    expect(clientMetadataFile("shadowsky.io")).toBe("client-metadata.json");
+    expect(clientMetadataFile("example.com")).toBe("client-metadata.json");
+  });
+
+  it("composes with canonicalClientMetadataDomain so each brand is self-consistent", () => {
+    // The fetched URL must equal the client_id in the served file.
+    const asphodel = canonicalClientMetadataDomain("main.asphodel.is");
+    expect(`https://${asphodel}/${clientMetadataFile(asphodel)}`).toBe(
+      "https://asphodel.is/client-metadata-asphodel.json",
+    );
+    const shadowsky = canonicalClientMetadataDomain("main.shadowsky.io");
+    expect(`https://${shadowsky}/${clientMetadataFile(shadowsky)}`).toBe(
+      "https://shadowsky.io/client-metadata.json",
+    );
   });
 });

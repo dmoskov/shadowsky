@@ -119,6 +119,21 @@ export function canonicalClientMetadataDomain(hostname: string): string {
   return hostname;
 }
 
+/**
+ * The static client-metadata file served for a given canonical domain.
+ *
+ * The prod/main builds are served on both shadowsky.io and asphodel.is, so a
+ * single `/client-metadata.json` can't carry the right `client_id` for both
+ * hosts. Each brand therefore fetches its own self-consistent static file
+ * (`client_id` equals the served URL), which works on plain static hosting
+ * (Amplify) without any host-based edge rewrite.
+ */
+export function clientMetadataFile(domain: string): string {
+  return domain === "asphodel.is"
+    ? "client-metadata-asphodel.json"
+    : "client-metadata.json";
+}
+
 // Determine the client ID based on environment
 function getClientId(): string {
   const hostname = window.location.hostname;
@@ -130,7 +145,8 @@ function getClientId(): string {
     return `${window.location.origin}/proxy-client-metadata`;
   }
 
-  return `https://${canonicalClientMetadataDomain(hostname)}/client-metadata.json`;
+  const domain = canonicalClientMetadataDomain(hostname);
+  return `https://${domain}/${clientMetadataFile(domain)}`;
 }
 
 export interface OAuthState {
