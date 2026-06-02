@@ -41,7 +41,7 @@
     "@atproto/api": "^0.20.8",
     "@atproto/oauth-client-browser": "^0.4.1",
     "@bsky/core": "*",
-    "@aws-sdk/client-cloudwatch-logs": "^3.1053.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.1059.0",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
     "@tanstack/react-query": "^5.100.14",
@@ -69,7 +69,7 @@
     "workbox-window": "^7.4.1"
   },
   "devDependencies": {
-    "@aws-amplify/backend-cli": "^1.8.2",
+    "@aws-amplify/backend-cli": "^1.8.3",
     "@axe-core/playwright": "^4.11.3",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.60.0",
