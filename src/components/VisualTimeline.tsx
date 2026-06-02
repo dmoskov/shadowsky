@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { differenceInHours, formatDistanceToNow } from "date-fns";
 import {
   ExternalLink,
@@ -9,14 +8,13 @@ import {
   Repeat2,
 } from "lucide-react";
 import React from "react";
-import { useAuth } from "../contexts/AuthContext";
 import { useScrollContainerGPU } from "../hooks/useGPUAcceleration";
 import { useNotificationPosts } from "../hooks/useNotificationPosts";
-import { usePageVisibility } from "../hooks/usePageVisibility";
 import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { throttle, TIMING } from "../utils/timing";
 import { ThreadModal } from "./ThreadModal";
+import { useVisualTimelineNotifications } from "./useVisualTimelineNotifications";
 import {
   AggregatedEvent,
   aggregateNotifications,
@@ -36,8 +34,6 @@ import {
 
 export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
   ({ hideTimeLabels = false, isInSkyDeck = false, isFocused = true }) => {
-    const { agent } = useAuth();
-    const isVisible = usePageVisibility();
     const navigate = useViewTransitionNavigate();
     const containerRef = React.useRef<HTMLDivElement>(null);
     const scrollableRef = React.useRef<HTMLDivElement>(null);
@@ -54,12 +50,26 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
       Map<string, { color: string; position: number }>
     >(new Map());
     // Removed expandedItems state - cards are always expanded
-    const [cursor, setCursor] = React.useState<string | undefined>(undefined);
-    const [allNotifications, setAllNotifications] = React.useState<any[]>([]);
-    const [hasMore, setHasMore] = React.useState(true);
-    const [isLoadingMore, setIsLoadingMore] = React.useState(false);
-    const [hasNewNotifications, setHasNewNotifications] = React.useState(false);
-    const [isRefreshing, setIsRefreshing] = React.useState(false);
+
+    const scrollToTop = React.useCallback(() => {
+      if (scrollableRef.current) {
+        scrollableRef.current.scrollTop = 0;
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }, []);
+
+    // Notification data layer (load / paginate / poll / refresh)
+    const {
+      notifications: allNotifications,
+      isLoading,
+      loadMore,
+      hasMore,
+      isLoadingMore,
+      hasNewNotifications,
+      refresh: refreshNotifications,
+      isRefreshing,
+    } = useVisualTimelineNotifications(scrollToTop);
 
     // Helper function to handle internal navigation
     const handleInternalNavigation = (e: React.MouseEvent, url: string) => {
@@ -67,147 +77,6 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
       e.stopPropagation();
       navigate(url);
     };
-
-    // Initial load query
-    const { data, isLoading } = useQuery({
-      queryKey: ["notifications-visual-timeline", "initial"],
-      queryFn: async () => {
-        if (!agent) throw new Error("Not authenticated");
-        const response = await agent.listNotifications({ limit: 50 });
-        return response.data;
-      },
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnMount: false, // Don't refetch on mount - use stale time instead
-      refetchInterval: isVisible ? 60 * 1000 : false, // Poll every 60 seconds, paused when tab hidden
-      enabled: !!agent, // Only run when agent is available
-    });
-
-    // Update state when initial data loads
-    React.useEffect(() => {
-      if (data) {
-        setAllNotifications(data.notifications || []);
-        setCursor(data.cursor);
-        setHasMore(!!data.cursor);
-      }
-    }, [data]);
-
-    // Periodically check for new notifications
-    React.useEffect(() => {
-      if (!agent || allNotifications.length === 0) return;
-
-      const checkForNew = async () => {
-        try {
-          const response = await agent.listNotifications({ limit: 1 });
-          if (response.data.notifications?.[0]) {
-            const latestNotification = response.data.notifications[0];
-            const currentLatest = allNotifications[0];
-
-            if (latestNotification.uri !== currentLatest.uri) {
-              setHasNewNotifications(true);
-            }
-          }
-        } catch (_error) {
-          // Silently fail - this is just a background check
-        }
-      };
-
-      // Check every 30 seconds
-      const interval = setInterval(checkForNew, 30000);
-      return () => clearInterval(interval);
-    }, [agent, allNotifications]);
-
-    // Load more function
-    const loadMore = React.useCallback(async () => {
-      if (!agent || !cursor || isLoadingMore || !hasMore) {
-        return;
-      }
-
-      setIsLoadingMore(true);
-      try {
-        const response = await agent.listNotifications({
-          limit: 50,
-          cursor: cursor,
-        });
-
-        if (
-          response.data.notifications &&
-          response.data.notifications.length > 0
-        ) {
-          const newNotifications = response.data.notifications;
-
-          setAllNotifications((prev) => {
-            const updated = [...prev, ...newNotifications];
-            return updated;
-          });
-          setCursor(response.data.cursor);
-          setHasMore(!!response.data.cursor);
-        } else {
-          setHasMore(false);
-        }
-      } catch (error) {
-        console.error("Error loading more notifications:", error);
-        setHasMore(false);
-      } finally {
-        setIsLoadingMore(false);
-      }
-    }, [agent, cursor, isLoadingMore, hasMore, allNotifications.length]);
-
-    // Refresh function to load new notifications
-    const refreshNotifications = React.useCallback(async () => {
-      if (!agent || isRefreshing) return;
-
-      setIsRefreshing(true);
-      setHasNewNotifications(false);
-
-      try {
-        const response = await agent.listNotifications({
-          limit: 50,
-        });
-
-        if (response.data.notifications) {
-          // Check for new notifications by comparing the first notification
-          const latestNotification = response.data.notifications[0];
-          const currentLatest = allNotifications[0];
-
-          if (
-            latestNotification &&
-            currentLatest &&
-            latestNotification.uri !== currentLatest.uri
-          ) {
-            // Find where the new notifications end
-            const existingIndex = response.data.notifications.findIndex((n) =>
-              allNotifications.some((existing) => existing.uri === n.uri),
-            );
-
-            if (existingIndex > 0) {
-              // Add only the new notifications at the beginning
-              const newNotifications = response.data.notifications.slice(
-                0,
-                existingIndex,
-              );
-              setAllNotifications((prev) => [...newNotifications, ...prev]);
-
-              // Scroll to top to show new notifications
-              if (scrollableRef.current) {
-                scrollableRef.current.scrollTop = 0;
-              } else {
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }
-            } else if (existingIndex === -1) {
-              // All notifications are new (rare case)
-              setAllNotifications(response.data.notifications);
-              setCursor(response.data.cursor);
-              setHasMore(!!response.data.cursor);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error refreshing notifications:", error);
-      } finally {
-        setIsRefreshing(false);
-      }
-    }, [agent, allNotifications, isRefreshing]);
 
     // Intersection observer for infinite scrolling
     React.useEffect(() => {
