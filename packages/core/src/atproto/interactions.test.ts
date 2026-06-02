@@ -18,9 +18,9 @@ function stubAgent() {
     app: {
       bsky: {
         feed: {
-          getQuotes: vi
-            .fn()
-            .mockResolvedValue({ data: { posts: [{ uri: "q" }], cursor: "qc" } }),
+          getQuotes: vi.fn().mockResolvedValue({
+            data: { posts: [{ uri: "q" }], cursor: "qc" },
+          }),
         },
       },
     },

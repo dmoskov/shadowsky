@@ -95,7 +95,12 @@ describe("@bsky/core feeds", () => {
       expect.objectContaining({ q: "cats", sort: "latest", limit: 50 }),
     );
     expect(result.feed).toEqual([
-      { post: { uri: "sp" }, reply: undefined, reason: undefined, feedContext: undefined },
+      {
+        post: { uri: "sp" },
+        reply: undefined,
+        reason: undefined,
+        feedContext: undefined,
+      },
     ]);
     expect(result.cursor).toBe("c4");
   });
