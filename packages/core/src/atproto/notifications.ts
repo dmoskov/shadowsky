@@ -10,6 +10,8 @@ import type { BskyAgent } from "@atproto/api";
 export interface NotificationsOptions {
   limit?: number;
   cursor?: string;
+  /** When true, only return notifications from followed accounts. */
+  priority?: boolean;
   seenAt?: string;
 }
 
@@ -21,6 +23,7 @@ export async function getNotifications(
   const response = await agent.app.bsky.notification.listNotifications({
     limit: options.limit || 50,
     cursor: options.cursor,
+    priority: options.priority,
   });
   return {
     notifications: response.data.notifications,

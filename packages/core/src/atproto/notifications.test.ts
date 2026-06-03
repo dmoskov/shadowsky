@@ -30,11 +30,26 @@ describe("@bsky/core notifications", () => {
     expect(agent.app.bsky.notification.listNotifications).toHaveBeenCalledWith({
       limit: 50,
       cursor: undefined,
+      priority: undefined,
     });
     expect(res).toEqual({
       notifications: [{ uri: "n1" }],
       cursor: "nc",
       seenAt: "2026-01-01T00:00:00Z",
+    });
+  });
+
+  it("getNotifications forwards limit, cursor and priority", async () => {
+    const agent = stubAgent();
+    await notifications.getNotifications(agent, {
+      limit: 25,
+      cursor: "abc",
+      priority: true,
+    });
+    expect(agent.app.bsky.notification.listNotifications).toHaveBeenCalledWith({
+      limit: 25,
+      cursor: "abc",
+      priority: true,
     });
   });
 

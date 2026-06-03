@@ -1,10 +1,22 @@
-import { AtpAgent } from "@atproto/api";
-import type { AppBskyNotificationListNotifications } from "@atproto/api";
+/**
+ * Notification service — canonical logic now lives in @bsky/core.
+ *
+ * This web class is a thin wrapper that binds the agent, injects the web's
+ * rate limiting (`rateLimitedNotificationFetch`) and error mapping
+ * (`mapATProtoError`), and delegates the actual AT Protocol calls to
+ * @bsky/core (shared with mobile).
+ */
+
+import type {
+  AppBskyNotificationListNotifications,
+  BskyAgent,
+} from "@atproto/api";
+import { notifications } from "@bsky/core";
 import { mapATProtoError } from "@bsky/shared";
 import { rateLimitedNotificationFetch } from "../rate-limiter";
 
 export class NotificationService {
-  constructor(private agent: AtpAgent) {}
+  constructor(private agent: BskyAgent) {}
 
   /**
    * List notifications for the current user
@@ -22,17 +34,11 @@ export class NotificationService {
   }> {
     return rateLimitedNotificationFetch(async () => {
       try {
-        const response =
-          await this.agent.app.bsky.notification.listNotifications({
-            limit: Math.min(limit, 100), // API max is 100
-            cursor,
-            priority,
-          });
-
-        return {
-          notifications: response.data.notifications,
-          cursor: response.data.cursor,
-        };
+        return await notifications.getNotifications(this.agent, {
+          cursor,
+          priority,
+          limit: Math.min(limit, 100), // API max is 100
+        });
       } catch (error) {
         throw mapATProtoError(error);
       }
@@ -45,9 +51,7 @@ export class NotificationService {
   async getUnreadCount(): Promise<number> {
     return rateLimitedNotificationFetch(async () => {
       try {
-        const response =
-          await this.agent.app.bsky.notification.getUnreadCount();
-        return response.data.count;
+        return await notifications.getUnreadCount(this.agent);
       } catch (error) {
         throw mapATProtoError(error);
       }
@@ -60,7 +64,7 @@ export class NotificationService {
   async updateSeen(seenAt: string): Promise<void> {
     return rateLimitedNotificationFetch(async () => {
       try {
-        await this.agent.app.bsky.notification.updateSeen({ seenAt });
+        await notifications.updateSeenNotifications(this.agent, seenAt);
       } catch (error) {
         throw mapATProtoError(error);
       }
@@ -69,6 +73,6 @@ export class NotificationService {
 }
 
 // Factory function - create new instance per agent
-export function getNotificationService(agent: AtpAgent): NotificationService {
+export function getNotificationService(agent: BskyAgent): NotificationService {
   return new NotificationService(agent);
 }
