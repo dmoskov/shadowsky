@@ -159,31 +159,32 @@ describe('ListsScreen', () => {
       expect(getByText('Failed to load lists')).toBeTruthy();
     });
 
-    it('shows error message text', () => {
+    it('shows the generic error message regardless of the error detail', () => {
       mockIsLoading = false;
       mockError = new Error('Network error');
       mockListsData = undefined;
 
       const {getByText} = render(<ListsScreen />);
-      expect(getByText('Network error')).toBeTruthy();
+      // ErrorState renders a static, user-friendly message (not error.message).
+      expect(getByText('Failed to load lists')).toBeTruthy();
     });
 
-    it('shows "Unknown error" for non-Error objects', () => {
+    it('shows the error UI for non-Error rejections too', () => {
       mockIsLoading = false;
       mockError = 'something went wrong';
       mockListsData = undefined;
 
       const {getByText} = render(<ListsScreen />);
-      expect(getByText('Unknown error')).toBeTruthy();
+      expect(getByText('Failed to load lists')).toBeTruthy();
     });
 
-    it('shows Retry button that calls refetch', () => {
+    it('shows a Try Again button that calls refetch', () => {
       mockIsLoading = false;
       mockError = new Error('Network error');
       mockListsData = undefined;
 
       const {getByText} = render(<ListsScreen />);
-      const retryButton = getByText('Retry');
+      const retryButton = getByText('Try Again');
       expect(retryButton).toBeTruthy();
 
       fireEvent.press(retryButton);

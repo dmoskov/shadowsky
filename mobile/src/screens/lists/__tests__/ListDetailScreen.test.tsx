@@ -243,7 +243,7 @@ describe('ListDetailScreen', () => {
       expect(getByText('Failed to load members')).toBeTruthy();
     });
 
-    it('renders error message detail', () => {
+    it('shows the generic error UI regardless of the error detail', () => {
       mockListData = makeListInfo('Error List');
       mockIsLoadingList = false;
       mockIsLoadingMembers = false;
@@ -254,10 +254,11 @@ describe('ListDetailScreen', () => {
         <ListDetailScreen listUri={LIST_URI} />,
       );
 
-      expect(getByText('Network failure')).toBeTruthy();
+      // ErrorState renders a static, user-friendly message (not error.message).
+      expect(getByText('Failed to load members')).toBeTruthy();
     });
 
-    it('renders Retry button that calls refetch', () => {
+    it('renders a Try Again button that calls refetch', () => {
       mockListData = makeListInfo('Error List');
       mockIsLoadingList = false;
       mockIsLoadingMembers = false;
@@ -268,7 +269,7 @@ describe('ListDetailScreen', () => {
         <ListDetailScreen listUri={LIST_URI} />,
       );
 
-      const retryButton = getByText('Retry');
+      const retryButton = getByText('Try Again');
       expect(retryButton).toBeTruthy();
 
       fireEvent.press(retryButton);

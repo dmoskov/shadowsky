@@ -74,8 +74,15 @@ function makeNamespace(nsid) {
         if (typeof prop !== "string") return undefined;
         if (/^is[A-Z]/.test(prop)) {
           const frag = lowerFirst(prop.slice(2));
-          return (v) =>
-            !!v && typeof v === "object" && v.$type === `${nsid}#${frag}`;
+          return (v) => {
+            if (!v || typeof v !== "object") return false;
+            // Record / main object types are identified by the bare NSID
+            // (e.g. app.bsky.feed.post) or its #main fragment, not "#record".
+            if (frag === "record" || frag === "main") {
+              return v.$type === nsid || v.$type === `${nsid}#main`;
+            }
+            return v.$type === `${nsid}#${frag}`;
+          };
         }
         if (/^validate/.test(prop)) {
           return () => ({ success: true, value: undefined });
