@@ -62,9 +62,6 @@ jobs:
   e2e-tests:
     name: E2E Tests (Maestro)
     runs-on: macos-latest
-# continue-on-error stays until the flows are reliably green; then it is
-    # removed so mobile E2E gates CI.
-    continue-on-error: true
     timeout-minutes: 45
     env:
       MAESTRO_TEST_HANDLE: ${{ secrets.MAESTRO_TEST_HANDLE }}
