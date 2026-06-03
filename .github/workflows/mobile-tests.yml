@@ -11,6 +11,7 @@ on:
       - "task/*"
     paths:
       - "mobile/**"
+      - ".github/workflows/mobile-tests.yml"
 
 jobs:
   unit-tests:
