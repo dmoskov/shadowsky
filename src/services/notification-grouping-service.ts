@@ -250,7 +250,7 @@ class NotificationGroupingService {
       title,
       body,
       icon: this.getGroupIcon(group),
-      badge: "/butterfly-icon.svg",
+      badge: "/asphodel-icon.svg",
       tag: group.groupKey,
       data: {
         reason: group.reason,
@@ -654,7 +654,7 @@ class NotificationGroupingService {
     if (group.users.length > 0 && group.users[0].avatar) {
       return group.users[0].avatar;
     }
-    return "/butterfly-icon.svg";
+    return "/asphodel-icon.svg";
   }
 
   /**

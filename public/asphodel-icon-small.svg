@@ -1,0 +1,17 @@
+<!-- Asphodel Icon — small / favicon variant -->
+<!-- Same six-petal flower, tuned for <=32px: deeper/saturated petals for contrast -->
+<!-- on the cream plate, wider petals, no center gap, larger center dot. -->
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="96" fill="#f5f0e8"/>
+
+  <g transform="translate(256,256)">
+    <g transform="rotate(0)">  <path d="M0,-14 Q-92,-103 0,-192 Q92,-103 0,-14Z" fill="#7a63b0"/></g>
+    <g transform="rotate(60)"> <path d="M0,-14 Q-92,-103 0,-192 Q92,-103 0,-14Z" fill="#c26b80"/></g>
+    <g transform="rotate(120)"><path d="M0,-14 Q-92,-103 0,-192 Q92,-103 0,-14Z" fill="#b9963f"/></g>
+    <g transform="rotate(180)"><path d="M0,-14 Q-92,-103 0,-192 Q92,-103 0,-14Z" fill="#4fa085"/></g>
+    <g transform="rotate(240)"><path d="M0,-14 Q-92,-103 0,-192 Q92,-103 0,-14Z" fill="#5f80ad"/></g>
+    <g transform="rotate(300)"><path d="M0,-14 Q-92,-103 0,-192 Q92,-103 0,-14Z" fill="#c08f4a"/></g>
+
+    <circle r="26" fill="#6b5d3a"/>
+  </g>
+</svg>

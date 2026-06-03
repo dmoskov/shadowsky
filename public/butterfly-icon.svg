@@ -1,51 +1,16 @@
-<!-- ShadowSky Icon — Butterfly Alighting on Asphodel -->
-<!-- Refined: evened spacing, brighter forewings, wider hindwing crescents -->
+<!-- Compatibility alias — the logo is now the six-petal flower (asphodel-icon.svg). -->
+<!-- Kept at this filename so cached/external URLs (social cards, OAuth) still resolve -->
+<!-- to the current logo. New references should use asphodel-icon.svg. -->
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="96" fill="#161a2e"/>
+  <rect width="512" height="512" rx="96" fill="#f5f0e8"/>
 
-  <g transform="translate(256,262) rotate(35)">
-
-    <!-- Flower petals (cream pair, drawn first = behind) -->
-    <g transform="rotate(175)">
-      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#e8e0d0"/>
-    </g>
-    <g transform="rotate(245)">
-      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#e8e0d0"/>
-    </g>
-
-    <!-- Flower petals (pink pair, overlapping cream) -->
-    <g transform="rotate(275)">
-      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#d8a0b8"/>
-    </g>
-    <g transform="rotate(145)">
-      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#d8a0b8"/>
-    </g>
-
-    <!-- Butterfly hindwings (pale pair, scaled down, behind forewings) -->
-    <g transform="rotate(336) scale(0.91)">
-      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#e4eaf2"/>
-    </g>
-    <g transform="rotate(84) scale(0.91)">
-      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#e4eaf2"/>
-    </g>
-
-    <!-- Butterfly forewings (blue pair, full size) -->
-    <g transform="rotate(355)">
-      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#5fb5d8"/>
-    </g>
-    <g transform="rotate(65)">
-      <path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#5fb5d8"/>
-    </g>
-
-    <!-- Butterfly body (along 30° axis) -->
-    <g transform="rotate(30)">
-      <path d="M0,-10 Q1.2,-32 0,-54" stroke="#c8d8e8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    </g>
-
-    <!-- Stem (extending away from butterfly) -->
-    <g transform="rotate(210)">
-      <path d="M0,-25 Q8,-115 -4,-195" stroke="#c0a898" stroke-width="3" fill="none" stroke-linecap="round"/>
-    </g>
-
+  <g transform="translate(256,256)">
+    <g transform="rotate(0)">  <path d="M0,-30 Q-76,-105 0,-180 Q76,-105 0,-30Z" fill="#a898cd"/></g>
+    <g transform="rotate(60)"> <path d="M0,-30 Q-76,-105 0,-180 Q76,-105 0,-30Z" fill="#d698a6"/></g>
+    <g transform="rotate(120)"><path d="M0,-30 Q-76,-105 0,-180 Q76,-105 0,-30Z" fill="#cfb575"/></g>
+    <g transform="rotate(180)"><path d="M0,-30 Q-76,-105 0,-180 Q76,-105 0,-30Z" fill="#84c1ab"/></g>
+    <g transform="rotate(240)"><path d="M0,-30 Q-76,-105 0,-180 Q76,-105 0,-30Z" fill="#8ba5c6"/></g>
+    <g transform="rotate(300)"><path d="M0,-30 Q-76,-105 0,-180 Q76,-105 0,-30Z" fill="#d6b382"/></g>
+    <circle r="22" fill="#8a7850"/>
   </g>
 </svg>

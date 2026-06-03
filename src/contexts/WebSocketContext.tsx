@@ -299,7 +299,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       if (window.Notification?.permission === "granted") {
         new window.Notification("New Bluesky Notification", {
           body: getNotificationBody(event.notification),
-          icon: event.notification.author.avatar || "/butterfly-icon.svg",
+          icon: event.notification.author.avatar || "/asphodel-icon.svg",
           tag: event.notification.uri,
         });
       }

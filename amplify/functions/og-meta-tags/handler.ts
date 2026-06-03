@@ -202,7 +202,7 @@ function generateOgHtml(
   const postImage = getPostImage(post);
 
   // Use post image if available, otherwise fall back to avatar
-  const ogImage = postImage || avatar || "https://shadowsky.io/butterfly-icon.svg";
+  const ogImage = postImage || avatar || "https://shadowsky.io/og-image.png";
 
   // Create title and description
   const title = `${authorName} (@${authorHandle}) on ShadowSky`;
@@ -248,7 +248,7 @@ function generateOgHtml(
   <meta property="og:locale" content="en_US">
   <meta name="author" content="${escapeHtml(authorName)}">
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
-  <link rel="icon" type="image/svg+xml" href="https://shadowsky.io/butterfly-icon.svg">
+  <link rel="icon" type="image/svg+xml" href="https://shadowsky.io/asphodel-icon.svg">
 
   <!-- Redirect for non-crawlers -->
   <meta http-equiv="refresh" content="0;url=${escapeHtml(canonicalUrl)}">
@@ -290,7 +290,7 @@ function generateProfileOgHtml(
   const description = profile.description
     ? truncateText(profile.description, 200)
     : `${profile.followersCount || 0} followers · ${profile.postsCount || 0} posts on Bluesky`;
-  const ogImage = profile.avatar || "https://shadowsky.io/butterfly-icon.svg";
+  const ogImage = profile.avatar || "https://shadowsky.io/og-image.png";
 
   const title = `${displayName} (@${profile.handle}) - ShadowSky`;
 
@@ -324,7 +324,7 @@ function generateProfileOgHtml(
   <!-- Additional Meta -->
   <meta property="og:locale" content="en_US">
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
-  <link rel="icon" type="image/svg+xml" href="https://shadowsky.io/butterfly-icon.svg">
+  <link rel="icon" type="image/svg+xml" href="https://shadowsky.io/asphodel-icon.svg">
 
   <!-- Redirect for non-crawlers -->
   <meta http-equiv="refresh" content="0;url=${escapeHtml(canonicalUrl)}">
@@ -365,7 +365,7 @@ function generateFallbackHtml(
   <meta property="og:url" content="${escapeHtml(canonicalUrl)}">
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${description}">
-  <meta property="og:image" content="https://shadowsky.io/butterfly-icon.svg">
+  <meta property="og:image" content="https://shadowsky.io/og-image.png">
   <meta property="og:site_name" content="ShadowSky">
 
   <!-- Twitter -->
@@ -373,10 +373,10 @@ function generateFallbackHtml(
   <meta name="twitter:url" content="${escapeHtml(canonicalUrl)}">
   <meta name="twitter:title" content="${title}">
   <meta name="twitter:description" content="${description}">
-  <meta name="twitter:image" content="https://shadowsky.io/butterfly-icon.svg">
+  <meta name="twitter:image" content="https://shadowsky.io/og-image.png">
 
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
-  <link rel="icon" type="image/svg+xml" href="https://shadowsky.io/butterfly-icon.svg">
+  <link rel="icon" type="image/svg+xml" href="https://shadowsky.io/asphodel-icon.svg">
 
   <!-- Redirect for non-crawlers -->
   <meta http-equiv="refresh" content="0;url=${escapeHtml(canonicalUrl)}">

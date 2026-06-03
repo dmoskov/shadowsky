@@ -1,0 +1,17 @@
+<!-- Asphodel Icon — six-petal flower -->
+<!-- One lens petal path, rotated in 60° steps around a shared center, six fills, -->
+<!-- plus a center dot. The pure single-path-rotation method. -->
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="96" fill="#f5f0e8"/>
+
+  <g transform="translate(256,256)">
+    <!-- top -->        <g transform="rotate(0)">  <path d="M0,-30 Q-76,-105 0,-180 Q76,-105 0,-30Z" fill="#a898cd"/></g>
+    <!-- upper-right --> <g transform="rotate(60)"> <path d="M0,-30 Q-76,-105 0,-180 Q76,-105 0,-30Z" fill="#d698a6"/></g>
+    <!-- lower-right --> <g transform="rotate(120)"><path d="M0,-30 Q-76,-105 0,-180 Q76,-105 0,-30Z" fill="#cfb575"/></g>
+    <!-- bottom -->     <g transform="rotate(180)"><path d="M0,-30 Q-76,-105 0,-180 Q76,-105 0,-30Z" fill="#84c1ab"/></g>
+    <!-- lower-left -->  <g transform="rotate(240)"><path d="M0,-30 Q-76,-105 0,-180 Q76,-105 0,-30Z" fill="#8ba5c6"/></g>
+    <!-- upper-left -->  <g transform="rotate(300)"><path d="M0,-30 Q-76,-105 0,-180 Q76,-105 0,-30Z" fill="#d6b382"/></g>
+
+    <circle r="22" fill="#8a7850"/>
+  </g>
+</svg>

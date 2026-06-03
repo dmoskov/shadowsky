@@ -1,6 +1,6 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 import React from "react";
-import appIcon from "/butterfly-icon.svg";
+import appIcon from "/asphodel-icon.svg";
 
 interface WelcomeScreenProps {
   onContinue: () => void;
