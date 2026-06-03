@@ -35,6 +35,7 @@
     "test:lint": "wireit",
     "test:types": "wireit",
     "test:unit": "wireit",
+    "test:amplify": "wireit",
     "test:unit:watch": "vitest watch"
   },
   "dependencies": {
@@ -160,6 +161,13 @@
         "src/**/*.{ts,tsx}",
         "src/**/*.test.{ts,tsx}",
         "vitest.config.ts"
+      ]
+    },
+    "test:amplify": {
+      "command": "vitest run --config amplify/vitest.config.ts",
+      "files": [
+        "amplify/functions/**/*.ts",
+        "amplify/vitest.config.ts"
       ]
     },
     "test:format": {

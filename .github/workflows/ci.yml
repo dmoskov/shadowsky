@@ -34,6 +34,13 @@ jobs:
       - name: Check @atproto/api version lockstep (web/mobile/core)
         run: node scripts/check-atproto-version.mjs
       - run: npm test
+      - name: Install Amplify function deps
+        working-directory: amplify
+        # npm install (not ci): the amplify lockfile is intentionally not kept
+        # in strict sync, and these deps are only needed to run the function tests.
+        run: npm install --no-audit --no-fund
+      - name: Run Amplify function tests
+        run: npm run test:amplify
       - name: Run unit tests with coverage
         run: npm run test:unit -- --coverage
       - name: Generate coverage summary
