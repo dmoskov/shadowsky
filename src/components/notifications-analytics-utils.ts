@@ -231,3 +231,48 @@ export function buildNotificationActivity(
     timeRange,
   };
 }
+
+export interface NotificationCounts {
+  total: number;
+  unread: number;
+  likes: number;
+  reposts: number;
+  follows: number;
+  mentions: number;
+  replies: number;
+}
+
+/**
+ * Count notifications by reason. `trackUnread` controls whether the unread
+ * count is computed from `isRead` (extended-history pages don't carry read
+ * status, so callers pass false there).
+ */
+export function countNotificationsByReason(
+  notifications: Notification[],
+  options: { trackUnread?: boolean } = {},
+): NotificationCounts {
+  const byReason = (reason: string) =>
+    notifications.filter((n) => n.reason === reason).length;
+
+  return {
+    total: notifications.length,
+    unread: options.trackUnread
+      ? notifications.filter((n) => !n.isRead).length
+      : 0,
+    likes: byReason("like"),
+    reposts: byReason("repost"),
+    follows: byReason("follow"),
+    mentions: byReason("mention"),
+    replies: byReason("reply"),
+  };
+}
+
+/** Notifications indexed within the last `hours` relative to `now`. */
+export function recentNotifications(
+  notifications: Notification[],
+  hours: number,
+  now: Date = new Date(),
+): Notification[] {
+  const cutoff = subHours(now, hours);
+  return notifications.filter((n) => new Date(n.indexedAt) >= cutoff);
+}

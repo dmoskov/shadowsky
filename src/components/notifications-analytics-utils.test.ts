@@ -2,6 +2,8 @@ import type { AppBskyNotificationListNotifications } from "@atproto/api";
 import { describe, expect, it } from "vitest";
 import {
   buildNotificationActivity,
+  countNotificationsByReason,
+  recentNotifications,
   type TimeRange,
 } from "./notifications-analytics-utils";
 
@@ -112,5 +114,50 @@ describe("buildNotificationActivity", () => {
     expect(res.uniqueUsers).toBe(0);
     expect(res.topUsers).toEqual([]);
     expect(res.daySpan).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("countNotificationsByReason", () => {
+  it("counts each reason and the total", () => {
+    const counts = countNotificationsByReason([
+      notif({ reason: "like", handle: "a" }),
+      notif({ reason: "like", handle: "b" }),
+      notif({ reason: "repost", handle: "a" }),
+      notif({ reason: "follow", handle: "c" }),
+      notif({ reason: "mention", handle: "a" }),
+      notif({ reason: "reply", handle: "b" }),
+    ]);
+    expect(counts).toMatchObject({
+      total: 6,
+      likes: 2,
+      reposts: 1,
+      follows: 1,
+      mentions: 1,
+      replies: 1,
+    });
+  });
+
+  it("counts unread only when trackUnread is set", () => {
+    const list = [
+      { ...notif({ reason: "like", handle: "a" }), isRead: false },
+      { ...notif({ reason: "like", handle: "b" }), isRead: true },
+    ];
+    expect(countNotificationsByReason(list, { trackUnread: true }).unread).toBe(
+      1,
+    );
+    // default: unread not tracked (e.g. extended-history pages)
+    expect(countNotificationsByReason(list).unread).toBe(0);
+  });
+});
+
+describe("recentNotifications", () => {
+  it("keeps only notifications within the window", () => {
+    const list = [
+      notif({ reason: "like", handle: "a", hoursAgo: 1 }),
+      notif({ reason: "like", handle: "b", hoursAgo: 12 }),
+      notif({ reason: "like", handle: "c", hoursAgo: 48 }),
+    ];
+    const within24h = recentNotifications(list, 24, NOW);
+    expect(within24h).toHaveLength(2);
   });
 });

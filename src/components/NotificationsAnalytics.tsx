@@ -20,7 +20,11 @@ import { useExtendedNotifications } from "../hooks/useExtendedNotifications";
 import { usePageVisibility } from "../hooks/usePageVisibility";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { BackgroundNotificationLoader } from "./BackgroundNotificationLoader";
-import { buildNotificationActivity } from "./notifications-analytics-utils";
+import {
+  buildNotificationActivity,
+  countNotificationsByReason,
+  recentNotifications,
+} from "./notifications-analytics-utils";
 import { useUserActivityStats } from "./useUserActivityStats";
 
 type TimeRange = "1d" | "3d" | "7d" | "4w";
@@ -399,74 +403,18 @@ export const NotificationsAnalytics: React.FC = React.memo(
 
     // Calculate current stats - use analytics data if we have extended data
     const stats = React.useMemo(() => {
-      // If we have extended data, calculate stats from the analytics data
+      // Extended history pages don't carry read status; count the last 24h.
       if (hasExtendedData && notifications?.notifications) {
-        // Get notifications from the last 24 hours for "recent" stats
-        const oneDayAgo = subDays(new Date(), 1);
-        const recentNotifications = notifications.notifications.filter(
-          (n: AppBskyNotificationListNotifications.Notification) =>
-            new Date(n.indexedAt) >= oneDayAgo,
+        return countNotificationsByReason(
+          recentNotifications(notifications.notifications, 24),
+          { trackUnread: false },
         );
-
-        const counts = {
-          total: recentNotifications.length,
-          unread: 0, // Extended data doesn't include read status
-          likes: recentNotifications.filter(
-            (n: AppBskyNotificationListNotifications.Notification) =>
-              n.reason === "like",
-          ).length,
-          reposts: recentNotifications.filter(
-            (n: AppBskyNotificationListNotifications.Notification) =>
-              n.reason === "repost",
-          ).length,
-          follows: recentNotifications.filter(
-            (n: AppBskyNotificationListNotifications.Notification) =>
-              n.reason === "follow",
-          ).length,
-          mentions: recentNotifications.filter(
-            (n: AppBskyNotificationListNotifications.Notification) =>
-              n.reason === "mention",
-          ).length,
-          replies: recentNotifications.filter(
-            (n: AppBskyNotificationListNotifications.Notification) =>
-              n.reason === "reply",
-          ).length,
-        };
-
-        return counts;
       }
-
-      // Otherwise use the current stats query
+      // Otherwise use the current stats query (includes read status).
       if (!currentStats) return null;
-
-      const counts = {
-        total: currentStats.notifications.length,
-        unread: currentStats.notifications.filter(
-          (n: AppBskyNotificationListNotifications.Notification) => !n.isRead,
-        ).length,
-        likes: currentStats.notifications.filter(
-          (n: AppBskyNotificationListNotifications.Notification) =>
-            n.reason === "like",
-        ).length,
-        reposts: currentStats.notifications.filter(
-          (n: AppBskyNotificationListNotifications.Notification) =>
-            n.reason === "repost",
-        ).length,
-        follows: currentStats.notifications.filter(
-          (n: AppBskyNotificationListNotifications.Notification) =>
-            n.reason === "follow",
-        ).length,
-        mentions: currentStats.notifications.filter(
-          (n: AppBskyNotificationListNotifications.Notification) =>
-            n.reason === "mention",
-        ).length,
-        replies: currentStats.notifications.filter(
-          (n: AppBskyNotificationListNotifications.Notification) =>
-            n.reason === "reply",
-        ).length,
-      };
-
-      return counts;
+      return countNotificationsByReason(currentStats.notifications, {
+        trackUnread: true,
+      });
     }, [currentStats, hasExtendedData, notifications]);
 
     if (!analytics || isLoadingStats) {
