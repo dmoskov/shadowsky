@@ -1,4 +1,4 @@
-appId: com.shadowsky.mobile
+appId: io.shadowsky.app
 env:
   TEST_HANDLE: ${MAESTRO_TEST_HANDLE}
   TEST_APP_PASSWORD: ${MAESTRO_TEST_APP_PASSWORD}

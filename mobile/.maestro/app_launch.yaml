@@ -1,4 +1,4 @@
-appId: com.shadowsky.mobile
+appId: io.shadowsky.app
 ---
 # E2E Test: App Launch & Auth Screen
 # Verifies the app launches and the auth screen renders correctly.

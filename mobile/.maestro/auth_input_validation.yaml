@@ -1,4 +1,4 @@
-appId: com.shadowsky.mobile
+appId: io.shadowsky.app
 ---
 # E2E Test: Auth Input Validation
 # Tests form input and validation on the auth screen.

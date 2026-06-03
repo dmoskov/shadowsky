@@ -62,10 +62,14 @@ jobs:
   e2e-tests:
     name: E2E Tests (Maestro)
     runs-on: macos-latest
+# continue-on-error stays until the flows are reliably green; then it is
+    # removed so mobile E2E gates CI.
     continue-on-error: true
+    timeout-minutes: 45
     env:
       MAESTRO_TEST_HANDLE: ${{ secrets.MAESTRO_TEST_HANDLE }}
       MAESTRO_TEST_APP_PASSWORD: ${{ secrets.MAESTRO_TEST_APP_PASSWORD }}
+      SIMULATOR: iPhone 16
 
     steps:
       - name: Checkout code
@@ -82,39 +86,45 @@ jobs:
         working-directory: mobile
         run: npm ci --legacy-peer-deps
 
-      - name: Setup Expo
-        uses: expo/expo-github-action@v8
-        with:
-          expo-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
+      - name: Install CocoaPods
+        run: gem install cocoapods
+
+      - name: Install Pods
+        working-directory: mobile/ios
+        run: pod install
+
+      - name: Build app for simulator (Release, self-contained JS bundle)
+        working-directory: mobile/ios
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -workspace Asphodel.xcworkspace \
+            -scheme Asphodel \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+
+      - name: Boot simulator
+        run: |
+          xcrun simctl boot "$SIMULATOR" || true
+          xcrun simctl bootstatus "$SIMULATOR" -b
+
+      - name: Install app on simulator
+        working-directory: mobile/ios
+        run: |
+          APP_PATH=$(find build/Build/Products/Release-iphonesimulator -maxdepth 1 -name "*.app" | head -1)
+          echo "Installing $APP_PATH"
+          test -n "$APP_PATH"
+          xcrun simctl install "$SIMULATOR" "$APP_PATH"
 
       - name: Install Maestro
         run: |
           curl -Ls "https://get.maestro.mobile.dev" | bash
           echo "${HOME}/.maestro/bin" >> $GITHUB_PATH
 
-      - name: Setup iOS Simulator
-        run: |
-          xcrun simctl boot "iPhone 15 Pro" || true
-          xcrun simctl list
-
-      - name: Start Expo
-        working-directory: mobile
-        run: |
-          npm start &
-          sleep 30
-
-      - name: Check for connected devices
-        id: check-devices
-        run: |
-          DEVICE_COUNT=$(xcrun simctl list devices booted 2>/dev/null | grep "Booted" | wc -l | tr -d ' ')
-          echo "device_count=$DEVICE_COUNT" >> $GITHUB_OUTPUT
-          if [ "$DEVICE_COUNT" -eq "0" ]; then
-            echo "⚠️ No booted simulators found — skipping Maestro tests"
-          fi
-
       - name: Run Maestro E2E tests (unauthenticated)
-        if: steps.check-devices.outputs.device_count != '0'
         working-directory: mobile
         run: |
           maestro test .maestro/app_launch.yaml --format junit --output e2e-results-launch.xml
@@ -122,18 +132,8 @@ jobs:
           maestro test .maestro/auth_input_validation.yaml --format junit --output e2e-results-auth-input.xml
         timeout-minutes: 15
 
-      - name: Check authenticated test credentials
-        if: steps.check-devices.outputs.device_count != '0'
-        run: |
-          if [ -n "$MAESTRO_TEST_HANDLE" ]; then
-            echo "✅ Authenticated E2E tests enabled (MAESTRO_TEST_HANDLE is set)"
-          else
-            echo "⏭️ Authenticated E2E tests skipped — MAESTRO_TEST_HANDLE secret not configured"
-            echo "   See mobile/.maestro/README.md for setup instructions"
-          fi
-
       - name: Run Maestro E2E tests (authenticated)
-        if: steps.check-devices.outputs.device_count != '0' && env.MAESTRO_TEST_HANDLE != ''
+        if: env.MAESTRO_TEST_HANDLE != ''
         working-directory: mobile
         run: |
           maestro test .maestro/feed_scroll.yaml --format junit --output e2e-results-feed.xml
@@ -143,18 +143,17 @@ jobs:
 
       - name: Upload E2E test results
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: e2e-test-results
           path: mobile/e2e-results-*.xml
-        if: always() && steps.check-devices.outputs.device_count != '0'
 
-      - name: Publish E2E test report
-        uses: dorny/test-reporter@v1
-        if: always() && steps.check-devices.outputs.device_count != '0'
+      - name: Upload Maestro debug output
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: E2E Tests
-          path: mobile/e2e-results-*.xml
-          reporter: java-junit
+          name: maestro-debug
+          path: ~/.maestro/tests
 
   swift-ui-tests:
     name: SwiftUI Interaction Tests
