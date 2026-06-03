@@ -13,6 +13,10 @@ module.exports = {
   testMatch: ["**/__tests__/**/*.test.{ts,tsx}", "**/*.test.{ts,tsx}"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    // Mock @atproto/api: its real ESM dep tree (multiformats/uint8arrays) can't
+    // be resolved by the RN Jest resolver. Unit tests inject their own mock
+    // agents, so a stubbed module surface is sufficient. See __mocks__.
+    "^@atproto/api$": "<rootDir>/__mocks__/atproto-api.js",
   },
   testTimeout: 10000,
   coverageThreshold: {
