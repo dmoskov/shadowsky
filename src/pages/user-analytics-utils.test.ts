@@ -4,6 +4,8 @@ import {
   buildEngagementChartData,
   buildPostFrequencyData,
   computePostingTimeAnalysis,
+  summarizePostEngagement,
+  type PostEngagement,
 } from "./user-analytics-utils";
 
 describe("buildEngagementChartData", () => {
@@ -80,5 +82,54 @@ describe("computePostingTimeAnalysis", () => {
     expect(result!.avgEngagementByHour[14]).toBe(15); // (10+20)/2
     expect(result!.maxPostsHour).toBe(14);
     expect(result!.maxEngagementHour).toBe(14);
+  });
+});
+
+describe("summarizePostEngagement", () => {
+  function post(
+    overrides: Partial<PostEngagement> & { totalEngagement: number },
+  ): PostEngagement {
+    return {
+      uri: "at://post",
+      text: "t",
+      createdAt: "2026-01-01T00:00:00Z",
+      likes: 0,
+      reposts: 0,
+      replies: 0,
+      author: { handle: "a" },
+      ...overrides,
+    };
+  }
+
+  it("sums likes/reposts/replies and total engagement", () => {
+    const summary = summarizePostEngagement([
+      post({ likes: 5, reposts: 2, replies: 1, totalEngagement: 8 }),
+      post({ likes: 3, reposts: 0, replies: 4, totalEngagement: 7 }),
+    ]);
+    expect(summary.totalLikes).toBe(8);
+    expect(summary.totalReposts).toBe(2);
+    expect(summary.totalReplies).toBe(5);
+    expect(summary.totalEngagement).toBe(15);
+  });
+
+  it("returns the top 10 posts by engagement, descending", () => {
+    const posts = Array.from({ length: 15 }, (_, i) =>
+      post({ uri: `at://p${i}`, totalEngagement: i }),
+    );
+    const summary = summarizePostEngagement(posts);
+    expect(summary.topPosts).toHaveLength(10);
+    expect(summary.topPosts[0].totalEngagement).toBe(14);
+    expect(summary.topPosts[9].totalEngagement).toBe(5);
+  });
+
+  it("handles an empty list", () => {
+    const summary = summarizePostEngagement([]);
+    expect(summary).toEqual({
+      topPosts: [],
+      totalLikes: 0,
+      totalReposts: 0,
+      totalReplies: 0,
+      totalEngagement: 0,
+    });
   });
 });

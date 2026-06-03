@@ -45,6 +45,48 @@ export interface PostingTimeAnalysis {
   maxAvgEngagement: number;
 }
 
+export interface PostEngagement {
+  uri: string;
+  text: string;
+  createdAt: string;
+  likes: number;
+  reposts: number;
+  replies: number;
+  totalEngagement: number;
+  author: {
+    handle: string;
+    displayName?: string;
+    avatar?: string;
+  };
+}
+
+export interface EngagementSummary {
+  topPosts: PostEngagement[];
+  totalLikes: number;
+  totalReposts: number;
+  totalReplies: number;
+  totalEngagement: number;
+}
+
+/** Top posts (by engagement) plus aggregate like/repost/reply totals. */
+export function summarizePostEngagement(
+  posts: PostEngagement[],
+): EngagementSummary {
+  const topPosts = [...posts]
+    .sort((a, b) => b.totalEngagement - a.totalEngagement)
+    .slice(0, 10);
+  const totalLikes = posts.reduce((sum, p) => sum + p.likes, 0);
+  const totalReposts = posts.reduce((sum, p) => sum + p.reposts, 0);
+  const totalReplies = posts.reduce((sum, p) => sum + p.replies, 0);
+  return {
+    topPosts,
+    totalLikes,
+    totalReposts,
+    totalReplies,
+    totalEngagement: totalLikes + totalReposts + totalReplies,
+  };
+}
+
 type DailyEngagement = Record<string, Partial<EngagementDay>> | undefined;
 
 function daysForRange(dateRange: DateRange): number {

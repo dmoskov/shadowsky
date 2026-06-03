@@ -31,24 +31,11 @@ import {
   buildEngagementChartData,
   buildPostFrequencyData,
   computePostingTimeAnalysis,
+  summarizePostEngagement,
+  type PostEngagement,
 } from "./user-analytics-utils";
 
 type DateRange = "24h" | "7d" | "30d" | "90d";
-
-interface PostEngagement {
-  uri: string;
-  text: string;
-  createdAt: string;
-  likes: number;
-  reposts: number;
-  replies: number;
-  totalEngagement: number;
-  author: {
-    handle: string;
-    displayName?: string;
-    avatar?: string;
-  };
-}
 
 export const UserAnalytics: React.FC = () => {
   const { agent, session } = useAuth();
@@ -163,22 +150,7 @@ export const UserAnalytics: React.FC = () => {
         },
       }));
 
-      const topPosts = [...postsWithEngagement]
-        .sort((a, b) => b.totalEngagement - a.totalEngagement)
-        .slice(0, 10);
-
-      const totalLikes = postsWithEngagement.reduce(
-        (sum, post) => sum + post.likes,
-        0,
-      );
-      const totalReposts = postsWithEngagement.reduce(
-        (sum, post) => sum + post.reposts,
-        0,
-      );
-      const totalReplies = postsWithEngagement.reduce(
-        (sum, post) => sum + post.replies,
-        0,
-      );
+      const summary = summarizePostEngagement(postsWithEngagement);
 
       // Aggregate by hour for 24h view, by day for others
       const dailyEngagement = allPosts.reduce(
@@ -226,12 +198,12 @@ export const UserAnalytics: React.FC = () => {
 
       return {
         posts: postsWithEngagement,
-        topPosts,
+        topPosts: summary.topPosts,
         totalPosts: postsWithEngagement.length,
-        totalLikes,
-        totalReposts,
-        totalReplies,
-        totalEngagement: totalLikes + totalReposts + totalReplies,
+        totalLikes: summary.totalLikes,
+        totalReposts: summary.totalReposts,
+        totalReplies: summary.totalReplies,
+        totalEngagement: summary.totalEngagement,
         dailyEngagement,
       };
     },
