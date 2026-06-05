@@ -2,6 +2,42 @@
 /* These reusable component classes replace the ones from asphodel-theme.css */
 
 @layer components {
+  /* ──────────────────────────────────────────────────────────────
+     Typography scale
+     Semantic type classes so headings and feed text stay consistent
+     across the app instead of drifting between ad-hoc utilities.
+     ────────────────────────────────────────────────────────────── */
+  .asph-h1 {
+    @apply text-2xl font-bold leading-tight text-asph-text-primary;
+    letter-spacing: var(--asph-letter-spacing-heading);
+  }
+
+  .asph-h2 {
+    @apply text-xl font-bold leading-snug text-asph-text-primary;
+    letter-spacing: var(--asph-letter-spacing-heading);
+  }
+
+  .asph-h3 {
+    @apply text-lg font-semibold leading-snug text-asph-text-primary;
+    letter-spacing: var(--asph-letter-spacing-tight);
+  }
+
+  /* Body copy — readable measure for post content */
+  .asph-text-body {
+    @apply text-[15px] leading-relaxed text-asph-text-primary;
+  }
+
+  /* De-emphasized metadata: handles, timestamps, captions */
+  .asph-text-meta {
+    @apply text-sm text-asph-text-secondary;
+  }
+
+  /* Post author name — crisp, slightly tightened headline */
+  .asph-post-name {
+    @apply font-semibold leading-snug text-asph-text-primary;
+    letter-spacing: var(--asph-letter-spacing-tight);
+  }
+
   /* Button styles with spring animations and refined depth */
   .asph-button {
     @apply rounded-lg px-3.5 py-1.5 text-sm font-semibold;

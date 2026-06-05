@@ -1154,8 +1154,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                 <ProfileHoverCard handle={post.author.handle}>
                   <Link
                     to={profileUrl}
-                    className="max-w-[200px] truncate font-semibold no-underline hover:underline"
-                    style={{ color: "var(--asph-text-primary)" }}
+                    className="asph-post-name max-w-[200px] truncate no-underline hover:underline"
                     onClick={(e) => e.stopPropagation()}
                     {...authorPrefetchHandlers}
                   >
@@ -1165,7 +1164,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                 <ProfileHoverCard handle={post.author.handle}>
                   <Link
                     to={profileUrl}
-                    className="max-w-[200px] truncate no-underline hover:underline"
+                    className="max-w-[200px] truncate text-sm no-underline hover:underline"
                     style={{ color: "var(--asph-text-secondary)" }}
                     onClick={(e) => e.stopPropagation()}
                     {...authorPrefetchHandlers}
@@ -1174,7 +1173,12 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                   </Link>
                 </ProfileHoverCard>
                 <DomainVerifiedBadgeInline handle={post.author.handle} />
-                <span style={{ color: "var(--asph-text-secondary)" }}>·</span>
+                <span
+                  className="text-sm"
+                  style={{ color: "var(--asph-text-secondary)" }}
+                >
+                  ·
+                </span>
                 <Link
                   to={threadUrl}
                   className="text-sm no-underline hover:underline"
@@ -1225,7 +1229,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
             </div>
 
             {/* Post content */}
-            <div className="mt-1 overflow-hidden">
+            <div className="mt-1.5 overflow-hidden">
               {/* Show labels if present */}
               {(post as any).labels && (post as any).labels.length > 0 && (
                 <div className="mb-2">
@@ -1236,10 +1240,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                   />
                 </div>
               )}
-              <p
-                className="whitespace-pre-wrap break-words"
-                style={{ color: "var(--asph-text-primary)" }}
-              >
+              <p className="asph-text-body whitespace-pre-wrap break-words">
                 <RichText text={record?.text || ""} facets={record?.facets} />
               </p>
               {/* Inline Translation */}
