@@ -18,7 +18,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/68a482ea291a2450981b4cabbc591713f4c869c2e30f697617072ac5118e7fe4.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/fa958156fc237ac5cb197a48206b79007673ef6209e1572336d75ac8559efdfa.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -49,7 +49,7 @@
         "/ShadowSkyOgMetaEdge/OgMetaEdgeFunction/CurrentVersion/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "OgMetaEdgeFunctionCurrentVersionA9E992B178a04e4ae0c27b04298538059e8d4ea9"
+            "data": "OgMetaEdgeFunctionCurrentVersionA9E992B1bad6baa9871f9e93062f7263f4e30328"
           }
         ],
         "/ShadowSkyOgMetaEdge/LambdaVersionArn": [
