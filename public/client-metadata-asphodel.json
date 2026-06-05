@@ -3,7 +3,7 @@
   "client_id": "https://asphodel.is/client-metadata-asphodel.json",
   "client_name": "Asphodel",
   "client_uri": "https://asphodel.is",
-  "logo_uri": "https://asphodel.is/asphodel-icon.svg",
+  "logo_uri": "https://asphodel.is/butterfly-icon.svg",
   "tos_uri": "https://asphodel.is/terms",
   "policy_uri": "https://asphodel.is/privacy",
   "redirect_uris": [

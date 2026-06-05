@@ -15,7 +15,7 @@ const CLIENT_METADATA = {
   client_id: 'https://shadowsky.io/client-metadata-mobile.json' as const,
   client_name: 'Asphodel Mobile',
   client_uri: 'https://shadowsky.io',
-  logo_uri: 'https://shadowsky.io/asphodel-icon.svg',
+  logo_uri: 'https://shadowsky.io/butterfly-icon.svg',
   tos_uri: 'https://shadowsky.io/terms',
   policy_uri: 'https://shadowsky.io/privacy',
   redirect_uris: ['io.shadowsky:/oauth-callback' as const],

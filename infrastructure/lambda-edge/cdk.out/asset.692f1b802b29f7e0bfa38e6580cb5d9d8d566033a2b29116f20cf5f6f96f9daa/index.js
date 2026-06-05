@@ -114,7 +114,7 @@ function generateThreadOgHtml(post, handle, postId) {
   const postText = post.record.text;
   const avatar = post.author.avatar;
   const postImage = getPostImage(post);
-  const ogImage = postImage || avatar || "https://shadowsky.io/og-image.png";
+  const ogImage = postImage || avatar || "https://shadowsky.io/butterfly-icon.svg";
   const title = `${authorName} (@${authorHandle}) on ShadowSky`;
   const description = truncateText(postText, 200);
   const canonicalUrl = `https://shadowsky.io/thread/${handle}/${postId}`;
@@ -132,7 +132,7 @@ function generateThreadOgHtml(post, handle, postId) {
 function generateProfileOgHtml(profile, handle) {
   const displayName = profile.displayName || profile.handle;
   const description = profile.description ? truncateText(profile.description, 200) : `${profile.followersCount || 0} followers \xB7 ${profile.postsCount || 0} posts`;
-  const ogImage = profile.avatar || "https://shadowsky.io/og-image.png";
+  const ogImage = profile.avatar || "https://shadowsky.io/butterfly-icon.svg";
   const canonicalUrl = `https://shadowsky.io/profile/${handle}`;
   return generateHtml({
     title: `${displayName} (@${profile.handle}) - ShadowSky`,
@@ -172,7 +172,7 @@ function generateHtml(params) {
   <meta name="twitter:creator" content="@${escapeHtml(authorHandle)}">
 
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
-  <link rel="icon" type="image/svg+xml" href="https://shadowsky.io/asphodel-icon.svg">
+  <link rel="icon" type="image/svg+xml" href="https://shadowsky.io/butterfly-icon.svg">
 
   <meta http-equiv="refresh" content="0;url=${escapeHtml(canonicalUrl)}">
   <script>window.location.href = "${escapeHtml(canonicalUrl)}";</script>
@@ -190,7 +190,7 @@ function generateFallbackHtml(canonicalUrl) {
   return generateHtml({
     title: "ShadowSky - Bluesky Companion",
     description: "Your companion app for deeper Bluesky insights",
-    ogImage: "https://shadowsky.io/og-image.png",
+    ogImage: "https://shadowsky.io/butterfly-icon.svg",
     canonicalUrl,
     cardType: "summary",
     authorName: "ShadowSky",

@@ -3,7 +3,7 @@ import React from "react";
 import { AccountSwitcher } from "./AccountSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { UserMenu } from "./UserMenu";
-import appIcon from "/asphodel-icon.svg";
+import appIcon from "/butterfly-icon.svg";
 
 interface HeaderProps {
   onMenuToggle: () => void;

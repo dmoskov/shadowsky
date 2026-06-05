@@ -14,7 +14,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { ATProtoError } from "../types/errors";
-import appIcon from "/asphodel-icon.svg";
+import appIcon from "/butterfly-icon.svg";
 
 type LoginMode = "oauth" | "app-password";
 
