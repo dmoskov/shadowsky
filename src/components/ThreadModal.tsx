@@ -55,6 +55,33 @@ interface QuoteState {
 
 type PostView = AppBskyFeedDefs.PostView;
 
+/**
+ * Searches the already-loaded feed caches for the clicked post so the thread
+ * view can render its root post in the same frame as the click, while the full
+ * thread (parents + replies) loads in the background. Returns undefined when the
+ * post isn't cached (e.g. opened via a deep link), in which case the modal falls
+ * back to its loading skeleton.
+ */
+function findCachedPostView(
+  queryClient: ReturnType<typeof useQueryClient>,
+  uri: string,
+): PostView | undefined {
+  const feedQueryKeys = [["timeline"], ["columnFeed"], ["authorFeed"]];
+  for (const queryKey of feedQueryKeys) {
+    const queries = queryClient.getQueriesData<{
+      pages?: Array<{ feed?: Array<{ post?: PostView }> }>;
+    }>({ queryKey });
+    for (const [, data] of queries) {
+      for (const page of data?.pages ?? []) {
+        for (const item of page.feed ?? []) {
+          if (item?.post?.uri === uri) return item.post;
+        }
+      }
+    }
+  }
+  return undefined;
+}
+
 export function ThreadModal({
   postUri,
   onClose,
@@ -138,6 +165,17 @@ export function ThreadModal({
     };
   }, [onClose]);
 
+  // Build a one-post placeholder thread from the feed cache so the root post
+  // paints instantly; the real thread replaces it when the fetch resolves.
+  const placeholderThread = useMemo(() => {
+    const cachedPost = findCachedPostView(queryClient, postUri);
+    if (!cachedPost) return undefined;
+    return {
+      $type: "app.bsky.feed.defs#threadViewPost",
+      post: cachedPost,
+    } as AppBskyFeedDefs.ThreadViewPost;
+  }, [queryClient, postUri]);
+
   const {
     data: threadData,
     isLoading: isLoadingRaw,
@@ -145,6 +183,7 @@ export function ThreadModal({
     refetch,
   } = useQuery({
     queryKey: ["thread", postUri],
+    placeholderData: placeholderThread,
     queryFn: async () => {
       if (!agent) throw new Error("Not authenticated");
 
@@ -191,7 +230,7 @@ export function ThreadModal({
             debug.log(
               "Thread has post despite unexpected type, attempting to use it",
             );
-            return thread;
+            return thread as AppBskyFeedDefs.ThreadViewPost;
           }
 
           throw new Error(

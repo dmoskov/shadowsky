@@ -59,11 +59,16 @@ export const PostContextMenu: React.FC<PostContextMenuProps> = ({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  // Close on scroll
+  // Close on scroll. Passive + capture so it never blocks scrolling; it fires
+  // once and then unmounts the menu (removing this listener).
   useEffect(() => {
     const handleScroll = () => onClose();
-    window.addEventListener("scroll", handleScroll, true);
-    return () => window.removeEventListener("scroll", handleScroll, true);
+    window.addEventListener("scroll", handleScroll, {
+      capture: true,
+      passive: true,
+    });
+    return () =>
+      window.removeEventListener("scroll", handleScroll, { capture: true });
   }, [onClose]);
 
   // Adjust position to keep menu within viewport

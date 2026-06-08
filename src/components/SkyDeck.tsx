@@ -9,6 +9,7 @@ import {
   Bookmark,
   Clock,
   Hash,
+  Loader2,
   Mail,
   Plus,
   Search,
@@ -20,6 +21,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
 import { useColumnSwipe } from "../hooks/useColumnSwipe";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 import { appPreferencesService } from "../services/app-preferences-service";
 import { columnService } from "../services/column-service";
 import { LOCAL_STORAGE_KEYS } from "../services/storage/storage-constants";
@@ -162,7 +164,10 @@ export default function SkyDeck() {
   const [columns, setColumns] = useState<Column[]>([]);
   const [columnsLoaded, setColumnsLoaded] = useState(false);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
-  const [isNarrowView, setIsNarrowView] = useState(false);
+  // Narrow view for screens below tailwind's md breakpoint (768px). Driven by
+  // matchMedia (via useMediaQuery) so it only updates when the breakpoint flips,
+  // not on every resize event — keeps the resize gesture smooth.
+  const isNarrowView = useMediaQuery("(max-width: 767px)");
   const [focusedColumnIndex, setFocusedColumnIndex] = useState(0);
   const [mobileColumnIndex, setMobileColumnIndex] = useState(0);
   const [customFeedUri, setCustomFeedUri] = useState("");
@@ -235,18 +240,6 @@ export default function SkyDeck() {
     enabled: !!agent?.session?.did,
     staleTime: 30 * 60 * 1000, // 30 minutes
   });
-
-  // Handle responsive width detection
-  useEffect(() => {
-    const checkWidth = () => {
-      // Consider narrow view for screens less than 768px (tailwind md breakpoint)
-      setIsNarrowView(window.innerWidth < 768);
-    };
-
-    checkWidth();
-    window.addEventListener("resize", checkWidth);
-    return () => window.removeEventListener("resize", checkWidth);
-  }, []);
 
   // Handle keyboard navigation between columns
   useEffect(() => {
@@ -972,7 +965,15 @@ export default function SkyDeck() {
                           aria-label="Add custom feed"
                           title="Add Feed"
                         >
-                          <Plus size={18} aria-hidden="true" />
+                          {isLoadingCustomFeed ? (
+                            <Loader2
+                              size={18}
+                              className="animate-spin"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <Plus size={18} aria-hidden="true" />
+                          )}
                         </button>
                         <span id="custom-feed-help" className="sr-only">
                           Enter an AT-URI or Bluesky app URL for a feed or list

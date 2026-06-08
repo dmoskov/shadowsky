@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useOptimisticFollow } from "../../hooks/useOptimisticFollow";
 import { useRoutePrefetch } from "../../hooks/useRoutePrefetch";
 import { useViewTransitionNavigate } from "../../hooks/useViewTransitionNavigate";
 import { layoutMeasurementService } from "../../services/layout-measurement-service";
@@ -46,6 +47,7 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
     const cardRef = useRef<HTMLDivElement>(null);
 
     const { agent, session } = useAuth();
+    const optimisticFollow = useOptimisticFollow();
     const navigate = useViewTransitionNavigate();
     const queryClient = useQueryClient();
     const { prefetchProfile } = useRoutePrefetch();
@@ -169,28 +171,11 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
 
     const handleFollow = async (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (!profile || !agent) return;
+      if (!profile) return;
 
-      try {
-        const profileService = getProfileService(agent);
-        if (profile.viewer?.following) {
-          await profileService.unfollow(profile.viewer.following);
-          setProfile({
-            ...profile,
-            viewer: { ...profile.viewer, following: undefined },
-            followersCount: (profile.followersCount || 0) - 1,
-          });
-        } else {
-          const uri = await profileService.follow(profile.did);
-          setProfile({
-            ...profile,
-            viewer: { ...profile.viewer, following: uri },
-            followersCount: (profile.followersCount || 0) + 1,
-          });
-        }
-      } catch (err) {
-        console.error("Error toggling follow:", err);
-      }
+      await optimisticFollow(profile, (updater) =>
+        setProfile((prev) => (prev ? updater(prev) : prev)),
+      );
     };
 
     const isOwnProfile = session?.handle === handle;

@@ -52,6 +52,7 @@ import { UserListModal } from "../components/UserListModal";
 import { partitionPanLabels } from "../config/pan-labeler";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
+import { useOptimisticFollow } from "../hooks/useOptimisticFollow";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { useTopPosts } from "../hooks/useTopPosts";
 import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
@@ -124,6 +125,7 @@ export default function ProfilePage() {
 
   const { likeMutation, repostMutation, undoableUnlike, undoableUnrepost } =
     useOptimisticPosts();
+  const optimisticFollow = useOptimisticFollow();
 
   // Fetch profile data via React Query for request deduplication
   // Uses the same ["profile", handle] key as prefetch hooks and hover cards
@@ -408,37 +410,8 @@ export default function ProfilePage() {
   );
 
   const handleFollow = async () => {
-    if (!profile || !agent) return;
-
-    try {
-      const profileService = getProfileService(agent);
-      if (profile.viewer?.following) {
-        await profileService.unfollow(profile.viewer.following);
-        setProfile({
-          ...profile,
-          viewer: { ...profile.viewer, following: undefined },
-          followersCount: (profile.followersCount || 0) - 1,
-        });
-        showToast(`Unfollowed @${profile.handle}`, {
-          type: "success",
-          duration: 3000,
-        });
-      } else {
-        const uri = await profileService.follow(profile.did);
-        setProfile({
-          ...profile,
-          viewer: { ...profile.viewer, following: uri },
-          followersCount: (profile.followersCount || 0) + 1,
-        });
-        showToast(`Following @${profile.handle}`, {
-          type: "success",
-          duration: 3000,
-        });
-      }
-    } catch (err) {
-      console.error("Error toggling follow:", err);
-      showToast("Failed to update follow status", { type: "error" });
-    }
+    if (!profile) return;
+    await optimisticFollow(profile, setProfile);
   };
 
   if (loading) {

@@ -6,8 +6,8 @@ import {
   useEffect,
   useId,
   useMemo,
-  useRef,
   useState,
+  type CSSProperties,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
@@ -406,8 +406,6 @@ export function DisclosureContent({
   unmountOnClose = false,
 }: DisclosureContentProps) {
   const { isOpen, triggerId, contentId, variant } = useDisclosurePanel();
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState<number | "auto">(isOpen ? "auto" : 0);
   const [shouldRender, setShouldRender] = useState(isOpen);
   const prefersReducedMotion = usePrefersReducedMotion();
 
@@ -417,38 +415,11 @@ export function DisclosureContent({
   useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
+    } else if (!shouldAnimate && unmountOnClose) {
+      // No transition fires when animation is disabled, so unmount directly.
+      setShouldRender(false);
     }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!shouldAnimate) {
-      setHeight(isOpen ? "auto" : 0);
-      return;
-    }
-
-    const content = contentRef.current;
-    if (!content) return;
-
-    if (isOpen) {
-      const scrollHeight = content.scrollHeight;
-      setHeight(scrollHeight);
-
-      const timer = setTimeout(() => {
-        setHeight("auto");
-      }, 200);
-
-      return () => clearTimeout(timer);
-    } else {
-      const scrollHeight = content.scrollHeight;
-      setHeight(scrollHeight);
-
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setHeight(0);
-        });
-      });
-    }
-  }, [isOpen, shouldAnimate]);
+  }, [isOpen, shouldAnimate, unmountOnClose]);
 
   const handleTransitionEnd = useCallback(() => {
     if (!isOpen && unmountOnClose) {
@@ -460,18 +431,21 @@ export function DisclosureContent({
     return null;
   }
 
-  const animationStyles = shouldAnimate
-    ? {
-        height: typeof height === "number" ? `${height}px` : height,
-        overflow: "hidden" as const,
-        transition: "height 200ms ease-in-out",
-      }
-    : {};
+  // Expand/collapse by animating grid-template-rows from 0fr to 1fr. Unlike
+  // animating `height`, this needs no JS measurement of scrollHeight (which
+  // forces a synchronous reflow on every open/close) — the grid resolves the
+  // content's natural height itself.
+  const animationStyles: CSSProperties = {
+    display: "grid",
+    gridTemplateRows: isOpen ? "1fr" : "0fr",
+    ...(shouldAnimate
+      ? { transition: "grid-template-rows 200ms ease-in-out" }
+      : {}),
+  };
 
   return (
     <div
       id={contentId}
-      ref={contentRef}
       role={variant === "details" ? undefined : "region"}
       aria-labelledby={triggerId}
       aria-hidden={!isOpen}
@@ -481,7 +455,13 @@ export function DisclosureContent({
       data-disclosure-content
       data-state={isOpen ? "open" : "closed"}
     >
-      <div style={{ visibility: isOpen ? "visible" : "hidden" }}>
+      <div
+        style={{
+          overflow: "hidden",
+          minHeight: 0,
+          visibility: isOpen ? "visible" : "hidden",
+        }}
+      >
         {children}
       </div>
     </div>

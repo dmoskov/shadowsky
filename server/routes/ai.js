@@ -125,7 +125,8 @@ router.post(
           },
           body: JSON.stringify({
             model: "claude-sonnet-4-5-20250929",
-            max_tokens: 300,
+            // ~700 tokens comfortably covers up to 2000 characters of alt text.
+            max_tokens: 700,
             messages: [
               {
                 role: "user",
@@ -140,7 +141,7 @@ router.post(
                   },
                   {
                     type: "text",
-                    text: "Generate alt text for this image that would help someone using a screen reader understand what's shown. Keep it concise (most descriptions should be brief), but you can use up to 500 characters when needed for complex images. Focus on the main subject and action.",
+                    text: "Generate alt text for this image that would help someone using a screen reader understand what's shown. Keep it concise (most descriptions should be brief), but you can use up to 2000 characters when needed for complex images. Focus on the main subject and action.",
                   },
                 ],
               },
@@ -155,7 +156,9 @@ router.post(
       }
 
       const data = await anthropicResponse.json();
-      const altText = data.content[0].text;
+      // Bluesky enforces a 2000-character alt-text limit; truncate with a small
+      // margin so we never exceed it even if the model runs slightly long.
+      const altText = data.content[0].text.slice(0, 1990);
 
       res.set(
         "Cache-Control",
