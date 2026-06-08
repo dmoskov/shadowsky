@@ -64,6 +64,10 @@ export const debug = {
   },
 };
 
+export function isDebugEnabled(): boolean {
+  return config.enabled;
+}
+
 export function enableDebug() {
   config.enabled = true;
   if (typeof window !== "undefined") {

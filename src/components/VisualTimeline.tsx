@@ -12,6 +12,7 @@ import { useScrollContainerGPU } from "../hooks/useGPUAcceleration";
 import { useNotificationPosts } from "../hooks/useNotificationPosts";
 import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { proxifyBskyImage } from "../utils/image-proxy";
+import { measureSync } from "../utils/perf";
 import { ThreadModal } from "./ThreadModal";
 import { useVisualTimelineNotifications } from "./useVisualTimelineNotifications";
 import {
@@ -125,7 +126,10 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
 
     // Smart aggregation based on notification type and context
     const aggregatedEvents = React.useMemo(
-      () => aggregateNotifications(allNotifications, postMap),
+      () =>
+        measureSync("notifications:aggregate", () =>
+          aggregateNotifications(allNotifications, postMap),
+        ),
       [allNotifications, postMap],
     );
 
@@ -299,96 +303,99 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
 
     // Track visible events for dynamic dot color with smooth transitions
     React.useEffect(() => {
-      const updateDayColors = () => {
-        const newDayColors = new Map<
-          string,
-          { color: string; position: number }
-        >();
-        const viewportHeight = window.innerHeight;
-        const viewportCenter = viewportHeight / 2;
+      const updateDayColors = () =>
+        measureSync("timeline:dayColors", () => {
+          const newDayColors = new Map<
+            string,
+            { color: string; position: number }
+          >();
+          const viewportHeight = window.innerHeight;
+          const viewportCenter = viewportHeight / 2;
 
-        // Get all day groups
-        const dayGroups = document.querySelectorAll("[data-day-group]");
+          // Get all day groups
+          const dayGroups = document.querySelectorAll("[data-day-group]");
 
-        dayGroups.forEach((dayGroup) => {
-          const dayLabel = dayGroup.getAttribute("data-day-group");
-          if (!dayLabel) return;
+          dayGroups.forEach((dayGroup) => {
+            const dayLabel = dayGroup.getAttribute("data-day-group");
+            if (!dayLabel) return;
 
-          const events = dayGroup.querySelectorAll("[data-event-time]");
-          let closestEvent: {
-            element: Element;
-            distance: number;
-            time: string;
-          } | null = null;
-          let totalWeight = 0;
-          let weightedR = 0;
-          let weightedG = 0;
-          let weightedB = 0;
-          let weightedA = 0;
+            const events = dayGroup.querySelectorAll("[data-event-time]");
+            let closestEvent: {
+              element: Element;
+              distance: number;
+              time: string;
+            } | null = null;
+            let totalWeight = 0;
+            let weightedR = 0;
+            let weightedG = 0;
+            let weightedB = 0;
+            let weightedA = 0;
 
-          // Find events near the viewport center and blend their colors
-          events.forEach((event) => {
-            const rect = event.getBoundingClientRect();
-            const eventCenter = rect.top + rect.height / 2;
-            const distance = Math.abs(eventCenter - viewportCenter);
+            // Find events near the viewport center and blend their colors
+            events.forEach((event) => {
+              const rect = event.getBoundingClientRect();
+              const eventCenter = rect.top + rect.height / 2;
+              const distance = Math.abs(eventCenter - viewportCenter);
 
-            // Only consider events within viewport or slightly outside
-            if (rect.bottom > -100 && rect.top < viewportHeight + 100) {
-              const eventTime = event.getAttribute("data-event-time");
-              if (eventTime) {
-                // Calculate weight based on distance from viewport center
-                const maxDistance = viewportHeight / 2;
-                const weight = Math.max(0, 1 - distance / maxDistance);
+              // Only consider events within viewport or slightly outside
+              if (rect.bottom > -100 && rect.top < viewportHeight + 100) {
+                const eventTime = event.getAttribute("data-event-time");
+                if (eventTime) {
+                  // Calculate weight based on distance from viewport center
+                  const maxDistance = viewportHeight / 2;
+                  const weight = Math.max(0, 1 - distance / maxDistance);
 
-                if (weight > 0) {
-                  const colors = getTimeOfDayColor(new Date(eventTime));
-                  const colorMatch = colors.borderColor.match(
-                    /rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/,
-                  );
+                  if (weight > 0) {
+                    const colors = getTimeOfDayColor(new Date(eventTime));
+                    const colorMatch = colors.borderColor.match(
+                      /rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/,
+                    );
 
-                  if (colorMatch) {
-                    totalWeight += weight;
-                    weightedR += parseInt(colorMatch[1]) * weight;
-                    weightedG += parseInt(colorMatch[2]) * weight;
-                    weightedB += parseInt(colorMatch[3]) * weight;
-                    weightedA += parseFloat(colorMatch[4]) * weight;
-                  }
+                    if (colorMatch) {
+                      totalWeight += weight;
+                      weightedR += parseInt(colorMatch[1]) * weight;
+                      weightedG += parseInt(colorMatch[2]) * weight;
+                      weightedB += parseInt(colorMatch[3]) * weight;
+                      weightedA += parseFloat(colorMatch[4]) * weight;
+                    }
 
-                  if (!closestEvent || distance < closestEvent.distance) {
-                    closestEvent = {
-                      element: event,
-                      distance,
-                      time: eventTime,
-                    };
+                    if (!closestEvent || distance < closestEvent.distance) {
+                      closestEvent = {
+                        element: event,
+                        distance,
+                        time: eventTime,
+                      };
+                    }
                   }
                 }
               }
+            });
+
+            if (totalWeight > 0) {
+              // Calculate weighted average color
+              const avgR = Math.round(weightedR / totalWeight);
+              const avgG = Math.round(weightedG / totalWeight);
+              const avgB = Math.round(weightedB / totalWeight);
+              const avgA = weightedA / totalWeight;
+
+              const blendedColor = `rgba(${avgR}, ${avgG}, ${avgB}, ${avgA})`;
+
+              // Get the position of the day banner for smooth scrolling effect
+              const dayBanner = dayGroup.querySelector(
+                ".timeline-sticky-banner",
+              );
+              const bannerRect = dayBanner?.getBoundingClientRect();
+              const bannerPosition = bannerRect ? bannerRect.top : 0;
+
+              newDayColors.set(dayLabel, {
+                color: blendedColor,
+                position: bannerPosition,
+              });
             }
           });
 
-          if (totalWeight > 0) {
-            // Calculate weighted average color
-            const avgR = Math.round(weightedR / totalWeight);
-            const avgG = Math.round(weightedG / totalWeight);
-            const avgB = Math.round(weightedB / totalWeight);
-            const avgA = weightedA / totalWeight;
-
-            const blendedColor = `rgba(${avgR}, ${avgG}, ${avgB}, ${avgA})`;
-
-            // Get the position of the day banner for smooth scrolling effect
-            const dayBanner = dayGroup.querySelector(".timeline-sticky-banner");
-            const bannerRect = dayBanner?.getBoundingClientRect();
-            const bannerPosition = bannerRect ? bannerRect.top : 0;
-
-            newDayColors.set(dayLabel, {
-              color: blendedColor,
-              position: bannerPosition,
-            });
-          }
+          setDayGroupColors(newDayColors);
         });
-
-        setDayGroupColors(newDayColors);
-      };
 
       // Coalesce scroll-driven color updates to a single run per animation
       // frame. Both the window and the SkyDeck `main` scroll containers feed
