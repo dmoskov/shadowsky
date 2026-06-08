@@ -12,11 +12,11 @@ This is the CLAUDE.md file for your project. Add project-specific instructions h
 
 ### Branch Strategy
 
-- **`main`** — Development branch. All feature work and fixes land here first.
-- **`prod`** — Production branch. Deploys the web app (including `public/` static files like OAuth client metadata). Merge `main` into `prod` to deploy.
+- **`main`** — Development/staging branch. All feature work and fixes land here first. Auto-deploys to `main.asphodel.is`.
+- **`prod`** — Production branch. Deploys the web app (including `public/` static files like OAuth client metadata). Auto-deploys to `asphodel.is`.
 - **`task/*`** — Feature/task branches created from `main`.
 
-To deploy: merge `main` into `prod` and push. The `prod` branch auto-deploys to `shadowsky.io`.
+To deploy to production: merge `main` into `prod` and push. The `prod` branch auto-deploys to `asphodel.is` (production); `main` auto-deploys to `main.asphodel.is` (staging).
 
 ### Rules
 
