@@ -48,9 +48,9 @@ export function useVisualTimelineNotifications(scrollToTop?: () => void) {
     }
   }, [data]);
 
-  // Periodically check for new notifications
+  // Periodically check for new notifications (paused when the tab is hidden)
   React.useEffect(() => {
-    if (!agent || allNotifications.length === 0) return;
+    if (!agent || allNotifications.length === 0 || !isVisible) return;
 
     const checkForNew = async () => {
       try {
@@ -70,7 +70,7 @@ export function useVisualTimelineNotifications(scrollToTop?: () => void) {
 
     const interval = setInterval(checkForNew, 30000);
     return () => clearInterval(interval);
-  }, [agent, allNotifications]);
+  }, [agent, allNotifications, isVisible]);
 
   // Load more (infinite scroll)
   const loadMore = React.useCallback(async () => {

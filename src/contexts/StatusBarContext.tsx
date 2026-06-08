@@ -133,14 +133,31 @@ export const StatusBarProvider: React.FC<StatusBarProviderProps> = ({
     };
   }, [isDegraded]);
 
-  // Update rate limit stats periodically
+  // Update rate limit stats periodically.
+  // Only push a new stats object into state when the fields the UI actually
+  // depends on change, so the common idle case (full token buckets, nothing
+  // queued or throttled) triggers zero re-renders of every StatusBar consumer.
   useEffect(() => {
+    const signatureOf = (s: ReturnType<typeof getRateLimiterStats>) =>
+      [s.api, s.profile, s.post, s.notification]
+        .map(
+          (b) =>
+            `${b.availableTokens}|${b.maxTokens}|${b.throttledRequests}|${b.queueLength}`,
+        )
+        .join(";");
+
+    let lastSignature = signatureOf(getRateLimiterStats());
+
     const updateRateLimits = () => {
-      setRateLimitStats(getRateLimiterStats());
+      const next = getRateLimiterStats();
+      const signature = signatureOf(next);
+      if (signature !== lastSignature) {
+        lastSignature = signature;
+        setRateLimitStats(next);
+      }
     };
 
-    // Update every 2 seconds
-    const interval = setInterval(updateRateLimits, 2000);
+    const interval = setInterval(updateRateLimits, 5000);
     return () => clearInterval(interval);
   }, []);
 

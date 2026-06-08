@@ -12,7 +12,6 @@ import { useScrollContainerGPU } from "../hooks/useGPUAcceleration";
 import { useNotificationPosts } from "../hooks/useNotificationPosts";
 import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { proxifyBskyImage } from "../utils/image-proxy";
-import { throttle, TIMING } from "../utils/timing";
 import { ThreadModal } from "./ThreadModal";
 import { useVisualTimelineNotifications } from "./useVisualTimelineNotifications";
 import {
@@ -391,23 +390,32 @@ export const VisualTimeline: React.FC<VisualTimelineProps> = React.memo(
         setDayGroupColors(newDayColors);
       };
 
-      // Throttle scroll handler for 60fps (16ms)
-      const handleScroll = throttle(updateDayColors, TIMING.SCROLL_THROTTLE);
+      // Coalesce scroll-driven color updates to a single run per animation
+      // frame. Both the window and the SkyDeck `main` scroll containers feed
+      // this handler, but the rAF guard ensures the layout-reading work
+      // (getBoundingClientRect over every event) runs at most once per frame
+      // no matter how many scroll events fire.
+      let rafId: number | null = null;
+      const handleScroll = () => {
+        if (rafId !== null) return;
+        rafId = requestAnimationFrame(() => {
+          rafId = null;
+          updateDayColors();
+        });
+      };
 
       // Initial update
       updateDayColors();
 
       // Listen to scroll events
+      const mainEl = document.querySelector("main");
       window.addEventListener("scroll", handleScroll, { passive: true });
-      document
-        .querySelector("main")
-        ?.addEventListener("scroll", handleScroll, { passive: true });
+      mainEl?.addEventListener("scroll", handleScroll, { passive: true });
 
       return () => {
+        if (rafId !== null) cancelAnimationFrame(rafId);
         window.removeEventListener("scroll", handleScroll);
-        document
-          .querySelector("main")
-          ?.removeEventListener("scroll", handleScroll);
+        mainEl?.removeEventListener("scroll", handleScroll);
       };
     }, [allEvents]);
 

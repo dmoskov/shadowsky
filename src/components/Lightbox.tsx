@@ -128,25 +128,27 @@ export const Lightbox: React.FC<LightboxProps> = ({
         </>
       )}
 
-      {/* Main image */}
+      {/* Main image — wrapper hugs the rendered image so the caption stays
+          glued to the image edge regardless of viewport size (fixes caption
+          detaching on vertical resize). */}
       <div
         className="relative flex items-center justify-center"
-        style={{ maxHeight: "90vh", maxWidth: "90vw" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <img
-          src={images[currentIndex].src}
-          alt={images[currentIndex].alt || ""}
-          className="max-h-[90vh] max-w-[90vw] object-contain"
-          style={{ position: "relative", zIndex: 1000001 }}
-        />
+        <div className="relative inline-block" style={{ zIndex: 1000001 }}>
+          <img
+            src={images[currentIndex].src}
+            alt={images[currentIndex].alt || ""}
+            className="block max-h-[90vh] max-w-[90vw] object-contain"
+          />
 
-        {/* Alt text display */}
-        {images[currentIndex].alt && (
-          <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-4 text-white">
-            <p className="text-sm">{images[currentIndex].alt}</p>
-          </div>
-        )}
+          {/* Alt text display — pinned to the image's own bottom edge */}
+          {images[currentIndex].alt && (
+            <div className="absolute inset-x-0 bottom-0 bg-black/70 p-4 text-white">
+              <p className="text-sm">{images[currentIndex].alt}</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Image counter */}

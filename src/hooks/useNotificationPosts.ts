@@ -162,10 +162,13 @@ export function useNotificationPosts(
       setIsFetchingMore(true);
       if (!agent) return;
 
-      // More aggressive batch sizing to reduce flicker
+      // Smaller batches with more breathing room: each batch writes to the
+      // query cache, which re-triggers the (expensive) notification
+      // aggregation downstream. Large 200-post bursts caused render spikes;
+      // smaller batches keep each update cheap and the main thread responsive.
       const batchNumber = Math.floor(fetchedCountRef.current / 100) + 1;
-      const BATCH_SIZE = batchNumber <= 3 ? 200 : 100;
-      const DELAY_BETWEEN_BATCHES = batchNumber <= 3 ? 100 : 1000;
+      const BATCH_SIZE = batchNumber <= 3 ? 75 : 50;
+      const DELAY_BETWEEN_BATCHES = batchNumber <= 3 ? 400 : 1000;
 
       // Get already fetched URIs from current query data
       const currentData: Post[] | undefined =
@@ -207,9 +210,9 @@ export function useNotificationPosts(
             // Cache the newly fetched posts
             PostCache.save(fetchedPosts);
 
-            // Minimal delay between API calls within a batch
+            // Small delay between API calls within a batch to ease pressure
             if (i + 25 < missingBatch.length) {
-              await new Promise((resolve) => setTimeout(resolve, 50));
+              await new Promise((resolve) => setTimeout(resolve, 100));
             }
           } catch (error) {
             debug.error("Failed to fetch additional posts batch:", error);
