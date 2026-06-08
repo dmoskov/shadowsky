@@ -5,6 +5,7 @@ const compression = require("compression");
 const path = require("path");
 const { WebSocketNotificationServer } = require("./websocket-server");
 const { apiVersionHeader } = require("./middleware/api-version");
+const { requestTiming } = require("./middleware/request-timing");
 
 // Route modules
 const aiRoutes = require("./routes/ai");
@@ -19,6 +20,11 @@ require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
 const app = express();
 const PORT = process.env.PORT || 3002;
 const WS_PORT = process.env.WS_PORT || 3001;
+
+// Structured per-request timing (one JSON line/request) for retrospective
+// performance investigation via CloudWatch Logs Insights. Registered first so
+// it captures the full request lifecycle.
+app.use(requestTiming());
 
 // Enable CORS for your Vite dev server and production domains
 app.use(
