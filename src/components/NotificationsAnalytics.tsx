@@ -703,11 +703,11 @@ export const NotificationsAnalytics: React.FC = React.memo(
                           }}
                         >
                           {/* Stacked bar */}
-                          <div className="absolute bottom-0 left-0 right-0 flex flex-col-reverse overflow-hidden rounded-t-lg transition-all duration-300 hover:opacity-90">
+                          <div className="absolute bottom-0 left-0 right-0 flex origin-bottom animate-grow-up flex-col-reverse overflow-hidden rounded-t-lg transition-opacity duration-300 hover:opacity-90">
                             {/* Likes - bottom of stack */}
                             {bucket.likes > 0 && (
                               <div
-                                className="w-full transition-all duration-500"
+                                className="w-full"
                                 style={{
                                   height: `${(bucket.likes / maxValue) * 270}px`,
                                   background:
@@ -719,7 +719,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                             {/* Reposts */}
                             {bucket.reposts > 0 && (
                               <div
-                                className="w-full transition-all duration-500"
+                                className="w-full"
                                 style={{
                                   height: `${(bucket.reposts / maxValue) * 270}px`,
                                   background:
@@ -731,7 +731,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                             {/* Follows */}
                             {bucket.follows > 0 && (
                               <div
-                                className="w-full transition-all duration-500"
+                                className="w-full"
                                 style={{
                                   height: `${(bucket.follows / maxValue) * 270}px`,
                                   background:
@@ -743,7 +743,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                             {/* Replies */}
                             {bucket.replies > 0 && (
                               <div
-                                className="w-full transition-all duration-500"
+                                className="w-full"
                                 style={{
                                   height: `${(bucket.replies / maxValue) * 270}px`,
                                   background:
@@ -755,7 +755,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                             {/* Mentions - top of stack */}
                             {bucket.mentions > 0 && (
                               <div
-                                className="w-full transition-all duration-500"
+                                className="w-full"
                                 style={{
                                   height: `${(bucket.mentions / maxValue) * 270}px`,
                                   background:
@@ -851,11 +851,11 @@ export const NotificationsAnalytics: React.FC = React.memo(
                             }}
                           >
                             {/* Stacked bar */}
-                            <div className="absolute bottom-0 left-0 right-0 flex flex-col-reverse overflow-hidden rounded-t-lg transition-all duration-300 hover:opacity-90">
+                            <div className="absolute bottom-0 left-0 right-0 flex origin-bottom animate-grow-up flex-col-reverse overflow-hidden rounded-t-lg transition-opacity duration-300 hover:opacity-90">
                               {/* Posts - bottom of stack */}
                               {bucket.posts > 0 && (
                                 <div
-                                  className="w-full transition-all duration-500"
+                                  className="w-full"
                                   style={{
                                     height: `${(bucket.posts / maxSentValue) * 270}px`,
                                     background:
@@ -867,7 +867,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                               {/* Replies */}
                               {bucket.replies > 0 && (
                                 <div
-                                  className="w-full transition-all duration-500"
+                                  className="w-full"
                                   style={{
                                     height: `${(bucket.replies / maxSentValue) * 270}px`,
                                     background:
@@ -879,7 +879,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                               {/* Reposts */}
                               {bucket.reposts > 0 && (
                                 <div
-                                  className="w-full transition-all duration-500"
+                                  className="w-full"
                                   style={{
                                     height: `${(bucket.reposts / maxSentValue) * 270}px`,
                                     background:
@@ -891,7 +891,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                               {/* Quotes */}
                               {bucket.quotes > 0 && (
                                 <div
-                                  className="w-full transition-all duration-500"
+                                  className="w-full"
                                   style={{
                                     height: `${(bucket.quotes / maxSentValue) * 270}px`,
                                     background:

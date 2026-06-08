@@ -207,10 +207,9 @@ export const NetworkWeatherPlaid: React.FC<NetworkWeatherPlaidProps> = ({
           return (
             <div
               key={`warp-${thread.id}`}
-              className="plaid-thread-morph absolute bottom-0 top-0"
+              className="plaid-thread-morph absolute bottom-0 left-0 top-0 w-full origin-left"
               style={{
-                left: `${offset * 100}%`,
-                width: `${widthPct}%`,
+                transform: `translateX(${offset * 100}%) scaleX(${widthPct / 100})`,
                 background: `linear-gradient(180deg, ${color}, ${color.replace(/[\d.]+\)$/, `${thread.opacity * 0.08})`)})`,
                 borderRight: `1px solid ${color.replace(/[\d.]+\)$/, "0.05)")}`,
               }}
@@ -235,10 +234,9 @@ export const NetworkWeatherPlaid: React.FC<NetworkWeatherPlaidProps> = ({
           return (
             <div
               key={`weft-${thread.id}`}
-              className="plaid-thread-morph absolute left-0 right-0"
+              className="plaid-thread-morph absolute left-0 right-0 top-0 h-full origin-top"
               style={{
-                top: `${offset * 100}%`,
-                height: `${heightPct}%`,
+                transform: `translateY(${offset * 100}%) scaleY(${heightPct / 100})`,
                 background: `linear-gradient(90deg, ${color}, ${color.replace(/[\d.]+\)$/, `${thread.opacity * 0.06})`)})`,
                 borderBottom: `1px solid ${color.replace(/[\d.]+\)$/, "0.04)")}`,
                 mixBlendMode: "multiply",
@@ -273,12 +271,9 @@ export const NetworkWeatherPlaid: React.FC<NetworkWeatherPlaidProps> = ({
           return (
             <div
               key={`cross-${crossing.warpId}-${crossing.weftId}`}
-              className="plaid-thread-morph absolute"
+              className="plaid-thread-morph absolute left-0 top-0 h-full w-full origin-top-left"
               style={{
-                left: `${x * 100}%`,
-                top: `${y * 100}%`,
-                width: `${w}%`,
-                height: `${h}%`,
+                transform: `translate(${x * 100}%, ${y * 100}%) scale(${w / 100}, ${h / 100})`,
                 backgroundColor: `hsla(48, 60%, 70%, ${crossing.brightness * 0.15})`,
                 mixBlendMode: "screen",
                 borderRadius: "2px",
@@ -413,21 +408,18 @@ const GapBadge: React.FC<{
  *
  * Add to your global CSS or a <style> tag:
  *
+ * Position/size are driven by transform (translate + scale), so the morph
+ * animates on the compositor instead of forcing layout each frame.
+ *
  * .plaid-thread-morph {
- *   transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
- *               top 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
- *               width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
- *               height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
+ *   transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
  *               opacity 0.6s ease-in-out,
  *               background 0.6s ease-in-out;
  * }
  */
 export const PLAID_MORPH_CSS = `
 .plaid-thread-morph {
-  transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
-              top 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
-              width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
-              height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
               opacity 0.6s ease-in-out,
               background 0.6s ease-in-out;
 }

@@ -114,8 +114,14 @@ export default {
         "button-spring": "buttonSpring 200ms var(--ease-spring-snappy)",
         // Card hover spring
         "card-lift": "cardLift 200ms var(--ease-spring-soft) forwards",
+        // Chart bar grow (composited scaleY, replaces height animation)
+        "grow-up": "growUp 500ms var(--ease-spring-soft) forwards",
       },
       keyframes: {
+        growUp: {
+          from: { transform: "scaleY(0)" },
+          to: { transform: "scaleY(1)" },
+        },
         fadeIn: {
           from: {
             opacity: "0",
