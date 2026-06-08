@@ -98,3 +98,26 @@ updates:
     commit-message:
       prefix: "deps"
       include: "scope"
+
+  # GitHub Actions: keep workflow action versions current so they don't fall
+  # behind the runner's Node runtime (e.g. the Node 20 -> 24 deprecation).
+  # Majors are allowed here because action major bumps are routine and skipping
+  # them is what let these go stale.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Los_Angeles"
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
