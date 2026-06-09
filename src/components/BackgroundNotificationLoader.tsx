@@ -7,7 +7,6 @@ import { useAuth } from "../contexts/AuthContext";
 import { usePageVisibility } from "../hooks/usePageVisibility";
 import { getNotificationService } from "../services/atproto/notifications";
 import { NotificationCacheService } from "../services/notification-cache-service";
-import { ExtendedFetchCache } from "../utils/extendedFetchCache";
 import {
   prefetchNotificationPosts,
   prefetchRootPosts,
@@ -235,22 +234,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
           (page: any) => page.notifications,
         );
         if (allNotifications.length > 0) {
-          const oldestDate = new Date(
-            allNotifications[allNotifications.length - 1].indexedAt,
-          );
-          const newestDate = new Date(allNotifications[0].indexedAt);
-          const daysReached = Math.floor(
-            (new Date().getTime() - oldestDate.getTime()) /
-              (1000 * 60 * 60 * 24),
-          );
-
-          ExtendedFetchCache.saveMetadata(
-            allNotifications.length,
-            oldestDate,
-            newestDate,
-            daysReached,
-          );
-
           // Prefetch posts for reply notifications
           if (agent) {
             const replyNotifications = allNotifications.filter(
@@ -306,22 +289,6 @@ export const BackgroundNotificationLoader: React.FC = () => {
           const page = data.pages[i];
           await cacheService.cacheNotifications(page.notifications, i + 1);
         }
-
-        // Update metadata
-        const oldestDate = new Date(
-          allNotifications[allNotifications.length - 1].indexedAt,
-        );
-        const newestDate = new Date(allNotifications[0].indexedAt);
-        const daysReached = Math.floor(
-          (new Date().getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24),
-        );
-
-        ExtendedFetchCache.saveMetadata(
-          allNotifications.length,
-          oldestDate,
-          newestDate,
-          daysReached,
-        );
 
         // Prefetch posts for new reply notifications
         if (agent) {

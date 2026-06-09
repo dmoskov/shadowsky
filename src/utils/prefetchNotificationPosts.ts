@@ -5,7 +5,9 @@ import type {
 } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { rateLimitedPostFetch } from "../services/rate-limiter";
-import { PostCache } from "./postCache";
+import { PostCacheService } from "../services/post-cache-service";
+
+const postCacheService = PostCacheService.getInstance();
 
 type Post = AppBskyFeedDefs.PostView;
 
@@ -52,7 +54,8 @@ export async function prefetchNotificationPosts(
   debug.log(`🔄 Prefetching ${postUris.length} posts for notifications`);
 
   // Check what's already cached
-  const { cached, missing } = await PostCache.getCachedPostsAsync(postUris);
+  const { cached, missing } =
+    await postCacheService.getCachedAndMissing(postUris);
 
   if (missing.length === 0) {
     debug.log(`✅ All ${cached.length} posts already cached`);
@@ -78,7 +81,7 @@ export async function prefetchNotificationPosts(
 
       // Cache the fetched posts
       if (posts.length > 0) {
-        PostCache.save(posts);
+        postCacheService.cachePostsInBackground(posts);
         fetchedCount += posts.length;
 
         if (onProgress) {
@@ -113,7 +116,8 @@ export async function extractRootPostUris(
   if (replyUris.length === 0) return [];
 
   // First check cache for reply posts
-  const { cached, missing } = await PostCache.getCachedPostsAsync(replyUris);
+  const { cached, missing } =
+    await postCacheService.getCachedAndMissing(replyUris);
 
   // Extract root URIs from cached posts
   cached.forEach((post) => {
@@ -139,7 +143,7 @@ export async function extractRootPostUris(
 
         // Cache these posts and extract root URIs
         if (posts.length > 0) {
-          PostCache.save(posts);
+          postCacheService.cachePostsInBackground(posts);
 
           posts.forEach((post) => {
             const record = post.record as any;
@@ -171,7 +175,8 @@ export async function prefetchRootPosts(
   debug.log(`🌳 Prefetching ${rootUris.length} root posts for conversations`);
 
   // Check what's already cached
-  const { cached, missing } = await PostCache.getCachedPostsAsync(rootUris);
+  const { cached, missing } =
+    await postCacheService.getCachedAndMissing(rootUris);
 
   if (missing.length === 0) {
     debug.log(`✅ All ${cached.length} root posts already cached`);
@@ -194,7 +199,7 @@ export async function prefetchRootPosts(
       const posts = response.data.posts as Post[];
 
       if (posts.length > 0) {
-        PostCache.save(posts);
+        postCacheService.cachePostsInBackground(posts);
         fetchedCount += posts.length;
       }
     } catch (error) {

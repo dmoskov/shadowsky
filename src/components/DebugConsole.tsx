@@ -22,8 +22,6 @@ import { NotificationCacheService } from "../services/notification-cache-service
 import { PostCacheService } from "../services/post-cache-service";
 import type { StorageBackendHealth } from "../services/storage-manager";
 import { NotificationCache } from "../utils/notificationCache";
-import { NotificationObjectCache } from "../utils/notificationObjectCache";
-import { PostCache } from "../utils/postCache";
 import { StorageManager } from "../utils/storageManager";
 
 interface StorageBreakdown {
@@ -37,9 +35,6 @@ interface StorageBreakdown {
 
 export function DebugConsole() {
   const [cacheInfo, setCacheInfo] = useState(NotificationCache.getCacheInfo());
-  const [notificationObjectCacheInfo, setNotificationObjectCacheInfo] =
-    useState(NotificationObjectCache.getCacheInfo());
-  const [postCacheInfo, setPostCacheInfo] = useState(PostCache.getCacheInfo());
   const [storageMetrics, setStorageMetrics] = useState<ReturnType<
     typeof StorageManager.getStorageMetrics
   > | null>(null);
@@ -64,8 +59,6 @@ export function DebugConsole() {
 
   const updateMetrics = useCallback(async () => {
     setCacheInfo(NotificationCache.getCacheInfo());
-    setNotificationObjectCacheInfo(NotificationObjectCache.getCacheInfo());
-    setPostCacheInfo(PostCache.getCacheInfo());
     setStorageMetrics(StorageManager.getStorageMetrics());
     setStorageHealth(StorageManager.getStorageHealth());
 
@@ -91,8 +84,14 @@ export function DebugConsole() {
     // Get Post IndexedDB stats if available
     if (postIndexedDBReady) {
       try {
-        const postStats = await PostCache.getIndexedDBCacheInfo();
-        setPostIndexedDBStats(postStats);
+        const stats = await PostCacheService.getInstance().getCacheStats();
+        setPostIndexedDBStats({
+          hasCache: stats.totalPosts > 0,
+          postCount: stats.totalPosts,
+          oldestPost: stats.oldestPost,
+          newestPost: stats.newestPost,
+          lastUpdate: stats.lastUpdate,
+        });
       } catch (error) {
         debug.error("Failed to get Post IndexedDB stats:", error);
       }
@@ -136,29 +135,15 @@ export function DebugConsole() {
     return () => unsubscribe();
   }, []);
 
-  const handleClearCache = (
-    type: "priority" | "all" | "posts" | "notifications" | "everything",
-  ) => {
-    switch (type) {
-      case "priority":
-        NotificationCache.clear(true);
-        break;
-      case "all":
-        NotificationCache.clear(false);
-        break;
-      case "posts":
-        PostCache.clear();
-        break;
-      case "notifications":
-        NotificationObjectCache.clear();
-        break;
-      case "everything":
-        NotificationCache.clearAll();
-        NotificationObjectCache.clear();
-        PostCache.clear();
-        break;
+  const handleClearCache = async (_type: "everything") => {
+    NotificationCache.clearAll();
+    try {
+      const postCacheService = PostCacheService.getInstance();
+      await postCacheService.init();
+      await postCacheService.clearCache();
+    } catch (error) {
+      debug.error("Failed to clear post cache:", error);
     }
-    updateMetrics();
     window.location.reload();
   };
 
@@ -310,10 +295,7 @@ export function DebugConsole() {
 
   const totalNotifications =
     cacheInfo.priorityCacheSize + cacheInfo.allCacheSize;
-  const totalCached =
-    totalNotifications +
-    postCacheInfo.postCount +
-    notificationObjectCacheInfo.notificationCount;
+  const totalCached = totalNotifications + (postIndexedDBStats?.postCount || 0);
 
   return (
     <div
@@ -541,97 +523,6 @@ export function DebugConsole() {
                     {cacheInfo.allCacheSize.toLocaleString()} items
                   </div>
                 </div>
-
-                {notificationObjectCacheInfo.hasCache && (
-                  <div
-                    style={{
-                      padding: "8px",
-                      background: "var(--asph-bg-primary)",
-                      borderRadius: "4px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          color: "var(--asph-text-secondary)",
-                        }}
-                      >
-                        Notification objects
-                      </span>
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          color: "var(--asph-primary)",
-                          fontWeight: 500,
-                        }}
-                      >
-                        {notificationObjectCacheInfo.cacheAge} old
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "14px",
-                        color: "var(--asph-text-primary)",
-                        marginTop: "2px",
-                      }}
-                    >
-                      {notificationObjectCacheInfo.notificationCount.toLocaleString()}{" "}
-                      notifications
-                    </div>
-                  </div>
-                )}
-
-                {postCacheInfo.hasCache && (
-                  <div
-                    style={{
-                      padding: "8px",
-                      background: "var(--asph-bg-primary)",
-                      borderRadius: "4px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          color: "var(--asph-text-secondary)",
-                        }}
-                      >
-                        Post content (localStorage)
-                      </span>
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          color: "var(--asph-primary)",
-                          fontWeight: 500,
-                        }}
-                      >
-                        {postCacheInfo.cacheAge} old
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "14px",
-                        color: "var(--asph-text-primary)",
-                        marginTop: "2px",
-                      }}
-                    >
-                      {postCacheInfo.postCount.toLocaleString()} posts
-                    </div>
-                  </div>
-                )}
 
                 {indexedDBStats && (
                   <div

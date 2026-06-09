@@ -7,7 +7,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { rateLimitedPostFetch } from "../services/rate-limiter";
-import { PostCache } from "../utils/postCache";
+import { PostCacheService } from "../services/post-cache-service";
+
+const postCacheService = PostCacheService.getInstance();
 
 type Post = AppBskyFeedDefs.PostView;
 
@@ -73,7 +75,7 @@ export function useNotificationPosts(
 
       // First, check if ALL posts are cached (not just first 200)
       const { cached: allCached, missing: allMissing } =
-        await PostCache.getCachedPostsAsync(postUris);
+        await postCacheService.getCachedAndMissing(postUris);
 
       // If we have ALL posts cached, return them immediately - no progressive loading needed!
       if (allMissing.length === 0) {
@@ -90,7 +92,7 @@ export function useNotificationPosts(
 
       // Check cache for initial batch
       const { cached, missing } =
-        await PostCache.getCachedPostsAsync(urisToFetch);
+        await postCacheService.getCachedAndMissing(urisToFetch);
 
       // If we have the initial batch cached, use it
       if (missing.length === 0 && cached.length === urisToFetch.length) {
@@ -116,7 +118,7 @@ export function useNotificationPosts(
           posts.push(...newPosts);
 
           // Cache the newly fetched posts
-          PostCache.save(newPosts);
+          postCacheService.cachePostsInBackground(newPosts);
         } catch (error) {
           debug.error("Failed to fetch posts batch:", error);
         }
@@ -192,7 +194,7 @@ export function useNotificationPosts(
 
       // Check cache first for this batch
       const { cached: cachedBatch, missing: missingBatch } =
-        await PostCache.getCachedPostsAsync(urisToFetch);
+        await postCacheService.getCachedAndMissing(urisToFetch);
       const newPosts: Post[] = [...cachedBatch];
 
       // Only fetch missing posts from API
@@ -208,7 +210,7 @@ export function useNotificationPosts(
             newPosts.push(...fetchedPosts);
 
             // Cache the newly fetched posts
-            PostCache.save(fetchedPosts);
+            postCacheService.cachePostsInBackground(fetchedPosts);
 
             // Small delay between API calls within a batch to ease pressure
             if (i + 25 < missingBatch.length) {

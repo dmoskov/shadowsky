@@ -82,6 +82,25 @@ export class PostCacheService {
     return this.db.getPosts(uris);
   }
 
+  // Partition URIs into cached posts and missing URIs (self-initializing)
+  async getCachedAndMissing(
+    uris: string[],
+  ): Promise<{ cached: Post[]; missing: string[] }> {
+    await this.init();
+    const cached = await this.db.getPosts(uris);
+    const found = new Set(cached.map((p) => p.uri));
+    return { cached, missing: uris.filter((uri) => !found.has(uri)) };
+  }
+
+  // Fire-and-forget cache write (self-initializing, errors logged)
+  cachePostsInBackground(posts: Post[]): void {
+    this.init()
+      .then(() => this.cachePosts(posts))
+      .catch((error) => {
+        debug.error("Failed to cache posts in background:", error);
+      });
+  }
+
   // Get all cached posts
   async getAllCachedPosts(limit = 1000, offset = 0): Promise<PostCacheResult> {
     this.ensureInitialized();
