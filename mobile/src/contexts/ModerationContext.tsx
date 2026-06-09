@@ -7,11 +7,30 @@ import React, {
   useMemo,
 } from "react";
 import { MMKV } from "react-native-mmkv";
-
+import {
+  DEFAULT_CONTENT_FILTER_PREFERENCES,
+  shouldHideContent as coreShouldHideContent,
+  shouldWarnContent as coreShouldWarnContent,
+  shouldBlurImages as coreShouldBlurImages,
+  getContentWarningText as coreGetContentWarningText,
+} from '@bsky/core';
+import type {
+  ContentFilterPreferences,
+  FilterableLabelType,
+  LabelPreference,
+} from '@bsky/core';
 
 import { createLogger } from '../utils/logger';
 
 const logger = createLogger('ModerationContext');
+
+// Label evaluation logic lives in @bsky/core (moderation/labels) so it is
+// single-sourced with web. This context binds it to MMKV-persisted prefs.
+export type LabelType = FilterableLabelType;
+export type { ContentFilterPreferences, LabelPreference };
+export { DEFAULT_CONTENT_FILTER_PREFERENCES };
+
+type LabelLike = import('@bsky/core').LabelLike;
 
 /**
  * MMKV instance for moderation preferences.
@@ -26,58 +45,6 @@ function getMMKVModeration() {
 }
 const CONTENT_FILTER_KEY = "content_filter_preferences";
 
-/**
- * Content label types from AT Protocol
- */
-export type LabelType =
-  | "porn"
-  | "sexual"
-  | "nudity"
-  | "graphic-media"
-  | "gore"
-  | "nsfl"
-  | "spam"
-  | "impersonation"
-  | "scam"
-  | "misleading";
-
-/**
- * User preference for each label type
- */
-export type LabelPreference = "show" | "warn" | "hide";
-
-/**
- * Content filter preferences
- */
-export interface ContentFilterPreferences {
-  porn: LabelPreference;
-  sexual: LabelPreference;
-  nudity: LabelPreference;
-  "graphic-media": LabelPreference;
-  gore: LabelPreference;
-  nsfl: LabelPreference;
-  spam: LabelPreference;
-  impersonation: LabelPreference;
-  scam: LabelPreference;
-  misleading: LabelPreference;
-}
-
-/**
- * Default content filter preferences
- */
-export const DEFAULT_CONTENT_FILTER_PREFERENCES: ContentFilterPreferences = {
-  porn: "hide",
-  sexual: "warn",
-  nudity: "warn",
-  "graphic-media": "warn",
-  gore: "warn",
-  nsfl: "hide",
-  spam: "hide",
-  impersonation: "warn",
-  scam: "warn",
-  misleading: "warn",
-};
-
 interface ModerationContextType {
   contentFilterPreferences: ContentFilterPreferences;
   setContentFilterPreference: (
@@ -85,10 +52,10 @@ interface ModerationContextType {
     preference: LabelPreference,
   ) => Promise<void>;
   resetContentFilterPreferences: () => Promise<void>;
-  shouldHideContent: (labels?: Array<{ val: string }>) => boolean;
-  shouldWarnContent: (labels?: Array<{ val: string }>) => boolean;
-  shouldBlurImages: (labels?: Array<{ val: string }>) => boolean;
-  getContentWarningText: (labels?: Array<{ val: string }>) => string;
+  shouldHideContent: (labels?: LabelLike[]) => boolean;
+  shouldWarnContent: (labels?: LabelLike[]) => boolean;
+  shouldBlurImages: (labels?: LabelLike[]) => boolean;
+  getContentWarningText: (labels?: LabelLike[]) => string;
 }
 
 const ModerationContext = createContext<ModerationContextType | undefined>(
@@ -170,101 +137,27 @@ export function ModerationProvider({
     }
   }, []);
 
-  const parseLabelType = useCallback((val: string): LabelType | null => {
-    const normalized = val.toLowerCase();
-    const knownLabels: LabelType[] = [
-      "porn",
-      "sexual",
-      "nudity",
-      "graphic-media",
-      "gore",
-      "nsfl",
-      "spam",
-      "impersonation",
-      "scam",
-      "misleading",
-    ];
-    return knownLabels.includes(normalized as LabelType)
-      ? (normalized as LabelType)
-      : null;
-  }, []);
-
   const shouldHideContent = useCallback(
-    (labels?: Array<{ val: string }>) => {
-      if (!labels || labels.length === 0) return false;
-
-      for (const label of labels) {
-        const labelType = parseLabelType(label.val);
-        if (labelType && contentFilterPreferences[labelType] === "hide") {
-          return true;
-        }
-      }
-      return false;
-    },
-    [contentFilterPreferences, parseLabelType],
+    (labels?: LabelLike[]) =>
+      coreShouldHideContent(labels, contentFilterPreferences),
+    [contentFilterPreferences],
   );
 
   const shouldWarnContent = useCallback(
-    (labels?: Array<{ val: string }>) => {
-      if (!labels || labels.length === 0) return false;
-
-      for (const label of labels) {
-        const labelType = parseLabelType(label.val);
-        if (labelType && contentFilterPreferences[labelType] === "warn") {
-          return true;
-        }
-      }
-      return false;
-    },
-    [contentFilterPreferences, parseLabelType],
+    (labels?: LabelLike[]) =>
+      coreShouldWarnContent(labels, contentFilterPreferences),
+    [contentFilterPreferences],
   );
 
   const shouldBlurImages = useCallback(
-    (labels?: Array<{ val: string }>) => {
-      if (!labels || labels.length === 0) return false;
-
-      for (const label of labels) {
-        const labelType = parseLabelType(label.val);
-        if (
-          labelType &&
-          (contentFilterPreferences[labelType] === "warn" ||
-            contentFilterPreferences[labelType] === "hide")
-        ) {
-          return true;
-        }
-      }
-      return false;
-    },
-    [contentFilterPreferences, parseLabelType],
+    (labels?: LabelLike[]) =>
+      coreShouldBlurImages(labels, contentFilterPreferences),
+    [contentFilterPreferences],
   );
 
   const getContentWarningText = useCallback(
-    (labels?: Array<{ val: string }>) => {
-      if (!labels || labels.length === 0) return "Sensitive Content";
-
-      const labelMetadata: Record<string, string> = {
-        porn: "Adult Content",
-        sexual: "Sexually Suggestive",
-        nudity: "Nudity",
-        "graphic-media": "Graphic Content",
-        gore: "Gore",
-        nsfl: "NSFL",
-        spam: "Spam",
-        impersonation: "Impersonation",
-        scam: "Scam",
-        misleading: "Misleading",
-      };
-
-      for (const label of labels) {
-        const labelType = parseLabelType(label.val);
-        if (labelType) {
-          return labelMetadata[labelType] || "Sensitive Content";
-        }
-      }
-
-      return "Sensitive Content";
-    },
-    [parseLabelType],
+    (labels?: LabelLike[]) => coreGetContentWarningText(labels),
+    [],
   );
 
   const value = useMemo(

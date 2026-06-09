@@ -71,7 +71,12 @@ export const ModerationProvider: React.FC<{ children: React.ReactNode }> = ({
         setBlockedUsers(new Set(JSON.parse(storedBlockedUsers)));
       }
       if (storedContentFilter) {
-        setContentFilterPreferences(JSON.parse(storedContentFilter));
+        // Merge over defaults so label types added after the user last saved
+        // (e.g. gore/nsfl/scam/misleading) get their default preference.
+        setContentFilterPreferences({
+          ...DEFAULT_CONTENT_FILTER_PREFERENCES,
+          ...JSON.parse(storedContentFilter),
+        });
       }
     } catch (error) {
       console.error("Failed to load moderation data:", error);

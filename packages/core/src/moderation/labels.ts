@@ -5,19 +5,38 @@
  * Handles label severity, user preferences, and display text for content warnings.
  */
 
-import type { ComAtprotoLabelDefs } from "@atproto/api";
+/**
+ * Minimal structural label shape accepted by the evaluation helpers.
+ * ComAtprotoLabelDefs.Label is assignable; platforms may also pass plain
+ * `{ val }` objects.
+ */
+export interface LabelLike {
+  val: string;
+  src?: string;
+}
 
 /**
- * Label types supported by AT Protocol
+ * Label types with user-configurable filter preferences.
+ * The union of the label vocabularies previously implemented separately by
+ * web (6 types) and mobile (10 types).
  */
-export type LabelType =
+export type FilterableLabelType =
   | "porn"
   | "sexual"
   | "nudity"
   | "graphic-media"
+  | "gore"
+  | "nsfl"
   | "spam"
   | "impersonation"
-  | "unknown";
+  | "scam"
+  | "misleading";
+
+/**
+ * Label types supported by AT Protocol ("unknown" is the fallback for
+ * unrecognized label values; it is never hidden/warned via preferences)
+ */
+export type LabelType = FilterableLabelType | "unknown";
 
 /**
  * Label severity levels
@@ -35,14 +54,10 @@ export type LabelPreference = "show" | "warn" | "hide";
 /**
  * Content filter preferences for all label types
  */
-export interface ContentFilterPreferences {
-  porn: LabelPreference;
-  sexual: LabelPreference;
-  nudity: LabelPreference;
-  "graphic-media": LabelPreference;
-  spam: LabelPreference;
-  impersonation: LabelPreference;
-}
+export type ContentFilterPreferences = Record<
+  FilterableLabelType,
+  LabelPreference
+>;
 
 /**
  * Default content filter preferences (conservative defaults)
@@ -52,8 +67,12 @@ export const DEFAULT_CONTENT_FILTER_PREFERENCES: ContentFilterPreferences = {
   sexual: "warn",
   nudity: "warn",
   "graphic-media": "warn",
+  gore: "warn",
+  nsfl: "hide",
   spam: "hide",
   impersonation: "warn",
+  scam: "warn",
+  misleading: "warn",
 };
 
 /**
@@ -94,6 +113,18 @@ const LABEL_METADATA: Record<LabelType, LabelMetadata> = {
     defaultSeverity: "warn",
     icon: "⚠️",
   },
+  gore: {
+    displayName: "Gore",
+    description: "Gory or disturbing imagery",
+    defaultSeverity: "warn",
+    icon: "⚠️",
+  },
+  nsfl: {
+    displayName: "NSFL",
+    description: "Extremely disturbing content",
+    defaultSeverity: "hide",
+    icon: "🚫",
+  },
   spam: {
     displayName: "Spam",
     description: "Spam or misleading content",
@@ -106,28 +137,46 @@ const LABEL_METADATA: Record<LabelType, LabelMetadata> = {
     defaultSeverity: "warn",
     icon: "⚠️",
   },
+  scam: {
+    displayName: "Scam",
+    description: "Fraudulent or deceptive content",
+    defaultSeverity: "warn",
+    icon: "⚠️",
+  },
+  misleading: {
+    displayName: "Misleading",
+    description: "Misleading or false information",
+    defaultSeverity: "warn",
+    icon: "⚠️",
+  },
   unknown: {
-    displayName: "Flagged Content",
+    displayName: "Sensitive Content",
     description: "Content flagged by moderators",
     defaultSeverity: "warn",
     icon: "⚠️",
   },
 };
 
+const FILTERABLE_LABEL_TYPES: readonly FilterableLabelType[] = [
+  "porn",
+  "sexual",
+  "nudity",
+  "graphic-media",
+  "gore",
+  "nsfl",
+  "spam",
+  "impersonation",
+  "scam",
+  "misleading",
+];
+
 /**
  * Parse a label value into a LabelType
  */
 export function parseLabelType(val: string): LabelType {
   const normalized = val.toLowerCase();
-  if (
-    normalized === "porn" ||
-    normalized === "sexual" ||
-    normalized === "nudity" ||
-    normalized === "graphic-media" ||
-    normalized === "spam" ||
-    normalized === "impersonation"
-  ) {
-    return normalized;
+  if ((FILTERABLE_LABEL_TYPES as readonly string[]).includes(normalized)) {
+    return normalized as FilterableLabelType;
   }
   return "unknown";
 }
@@ -143,7 +192,7 @@ export function getLabelMetadata(labelType: LabelType): LabelMetadata {
  * Get the most severe label from a list of labels
  */
 export function getMostSevereLabel(
-  labels: ComAtprotoLabelDefs.Label[] | undefined,
+  labels: LabelLike[] | undefined,
 ): LabelType | null {
   if (!labels || labels.length === 0) return null;
 
@@ -184,7 +233,7 @@ export interface LabelerLabelPreference {
  * Now supports both native labels and third-party labeler labels
  */
 export function shouldHideContent(
-  labels: ComAtprotoLabelDefs.Label[] | undefined,
+  labels: LabelLike[] | undefined,
   preferences: ContentFilterPreferences,
   labelerPreferences?: LabelerLabelPreference[],
 ): boolean {
@@ -215,7 +264,7 @@ export function shouldHideContent(
  * Now supports both native labels and third-party labeler labels
  */
 export function shouldWarnContent(
-  labels: ComAtprotoLabelDefs.Label[] | undefined,
+  labels: LabelLike[] | undefined,
   preferences: ContentFilterPreferences,
   labelerPreferences?: LabelerLabelPreference[],
 ): boolean {
@@ -246,7 +295,7 @@ export function shouldWarnContent(
  * Now supports both native labels and third-party labeler labels
  */
 export function shouldBlurImages(
-  labels: ComAtprotoLabelDefs.Label[] | undefined,
+  labels: LabelLike[] | undefined,
   preferences: ContentFilterPreferences,
   labelerPreferences?: LabelerLabelPreference[],
 ): boolean {
@@ -281,9 +330,7 @@ export function shouldBlurImages(
 /**
  * Get display text for a content warning
  */
-export function getContentWarningText(
-  labels: ComAtprotoLabelDefs.Label[] | undefined,
-): string {
+export function getContentWarningText(labels: LabelLike[] | undefined): string {
   const mostSevere = getMostSevereLabel(labels);
   if (!mostSevere) return "Sensitive Content";
 
@@ -295,7 +342,7 @@ export function getContentWarningText(
  * Get detailed description for a content warning
  */
 export function getContentWarningDescription(
-  labels: ComAtprotoLabelDefs.Label[] | undefined,
+  labels: LabelLike[] | undefined,
 ): string {
   const mostSevere = getMostSevereLabel(labels);
   if (!mostSevere) return "This content may be sensitive";
@@ -307,9 +354,7 @@ export function getContentWarningDescription(
 /**
  * Get icon for a content warning
  */
-export function getContentWarningIcon(
-  labels: ComAtprotoLabelDefs.Label[] | undefined,
-): string {
+export function getContentWarningIcon(labels: LabelLike[] | undefined): string {
   const mostSevere = getMostSevereLabel(labels);
   if (!mostSevere) return "⚠️";
 
@@ -321,7 +366,7 @@ export function getContentWarningIcon(
  * Check if an author has labels (account-level warnings)
  */
 export function hasAuthorLabels(
-  authorLabels: ComAtprotoLabelDefs.Label[] | undefined,
+  authorLabels: LabelLike[] | undefined,
 ): boolean {
   return !!authorLabels && authorLabels.length > 0;
 }
@@ -330,7 +375,7 @@ export function hasAuthorLabels(
  * Get warning text for author labels
  */
 export function getAuthorWarningText(
-  authorLabels: ComAtprotoLabelDefs.Label[] | undefined,
+  authorLabels: LabelLike[] | undefined,
 ): string {
   if (!authorLabels || authorLabels.length === 0) {
     return "Account Warning";

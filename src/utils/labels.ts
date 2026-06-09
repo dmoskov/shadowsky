@@ -7,7 +7,9 @@
  */
 
 export {
+  type LabelLike,
   type LabelType,
+  type FilterableLabelType,
   type LabelSeverity,
   type LabelPreference,
   type ContentFilterPreferences,

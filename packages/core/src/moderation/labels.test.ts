@@ -50,11 +50,18 @@ describe("getMostSevereLabel", () => {
 describe("shouldHideContent / shouldWarnContent / shouldBlurImages", () => {
   const prefs = DEFAULT_CONTENT_FILTER_PREFERENCES;
 
-  it("hides content the user prefers hidden (default: porn, spam)", () => {
+  it("hides content the user prefers hidden (default: porn, nsfl, spam)", () => {
     expect(shouldHideContent([label("porn")], prefs)).toBe(true);
     expect(shouldHideContent([label("spam")], prefs)).toBe(true);
+    expect(shouldHideContent([label("nsfl")], prefs)).toBe(true);
     expect(shouldHideContent([label("nudity")], prefs)).toBe(false);
     expect(shouldHideContent(undefined, prefs)).toBe(false);
+  });
+
+  it("covers the mobile-originated label types (gore, scam, misleading)", () => {
+    expect(shouldWarnContent([label("gore")], prefs)).toBe(true);
+    expect(shouldWarnContent([label("scam")], prefs)).toBe(true);
+    expect(shouldWarnContent([label("misleading")], prefs)).toBe(true);
   });
 
   it("warns on warn-preference labels", () => {
