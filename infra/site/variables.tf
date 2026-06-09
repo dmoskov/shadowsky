@@ -46,13 +46,10 @@ variable "cloudfront_aliases_shadowsky" {
   default     = ["shadowsky.io", "www.shadowsky.io"]
 }
 
-variable "cloudfront_aliases_asphodel" {
-  description = "CloudFront aliases for asphodel.is on the S3 distribution"
-  type        = list(string)
-  default     = []
-  # Empty since 2026-06-02: asphodel.is, www.asphodel.is, and main.asphodel.is
-  # are served by AWS Amplify (app d1g6mni4b6812x), which owns their aliases
-  # and Route53 records. Claiming these aliases here would conflict with
-  # Amplify's distribution and take the site down. The S3 distribution
-  # (aws_cloudfront_distribution.asphodel) is kept but dormant.
-}
+# NOTE: asphodel.is web hosting is NOT managed here. asphodel.is,
+# www.asphodel.is, and main.asphodel.is are served by AWS Amplify
+# (app d1g6mni4b6812x), which owns their CloudFront aliases and Route53
+# records. The former S3-backed asphodel distribution (EMRRAFHTOF28N) was
+# destroyed on 2026-06-09. Do not re-create CloudFront aliases or DNS
+# records for those hostnames here — they would conflict with Amplify's
+# distribution and take the site down.

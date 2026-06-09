@@ -35,8 +35,9 @@ resource "aws_route53_record" "api_asphodel" {
 # main.asphodel.is records point at AWS Amplify (app d1g6mni4b6812x), whose
 # domain association owns their lifecycle (its CloudFront target can change
 # when Amplify re-provisions). The records previously defined here were
-# removed from state via `terraform state rm` on 2026-06-09 — do not re-add
-# them, and do not point them back at aws_cloudfront_distribution.asphodel.
+# removed from state via `terraform state rm` on 2026-06-09, and the old
+# S3-backed asphodel CloudFront distribution was destroyed — do not re-add
+# either here.
 
 # --- shadowsky.io web (CloudFront) ---
 # These are created only after removing aliases from the old Amplify CloudFront distribution

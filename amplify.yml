@@ -46,7 +46,6 @@ frontend:
             aws s3 sync dist/ s3://shadowsky-frontend-181691141781/ --delete
             echo "Invalidating CloudFront caches..."
             aws cloudfront create-invalidation --distribution-id E23PU8CFBQFK81 --paths "/*" || echo "shadowsky invalidation failed"
-            aws cloudfront create-invalidation --distribution-id EMRRAFHTOF28N --paths "/*" || echo "asphodel invalidation failed"
             echo "Deploy to S3/CloudFront complete."
           else
             echo "Skipping S3 deploy (branch: $AWS_BRANCH)"

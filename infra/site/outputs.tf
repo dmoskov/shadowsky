@@ -33,19 +33,9 @@ output "cloudfront_distribution_id_shadowsky" {
   value       = aws_cloudfront_distribution.shadowsky.id
 }
 
-output "cloudfront_distribution_id_asphodel" {
-  description = "CloudFront distribution ID for asphodel.is"
-  value       = aws_cloudfront_distribution.asphodel.id
-}
-
 output "cloudfront_domain_shadowsky" {
   description = "CloudFront domain name for shadowsky.io"
   value       = aws_cloudfront_distribution.shadowsky.domain_name
-}
-
-output "cloudfront_domain_asphodel" {
-  description = "CloudFront domain name for asphodel.is"
-  value       = aws_cloudfront_distribution.asphodel.domain_name
 }
 
 output "s3_bucket_name" {
@@ -77,6 +67,5 @@ output "next_steps" {
 
     4. Invalidate CloudFront:
        aws cloudfront create-invalidation --distribution-id ${aws_cloudfront_distribution.shadowsky.id} --paths "/*"
-       aws cloudfront create-invalidation --distribution-id ${aws_cloudfront_distribution.asphodel.id} --paths "/*"
   EOT
 }
