@@ -47,8 +47,12 @@ variable "cloudfront_aliases_shadowsky" {
 }
 
 variable "cloudfront_aliases_asphodel" {
-  description = "CloudFront aliases for asphodel.is"
+  description = "CloudFront aliases for asphodel.is on the S3 distribution"
   type        = list(string)
-  default     = ["asphodel.is", "www.asphodel.is"]
-  # asphodel.is has no existing CloudFront distribution, safe to claim immediately
+  default     = []
+  # Empty since 2026-06-02: asphodel.is, www.asphodel.is, and main.asphodel.is
+  # are served by AWS Amplify (app d1g6mni4b6812x), which owns their aliases
+  # and Route53 records. Claiming these aliases here would conflict with
+  # Amplify's distribution and take the site down. The S3 distribution
+  # (aws_cloudfront_distribution.asphodel) is kept but dormant.
 }

@@ -30,29 +30,13 @@ resource "aws_route53_record" "api_asphodel" {
   }
 }
 
-# --- asphodel.is web (CloudFront) ---
-
-resource "aws_route53_record" "asphodel_apex" {
-  count   = length(var.cloudfront_aliases_asphodel) > 0 ? 1 : 0
-  zone_id = data.aws_route53_zone.asphodel.zone_id
-  name    = "asphodel.is"
-  type    = "A"
-
-  alias {
-    name                   = aws_cloudfront_distribution.asphodel.domain_name
-    zone_id                = aws_cloudfront_distribution.asphodel.hosted_zone_id
-    evaluate_target_health = false
-  }
-}
-
-resource "aws_route53_record" "asphodel_www" {
-  count   = contains(var.cloudfront_aliases_asphodel, "www.asphodel.is") ? 1 : 0
-  zone_id = data.aws_route53_zone.asphodel.zone_id
-  name    = "www.asphodel.is"
-  type    = "CNAME"
-  ttl     = 300
-  records = [aws_cloudfront_distribution.asphodel.domain_name]
-}
+# --- asphodel.is web ---
+# NOT managed by Terraform. The asphodel.is, www.asphodel.is, and
+# main.asphodel.is records point at AWS Amplify (app d1g6mni4b6812x), whose
+# domain association owns their lifecycle (its CloudFront target can change
+# when Amplify re-provisions). The records previously defined here were
+# removed from state via `terraform state rm` on 2026-06-09 — do not re-add
+# them, and do not point them back at aws_cloudfront_distribution.asphodel.
 
 # --- shadowsky.io web (CloudFront) ---
 # These are created only after removing aliases from the old Amplify CloudFront distribution
