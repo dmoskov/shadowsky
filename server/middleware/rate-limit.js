@@ -45,14 +45,14 @@ function getClientIp(req) {
 /**
  * Create rate limiting middleware
  *
- * @param {Object} options - Rate limiting options
- * @param {number} options.windowMs - Time window in milliseconds (default: 60000 = 1 minute)
- * @param {number} options.maxRequests - Maximum requests per window (default: 10)
- * @param {string} options.keyPrefix - Prefix for the rate limit key (default: "default")
- * @param {Function} options.keyGenerator - Custom function to generate rate limit key (default: uses IP)
- * @param {string} options.message - Error message when rate limited (default: "Too many requests")
- * @param {boolean} options.skipSuccessfulRequests - Don't count successful requests (default: false)
- * @param {Function} options.skip - Function to skip rate limiting for certain requests (default: null)
+ * @param {Object} [options] - Rate limiting options
+ * @param {number} [options.windowMs] - Time window in milliseconds (default: 60000 = 1 minute)
+ * @param {number} [options.maxRequests] - Maximum requests per window (default: 10)
+ * @param {string} [options.keyPrefix] - Prefix for the rate limit key (default: "default")
+ * @param {Function} [options.keyGenerator] - Custom function to generate rate limit key (default: uses IP)
+ * @param {string} [options.message] - Error message when rate limited (default: "Too many requests")
+ * @param {boolean} [options.skipSuccessfulRequests] - Don't count successful requests (default: false)
+ * @param {Function} [options.skip] - Function to skip rate limiting for certain requests (default: null)
  * @returns {Function} Express middleware function
  */
 function rateLimit(options = {}) {

@@ -131,9 +131,11 @@ async function processUserNotifications(userConfig) {
       service: "https://bsky.social",
     });
 
-    // Resume session
+    // Resume session. NOTE: this must go through resumeSession() —
+    // `agent.session` is a getter-only property, so a direct assignment
+    // silently does nothing and the agent stays unauthenticated.
     if (credentials && credentials.accessJwt) {
-      agent.session = credentials;
+      await agent.resumeSession(credentials);
     } else {
       console.log(`No valid session for user ${handle}`);
       return;

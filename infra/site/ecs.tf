@@ -37,7 +37,8 @@ resource "aws_ecs_task_definition" "api" {
       { name = "WS_PORT", value = "3001" },
       { name = "NODE_ENV", value = "production" },
       { name = "TRENDING_TABLE_NAME", value = "${local.prefix}-trending-${var.environment}" },
-      { name = "FIREHOSE_SAMPLE_RATE", value = "1" }
+      { name = "FIREHOSE_SAMPLE_RATE", value = "1" },
+      { name = "PUSH_TOKENS_TABLE", value = aws_dynamodb_table.push_tokens.name }
     ]
 
     secrets = [

@@ -1,6 +1,7 @@
 const WebSocket = require("ws");
 const jwt = require("jsonwebtoken");
 const { BskyAgent } = require("@atproto/api");
+const { nextBackoff, computePollDelay } = require("./utils/poll-backoff");
 
 /**
  * WebSocket Server for Real-Time Notifications
@@ -158,6 +159,7 @@ class WebSocketNotificationServer {
           refreshJwt: token, // In practice, this should be stored separately
           did: userDid,
           handle: decoded.handle || "",
+          active: true,
         });
         this.userAgents.set(userDid, agent);
         this.log(`Created agent for user: ${userDid}`);
@@ -336,11 +338,7 @@ class WebSocketNotificationServer {
 
   _schedulePoll(userDid) {
     const backoff = this.userPollBackoffs.get(userDid) || 0;
-    // ±20% jitter prevents a thundering herd when many users hit 429 at once.
-    const jitter = backoff * 0.2 * (Math.random() * 2 - 1);
-    const delay = backoff > 0
-      ? Math.round(backoff + jitter)
-      : this.config.pollInterval;
+    const delay = computePollDelay(backoff, this.config.pollInterval);
 
     const timeout = setTimeout(async () => {
       if (!this.userConnections.has(userDid)) return; // user disconnected
@@ -405,8 +403,8 @@ class WebSocketNotificationServer {
     } catch (err) {
       // Handle rate limiting with exponential backoff (cap at 5 minutes).
       if (err.status === 429) {
-        const prev = this.userPollBackoffs.get(userDid) || this.config.pollInterval;
-        const next = Math.min(prev * 2, 5 * 60 * 1000);
+        const prev = this.userPollBackoffs.get(userDid);
+        const next = nextBackoff(prev, this.config.pollInterval);
         this.userPollBackoffs.set(userDid, next);
         this.log(`Rate limited for ${userDid}, backing off to ${Math.round(next / 1000)}s`);
       } else {

@@ -10,6 +10,9 @@ export const CORE_PACKAGE_VERSION = "0.0.0";
 
 export * from "./format";
 export * from "./logger";
+export * from "./errors";
+export * from "./moderation/labels";
+export * from "./notifications/aggregator";
 export * from "./atproto/services";
 export * as profiles from "./atproto/profiles";
 export * as feeds from "./atproto/feeds";

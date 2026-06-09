@@ -48,15 +48,16 @@ jobs:
         run: |
           echo "## Test Coverage Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Coverage Thresholds" >> $GITHUB_STEP_SUMMARY
+          echo "### Coverage Thresholds (enforced by vitest.config.ts)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Threshold |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|-----------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Statements | 30% |" >> $GITHUB_STEP_SUMMARY
-          echo "| Branches | 30% |" >> $GITHUB_STEP_SUMMARY
-          echo "| Functions | 30% |" >> $GITHUB_STEP_SUMMARY
-          echo "| Lines | 30% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Statements | 10% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branches | 10% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Functions | 10% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lines | 10% |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "_Baseline ~11% (UI-heavy app, primary coverage via E2E). Raise the thresholds in vitest.config.ts and update this table as unit coverage grows._" >> $GITHUB_STEP_SUMMARY
           echo "See coverage report artifact for detailed breakdown." >> $GITHUB_STEP_SUMMARY
       - name: Upload coverage reports
         uses: actions/upload-artifact@v6

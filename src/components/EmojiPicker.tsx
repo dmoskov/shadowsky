@@ -2,7 +2,10 @@ import { Search, X } from "lucide-react";
 import { CSSProperties, useEffect, useMemo, useRef, useState } from "react";
 import { Grid } from "react-window";
 import { useDelayedValue } from "../hooks/useTiming";
-import { EMOJI_CATEGORIES } from "./emoji-data";
+
+// emoji-data is ~1800 lines of Unicode data; load it on demand when the
+// picker first opens instead of bundling it with every composer chunk.
+type EmojiCategories = typeof import("./emoji-data").EMOJI_CATEGORIES;
 
 interface EmojiPickerProps {
   onSelectEmoji: (emoji: string) => void;
@@ -62,20 +65,25 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDelayedValue(searchTerm, 150);
   const [recentEmojis, setRecentEmojis] = useState<string[]>([]);
+  const [emojiCategories, setEmojiCategories] =
+    useState<EmojiCategories | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Load recent emojis on mount
+  // Load emoji data and recent emojis on mount
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const emojis = JSON.parse(stored);
-        setRecentEmojis(emojis);
-        EMOJI_CATEGORIES.recent.emojis = emojis;
-      } catch (_e) {
-        console.error("Error loading recent emojis:", _e);
+    import("./emoji-data").then(({ EMOJI_CATEGORIES }) => {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const emojis = JSON.parse(stored);
+          setRecentEmojis(emojis);
+          EMOJI_CATEGORIES.recent.emojis = emojis;
+        } catch (_e) {
+          console.error("Error loading recent emojis:", _e);
+        }
       }
-    }
+      setEmojiCategories(EMOJI_CATEGORIES);
+    });
   }, []);
 
   const handleSelectEmoji = (emoji: string) => {
@@ -85,19 +93,21 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
       MAX_RECENT_EMOJIS,
     );
     setRecentEmojis(newRecent);
-    EMOJI_CATEGORIES.recent.emojis = newRecent;
+    if (emojiCategories) {
+      emojiCategories.recent.emojis = newRecent;
+    }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newRecent));
 
     onSelectEmoji(emoji);
   };
 
   const searchResults = useMemo(() => {
-    if (!debouncedSearchTerm) return [];
+    if (!debouncedSearchTerm || !emojiCategories) return [];
 
     const results: string[] = [];
     const search = debouncedSearchTerm.toLowerCase();
 
-    Object.values(EMOJI_CATEGORIES).forEach((category) => {
+    Object.values(emojiCategories).forEach((category) => {
       category.emojis.forEach((emoji) => {
         if (emoji.toLowerCase().includes(search)) {
           results.push(emoji);
@@ -106,14 +116,15 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
     });
 
     return results;
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, emojiCategories]);
 
-  const displayEmojis = debouncedSearchTerm
-    ? searchResults
-    : selectedCategory === "recent" && recentEmojis.length === 0
-      ? EMOJI_CATEGORIES.smileys.emojis
-      : EMOJI_CATEGORIES[selectedCategory as keyof typeof EMOJI_CATEGORIES]
-          .emojis;
+  const displayEmojis = !emojiCategories
+    ? []
+    : debouncedSearchTerm
+      ? searchResults
+      : selectedCategory === "recent" && recentEmojis.length === 0
+        ? emojiCategories.smileys.emojis
+        : emojiCategories[selectedCategory as keyof EmojiCategories].emojis;
 
   // Calculate grid dimensions
   const rowCount = Math.ceil(displayEmojis.length / COLUMN_COUNT);
@@ -194,12 +205,12 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
           </div>
         </div>
 
-        {!searchTerm && (
+        {!searchTerm && emojiCategories && (
           <div
             className="flex overflow-x-auto border-b"
             style={{ borderColor: "var(--asph-border-primary)" }}
           >
-            {Object.entries(EMOJI_CATEGORIES).map(([key, category]) => {
+            {Object.entries(emojiCategories).map(([key, category]) => {
               if (key === "recent" && recentEmojis.length === 0) return null;
 
               const Icon = category.icon;

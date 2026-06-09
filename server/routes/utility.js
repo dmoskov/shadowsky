@@ -91,6 +91,7 @@ router.post("/fetch-link-metadata", moderateLimiter, async (req, res) => {
     // Extract meta tags
     let title = "";
     let description = "";
+    /** @type {string | null} */
     let imageUrl = null;
 
     // Extract <title> tag

@@ -98,7 +98,9 @@ async function getJwksKeys(region, userPoolId) {
     throw new Error(`Failed to fetch JWKS: ${response.status}`);
   }
 
-  const jwks = await response.json();
+  const jwks = /** @type {{ keys: Array<{ kid: string }> }} */ (
+    await response.json()
+  );
 
   // Build key map by kid
   jwksCache = new Map();
@@ -363,7 +365,7 @@ function isValidDid(did) {
  * Authenticate request using Cognito JWT
  *
  * @param {Object} req - Express request object
- * @returns {Object} AuthResult with user information or error
+ * @returns {Promise<Object>} AuthResult with user information or error
  */
 async function authenticateCognito(req) {
   try {
@@ -462,7 +464,7 @@ function authenticateDid(req) {
  * Priority: Cognito JWT > Bluesky DID
  *
  * @param {Object} req - Express request object
- * @returns {Object} AuthResult with user information or error
+ * @returns {Promise<Object>} AuthResult with user information or error
  */
 async function authenticateRequest(req) {
   // Try Cognito JWT first (if available)

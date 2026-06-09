@@ -241,7 +241,7 @@ async function validateUrlForSSRF(urlString) {
  * @param {string} url - The URL to fetch (must already be SSRF-validated)
  * @param {object} [options={}] - Standard fetch options (redirect will be overridden)
  * @param {number} [maxRedirects=10] - Maximum number of redirects to follow
- * @returns {Promise<import('node-fetch').Response>} The final response
+ * @returns {Promise<any>} The final response (node-fetch v2 Response)
  */
 async function ssrfSafeFetch(url, options = {}, maxRedirects = 10) {
   let currentUrl = url;

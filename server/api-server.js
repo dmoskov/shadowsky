@@ -6,6 +6,7 @@ const path = require("path");
 const { WebSocketNotificationServer } = require("./websocket-server");
 const { apiVersionHeader } = require("./middleware/api-version");
 const { requestTiming } = require("./middleware/request-timing");
+const { makeCorsOriginHandler } = require("./utils/cors-origin");
 
 // Route modules
 const aiRoutes = require("./routes/ai");
@@ -24,6 +25,7 @@ const WS_PORT = process.env.WS_PORT || 3001;
 // Placeholder so the SIGTERM/SIGINT shutdown handlers below don't ReferenceError
 // when no trending service has been started. Set to an instance with .shutdown()
 // if a trending service is ever initialized at runtime.
+/** @type {{ shutdown: () => void } | null} */
 let trendingServiceInstance = null;
 
 // Structured per-request timing (one JSON line/request) for retrospective
@@ -34,40 +36,7 @@ app.use(requestTiming());
 // Enable CORS for your Vite dev server and production domains
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-
-      const allowedOrigins = [
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:5175",
-        "http://localhost:5176",
-        // shadowsky.io (legacy — keep until all clients migrate to asphodel.is)
-        "https://main.shadowsky.io",
-        "https://shadowsky.io",
-        "https://www.shadowsky.io",
-        // asphodel.is (canonical)
-        "https://asphodel.is",
-        "https://www.asphodel.is",
-        "https://main.asphodel.is",
-      ];
-
-      // Allow any subdomain of shadowsky.io or asphodel.is
-      if (
-        origin.match(/^https:\/\/.*\.shadowsky\.io$/) ||
-        origin.match(/^https:\/\/.*\.asphodel\.is$/) ||
-        allowedOrigins.includes(origin)
-      ) {
-        callback(null, true);
-      } else {
-        // Log a single short line instead of throwing — throwing causes Express
-        // to invoke the 500 error handler and emit a 30-line stack trace per
-        // rejected request, drowning out real errors in the logs.
-        console.log(JSON.stringify({ t: "cors_reject", origin }));
-        callback(null, false);
-      }
-    },
+    origin: makeCorsOriginHandler(),
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: [

@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "noEmit": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2022",
+    "lib": ["es2022"],
+    "types": ["node"],
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "maxNodeModuleJsDepth": 0,
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "node-fetch": ["types/node-fetch.d.ts"]
+    }
+  },
+  "include": [
+    "api-server.js",
+    "websocket-server.js",
+    "push-worker.js",
+    "ip-validator.js",
+    "middleware/**/*.js",
+    "routes/**/*.js",
+    "utils/**/*.js",
+    "test/**/*.js"
+  ],
+  "exclude": ["node_modules"]
+}

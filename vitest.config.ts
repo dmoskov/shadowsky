@@ -20,6 +20,8 @@ export default defineConfig({
       "**/*.spec.js",
       "**/amplify/**",
       "**/mobile/**",
+      // Server tests use node:test (run via `npm test` in server/)
+      "**/server/**",
     ],
     coverage: {
       provider: "v8",

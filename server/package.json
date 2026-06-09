@@ -5,7 +5,9 @@
   "main": "api-server.js",
   "scripts": {
     "start": "node api-server.js",
-    "dev": "nodemon api-server.js"
+    "dev": "nodemon api-server.js",
+    "test": "node --test test/*.test.js",
+    "test:types": "tsc -p jsconfig.json"
   },
   "dependencies": {
     "@atproto/api": "^0.16.7",

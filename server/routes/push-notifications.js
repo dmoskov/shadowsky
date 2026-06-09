@@ -9,23 +9,20 @@
  *   their OWN did (ownership is enforced against req.auth.did).
  * - The bulk-list endpoint is restricted to admins (Cognito group "admin").
  *
- * NOTE: pushTokenStore is in-memory and is lost on restart and not shared
- * across instances. This is acceptable for the current POC, but production
- * use should back this with DynamoDB (with a TTL on stale tokens) so tokens
- * survive restarts and work across multiple ECS tasks.
+ * Storage: DynamoDB when PUSH_TOKENS_TABLE is set (durable, shared across
+ * ECS tasks); in-memory fallback otherwise. See utils/push-token-store.js.
  */
 
 const express = require("express");
 const router = express.Router();
 const { requireCognitoAuth } = require("../middleware/cognito-auth");
 const { moderateLimiter } = require("../middleware/rate-limit");
+const { createPushTokenStore } = require("../utils/push-token-store");
 
 // Push enabled flag - set to true to enable push notifications
 const pushEnabled = true;
 
-// In-memory storage for push tokens
-// In production, this should use DynamoDB or Redis (see file header note).
-const pushTokenStore = new Map();
+const pushTokenStore = createPushTokenStore();
 
 /**
  * Returns true if the authenticated caller is allowed to act on `targetDid`.
@@ -82,7 +79,7 @@ router.post(
       }
 
       // Store the push token
-      pushTokenStore.set(did, {
+      await pushTokenStore.set(did, {
         did,
         handle,
         pushToken,
@@ -131,8 +128,8 @@ router.delete(
         });
       }
 
-      if (pushTokenStore.has(did)) {
-        pushTokenStore.delete(did);
+      const deleted = await pushTokenStore.delete(did);
+      if (deleted) {
         console.log(`Unregistered push token for ${did}`);
         res.json({
           success: true,
@@ -172,7 +169,7 @@ router.get(
     }
 
     try {
-      const subscriptions = Array.from(pushTokenStore.values());
+      const subscriptions = await pushTokenStore.list();
       res.json({
         subscriptions,
         count: subscriptions.length,
@@ -216,7 +213,7 @@ router.post(
         });
       }
 
-      const subscription = pushTokenStore.get(did);
+      const subscription = await pushTokenStore.get(did);
       if (!subscription) {
         return res.status(404).json({
           error: "Push token not found for this user",
@@ -252,7 +249,7 @@ router.get(
   "/push-notification/stats",
   moderateLimiter,
   requireCognitoAuth(),
-  (req, res) => {
+  async (req, res) => {
     if (!pushEnabled) {
       return res.json({
         status: "disabled",
@@ -266,14 +263,22 @@ router.get(
       });
     }
 
-    res.json({
-      status: "enabled",
-      registeredDevices: pushTokenStore.size,
-      message: "Push notifications are enabled",
-    });
+    try {
+      res.json({
+        status: "enabled",
+        registeredDevices: await pushTokenStore.count(),
+        message: "Push notifications are enabled",
+      });
+    } catch (error) {
+      console.error("Error getting push notification stats:", error);
+      res.status(500).json({
+        error: "Failed to get push notification stats",
+      });
+    }
   },
 );
 
-// Export the token store for use by the push worker
+// Export the token store for use by the push worker (async interface; see
+// utils/push-token-store.js)
 module.exports = router;
 module.exports.pushTokenStore = pushTokenStore;
