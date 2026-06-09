@@ -1,21 +1,8 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import {
-  Clock,
-  Hash,
-  Heart,
-  List,
-  MessageCircle,
-  Repeat2,
-  Reply,
-  Rss,
-  Shield,
-  Star,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { Repeat2, Reply } from "lucide-react";
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
@@ -32,11 +19,8 @@ import { usePostDeepLink } from "../hooks/usePostDeepLink";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useMinDuration } from "../hooks/useTiming";
 import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
-import { columnService } from "../services/column-service";
-import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
+import { proxifyBskyImage } from "../utils/image-proxy";
 import { lazyWithRetry } from "../utils/lazyWithRetry";
-import { createLogger } from "../utils/logger";
-import { ImageGrid } from "./ImageGrid";
 import { NetworkWeatherLayer } from "./NetworkWeatherLayer";
 import { PostActionBar } from "./PostActionBar";
 import { Spinner } from "./ui/LoadingState";
@@ -45,19 +29,15 @@ import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { RichText } from "./ui/RichText";
 import { FeedSkeleton, PostSkeleton } from "./ui/SkeletonLoader";
 import {
-  type Embed,
-  type EmbedImage,
-  type FeedGenerator,
-  type FeedOption,
   type FeedQueryData,
-  type FeedType,
   type HomeProps,
   MOBILE_CONFIG,
-  OPEN_THREAD_KEY,
   type Post,
-  type SavedFeed,
 } from "./Home.types";
+import { FeedEmbed, type GalleryImage } from "./HomeFeedEmbed";
+import { useFeedSelection } from "./useFeedSelection";
 import { useHomeFeedQuery } from "./useHomeFeedQuery";
+import { useThreadModalState } from "./useThreadModalState";
 
 // Code-split heavy components to improve initial load time
 const FeedDiscovery = lazyWithRetry(() =>
@@ -69,15 +49,6 @@ const ImageGallery = lazyWithRetry(() =>
 const ThreadModal = lazyWithRetry(() =>
   import("./ThreadModal").then((m) => ({ default: m.ThreadModal })),
 );
-const VideoPlayer = lazyWithRetry(() =>
-  import("./VideoPlayer").then((m) => ({ default: m.VideoPlayer })),
-);
-
-const logger = createLogger("Home");
-
-async function loadAnthropicService() {
-  return await import("../services/anthropic");
-}
 
 export const Home: React.FC<HomeProps> = React.memo(
   ({
@@ -104,22 +75,13 @@ export const Home: React.FC<HomeProps> = React.memo(
       enabled: isFocused,
     });
     // Removed hoveredPost state to prevent re-renders - using CSS hover instead
-    // Use initialFeedUri if provided, otherwise get from column preferences
-    const [selectedFeed, setSelectedFeed] = React.useState<FeedType>(() => {
-      // Use the feed from the column data or default to following
-      return (initialFeedUri as FeedType) || "following";
+    // Feed selection (selected feed, available feed options, parent sync)
+    const { selectedFeed } = useFeedSelection({
+      initialFeedUri,
+      columnId,
+      onFeedChange,
+      onRefreshRequest,
     });
-
-    // Update selectedFeed when initialFeedUri changes from parent
-    React.useEffect(() => {
-      if (initialFeedUri && initialFeedUri !== selectedFeed) {
-        setSelectedFeed(initialFeedUri as FeedType);
-        // Also save to column preferences
-        if (columnId) {
-          columnService.updateColumnFeedPreference(columnId, initialFeedUri);
-        }
-      }
-    }, [initialFeedUri, columnId]);
 
     // Stability-focused caching: warm up cache for instant first load
     // Pre-populates React Query cache with IndexedDB data before component fetches
@@ -144,59 +106,24 @@ export const Home: React.FC<HomeProps> = React.memo(
       externalShowFeedDiscovery !== undefined
         ? externalShowFeedDiscovery
         : internalShowFeedDiscovery;
-    const [galleryImages, setGalleryImages] = useState<Array<{
-      thumb: string;
-      fullsize: string;
-      alt?: string;
-    }> | null>(null);
+    const [galleryImages, setGalleryImages] = useState<GalleryImage[] | null>(
+      null,
+    );
     const [galleryIndex, setGalleryIndex] = useState(0);
-    // Restore open thread state from sessionStorage (persists across view mode changes)
-    const [selectedPost, setSelectedPost] = useState<Post | null>(() => {
-      try {
-        const stored = sessionStorage.getItem(OPEN_THREAD_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          // Only restore if it was stored recently (within 30 seconds)
-          // This prevents restoring stale thread state on page refresh
-          if (parsed.timestamp && Date.now() - parsed.timestamp < 30000) {
-            return parsed.post;
-          }
-          // Clean up stale data
-          sessionStorage.removeItem(OPEN_THREAD_KEY);
-        }
-      } catch {
-        // Ignore parse errors
-      }
-      return null;
-    });
-    const [showThread, setShowThread] = useState(() => {
-      try {
-        const stored = sessionStorage.getItem(OPEN_THREAD_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed.timestamp && Date.now() - parsed.timestamp < 30000) {
-            return true;
-          }
-        }
-      } catch {
-        // Ignore parse errors
-      }
-      return false;
-    });
-    const [openThreadToReply, setOpenThreadToReply] = useState(false);
-    const [openThreadToQuote, setOpenThreadToQuote] = useState(false);
+    // Thread modal state (open post, reply/quote focus, session persistence)
+    const {
+      selectedPost,
+      showThread,
+      openThreadToReply,
+      openThreadToQuote,
+      openThread: handlePostClick,
+      openThreadToReplyTo,
+      openThreadToQuotePost,
+      openThreadByUri,
+      closeThread,
+    } = useThreadModalState();
     const [focusedPostIndex, setFocusedPostIndex] = useState<number>(-1);
-    const [generatedAltTexts, setGeneratedAltTexts] = useState<
-      Record<string, Record<number, string>>
-    >({});
-    const [generatingAltText, setGeneratingAltText] = useState<
-      Record<string, Record<number, boolean>>
-    >({});
-    const [showAltText, setShowAltText] = useState<
-      Record<string, Record<number, boolean>>
-    >({});
     const postsContainerRef = useRef<HTMLDivElement>(null);
-    const [feedOrder, setFeedOrder] = useState<string[]>([]);
     // Removed showFeedDropdown - now handled by parent component
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const scrollPositionRef = useRef<{ [key: string]: number }>({});
@@ -208,175 +135,6 @@ export const Home: React.FC<HomeProps> = React.memo(
     // Keyboard shortcuts context for L/R/B/S/C shortcuts
     const { setFocusedPost, registerPostActions, unregisterPostActions } =
       useKeyboardShortcutsContext();
-
-    // Fetch user's saved/pinned feeds
-    const { data: userPrefs } = useQuery({
-      queryKey: ["userPreferences"],
-      queryFn: async () => {
-        if (!agent) throw new Error("Not authenticated");
-        const prefs = await agent.getPreferences();
-        debug.log("User preferences:", prefs);
-        return prefs;
-      },
-      enabled: !!agent,
-      staleTime: 30 * 60 * 1000, // 30 minutes
-      refetchOnMount: false,
-    });
-
-    // Fetch feed generator details for saved feeds
-    const { data: feedGenerators } = useQuery({
-      queryKey: ["feedGenerators", userPrefs?.savedFeeds],
-      queryFn: async () => {
-        if (!agent || !userPrefs?.savedFeeds?.length) return [];
-
-        const feedUris = userPrefs.savedFeeds
-          .filter((feed) => feed.type === "feed")
-          .map((feed) => feed.value);
-
-        if (feedUris.length === 0) return [];
-
-        try {
-          const response = await agent.app.bsky.feed.getFeedGenerators({
-            feeds: feedUris,
-          });
-          debug.log("Feed generators:", response.data);
-          return response.data.feeds;
-        } catch (error) {
-          debug.error("Failed to fetch feed generators:", error);
-          return [];
-        }
-      },
-      enabled: !!agent && !!userPrefs?.savedFeeds,
-    });
-
-    // Build feed options including user's saved feeds
-    const feedOptions = React.useMemo(() => {
-      const defaultFeeds = [
-        {
-          type: "following" as FeedType,
-          label: "Following",
-          icon: Users,
-          uri: "following",
-          isDefault: true,
-        },
-        {
-          type: "whats-hot" as FeedType,
-          label: "What's Hot",
-          icon: TrendingUp,
-          uri: "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot",
-          isDefault: true,
-        },
-        {
-          type: "popular-with-friends" as FeedType,
-          label: "Popular w/ Friends",
-          icon: Heart,
-          uri: "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/with-friends",
-          isDefault: true,
-        },
-        {
-          type: "recent" as FeedType,
-          label: "Recent",
-          icon: Clock,
-          uri: "recent",
-          isDefault: true,
-        },
-      ];
-
-      // Add pinned feeds first, then other saved feeds
-      const savedFeeds: FeedOption[] = [];
-      if (userPrefs?.savedFeeds && feedGenerators) {
-        const pinnedFeeds = userPrefs.savedFeeds.filter(
-          (feed) => feed.pinned && feed.type === "feed",
-        );
-        const unpinnedFeeds = userPrefs.savedFeeds.filter(
-          (feed) => !feed.pinned && feed.type === "feed",
-        );
-
-        const addFeedOption = (savedFeed: SavedFeed) => {
-          const generator = feedGenerators.find(
-            (g: FeedGenerator) => g.uri === savedFeed.value,
-          );
-          if (generator) {
-            savedFeeds.push({
-              type: savedFeed.value,
-              label: generator.displayName,
-              icon: savedFeed.pinned ? Star : Hash,
-              uri: savedFeed.value,
-              pinned: savedFeed.pinned,
-              generator,
-              isDefault: false,
-            });
-          }
-        };
-
-        pinnedFeeds.forEach((feed) => addFeedOption(feed));
-        unpinnedFeeds.forEach((feed) => addFeedOption(feed));
-      }
-
-      const allFeeds = [...defaultFeeds, ...savedFeeds];
-
-      // Initialize feed order if not set
-      if (feedOrder.length === 0) {
-        const savedOrder = localStorage.getItem("feedOrder");
-        if (savedOrder) {
-          const parsedOrder = JSON.parse(savedOrder);
-          // Validate saved order includes all current feeds
-          const currentTypes = allFeeds.map((f) => f.type);
-          const validOrder = parsedOrder.filter((type: string) =>
-            currentTypes.includes(type),
-          );
-          const missingTypes = currentTypes.filter(
-            (type) => !validOrder.includes(type),
-          );
-          setFeedOrder([...validOrder, ...missingTypes]);
-        } else {
-          setFeedOrder(allFeeds.map((f) => f.type));
-        }
-      }
-
-      // Sort feeds by the saved order
-      return allFeeds.sort((a, b) => {
-        const aIndex = feedOrder.indexOf(a.type);
-        const bIndex = feedOrder.indexOf(b.type);
-        if (aIndex === -1 && bIndex === -1) return 0;
-        if (aIndex === -1) return 1;
-        if (bIndex === -1) return -1;
-        return aIndex - bIndex;
-      });
-    }, [userPrefs, feedGenerators, feedOrder]);
-
-    const currentFeedOption = feedOptions.find(
-      (opt) => opt.type === selectedFeed,
-    );
-
-    // Notify parent of current feed on mount and feed change
-    useEffect(() => {
-      if (onFeedChange && currentFeedOption) {
-        onFeedChange(selectedFeed, currentFeedOption.label, feedOptions);
-      }
-    }, [selectedFeed, currentFeedOption, feedOptions, onFeedChange]);
-
-    // Handle refresh request from parent
-    useEffect(() => {
-      if (onRefreshRequest && onRefreshRequest > 0) {
-        queryClient.invalidateQueries({ queryKey: ["timeline", selectedFeed] });
-      }
-    }, [onRefreshRequest, queryClient, selectedFeed]);
-
-    // Persist open thread state to sessionStorage for view mode transitions
-    useEffect(() => {
-      if (showThread && selectedPost) {
-        sessionStorage.setItem(
-          OPEN_THREAD_KEY,
-          JSON.stringify({
-            post: selectedPost,
-            timestamp: Date.now(),
-          }),
-        );
-      } else {
-        sessionStorage.removeItem(OPEN_THREAD_KEY);
-      }
-    }, [showThread, selectedPost]);
 
     // Dropdown is now handled by the parent component
 
@@ -453,34 +211,10 @@ export const Home: React.FC<HomeProps> = React.memo(
       }
     }, [data?.pages, queryClient, selectedFeed]);
 
-    // Clean up alt text states and postRefs for posts that are no longer in the feed
+    // Clean up postRefs for posts that are no longer in the feed
     // This prevents unbounded memory growth as users scroll through feeds
-    // Only prunes state when entries actually need removal to avoid unnecessary re-renders
     React.useEffect(() => {
       const currentPostUris = new Set(posts.map((p) => p.post.uri));
-
-      // Helper: returns prev unchanged if nothing was pruned, otherwise returns filtered copy
-      function pruneRecord<T>(
-        prev: Record<string, T>,
-        validKeys: Set<string>,
-      ): Record<string, T> {
-        const staleKeys = Object.keys(prev).filter(
-          (key) => !validKeys.has(key),
-        );
-        if (staleKeys.length === 0) return prev;
-        const filtered: Record<string, T> = {};
-        for (const key of Object.keys(prev)) {
-          if (validKeys.has(key)) {
-            filtered[key] = prev[key];
-          }
-        }
-        return filtered;
-      }
-
-      // Clean up alt text states for removed posts (no-op if nothing stale)
-      setGeneratedAltTexts((prev) => pruneRecord(prev, currentPostUris));
-      setGeneratingAltText((prev) => pruneRecord(prev, currentPostUris));
-      setShowAltText((prev) => pruneRecord(prev, currentPostUris));
 
       // Clean up postRefs for removed posts
       let hasStaleRefs = false;
@@ -745,26 +479,18 @@ export const Home: React.FC<HomeProps> = React.memo(
                   />
                 </div>
 
-                {renderEmbed(post.embed, post.uri, index)}
+                <FeedEmbed
+                  embed={post.embed}
+                  onOpenGallery={openGallery}
+                  onOpenQuotedPost={openThreadByUri}
+                />
 
                 {/* Post Action Bar */}
                 <PostActionBar
                   post={post as unknown as AppBskyFeedDefs.PostView}
-                  onReply={() => {
-                    // Open thread modal with reply focus
-                    setSelectedPost(post);
-                    setOpenThreadToReply(true);
-                    setOpenThreadToQuote(false);
-                    setShowThread(true);
-                  }}
+                  onReply={() => openThreadToReplyTo(post)}
                   onRepost={() => handleRepost(post)}
-                  onQuote={() => {
-                    // Open thread modal with quote focus
-                    setSelectedPost(post);
-                    setOpenThreadToReply(false);
-                    setOpenThreadToQuote(true);
-                    setShowThread(true);
-                  }}
+                  onQuote={() => openThreadToQuotePost(post)}
                   onLike={() => handleLike(post)}
                   onBookmark={() => handleBookmark(post)}
                   showCounts={true}
@@ -833,12 +559,14 @@ export const Home: React.FC<HomeProps> = React.memo(
       };
     }, [selectedFeed]);
 
-    // Handler functions (must be defined before keyboard navigation useEffect)
-    const handlePostClick = React.useCallback((post: Post) => {
-      setSelectedPost(post);
-      setOpenThreadToReply(false); // Reset when clicking on post normally
-      setShowThread(true);
-    }, []);
+    // Open the lightbox gallery (used by FeedEmbed for image grids)
+    const openGallery = React.useCallback(
+      (images: GalleryImage[], index: number) => {
+        setGalleryImages(images);
+        setGalleryIndex(index);
+      },
+      [],
+    );
 
     // Mutations are handled by useOptimisticPosts hook
 
@@ -1112,9 +840,7 @@ export const Home: React.FC<HomeProps> = React.memo(
           }
         },
         onReply: (post) => {
-          setSelectedPost(post as unknown as Post);
-          setOpenThreadToReply(true);
-          setShowThread(true);
+          openThreadToReplyTo(post as unknown as Post);
         },
         onBookmark: (post) => {
           toggleBookmark(post);
@@ -1183,690 +909,8 @@ export const Home: React.FC<HomeProps> = React.memo(
       focusedPostIndex,
       posts,
       handlePostClick,
+      openThreadToReplyTo,
     ]);
-
-    const handleGenerateAltText = React.useCallback(
-      async (imageUrl: string, postUri: string, index: number) => {
-        const postKey = postUri;
-        setGeneratingAltText((prev) => ({
-          ...prev,
-          [postKey]: { ...prev[postKey], [index]: true },
-        }));
-        try {
-          // Pass the URL directly to the backend which will handle fetching
-          const anthropicService = await loadAnthropicService();
-          const altText = await anthropicService.generateAltText(imageUrl);
-
-          setGeneratedAltTexts((prev) => ({
-            ...prev,
-            [postKey]: { ...prev[postKey], [index]: altText },
-          }));
-          setShowAltText((prev) => ({
-            ...prev,
-            [postKey]: { ...prev[postKey], [index]: true },
-          }));
-        } catch (error) {
-          // Show user-friendly error message
-          logger.error("Error generating alt text:", error);
-          alert(
-            error instanceof Error
-              ? error.message
-              : "Failed to generate alt text",
-          );
-        } finally {
-          setGeneratingAltText((prev) => ({
-            ...prev,
-            [postKey]: { ...prev[postKey], [index]: false },
-          }));
-        }
-      },
-      [],
-    );
-
-    // Memoize renderEmbed to prevent re-creation on every render
-    const renderEmbed = React.useCallback(
-      (
-        embed: Embed | null | undefined,
-        postUri?: string,
-        postIndex?: number,
-      ) => {
-        if (!embed) return null;
-
-        if (embed.$type === "app.bsky.embed.images#view") {
-          return (
-            <ImageGrid
-              images={(embed.images || []).map((img: EmbedImage) => ({
-                thumb: img.thumb,
-                fullsize: img.fullsize || img.thumb,
-                alt: img.alt,
-              }))}
-              onImageClick={(index) => {
-                const images = (embed.images || []).map((img: EmbedImage) => ({
-                  thumb: proxifyBskyImage(img.thumb) || "",
-                  fullsize: proxifyBskyImage(img.fullsize || img.thumb) || "",
-                  alt: img.alt || "",
-                }));
-                setGalleryImages(images);
-                setGalleryIndex(index);
-              }}
-            />
-          );
-        }
-
-        if (embed.$type === "app.bsky.embed.external#view") {
-          const external = embed.external;
-          if (!external) return null;
-
-          const isGif =
-            external.uri?.toLowerCase().includes(".gif") ||
-            external.uri?.includes("tenor.com") ||
-            external.uri?.includes("giphy.com") ||
-            external.uri?.includes("t.gifs.bsky.app");
-
-          const handleClick = (e: React.MouseEvent) => {
-            e.stopPropagation();
-            if (external.uri) {
-              window.open(external.uri, "_blank", "noopener,noreferrer");
-            }
-          };
-
-          if (isGif) {
-            return (
-              <div
-                className="relative mt-2 cursor-pointer overflow-hidden rounded-lg"
-                onClick={handleClick}
-              >
-                <img
-                  src={external.uri}
-                  alt={external.title || "GIF"}
-                  className="w-full object-contain"
-                  style={{ maxHeight: "400px" }}
-                  loading="lazy"
-                />
-                <div className="absolute bottom-2 left-2 rounded bg-black/70 px-2 py-0.5 text-xs font-bold text-white">
-                  GIF
-                </div>
-              </div>
-            );
-          }
-
-          return (
-            <div
-              className="mt-2 cursor-pointer rounded-lg border p-2.5 transition-opacity hover:opacity-90"
-              style={{ borderColor: "var(--asph-border-primary)" }}
-              onClick={handleClick}
-            >
-              {external.thumb && (
-                <img
-                  src={proxifyBskyImage(external.thumb)}
-                  alt=""
-                  className="mb-2 h-auto w-full rounded object-cover"
-                  style={{
-                    maxHeight: "200px",
-                    backgroundColor: "var(--asph-bg-tertiary)",
-                  }}
-                />
-              )}
-              <div
-                className="text-sm font-semibold"
-                style={{ color: "var(--asph-text-primary)" }}
-              >
-                {external.title}
-              </div>
-              <div
-                className="mt-1 text-xs"
-                style={{ color: "var(--asph-text-secondary)" }}
-              >
-                {external.description}
-              </div>
-            </div>
-          );
-        }
-
-        if (embed.$type === "app.bsky.embed.video#view") {
-          return (
-            <div
-              className="mt-2 overflow-hidden rounded-lg"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Suspense
-                fallback={
-                  <div
-                    className="flex items-center justify-center bg-asph-bg-tertiary"
-                    style={{
-                      aspectRatio: embed.aspectRatio
-                        ? `${embed.aspectRatio.width}/${embed.aspectRatio.height}`
-                        : "16/9",
-                    }}
-                  >
-                    <Spinner size="md" aria-label="Loading video" />
-                  </div>
-                }
-              >
-                <VideoPlayer
-                  src={proxifyBskyVideo(embed.playlist) || ""}
-                  thumbnail={
-                    embed.thumbnail
-                      ? proxifyBskyVideo(embed.thumbnail)
-                      : undefined
-                  }
-                  aspectRatio={embed.aspectRatio}
-                  alt={embed.alt}
-                />
-              </Suspense>
-            </div>
-          );
-        }
-
-        // Handle record embeds (quoted posts, starter packs, feeds, lists, labelers)
-        if (embed.$type === "app.bsky.embed.record#view") {
-          const recordData = embed.record;
-
-          // Handle deleted, blocked, or detached
-          if (
-            recordData?.$type === "app.bsky.embed.record#viewNotFound" ||
-            recordData?.$type === "app.bsky.embed.record#viewDetached"
-          ) {
-            return (
-              <div
-                className="mt-2 overflow-hidden rounded-lg border"
-                style={{ borderColor: "var(--asph-border-primary)" }}
-              >
-                <div
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
-                  style={{
-                    backgroundColor: "var(--asph-bg-tertiary)",
-                    borderBottom: `1px solid var(--asph-border-primary)`,
-                    color: "var(--asph-text-secondary)",
-                  }}
-                >
-                  <MessageCircle size={12} />
-                  <span>Quoted post</span>
-                </div>
-                <div className="p-3">
-                  <div
-                    className="text-sm italic"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  >
-                    Post not found or deleted
-                  </div>
-                </div>
-              </div>
-            );
-          }
-          if (recordData?.$type === "app.bsky.embed.record#viewBlocked") {
-            return (
-              <div
-                className="mt-2 overflow-hidden rounded-lg border"
-                style={{ borderColor: "var(--asph-border-primary)" }}
-              >
-                <div
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
-                  style={{
-                    backgroundColor: "var(--asph-bg-tertiary)",
-                    borderBottom: `1px solid var(--asph-border-primary)`,
-                    color: "var(--asph-text-secondary)",
-                  }}
-                >
-                  <MessageCircle size={12} />
-                  <span>Quoted post</span>
-                </div>
-                <div className="p-3">
-                  <div
-                    className="text-sm italic"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  >
-                    Post from blocked user
-                  </div>
-                </div>
-              </div>
-            );
-          }
-
-          // Starter pack embed
-          if (
-            recordData?.$type === "app.bsky.graph.defs#starterPackViewBasic"
-          ) {
-            const starterPack = recordData as any;
-            const packRecord = starterPack.record as any;
-            const packName = packRecord?.name || "Starter Pack";
-            const packDescription = packRecord?.description || "";
-            return (
-              <div
-                className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-all hover:border-opacity-80"
-                style={{ borderColor: "var(--asph-border-primary)" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (starterPack.creator?.handle) {
-                    const rkey = starterPack.uri?.split("/").pop();
-                    if (rkey) {
-                      window.open(
-                        `https://bsky.app/starter-pack/${starterPack.creator.handle}/${rkey}`,
-                        "_blank",
-                        "noopener,noreferrer",
-                      );
-                    }
-                  }
-                }}
-              >
-                <div
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
-                  style={{
-                    backgroundColor: "var(--asph-bg-tertiary)",
-                    borderBottom: `1px solid var(--asph-border-primary)`,
-                    color: "var(--asph-text-secondary)",
-                  }}
-                >
-                  <Users size={12} />
-                  <span>Starter Pack</span>
-                </div>
-                <div className="p-3">
-                  <div className="mb-1 flex items-center gap-2">
-                    {starterPack.creator?.avatar && (
-                      <img
-                        src={
-                          proxifyBskyImage(starterPack.creator.avatar) ||
-                          "/default-avatar.svg"
-                        }
-                        alt=""
-                        className="h-5 w-5 rounded-full"
-                      />
-                    )}
-                    <span
-                      className="text-sm font-semibold"
-                      style={{ color: "var(--asph-text-primary)" }}
-                    >
-                      {packName}
-                    </span>
-                  </div>
-                  {packDescription && (
-                    <p
-                      className="mt-1 line-clamp-2 text-sm"
-                      style={{ color: "var(--asph-text-secondary)" }}
-                    >
-                      {packDescription}
-                    </p>
-                  )}
-                  <div
-                    className="mt-2 flex items-center gap-3 text-xs"
-                    style={{ color: "var(--asph-text-tertiary)" }}
-                  >
-                    {starterPack.creator?.handle && (
-                      <span>by @{starterPack.creator.handle}</span>
-                    )}
-                    {starterPack.listItemCount != null && (
-                      <span>{starterPack.listItemCount} members</span>
-                    )}
-                    {starterPack.joinedAllTimeCount != null && (
-                      <span>{starterPack.joinedAllTimeCount} joined</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          }
-
-          // Feed generator embed
-          if (recordData?.$type === "app.bsky.feed.defs#generatorView") {
-            const feedGen = recordData as any;
-            return (
-              <div
-                className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-all hover:border-opacity-80"
-                style={{ borderColor: "var(--asph-border-primary)" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (feedGen.creator?.handle) {
-                    const rkey = feedGen.uri?.split("/").pop();
-                    if (rkey) {
-                      window.open(
-                        `https://bsky.app/profile/${feedGen.creator.handle}/feed/${rkey}`,
-                        "_blank",
-                        "noopener,noreferrer",
-                      );
-                    }
-                  }
-                }}
-              >
-                <div
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
-                  style={{
-                    backgroundColor: "var(--asph-bg-tertiary)",
-                    borderBottom: `1px solid var(--asph-border-primary)`,
-                    color: "var(--asph-text-secondary)",
-                  }}
-                >
-                  <Rss size={12} />
-                  <span>Feed</span>
-                </div>
-                <div className="p-3">
-                  <div className="flex items-center gap-2">
-                    {feedGen.avatar && (
-                      <img
-                        src={proxifyBskyImage(feedGen.avatar)}
-                        alt=""
-                        className="h-8 w-8 rounded-lg"
-                      />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <span
-                        className="text-sm font-semibold"
-                        style={{ color: "var(--asph-text-primary)" }}
-                      >
-                        {feedGen.displayName}
-                      </span>
-                      {feedGen.creator?.handle && (
-                        <div
-                          className="text-xs"
-                          style={{ color: "var(--asph-text-tertiary)" }}
-                        >
-                          by @{feedGen.creator.handle}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {feedGen.description && (
-                    <p
-                      className="mt-2 line-clamp-2 text-sm"
-                      style={{ color: "var(--asph-text-secondary)" }}
-                    >
-                      {feedGen.description}
-                    </p>
-                  )}
-                  {feedGen.likeCount != null && feedGen.likeCount > 0 && (
-                    <div
-                      className="mt-2 flex items-center gap-1 text-xs"
-                      style={{ color: "var(--asph-text-tertiary)" }}
-                    >
-                      <Heart size={11} />
-                      <span>{feedGen.likeCount}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          }
-
-          // List embed
-          if (recordData?.$type === "app.bsky.graph.defs#listView") {
-            const listView = recordData as any;
-            const purposeLabel =
-              listView.purpose === "app.bsky.graph.defs#modlist"
-                ? "Moderation List"
-                : listView.purpose === "app.bsky.graph.defs#curatelist"
-                  ? "User List"
-                  : "List";
-            return (
-              <div
-                className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-all hover:border-opacity-80"
-                style={{ borderColor: "var(--asph-border-primary)" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (listView.creator?.handle) {
-                    const rkey = listView.uri?.split("/").pop();
-                    if (rkey) {
-                      window.open(
-                        `https://bsky.app/profile/${listView.creator.handle}/lists/${rkey}`,
-                        "_blank",
-                        "noopener,noreferrer",
-                      );
-                    }
-                  }
-                }}
-              >
-                <div
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
-                  style={{
-                    backgroundColor: "var(--asph-bg-tertiary)",
-                    borderBottom: `1px solid var(--asph-border-primary)`,
-                    color: "var(--asph-text-secondary)",
-                  }}
-                >
-                  <List size={12} />
-                  <span>{purposeLabel}</span>
-                </div>
-                <div className="p-3">
-                  <div className="flex items-center gap-2">
-                    {listView.avatar && (
-                      <img
-                        src={proxifyBskyImage(listView.avatar)}
-                        alt=""
-                        className="h-8 w-8 rounded-lg"
-                      />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <span
-                        className="text-sm font-semibold"
-                        style={{ color: "var(--asph-text-primary)" }}
-                      >
-                        {listView.name}
-                      </span>
-                      {listView.creator?.handle && (
-                        <div
-                          className="text-xs"
-                          style={{ color: "var(--asph-text-tertiary)" }}
-                        >
-                          by @{listView.creator.handle}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {listView.description && (
-                    <p
-                      className="mt-2 line-clamp-2 text-sm"
-                      style={{ color: "var(--asph-text-secondary)" }}
-                    >
-                      {listView.description}
-                    </p>
-                  )}
-                  {listView.listItemCount != null && (
-                    <div
-                      className="mt-2 text-xs"
-                      style={{ color: "var(--asph-text-tertiary)" }}
-                    >
-                      {listView.listItemCount} members
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          }
-
-          // Labeler service embed
-          if (recordData?.$type === "app.bsky.labeler.defs#labelerView") {
-            const labeler = recordData as any;
-            return (
-              <div
-                className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-all hover:border-opacity-80"
-                style={{ borderColor: "var(--asph-border-primary)" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (labeler.creator?.handle) {
-                    window.open(
-                      `https://bsky.app/profile/${labeler.creator.handle}`,
-                      "_blank",
-                      "noopener,noreferrer",
-                    );
-                  }
-                }}
-              >
-                <div
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
-                  style={{
-                    backgroundColor: "var(--asph-bg-tertiary)",
-                    borderBottom: `1px solid var(--asph-border-primary)`,
-                    color: "var(--asph-text-secondary)",
-                  }}
-                >
-                  <Shield size={12} />
-                  <span>Labeler</span>
-                </div>
-                <div className="p-3">
-                  <div className="flex items-center gap-2">
-                    {labeler.creator?.avatar && (
-                      <img
-                        src={
-                          proxifyBskyImage(labeler.creator.avatar) ||
-                          "/default-avatar.svg"
-                        }
-                        alt=""
-                        className="h-8 w-8 rounded-full"
-                      />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <span
-                        className="text-sm font-semibold"
-                        style={{ color: "var(--asph-text-primary)" }}
-                      >
-                        {labeler.creator?.displayName ||
-                          labeler.creator?.handle}
-                      </span>
-                      {labeler.creator?.handle && (
-                        <div
-                          className="text-xs"
-                          style={{ color: "var(--asph-text-tertiary)" }}
-                        >
-                          @{labeler.creator.handle}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {labeler.likeCount != null && labeler.likeCount > 0 && (
-                    <div
-                      className="mt-2 flex items-center gap-1 text-xs"
-                      style={{ color: "var(--asph-text-tertiary)" }}
-                    >
-                      <Heart size={11} />
-                      <span>{labeler.likeCount}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          }
-
-          // Normal quoted post
-          if (recordData?.$type === "app.bsky.embed.record#viewRecord") {
-            const quotedPost = recordData;
-            return (
-              <div
-                className="mt-2 overflow-hidden rounded-lg border transition-all hover:border-opacity-80"
-                style={{ borderColor: "var(--asph-border-primary)" }}
-              >
-                {/* Quote post header */}
-                <div
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs"
-                  style={{
-                    backgroundColor: "var(--asph-bg-tertiary)",
-                    borderBottom: `1px solid var(--asph-border-primary)`,
-                    color: "var(--asph-text-secondary)",
-                  }}
-                >
-                  <MessageCircle size={12} />
-                  <span>Quoted post</span>
-                </div>
-
-                {/* Quote post content */}
-                <div
-                  className="cursor-pointer p-3"
-                  data-clickable="quote"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (quotedPost.uri && quotedPost.author) {
-                      // Open the quoted post in thread modal
-                      setSelectedPost({ uri: quotedPost.uri } as Post);
-                      setOpenThreadToReply(false);
-                      setShowThread(true);
-                    }
-                  }}
-                >
-                  <div className="mb-2 flex items-center gap-2">
-                    {quotedPost.author?.handle && (
-                      <ProfileHoverCard handle={quotedPost.author.handle}>
-                        <img
-                          src={
-                            proxifyBskyImage(quotedPost.author.avatar) ||
-                            "/default-avatar.svg"
-                          }
-                          alt={quotedPost.author?.handle || "unknown"}
-                          className="h-5 w-5 cursor-pointer rounded-full transition-opacity hover:opacity-80"
-                        />
-                      </ProfileHoverCard>
-                    )}
-                    <div className="flex items-center gap-1 text-sm">
-                      {quotedPost.author?.handle ? (
-                        <ProfileHoverCard handle={quotedPost.author.handle}>
-                          <span
-                            className="cursor-pointer font-semibold hover:underline"
-                            style={{ color: "var(--asph-text-primary)" }}
-                          >
-                            {quotedPost.author?.displayName ||
-                              quotedPost.author?.handle}
-                          </span>
-                        </ProfileHoverCard>
-                      ) : (
-                        <span
-                          className="font-semibold"
-                          style={{ color: "var(--asph-text-primary)" }}
-                        >
-                          Unknown
-                        </span>
-                      )}
-                      {quotedPost.author?.handle ? (
-                        <ProfileHoverCard handle={quotedPost.author.handle}>
-                          <span
-                            className="cursor-pointer hover:underline"
-                            style={{ color: "var(--asph-text-secondary)" }}
-                          >
-                            @{quotedPost.author?.handle || "unknown"}
-                          </span>
-                        </ProfileHoverCard>
-                      ) : (
-                        <span style={{ color: "var(--asph-text-secondary)" }}>
-                          @{quotedPost.author?.handle || "unknown"}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div
-                    className="text-sm"
-                    style={{ color: "var(--asph-text-primary)" }}
-                  >
-                    <RichText
-                      text={quotedPost.value?.text || ""}
-                      facets={
-                        quotedPost.value?.facets as Parameters<
-                          typeof RichText
-                        >[0]["facets"]
-                      }
-                    />
-                  </div>
-                  {quotedPost.embeds?.[0] &&
-                    renderEmbed(quotedPost.embeds[0], postUri, postIndex)}
-                </div>
-              </div>
-            );
-          }
-        }
-
-        // Handle record with media (quote post + media)
-        if (embed.$type === "app.bsky.embed.recordWithMedia#view") {
-          return (
-            <div className="mt-3">
-              {embed.media && renderEmbed(embed.media, postUri, postIndex)}
-              {embed.record && renderEmbed(embed.record, postUri, postIndex)}
-            </div>
-          );
-        }
-
-        return null;
-      },
-      [
-        generatedAltTexts,
-        generatingAltText,
-        showAltText,
-        handleGenerateAltText,
-      ],
-    );
 
     if (isLoading) {
       return (
@@ -2004,12 +1048,7 @@ export const Home: React.FC<HomeProps> = React.memo(
               postUri={selectedPost.uri}
               openToReply={openThreadToReply}
               openToQuote={openThreadToQuote}
-              onClose={() => {
-                setShowThread(false);
-                setSelectedPost(null);
-                setOpenThreadToReply(false);
-                setOpenThreadToQuote(false);
-              }}
+              onClose={closeThread}
             />
           </Suspense>
         )}
