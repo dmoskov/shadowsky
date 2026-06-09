@@ -22,6 +22,7 @@ class WebSocketNotificationServer {
     this.userAgents = new Map(); // Map<userDid, BskyAgent>
     this.userPollingIntervals = new Map(); // Map<userDid, NodeJS.Timeout>
     this.userLastSeenCursors = new Map(); // Map<userDid, string>
+    this.userPollBackoffs = new Map(); // Map<userDid, number> — current backoff ms
     this.usersWithPushEnabled = new Map(); // Map<userDid, boolean> - Track who has push subscriptions
 
     this.config = {
@@ -287,9 +288,10 @@ class WebSocketNotificationServer {
         // Stop polling for this user
         const interval = this.userPollingIntervals.get(userDid);
         if (interval) {
-          clearInterval(interval);
+          clearTimeout(interval);
           this.userPollingIntervals.delete(userDid);
         }
+        this.userPollBackoffs.delete(userDid);
 
         this.log(`Cleaned up resources for user: ${userDid}`);
       }
@@ -325,16 +327,28 @@ class WebSocketNotificationServer {
 
   async startPollingForUser(userDid) {
     this.log(`Starting notification polling for user: ${userDid}`);
+    this.userPollBackoffs.set(userDid, 0);
 
-    // Do an initial poll immediately
+    // Do an initial poll immediately, then schedule the recurring loop.
     await this.pollNotificationsForUser(userDid);
+    this._schedulePoll(userDid);
+  }
 
-    // Then poll periodically
-    const interval = setInterval(async () => {
+  _schedulePoll(userDid) {
+    const backoff = this.userPollBackoffs.get(userDid) || 0;
+    // ±20% jitter prevents a thundering herd when many users hit 429 at once.
+    const jitter = backoff * 0.2 * (Math.random() * 2 - 1);
+    const delay = backoff > 0
+      ? Math.round(backoff + jitter)
+      : this.config.pollInterval;
+
+    const timeout = setTimeout(async () => {
+      if (!this.userConnections.has(userDid)) return; // user disconnected
       await this.pollNotificationsForUser(userDid);
-    }, this.config.pollInterval);
+      this._schedulePoll(userDid);
+    }, delay);
 
-    this.userPollingIntervals.set(userDid, interval);
+    this.userPollingIntervals.set(userDid, timeout);
   }
 
   async pollNotificationsForUser(userDid) {
@@ -384,11 +398,17 @@ class WebSocketNotificationServer {
 
         // Also send updated count
         this.sendNotificationCountToUser(userDid, response.data.notifications);
+
+        // Successful poll — reset any backoff accumulated from prior 429s.
+        this.userPollBackoffs.set(userDid, 0);
       }
     } catch (err) {
-      // Handle rate limiting gracefully
+      // Handle rate limiting with exponential backoff (cap at 5 minutes).
       if (err.status === 429) {
-        this.log(`Rate limited for ${userDid}, will retry later`);
+        const prev = this.userPollBackoffs.get(userDid) || this.config.pollInterval;
+        const next = Math.min(prev * 2, 5 * 60 * 1000);
+        this.userPollBackoffs.set(userDid, next);
+        this.log(`Rate limited for ${userDid}, backing off to ${Math.round(next / 1000)}s`);
       } else {
         this.logError(
           `Error polling notifications for ${userDid}:`,

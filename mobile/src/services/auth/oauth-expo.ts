@@ -12,12 +12,12 @@ import {createLogger} from '../../utils/logger';
 const logger = createLogger('OAuthExpo');
 
 const CLIENT_METADATA = {
-  client_id: 'https://shadowsky.io/client-metadata-mobile.json' as const,
+  client_id: 'https://asphodel.is/client-metadata-mobile.json' as const,
   client_name: 'Asphodel Mobile',
-  client_uri: 'https://shadowsky.io',
-  logo_uri: 'https://shadowsky.io/butterfly-icon.svg',
-  tos_uri: 'https://shadowsky.io/terms',
-  policy_uri: 'https://shadowsky.io/privacy',
+  client_uri: 'https://asphodel.is',
+  logo_uri: 'https://asphodel.is/butterfly-icon.svg',
+  tos_uri: 'https://asphodel.is/terms',
+  policy_uri: 'https://asphodel.is/privacy',
   redirect_uris: ['io.shadowsky:/oauth-callback' as const],
   scope: 'atproto transition:generic',
   grant_types: ['authorization_code' as const, 'refresh_token' as const],

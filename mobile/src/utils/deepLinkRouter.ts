@@ -101,10 +101,12 @@ export function resolveRoute(parsed: ParsedURL): string | null {
     }
   }
 
-  // Handle bsky.app / shadowsky.io URLs
+  // Handle bsky.app / asphodel.is / shadowsky.io URLs
   if (
     hostname === "bsky.app" ||
     hostname === "staging.bsky.app" ||
+    hostname === "asphodel.is" ||
+    hostname === "main.asphodel.is" ||
     hostname === "shadowsky.io" ||
     hostname === "main.shadowsky.io"
   ) {

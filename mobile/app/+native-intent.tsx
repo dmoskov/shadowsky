@@ -82,8 +82,9 @@ export default function NativeIntent() {
           }
         }
 
-        // Handle bsky.app URLs
+        // Handle bsky.app / asphodel.is / shadowsky.io URLs
         if (hostname === "bsky.app" || hostname === "staging.bsky.app" ||
+            hostname === "asphodel.is" || hostname === "main.asphodel.is" ||
             hostname === "shadowsky.io" || hostname === "main.shadowsky.io") {
 
           const pathSegments = path?.split("/").filter(Boolean) || [];

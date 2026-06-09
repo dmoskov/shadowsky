@@ -74,6 +74,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         action: "VIEW",
         autoVerify: true,
         data: [
+          { scheme: "https", host: "asphodel.is" },
+          { scheme: "https", host: "main.asphodel.is" },
           { scheme: "https", host: "shadowsky.io" },
           { scheme: "https", host: "main.shadowsky.io" },
           { scheme: "https", host: "bsky.app" },
