@@ -1,3 +1,19 @@
+/**
+ * EnhancedComposer — the embeddable reply/quote composer.
+ *
+ * This is intentionally a separate component from the full-page composer
+ * (composer/ComposerRefactored.tsx). The two serve different roles:
+ * - ComposerRefactored: prop-less, full-page, multi-post thread authoring
+ *   with drafts, threadgate/postgate controls, and AI tooling.
+ * - EnhancedComposer: prop-driven single-post widget for inline contexts
+ *   (currently ThreadModal replies/quotes) with reply-context display and
+ *   Bluesky-URL quote detection.
+ *
+ * Consolidation policy: share logic via common subcomponents and hooks
+ * (uploadBlobWithRetry, compressImage, EmojiPicker, useVideoCompression)
+ * rather than merging the two UIs.
+ */
+
 import type { AppBskyFeedDefs } from "@atproto/api";
 import {
   AlertCircle,
@@ -27,7 +43,6 @@ import {
 } from "../utils/video-compression";
 import { AltTextEditor } from "./AltTextEditor";
 import { EmojiPicker } from "./EmojiPicker";
-import { GiphySearch } from "./GiphySearch";
 import { ImageEditor } from "./ImageEditor";
 import {
   MentionTypeahead,
@@ -84,7 +99,6 @@ interface EnhancedComposerProps {
   features?: {
     media?: boolean;
     emoji?: boolean;
-    giphy?: boolean;
     altTextGeneration?: boolean;
     shortcuts?: boolean;
     hashtags?: boolean;
@@ -122,7 +136,6 @@ export function EnhancedComposer({
   features = {
     media: true,
     emoji: true,
-    giphy: false,
     altTextGeneration: true,
     shortcuts: true,
     hashtags: true,
@@ -152,7 +165,6 @@ export function EnhancedComposer({
 
   // UI state
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [showGifSearch, setShowGifSearch] = useState(false);
   const [showImageEditor, setShowImageEditor] = useState(false);
   const [showVideoEditor, setShowVideoEditor] = useState(false);
   const [showAltTextEditor, setShowAltTextEditor] = useState<string | null>(
@@ -630,7 +642,6 @@ export function EnhancedComposer({
       setText("");
       setMedia([]);
       setShowEmojiPicker(false);
-      setShowGifSearch(false);
       setShowHashtagSuggestions(false);
       setDetectedQuotePost(null);
     } catch (error) {
@@ -661,20 +672,6 @@ export function EnhancedComposer({
     }
 
     setShowEmojiPicker(false);
-  };
-
-  // Handle GIF selection
-  const handleGifSelect = async (gifUrl: string) => {
-    try {
-      const response = await fetch(gifUrl);
-      const blob = await response.blob();
-      const file = new File([blob], "gif.gif", { type: "image/gif" });
-      await addMedia(file);
-      setShowGifSearch(false);
-    } catch (error) {
-      debug.error("Failed to add GIF:", error);
-      setError("Failed to add GIF");
-    }
   };
 
   // Handle hashtag selection
@@ -1152,27 +1149,6 @@ export function EnhancedComposer({
           </button>
         </div>
       </div>
-
-      {/* GIF search modal */}
-      {features.giphy && showGifSearch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-lg bg-white p-4 dark:bg-gray-800">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Search GIFs</h3>
-              <button
-                onClick={() => setShowGifSearch(false)}
-                className="touch-target-icon rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <GiphySearch
-              onSelectGif={handleGifSelect}
-              onClose={() => setShowGifSearch(false)}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Image editor modal */}
       {features.imageEditing && showImageEditor && hasEditableImages && (

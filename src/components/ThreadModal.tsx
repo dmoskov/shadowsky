@@ -1391,7 +1391,6 @@ export function ThreadModal({
                     features={{
                       media: true,
                       emoji: true,
-                      giphy: true,
                       altTextGeneration: true,
                       shortcuts: true,
                       hashtags: true,

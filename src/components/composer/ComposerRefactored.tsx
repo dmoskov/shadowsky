@@ -7,6 +7,11 @@
  * - Level 3 (Advanced): ComposerAIFeatures (tone, hashtags, optimization) - expandable section
  *
  * Feature flag: enableProgressiveDisclosure controls the layered UI
+ *
+ * Role note: this is the full-page, prop-less, multi-post thread composer.
+ * The embeddable single-post reply/quote composer used by ThreadModal is
+ * EnhancedComposer.tsx — kept separate by design; share logic via common
+ * subcomponents and hooks rather than merging the two UIs.
  */
 
 import { RichText } from "@atproto/api";

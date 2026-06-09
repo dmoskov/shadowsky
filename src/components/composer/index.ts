@@ -50,6 +50,3 @@ export { ComposerAIFeatures } from "./ComposerAIFeatures";
 
 // Toolbar - Orchestrates visibility
 export { ComposerToolbar } from "./ComposerToolbar";
-
-// Modals - Lazy-loaded modal wrappers
-export { ComposerModals } from "./ComposerModals";
