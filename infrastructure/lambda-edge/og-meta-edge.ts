@@ -218,11 +218,11 @@ function generateThreadOgHtml(post: BlueskyPost, handle: string, postId: string)
 
   // Get post image if available, fall back to avatar
   const postImage = getPostImage(post);
-  const ogImage = postImage || avatar || 'https://shadowsky.io/butterfly-icon.svg';
+  const ogImage = postImage || avatar || 'https://asphodel.is/butterfly-icon.svg';
 
-  const title = `${authorName} (@${authorHandle}) on ShadowSky`;
+  const title = `${authorName} (@${authorHandle}) on Asphodel`;
   const description = truncateText(postText, 200);
-  const canonicalUrl = `https://shadowsky.io/thread/${handle}/${postId}`;
+  const canonicalUrl = `https://asphodel.is/thread/${handle}/${postId}`;
   const cardType = postImage ? 'summary_large_image' : 'summary';
 
   return generateHtml({
@@ -241,11 +241,11 @@ function generateProfileOgHtml(profile: BlueskyProfile, handle: string): string 
   const description = profile.description
     ? truncateText(profile.description, 200)
     : `${profile.followersCount || 0} followers · ${profile.postsCount || 0} posts`;
-  const ogImage = profile.avatar || 'https://shadowsky.io/butterfly-icon.svg';
-  const canonicalUrl = `https://shadowsky.io/profile/${handle}`;
+  const ogImage = profile.avatar || 'https://asphodel.is/butterfly-icon.svg';
+  const canonicalUrl = `https://asphodel.is/profile/${handle}`;
 
   return generateHtml({
-    title: `${displayName} (@${profile.handle}) - ShadowSky`,
+    title: `${displayName} (@${profile.handle}) - Asphodel`,
     description,
     ogImage,
     canonicalUrl,
@@ -283,7 +283,7 @@ function generateHtml(params: HtmlParams): string {
   <meta property="og:title" content="${escapeHtml(title)}">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:image" content="${escapeHtml(ogImage)}">
-  <meta property="og:site_name" content="ShadowSky">
+  <meta property="og:site_name" content="Asphodel">
   <meta property="article:author" content="${escapeHtml(authorName)}">
 
   <meta name="twitter:card" content="${cardType}">
@@ -294,7 +294,7 @@ function generateHtml(params: HtmlParams): string {
   <meta name="twitter:creator" content="@${escapeHtml(authorHandle)}">
 
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
-  <link rel="icon" type="image/svg+xml" href="https://shadowsky.io/butterfly-icon.svg">
+  <link rel="icon" type="image/svg+xml" href="https://asphodel.is/butterfly-icon.svg">
 
   <meta http-equiv="refresh" content="0;url=${escapeHtml(canonicalUrl)}">
   <script>window.location.href = "${escapeHtml(canonicalUrl)}";</script>
@@ -303,7 +303,7 @@ function generateHtml(params: HtmlParams): string {
   <noscript>
     <h1>${escapeHtml(title)}</h1>
     <p>${escapeHtml(description)}</p>
-    <p><a href="${escapeHtml(canonicalUrl)}">View on ShadowSky</a></p>
+    <p><a href="${escapeHtml(canonicalUrl)}">View on Asphodel</a></p>
   </noscript>
 </body>
 </html>`;
@@ -311,12 +311,12 @@ function generateHtml(params: HtmlParams): string {
 
 function generateFallbackHtml(canonicalUrl: string): string {
   return generateHtml({
-    title: 'ShadowSky - Bluesky Companion',
+    title: 'Asphodel - Bluesky Companion',
     description: 'Your companion app for deeper Bluesky insights',
-    ogImage: 'https://shadowsky.io/butterfly-icon.svg',
+    ogImage: 'https://asphodel.is/butterfly-icon.svg',
     canonicalUrl,
     cardType: 'summary',
-    authorName: 'ShadowSky',
+    authorName: 'Asphodel',
     authorHandle: 'shadowsky',
   });
 }
@@ -350,7 +350,7 @@ export const handler = async (event: CloudFrontRequestEvent): Promise<CloudFront
   if (threadMatch) {
     const [, handle, postId] = threadMatch;
     const post = await fetchPostThread(handle, postId);
-    const canonicalUrl = `https://shadowsky.io${uri}`;
+    const canonicalUrl = `https://asphodel.is${uri}`;
 
     const html = post
       ? generateThreadOgHtml(post, handle, postId)
@@ -372,7 +372,7 @@ export const handler = async (event: CloudFrontRequestEvent): Promise<CloudFront
   if (profileMatch) {
     const [, handle] = profileMatch;
     const profile = await fetchProfile(handle);
-    const canonicalUrl = `https://shadowsky.io${uri}`;
+    const canonicalUrl = `https://asphodel.is${uri}`;
 
     const html = profile
       ? generateProfileOgHtml(profile, handle)

@@ -21,6 +21,11 @@ const app = express();
 const PORT = process.env.PORT || 3002;
 const WS_PORT = process.env.WS_PORT || 3001;
 
+// Placeholder so the SIGTERM/SIGINT shutdown handlers below don't ReferenceError
+// when no trending service has been started. Set to an instance with .shutdown()
+// if a trending service is ever initialized at runtime.
+let trendingServiceInstance = null;
+
 // Structured per-request timing (one JSON line/request) for retrospective
 // performance investigation via CloudWatch Logs Insights. Registered first so
 // it captures the full request lifecycle.
@@ -38,11 +43,14 @@ app.use(
         "http://localhost:5174",
         "http://localhost:5175",
         "http://localhost:5176",
+        // shadowsky.io (legacy — keep until all clients migrate to asphodel.is)
         "https://main.shadowsky.io",
         "https://shadowsky.io",
         "https://www.shadowsky.io",
+        // asphodel.is (canonical)
         "https://asphodel.is",
         "https://www.asphodel.is",
+        "https://main.asphodel.is",
       ];
 
       // Allow any subdomain of shadowsky.io or asphodel.is
@@ -53,7 +61,11 @@ app.use(
       ) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        // Log a single short line instead of throwing — throwing causes Express
+        // to invoke the 500 error handler and emit a 30-line stack trace per
+        // rejected request, drowning out real errors in the logs.
+        console.log(JSON.stringify({ t: "cors_reject", origin }));
+        callback(null, false);
       }
     },
     credentials: true,

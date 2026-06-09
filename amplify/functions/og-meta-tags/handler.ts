@@ -202,10 +202,10 @@ function generateOgHtml(
   const postImage = getPostImage(post);
 
   // Use post image if available, otherwise fall back to avatar
-  const ogImage = postImage || avatar || "https://shadowsky.io/butterfly-icon.svg";
+  const ogImage = postImage || avatar || "https://asphodel.is/butterfly-icon.svg";
 
   // Create title and description
-  const title = `${authorName} (@${authorHandle}) on ShadowSky`;
+  const title = `${authorName} (@${authorHandle}) on Asphodel`;
   const description = truncateText(postText, 200);
 
   // Format engagement stats
@@ -233,7 +233,7 @@ function generateOgHtml(
   <meta property="og:title" content="${escapeHtml(title)}">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:image" content="${escapeHtml(ogImage)}">
-  <meta property="og:site_name" content="ShadowSky">
+  <meta property="og:site_name" content="Asphodel">
   <meta property="article:author" content="${escapeHtml(authorName)}">
 
   <!-- Twitter -->
@@ -248,7 +248,7 @@ function generateOgHtml(
   <meta property="og:locale" content="en_US">
   <meta name="author" content="${escapeHtml(authorName)}">
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
-  <link rel="icon" type="image/svg+xml" href="https://shadowsky.io/butterfly-icon.svg">
+  <link rel="icon" type="image/svg+xml" href="https://asphodel.is/butterfly-icon.svg">
 
   <!-- Redirect for non-crawlers -->
   <meta http-equiv="refresh" content="0;url=${escapeHtml(canonicalUrl)}">
@@ -259,7 +259,7 @@ function generateOgHtml(
     <h1>${escapeHtml(title)}</h1>
     <p>${escapeHtml(postText)}</p>
     <p>${likes} likes &middot; ${reposts} reposts &middot; ${replies} replies</p>
-    <p><a href="${escapeHtml(canonicalUrl)}">View on ShadowSky</a></p>
+    <p><a href="${escapeHtml(canonicalUrl)}">View on Asphodel</a></p>
   </noscript>
 </body>
 </html>`;
@@ -290,9 +290,9 @@ function generateProfileOgHtml(
   const description = profile.description
     ? truncateText(profile.description, 200)
     : `${profile.followersCount || 0} followers · ${profile.postsCount || 0} posts on Bluesky`;
-  const ogImage = profile.avatar || "https://shadowsky.io/butterfly-icon.svg";
+  const ogImage = profile.avatar || "https://asphodel.is/butterfly-icon.svg";
 
-  const title = `${displayName} (@${profile.handle}) - ShadowSky`;
+  const title = `${displayName} (@${profile.handle}) - Asphodel`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -311,7 +311,7 @@ function generateProfileOgHtml(
   <meta property="og:title" content="${escapeHtml(title)}">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:image" content="${escapeHtml(ogImage)}">
-  <meta property="og:site_name" content="ShadowSky">
+  <meta property="og:site_name" content="Asphodel">
   <meta property="profile:username" content="${escapeHtml(profile.handle)}">
 
   <!-- Twitter -->
@@ -324,7 +324,7 @@ function generateProfileOgHtml(
   <!-- Additional Meta -->
   <meta property="og:locale" content="en_US">
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
-  <link rel="icon" type="image/svg+xml" href="https://shadowsky.io/butterfly-icon.svg">
+  <link rel="icon" type="image/svg+xml" href="https://asphodel.is/butterfly-icon.svg">
 
   <!-- Redirect for non-crawlers -->
   <meta http-equiv="refresh" content="0;url=${escapeHtml(canonicalUrl)}">
@@ -335,7 +335,7 @@ function generateProfileOgHtml(
     <h1>${escapeHtml(title)}</h1>
     <p>${escapeHtml(description)}</p>
     <p>${profile.followersCount || 0} followers &middot; ${profile.followsCount || 0} following &middot; ${profile.postsCount || 0} posts</p>
-    <p><a href="${escapeHtml(canonicalUrl)}">View on ShadowSky</a></p>
+    <p><a href="${escapeHtml(canonicalUrl)}">View on Asphodel</a></p>
   </noscript>
 </body>
 </html>`;
@@ -345,10 +345,10 @@ function generateFallbackHtml(
   canonicalUrl: string,
   type: "thread" | "profile" = "thread"
 ): string {
-  const title = type === "profile" ? "Profile on ShadowSky" : "Thread on ShadowSky";
+  const title = type === "profile" ? "Profile on Asphodel" : "Thread on Asphodel";
   const description = type === "profile"
-    ? "View this Bluesky profile on ShadowSky"
-    : "View this Bluesky thread on ShadowSky";
+    ? "View this Bluesky profile on Asphodel"
+    : "View this Bluesky thread on Asphodel";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -365,18 +365,18 @@ function generateFallbackHtml(
   <meta property="og:url" content="${escapeHtml(canonicalUrl)}">
   <meta property="og:title" content="${title}">
   <meta property="og:description" content="${description}">
-  <meta property="og:image" content="https://shadowsky.io/butterfly-icon.svg">
-  <meta property="og:site_name" content="ShadowSky">
+  <meta property="og:image" content="https://asphodel.is/butterfly-icon.svg">
+  <meta property="og:site_name" content="Asphodel">
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary">
   <meta name="twitter:url" content="${escapeHtml(canonicalUrl)}">
   <meta name="twitter:title" content="${title}">
   <meta name="twitter:description" content="${description}">
-  <meta name="twitter:image" content="https://shadowsky.io/butterfly-icon.svg">
+  <meta name="twitter:image" content="https://asphodel.is/butterfly-icon.svg">
 
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
-  <link rel="icon" type="image/svg+xml" href="https://shadowsky.io/butterfly-icon.svg">
+  <link rel="icon" type="image/svg+xml" href="https://asphodel.is/butterfly-icon.svg">
 
   <!-- Redirect for non-crawlers -->
   <meta http-equiv="refresh" content="0;url=${escapeHtml(canonicalUrl)}">
@@ -385,7 +385,7 @@ function generateFallbackHtml(
 <body>
   <noscript>
     <h1>${title}</h1>
-    <p><a href="${escapeHtml(canonicalUrl)}">View on ShadowSky</a></p>
+    <p><a href="${escapeHtml(canonicalUrl)}">View on Asphodel</a></p>
   </noscript>
 </body>
 </html>`;
@@ -424,7 +424,7 @@ export const handler: APIGatewayProxyHandler = async (
 
   // Handle profile requests
   if (isProfileRequest && handle) {
-    const canonicalUrl = `https://shadowsky.io/profile/${handle}`;
+    const canonicalUrl = `https://asphodel.is/profile/${handle}`;
 
     // For non-crawlers, redirect immediately
     if (!isCrawler(userAgent)) {
@@ -479,7 +479,7 @@ export const handler: APIGatewayProxyHandler = async (
     };
   }
 
-  const canonicalUrl = `https://shadowsky.io/thread/${handle}/${postId}`;
+  const canonicalUrl = `https://asphodel.is/thread/${handle}/${postId}`;
 
   // For non-crawlers, redirect immediately
   if (!isCrawler(userAgent)) {
