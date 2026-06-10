@@ -93,6 +93,10 @@ If formatting issues are found, the script will suggest running `npm run fix:for
 - **Test with both storage types**: When modifying storage-related code, test with both local storage and AT Protocol storage.
 - **Check for infinite loops**: Be careful with functions that might call each other (like preference loading/saving) to avoid infinite loops.
 
+### Design Tokens
+
+- **Single source of truth**: All colors come from `packages/tokens/tokens.mjs`. Edit it, run `npm run tokens:build`, and commit the regenerated files. Never hardcode hex colors or use raw Tailwind gray utilities — CI enforces this (`npm run test:design`). See `docs/DESIGN.md` for the full rules.
+
 ### AT Protocol Integration
 
 - **Use singleton records for user data**: Bookmarks, drafts, and preferences use singleton records with "self" as the rkey.
