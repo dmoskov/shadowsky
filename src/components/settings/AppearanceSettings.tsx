@@ -5,11 +5,19 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { appPreferencesService } from "../../services/app-preferences-service";
 
+const WIDTH_OPTIONS = [
+  { value: 0, label: "Full Width" },
+  { value: 280, label: "Compact" },
+  { value: 320, label: "Medium" },
+  { value: 360, label: "Comfortable" },
+  { value: 400, label: "Spacious" },
+];
+
 export const AppearanceSettings: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const { agent } = useAuth();
   const queryClient = useQueryClient();
-  const [selectedWidth, setSelectedWidth] = useState(320);
+  const [selectedWidth, setSelectedWidth] = useState(0);
 
   // Get current preferences
   const { data: appPreferences } = useQuery({
@@ -24,7 +32,7 @@ export const AppearanceSettings: React.FC = () => {
 
   // Load column width from preferences
   useEffect(() => {
-    if (appPreferences?.columnWidth) {
+    if (appPreferences && appPreferences.columnWidth != null) {
       setSelectedWidth(appPreferences.columnWidth);
     }
   }, [appPreferences]);
@@ -194,69 +202,64 @@ export const AppearanceSettings: React.FC = () => {
             className="mb-4 text-sm"
             style={{ color: "var(--asph-text-secondary)" }}
           >
-            Adjust the width of columns in your home feed. Smaller widths allow
-            more columns to fit on screen.
+            Choose how columns are displayed. Full width shows one column at a
+            time like the standard Bluesky app. Fixed widths show multiple
+            columns side by side.
           </p>
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label
-                className="text-sm font-medium"
-                style={{ color: "var(--asph-text-primary)" }}
-              >
-                Width: {selectedWidth}px
-              </label>
-              <span
-                className="text-xs"
-                style={{ color: "var(--asph-text-secondary)" }}
-              >
-                {selectedWidth === 280 && "Compact"}
-                {selectedWidth === 320 && "Default"}
-                {selectedWidth === 360 && "Comfortable"}
-                {selectedWidth === 400 && "Spacious"}
-              </span>
-            </div>
-            <input
-              type="range"
-              min="280"
-              max="400"
-              step="40"
-              value={selectedWidth}
-              onChange={(e) => setSelectedWidth(Number(e.target.value))}
-              className="h-2 w-full cursor-pointer appearance-none rounded-lg"
-              style={{
-                background: `linear-gradient(to right, var(--asph-primary) 0%, var(--asph-primary) ${((selectedWidth - 280) / 120) * 100}%, var(--asph-bg-tertiary) ${((selectedWidth - 280) / 120) * 100}%, var(--asph-bg-tertiary) 100%)`,
-              }}
-            />
-            <div
-              className="flex justify-between text-xs"
-              style={{ color: "var(--asph-text-secondary)" }}
-            >
-              <span>280px</span>
-              <span>320px</span>
-              <span>360px</span>
-              <span>400px</span>
+            <div className="grid gap-2">
+              {WIDTH_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setSelectedWidth(option.value)}
+                  className={`touch-target flex items-center justify-between rounded-lg border-2 px-4 py-3 text-left transition-all ${
+                    selectedWidth === option.value
+                      ? "border-blue-500"
+                      : "border-transparent hover:border-asph-border-secondary"
+                  }`}
+                  style={{
+                    backgroundColor:
+                      selectedWidth === option.value
+                        ? "var(--asph-bg-tertiary)"
+                        : "var(--asph-bg-primary)",
+                  }}
+                >
+                  <span
+                    className="text-sm font-medium"
+                    style={{ color: "var(--asph-text-primary)" }}
+                  >
+                    {option.label}
+                  </span>
+                  <span
+                    className="text-xs"
+                    style={{ color: "var(--asph-text-tertiary)" }}
+                  >
+                    {option.value === 0 ? "Single column" : `${option.value}px`}
+                  </span>
+                </button>
+              ))}
             </div>
             <button
               onClick={() => updateColumnWidth.mutate(selectedWidth)}
               disabled={
                 updateColumnWidth.isPending ||
-                selectedWidth === appPreferences?.columnWidth
+                selectedWidth === (appPreferences?.columnWidth ?? 0)
               }
               className="touch-target-sm mt-3 rounded px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
               style={{
                 backgroundColor:
                   updateColumnWidth.isPending ||
-                  selectedWidth === appPreferences?.columnWidth
+                  selectedWidth === (appPreferences?.columnWidth ?? 0)
                     ? "var(--asph-bg-tertiary)"
                     : "var(--asph-primary)",
                 color:
                   updateColumnWidth.isPending ||
-                  selectedWidth === appPreferences?.columnWidth
+                  selectedWidth === (appPreferences?.columnWidth ?? 0)
                     ? "var(--asph-text-secondary)"
                     : "white",
               }}
             >
-              {updateColumnWidth.isPending ? "Applying..." : "Apply Width"}
+              {updateColumnWidth.isPending ? "Applying..." : "Apply Layout"}
             </button>
           </div>
         </div>

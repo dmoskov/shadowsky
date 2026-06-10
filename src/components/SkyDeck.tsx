@@ -172,7 +172,7 @@ export default function SkyDeck() {
   const [mobileColumnIndex, setMobileColumnIndex] = useState(0);
   const [customFeedUri, setCustomFeedUri] = useState("");
   const [isLoadingCustomFeed, setIsLoadingCustomFeed] = useState(false);
-  const [columnWidth, setColumnWidth] = useState(320); // Default width
+  const [columnWidth, setColumnWidth] = useState(0); // Default: full width (0 = full)
   const columnsContainerRef = useRef<HTMLDivElement>(null);
   const columnSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const columnsLoadedRef = useRef(false);
@@ -366,8 +366,8 @@ export default function SkyDeck() {
       const storageType = appPreferences?.columnStorageType || "local";
       await columnService.initialize(agent, storageType);
 
-      // Set column width from preferences
-      if (appPreferences?.columnWidth) {
+      // Set column width from preferences (0 = full width)
+      if (appPreferences && appPreferences.columnWidth != null) {
         setColumnWidth(appPreferences.columnWidth);
       }
 
@@ -545,6 +545,14 @@ export default function SkyDeck() {
     containerRef: mobileContainerRef,
   });
 
+  const isFullWidth = columnWidth === 0;
+
+  // Helper to get icon for a column type
+  const getColumnIcon = (type: ColumnType) => {
+    const option = columnOptions.find((opt) => opt.type === type);
+    return option?.icon || Hash;
+  };
+
   // In narrow view, show columns with swipe navigation
   if (isNarrowView && columns.length > 0) {
     const currentColumn = columns[mobileColumnIndex] || columns[0];
@@ -598,7 +606,120 @@ export default function SkyDeck() {
     );
   }
 
-  // Full multi-column view for wider screens
+  // Full-width single-column view (like the real Bluesky app)
+  if (isFullWidth && columns.length > 0) {
+    const currentColumn = columns[focusedColumnIndex] || columns[0];
+
+    return (
+      <div className="flex h-full flex-col overflow-hidden bg-asph-bg-primary">
+        {/* Column tab bar */}
+        {columns.length > 1 && (
+          <div className="flex items-center gap-1 border-b border-asph-border-primary bg-asph-bg-secondary px-2">
+            <div className="asph-scrollbar flex flex-1 items-center gap-1 overflow-x-auto py-1">
+              {columns.map((col, index) => {
+                const Icon = getColumnIcon(col.type);
+                return (
+                  <button
+                    key={`tab-${col.id}`}
+                    onClick={() => setFocusedColumnIndex(index)}
+                    className={`flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors ${
+                      focusedColumnIndex === index
+                        ? "bg-asph-bg-active font-medium text-asph-text-primary"
+                        : "text-asph-text-secondary hover:bg-asph-bg-hover hover:text-asph-text-primary"
+                    }`}
+                    aria-current={
+                      focusedColumnIndex === index ? "true" : undefined
+                    }
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="max-w-[120px] truncate">
+                      {col.title || col.type}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setIsAddingColumn(true)}
+              className="shrink-0 rounded-md p-1.5 text-asph-text-tertiary transition-colors hover:bg-asph-bg-hover hover:text-asph-text-primary"
+              aria-label="Add column"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Full-width column content */}
+        <div className="relative flex-1 overflow-hidden">
+          <div className="mx-auto h-full w-full max-w-2xl">
+            <SkyColumn
+              key={currentColumn.id}
+              column={currentColumn}
+              onClose={() => handleRemoveColumn(currentColumn.id)}
+              onMoveLeft={
+                focusedColumnIndex > 0
+                  ? () => {
+                      handleMoveLeft(currentColumn.id);
+                      setFocusedColumnIndex(focusedColumnIndex - 1);
+                    }
+                  : undefined
+              }
+              onMoveRight={
+                focusedColumnIndex < columns.length - 1
+                  ? () => {
+                      handleMoveRight(currentColumn.id);
+                      setFocusedColumnIndex(focusedColumnIndex + 1);
+                    }
+                  : undefined
+              }
+              isFocused={true}
+            />
+          </div>
+        </div>
+
+        {/* Add column panel (full-width mode) */}
+        {isAddingColumn && (
+          <div className="absolute inset-0 z-50 flex items-start justify-center bg-black/50 pt-16">
+            <div className="mx-4 w-full max-w-md animate-fade-in rounded-lg border border-asph-border-primary bg-asph-bg-secondary p-4 shadow-xl">
+              <h3 className="mb-3 text-sm font-medium text-asph-text-primary">
+                Add Column
+              </h3>
+              <div className="grid gap-2">
+                {columnOptions.map((option) => {
+                  const Icon = option.icon;
+                  return (
+                    <button
+                      key={option.type}
+                      onClick={() => handleAddColumn(option.type)}
+                      className="touch-target flex items-center gap-3 rounded-md border border-asph-border-primary p-3 text-left transition-colors hover:bg-asph-bg-hover"
+                    >
+                      <Icon className="h-5 w-5 text-blue-500" />
+                      <div>
+                        <div className="font-medium text-asph-text-primary">
+                          {option.label}
+                        </div>
+                        <div className="text-sm text-asph-text-tertiary">
+                          {option.description}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setIsAddingColumn(false)}
+                className="mt-3 w-full rounded-md bg-asph-bg-tertiary px-4 py-2 text-asph-text-secondary transition-colors hover:bg-asph-bg-active"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Multi-column deck view for wider screens
   return (
     <div className="flex h-full flex-col overflow-hidden bg-asph-bg-primary">
       <div className="skydeck-columns-scrollbar flex-1 overflow-x-auto overflow-y-hidden p-3">
