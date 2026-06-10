@@ -1,9 +1,9 @@
 /* GENERATED FILE - do not edit.
  * Edit packages/tokens/tokens.mjs and run `npm run tokens:build`.
  *
- * Color, shadow, and letter-spacing variables for the Asphodel theme.
- * Non-token variables (focus rings, animation timing, loading states) live
- * in asphodel-theme.css. */
+ * Color, shadow, letter-spacing, and type-scale variables for the Asphodel
+ * theme. Non-token variables (focus rings, animation timing, loading
+ * states) live in asphodel-theme.css. */
 
 :root {
   --asph-primary: #ff6b9d;
@@ -68,6 +68,17 @@
   --asph-warning-10: rgba(255, 193, 7, 0.1);
   --asph-info-10: rgba(41, 121, 255, 0.1);
   --asph-orange-10: rgba(255, 109, 0, 0.1);
+  --asph-font-large-title: 2.125rem;
+  --asph-font-title1: 1.75rem;
+  --asph-font-title2: 1.375rem;
+  --asph-font-title3: 1.25rem;
+  --asph-font-headline: 1.0625rem;
+  --asph-font-body: 1.0625rem;
+  --asph-font-callout: 1rem;
+  --asph-font-subheadline: 0.9375rem;
+  --asph-font-footnote: 0.8125rem;
+  --asph-font-caption1: 0.75rem;
+  --asph-font-caption2: 0.6875rem;
 }
 
 /* Dark theme */

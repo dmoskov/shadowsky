@@ -4,7 +4,21 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter, usePathname } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
-import { HomeIcon, ListIcon, CalendarIcon, ChartIcon, SettingsIcon, ChatBubbleIcon, SearchIcon, ImageIcon, BookmarkIcon, PenIcon, BellIcon, PersonIcon } from "./icons";
+import {
+  Home as HomeIcon,
+  List as ListIcon,
+  Calendar as CalendarIcon,
+  BarChart3 as ChartIcon,
+  Settings as SettingsIcon,
+  MessageCircle as ChatBubbleIcon,
+  Search as SearchIcon,
+  Image as ImageIcon,
+  Bookmark as BookmarkIcon,
+  PenLine as PenIcon,
+  Bell as BellIcon,
+  User as PersonIcon,
+  Compass as CompassIcon,
+} from "lucide-react-native";
 import { useUnreadMessageCount, useDraftCount } from "../hooks/api";
 import { useUnreadCount } from "../hooks/api/useNotifications";
 import {fontSize} from '../utils/typography';
@@ -127,7 +141,7 @@ export function CustomDrawerContent() {
         />
         <DrawerItem
           label="Discover Feeds"
-          icon={<SearchIcon size={20} color={pathname.includes("/feeds/discover") ? colors.primary : colors.text} />}
+          icon={<CompassIcon size={20} color={pathname.includes("/feeds/discover") ? colors.primary : colors.text} />}
           isActive={pathname.includes("/feeds/discover")}
           onPress={() => router.push("/(app)/feeds/discover")}
           styles={styles}

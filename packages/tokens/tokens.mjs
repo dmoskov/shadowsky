@@ -396,6 +396,23 @@ const mobileLight = {
   textOnPrimary: "#ffffff",
 };
 
+// Shared type scale (px), named after the iOS Dynamic Type styles that
+// mobile/src/utils/typography.ts already uses, so both platforms speak the
+// same size vocabulary. Emitted as --asph-font-* rem variables on web.
+export const typeScale = {
+  "large-title": 34,
+  title1: 28,
+  title2: 22,
+  title3: 20,
+  headline: 17,
+  body: 17,
+  callout: 16,
+  subheadline: 15,
+  footnote: 13,
+  caption1: 12,
+  caption2: 11,
+};
+
 // Native iOS modules that receive a generated DesignTokens.swift. Add a
 // module name here when its SwiftUI views need brand/semantic colors;
 // system-adaptive colors (UIColor.system*) should stay as they are.

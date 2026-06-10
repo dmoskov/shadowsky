@@ -9,7 +9,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { web, mobile, swiftModules } from "./tokens.mjs";
+import { web, mobile, swiftModules, typeScale } from "./tokens.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -27,10 +27,19 @@ function cssBlock(selector, vars) {
   return `${selector} {\n${lines.join("\n")}\n}`;
 }
 
+function typeScaleVars() {
+  return Object.fromEntries(
+    Object.entries(typeScale).map(([name, px]) => [
+      `font-${name}`,
+      `${px / 16}rem`,
+    ]),
+  );
+}
+
 function generateCss() {
   const blocks = [
-    `/* ${HEADER_NOTE.join("\n * ")}\n *\n * Color, shadow, and letter-spacing variables for the Asphodel theme.\n * Non-token variables (focus rings, animation timing, loading states) live\n * in asphodel-theme.css. */`,
-    cssBlock(":root", web.light),
+    `/* ${HEADER_NOTE.join("\n * ")}\n *\n * Color, shadow, letter-spacing, and type-scale variables for the Asphodel\n * theme. Non-token variables (focus rings, animation timing, loading\n * states) live in asphodel-theme.css. */`,
+    cssBlock(":root", { ...web.light, ...typeScaleVars() }),
     `/* Dark theme */\n${cssBlock('.dark,\n[data-theme="dark"]', web.dark)}`,
     `/* High Contrast - Light - WCAG AAA (7:1 minimum contrast ratio) */\n${cssBlock(
       '[data-high-contrast="true"],\n[data-high-contrast="true"][data-theme="light"]',

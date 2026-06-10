@@ -64,6 +64,22 @@ export default {
         "asph-heading": "var(--asph-letter-spacing-heading)",
         "asph-wide": "var(--asph-letter-spacing-wide)",
       },
+      fontSize: {
+        // Shared type scale, named after iOS Dynamic Type styles (see
+        // packages/tokens/tokens.mjs); identical vocabulary to mobile's
+        // src/utils/typography.ts
+        "asph-large-title": ["var(--asph-font-large-title)", "1.2"],
+        "asph-title1": ["var(--asph-font-title1)", "1.25"],
+        "asph-title2": ["var(--asph-font-title2)", "1.3"],
+        "asph-title3": ["var(--asph-font-title3)", "1.3"],
+        "asph-headline": ["var(--asph-font-headline)", "1.4"],
+        "asph-body": ["var(--asph-font-body)", "1.5"],
+        "asph-callout": ["var(--asph-font-callout)", "1.45"],
+        "asph-subheadline": ["var(--asph-font-subheadline)", "1.45"],
+        "asph-footnote": ["var(--asph-font-footnote)", "1.4"],
+        "asph-caption1": ["var(--asph-font-caption1)", "1.35"],
+        "asph-caption2": ["var(--asph-font-caption2)", "1.35"],
+      },
       animation: {
         // Existing animations
         "fade-in": "fadeIn 0.3s ease-out",
