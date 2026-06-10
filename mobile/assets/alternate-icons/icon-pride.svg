@@ -1,0 +1,15 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="96" fill="#161a2e"/>
+  <g transform="translate(256,262) rotate(35)">
+    <g transform="rotate(175)"><path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#e8963c"/></g>
+    <g transform="rotate(245)"><path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#e0c83c"/></g>
+    <g transform="rotate(275)"><path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#4cb86c"/></g>
+    <g transform="rotate(145)"><path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#e85454"/></g>
+    <g transform="rotate(336) scale(0.91)"><path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#9c5ce0"/></g>
+    <g transform="rotate(84) scale(0.91)"><path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#9c5ce0"/></g>
+    <g transform="rotate(355)"><path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#3c8ee0"/></g>
+    <g transform="rotate(65)"><path d="M0,-30 C-46,-62 -52,-136 0,-180 C52,-136 46,-62 0,-30Z" fill="#3c8ee0"/></g>
+    <g transform="rotate(30)"><path d="M0,-10 Q1.2,-32 0,-54" stroke="#c8d8e8" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>
+    <g transform="rotate(210)"><path d="M0,-25 Q8,-115 -4,-195" stroke="#c0a898" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+  </g>
+</svg>
