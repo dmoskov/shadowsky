@@ -11,6 +11,7 @@ const DEFAULT_COLUMN_WIDTH = 320;
  * Sidebar: 256px, 3 columns: 3*columnWidth + 2*12px gap + 24px padding
  */
 function collapseThreshold(columnWidth: number): number {
+  if (columnWidth === 0) return 0; // Full-width: never auto-collapse
   return 256 + 3 * columnWidth + 2 * 12 + 24;
 }
 
@@ -39,7 +40,9 @@ export function useSidebarManagement(isAuthenticated: boolean) {
 
     void appPreferencesService.getPreferences().then((prefs) => {
       if (cancelled) return; // Stale async result — discard
-      setColumnWidth(prefs?.columnWidth || DEFAULT_COLUMN_WIDTH);
+      setColumnWidth(
+        prefs?.columnWidth != null ? prefs.columnWidth : DEFAULT_COLUMN_WIDTH,
+      );
     });
 
     return () => {
