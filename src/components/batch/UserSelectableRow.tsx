@@ -87,12 +87,12 @@ export const UserSelectableRow: React.FC<UserSelectableRowProps> = ({
       role={isSelectionMode ? "option" : "button"}
       aria-selected={isSelectionMode ? selected : undefined}
       tabIndex={isFocused ? 0 : -1}
-      className={`flex cursor-pointer items-center gap-3 border-b p-4 outline-none transition-colors dark:border-gray-700 ${
+      className={`flex cursor-pointer items-center gap-3 border-b p-4 outline-none transition-colors border-asph-border-primary ${
         isSelectionMode && selected
           ? "bg-blue-50 dark:bg-blue-900/20"
           : isFocused
             ? "bg-blue-50 ring-2 ring-inset ring-blue-500 dark:bg-blue-900/30"
-            : "hover:bg-gray-50 dark:hover:bg-gray-800"
+            : "hover:bg-asph-bg-hover"
       } ${className}`}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
@@ -103,7 +103,7 @@ export const UserSelectableRow: React.FC<UserSelectableRowProps> = ({
           className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 transition-colors ${
             selected
               ? "border-blue-500 bg-blue-500"
-              : "border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800"
+              : "border-asph-border-secondary bg-asph-bg-secondary"
           }`}
           aria-hidden="true"
         >

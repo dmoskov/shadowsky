@@ -85,8 +85,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
           style={{
             top: `${position.top}px`,
             left: `${position.left}px`,
-            backgroundColor: "var(--asph-bg-tooltip, #1f2937)",
-            color: "var(--asph-text-tooltip, #ffffff)",
+            backgroundColor: "var(--asph-text-primary)",
+            color: "var(--asph-bg-secondary)",
             pointerEvents: "none",
           }}
         >
@@ -102,7 +102,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
               height: 0,
               borderLeft: "4px solid transparent",
               borderRight: "4px solid transparent",
-              borderTop: "4px solid var(--asph-bg-tooltip, #1f2937)",
+              borderTop: "4px solid var(--asph-text-primary)",
             }}
           />
         </div>

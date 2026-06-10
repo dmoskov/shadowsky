@@ -255,7 +255,7 @@ export function ReportModal({
   return (
     <div className="modal-backdrop" onClick={handleClose}>
       <div
-        className="modal-container modal-auto-height modal-lg bg-white dark:bg-gray-900"
+        className="modal-container modal-auto-height modal-lg bg-asph-bg-secondary"
         onClick={(e) => e.stopPropagation()}
       >
         {isSubmitted ? (
@@ -264,7 +264,7 @@ export function ReportModal({
             <div className="flex items-start gap-3 p-6">
               <CheckCircle className="mt-1 h-6 w-6 flex-shrink-0 text-green-600 dark:text-green-400" />
               <div className="flex-1">
-                <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                <h3 className="mb-2 text-lg font-semibold text-asph-text-primary">
                   Report Submitted
                 </h3>
                 <p className="text-asph-text-secondary">
@@ -274,7 +274,7 @@ export function ReportModal({
               </div>
               <button
                 onClick={handleClose}
-                className="touch-target-icon rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="touch-target-icon rounded-full hover:bg-asph-bg-hover"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -282,8 +282,8 @@ export function ReportModal({
 
             {/* Block Option */}
             {showBlockOption && subjectHandle && (
-              <div className="border-t border-gray-200 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-800">
-                <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+              <div className="border-t border-asph-border-primary bg-asph-bg-tertiary p-6">
+                <h4 className="mb-2 text-sm font-semibold text-asph-text-primary">
                   Block @{subjectHandle}?
                 </h4>
                 <p className="mb-4 text-sm text-asph-text-secondary">
@@ -293,7 +293,7 @@ export function ReportModal({
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={handleClose}
-                    className="touch-target-sm rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700"
+                    className="touch-target-sm rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-asph-bg-active"
                   >
                     Skip
                   </button>
@@ -309,7 +309,7 @@ export function ReportModal({
 
             {/* Close Button */}
             {!showBlockOption && (
-              <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex justify-end gap-3 border-t border-asph-border-primary bg-asph-bg-tertiary px-6 py-4">
                 <button
                   onClick={handleClose}
                   className="touch-target-sm rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
@@ -325,7 +325,7 @@ export function ReportModal({
             <div className="flex items-start gap-3 p-6">
               <Flag className="mt-1 h-6 w-6 flex-shrink-0 text-red-600 dark:text-red-400" />
               <div className="flex-1">
-                <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                <h3 className="mb-2 text-lg font-semibold text-asph-text-primary">
                   Report {reportType === "post" ? "Post" : "Account"}
                 </h3>
                 <p className="text-sm text-asph-text-secondary">
@@ -336,29 +336,29 @@ export function ReportModal({
               </div>
               <button
                 onClick={handleClose}
-                className="touch-target-icon rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="touch-target-icon rounded-full hover:bg-asph-bg-hover"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Category Selection */}
-            <div className="asph-scrollbar max-h-96 overflow-y-auto border-t border-gray-200 dark:border-gray-700">
+            <div className="asph-scrollbar max-h-96 overflow-y-auto border-t border-asph-border-primary">
               {REPORT_CATEGORIES.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`touch-target flex w-full items-start gap-3 border-b border-gray-200 p-4 text-left transition-colors dark:border-gray-700 ${
+                  className={`touch-target flex w-full items-start gap-3 border-b border-asph-border-primary p-4 text-left transition-colors ${
                     selectedCategory === category.id
                       ? "bg-blue-50 dark:bg-blue-900/20"
-                      : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                      : "hover:bg-asph-bg-hover"
                   }`}
                 >
                   <div
                     className={`mt-1 h-5 w-5 flex-shrink-0 rounded-full border-2 ${
                       selectedCategory === category.id
                         ? "border-blue-600 bg-blue-600 dark:border-blue-500 dark:bg-blue-500"
-                        : "border-gray-300 dark:border-gray-600"
+                        : "border-asph-border-secondary"
                     } flex items-center justify-center`}
                   >
                     {selectedCategory === category.id && (
@@ -368,7 +368,7 @@ export function ReportModal({
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                      <span className="font-medium text-asph-text-primary">
                         {category.label}
                       </span>
                     </div>
@@ -382,10 +382,10 @@ export function ReportModal({
 
             {/* Additional Context */}
             {selectedCategory && (
-              <div className="border-t border-gray-200 p-6 dark:border-gray-700">
+              <div className="border-t border-asph-border-primary p-6">
                 <label
                   htmlFor="additional-context"
-                  className="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-100"
+                  className="mb-2 block text-sm font-medium text-asph-text-primary"
                 >
                   Additional context (optional)
                 </label>
@@ -394,7 +394,7 @@ export function ReportModal({
                   value={additionalContext}
                   onChange={(e) => setAdditionalContext(e.target.value)}
                   placeholder="Provide any additional details that might help with this report..."
-                  className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                  className="w-full rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary placeholder-asph-text-tertiary focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
                   rows={4}
                   maxLength={300}
                 />
@@ -414,11 +414,11 @@ export function ReportModal({
             )}
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex justify-end gap-3 border-t border-asph-border-primary bg-asph-bg-tertiary px-6 py-4">
               <button
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="touch-target-sm rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 disabled:opacity-50 dark:hover:bg-gray-700"
+                className="touch-target-sm rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-asph-bg-active disabled:opacity-50"
               >
                 Cancel
               </button>

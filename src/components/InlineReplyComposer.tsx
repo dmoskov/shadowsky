@@ -120,7 +120,7 @@ export function InlineReplyComposer({
         </span>
         <button
           onClick={onClose}
-          className="touch-target-icon rounded p-1 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+          className="touch-target-icon rounded p-1 transition-colors hover:bg-asph-bg-active"
           aria-label="Cancel reply"
         >
           <X

@@ -190,19 +190,19 @@ export function UserListModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="modal-container modal-auto-height modal-md bg-white dark:bg-gray-900"
+        className="modal-container modal-auto-height modal-md bg-asph-bg-secondary"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-asph-border-primary bg-asph-bg-secondary p-4">
           <h2 id={titleId} className="text-xl font-semibold">
             {title}
           </h2>
           <button
             onClick={onClose}
             aria-label="Close dialog"
-            className="touch-target-icon rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded-full p-2 hover:bg-asph-bg-hover"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -233,10 +233,10 @@ export function UserListModal({
                   role="option"
                   aria-selected={index === focusedIndex}
                   tabIndex={index === focusedIndex ? 0 : -1}
-                  className={`flex cursor-pointer items-center gap-3 border-b p-4 outline-none dark:border-gray-700 ${
+                  className={`flex cursor-pointer items-center gap-3 border-b border-asph-border-primary p-4 outline-none ${
                     index === focusedIndex
                       ? "bg-blue-50 ring-2 ring-inset ring-blue-500 dark:bg-blue-900/30"
-                      : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                      : "hover:bg-asph-bg-hover"
                   }`}
                   onClick={() => handleUserClick(user.handle)}
                   onFocus={() => setFocusedIndex(index)}
@@ -278,7 +278,7 @@ export function UserListModal({
               {loadingMore && (
                 <div className="flex justify-center p-4" aria-live="polite">
                   <div
-                    className="h-6 w-6 animate-spin rounded-full border-b-2 border-gray-900 dark:border-gray-100"
+                    className="h-6 w-6 animate-spin rounded-full border-b-2 border-asph-text-primary"
                     aria-label="Loading more users"
                   ></div>
                 </div>

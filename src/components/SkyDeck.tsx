@@ -550,7 +550,7 @@ export default function SkyDeck() {
     const currentColumn = columns[mobileColumnIndex] || columns[0];
 
     return (
-      <div className="h-full overflow-hidden dark:bg-gray-900">
+      <div className="h-full overflow-hidden bg-asph-bg-primary">
         <div
           ref={mobileContainerRef}
           {...swipeHandlers}
@@ -582,7 +582,7 @@ export default function SkyDeck() {
                     className={`touch-target h-2 w-2 rounded-full transition-all ${
                       index === mobileColumnIndex
                         ? "w-6 bg-blue-500"
-                        : "bg-gray-400 dark:bg-gray-500"
+                        : "bg-asph-text-tertiary"
                     }`}
                     aria-label={`Go to ${col.title || `column ${index + 1}`}`}
                     aria-current={
@@ -600,13 +600,13 @@ export default function SkyDeck() {
 
   // Full multi-column view for wider screens
   return (
-    <div className="flex h-full flex-col overflow-hidden dark:bg-gray-900">
+    <div className="flex h-full flex-col overflow-hidden bg-asph-bg-primary">
       <div className="skydeck-columns-scrollbar flex-1 overflow-x-auto overflow-y-hidden p-3">
         <div ref={columnsContainerRef} className="flex h-full min-w-min gap-3">
           {columns.map((column, index) => (
             <div
               key={column.id}
-              className={`h-full shrink-0 rounded-lg border border-gray-200 bg-white shadow-md transition-all duration-300 ease-out dark:border-gray-700 dark:bg-gray-900 ${
+              className={`h-full shrink-0 rounded-lg border border-asph-border-primary bg-asph-bg-secondary shadow-md transition-all duration-300 ease-out ${
                 focusedColumnIndex === index
                   ? "shadow-xl ring-2 ring-blue-500/30"
                   : "hover:shadow-lg dark:hover:shadow-black/30"
@@ -665,7 +665,7 @@ export default function SkyDeck() {
             style={{ width: `${columnWidth}px` }}
           >
             {isAddingColumn ? (
-              <div className="flex h-full animate-fade-in flex-col rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex h-full animate-fade-in flex-col rounded-lg border border-asph-border-primary bg-asph-bg-secondary shadow-md">
                 <div className="asph-scrollbar flex-1 overflow-y-auto p-3">
                   <div className="grid gap-2">
                     {columnOptions.map((option) => {
@@ -674,11 +674,11 @@ export default function SkyDeck() {
                         <button
                           key={option.type}
                           onClick={() => handleAddColumn(option.type)}
-                          className="touch-target flex min-h-[4rem] items-start gap-3 rounded-md border border-gray-200 p-3 text-left transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-900/50"
+                          className="touch-target flex min-h-[4rem] items-start gap-3 rounded-md border border-asph-border-primary p-3 text-left transition-colors hover:bg-asph-bg-hover"
                         >
                           <Icon className="mt-0.5 h-5 w-5 text-blue-500" />
                           <div className="flex-1">
-                            <div className="font-medium text-gray-900 dark:text-white">
+                            <div className="font-medium text-asph-text-primary">
                               {option.label}
                             </div>
                             <div className="whitespace-normal text-sm text-asph-text-tertiary">
@@ -694,7 +694,7 @@ export default function SkyDeck() {
                       feedGenerators &&
                       feedGenerators.length > 0 && (
                         <>
-                          <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+                          <div className="mt-4 border-t border-asph-border-primary pt-4">
                             <h4 className="mb-2 px-3 text-sm font-medium text-asph-text-secondary">
                               Add Feed
                             </h4>
@@ -722,7 +722,7 @@ export default function SkyDeck() {
                                             generator.displayName,
                                           )
                                         }
-                                        className="touch-target flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50"
+                                        className="touch-target flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-asph-bg-hover"
                                       >
                                         {savedFeed.pinned ? (
                                           <Star className="mt-0.5 h-4 w-4 text-yellow-500" />
@@ -730,7 +730,7 @@ export default function SkyDeck() {
                                           <Hash className="mt-0.5 h-4 w-4 text-asph-text-tertiary" />
                                         )}
                                         <div className="min-w-0 flex-1">
-                                          <div className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                                          <div className="truncate text-sm font-medium text-asph-text-primary">
                                             {generator.displayName}
                                           </div>
                                           {generator.description && (
@@ -751,7 +751,7 @@ export default function SkyDeck() {
                     {/* Add Lists Section */}
                     {userLists && userLists.length > 0 && (
                       <>
-                        <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+                        <div className="mt-4 border-t border-asph-border-primary pt-4">
                           <h4 className="mb-2 px-3 text-sm font-medium text-asph-text-secondary">
                             Add List
                           </h4>
@@ -763,11 +763,11 @@ export default function SkyDeck() {
                                   onClick={() =>
                                     handleAddColumn("feed", list.uri, list.name)
                                   }
-                                  className="touch-target-icon touch-target flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-900/50"
+                                  className="touch-target-icon touch-target flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-asph-bg-hover"
                                 >
                                   <Users className="mt-0.5 h-4 w-4 text-blue-500" />
                                   <div className="min-w-0 flex-1">
-                                    <div className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                                    <div className="truncate text-sm font-medium text-asph-text-primary">
                                       {list.name}
                                     </div>
                                     {list.description && (
@@ -788,7 +788,7 @@ export default function SkyDeck() {
                     )}
 
                     {/* Add Custom Feed by URI */}
-                    <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+                    <div className="mt-4 border-t border-asph-border-primary pt-4">
                       <h4 className="mb-2 px-3 text-sm font-medium text-asph-text-secondary">
                         Add Custom Feed or List by URI
                       </h4>
@@ -815,7 +815,7 @@ export default function SkyDeck() {
                           }}
                           placeholder="Paste feed/list AT-URI or bsky.app URL"
                           aria-describedby="custom-feed-help"
-                          className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500"
+                          className="flex-1 rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-asph-text-primary placeholder-asph-text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                         />
                         <button
                           id="add-feed-button"
@@ -984,7 +984,7 @@ export default function SkyDeck() {
                   <div className="mt-4">
                     <button
                       onClick={() => setIsAddingColumn(false)}
-                      className="touch-target-list-item w-full rounded-md bg-gray-300 px-4 py-2 text-asph-text-secondary transition-colors hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500"
+                      className="touch-target-list-item w-full rounded-md bg-asph-bg-tertiary px-4 py-2 text-asph-text-secondary transition-colors hover:bg-asph-bg-active"
                     >
                       Cancel
                     </button>
@@ -994,11 +994,11 @@ export default function SkyDeck() {
             ) : (
               <button
                 onClick={() => setIsAddingColumn(true)}
-                className="touch-target group relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-gray-300 bg-white shadow-md transition-all duration-300 hover:border-blue-400 hover:bg-gray-50 hover:shadow-lg dark:border-gray-600 dark:bg-gray-800 dark:hover:border-blue-500 dark:hover:bg-gray-900/50"
+                className="touch-target group relative flex h-full w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-asph-border-secondary bg-asph-bg-secondary shadow-md transition-all duration-300 hover:border-blue-400 hover:bg-asph-bg-hover hover:shadow-lg dark:hover:border-blue-500"
                 aria-label="Add new column"
               >
                 <Plus
-                  className="h-12 w-12 text-asph-text-tertiary group-hover:text-gray-600 dark:group-hover:text-gray-300"
+                  className="h-12 w-12 text-asph-text-tertiary group-hover:text-asph-text-secondary"
                   aria-hidden="true"
                 />
               </button>

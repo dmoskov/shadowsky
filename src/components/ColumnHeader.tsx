@@ -95,9 +95,9 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-2.5 dark:border-gray-700 dark:bg-gray-950">
+    <div className="flex items-center justify-between border-b border-asph-border-primary bg-asph-bg-secondary px-4 py-2.5">
       <div className="flex items-center gap-2">
-        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="text-base font-semibold text-asph-text-primary">
           {column.type === "feed" && currentFeedLabel
             ? currentFeedLabel
             : getDisplayTitle()}
@@ -142,7 +142,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
                   setShowFeedDropdown(false);
                 }
               }}
-              className="touch-target flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-asph-bg-hover"
               title="Change feed"
             >
               <span className="text-asph-text-secondary">Change</span>
@@ -156,7 +156,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
               ReactDOM.createPortal(
                 <div
                   ref={dropdownRef}
-                  className="asph-scrollbar fixed z-[9999] max-h-96 w-64 overflow-y-auto rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                  className="asph-scrollbar fixed z-[9999] max-h-96 w-64 overflow-y-auto rounded-md border border-asph-border-primary bg-asph-bg-secondary shadow-lg"
                   style={{
                     top: `${feedMenuPosition.top}px`,
                     right: `${feedMenuPosition.right}px`,
@@ -170,26 +170,26 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
                           onFeedChange(option.type);
                           setShowFeedDropdown(false);
                         }}
-                        className="touch-target-list-item flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="touch-target-list-item flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-asph-bg-hover"
                       >
                         <option.icon className="h-4 w-4 text-asph-text-secondary" />
-                        <span className="text-sm text-gray-900 dark:text-gray-100">
+                        <span className="text-sm text-asph-text-primary">
                           {option.label}
                         </span>
                       </button>
                     ))}
                     {onDiscoverFeeds && (
                       <>
-                        <div className="border-t dark:border-gray-700" />
+                        <div className="border-t border-asph-border-primary" />
                         <button
                           onClick={() => {
                             onDiscoverFeeds();
                             setShowFeedDropdown(false);
                           }}
-                          className="touch-target-list-item flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                          className="touch-target-list-item flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-asph-bg-hover"
                         >
                           <Plus className="h-4 w-4 text-asph-text-secondary" />
-                          <span className="text-sm text-gray-900 dark:text-gray-100">
+                          <span className="text-sm text-asph-text-primary">
                             Discover Feeds...
                           </span>
                         </button>
@@ -251,7 +251,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
                 />
                 <div
                   ref={moreMenuRef}
-                  className="fixed z-[9999] w-48 rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                  className="fixed z-[9999] w-48 rounded-md border border-asph-border-primary bg-asph-bg-secondary shadow-lg"
                   style={{
                     top: `${moreMenuPosition.top}px`,
                     right: `${moreMenuPosition.right}px`,
@@ -264,7 +264,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
                           onMoveLeft();
                           setShowMenu(false);
                         }}
-                        className="touch-target-list-item flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="touch-target-list-item flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-asph-bg-hover"
                       >
                         <ChevronLeft className="h-4 w-4" />
                         Move Left
@@ -276,7 +276,7 @@ const ColumnHeaderComponent: React.FC<ColumnHeaderProps> = ({
                           onMoveRight();
                           setShowMenu(false);
                         }}
-                        className="touch-target-list-item flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="touch-target-list-item flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-asph-bg-hover"
                       >
                         <ChevronRight className="h-4 w-4" />
                         Move Right

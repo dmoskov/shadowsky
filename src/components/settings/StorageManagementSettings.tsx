@@ -193,7 +193,7 @@ export const StorageManagementSettings: React.FC = () => {
                   {getStorageStatusText(storageStats.usagePercent)}
                 </span>
               </div>
-              <div className="relative h-4 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+              <div className="relative h-4 overflow-hidden rounded-full bg-asph-bg-active">
                 <div
                   className={`h-full transition-all duration-300 ${
                     storageStats.usagePercent >= 90

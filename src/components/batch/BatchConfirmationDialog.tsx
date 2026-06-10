@@ -116,11 +116,11 @@ export const BatchConfirmationDialog: React.FC<
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
-        className="mx-4 w-full max-w-md overflow-hidden rounded-xl border bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900"
+        className="mx-4 w-full max-w-md overflow-hidden rounded-xl border bg-asph-bg-secondary shadow-2xl border-asph-border-primary"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="border-b px-6 py-4 dark:border-gray-700">
+        <div className="border-b px-6 py-4 border-asph-border-primary">
           <div className="flex items-center gap-3">
             {estimation.riskLevel !== "safe" && (
               <div
@@ -137,7 +137,7 @@ export const BatchConfirmationDialog: React.FC<
             <div>
               <h2
                 id={titleId}
-                className="text-lg font-semibold text-gray-900 dark:text-white"
+                className="text-lg font-semibold text-asph-text-primary"
               >
                 {getDialogTitle()}
               </h2>
@@ -154,7 +154,7 @@ export const BatchConfirmationDialog: React.FC<
         <div id={descriptionId} className="space-y-4 px-6 py-4">
           {/* Stats */}
           <div className="flex gap-4">
-            <div className="flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 dark:bg-gray-800">
+            <div className="flex items-center gap-2 rounded-lg bg-asph-bg-tertiary px-3 py-2">
               <Users
                 className="h-4 w-4 text-asph-text-tertiary"
                 aria-hidden="true"
@@ -165,7 +165,7 @@ export const BatchConfirmationDialog: React.FC<
             </div>
 
             {estimation.estimatedTimeSeconds > 0 && (
-              <div className="flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 dark:bg-gray-800">
+              <div className="flex items-center gap-2 rounded-lg bg-asph-bg-tertiary px-3 py-2">
                 <Clock
                   className="h-4 w-4 text-asph-text-tertiary"
                   aria-hidden="true"
@@ -244,10 +244,10 @@ export const BatchConfirmationDialog: React.FC<
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800/50">
+        <div className="flex justify-end gap-3 border-t bg-asph-bg-tertiary px-6 py-4 border-asph-border-primary">
           <button
             onClick={onClose}
-            className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 dark:hover:bg-gray-700"
+            className="touch-target-sm rounded-lg px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-asph-bg-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-asph-border-secondary"
           >
             Cancel
           </button>

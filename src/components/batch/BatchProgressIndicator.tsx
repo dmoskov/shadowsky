@@ -147,16 +147,16 @@ export const BatchProgressIndicator: React.FC<BatchProgressIndicatorProps> = ({
 
   return (
     <div
-      className="fixed bottom-4 left-1/2 z-50 w-full max-w-md -translate-x-1/2 rounded-xl border bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900"
+      className="fixed bottom-4 left-1/2 z-50 w-full max-w-md -translate-x-1/2 rounded-xl border bg-asph-bg-secondary shadow-xl border-asph-border-primary"
       role="status"
       aria-live="polite"
     >
       {/* Header */}
-      <div className="flex items-center justify-between border-b px-4 py-3 dark:border-gray-700">
+      <div className="flex items-center justify-between border-b px-4 py-3 border-asph-border-primary">
         <div className="flex items-center gap-3">
           {statusContent.icon}
           <div>
-            <h3 className="font-medium text-gray-900 dark:text-white">
+            <h3 className="font-medium text-asph-text-primary">
               {statusContent.title}
             </h3>
             <p className="text-xs text-asph-text-tertiary">
@@ -170,7 +170,7 @@ export const BatchProgressIndicator: React.FC<BatchProgressIndicatorProps> = ({
           {operation.status === "running" && onPause && (
             <button
               onClick={onPause}
-              className="touch-target-icon rounded-lg p-2 text-asph-text-tertiary hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-icon rounded-lg p-2 text-asph-text-tertiary hover:bg-asph-bg-hover"
               title="Pause"
               aria-label="Pause operation"
             >
@@ -180,7 +180,7 @@ export const BatchProgressIndicator: React.FC<BatchProgressIndicatorProps> = ({
           {operation.status === "paused" && onResume && (
             <button
               onClick={onResume}
-              className="touch-target-icon rounded-lg p-2 text-asph-text-tertiary hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-icon rounded-lg p-2 text-asph-text-tertiary hover:bg-asph-bg-hover"
               title="Resume"
               aria-label="Resume operation"
             >
@@ -200,7 +200,7 @@ export const BatchProgressIndicator: React.FC<BatchProgressIndicatorProps> = ({
           {isComplete && onClose && (
             <button
               onClick={onClose}
-              className="touch-target-icon rounded-lg p-2 text-asph-text-tertiary hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-icon rounded-lg p-2 text-asph-text-tertiary hover:bg-asph-bg-hover"
               title="Close"
               aria-label="Close"
             >
@@ -212,7 +212,7 @@ export const BatchProgressIndicator: React.FC<BatchProgressIndicatorProps> = ({
 
       {/* Progress bar */}
       <div className="px-4 py-3">
-        <div className="mb-2 h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+        <div className="mb-2 h-2 overflow-hidden rounded-full bg-asph-bg-active">
           <div
             className={`h-full transition-all duration-300 ${
               operation.status === "completed"
@@ -220,7 +220,7 @@ export const BatchProgressIndicator: React.FC<BatchProgressIndicatorProps> = ({
                 : operation.status === "failed"
                   ? "bg-red-500"
                   : operation.status === "cancelled"
-                    ? "bg-gray-400"
+                    ? "bg-asph-text-tertiary"
                     : "bg-blue-500"
             }`}
             style={{ width: `${progress}%` }}
@@ -268,7 +268,7 @@ export const BatchProgressIndicator: React.FC<BatchProgressIndicatorProps> = ({
 
       {/* Failed operations summary */}
       {isComplete && operation.failedCount > 0 && (
-        <div className="border-t px-4 py-3 dark:border-gray-700">
+        <div className="border-t px-4 py-3 border-asph-border-primary">
           <details className="text-sm">
             <summary className="cursor-pointer text-red-600 hover:text-red-700 dark:text-red-400">
               {operation.failedCount} operation

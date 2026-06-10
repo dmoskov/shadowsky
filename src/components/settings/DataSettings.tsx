@@ -575,11 +575,11 @@ export const DataSettings: React.FC = () => {
                 <div className="ml-6">
                   {item.id === "settings" ? (
                     <>
-                      <div className="flex items-center gap-2 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+                      <div className="flex items-center gap-2 rounded-lg bg-asph-bg-tertiary p-1">
                         <button
                           className={`touch-target rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                             !isEnabled
-                              ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
+                              ? "bg-asph-bg-active text-asph-text-primary shadow-sm"
                               : "cursor-not-allowed text-asph-text-secondary opacity-50"
                           }`}
                           onClick={() => item.onToggle(false)}
@@ -595,8 +595,8 @@ export const DataSettings: React.FC = () => {
                         <button
                           className={`touch-target rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                             isEnabled
-                              ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                              : "text-asph-text-secondary hover:text-gray-900 dark:hover:text-gray-200"
+                              ? "bg-asph-bg-active text-asph-text-primary shadow-sm"
+                              : "text-asph-text-secondary hover:text-asph-text-primary"
                           }`}
                           onClick={() => item.onToggle(true)}
                           disabled={item.isLoading || isEnabled}
@@ -612,12 +612,12 @@ export const DataSettings: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <div className="flex items-center gap-2 rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+                      <div className="flex items-center gap-2 rounded-lg bg-asph-bg-tertiary p-1">
                         <button
                           className={`touch-target rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                             !isEnabled
-                              ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                              : "text-asph-text-secondary hover:text-gray-900 dark:hover:text-gray-200"
+                              ? "bg-asph-bg-active text-asph-text-primary shadow-sm"
+                              : "text-asph-text-secondary hover:text-asph-text-primary"
                           }`}
                           onClick={() => item.onToggle(false)}
                           disabled={item.isLoading}
@@ -627,8 +627,8 @@ export const DataSettings: React.FC = () => {
                         <button
                           className={`touch-target rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                             isEnabled
-                              ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                              : "text-asph-text-secondary hover:text-gray-900 dark:hover:text-gray-200"
+                              ? "bg-asph-bg-active text-asph-text-primary shadow-sm"
+                              : "text-asph-text-secondary hover:text-asph-text-primary"
                           }`}
                           onClick={() => item.onToggle(true)}
                           disabled={item.isLoading}

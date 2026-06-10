@@ -98,7 +98,7 @@ export function GifPicker({
             </h3>
             <button
               onClick={onClose}
-              className="touch-target-icon rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-icon rounded hover:bg-asph-bg-hover"
               aria-label="Close"
             >
               <X size={20} />

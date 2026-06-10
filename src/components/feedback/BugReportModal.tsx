@@ -343,7 +343,7 @@ export function BugReportModal({
         aria-modal="true"
         aria-labelledby="bug-report-title"
         aria-describedby="bug-report-description"
-        className={`modal-container modal-auto-height modal-lg bg-white dark:bg-gray-900 ${contentAnimationClass}`}
+        className={`modal-container modal-auto-height modal-lg bg-asph-bg-secondary ${contentAnimationClass}`}
         onClick={(e) => e.stopPropagation()}
         onAnimationEnd={isEntering ? handleEntranceEnd : undefined}
         data-state={modalState}
@@ -356,7 +356,7 @@ export function BugReportModal({
               <div className="flex-1">
                 <h3
                   id="bug-report-title"
-                  className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100"
+                  className="mb-2 text-lg font-semibold text-asph-text-primary"
                 >
                   Bug Report Submitted
                 </h3>
@@ -368,11 +368,11 @@ export function BugReportModal({
                   your bug report and will investigate the issue.
                 </p>
                 {referenceId && (
-                  <div className="mt-4 rounded-md bg-gray-100 p-3 dark:bg-gray-800">
+                  <div className="mt-4 rounded-md bg-asph-bg-tertiary p-3">
                     <p className="text-sm text-asph-text-tertiary">
                       Reference ID:
                     </p>
-                    <p className="font-mono text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <p className="font-mono text-sm font-medium text-asph-text-primary">
                       {referenceId}
                     </p>
                   </div>
@@ -381,14 +381,14 @@ export function BugReportModal({
               <button
                 onClick={handleModalClose}
                 aria-label="Close dialog"
-                className="touch-target-icon rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="touch-target-icon rounded-full p-1 hover:bg-asph-bg-hover"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
 
             {/* Close Button */}
-            <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex justify-end gap-3 border-t bg-asph-bg-tertiary px-6 py-4 border-asph-border-primary">
               <button
                 onClick={handleModalClose}
                 className="touch-target-sm rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
@@ -405,7 +405,7 @@ export function BugReportModal({
               <div className="flex-1">
                 <h3
                   id="bug-report-title"
-                  className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100"
+                  className="mb-2 text-lg font-semibold text-asph-text-primary"
                 >
                   Report a Bug
                 </h3>
@@ -421,20 +421,20 @@ export function BugReportModal({
               <button
                 onClick={handleModalClose}
                 aria-label="Close dialog"
-                className="touch-target-icon rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="touch-target-icon rounded-full p-1 hover:bg-asph-bg-hover"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
 
             {/* Form */}
-            <div className="asph-scrollbar max-h-[60vh] overflow-y-auto border-t border-gray-200 p-6 dark:border-gray-700">
+            <div className="asph-scrollbar max-h-[60vh] overflow-y-auto border-t border-asph-border-primary p-6">
               <div className="space-y-4">
                 {/* Bug Description */}
                 <div>
                   <label
                     htmlFor="bug-description"
-                    className="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-100"
+                    className="mb-2 block text-sm font-medium text-asph-text-primary"
                   >
                     Bug Description <span className="text-red-500">*</span>
                   </label>
@@ -443,7 +443,7 @@ export function BugReportModal({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describe the bug you encountered..."
-                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                    className="w-full rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary placeholder-asph-text-tertiary focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
                     rows={3}
                     required
                   />
@@ -453,7 +453,7 @@ export function BugReportModal({
                 <div>
                   <label
                     htmlFor="steps-to-reproduce"
-                    className="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-100"
+                    className="mb-2 block text-sm font-medium text-asph-text-primary"
                   >
                     Steps to Reproduce (optional)
                   </label>
@@ -462,7 +462,7 @@ export function BugReportModal({
                     value={stepsToReproduce}
                     onChange={(e) => setStepsToReproduce(e.target.value)}
                     placeholder="1. Go to...&#10;2. Click on...&#10;3. Observe..."
-                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                    className="w-full rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary placeholder-asph-text-tertiary focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
                     rows={3}
                   />
                 </div>
@@ -472,7 +472,7 @@ export function BugReportModal({
                   <div>
                     <label
                       htmlFor="expected-behavior"
-                      className="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-100"
+                      className="mb-2 block text-sm font-medium text-asph-text-primary"
                     >
                       Expected Behavior (optional)
                     </label>
@@ -481,14 +481,14 @@ export function BugReportModal({
                       value={expectedBehavior}
                       onChange={(e) => setExpectedBehavior(e.target.value)}
                       placeholder="What did you expect to happen?"
-                      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                      className="w-full rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary placeholder-asph-text-tertiary focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
                       rows={2}
                     />
                   </div>
                   <div>
                     <label
                       htmlFor="actual-behavior"
-                      className="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-100"
+                      className="mb-2 block text-sm font-medium text-asph-text-primary"
                     >
                       Actual Behavior (optional)
                     </label>
@@ -497,7 +497,7 @@ export function BugReportModal({
                       value={actualBehavior}
                       onChange={(e) => setActualBehavior(e.target.value)}
                       placeholder="What actually happened?"
-                      className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                      className="w-full rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary placeholder-asph-text-tertiary focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
                       rows={2}
                     />
                   </div>
@@ -505,7 +505,7 @@ export function BugReportModal({
 
                 {/* Screenshot Section */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <label className="mb-2 block text-sm font-medium text-asph-text-primary">
                     Screenshot (optional)
                   </label>
                   {screenshot ? (
@@ -513,7 +513,7 @@ export function BugReportModal({
                       <img
                         src={screenshot}
                         alt="Screenshot preview"
-                        className="max-h-40 w-full rounded-md border border-gray-300 object-contain dark:border-gray-600"
+                        className="max-h-40 w-full rounded-md border border-asph-border-secondary object-contain"
                       />
                       <button
                         onClick={removeScreenshot}
@@ -527,7 +527,7 @@ export function BugReportModal({
                     <button
                       onClick={captureScreenshot}
                       disabled={isCapturingScreenshot}
-                      className="touch-target-sm flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
+                      className="touch-target-sm flex items-center gap-2 rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-asph-bg-hover disabled:opacity-50"
                     >
                       {isCapturingScreenshot ? (
                         <>
@@ -545,10 +545,10 @@ export function BugReportModal({
                 </div>
 
                 {/* Diagnostic Info Toggle */}
-                <div className="rounded-md border border-gray-200 p-4 dark:border-gray-700">
+                <div className="rounded-md border border-asph-border-primary p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      <h4 className="text-sm font-medium text-asph-text-primary">
                         Include Diagnostic Information
                       </h4>
                       <p className="text-xs text-asph-text-tertiary">
@@ -560,7 +560,7 @@ export function BugReportModal({
                       className={`touch-target relative h-6 w-11 rounded-full transition-colors ${
                         includeDiagnostics
                           ? "bg-blue-600 dark:bg-blue-500"
-                          : "bg-gray-300 dark:bg-gray-600"
+                          : "bg-asph-bg-active"
                       }`}
                       role="switch"
                       aria-checked={includeDiagnostics}
@@ -575,13 +575,13 @@ export function BugReportModal({
 
                   {/* Diagnostic Preview */}
                   {includeDiagnostics && diagnosticData && (
-                    <div className="mt-3 space-y-2 border-t border-gray-200 pt-3 dark:border-gray-600">
+                    <div className="mt-3 space-y-2 border-t border-asph-border-primary pt-3">
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         <div>
                           <span className="text-asph-text-tertiary">
                             Version:
                           </span>{" "}
-                          <span className="text-gray-900 dark:text-gray-100">
+                          <span className="text-asph-text-primary">
                             {diagnosticData.appVersion}
                           </span>
                         </div>
@@ -589,7 +589,7 @@ export function BugReportModal({
                           <span className="text-asph-text-tertiary">
                             Screen:
                           </span>{" "}
-                          <span className="text-gray-900 dark:text-gray-100">
+                          <span className="text-asph-text-primary">
                             {diagnosticData.screenSize}
                           </span>
                         </div>
@@ -597,7 +597,7 @@ export function BugReportModal({
                           <span className="text-asph-text-tertiary">
                             Platform:
                           </span>{" "}
-                          <span className="text-gray-900 dark:text-gray-100">
+                          <span className="text-asph-text-primary">
                             {diagnosticData.platform}
                           </span>
                         </div>
@@ -605,7 +605,7 @@ export function BugReportModal({
                           <span className="text-asph-text-tertiary">
                             Errors (1h):
                           </span>{" "}
-                          <span className="text-gray-900 dark:text-gray-100">
+                          <span className="text-asph-text-primary">
                             {diagnosticData.errorStats.lastHour}
                           </span>
                         </div>
@@ -633,11 +633,11 @@ export function BugReportModal({
             )}
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex justify-end gap-3 border-t bg-asph-bg-tertiary px-6 py-4 border-asph-border-primary">
               <button
                 onClick={handleModalClose}
                 disabled={isSubmitting}
-                className="touch-target-sm rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 disabled:opacity-50 dark:hover:bg-gray-700"
+                className="touch-target-sm rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-asph-bg-active disabled:opacity-50"
               >
                 Cancel
               </button>

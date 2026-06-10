@@ -231,7 +231,7 @@ export function DebugConsole() {
             label: "Following List",
             size: 0,
             count: 0,
-            color: "#f59e0b",
+            color: "var(--asph-warning)",
           };
           breakdown.push(category);
         }
@@ -282,7 +282,7 @@ export function DebugConsole() {
       case "critical":
         return "var(--asph-error)";
       case "warning":
-        return "#f59e0b";
+        return "var(--asph-warning)";
       default:
         return "var(--asph-success)";
     }
@@ -1065,7 +1065,7 @@ export function DebugConsole() {
                     systemHealth.overall === "healthy"
                       ? "var(--asph-success)"
                       : systemHealth.overall === "degraded"
-                        ? "#f59e0b"
+                        ? "var(--asph-warning)"
                         : systemHealth.overall === "failed"
                           ? "var(--asph-error)"
                           : "var(--asph-border)"
@@ -1087,7 +1087,7 @@ export function DebugConsole() {
                         systemHealth.overall === "healthy"
                           ? "var(--asph-success)"
                           : systemHealth.overall === "degraded"
-                            ? "#f59e0b"
+                            ? "var(--asph-warning)"
                             : systemHealth.overall === "failed"
                               ? "var(--asph-error)"
                               : "var(--asph-text-secondary)",
@@ -1101,7 +1101,7 @@ export function DebugConsole() {
                         systemHealth.overall === "healthy"
                           ? "var(--asph-success)"
                           : systemHealth.overall === "degraded"
-                            ? "#f59e0b"
+                            ? "var(--asph-warning)"
                             : systemHealth.overall === "failed"
                               ? "var(--asph-error)"
                               : "var(--asph-text-secondary)",
@@ -1156,7 +1156,7 @@ export function DebugConsole() {
                           backend.status === "healthy"
                             ? "var(--asph-success)"
                             : backend.status === "degraded"
-                              ? "#f59e0b"
+                              ? "var(--asph-warning)"
                               : backend.status === "failed"
                                 ? "var(--asph-error)"
                                 : "var(--asph-border)"
@@ -1186,7 +1186,7 @@ export function DebugConsole() {
                           {backend.status === "degraded" && (
                             <AlertCircle
                               size={14}
-                              style={{ color: "#f59e0b" }}
+                              style={{ color: "var(--asph-warning)" }}
                             />
                           )}
                           {backend.status === "failed" && (
@@ -1219,7 +1219,7 @@ export function DebugConsole() {
                               backend.status === "healthy"
                                 ? "var(--asph-success)"
                                 : backend.status === "degraded"
-                                  ? "#f59e0b"
+                                  ? "var(--asph-warning)"
                                   : backend.status === "failed"
                                     ? "var(--asph-error)"
                                     : "var(--asph-text-secondary)",

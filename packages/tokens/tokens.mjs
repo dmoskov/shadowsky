@@ -50,13 +50,13 @@ const webLight = {
   "border-secondary": "#d4d4d8",
   "border-light": "#f4f4f5",
 
-  /* Notification type colors */
-  like: "#ff1744",
-  repost: "#00e676",
+  /* Notification type colors (shared with mobile) */
+  like: "#ef4444",
+  repost: "#10b981",
   follow: brand.primary,
-  mention: "#9c27b0",
-  reply: "#00bcd4",
-  quote: "#651fff",
+  mention: "#8b5cf6",
+  reply: "#6366f1",
+  quote: "#06b6d4",
 
   /* Status colors */
   success: "#00e676",
@@ -138,13 +138,13 @@ const webDark = {
   "border-secondary": "#3f3f46",
   "border-light": "#18181b",
 
-  /* Notification type colors - bright neon for dark mode */
-  like: "#ff4081",
-  repost: "#00e676",
+  /* Notification type colors (shared with mobile) */
+  like: "#ef4444",
+  repost: "#10b981",
   follow: brand.primary,
-  mention: "#ce93d8",
-  reply: "#40c4ff",
-  quote: "#7c4dff",
+  mention: "#8b5cf6",
+  reply: "#6366f1",
+  quote: "#06b6d4",
 
   /* Status colors - bright neon for dark mode */
   success: "#00e676",

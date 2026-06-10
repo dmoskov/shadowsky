@@ -264,16 +264,16 @@ export function ProfileQRCodeModal({
               </div>
             ) : (
               <div className="flex h-[240px] w-[240px] items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-black/20 border-t-black/60" />
               </div>
             )}
 
             {/* Name and handle */}
             <div className="mt-4 text-center">
               {displayName && (
-                <p className="text-lg font-bold text-gray-900">{displayName}</p>
+                <p className="text-lg font-bold text-black">{displayName}</p>
               )}
-              <p className="text-sm text-gray-500">@{handle}</p>
+              <p className="text-sm text-black/60">@{handle}</p>
             </div>
           </div>
         </div>

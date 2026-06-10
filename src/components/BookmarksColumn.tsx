@@ -529,7 +529,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
         const quotedPost = recordData;
         return (
           <div
-            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
+            className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-asph-bg-hover"
             style={{ borderColor: "var(--asph-border-primary)" }}
             onClick={(e) => {
               e.stopPropagation();
@@ -661,7 +661,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowCollectionPanel(true)}
-              className="touch-target-sm flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="touch-target-sm flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-all hover:bg-asph-bg-active"
               title="Manage collections"
             >
               <Folder
@@ -675,7 +675,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
 
             <button
               onClick={() => navigate("/settings/data")}
-              className="touch-target-sm flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="touch-target-sm flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-all hover:bg-asph-bg-active"
               title="Data storage settings"
             >
               <Cloud
@@ -691,7 +691,7 @@ const BookmarksColumnComponent: React.FC<BookmarksColumnProps> = ({
             {onClose && (
               <button
                 onClick={onClose}
-                className="touch-target-icon rounded-full p-1.5 opacity-0 transition-all hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
+                className="touch-target-icon rounded-full p-1.5 opacity-0 transition-all hover:bg-asph-bg-active group-hover:opacity-100"
                 style={{ color: "var(--asph-text-secondary)" }}
                 aria-label="Close column"
               >

@@ -124,7 +124,7 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
               >
                 <RefreshCw
                   size={12}
-                  className="touch-target rounded p-0.5 text-red-500 hover:bg-gray-200/50 dark:hover:bg-white/10"
+                  className="touch-target rounded p-0.5 text-red-500 hover:bg-asph-bg-hover"
                 />
               </button>
             )}
@@ -161,7 +161,7 @@ export const MultiAccountSelector: React.FC<MultiAccountSelectorProps> = ({
           }
         }}
         disabled={disabled}
-        className="touch-target flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-gray-200/50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-white/10"
+        className="touch-target flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-asph-bg-hover disabled:cursor-not-allowed disabled:opacity-50"
         style={{
           backgroundColor: "var(--asph-bg-secondary)",
           border: "1px solid var(--asph-border-primary)",

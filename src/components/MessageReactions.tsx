@@ -144,13 +144,13 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
       {/* Quick reactions on hover (for desktop) */}
       <div className="group relative hidden md:block">
         <div
-          className={`invisible absolute ${isOwnMessage ? "right-0" : "left-0"} top-0 z-10 flex gap-1 rounded-lg bg-white p-1 opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100 dark:bg-gray-800`}
+          className={`invisible absolute ${isOwnMessage ? "right-0" : "left-0"} top-0 z-10 flex gap-1 rounded-lg bg-asph-bg-secondary p-1 opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100`}
         >
           {quickReactions.map((emoji) => (
             <button
               key={emoji}
               onClick={() => handleReactionClick(emoji)}
-              className="touch-target flex h-8 w-8 items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="touch-target flex h-8 w-8 items-center justify-center rounded hover:bg-asph-bg-hover"
               title={`React with ${emoji}`}
             >
               {emoji}

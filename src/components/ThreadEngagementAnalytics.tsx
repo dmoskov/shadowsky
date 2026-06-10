@@ -180,7 +180,7 @@ export const ThreadEngagementAnalytics: React.FC<
       {/* Header - always visible */}
       <button
         onClick={toggleCollapse}
-        className="touch-target-list-item flex w-full items-center justify-between px-4 py-3 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+        className="touch-target-list-item flex w-full items-center justify-between px-4 py-3 transition-colors hover:bg-asph-bg-hover"
       >
         <div className="flex items-center gap-2">
           <BarChart3 size={18} style={{ color: "var(--asph-primary)" }} />
@@ -347,7 +347,7 @@ export const ThreadEngagementAnalytics: React.FC<
                             pe.rank === 1
                               ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
                               : pe.rank === 2
-                                ? "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                                ? "bg-asph-bg-active text-asph-text-secondary"
                                 : pe.rank === 3
                                   ? "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
                                   : ""
@@ -474,7 +474,7 @@ export const ThreadEngagementAnalytics: React.FC<
                       {author.displayName || author.handle}
                     </span>
                     <span
-                      className="rounded bg-gray-200 px-1 text-xs dark:bg-gray-700"
+                      className="rounded bg-asph-bg-active px-1 text-xs"
                       style={{ color: "var(--asph-text-secondary)" }}
                     >
                       {author.postCount}

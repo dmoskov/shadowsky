@@ -464,7 +464,7 @@ export const DirectMessages: React.FC = () => {
                           className="h-10 w-10 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-700">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-asph-bg-active">
                           <span className="text-lg text-asph-text-secondary">
                             {(otherMember.displayName ||
                               otherMember.handle ||
@@ -535,7 +535,7 @@ export const DirectMessages: React.FC = () => {
                   className="h-10 w-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-700">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-asph-bg-active">
                   <span className="text-lg text-asph-text-secondary">
                     {(getOtherMember(conversationData.conversation)
                       .displayName ||

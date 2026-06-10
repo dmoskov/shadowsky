@@ -281,7 +281,7 @@ const MediaItem: React.FC<MediaItemProps> = ({
             className={`touch-target absolute right-2 top-2 rounded-lg p-1.5 transition-all ${
               isGeneratingAlt
                 ? "animate-pulse bg-blue-100 dark:bg-blue-900"
-                : "hover:scale-110 hover:bg-gray-100 dark:hover:bg-gray-800"
+                : "hover:scale-110 hover:bg-asph-bg-hover"
             }`}
             disabled={!canGenerateAlt}
             title="Generate alt text with AI"

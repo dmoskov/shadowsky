@@ -327,14 +327,14 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
           aria-hidden="true"
         />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-medium text-gray-900 dark:text-gray-100">
+          <p className="truncate text-xs font-medium text-asph-text-primary">
             {config.title}
           </p>
         </div>
         {showRetryButton && (
           <button
             onClick={onRetry}
-            className="touch-target-icon rounded p-1 transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-gray-700"
+            className="touch-target-icon rounded p-1 transition-colors hover:bg-asph-bg-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             aria-label="Retry upload"
           >
             <RefreshCw className="h-4 w-4 text-asph-text-secondary" />
@@ -343,7 +343,7 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
         {showCancelButton && (
           <button
             onClick={onCancel}
-            className="touch-target-icon rounded p-1 transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-gray-700"
+            className="touch-target-icon rounded p-1 transition-colors hover:bg-asph-bg-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             aria-label="Cancel upload"
           >
             <X className="h-4 w-4 text-asph-text-secondary" />
@@ -368,7 +368,7 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-start justify-between">
             <div className="min-w-0 flex-1">
-              <h3 className="mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
+              <h3 className="mb-1 text-sm font-semibold text-asph-text-primary">
                 {config.title}
               </h3>
               {fileName && (
@@ -418,7 +418,7 @@ export const VideoUploadErrorPanel: React.FC<VideoUploadErrorPanelProps> = ({
             {showCancelButton && (
               <button
                 onClick={onCancel}
-                className="touch-target-sm inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                className="touch-target-sm inline-flex items-center gap-2 rounded-md border border-asph-border-secondary px-3 py-1.5 text-sm font-medium text-asph-text-secondary transition-colors hover:bg-asph-bg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-asph-border-secondary focus-visible:ring-offset-2"
                 aria-label="Cancel upload"
               >
                 <X className="h-4 w-4" aria-hidden="true" />

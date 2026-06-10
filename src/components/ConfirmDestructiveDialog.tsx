@@ -196,13 +196,13 @@ export const ConfirmDestructiveDialog: React.FC<
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
-        className={`modal-container modal-auto-height modal-md border bg-white dark:border-gray-700 dark:bg-gray-900 ${
+        className={`modal-container modal-auto-height modal-md border border-asph-border-primary bg-asph-bg-secondary ${
           isExiting ? "animate-exit-scale" : "animate-enter-scale"
         }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+        <div className="border-b border-asph-border-primary px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div
@@ -215,7 +215,7 @@ export const ConfirmDestructiveDialog: React.FC<
               </div>
               <h2
                 id={titleId}
-                className="text-lg font-semibold text-gray-900 dark:text-white"
+                className="text-lg font-semibold text-asph-text-primary"
               >
                 {title}
               </h2>
@@ -223,7 +223,7 @@ export const ConfirmDestructiveDialog: React.FC<
             <button
               onClick={handleClose}
               disabled={isProcessing}
-              className="touch-target-icon rounded-full p-1 text-asph-text-tertiary transition-colors hover:bg-gray-100 hover:text-gray-500 disabled:opacity-50 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+              className="touch-target-icon rounded-full p-1 text-asph-text-tertiary transition-colors hover:bg-asph-bg-hover hover:text-asph-text-secondary disabled:opacity-50"
               aria-label="Close dialog"
             >
               <X className="h-5 w-5" aria-hidden="true" />
@@ -296,7 +296,7 @@ export const ConfirmDestructiveDialog: React.FC<
                 onChange={(e) => setTypedConfirmation(e.target.value)}
                 onKeyDown={handleKeyDown}
                 disabled={isProcessing}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus-visible:border-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+                className="w-full rounded-lg border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-asph-text-primary placeholder-asph-text-tertiary focus-visible:border-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder={requireTypeConfirmation}
                 autoComplete="off"
                 autoCorrect="off"
@@ -308,11 +308,11 @@ export const ConfirmDestructiveDialog: React.FC<
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800/50">
+        <div className="flex justify-end gap-3 border-t border-asph-border-primary bg-asph-bg-tertiary px-6 py-4">
           <button
             onClick={handleClose}
             disabled={isProcessing}
-            className="touch-target-sm ios-press-light rounded-lg px-4 py-2 text-sm font-medium text-asph-text-secondary transition-colors hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 disabled:opacity-50 dark:hover:bg-gray-700"
+            className="touch-target-sm ios-press-light rounded-lg px-4 py-2 text-sm font-medium text-asph-text-secondary transition-colors hover:bg-asph-bg-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-asph-border-secondary disabled:opacity-50"
           >
             {cancelButtonLabel}
           </button>

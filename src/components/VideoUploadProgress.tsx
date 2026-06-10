@@ -121,7 +121,7 @@ export function VideoUploadProgress({
         {isActive && onCancel && (
           <button
             onClick={onCancel}
-            className="touch-target-icon ml-1 rounded-full p-1 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="touch-target-icon ml-1 rounded-full p-1 transition-colors hover:bg-asph-bg-active"
             title="Cancel upload"
           >
             <X size={14} style={{ color: "var(--asph-text-secondary)" }} />
@@ -186,7 +186,7 @@ export function VideoUploadProgress({
           {isActive && onCancel && (
             <button
               onClick={onCancel}
-              className="touch-target-icon rounded-full p-1.5 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="touch-target-icon rounded-full p-1.5 transition-colors hover:bg-asph-bg-active"
               title="Cancel upload"
             >
               <X size={18} style={{ color: "var(--asph-text-secondary)" }} />
@@ -332,7 +332,7 @@ function StageIndicator({
             ? "bg-green-500 text-white"
             : isActive
               ? "bg-blue-500 text-white"
-              : "bg-gray-200 dark:bg-gray-700"
+              : "bg-asph-bg-active"
         }`}
         style={
           !isComplete && !isActive

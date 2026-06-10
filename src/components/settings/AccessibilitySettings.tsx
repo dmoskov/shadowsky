@@ -146,7 +146,7 @@ export const AccessibilitySettings: React.FC = () => {
                 updateSettings({ highContrast: !settings.highContrast })
               }
               className={`touch-target relative inline-flex h-6 w-11 items-center rounded-full spring-toggle ${
-                settings.highContrast ? "bg-blue-500" : "bg-gray-400"
+                settings.highContrast ? "bg-blue-500" : "bg-asph-bg-active"
               }`}
               style={{
                 backgroundColor: settings.highContrast
@@ -493,7 +493,7 @@ export const AccessibilitySettings: React.FC = () => {
         </h3>
         <p className="text-sm" style={{ color: "var(--asph-text-secondary)" }}>
           Press{" "}
-          <kbd className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-700">
+          <kbd className="rounded bg-asph-bg-active px-1.5 py-0.5 font-mono text-xs">
             ?
           </kbd>{" "}
           to view all available keyboard shortcuts for navigating Asphodel.

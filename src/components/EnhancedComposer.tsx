@@ -967,7 +967,7 @@ export function EnhancedComposer({
           {features.imageEditing && hasEditableImages && (
             <button
               onClick={() => setShowImageEditor(true)}
-              className="touch-target flex h-32 w-full items-center justify-center rounded border-2 border-dashed transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target flex h-32 w-full items-center justify-center rounded border-2 border-dashed transition-colors hover:bg-asph-bg-hover"
               style={{
                 borderColor: "var(--asph-border-primary)",
                 color: "var(--asph-text-secondary)",
@@ -1053,7 +1053,7 @@ export function EnhancedComposer({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isSubmitting}
-                className="touch-target-icon rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="touch-target-icon rounded-full p-2 transition-all hover:bg-asph-bg-hover"
                 style={{ color: "var(--asph-text-secondary)" }}
                 title="Add image or video"
               >
@@ -1068,7 +1068,7 @@ export function EnhancedComposer({
               <button
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                 disabled={isSubmitting}
-                className="touch-target-icon rounded-full p-2 transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="touch-target-icon rounded-full p-2 transition-all hover:bg-asph-bg-hover"
                 style={{ color: "var(--asph-text-secondary)" }}
                 title="Add emoji"
               >

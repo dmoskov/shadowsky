@@ -656,7 +656,7 @@ function VideoPlayerComponent({
 
   // Error state with retry option
   const renderError = () => (
-    <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80">
+    <div className="absolute inset-0 flex items-center justify-center bg-black/80">
       <div className="max-w-xs p-4 text-center">
         <AlertCircle className="mx-auto mb-3 h-12 w-12 text-red-400" />
         <p className="mb-2 text-sm font-medium text-white">
@@ -687,7 +687,7 @@ function VideoPlayerComponent({
     return (
       <div
         ref={containerRef}
-        className="media-placeholder-wrapper relative cursor-pointer overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
+        className="media-placeholder-wrapper relative cursor-pointer overflow-hidden rounded-lg bg-asph-bg-tertiary"
         style={containerStyle}
         data-aspect-ratio="true"
         onClick={handleLoadVideo}
@@ -721,7 +721,7 @@ function VideoPlayerComponent({
           />
         ) : (
           <div
-            className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700"
+            className="absolute inset-0 flex items-center justify-center bg-asph-bg-active"
             style={{ zIndex: 1 }}
           >
             <span className="text-asph-text-tertiary">Video</span>
@@ -744,7 +744,7 @@ function VideoPlayerComponent({
     return (
       <div
         ref={containerRef}
-        className="media-placeholder-wrapper relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
+        className="media-placeholder-wrapper relative overflow-hidden rounded-lg bg-asph-bg-tertiary"
         style={containerStyle}
         data-aspect-ratio="true"
       >
@@ -763,7 +763,7 @@ function VideoPlayerComponent({
           />
         ) : (
           <div
-            className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700"
+            className="absolute inset-0 flex items-center justify-center bg-asph-bg-active"
             style={{ zIndex: 1 }}
           >
             <Loader2 className="h-8 w-8 animate-spin text-asph-text-tertiary" />
@@ -776,7 +776,7 @@ function VideoPlayerComponent({
   return (
     <div
       ref={containerRef}
-      className="media-placeholder-wrapper relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
+      className="media-placeholder-wrapper relative overflow-hidden rounded-lg bg-asph-bg-tertiary"
       style={containerStyle}
       data-aspect-ratio="true"
       data-loaded={isVideoLoaded ? "true" : "false"}
@@ -906,7 +906,7 @@ function VideoPlayerComponent({
             <div className="flex items-center space-x-3">
               <button
                 onClick={handlePlayPause}
-                className="touch-target text-white transition-colors hover:text-gray-300"
+                className="touch-target text-white transition-colors hover:text-white/80"
                 aria-label={isPlaying ? "Pause" : "Play"}
               >
                 {isPlaying ? (
@@ -920,7 +920,7 @@ function VideoPlayerComponent({
               <div className="group relative flex items-center">
                 <button
                   onClick={handleMuteToggle}
-                  className="touch-target text-white transition-colors hover:text-gray-300"
+                  className="touch-target text-white transition-colors hover:text-white/80"
                   aria-label={isMuted ? "Unmute" : "Mute"}
                 >
                   {isMuted || volume === 0 ? (
@@ -964,7 +964,7 @@ function VideoPlayerComponent({
 
             <button
               onClick={handleFullscreen}
-              className="touch-target text-white transition-colors hover:text-gray-300"
+              className="touch-target text-white transition-colors hover:text-white/80"
               aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
             >
               {isFullscreen ? (

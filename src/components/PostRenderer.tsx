@@ -876,7 +876,7 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
       const quotedPost = embed.record;
       return (
         <div
-          className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/50"
+          className="mt-2 cursor-pointer overflow-hidden rounded-lg border transition-colors hover:bg-asph-bg-hover"
           style={{ borderColor: "var(--asph-border-primary)" }}
           onClick={(e) => {
             e.stopPropagation();

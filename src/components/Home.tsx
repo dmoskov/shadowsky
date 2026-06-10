@@ -719,7 +719,7 @@ export const Home: React.FC<HomeProps> = React.memo(
           >
             {hasNewPosts && <NewPostsPill onClick={handleLoadNewPosts} />}
             <div
-              className="divide-y divide-gray-100 dark:divide-gray-950"
+              className="divide-y divide-asph-border-primary"
               role="feed"
               aria-label="Posts"
             >

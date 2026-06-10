@@ -197,7 +197,7 @@ const NotFoundIllustration: React.FC<{ width: number; height: number }> = ({
       cy="60"
       r="50"
       fill="currentColor"
-      className="text-gray-100 dark:text-gray-800"
+      className="text-asph-bg-tertiary"
     />
     <circle
       cx="52"
@@ -248,7 +248,7 @@ const EmptyIllustration: React.FC<{ width: number; height: number }> = ({
       cy="60"
       r="50"
       fill="currentColor"
-      className="text-gray-100 dark:text-gray-800"
+      className="text-asph-bg-tertiary"
     />
     <path
       d="M35 50L60 38L85 50L60 62L35 50Z"
@@ -263,8 +263,7 @@ const EmptyIllustration: React.FC<{ width: number; height: number }> = ({
     <path
       d="M85 50V74L60 86V62L85 50Z"
       fill="currentColor"
-      className="text-gray-350 dark:text-gray-550"
-      style={{ color: "var(--tw-color-gray-350, #b4b8c0)" }}
+      className="text-asph-border-secondary"
     />
     <path
       d="M60 62V86"

@@ -93,7 +93,7 @@ export const ExploreEmptyState: React.FC<ExploreEmptyStateProps> = ({
         {hasContent && (
           <button
             onClick={() => refetchAll()}
-            className="touch-target-icon rounded-full p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded-full p-1.5 transition-colors hover:bg-asph-bg-hover"
             style={{ color: "var(--asph-text-tertiary)" }}
             aria-label="Refresh trending content"
           >
@@ -159,9 +159,8 @@ export const ExploreEmptyState: React.FC<ExploreEmptyStateProps> = ({
       >
         <p>Type a query above to search posts</p>
         <p className="mt-1">
-          Press{" "}
-          <kbd className="rounded bg-gray-200 px-1 dark:bg-gray-700">/</kbd> to
-          focus search
+          Press <kbd className="rounded bg-asph-bg-active px-1">/</kbd> to focus
+          search
         </p>
       </div>
     </div>

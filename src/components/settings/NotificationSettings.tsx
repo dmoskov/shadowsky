@@ -193,7 +193,7 @@ export const NotificationSettings: React.FC = () => {
               className={`touch-target relative inline-flex h-6 w-11 items-center rounded-full spring-toggle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${
                 notifications[type.key as keyof typeof notifications]
                   ? "bg-blue-500"
-                  : "bg-gray-300 dark:bg-gray-600"
+                  : "bg-asph-bg-active"
               }`}
               role="switch"
               aria-checked={

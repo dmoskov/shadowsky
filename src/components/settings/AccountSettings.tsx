@@ -246,7 +246,7 @@ export const AccountSettings: React.FC = () => {
                     : "/default-avatar.svg"
                 }
                 alt="Profile avatar"
-                className="h-24 w-24 rounded-full border-4 border-white dark:border-gray-900"
+                className="h-24 w-24 rounded-full border-4 border-asph-bg-secondary"
               />
               {isCompressing === "avatar" && (
                 <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-50">

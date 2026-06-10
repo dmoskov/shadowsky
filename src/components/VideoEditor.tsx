@@ -608,7 +608,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={onCancel}
-              className="touch-target-icon rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-icon rounded-full p-2 transition-colors hover:bg-asph-bg-hover"
               style={{ color: "var(--asph-text-primary)" }}
             >
               <X size={20} />
@@ -624,7 +624,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={resetAll}
-              className="touch-target-sm flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-sm flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors hover:bg-asph-bg-hover"
               style={{
                 borderColor: "var(--asph-border-primary)",
                 color: "var(--asph-text-secondary)",
@@ -659,7 +659,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
           <div className="flex flex-1 flex-col overflow-hidden">
             <div
               ref={videoContainerRef}
-              className="relative flex flex-1 items-center justify-center overflow-hidden bg-gray-900 p-4"
+              className="relative flex flex-1 items-center justify-center overflow-hidden bg-black p-4"
             >
               <div className="relative">
                 <video
@@ -841,7 +841,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                     <button
                       onClick={() => adjustTrim("start", "left")}
                       disabled={trim.start <= 0}
-                      className="touch-target-icon rounded transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
+                      className="touch-target-icon rounded transition-colors hover:bg-asph-bg-active disabled:opacity-30"
                       style={{ color: "var(--asph-text-primary)" }}
                     >
                       <ChevronLeft size={16} />
@@ -855,7 +855,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                     <button
                       onClick={() => adjustTrim("start", "right")}
                       disabled={trim.start >= trim.end - 1}
-                      className="touch-target-icon rounded transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
+                      className="touch-target-icon rounded transition-colors hover:bg-asph-bg-active disabled:opacity-30"
                       style={{ color: "var(--asph-text-primary)" }}
                     >
                       <ChevronRight size={16} />
@@ -884,7 +884,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                     <button
                       onClick={() => adjustTrim("end", "left")}
                       disabled={trim.end <= trim.start + 1}
-                      className="touch-target-icon rounded transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
+                      className="touch-target-icon rounded transition-colors hover:bg-asph-bg-active disabled:opacity-30"
                       style={{ color: "var(--asph-text-primary)" }}
                     >
                       <ChevronLeft size={16} />
@@ -898,7 +898,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                     <button
                       onClick={() => adjustTrim("end", "right")}
                       disabled={!metadata || trim.end >= metadata.duration}
-                      className="touch-target-icon rounded transition-colors hover:bg-gray-200 disabled:opacity-30 dark:hover:bg-gray-700"
+                      className="touch-target-icon rounded transition-colors hover:bg-asph-bg-active disabled:opacity-30"
                       style={{ color: "var(--asph-text-primary)" }}
                     >
                       <ChevronRight size={16} />
@@ -941,7 +941,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                   className={`touch-target flex flex-1 flex-col items-center justify-center gap-1 py-2 text-xs font-medium transition-colors ${
                     activeTab === id
                       ? "border-b-2"
-                      : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                      : "text-asph-text-tertiary hover:text-asph-text-secondary"
                   }`}
                   style={{
                     borderColor:
@@ -1025,7 +1025,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                         className={`touch-target rounded-lg border px-4 py-3 text-sm font-medium transition-colors ${
                           playbackSpeed === value
                             ? ""
-                            : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                            : "hover:bg-asph-bg-hover"
                         }`}
                         style={{
                           borderColor:
@@ -1143,7 +1143,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                           className={`cursor-pointer rounded-lg border p-2 transition-colors ${
                             editingTextId === overlay.id
                               ? "ring-2"
-                              : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                              : "hover:bg-asph-bg-hover"
                           }`}
                           style={{
                             borderColor:
@@ -1235,7 +1235,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                               className={`touch-target rounded border px-2 py-1 text-xs capitalize transition-colors ${
                                 editingOverlay.position === pos
                                   ? "font-medium"
-                                  : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                                  : "hover:bg-asph-bg-hover"
                               }`}
                               style={{
                                 borderColor:
@@ -1264,7 +1264,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                             className={`touch-target col-span-3 rounded border px-2 py-1 text-xs transition-colors ${
                               editingOverlay.position === "center"
                                 ? "font-medium"
-                                : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                                : "hover:bg-asph-bg-hover"
                             }`}
                             style={{
                               borderColor:
@@ -1319,7 +1319,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                           className={`touch-target flex-1 rounded border p-2 transition-colors ${
                             editingOverlay.bold
                               ? "bg-blue-100 dark:bg-blue-900/50"
-                              : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                              : "hover:bg-asph-bg-hover"
                           }`}
                           style={{
                             borderColor: editingOverlay.bold
@@ -1339,7 +1339,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                           className={`touch-target flex-1 rounded border p-2 transition-colors ${
                             editingOverlay.italic
                               ? "bg-blue-100 dark:bg-blue-900/50"
-                              : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                              : "hover:bg-asph-bg-hover"
                           }`}
                           style={{
                             borderColor: editingOverlay.italic
@@ -1366,7 +1366,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                               className={`touch-target flex-1 rounded border p-2 transition-colors ${
                                 editingOverlay.align === align
                                   ? "bg-blue-100 dark:bg-blue-900/50"
-                                  : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                                  : "hover:bg-asph-bg-hover"
                               }`}
                               style={{
                                 borderColor:
@@ -1444,7 +1444,7 @@ export function VideoEditor({ video, onSave, onCancel }: VideoEditorProps) {
                                 {bg === "transparent" && (
                                   <X
                                     size={14}
-                                    className="mx-auto text-gray-400"
+                                    className="mx-auto text-asph-text-tertiary"
                                   />
                                 )}
                               </button>

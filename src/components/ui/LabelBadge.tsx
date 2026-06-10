@@ -34,7 +34,7 @@ export const LABEL_DEFINITIONS: Record<
   porn: {
     label: "Adult Content",
     icon: <EyeOff size={12} />,
-    color: "#dc2626",
+    color: "var(--asph-error)",
     bgColor: "rgba(220, 38, 38, 0.1)",
     borderColor: "rgba(220, 38, 38, 0.3)",
     description: "Contains adult/pornographic content",
@@ -44,7 +44,7 @@ export const LABEL_DEFINITIONS: Record<
   sexual: {
     label: "Sexual Content",
     icon: <EyeOff size={12} />,
-    color: "#ea580c",
+    color: "var(--asph-orange)",
     bgColor: "rgba(234, 88, 12, 0.1)",
     borderColor: "rgba(234, 88, 12, 0.3)",
     description: "Contains sexual content",
@@ -54,7 +54,7 @@ export const LABEL_DEFINITIONS: Record<
   nudity: {
     label: "Nudity",
     icon: <Eye size={12} />,
-    color: "#ea580c",
+    color: "var(--asph-orange)",
     bgColor: "rgba(234, 88, 12, 0.1)",
     borderColor: "rgba(234, 88, 12, 0.3)",
     description: "Contains nudity",
@@ -64,7 +64,7 @@ export const LABEL_DEFINITIONS: Record<
   "graphic-media": {
     label: "Graphic Content",
     icon: <AlertTriangle size={12} />,
-    color: "#dc2626",
+    color: "var(--asph-error)",
     bgColor: "rgba(220, 38, 38, 0.1)",
     borderColor: "rgba(220, 38, 38, 0.3)",
     description: "Contains graphic violence or disturbing imagery",
@@ -76,7 +76,7 @@ export const LABEL_DEFINITIONS: Record<
   spam: {
     label: "Spam",
     icon: <X size={12} />,
-    color: "#9333ea",
+    color: "var(--asph-mention)",
     bgColor: "rgba(147, 51, 234, 0.1)",
     borderColor: "rgba(147, 51, 234, 0.3)",
     description: "Flagged as spam",
@@ -85,7 +85,7 @@ export const LABEL_DEFINITIONS: Record<
   impersonation: {
     label: "Impersonation",
     icon: <Shield size={12} />,
-    color: "#dc2626",
+    color: "var(--asph-error)",
     bgColor: "rgba(220, 38, 38, 0.1)",
     borderColor: "rgba(220, 38, 38, 0.3)",
     description: "Account may be impersonating someone",
@@ -94,7 +94,7 @@ export const LABEL_DEFINITIONS: Record<
   scam: {
     label: "Scam",
     icon: <Flag size={12} />,
-    color: "#dc2626",
+    color: "var(--asph-error)",
     bgColor: "rgba(220, 38, 38, 0.1)",
     borderColor: "rgba(220, 38, 38, 0.3)",
     description: "Flagged as potential scam",
@@ -105,7 +105,7 @@ export const LABEL_DEFINITIONS: Record<
   misleading: {
     label: "Misleading",
     icon: <AlertTriangle size={12} />,
-    color: "#f59e0b",
+    color: "var(--asph-warning)",
     bgColor: "rgba(245, 158, 11, 0.1)",
     borderColor: "rgba(245, 158, 11, 0.3)",
     description: "May contain misleading information",
@@ -125,7 +125,7 @@ export const LABEL_DEFINITIONS: Record<
   "!warn": {
     label: "Warning",
     icon: <AlertTriangle size={12} />,
-    color: "#f59e0b",
+    color: "var(--asph-warning)",
     bgColor: "rgba(245, 158, 11, 0.1)",
     borderColor: "rgba(245, 158, 11, 0.3)",
     description: "Content has a warning",
@@ -304,8 +304,8 @@ export const LabelIndicator: React.FC<{
 
   const severityColors = {
     info: "#6b7280",
-    warning: "#f59e0b",
-    error: "#dc2626",
+    warning: "var(--asph-warning)",
+    error: "var(--asph-error)",
   };
 
   // Create a detailed tooltip with all label descriptions
@@ -321,9 +321,9 @@ export const LabelIndicator: React.FC<{
       <div
         className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
         style={{
-          backgroundColor: `${severityColors[highestSeverity]}20`,
+          backgroundColor: `color-mix(in srgb, ${severityColors[highestSeverity]} 12.5%, transparent)`,
           color: severityColors[highestSeverity],
-          border: `1px solid ${severityColors[highestSeverity]}40`,
+          border: `1px solid color-mix(in srgb, ${severityColors[highestSeverity]} 25%, transparent)`,
         }}
       >
         <Shield size={10} />

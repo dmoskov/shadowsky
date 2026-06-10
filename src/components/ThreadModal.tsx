@@ -1097,7 +1097,7 @@ export function ThreadModal({
                   className={`touch-target flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-colors sm:px-3 ${
                     showAnalytics
                       ? "bg-blue-500 text-white"
-                      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                      : "hover:bg-asph-bg-hover"
                   }`}
                   style={
                     !showAnalytics
@@ -1117,7 +1117,7 @@ export function ThreadModal({
                   e.stopPropagation();
                   handleClose();
                 }}
-                className="touch-target-icon -mr-1 rounded-full p-3 transition-all hover:scale-110 hover:bg-gray-100 active:bg-gray-200 dark:hover:bg-gray-800 dark:active:bg-gray-700 sm:mr-0 sm:p-2"
+                className="touch-target-icon -mr-1 rounded-full p-3 transition-all hover:scale-110 hover:bg-asph-bg-hover active:bg-asph-bg-active sm:mr-0 sm:p-2"
                 style={{ color: "var(--asph-text-secondary)" }}
                 aria-label="Close thread"
               >

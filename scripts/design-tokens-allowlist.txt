@@ -1,0 +1,3 @@
+# Justified exceptions to the design-token guard (scripts/check-design-tokens.mjs).
+# One per line: "path/to/file.tsx" exempts a whole file,
+# "path/to/file.tsx:text-gray-500" exempts one class token in one file.

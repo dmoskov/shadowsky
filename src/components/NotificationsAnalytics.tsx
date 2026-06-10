@@ -27,6 +27,25 @@ import {
 } from "./notifications-analytics-utils";
 import { useUserActivityStats } from "./useUserActivityStats";
 
+const CHART_COLORS = {
+  red: "var(--asph-like)",
+  redLight: "#f87171",
+  redText: "#dc2626",
+  blue: "#60a5fa",
+  blueLight: "#93c5fd",
+  blueDeep: "#3b82f6",
+  blueText: "var(--asph-info)",
+  purple: "#a78bfa",
+  purpleLight: "#c4b5fd",
+  purpleText: "var(--asph-accent)",
+  green: "#4ade80",
+  greenLight: "#86efac",
+  greenText: "#16a34a",
+  rose: "#fb7185",
+  roseLight: "#fda4af",
+  roseText: "#e11d48",
+} as const;
+
 type TimeRange = "1d" | "3d" | "7d" | "4w";
 
 interface UserInteractionStats {
@@ -710,8 +729,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                 className="w-full"
                                 style={{
                                   height: `${(bucket.likes / maxValue) * 270}px`,
-                                  background:
-                                    "linear-gradient(180deg, #f87171 0%, #ef4444 100%)",
+                                  background: `linear-gradient(180deg, ${CHART_COLORS.redLight} 0%, ${CHART_COLORS.red} 100%)`,
                                 }}
                                 title={`${bucket.likes} likes`}
                               />
@@ -722,8 +740,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                 className="w-full"
                                 style={{
                                   height: `${(bucket.reposts / maxValue) * 270}px`,
-                                  background:
-                                    "linear-gradient(180deg, #93c5fd 0%, #60a5fa 100%)",
+                                  background: `linear-gradient(180deg, ${CHART_COLORS.blueLight} 0%, ${CHART_COLORS.blue} 100%)`,
                                 }}
                                 title={`${bucket.reposts} reposts`}
                               />
@@ -734,8 +751,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                 className="w-full"
                                 style={{
                                   height: `${(bucket.follows / maxValue) * 270}px`,
-                                  background:
-                                    "linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%)",
+                                  background: `linear-gradient(180deg, ${CHART_COLORS.purpleLight} 0%, ${CHART_COLORS.purple} 100%)`,
                                 }}
                                 title={`${bucket.follows} follows`}
                               />
@@ -746,8 +762,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                 className="w-full"
                                 style={{
                                   height: `${(bucket.replies / maxValue) * 270}px`,
-                                  background:
-                                    "linear-gradient(180deg, #86efac 0%, #4ade80 100%)",
+                                  background: `linear-gradient(180deg, ${CHART_COLORS.greenLight} 0%, ${CHART_COLORS.green} 100%)`,
                                 }}
                                 title={`${bucket.replies} replies`}
                               />
@@ -758,8 +773,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                 className="w-full"
                                 style={{
                                   height: `${(bucket.mentions / maxValue) * 270}px`,
-                                  background:
-                                    "linear-gradient(180deg, #fda4af 0%, #fb7185 100%)",
+                                  background: `linear-gradient(180deg, ${CHART_COLORS.roseLight} 0%, ${CHART_COLORS.rose} 100%)`,
                                 }}
                                 title={`${bucket.mentions} mentions`}
                               />
@@ -781,27 +795,27 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                 {bucket.total} total
                               </div>
                               {bucket.likes > 0 && (
-                                <div style={{ color: "#dc2626" }}>
+                                <div style={{ color: CHART_COLORS.redText }}>
                                   {bucket.likes} likes
                                 </div>
                               )}
                               {bucket.reposts > 0 && (
-                                <div style={{ color: "#2563eb" }}>
+                                <div style={{ color: CHART_COLORS.blueText }}>
                                   {bucket.reposts} reposts
                                 </div>
                               )}
                               {bucket.follows > 0 && (
-                                <div style={{ color: "#7c3aed" }}>
+                                <div style={{ color: CHART_COLORS.purpleText }}>
                                   {bucket.follows} follows
                                 </div>
                               )}
                               {bucket.replies > 0 && (
-                                <div style={{ color: "#16a34a" }}>
+                                <div style={{ color: CHART_COLORS.greenText }}>
                                   {bucket.replies} replies
                                 </div>
                               )}
                               {bucket.mentions > 0 && (
-                                <div style={{ color: "#e11d48" }}>
+                                <div style={{ color: CHART_COLORS.roseText }}>
                                   {bucket.mentions} mentions
                                 </div>
                               )}
@@ -858,8 +872,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                   className="w-full"
                                   style={{
                                     height: `${(bucket.posts / maxSentValue) * 270}px`,
-                                    background:
-                                      "linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%)",
+                                    background: `linear-gradient(180deg, ${CHART_COLORS.blue} 0%, ${CHART_COLORS.blueDeep} 100%)`,
                                   }}
                                   title={`${bucket.posts} posts`}
                                 />
@@ -870,8 +883,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                   className="w-full"
                                   style={{
                                     height: `${(bucket.replies / maxSentValue) * 270}px`,
-                                    background:
-                                      "linear-gradient(180deg, #86efac 0%, #4ade80 100%)",
+                                    background: `linear-gradient(180deg, ${CHART_COLORS.greenLight} 0%, ${CHART_COLORS.green} 100%)`,
                                   }}
                                   title={`${bucket.replies} replies`}
                                 />
@@ -882,8 +894,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                   className="w-full"
                                   style={{
                                     height: `${(bucket.reposts / maxSentValue) * 270}px`,
-                                    background:
-                                      "linear-gradient(180deg, #c4b5fd 0%, #a78bfa 100%)",
+                                    background: `linear-gradient(180deg, ${CHART_COLORS.purpleLight} 0%, ${CHART_COLORS.purple} 100%)`,
                                   }}
                                   title={`${bucket.reposts} reposts`}
                                 />
@@ -894,8 +905,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                   className="w-full"
                                   style={{
                                     height: `${(bucket.quotes / maxSentValue) * 270}px`,
-                                    background:
-                                      "linear-gradient(180deg, #fda4af 0%, #fb7185 100%)",
+                                    background: `linear-gradient(180deg, ${CHART_COLORS.roseLight} 0%, ${CHART_COLORS.rose} 100%)`,
                                   }}
                                   title={`${bucket.quotes} quotes`}
                                 />
@@ -918,22 +928,26 @@ export const NotificationsAnalytics: React.FC = React.memo(
                                   {total} total
                                 </div>
                                 {bucket.posts > 0 && (
-                                  <div style={{ color: "#2563eb" }}>
+                                  <div style={{ color: CHART_COLORS.blueText }}>
                                     {bucket.posts} posts
                                   </div>
                                 )}
                                 {bucket.replies > 0 && (
-                                  <div style={{ color: "#16a34a" }}>
+                                  <div
+                                    style={{ color: CHART_COLORS.greenText }}
+                                  >
                                     {bucket.replies} replies
                                   </div>
                                 )}
                                 {bucket.reposts > 0 && (
-                                  <div style={{ color: "#7c3aed" }}>
+                                  <div
+                                    style={{ color: CHART_COLORS.purpleText }}
+                                  >
                                     {bucket.reposts} reposts
                                   </div>
                                 )}
                                 {bucket.quotes > 0 && (
-                                  <div style={{ color: "#e11d48" }}>
+                                  <div style={{ color: CHART_COLORS.roseText }}>
                                     {bucket.quotes} quotes
                                   </div>
                                 )}
@@ -970,7 +984,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   <div className="flex items-center gap-1">
                     <div
                       className="h-3 w-3 rounded"
-                      style={{ backgroundColor: "#ef4444" }}
+                      style={{ backgroundColor: CHART_COLORS.red }}
                     ></div>
                     <span style={{ color: "var(--asph-text-secondary)" }}>
                       Likes
@@ -979,7 +993,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   <div className="flex items-center gap-1">
                     <div
                       className="h-3 w-3 rounded"
-                      style={{ backgroundColor: "#60a5fa" }}
+                      style={{ backgroundColor: CHART_COLORS.blue }}
                     ></div>
                     <span style={{ color: "var(--asph-text-secondary)" }}>
                       Reposts
@@ -988,7 +1002,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   <div className="flex items-center gap-1">
                     <div
                       className="h-3 w-3 rounded"
-                      style={{ backgroundColor: "#a78bfa" }}
+                      style={{ backgroundColor: CHART_COLORS.purple }}
                     ></div>
                     <span style={{ color: "var(--asph-text-secondary)" }}>
                       Follows
@@ -997,7 +1011,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   <div className="flex items-center gap-1">
                     <div
                       className="h-3 w-3 rounded"
-                      style={{ backgroundColor: "#4ade80" }}
+                      style={{ backgroundColor: CHART_COLORS.green }}
                     ></div>
                     <span style={{ color: "var(--asph-text-secondary)" }}>
                       Replies
@@ -1006,7 +1020,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   <div className="flex items-center gap-1">
                     <div
                       className="h-3 w-3 rounded"
-                      style={{ backgroundColor: "#fb7185" }}
+                      style={{ backgroundColor: CHART_COLORS.rose }}
                     ></div>
                     <span style={{ color: "var(--asph-text-secondary)" }}>
                       Mentions
@@ -1018,7 +1032,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   <div className="flex items-center gap-1">
                     <div
                       className="h-3 w-3 rounded"
-                      style={{ backgroundColor: "#3b82f6" }}
+                      style={{ backgroundColor: CHART_COLORS.blueDeep }}
                     ></div>
                     <span style={{ color: "var(--asph-text-secondary)" }}>
                       Posts
@@ -1027,7 +1041,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   <div className="flex items-center gap-1">
                     <div
                       className="h-3 w-3 rounded"
-                      style={{ backgroundColor: "#4ade80" }}
+                      style={{ backgroundColor: CHART_COLORS.green }}
                     ></div>
                     <span style={{ color: "var(--asph-text-secondary)" }}>
                       Replies
@@ -1036,7 +1050,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   <div className="flex items-center gap-1">
                     <div
                       className="h-3 w-3 rounded"
-                      style={{ backgroundColor: "#a78bfa" }}
+                      style={{ backgroundColor: CHART_COLORS.purple }}
                     ></div>
                     <span style={{ color: "var(--asph-text-secondary)" }}>
                       Reposts
@@ -1045,7 +1059,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                   <div className="flex items-center gap-1">
                     <div
                       className="h-3 w-3 rounded"
-                      style={{ backgroundColor: "#fb7185" }}
+                      style={{ backgroundColor: CHART_COLORS.rose }}
                     ></div>
                     <span style={{ color: "var(--asph-text-secondary)" }}>
                       Quotes
@@ -1189,7 +1203,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                           className="text-xs"
                           style={{ color: "var(--asph-text-secondary)" }}
                         >
-                          <span style={{ color: "#ef4444" }}>♥</span>{" "}
+                          <span style={{ color: CHART_COLORS.red }}>♥</span>{" "}
                           {user.likes}
                         </span>
                       )}
@@ -1198,7 +1212,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                           className="text-xs"
                           style={{ color: "var(--asph-text-secondary)" }}
                         >
-                          <span style={{ color: "#4ade80" }}>↩</span>{" "}
+                          <span style={{ color: CHART_COLORS.green }}>↩</span>{" "}
                           {user.replies}
                         </span>
                       )}
@@ -1207,7 +1221,7 @@ export const NotificationsAnalytics: React.FC = React.memo(
                           className="text-xs"
                           style={{ color: "var(--asph-text-secondary)" }}
                         >
-                          <span style={{ color: "#60a5fa" }}>⟲</span>{" "}
+                          <span style={{ color: CHART_COLORS.blue }}>⟲</span>{" "}
                           {user.reposts}
                         </span>
                       )}

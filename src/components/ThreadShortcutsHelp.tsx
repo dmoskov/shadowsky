@@ -39,7 +39,7 @@ export const ThreadShortcutsHelp: React.FC<ThreadShortcutsHelpProps> = ({
         {enabledShortcuts.slice(0, 5).map((shortcut) => (
           <span key={shortcut.key} className="flex items-center gap-1">
             <kbd
-              className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-700"
+              className="rounded bg-asph-bg-active px-1.5 py-0.5 font-mono text-xs"
               aria-label={`Press ${shortcut.key}`}
             >
               {shortcut.key}
@@ -107,7 +107,7 @@ export const ThreadShortcutsHelp: React.FC<ThreadShortcutsHelpProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="touch-target-icon rounded-full p-1.5 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="touch-target-icon rounded-full p-1.5 transition-colors hover:bg-asph-bg-active"
             style={{ color: "var(--asph-text-secondary)" }}
             aria-label="Close shortcuts panel"
           >
@@ -175,7 +175,7 @@ export const ThreadShortcutsHelp: React.FC<ThreadShortcutsHelpProps> = ({
           style={{ color: "var(--asph-text-tertiary)" }}
         >
           Press{" "}
-          <kbd className="rounded bg-gray-200 px-1.5 py-0.5 font-mono dark:bg-gray-700">
+          <kbd className="rounded bg-asph-bg-active px-1.5 py-0.5 font-mono">
             ?
           </kbd>{" "}
           to toggle this panel
@@ -191,7 +191,7 @@ interface ShortcutRowProps {
 
 const ShortcutRow: React.FC<ShortcutRowProps> = ({ shortcut }) => (
   <div
-    className="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+    className="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors hover:bg-asph-bg-hover"
     role="listitem"
   >
     <span style={{ color: "var(--asph-text-primary)" }}>
@@ -252,7 +252,7 @@ export const ThreadShortcutsHintBar: React.FC<{
         aria-label="Show all keyboard shortcuts"
       >
         <kbd
-          className="rounded bg-gray-200 px-1.5 py-0.5 font-mono dark:bg-gray-700"
+          className="rounded bg-asph-bg-active px-1.5 py-0.5 font-mono"
           aria-hidden="true"
         >
           ?
@@ -273,7 +273,7 @@ const ShortcutHint: React.FC<{
   >
     <kbd
       className={`rounded px-1.5 py-0.5 font-mono ${
-        active ? "bg-blue-500 text-white" : "bg-gray-200 dark:bg-gray-700"
+        active ? "bg-blue-500 text-white" : "bg-asph-bg-active"
       }`}
       aria-label={`Press ${keyName}`}
     >

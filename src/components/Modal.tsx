@@ -144,7 +144,7 @@ export function Modal({
         aria-modal="true"
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
-        className={`modal-container modal-auto-height modal-md bg-white dark:bg-gray-900 ${contentAnimationClass}`}
+        className={`modal-container modal-auto-height modal-md bg-asph-bg-secondary ${contentAnimationClass}`}
         onClick={(e) => e.stopPropagation()}
         onAnimationEnd={isEntering ? handleEntranceEnd : undefined}
         data-state={modalState}
@@ -159,7 +159,7 @@ export function Modal({
             {title && (
               <h3
                 id="modal-title"
-                className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100"
+                className="mb-2 text-lg font-semibold text-asph-text-primary"
               >
                 {title}
               </h3>
@@ -174,18 +174,18 @@ export function Modal({
           <button
             onClick={handleClose}
             aria-label="Close dialog"
-            className="touch-target-icon rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded-full p-1 hover:bg-asph-bg-hover"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex justify-end gap-3 border-t border-asph-border-primary bg-asph-bg-tertiary px-6 py-4">
           {type === "confirm" && (
             <button
               onClick={handleClose}
-              className="touch-target-sm ios-press-light rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="touch-target-sm ios-press-light rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-asph-bg-active"
             >
               {cancelText}
             </button>

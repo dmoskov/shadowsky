@@ -360,7 +360,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
           {onClose && (
             <button
               onClick={onClose}
-              className="touch-target-icon rounded-full p-1.5 transition-all hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="touch-target-icon rounded-full p-1.5 transition-all hover:bg-asph-bg-active"
               style={{ color: "var(--asph-text-secondary)" }}
               aria-label="Close column"
             >
@@ -407,7 +407,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                 <button
                   type="button"
                   onClick={handleClearSearch}
-                  className="touch-target-icon absolute right-3 top-1/2 -translate-y-1/2 transform rounded-full p-1 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  className="touch-target-icon absolute right-3 top-1/2 -translate-y-1/2 transform rounded-full p-1 hover:bg-asph-bg-active"
                   aria-label="Clear search"
                 >
                   <X
@@ -566,7 +566,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                           className={`touch-target group flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors ${
                             selectedSuggestionIndex === index
                               ? "bg-blue-50 dark:bg-blue-900/20"
-                              : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                              : "hover:bg-asph-bg-hover"
                           }`}
                         >
                           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -597,7 +597,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                               e.stopPropagation();
                               removeFromHistory(entry.id);
                             }}
-                            className="touch-target-icon shrink-0 rounded p-1 opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100 dark:hover:bg-gray-700"
+                            className="touch-target-icon shrink-0 rounded p-1 opacity-0 transition-opacity hover:bg-asph-bg-active group-hover:opacity-100"
                             style={{ color: "var(--asph-text-tertiary)" }}
                             aria-label={`Remove "${entry.query}" from search history`}
                           >
@@ -661,7 +661,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                 className={`touch-target flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition-colors ${
                   sortOrder === "latest"
                     ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                    : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                    : "hover:bg-asph-bg-hover"
                 }`}
                 style={
                   sortOrder !== "latest"
@@ -679,7 +679,7 @@ const SearchColumnComponent: React.FC<SearchColumnProps> = ({
                 className={`touch-target flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition-colors ${
                   sortOrder === "top"
                     ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                    : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                    : "hover:bg-asph-bg-hover"
                 }`}
                 style={
                   sortOrder !== "top"

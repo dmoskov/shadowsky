@@ -73,7 +73,7 @@ export const ColumnMigrationNotice: React.FC = () => {
             </button>
             <button
               onClick={handleDismiss}
-              className="touch-target-sm rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-sm rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-asph-bg-hover"
               style={{ color: "var(--asph-text-secondary)" }}
             >
               Later
@@ -82,7 +82,7 @@ export const ColumnMigrationNotice: React.FC = () => {
         </div>
         <button
           onClick={handleDismiss}
-          className="touch-target-icon rounded p-1 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="touch-target-icon rounded p-1 transition-colors hover:bg-asph-bg-hover"
           aria-label="Dismiss"
         >
           <X

@@ -213,7 +213,7 @@ export const PrivacySettings: React.FC = () => {
             setPrivacy({ ...privacy, hideFromSearch: !privacy.hideFromSearch })
           }
           className={`touch-target relative h-6 w-11 rounded-full transition-colors ${
-            privacy.hideFromSearch ? "bg-blue-500" : "bg-gray-300"
+            privacy.hideFromSearch ? "bg-blue-500" : "bg-asph-bg-active"
           }`}
         >
           <span
@@ -250,7 +250,7 @@ export const PrivacySettings: React.FC = () => {
             setPrivacy({ ...privacy, filterContent: !privacy.filterContent })
           }
           className={`touch-target relative h-6 w-11 rounded-full transition-colors ${
-            privacy.filterContent ? "bg-blue-500" : "bg-gray-300"
+            privacy.filterContent ? "bg-blue-500" : "bg-asph-bg-active"
           }`}
         >
           <span

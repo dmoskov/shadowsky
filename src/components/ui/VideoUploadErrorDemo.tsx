@@ -156,8 +156,8 @@ export const VideoUploadErrorDemo: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6">
-      <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-        <h1 className="mb-4 text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <div className="rounded-lg bg-asph-bg-secondary p-6 shadow-md">
+        <h1 className="mb-4 text-2xl font-bold text-asph-text-primary">
           Video Upload Error UI Demo
         </h1>
         <p className="mb-6 text-asph-text-secondary">
@@ -173,7 +173,7 @@ export const VideoUploadErrorDemo: React.FC = () => {
             <select
               value={selectedError}
               onChange={(e) => setSelectedError(e.target.value)}
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+              className="w-full rounded-md border border-asph-border-secondary bg-asph-bg-tertiary px-3 py-2 text-asph-text-primary"
             >
               <optgroup label="Network Errors">
                 <option value="networkTimeout">Network Timeout</option>
@@ -237,8 +237,8 @@ export const VideoUploadErrorDemo: React.FC = () => {
           </div>
         </div>
 
-        <div className="border-t border-gray-200 pt-6 dark:border-gray-700">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <div className="border-t border-asph-border-primary pt-6">
+          <h2 className="mb-4 text-lg font-semibold text-asph-text-primary">
             Preview
           </h2>
           <VideoUploadErrorPanel
@@ -254,11 +254,11 @@ export const VideoUploadErrorDemo: React.FC = () => {
         </div>
       </div>
 
-      <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+      <div className="rounded-lg bg-asph-bg-secondary p-6 shadow-md">
+        <h2 className="mb-4 text-lg font-semibold text-asph-text-primary">
           Error Details
         </h2>
-        <pre className="overflow-auto rounded-lg bg-gray-100 p-4 text-xs dark:bg-gray-900">
+        <pre className="overflow-auto rounded-lg bg-asph-bg-tertiary p-4 text-xs">
           {JSON.stringify(errorExamples[selectedError], null, 2)}
         </pre>
       </div>

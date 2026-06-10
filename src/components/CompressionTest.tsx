@@ -356,7 +356,7 @@ export function CompressionTest() {
         />
 
         {originalFile && (
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-asph-text-secondary">
             Original file: {originalFile.name} (
             {(originalFile.size / 1024 / 1024).toFixed(2)} MB)
           </div>
@@ -375,12 +375,12 @@ export function CompressionTest() {
               className="rounded border p-4"
             >
               <h3 className="mb-2 font-bold">{result.name}</h3>
-              <div className="mb-2 text-sm text-gray-600">
+              <div className="mb-2 text-sm text-asph-text-secondary">
                 Size: {(result.size / 1024 / 1024).toFixed(2)} MB
                 <br />
                 Time: {result.time}ms
               </div>
-              <div className="rounded bg-gray-100 p-2">
+              <div className="rounded bg-asph-bg-tertiary p-2">
                 <img
                   src={result.url}
                   alt={result.name}

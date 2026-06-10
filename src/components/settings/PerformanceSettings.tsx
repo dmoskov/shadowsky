@@ -55,7 +55,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <div
-      className={`rounded-lg border p-4 ${rating ? getRatingBgColor(rating) : "bg-gray-100 dark:bg-gray-800"}`}
+      className={`rounded-lg border p-4 ${rating ? getRatingBgColor(rating) : "bg-asph-bg-tertiary"}`}
       style={{ borderColor: "var(--asph-border-primary)" }}
     >
       <div className="mb-2 flex items-center justify-between">
@@ -121,7 +121,7 @@ const TrendItem: React.FC<TrendItemProps> = ({
   const unit = METRIC_INFO[metricKey]?.unit || "";
 
   return (
-    <div className="flex items-center justify-between border-b border-gray-200 py-2 last:border-0 dark:border-gray-700">
+    <div className="flex items-center justify-between border-b border-asph-border-primary py-2 last:border-0">
       <div>
         <span className="font-medium">{metric}</span>
         <span className="ml-2 text-sm text-asph-text-tertiary">
@@ -425,7 +425,7 @@ export const PerformanceSettings: React.FC = () => {
                   className={`touch-target rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                     budgetPreset === preset
                       ? "bg-blue-600 text-white"
-                      : "bg-gray-100 text-asph-text-secondary hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+                      : "bg-asph-bg-tertiary text-asph-text-secondary hover:bg-asph-bg-active"
                   }`}
                 >
                   {preset.charAt(0).toUpperCase() + preset.slice(1)}
@@ -454,7 +454,7 @@ export const PerformanceSettings: React.FC = () => {
                   }
                   step={metric === "cls" ? 0.01 : 100}
                   min={0}
-                  className="w-full rounded-md border bg-white px-2 py-1.5 text-sm dark:bg-gray-800"
+                  className="w-full rounded-md border bg-asph-bg-secondary px-2 py-1.5 text-sm"
                   style={{ borderColor: "var(--asph-border-primary)" }}
                 />
               </div>
@@ -699,9 +699,7 @@ export const PerformanceSettings: React.FC = () => {
           <button
             onClick={() => setEngagementEnabled(!isEngagementEnabled)}
             className={`touch-target relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors ${
-              isEngagementEnabled
-                ? "bg-blue-600"
-                : "bg-gray-300 dark:bg-gray-600"
+              isEngagementEnabled ? "bg-blue-600" : "bg-asph-bg-active"
             }`}
             role="switch"
             aria-checked={isEngagementEnabled}

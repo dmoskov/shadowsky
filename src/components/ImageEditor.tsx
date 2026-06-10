@@ -690,7 +690,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={onCancel}
-              className="touch-target-icon rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-icon rounded-full p-2 transition-colors hover:bg-asph-bg-hover"
               style={{ color: "var(--asph-text-primary)" }}
             >
               <X size={20} />
@@ -709,7 +709,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={resetAdjustments}
-              className="touch-target-sm flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-sm flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors hover:bg-asph-bg-hover"
               style={{
                 borderColor: "var(--asph-border-primary)",
                 color: "var(--asph-text-secondary)",
@@ -736,7 +736,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
 
         <div className="flex flex-1 overflow-hidden">
           {/* Main preview area */}
-          <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-gray-900 p-4">
+          <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-black p-4">
             <div ref={previewRef} className="relative max-h-full max-w-full">
               <img
                 ref={imageRef}
@@ -863,7 +863,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                   className={`touch-target flex flex-1 items-center justify-center gap-1.5 py-3 text-sm font-medium transition-colors ${
                     activeTab === id
                       ? "border-b-2"
-                      : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                      : "text-asph-text-tertiary hover:text-asph-text-secondary"
                   }`}
                   style={{
                     borderColor:
@@ -959,7 +959,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                     <div className="flex gap-2">
                       <button
                         onClick={() => rotate("ccw")}
-                        className="touch-target-icon flex-1 rounded-lg border p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="touch-target-icon flex-1 rounded-lg border p-2 transition-colors hover:bg-asph-bg-hover"
                         style={{
                           borderColor: "var(--asph-border-primary)",
                           color: "var(--asph-text-primary)",
@@ -970,7 +970,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                       </button>
                       <button
                         onClick={() => rotate("cw")}
-                        className="touch-target-icon flex-1 rounded-lg border p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="touch-target-icon flex-1 rounded-lg border p-2 transition-colors hover:bg-asph-bg-hover"
                         style={{
                           borderColor: "var(--asph-border-primary)",
                           color: "var(--asph-text-primary)",
@@ -981,7 +981,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                       </button>
                       <button
                         onClick={() => flip("h")}
-                        className={`touch-target flex-1 rounded-lg border p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                        className={`touch-target flex-1 rounded-lg border p-2 transition-colors hover:bg-asph-bg-hover ${
                           adjustments.flipH
                             ? "bg-blue-100 dark:bg-blue-900"
                             : ""
@@ -998,7 +998,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                       </button>
                       <button
                         onClick={() => flip("v")}
-                        className={`touch-target flex-1 rounded-lg border p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                        className={`touch-target flex-1 rounded-lg border p-2 transition-colors hover:bg-asph-bg-hover ${
                           adjustments.flipV
                             ? "bg-blue-100 dark:bg-blue-900"
                             : ""
@@ -1118,7 +1118,7 @@ export function ImageEditor({ images, onSave, onCancel }: ImageEditorProps) {
                             setIsCropping(false);
                             setCropArea(null);
                           }}
-                          className="touch-target-sm flex-1 rounded-lg border px-4 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                          className="touch-target-sm flex-1 rounded-lg border px-4 py-2 text-sm transition-colors hover:bg-asph-bg-hover"
                           style={{
                             borderColor: "var(--asph-border-primary)",
                             color: "var(--asph-text-primary)",

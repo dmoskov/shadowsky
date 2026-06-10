@@ -443,7 +443,7 @@ export const ModerationHistorySettings: React.FC = () => {
               className="mt-1 flex items-center gap-2 text-xs"
               style={{ color: "var(--asph-text-tertiary)" }}
             >
-              <span className="rounded bg-gray-500 bg-opacity-20 px-1.5 py-0.5 capitalize">
+              <span className="rounded bg-asph-bg-active px-1.5 py-0.5 capitalize">
                 {entry.reason}
               </span>
               <span>·</span>

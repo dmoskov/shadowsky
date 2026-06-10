@@ -268,7 +268,7 @@ export const ComposerToolbar: React.FC<ComposerToolbarProps> = ({
               className={`h-1.5 w-6 rounded-full transition-colors ${
                 disclosureLevel === "advanced"
                   ? "bg-blue-500"
-                  : "bg-gray-300 dark:bg-gray-600"
+                  : "bg-asph-bg-active"
               }`}
             />
           </div>
@@ -334,13 +334,13 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
       </button>
       {tooltip && (
         <div className="absolute bottom-full right-0 z-10 mb-2 hidden group-hover:block">
-          <div className="whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-xs text-white">
+          <div className="whitespace-nowrap rounded-lg bg-asph-text-primary px-3 py-2 text-xs text-asph-bg-secondary">
             <div className="mb-1 font-semibold">{tooltip.title}</div>
             <div>{tooltip.description}</div>
             {tooltip.detail && (
-              <div className="mt-1 text-gray-300">{tooltip.detail}</div>
+              <div className="mt-1 text-asph-bg-tertiary">{tooltip.detail}</div>
             )}
-            <div className="absolute bottom-0 right-4 h-2 w-2 translate-y-1/2 rotate-45 transform bg-gray-900"></div>
+            <div className="absolute bottom-0 right-4 h-2 w-2 translate-y-1/2 rotate-45 transform bg-asph-text-primary"></div>
           </div>
         </div>
       )}

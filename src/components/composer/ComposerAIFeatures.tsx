@@ -183,7 +183,7 @@ const ToneOptionsModal: React.FC<ToneOptionsModalProps> = ({
             Choose a Tone
           </h3>
           <button
-            className="touch-target-icon rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded p-1 hover:bg-asph-bg-hover focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onClose}
             aria-label="Close dialog"
           >
@@ -302,7 +302,7 @@ const TonePreviewModal: React.FC<TonePreviewModalProps> = ({
             </span>
           </h3>
           <button
-            className="touch-target-icon rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded p-1 hover:bg-asph-bg-hover focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onCancel}
             aria-label="Close dialog"
           >
@@ -419,7 +419,7 @@ const ThreadOptimizationModal: React.FC<ThreadOptimizationModalProps> = ({
             Thread Optimization - {result.totalPosts} Posts
           </h3>
           <button
-            className="touch-target-icon rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded p-1 hover:bg-asph-bg-hover focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onCancel}
             aria-label="Close dialog"
           >
@@ -575,7 +575,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
             Writing Feedback
           </h3>
           <button
-            className="touch-target-icon rounded p-1 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded p-1 hover:bg-asph-bg-hover focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             onClick={onClose}
             aria-label="Close dialog"
           >
@@ -623,7 +623,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
               <FileText size={16} aria-hidden="true" />
               Original Version
             </h4>
-            <p className="rounded bg-gray-50 p-3 text-sm dark:bg-gray-900">
+            <p className="rounded bg-asph-bg-primary p-3 text-sm">
               {originalText}
             </p>
           </div>
@@ -649,7 +649,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
                 Use This
               </button>
             </h4>
-            <p className="mb-3 rounded bg-gray-50 p-3 text-sm dark:bg-gray-900">
+            <p className="mb-3 rounded bg-asph-bg-primary p-3 text-sm">
               {feedback.correctedVersion.text}
             </p>
             {feedback.correctedVersion.changes.length > 0 && (
@@ -685,7 +685,7 @@ const WritingFeedbackModal: React.FC<WritingFeedbackModalProps> = ({
                 Use This
               </button>
             </h4>
-            <p className="mb-3 rounded bg-gray-50 p-3 text-sm dark:bg-gray-900">
+            <p className="mb-3 rounded bg-asph-bg-primary p-3 text-sm">
               {feedback.enhancedVersion.text}
             </p>
             {feedback.enhancedVersion.improvements.length > 0 && (

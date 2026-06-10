@@ -816,7 +816,7 @@ export const ContentModerationSettings: React.FC = () => {
             onClick={handleToggleAdultContent}
             disabled={isLoading}
             className={`touch-target relative h-6 w-11 rounded-full transition-colors disabled:opacity-50 ${
-              adultContentEnabled ? "bg-blue-500" : "bg-gray-300"
+              adultContentEnabled ? "bg-blue-500" : "bg-asph-bg-active"
             }`}
           >
             <span

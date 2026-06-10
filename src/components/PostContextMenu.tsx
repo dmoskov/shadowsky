@@ -181,7 +181,7 @@ export const PostContextMenu: React.FC<PostContextMenuProps> = ({
         ref={menuRef}
         role="menu"
         aria-label="Post context menu"
-        className="fixed z-[9999] w-56 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-900"
+        className="fixed z-[9999] w-56 overflow-hidden rounded-lg border border-asph-border-primary bg-asph-bg-secondary py-1 shadow-lg"
         style={{
           top: `${adjusted.y}px`,
           left: `${adjusted.x}px`,
@@ -217,7 +217,7 @@ export const PostContextMenu: React.FC<PostContextMenuProps> = ({
         )}
 
         <div
-          className="my-1 border-t border-gray-200 dark:border-gray-700"
+          className="my-1 border-t border-asph-border-primary"
           role="separator"
         />
 

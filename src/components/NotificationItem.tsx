@@ -240,7 +240,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                 return (
                   <div className="mt-2">
                     <div
-                      className="relative overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
+                      className="relative overflow-hidden rounded-lg border bg-asph-bg-tertiary"
                       style={{
                         borderColor: "var(--asph-border-primary)",
                         aspectRatio: "16/9",
@@ -291,7 +291,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                 return (
                   <div className="mt-2">
                     <div
-                      className="relative overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
+                      className="relative overflow-hidden rounded-lg border bg-asph-bg-tertiary"
                       style={{
                         borderColor: "var(--asph-border-primary)",
                         aspectRatio: "16/9",
@@ -349,7 +349,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                   return (
                     <div className="mt-2">
                       <div
-                        className="overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
+                        className="overflow-hidden rounded-lg border bg-asph-bg-tertiary"
                         style={{
                           borderColor: "var(--asph-border-primary)",
                         }}
@@ -393,7 +393,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = React.memo(
                   return (
                     <div className="mt-2">
                       <div
-                        className="overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
+                        className="overflow-hidden rounded-lg border bg-asph-bg-tertiary"
                         style={{
                           borderColor: "var(--asph-border-primary)",
                         }}

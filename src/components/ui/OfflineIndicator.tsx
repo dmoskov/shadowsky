@@ -380,7 +380,7 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
         };
       default:
         return {
-          bgColor: "bg-gray-500",
+          bgColor: "bg-asph-info",
           icon: <WifiOff className="h-4 w-4" />,
           title: "Connection status unknown",
           message: "",

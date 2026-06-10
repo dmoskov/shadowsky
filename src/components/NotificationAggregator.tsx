@@ -592,7 +592,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500 dark:border-gray-600 dark:border-t-blue-400"></div>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-asph-border-secondary border-t-blue-500 dark:border-t-blue-400"></div>
                       <span
                         className="text-sm"
                         style={{ color: "var(--asph-text-secondary)" }}
@@ -752,7 +752,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                     {hasVideo && (
                       <div className="mt-2">
                         <div
-                          className="relative overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
+                          className="relative overflow-hidden rounded-lg border bg-asph-bg-tertiary"
                           style={{
                             borderColor: "var(--asph-border-primary)",
                             aspectRatio: "16/9",
@@ -809,7 +809,7 @@ export const AggregatedNotificationItem: React.FC<AggregatedNotificationItemProp
                         return (
                           <div className="mt-2">
                             <div
-                              className="overflow-hidden rounded-lg border bg-gray-100 dark:bg-gray-800"
+                              className="overflow-hidden rounded-lg border bg-asph-bg-tertiary"
                               style={{
                                 borderColor: "var(--asph-border-primary)",
                               }}

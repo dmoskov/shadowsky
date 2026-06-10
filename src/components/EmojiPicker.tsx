@@ -48,7 +48,7 @@ function EmojiCell({
     <div style={style}>
       <button
         onClick={() => onSelect(emoji)}
-        className="touch-target flex h-full w-full items-center justify-center rounded text-2xl hover:bg-gray-100 dark:hover:bg-gray-800"
+        className="touch-target flex h-full w-full items-center justify-center rounded text-2xl hover:bg-asph-bg-hover"
         style={{
           background: "transparent",
           transition: "background 0.2s",
@@ -168,7 +168,7 @@ export function EmojiPicker({ onSelectEmoji, onClose }: EmojiPickerProps) {
             </h3>
             <button
               onClick={onClose}
-              className="touch-target-icon rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-icon rounded hover:bg-asph-bg-hover"
               aria-label="Close"
             >
               <X size={20} />

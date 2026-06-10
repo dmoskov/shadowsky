@@ -134,7 +134,7 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
           <button
             onClick={onClose}
             aria-label="Close keyboard shortcuts help"
-            className="touch-target-icon rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="touch-target-icon rounded-full p-2 transition-colors hover:bg-asph-bg-hover"
           >
             <X size={20} style={{ color: "var(--asph-text-secondary)" }} />
           </button>
@@ -218,7 +218,7 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
         >
           <p>
             Press{" "}
-            <kbd className="rounded border border-gray-300 px-1.5 py-0.5 dark:border-gray-600">
+            <kbd className="rounded border border-asph-border-secondary px-1.5 py-0.5">
               Esc
             </kbd>{" "}
             to close this dialog

@@ -86,7 +86,7 @@ export const AppearanceSettings: React.FC = () => {
                 className={`touch-target flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all ${
                   theme === themeOption.value
                     ? "border-blue-500"
-                    : "border-gray-200 hover:border-gray-300"
+                    : "border-asph-border-primary hover:border-asph-border-secondary"
                 }`}
                 style={{
                   backgroundColor:

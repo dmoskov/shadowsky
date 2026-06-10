@@ -61,7 +61,7 @@ export const PostItem = React.memo(
     return (
       <div
         ref={(el) => registerRef(`${post.uri}-${index}`, el)}
-        className={`relative cursor-pointer px-3 py-2.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900 ${
+        className={`relative cursor-pointer px-3 py-2.5 transition-colors hover:bg-asph-bg-hover ${
           item.reply?.parent || post.record?.reply?.parent
             ? "from-blue-500/3 border-l-4 border-blue-500 bg-gradient-to-r to-transparent"
             : ""

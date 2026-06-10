@@ -286,7 +286,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
 
     return (
       <div
-        className="flex items-center gap-2 rounded-md bg-gray-100 px-2 py-1 dark:bg-gray-800"
+        className="flex items-center gap-2 rounded-md bg-asph-bg-tertiary px-2 py-1"
         role="status"
         aria-label={`Upload ${progress.state}: ${progress.percentage.toFixed(0)}%`}
         aria-live="polite"
@@ -296,7 +296,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
           aria-hidden="true"
         />
         <div className="min-w-0 flex-1">
-          <div className="h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+          <div className="h-1.5 overflow-hidden rounded-full bg-asph-bg-active">
             <div
               className={`h-full ${stateConfig.bgColor} transition-all duration-300 ease-out`}
               style={{ width: `${progress.percentage}%` }}
@@ -329,7 +329,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
 
   return (
     <div
-      className="w-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+      className="w-full rounded-lg border border-asph-border-primary bg-asph-bg-secondary p-4 shadow-sm"
       role="region"
       aria-label="Upload progress"
     >
@@ -343,7 +343,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <h3 className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+              <h3 className="truncate text-sm font-medium text-asph-text-primary">
                 {fileName || "Video Upload"}
               </h3>
               <p className="text-xs text-asph-text-secondary">
@@ -359,7 +359,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
             {onCancel && progress.state !== "complete" && (
               <button
                 onClick={onCancel}
-                className="touch-target-icon ml-2 rounded-md p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="touch-target-icon ml-2 rounded-md p-1.5 transition-colors hover:bg-asph-bg-hover"
                 aria-label="Cancel upload"
               >
                 <span className="text-xs text-asph-text-secondary">✕</span>
@@ -368,7 +368,7 @@ export const UploadProgressBar: React.FC<UploadProgressBarProps> = ({
           </div>
 
           <div
-            className="mb-2 h-2 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+            className="mb-2 h-2 overflow-hidden rounded-full bg-asph-bg-active"
             role="progressbar"
             aria-valuenow={progress.percentage}
             aria-valuemin={0}

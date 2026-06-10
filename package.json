@@ -36,6 +36,7 @@
     "test:types": "wireit",
     "test:unit": "wireit",
     "test:amplify": "wireit",
+    "test:design": "wireit",
     "test:unit:watch": "vitest watch",
     "tokens:build": "wireit",
     "tokens:check": "wireit"
@@ -155,6 +156,7 @@
         "test:lint",
         "test:types",
         "test:unit",
+        "test:design",
         "tokens:check"
       ]
     },
@@ -197,6 +199,15 @@
         "vite.config.ts",
         "tsconfig.json"
       ]
+    },
+    "test:design": {
+      "command": "node scripts/check-design-tokens.mjs",
+      "files": [
+        "src/**/*.{ts,tsx}",
+        "scripts/check-design-tokens.mjs",
+        "scripts/design-tokens-allowlist.txt"
+      ],
+      "output": []
     },
     "tokens:build": {
       "command": "node packages/tokens/build.mjs",

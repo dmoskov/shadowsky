@@ -116,7 +116,7 @@ export const PostMenu: React.FC<PostMenuProps> = ({
               id={menuId}
               role="menu"
               aria-label="Post actions"
-              className="asph-scrollbar fixed z-[9999] max-h-[calc(100vh-16px)] w-56 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
+              className="asph-scrollbar fixed z-[9999] max-h-[calc(100vh-16px)] w-56 overflow-y-auto rounded-lg border border-asph-border-primary bg-asph-bg-secondary shadow-lg"
               style={{
                 top: `${menuPosition.top}px`,
                 left: `${menuPosition.left}px`,

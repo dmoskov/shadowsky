@@ -78,7 +78,7 @@ export function AuthExpiredModal({
         aria-modal="true"
         aria-labelledby="auth-expired-title"
         aria-describedby="auth-expired-description"
-        className={`modal-container modal-auto-height modal-md bg-white dark:bg-gray-900 ${contentAnimationClass}`}
+        className={`modal-container modal-auto-height modal-md bg-asph-bg-secondary ${contentAnimationClass}`}
         onClick={(e) => e.stopPropagation()}
         onAnimationEnd={isEntering ? handleEntranceEnd : undefined}
         data-state={modalState}
@@ -91,7 +91,7 @@ export function AuthExpiredModal({
           <div className="flex-1">
             <h3
               id="auth-expired-title"
-              className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100"
+              className="mb-2 text-lg font-semibold text-asph-text-primary"
             >
               Session Expired
             </h3>
@@ -112,7 +112,7 @@ export function AuthExpiredModal({
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 border-t bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex justify-end gap-3 border-t border-asph-border-primary bg-asph-bg-tertiary px-6 py-4">
           <button
             onClick={handleReLogin}
             className="touch-target-sm flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"

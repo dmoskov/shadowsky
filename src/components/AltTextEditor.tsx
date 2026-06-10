@@ -140,7 +140,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={onCancel}
-              className="touch-target-icon rounded-full p-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="touch-target-icon rounded-full p-2 transition-colors hover:bg-asph-bg-hover"
               style={{ color: "var(--asph-text-primary)" }}
             >
               <X size={20} />
@@ -167,7 +167,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
         <div className="flex flex-1 overflow-hidden">
           {/* Image preview */}
           <div
-            className="flex w-1/2 items-center justify-center border-r bg-gray-900 p-4"
+            className="flex w-1/2 items-center justify-center border-r bg-black p-4"
             style={{ borderColor: "var(--asph-border-primary)" }}
           >
             <img
@@ -184,7 +184,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
               <button
                 onClick={generateAltText}
                 disabled={isGenerating}
-                className="touch-target-sm flex w-full items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-medium transition-colors hover:bg-gray-50 disabled:opacity-50 dark:hover:bg-gray-800"
+                className="touch-target-sm flex w-full items-center justify-center gap-2 rounded-lg border py-2.5 text-sm font-medium transition-colors hover:bg-asph-bg-hover disabled:opacity-50"
                 style={{
                   borderColor: "var(--asph-primary)",
                   color: "var(--asph-primary)",
@@ -230,7 +230,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
                       className={`touch-target w-full rounded-lg border p-3 text-left text-sm transition-colors ${
                         selectedSuggestion === index
                           ? "ring-2 ring-blue-500"
-                          : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                          : "hover:bg-asph-bg-hover"
                       }`}
                       style={{
                         borderColor:
@@ -269,7 +269,7 @@ export function AltTextEditor({ image, onSave, onCancel }: AltTextEditorProps) {
                   <button
                     key={`template-${template.label}-${index}`}
                     onClick={() => applyTemplate(template.prefix)}
-                    className="touch-target-sm rounded-full border px-2.5 py-1 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="touch-target-sm rounded-full border px-2.5 py-1 text-xs transition-colors hover:bg-asph-bg-hover"
                     style={{
                       borderColor: "var(--asph-border-primary)",
                       color: "var(--asph-text-secondary)",

@@ -418,7 +418,7 @@ const SkyColumn = memo(
                   title="Refresh feed"
                 >
                   <RefreshCw className="h-5 w-5" />
-                  <span className="absolute -left-12 top-1/2 -translate-y-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 dark:bg-gray-700">
+                  <span className="absolute -left-12 top-1/2 -translate-y-1/2 whitespace-nowrap rounded bg-black/80 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
                     Refresh
                   </span>
                 </button>
@@ -429,7 +429,7 @@ const SkyColumn = memo(
                   title="Scroll to top"
                 >
                   <ArrowUp className="h-5 w-5" />
-                  <span className="absolute -left-16 top-1/2 -translate-y-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 dark:bg-gray-700">
+                  <span className="absolute -left-16 top-1/2 -translate-y-1/2 whitespace-nowrap rounded bg-black/80 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
                     Back to top
                   </span>
                 </button>
