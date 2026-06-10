@@ -20,6 +20,7 @@
 
   dispatch_once(&nativeComponentsToken, ^{
     thirdPartyComponents = @{
+		@"SkiaPictureView": NSClassFromString(@"SkiaPictureView"), // @shopify/react-native-skia
 		@"RNGestureHandlerButton": NSClassFromString(@"RNGestureHandlerButtonComponentView"), // react-native-gesture-handler
 		@"RNCSafeAreaProvider": NSClassFromString(@"RNCSafeAreaProviderComponentView"), // react-native-safe-area-context
 		@"RNCSafeAreaView": NSClassFromString(@"RNCSafeAreaViewComponentView"), // react-native-safe-area-context
