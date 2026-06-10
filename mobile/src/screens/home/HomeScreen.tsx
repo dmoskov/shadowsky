@@ -17,6 +17,8 @@ import { ErrorState } from "../../components/ErrorState";
 import { useRouter } from "expo-router";
 import { triggerHaptic } from "../../utils/haptics";
 import { useToast } from "../../contexts/ToastContext";
+import { useJetstreamOptional } from "../../contexts/JetstreamContext";
+import { useCustomFeedFreshness } from "../../hooks/useCustomFeedFreshness";
 import { useNetworkStatus } from "../../hooks/useNetworkStatus";
 import { useDataPrefetch } from "../../hooks/useDataPrefetch";
 import { useFeedPagePrefetch } from "../../hooks/useFeedPagePrefetch";
@@ -140,6 +142,39 @@ export function HomeScreen() {
   // Prefetch thread and profile data for the first visible posts
   useDataPrefetch(flatPosts);
 
+  // "New posts" pill: the feed is never refetched underneath the reader —
+  // freshness is only signalled. The Following timeline gets its signal
+  // from Jetstream (free, event-driven); custom feeds use the official
+  // client's peek pattern (limit-1 fetch on an interval).
+  const jetstream = useJetstreamOptional();
+  const { hasNewPosts: hasNewCustomFeedPosts, clearNewPosts } =
+    useCustomFeedFreshness({
+      feedUri: selectedFeedUri,
+      topPostUri: data?.pages?.[0]?.feed?.[0]?.post?.uri,
+      isReady: !activeQuery.isLoading && !isError && !!data,
+    });
+  const showNewPostsPill = selectedFeedUri
+    ? hasNewCustomFeedPosts
+    : (jetstream?.hasNewTimelinePosts ?? false);
+
+  const clearFreshnessSignals = useCallback(() => {
+    jetstream?.clearNewTimelinePosts();
+    clearNewPosts();
+  }, [jetstream, clearNewPosts]);
+
+  const handleLoadNewPosts = useCallback(() => {
+    triggerHaptic("light");
+    clearFreshnessSignals();
+    scrollRef.current?.scrollToTop();
+    scrollRef.current?.refresh();
+    showChrome();
+  }, [clearFreshnessSignals, showChrome]);
+
+  // Pull-to-refresh also clears the signals — the feed is fresh either way
+  const handleFeedRefreshed = useCallback(() => {
+    clearFreshnessSignals();
+  }, [clearFreshnessSignals]);
+
   // Prefetch next feed page during idle to eliminate pagination loading flicker
   useFeedPagePrefetch(activeQuery);
 
@@ -164,6 +199,7 @@ export function HomeScreen() {
       if (isDoubleTap) {
         // Double tap: scroll to top + refresh
         triggerHaptic("medium");
+        clearFreshnessSignals();
         scrollRef.current?.scrollToTop();
         scrollRef.current?.refresh();
         showChrome();
@@ -181,7 +217,7 @@ export function HomeScreen() {
       setSelectedFeedUri(feedUri);
       lastFeedTapRef.current = { feedUri, time: Date.now() };
     }
-  }, [selectedFeedUri]);
+  }, [selectedFeedUri, clearFreshnessSignals, showChrome]);
 
   const handleDiscoverFeeds = useCallback(() => {
     triggerHaptic("light");
@@ -451,6 +487,7 @@ export function HomeScreen() {
             query={activeQuery}
             bookmarkedPostUris={bookmarkedPostUris}
             isOnline={isConnected}
+            onRefresh={handleFeedRefreshed}
             onPostPress={handlePostPress}
             onProfilePress={handleProfilePress}
             onLike={handleLike}
@@ -469,6 +506,27 @@ export function HomeScreen() {
           />
         )}
       </Animated.View>
+
+      {/* New posts pill — signal-only freshness, official-client pattern */}
+      {showNewPostsPill && (
+        <TouchableOpacity
+          testID="new-posts-pill"
+          style={[
+            styles.newPostsPill,
+            {
+              top: insets.top + NAV_BAR_HEIGHT + FEED_PICKER_HEIGHT + 12,
+              backgroundColor: colors.primary,
+            },
+            elevation.high,
+          ]}
+          onPress={handleLoadNewPosts}
+          activeOpacity={0.8}
+          accessibilityLabel="Load new posts"
+          accessibilityRole="button"
+        >
+          <Text style={styles.newPostsPillText}>↑ New posts</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Compose FAB */}
       <Animated.View
@@ -590,6 +648,19 @@ function createStyles(colors: any) {
       fontSize: fontSize.subheadline,
       fontWeight: '600',
       color: colors.primary,
+    },
+    newPostsPill: {
+      position: 'absolute',
+      alignSelf: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      zIndex: 10,
+    },
+    newPostsPillText: {
+      color: '#ffffff',
+      fontSize: fontSize.subheadline,
+      fontWeight: '600',
     },
     fab: {
       position: 'absolute',

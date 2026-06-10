@@ -42,6 +42,14 @@ interface JetstreamContextType {
   reconnect: () => void;
   /** Update the list of followed DIDs for timeline filtering */
   updateFollowedDids: (dids: string[]) => void;
+  /**
+   * Whether followed accounts have posted since the timeline was last
+   * refreshed. Drives the "New posts" pill — content is never refetched
+   * underneath the reader.
+   */
+  hasNewTimelinePosts: boolean;
+  /** Clear the new-posts signal (call when the timeline is refreshed) */
+  clearNewTimelinePosts: () => void;
 }
 
 const JetstreamContext = createContext<JetstreamContextType | null>(null);
@@ -72,21 +80,21 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
   const isInitializedRef = useRef(false);
   const [isConnected, setIsConnected] = React.useState(false);
   const [isReconnectExhausted, setIsReconnectExhausted] = React.useState(false);
+  const [hasNewTimelinePosts, setHasNewTimelinePosts] = React.useState(false);
 
   // Track whether Jetstream was connected before low-power mode kicked in
   const wasConnectedBeforeLowPowerRef = useRef(false);
+
+  // Track first connect: startup gets an active timeline refresh, but
+  // reconnects (app foreground, network blips) only mark it stale so the
+  // feed is never rebuilt underneath the reader
+  const hasConnectedOnceRef = useRef(false);
 
   // Debounce timer for notification cache invalidation
   const notificationDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
   const pendingNotificationCount = useRef(0);
-
-  // Debounce timer for timeline cache invalidation
-  const timelineDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-  const pendingTimelineEvents = useRef(0);
 
   // Connect when authenticated, disconnect when not
   useEffect(() => {
@@ -116,7 +124,18 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
       // Refresh stale caches on connect
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
-      queryClient.invalidateQueries({ queryKey: ["timeline"] });
+      if (!hasConnectedOnceRef.current) {
+        // First connect after launch: actively fetch a fresh timeline
+        hasConnectedOnceRef.current = true;
+        queryClient.invalidateQueries({ queryKey: ["timeline"] });
+      } else {
+        // Reconnect: mark stale only; the "New posts" pill and
+        // pull-to-refresh bring fresh content in on the user's terms
+        queryClient.invalidateQueries({
+          queryKey: ["timeline"],
+          refetchType: "none",
+        });
+      }
     };
 
     const handleDisconnect = () => {
@@ -144,32 +163,45 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
       }, 300);
     };
 
-    // Real-time timeline events: batch and debounce cache invalidation
-    const flushTimelineEvents = () => {
-      if (pendingTimelineEvents.current > 0) {
-        logger.log(
-          `Flushing ${pendingTimelineEvents.current} timeline events`,
-        );
-        queryClient.invalidateQueries({ queryKey: ["timeline"] });
-        pendingTimelineEvents.current = 0;
-      }
-      timelineDebounceRef.current = null;
-    };
-
-    const debounceTimelineInvalidation = () => {
-      pendingTimelineEvents.current++;
-      if (timelineDebounceRef.current) {
-        clearTimeout(timelineDebounceRef.current);
-      }
-      timelineDebounceRef.current = setTimeout(flushTimelineEvents, 500);
-    };
-
+    // Real-time timeline events. Following the official client's pattern,
+    // a new post never refetches the feed in place (that would replace
+    // content underneath the reader and refetch every cached page) — it
+    // only raises the "New posts" signal for the pill.
     const handleNewPost = () => {
-      debounceTimelineInvalidation();
+      setHasNewTimelinePosts(true);
     };
 
-    const handleDeletePost = () => {
-      debounceTimelineInvalidation();
+    // A deleted post is removed surgically from cached feed pages —
+    // one row disappears, no refetch, no feed rebuild.
+    const handleDeletePost = (event: JetstreamEvent) => {
+      if (event.type !== JetstreamEventType.TIMELINE_DELETE_POST) return;
+      const deletedUri = event.uri;
+      queryClient.setQueriesData(
+        {
+          predicate: (query) =>
+            query.queryKey[0] === "timeline" || query.queryKey[0] === "feed",
+        },
+        (oldData: unknown) => {
+          const data = oldData as
+            | { pages?: Array<{ feed?: Array<{ post?: { uri?: string } }> }> }
+            | undefined;
+          if (!data?.pages) return oldData;
+
+          let changed = false;
+          const newPages = data.pages.map((page) => {
+            if (!page.feed?.some((item) => item.post?.uri === deletedUri)) {
+              return page;
+            }
+            changed = true;
+            return {
+              ...page,
+              feed: page.feed.filter((item) => item.post?.uri !== deletedUri),
+            };
+          });
+
+          return changed ? { ...data, pages: newPages } : oldData;
+        },
+      );
     };
 
     const handleError = (event: JetstreamEvent) => {
@@ -199,12 +231,6 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
         notificationDebounceRef.current = null;
       }
       pendingNotificationCount.current = 0;
-
-      if (timelineDebounceRef.current) {
-        clearTimeout(timelineDebounceRef.current);
-        timelineDebounceRef.current = null;
-      }
-      pendingTimelineEvents.current = 0;
 
       const svc = getJetstreamService();
       if (svc) {
@@ -260,14 +286,27 @@ export function JetstreamProvider({ children }: JetstreamProviderProps) {
     }
   }, []);
 
+  const clearNewTimelinePosts = useCallback(() => {
+    setHasNewTimelinePosts(false);
+  }, []);
+
   const value = useMemo(
     (): JetstreamContextType => ({
       isConnected,
       isReconnectExhausted,
       reconnect,
       updateFollowedDids,
+      hasNewTimelinePosts,
+      clearNewTimelinePosts,
     }),
-    [isConnected, isReconnectExhausted, reconnect, updateFollowedDids],
+    [
+      isConnected,
+      isReconnectExhausted,
+      reconnect,
+      updateFollowedDids,
+      hasNewTimelinePosts,
+      clearNewTimelinePosts,
+    ],
   );
 
   return (

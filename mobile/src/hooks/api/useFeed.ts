@@ -3,6 +3,10 @@ import {getTimeline, getFeed, getAuthorFeed, getActorLikes, getPostThread, Autho
 
 /**
  * Hook to fetch the user's timeline with infinite scroll
+ *
+ * refetchOnReconnect is disabled: reconnects must not replace feed content
+ * underneath the reader. Freshness is signalled by the "New posts" pill
+ * (Jetstream events) and pulled in via user refresh.
  */
 export function useTimeline() {
   return useInfiniteQuery({
@@ -11,6 +15,7 @@ export function useTimeline() {
     getNextPageParam: (lastPage) => lastPage.cursor,
     initialPageParam: undefined as string | undefined,
     maxPages: 10,
+    refetchOnReconnect: false,
   });
 }
 
@@ -25,6 +30,7 @@ export function useCustomFeed(feedUri: string) {
     initialPageParam: undefined as string | undefined,
     enabled: !!feedUri,
     maxPages: 10,
+    refetchOnReconnect: false,
   });
 }
 

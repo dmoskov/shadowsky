@@ -225,6 +225,17 @@ export function setupFocusManager() {
 }
 
 /**
+ * Feed queries hold content the user may be actively reading. Blanket
+ * invalidations (foreground, reconnect) must never refetch these in place —
+ * they get marked stale instead, and refresh via the "New posts" pill or
+ * pull-to-refresh.
+ */
+function isFeedQuery(queryKey: readonly unknown[]): boolean {
+  const root = queryKey[0];
+  return root === 'timeline' || root === 'feed';
+}
+
+/**
  * AppState listener for mobile-specific query behavior
  * Handles app backgrounding/foregrounding intelligently
  */
@@ -257,10 +268,15 @@ export function setupAppStateListener() {
         const isStale = await isPrefetchDataStale();
 
         if (prefetchData && !isStale) {
-          logger.log('Hydrating timeline from prefetched data');
-
-          // Hydrate timeline query cache
-          if (prefetchData.timeline) {
+          // Hydrate timeline query cache — but ONLY when it's empty (cold
+          // start). Overwriting a populated cache here would collapse the
+          // user's multi-page timeline to a single page and lose their
+          // scroll position mid-read.
+          if (
+            prefetchData.timeline &&
+            !queryClient.getQueryData(['timeline'])
+          ) {
+            logger.log('Hydrating empty timeline from prefetched data');
             queryClient.setQueryData(
               ['timeline'],
               {
@@ -281,10 +297,21 @@ export function setupAppStateListener() {
         logger.error('Error hydrating prefetched data:', error);
       }
 
-      // If app was in background for more than 5 minutes, invalidate stale queries
+      // If app was in background for more than 5 minutes, invalidate stale queries.
+      // Feed queries (timeline / custom feeds) are only MARKED stale, not
+      // refetched: replacing feed content underneath the reader on foreground
+      // causes jumps and lost positions. The "New posts" pill and
+      // pull-to-refresh bring fresh feed content in on the user's terms.
       if (backgroundDuration > fiveMinutes) {
         logger.log(`App foregrounded after ${Math.round(backgroundDuration / 1000)}s, invalidating stale queries`);
-        queryClient.invalidateQueries({ stale: true });
+        queryClient.invalidateQueries({
+          stale: true,
+          predicate: (query) => !isFeedQuery(query.queryKey),
+        });
+        queryClient.invalidateQueries({
+          predicate: (query) => isFeedQuery(query.queryKey),
+          refetchType: 'none',
+        });
       }
 
       // Resume refetch intervals
@@ -354,7 +381,16 @@ export function setupNetworkListener() {
         }
         networkInvalidationTimer = setTimeout(() => {
           logger.log('Back online, invalidating stale queries');
-          queryClient.invalidateQueries({ stale: true });
+          // Same feed protection as the foreground handler: mark feeds
+          // stale without yanking content out from under the reader
+          queryClient.invalidateQueries({
+            stale: true,
+            predicate: (query) => !isFeedQuery(query.queryKey),
+          });
+          queryClient.invalidateQueries({
+            predicate: (query) => isFeedQuery(query.queryKey),
+            refetchType: 'none',
+          });
           networkInvalidationTimer = null;
         }, 2000);
       } else if (!isOnline) {

@@ -9,6 +9,19 @@ jest.mock('../../../contexts/ThemeContext', () => ({
   useTheme: () => mockTheme,
 }));
 
+const mockJetstream = {
+  isConnected: true,
+  isReconnectExhausted: false,
+  reconnect: jest.fn(),
+  updateFollowedDids: jest.fn(),
+  hasNewTimelinePosts: false,
+  clearNewTimelinePosts: jest.fn(),
+};
+
+jest.mock('../../../contexts/JetstreamContext', () => ({
+  useJetstreamOptional: () => mockJetstream,
+}));
+
 jest.mock('../../../contexts/ToastContext', () => ({
   useToast: () => ({
     showToast: jest.fn(),
@@ -249,6 +262,23 @@ jest.mock('../../../../modules/native-feed-list', () => {
   return { NativeFeedList };
 });
 
+const mockCustomFeedFreshness = {
+  hasNewPosts: false,
+  clearNewPosts: jest.fn(),
+};
+
+jest.mock('../../../hooks/useCustomFeedFreshness', () => ({
+  useCustomFeedFreshness: () => mockCustomFeedFreshness,
+}));
+
+jest.mock('../../../hooks/useNetworkStatus', () => ({
+  useNetworkStatus: () => ({ isConnected: true }),
+}));
+
+jest.mock('../../../hooks/useFeedPagePrefetch', () => ({
+  useFeedPagePrefetch: jest.fn(),
+}));
+
 jest.mock('../../../hooks/useDataPrefetch', () => ({
   useDataPrefetch: () => ({ resetPrefetchCache: jest.fn() }),
 }));
@@ -269,7 +299,11 @@ import { HomeScreen } from '../HomeScreen';
 // ─── Helpers ──────────────────────────────────────────────
 
 const testQueryClient = new QueryClient({
-  defaultOptions: { queries: { retry: false } },
+  defaultOptions: { queries: { retry: false, gcTime: 0 } },
+});
+
+afterAll(() => {
+  testQueryClient.clear();
 });
 
 function renderWithProviders(ui: React.ReactElement) {
@@ -338,6 +372,8 @@ describe('HomeScreen', () => {
       isRefetching: false,
     };
     mockSavedFeeds = undefined;
+    mockJetstream.hasNewTimelinePosts = false;
+    mockCustomFeedFreshness.hasNewPosts = false;
   });
 
   // ─── Loading state ──────────────────────────────────────
@@ -931,6 +967,73 @@ describe('HomeScreen', () => {
 
       fireEvent.press(getByTestId(`post-press-${uri2}`));
       expect(mockNavigateToThread).toHaveBeenCalledWith('bob.bsky.social', 'p2', 'did:plc:bob');
+    });
+  });
+  // ─── New posts pill ─────────────────────────────────────
+  describe('new posts pill', () => {
+    function loadTimeline() {
+      mockTimelineQuery = {
+        ...mockTimelineQuery,
+        data: makeFeedPage([makePost('at://did:plc:alice/app.bsky.feed.post/p1')]),
+        isLoading: false,
+      };
+    }
+
+    it('shows the pill when Jetstream signals new timeline posts', () => {
+      loadTimeline();
+      mockJetstream.hasNewTimelinePosts = true;
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      expect(getByTestId('new-posts-pill')).toBeTruthy();
+    });
+
+    it('does not show the pill without a new-posts signal', () => {
+      loadTimeline();
+      const { queryByTestId } = renderWithProviders(<HomeScreen />);
+      expect(queryByTestId('new-posts-pill')).toBeNull();
+    });
+
+    it('ignores the Jetstream signal on a custom feed (it is Following-only)', () => {
+      loadTimeline();
+      mockJetstream.hasNewTimelinePosts = true;
+      mockSavedFeeds = [
+        { uri: 'at://did:plc:x/app.bsky.feed.generator/foryou', displayName: 'For You' },
+      ];
+      const { queryByTestId } = renderWithProviders(<HomeScreen />);
+      // HomeScreen auto-selects the first saved feed, so the pill must hide
+      expect(queryByTestId('new-posts-pill')).toBeNull();
+    });
+
+    it('shows the pill on a custom feed when the peek finds new posts', () => {
+      loadTimeline();
+      mockCustomFeedFreshness.hasNewPosts = true;
+      mockSavedFeeds = [
+        { uri: 'at://did:plc:x/app.bsky.feed.generator/foryou', displayName: 'For You' },
+      ];
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      expect(getByTestId('new-posts-pill')).toBeTruthy();
+    });
+
+    it('tapping the custom-feed pill clears the peek signal', () => {
+      loadTimeline();
+      mockCustomFeedFreshness.hasNewPosts = true;
+      mockSavedFeeds = [
+        { uri: 'at://did:plc:x/app.bsky.feed.generator/foryou', displayName: 'For You' },
+      ];
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      fireEvent.press(getByTestId('new-posts-pill'));
+      expect(mockCustomFeedFreshness.clearNewPosts).toHaveBeenCalled();
+      expect(mockScrollToTop).toHaveBeenCalledTimes(1);
+      expect(mockRefresh).toHaveBeenCalledTimes(1);
+    });
+
+    it('tapping the pill clears the signal, scrolls to top, and refreshes', () => {
+      loadTimeline();
+      mockJetstream.hasNewTimelinePosts = true;
+      const { getByTestId } = renderWithProviders(<HomeScreen />);
+      fireEvent.press(getByTestId('new-posts-pill'));
+      expect(mockJetstream.clearNewTimelinePosts).toHaveBeenCalled();
+      expect(mockScrollToTop).toHaveBeenCalledTimes(1);
+      expect(mockRefresh).toHaveBeenCalledTimes(1);
     });
   });
 });
