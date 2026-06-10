@@ -166,7 +166,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           if (!def) return null;
 
           const isActive = activeTabId === itemId;
-          const iconColor = isActive ? colors.info : colors.textTertiary;
+          const iconColor = isActive ? colors.primary : colors.textTertiary;
 
           return (
             <Pressable

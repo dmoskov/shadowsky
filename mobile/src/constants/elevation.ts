@@ -51,7 +51,7 @@ export const elevation = {
 // Colored shadows for emphasis on specific elements
 export const coloredShadow = {
   primary: (opacity: number = 0.3) => ({
-    shadowColor: '#c9a84c',
+    shadowColor: '#ff6b9d',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: opacity,
     shadowRadius: 4,
@@ -59,7 +59,7 @@ export const coloredShadow = {
   }),
 
   accent: (opacity: number = 0.3) => ({
-    shadowColor: '#F91880',
+    shadowColor: '#a78bfa',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: opacity,
     shadowRadius: 4,

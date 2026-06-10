@@ -519,7 +519,7 @@ function createStyles(colors: any) {
     textAlign: "center",
   },
   link: {
-    color: colors.info,
+    color: colors.primary,
     textDecorationLine: "underline",
   },
   explainerContainer: {

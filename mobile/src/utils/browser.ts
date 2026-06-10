@@ -104,7 +104,7 @@ export async function openLink(url: string, colors?: any): Promise<void> {
       // Toolbar color matching app dark theme
       toolbarColor: themeColors.background, // #0a0a0f
       // Control tint color (buttons, etc.)
-      controlsColor: themeColors.primary, // #c9a84c
+      controlsColor: themeColors.primary,
       // Collapse the toolbar when scrolling (iOS only)
       enableBarCollapsing: true,
       // Show the page title in the toolbar

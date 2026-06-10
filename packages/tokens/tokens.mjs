@@ -9,10 +9,8 @@
 // CI runs `npm run tokens:check` to fail if generated files drift from this
 // source.
 
-// Canonical Asphodel brand colors. Web uses these today; mobile adopts them
-// in the planned brand-unification phase (Phase 3 of the design
-// consolidation), at which point the mobile palettes below switch from their
-// legacy gold/magenta literals to these references.
+// Canonical Asphodel brand colors, shared by the web and mobile palettes
+// below.
 export const brand = {
   primary: "#ff6b9d",
   primaryDark: "#d63a71",
@@ -292,9 +290,8 @@ const webHighContrastDark = {
 
 // ---------------------------------------------------------------------------
 // Mobile (React Native theme objects + SwiftUI DesignTokens).
-// These are the app's current (legacy) brand values; Phase 3 of the design
-// consolidation replaces primary/accent with the canonical `brand` values
-// above.
+// Brand colors reference the canonical Asphodel `brand` palette above so web
+// and mobile cannot drift.
 // ---------------------------------------------------------------------------
 
 const mobileDark = {
@@ -305,8 +302,8 @@ const mobileDark = {
   border: "#1f2937",
   borderLight: "#374151",
   borderDark: "#000000",
-  primary: "#c9a84c",
-  primaryDark: "#8a7230",
+  primary: brand.primary,
+  primaryDark: brand.primaryDark,
   danger: "#ef4444",
   success: "#10b981",
   info: "#3b82f6",
@@ -327,7 +324,7 @@ const mobileDark = {
   unreadBackground: "#0f172a",
   overlayBackground: "rgba(0, 0, 0, 0.7)",
   // Special colors
-  accent: "#F91880",
+  accent: brand.accentDark,
   accentGreen: "#4ade80",
   accentBlue: "#3b82f6",
   accentPurple: "#8b5cf6",
@@ -337,12 +334,12 @@ const mobileDark = {
   editorText: "#999999",
   modalOverlay: "rgba(0, 0, 0, 0.6)",
   // Visual polish colors
-  primaryLight: "#e0c86b",
+  primaryLight: brand.primaryLight,
   shadowLight: "rgba(0, 0, 0, 0.1)",
   shadowMedium: "rgba(0, 0, 0, 0.2)",
   shadowHeavy: "rgba(0, 0, 0, 0.4)",
-  glowPrimary: "rgba(201, 168, 76, 0.15)",
-  glowAccent: "rgba(249, 24, 128, 0.15)",
+  glowPrimary: "rgba(255, 107, 157, 0.15)",
+  glowAccent: "rgba(167, 139, 250, 0.15)",
   cardBackground: "#16161f",
   cardBorder: "#2a2a35",
   textOnPrimary: "#ffffff",
@@ -356,8 +353,8 @@ const mobileLight = {
   border: "#e5e7eb",
   borderLight: "#d1d5db",
   borderDark: "#111827",
-  primary: "#c9a84c",
-  primaryDark: "#8a7230",
+  primary: brand.primary,
+  primaryDark: brand.primaryDark,
   danger: "#ef4444",
   success: "#10b981",
   info: "#3b82f6",
@@ -378,7 +375,7 @@ const mobileLight = {
   unreadBackground: "#f0f9ff",
   overlayBackground: "rgba(0, 0, 0, 0.5)",
   // Special colors
-  accent: "#F91880",
+  accent: brand.accentLight,
   accentGreen: "#4ade80",
   accentBlue: "#3b82f6",
   accentPurple: "#8b5cf6",
@@ -388,12 +385,12 @@ const mobileLight = {
   editorText: "#6b7280",
   modalOverlay: "rgba(0, 0, 0, 0.4)",
   // Visual polish colors
-  primaryLight: "#e0c86b",
+  primaryLight: brand.primaryLight,
   shadowLight: "rgba(0, 0, 0, 0.05)",
   shadowMedium: "rgba(0, 0, 0, 0.1)",
   shadowHeavy: "rgba(0, 0, 0, 0.2)",
-  glowPrimary: "rgba(201, 168, 76, 0.1)",
-  glowAccent: "rgba(249, 24, 128, 0.1)",
+  glowPrimary: "rgba(255, 107, 157, 0.1)",
+  glowAccent: "rgba(124, 58, 237, 0.1)",
   cardBackground: "#ffffff",
   cardBorder: "#e5e7eb",
   textOnPrimary: "#ffffff",

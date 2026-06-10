@@ -56,7 +56,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   notification: {
     icon: "./assets/notification-icon.png",
-    color: "#c9a84c",
+    color: "#ff6b9d",
     androidMode: "default",
     androidCollapsedTitle: "{{unread_count}} new notifications",
   },
@@ -96,7 +96,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       "expo-notifications",
       {
         icon: "./assets/notification-icon.png",
-        color: "#c9a84c",
+        color: "#ff6b9d",
         sounds: [],
       },
     ],
