@@ -1,21 +1,18 @@
 import React, { useState, useMemo } from "react";
 import {
-  View,
   Text,
   StyleSheet,
-  Modal,
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
   Alert,
-  useWindowDimensions,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
-import { useTheme } from "../contexts/ThemeContext";
-import { BlurOverlay } from "./BlurOverlay";
+import { ThemeColors, useTheme } from "../contexts/ThemeContext";
+import { AppModal } from "./ui/AppModal";
 import { appealLabel } from "../services/atproto/labelers";
 import { fontSize } from "../utils/typography";
+import { borderRadius } from "../constants/elevation";
+import { fontWeights, spacing } from "../constants/spacing";
 
 interface AppealLabelModalProps {
   visible: boolean;
@@ -39,8 +36,6 @@ function AppealLabelModalInner({
   onAppealSubmitted,
 }: AppealLabelModalProps) {
   const { colors } = useTheme();
-  const { width: windowWidth } = useWindowDimensions();
-  const isWideScreen = windowWidth > 768;
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,7 +58,7 @@ function AppealLabelModalInner({
       });
       setIsSubmitted(true);
       onAppealSubmitted?.();
-    } catch (error) {
+    } catch {
       Alert.alert(
         "Error",
         "Failed to submit appeal. Please try again.",
@@ -83,151 +78,86 @@ function AppealLabelModalInner({
   const displayLabel =
     labelVal.replace(/-/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={handleClose}
+  const footer = isSubmitted ? (
+    <TouchableOpacity
+      style={[styles.button, styles.primaryButton]}
+      onPress={handleClose}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
+      <Text style={styles.primaryButtonText}>Done</Text>
+    </TouchableOpacity>
+  ) : (
+    <>
+      <TouchableOpacity
+        style={[styles.button, styles.secondaryButton]}
+        onPress={handleClose}
+        disabled={isSubmitting}
       >
-      <View style={styles.backdrop}>
-        <BlurOverlay intensity={25} />
-        <View style={[styles.container, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 }]}>
-          {isSubmitted ? (
-            <>
-              <View style={styles.header}>
-                <Text style={styles.headerTitle}>Appeal Submitted</Text>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={handleClose}
-                >
-                  <Text style={styles.closeButtonText}>✕</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.content}>
-                <Text style={styles.successText}>
-                  Your appeal has been submitted to{" "}
-                  {labelerName || "the labeler"}. They will review your appeal
-                  and may remove or modify the label.
-                </Text>
-              </View>
-              <View style={styles.footer}>
-                <TouchableOpacity
-                  style={[styles.button, styles.primaryButton]}
-                  onPress={handleClose}
-                >
-                  <Text style={styles.primaryButtonText}>Done</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          ) : (
-            <>
-              <View style={styles.header}>
-                <Text style={styles.headerTitle}>Appeal Label</Text>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={handleClose}
-                >
-                  <Text style={styles.closeButtonText}>✕</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.content}>
-                <Text style={styles.description}>
-                  You are appealing the &ldquo;{displayLabel}&rdquo; label
-                  {labelerName ? ` applied by ${labelerName}` : ""}.
-                  Please explain why you believe this label is incorrect.
-                </Text>
-                <Text style={styles.inputLabel}>Reason for appeal</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={reason}
-                  onChangeText={setReason}
-                  placeholder="Explain why this label should be removed or changed..."
-                  placeholderTextColor={colors.textSecondary}
-                  multiline
-                  numberOfLines={4}
-                  maxLength={500}
-                  textAlignVertical="top"
-                />
-                <Text style={styles.charCount}>{reason.length}/500</Text>
-              </View>
-              <View style={styles.footer}>
-                <TouchableOpacity
-                  style={[styles.button, styles.secondaryButton]}
-                  onPress={handleClose}
-                  disabled={isSubmitting}
-                >
-                  <Text style={styles.secondaryButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.button,
-                    styles.primaryButton,
-                    (!reason.trim() || isSubmitting) && styles.buttonDisabled,
-                  ]}
-                  onPress={handleSubmit}
-                  disabled={!reason.trim() || isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <ActivityIndicator color={colors.textOnPrimary} />
-                  ) : (
-                    <Text style={styles.primaryButtonText}>Submit Appeal</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
-        </View>
-      </View>
-      </KeyboardAvoidingView>
-    </Modal>
+        <Text style={styles.secondaryButtonText}>Cancel</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.button,
+          styles.primaryButton,
+          (!reason.trim() || isSubmitting) && styles.buttonDisabled,
+        ]}
+        onPress={handleSubmit}
+        disabled={!reason.trim() || isSubmitting}
+      >
+        {isSubmitting ? (
+          <ActivityIndicator color={colors.textOnPrimary} />
+        ) : (
+          <Text style={styles.primaryButtonText}>Submit Appeal</Text>
+        )}
+      </TouchableOpacity>
+    </>
+  );
+
+  return (
+    <AppModal
+      visible={visible}
+      onClose={handleClose}
+      title={isSubmitted ? "Appeal Submitted" : "Appeal Label"}
+      maxHeight="80%"
+      footer={footer}
+    >
+      {isSubmitted ? (
+        <Text style={styles.successText}>
+          Your appeal has been submitted to{" "}
+          {labelerName || "the labeler"}. They will review your appeal
+          and may remove or modify the label.
+        </Text>
+      ) : (
+        <>
+          <Text style={styles.description}>
+            You are appealing the &ldquo;{displayLabel}&rdquo; label
+            {labelerName ? ` applied by ${labelerName}` : ""}.
+            Please explain why you believe this label is incorrect.
+          </Text>
+          <Text style={styles.inputLabel}>Reason for appeal</Text>
+          <TextInput
+            style={styles.textInput}
+            value={reason}
+            onChangeText={setReason}
+            placeholder="Explain why this label should be removed or changed..."
+            placeholderTextColor={colors.textSecondary}
+            multiline
+            numberOfLines={4}
+            maxLength={500}
+            textAlignVertical="top"
+          />
+          <Text style={styles.charCount}>{reason.length}/500</Text>
+        </>
+      )}
+    </AppModal>
   );
 }
 
-function createStyles(colors: any) {
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    backdrop: {
-      flex: 1,
-      justifyContent: "flex-end",
-    },
-    container: {
-      backgroundColor: colors.surfaceElevated,
-      borderTopLeftRadius: 16,
-      borderTopRightRadius: 16,
-      maxHeight: "80%",
-    },
-    header: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    headerTitle: {
-      fontSize: fontSize.headline,
-      fontWeight: "600",
-      color: colors.text,
-    },
-    closeButton: {
-      padding: 8,
-    },
-    closeButtonText: {
-      fontSize: fontSize.title2,
-      color: colors.textSecondary,
-    },
-    content: {
-      padding: 16,
-    },
     description: {
       fontSize: fontSize.subheadline,
       color: colors.textSecondary,
-      marginBottom: 16,
+      marginBottom: spacing.lg,
       lineHeight: 20,
     },
     successText: {
@@ -237,49 +167,41 @@ function createStyles(colors: any) {
     },
     inputLabel: {
       fontSize: fontSize.subheadline,
-      fontWeight: "600",
+      fontWeight: fontWeights.semibold,
       color: colors.text,
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     },
     textInput: {
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 8,
-      padding: 12,
+      borderRadius: borderRadius.medium,
+      padding: spacing.md,
       fontSize: fontSize.subheadline,
       color: colors.text,
       minHeight: 100,
-      backgroundColor: colors.surface,
+      backgroundColor: colors.surfaceAlt,
     },
     charCount: {
       fontSize: fontSize.caption1,
       color: colors.textSecondary,
       textAlign: "right",
-      marginTop: 4,
-    },
-    footer: {
-      flexDirection: "row",
-      justifyContent: "flex-end",
-      gap: 8,
-      padding: 16,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
+      marginTop: spacing.xs,
     },
     button: {
-      paddingHorizontal: 16,
+      paddingHorizontal: spacing.lg,
       paddingVertical: 10,
-      borderRadius: 8,
+      borderRadius: borderRadius.medium,
       minWidth: 100,
       alignItems: "center",
       justifyContent: "center",
     },
     secondaryButton: {
-      backgroundColor: colors.surface,
+      backgroundColor: colors.surfaceAlt,
     },
     secondaryButtonText: {
       color: colors.text,
       fontSize: fontSize.subheadline,
-      fontWeight: "600",
+      fontWeight: fontWeights.semibold,
     },
     primaryButton: {
       backgroundColor: colors.primary,
@@ -287,7 +209,7 @@ function createStyles(colors: any) {
     primaryButtonText: {
       color: colors.textOnPrimary,
       fontSize: fontSize.subheadline,
-      fontWeight: "600",
+      fontWeight: fontWeights.semibold,
     },
     buttonDisabled: {
       opacity: 0.5,

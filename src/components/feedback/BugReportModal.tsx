@@ -1,18 +1,9 @@
-import {
-  Bug,
-  Camera,
-  Check,
-  CheckCircle,
-  Loader2,
-  Trash2,
-  X,
-} from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Bug, Camera, Check, CheckCircle, Loader2, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { getErrorMonitor } from "../../utils/error-monitoring";
-
-type ModalState = "entering" | "open" | "exiting" | "closed";
+import { Button } from "../ui/Button";
+import { Modal, ModalClose, ModalFooter } from "../ui/Modal";
 
 interface DiagnosticData {
   appVersion: string;
@@ -54,7 +45,6 @@ export function BugReportModal({
   onReportSubmitted,
 }: BugReportModalProps) {
   const { session } = useAuth();
-  const [modalState, setModalState] = useState<ModalState>("closed");
   const [description, setDescription] = useState("");
   const [stepsToReproduce, setStepsToReproduce] = useState("");
   const [expectedBehavior, setExpectedBehavior] = useState("");
@@ -71,9 +61,7 @@ export function BugReportModal({
   const [includeDiagnostics, setIncludeDiagnostics] = useState(true);
   const [includeScreenshot, setIncludeScreenshot] = useState(false);
 
-  const containerRef = useFocusTrap<HTMLDivElement>(
-    modalState === "entering" || modalState === "open",
-  );
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Collect diagnostic data when modal opens
   useEffect(() => {
@@ -81,53 +69,6 @@ export function BugReportModal({
       collectDiagnosticData();
     }
   }, [isOpen]);
-
-  // Handle isOpen prop changes
-  useEffect(() => {
-    if (isOpen && modalState === "closed") {
-      setModalState("entering");
-    } else if (
-      !isOpen &&
-      (modalState === "entering" || modalState === "open")
-    ) {
-      setModalState("exiting");
-    }
-  }, [isOpen, modalState]);
-
-  // Transition from entering to open after entrance animation
-  const handleEntranceEnd = useCallback(() => {
-    if (modalState === "entering") {
-      setModalState("open");
-    }
-  }, [modalState]);
-
-  // Transition from exiting to closed after exit animation
-  const handleExitEnd = useCallback(() => {
-    if (modalState === "exiting") {
-      setModalState("closed");
-      onClose();
-    }
-  }, [modalState, onClose]);
-
-  const handleClose = useCallback(() => {
-    setModalState("exiting");
-  }, []);
-
-  // Handle Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.key === "Escape" &&
-        (modalState === "entering" || modalState === "open")
-      ) {
-        e.preventDefault();
-        handleClose();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalState, handleClose]);
 
   const collectDiagnosticData = () => {
     const errorMonitor = getErrorMonitor();
@@ -197,7 +138,7 @@ export function BugReportModal({
       const html2canvas = (await import("html2canvas")).default;
 
       // Temporarily hide the modal for screenshot
-      const modalElement = containerRef.current?.closest(".modal-backdrop");
+      const modalElement = contentRef.current?.closest(".modal-backdrop");
       if (modalElement) {
         (modalElement as HTMLElement).style.visibility = "hidden";
       }
@@ -305,54 +246,26 @@ export function BugReportModal({
     collectDiagnosticData();
   };
 
-  const handleModalClose = () => {
+  const handleClosed = () => {
     resetForm();
-    handleClose();
+    onClose();
   };
 
-  // Don't render if modal is fully closed
-  if (modalState === "closed") return null;
-
-  // Determine animation classes based on state
-  const isEntering = modalState === "entering";
-  const isExiting = modalState === "exiting";
-
-  const backdropAnimationClass = isEntering
-    ? "animate-enter-fade"
-    : isExiting
-      ? "animate-exit-fade"
-      : "";
-
-  const contentAnimationClass = isEntering
-    ? "animate-enter-scale"
-    : isExiting
-      ? "animate-exit-scale"
-      : "";
-
   return (
-    <div
-      className={`modal-backdrop ${backdropAnimationClass}`}
-      onClick={handleModalClose}
-      onAnimationEnd={isExiting ? handleExitEnd : undefined}
-      role="presentation"
-      data-state={modalState}
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClosed}
+      size="lg"
+      labelledBy="bug-report-title"
+      describedBy="bug-report-description"
+      className="bg-asph-bg-secondary"
     >
-      <div
-        ref={containerRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="bug-report-title"
-        aria-describedby="bug-report-description"
-        className={`modal-container modal-auto-height modal-lg bg-asph-bg-secondary ${contentAnimationClass}`}
-        onClick={(e) => e.stopPropagation()}
-        onAnimationEnd={isEntering ? handleEntranceEnd : undefined}
-        data-state={modalState}
-      >
-        {isSubmitted ? (
+      {(close) =>
+        isSubmitted ? (
           <>
             {/* Success State */}
             <div className="flex items-start gap-3 p-6">
-              <CheckCircle className="mt-1 h-6 w-6 flex-shrink-0 text-green-600 dark:text-green-400" />
+              <CheckCircle className="mt-1 h-6 w-6 flex-shrink-0 text-asph-success" />
               <div className="flex-1">
                 <h3
                   id="bug-report-title"
@@ -378,30 +291,25 @@ export function BugReportModal({
                   </div>
                 )}
               </div>
-              <button
-                onClick={handleModalClose}
-                aria-label="Close dialog"
-                className="touch-target-icon rounded-full p-1 hover:bg-asph-bg-hover"
-              >
-                <X className="h-5 w-5" aria-hidden="true" />
-              </button>
+              <ModalClose className="touch-target-icon p-1" />
             </div>
 
             {/* Close Button */}
-            <div className="flex justify-end gap-3 border-t bg-asph-bg-tertiary px-6 py-4 border-asph-border-primary">
-              <button
-                onClick={handleModalClose}
-                className="touch-target-sm rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+            <ModalFooter className="bg-asph-bg-tertiary px-6 py-4">
+              <Button
+                variant="primary"
+                className="touch-target-sm"
+                onClick={close}
               >
                 Close
-              </button>
-            </div>
+              </Button>
+            </ModalFooter>
           </>
         ) : (
           <>
             {/* Header */}
-            <div className="flex items-start gap-3 p-6">
-              <Bug className="mt-1 h-6 w-6 flex-shrink-0 text-orange-600 dark:text-orange-400" />
+            <div ref={contentRef} className="flex items-start gap-3 p-6">
+              <Bug className="mt-1 h-6 w-6 flex-shrink-0 text-asph-warning" />
               <div className="flex-1">
                 <h3
                   id="bug-report-title"
@@ -418,13 +326,7 @@ export function BugReportModal({
                   us investigate.
                 </p>
               </div>
-              <button
-                onClick={handleModalClose}
-                aria-label="Close dialog"
-                className="touch-target-icon rounded-full p-1 hover:bg-asph-bg-hover"
-              >
-                <X className="h-5 w-5" aria-hidden="true" />
-              </button>
+              <ModalClose className="touch-target-icon p-1" />
             </div>
 
             {/* Form */}
@@ -436,14 +338,14 @@ export function BugReportModal({
                     htmlFor="bug-description"
                     className="mb-2 block text-sm font-medium text-asph-text-primary"
                   >
-                    Bug Description <span className="text-red-500">*</span>
+                    Bug Description <span className="text-asph-error">*</span>
                   </label>
                   <textarea
                     id="bug-description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describe the bug you encountered..."
-                    className="w-full rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary placeholder-asph-text-tertiary focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+                    className="focus-border w-full rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary placeholder-asph-text-tertiary"
                     rows={3}
                     required
                   />
@@ -462,7 +364,7 @@ export function BugReportModal({
                     value={stepsToReproduce}
                     onChange={(e) => setStepsToReproduce(e.target.value)}
                     placeholder="1. Go to...&#10;2. Click on...&#10;3. Observe..."
-                    className="w-full rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary placeholder-asph-text-tertiary focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+                    className="focus-border w-full rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary placeholder-asph-text-tertiary"
                     rows={3}
                   />
                 </div>
@@ -481,7 +383,7 @@ export function BugReportModal({
                       value={expectedBehavior}
                       onChange={(e) => setExpectedBehavior(e.target.value)}
                       placeholder="What did you expect to happen?"
-                      className="w-full rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary placeholder-asph-text-tertiary focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+                      className="focus-border w-full rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary placeholder-asph-text-tertiary"
                       rows={2}
                     />
                   </div>
@@ -497,7 +399,7 @@ export function BugReportModal({
                       value={actualBehavior}
                       onChange={(e) => setActualBehavior(e.target.value)}
                       placeholder="What actually happened?"
-                      className="w-full rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary placeholder-asph-text-tertiary focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500"
+                      className="focus-border w-full rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-sm text-asph-text-primary placeholder-asph-text-tertiary"
                       rows={2}
                     />
                   </div>
@@ -517,17 +419,18 @@ export function BugReportModal({
                       />
                       <button
                         onClick={removeScreenshot}
-                        className="touch-target-icon absolute right-2 top-2 rounded-full bg-red-600 p-1 text-white hover:bg-red-700"
+                        className="touch-target-icon absolute right-2 top-2 rounded-full bg-asph-error p-1 text-white hover:opacity-90"
                         aria-label="Remove screenshot"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   ) : (
-                    <button
+                    <Button
+                      variant="secondary"
+                      className="touch-target-sm flex items-center gap-2"
                       onClick={captureScreenshot}
                       disabled={isCapturingScreenshot}
-                      className="touch-target-sm flex items-center gap-2 rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-asph-bg-hover disabled:opacity-50"
                     >
                       {isCapturingScreenshot ? (
                         <>
@@ -540,7 +443,7 @@ export function BugReportModal({
                           Capture Screenshot
                         </>
                       )}
-                    </button>
+                    </Button>
                   )}
                 </div>
 
@@ -559,7 +462,7 @@ export function BugReportModal({
                       onClick={() => setIncludeDiagnostics(!includeDiagnostics)}
                       className={`touch-target relative h-6 w-11 rounded-full transition-colors ${
                         includeDiagnostics
-                          ? "bg-blue-600 dark:bg-blue-500"
+                          ? "bg-asph-primary"
                           : "bg-asph-bg-active"
                       }`}
                       role="switch"
@@ -625,26 +528,26 @@ export function BugReportModal({
 
             {/* Error Message */}
             {error && (
-              <div className="border-t border-red-200 bg-red-50 p-4 dark:border-red-900 dark:bg-red-900/20">
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  {error}
-                </p>
+              <div className="border-t border-asph-error/30 bg-asph-error/10 p-4">
+                <p className="text-sm text-asph-error">{error}</p>
               </div>
             )}
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 border-t bg-asph-bg-tertiary px-6 py-4 border-asph-border-primary">
-              <button
-                onClick={handleModalClose}
+            <ModalFooter className="bg-asph-bg-tertiary px-6 py-4">
+              <Button
+                variant="ghost"
+                className="touch-target-sm"
+                onClick={close}
                 disabled={isSubmitting}
-                className="touch-target-sm rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-asph-bg-active disabled:opacity-50"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="primary"
+                className="touch-target-sm flex items-center gap-2"
                 onClick={handleSubmit}
                 disabled={!description.trim() || isSubmitting}
-                className="touch-target-sm flex items-center gap-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:opacity-50 dark:bg-orange-500 dark:hover:bg-orange-600"
               >
                 {isSubmitting ? (
                   <>
@@ -657,11 +560,11 @@ export function BugReportModal({
                     Submit Report
                   </>
                 )}
-              </button>
-            </div>
+              </Button>
+            </ModalFooter>
           </>
-        )}
-      </div>
-    </div>
+        )
+      }
+    </Modal>
   );
 }

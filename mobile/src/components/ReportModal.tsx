@@ -3,20 +3,17 @@ import {
   View,
   Text,
   StyleSheet,
-  Modal,
   TouchableOpacity,
-  ScrollView,
   TextInput,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  useWindowDimensions,
 } from 'react-native';
-import {useTheme} from '../contexts/ThemeContext';
-import {BlurOverlay} from './BlurOverlay';
+import {ThemeColors, useTheme} from '../contexts/ThemeContext';
+import {AppModal} from './ui/AppModal';
 import {getAtProtoClient} from '../services/atproto/client';
 import {recordReport} from '../services/moderation-history';
 import {fontSize} from '../utils/typography';
+import {borderRadius} from '../constants/elevation';
+import {fontWeights, spacing} from '../constants/spacing';
 
 export type ReportType = 'post' | 'account';
 
@@ -108,8 +105,6 @@ function ReportModalInner({
   onMute,
 }: ReportModalProps) {
   const { colors } = useTheme();
-  const { width: windowWidth } = useWindowDimensions();
-  const isWideScreen = windowWidth > 768;
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -213,245 +208,185 @@ function ReportModalInner({
     handleClose();
   };
 
+  const title = isSubmitted
+    ? 'Report Submitted'
+    : `Report ${reportType === 'post' ? 'Post' : 'Account'}`;
+
+  const footer = isSubmitted ? (
+    <TouchableOpacity
+      style={[styles.button, styles.primaryButton]}
+      onPress={handleClose}>
+      <Text style={styles.primaryButtonText}>Close</Text>
+    </TouchableOpacity>
+  ) : (
+    <>
+      <TouchableOpacity
+        style={[styles.button, styles.secondaryButton]}
+        onPress={handleClose}
+        disabled={isSubmitting}>
+        <Text style={styles.secondaryButtonText}>Cancel</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          styles.button,
+          styles.dangerButton,
+          (!selectedCategory || isSubmitting) && styles.buttonDisabled,
+        ]}
+        onPress={handleSubmit}
+        disabled={!selectedCategory || isSubmitting}>
+        {isSubmitting ? (
+          <ActivityIndicator color={colors.textOnPrimary} />
+        ) : (
+          <Text style={styles.dangerButtonText}>Submit Report</Text>
+        )}
+      </TouchableOpacity>
+    </>
+  );
+
   return (
-    <Modal
+    <AppModal
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={handleClose}>
-      <KeyboardAvoidingView
-        style={styles.backdrop}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <BlurOverlay intensity={25} />
-        <View style={[styles.container, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 }]}>
-          {isSubmitted ? (
-            <>
-              {/* Success State */}
-              <View style={styles.header}>
-                <Text style={styles.headerTitle}>Report Submitted</Text>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={handleClose}>
-                  <Text style={styles.closeButtonText}>✕</Text>
-                </TouchableOpacity>
-              </View>
+      onClose={handleClose}
+      title={title}
+      maxHeight="90%"
+      keyboardDismissMode="on-drag"
+      footer={footer}>
+      {isSubmitted ? (
+        <>
+          {/* Success State */}
+          <Text style={styles.successText}>
+            Thank you for helping keep our community safe. We'll review
+            this report and take appropriate action.
+          </Text>
 
-              <ScrollView style={styles.content} keyboardDismissMode="on-drag">
-                <Text style={styles.successText}>
-                  Thank you for helping keep our community safe. We'll review
-                  this report and take appropriate action.
+          {/* Block/Mute Options */}
+          {reportType === 'account' && subjectHandle && (
+            <View style={styles.postReportActions}>
+              <Text style={styles.postReportTitle}>
+                Additional Actions
+              </Text>
+              <Text style={styles.postReportDescription}>
+                You can also block or mute @{subjectHandle} to control
+                your experience.
+              </Text>
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.blockButton]}
+                onPress={handleBlockAfterReport}>
+                <Text style={styles.actionButtonText}>
+                  Block @{subjectHandle}
                 </Text>
+              </TouchableOpacity>
 
-                {/* Block/Mute Options */}
-                {reportType === 'account' && subjectHandle && (
-                  <View style={styles.postReportActions}>
-                    <Text style={styles.postReportTitle}>
-                      Additional Actions
-                    </Text>
-                    <Text style={styles.postReportDescription}>
-                      You can also block or mute @{subjectHandle} to control
-                      your experience.
-                    </Text>
-
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.blockButton]}
-                      onPress={handleBlockAfterReport}>
-                      <Text style={styles.actionButtonText}>
-                        Block @{subjectHandle}
-                      </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.muteButton]}
-                      onPress={handleMuteAfterReport}>
-                      <Text style={styles.actionButtonText}>
-                        Mute @{subjectHandle}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </ScrollView>
-
-              <View style={styles.footer}>
-                <TouchableOpacity
-                  style={[styles.button, styles.primaryButton]}
-                  onPress={handleClose}>
-                  <Text style={styles.primaryButtonText}>Close</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          ) : (
-            <>
-              {/* Report Form */}
-              <View style={styles.header}>
-                <Text style={styles.headerTitle}>
-                  Report {reportType === 'post' ? 'Post' : 'Account'}
+              <TouchableOpacity
+                style={[styles.actionButton, styles.muteButton]}
+                onPress={handleMuteAfterReport}>
+                <Text style={styles.actionButtonText}>
+                  Mute @{subjectHandle}
                 </Text>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={handleClose}>
-                  <Text style={styles.closeButtonText}>✕</Text>
-                </TouchableOpacity>
-              </View>
-
-              <ScrollView style={styles.content} keyboardDismissMode="on-drag">
-                <Text style={styles.description}>
-                  {reportType === 'post'
-                    ? "Help us understand what's wrong with this post"
-                    : `Report @${subjectHandle || 'this account'} for violating community guidelines`}
-                </Text>
-
-                {/* Category Selection */}
-                <View style={styles.categoriesContainer}>
-                  {REPORT_CATEGORIES.map((category) => (
-                    <TouchableOpacity
-                      key={category.id}
-                      style={[
-                        styles.categoryItem,
-                        selectedCategory === category.id &&
-                          styles.categoryItemSelected,
-                      ]}
-                      onPress={() => setSelectedCategory(category.id)}>
-                      <View
-                        style={[
-                          styles.radioButton,
-                          selectedCategory === category.id &&
-                            styles.radioButtonSelected,
-                        ]}>
-                        {selectedCategory === category.id && (
-                          <View style={styles.radioButtonInner} />
-                        )}
-                      </View>
-                      <View style={styles.categoryContent}>
-                        <Text style={styles.categoryLabel}>
-                          {category.label}
-                        </Text>
-                        <Text style={styles.categoryDescription}>
-                          {category.description}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                {/* Additional Context */}
-                {selectedCategory && (
-                  <View style={styles.contextContainer}>
-                    <Text style={styles.contextLabel}>
-                      Additional context (optional)
-                    </Text>
-                    <TextInput
-                      style={styles.textInput}
-                      value={additionalContext}
-                      onChangeText={setAdditionalContext}
-                      placeholder="Provide any additional details..."
-                      placeholderTextColor={colors.textTertiary}
-                      multiline
-                      numberOfLines={4}
-                      maxLength={300}
-                      textAlignVertical="top"
-                    />
-                    <Text style={styles.charCount}>
-                      {additionalContext.length}/300
-                    </Text>
-                  </View>
-                )}
-
-                {/* Error Message */}
-                {error && (
-                  <View style={styles.errorContainer}>
-                    <Text style={styles.errorText}>{error}</Text>
-                  </View>
-                )}
-              </ScrollView>
-
-              <View style={styles.footer}>
-                <TouchableOpacity
-                  style={[styles.button, styles.secondaryButton]}
-                  onPress={handleClose}
-                  disabled={isSubmitting}>
-                  <Text style={styles.secondaryButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.button,
-                    styles.dangerButton,
-                    (!selectedCategory || isSubmitting) &&
-                      styles.buttonDisabled,
-                  ]}
-                  onPress={handleSubmit}
-                  disabled={!selectedCategory || isSubmitting}>
-                  {isSubmitting ? (
-                    <ActivityIndicator color={colors.textOnPrimary} />
-                  ) : (
-                    <Text style={styles.dangerButtonText}>Submit Report</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </>
+              </TouchableOpacity>
+            </View>
           )}
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+        </>
+      ) : (
+        <>
+          {/* Report Form */}
+          <Text style={styles.description}>
+            {reportType === 'post'
+              ? "Help us understand what's wrong with this post"
+              : `Report @${subjectHandle || 'this account'} for violating community guidelines`}
+          </Text>
+
+          {/* Category Selection */}
+          <View style={styles.categoriesContainer}>
+            {REPORT_CATEGORIES.map((category) => (
+              <TouchableOpacity
+                key={category.id}
+                style={[
+                  styles.categoryItem,
+                  selectedCategory === category.id &&
+                    styles.categoryItemSelected,
+                ]}
+                onPress={() => setSelectedCategory(category.id)}>
+                <View
+                  style={[
+                    styles.radioButton,
+                    selectedCategory === category.id &&
+                      styles.radioButtonSelected,
+                  ]}>
+                  {selectedCategory === category.id && (
+                    <View style={styles.radioButtonInner} />
+                  )}
+                </View>
+                <View style={styles.categoryContent}>
+                  <Text style={styles.categoryLabel}>
+                    {category.label}
+                  </Text>
+                  <Text style={styles.categoryDescription}>
+                    {category.description}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Additional Context */}
+          {selectedCategory && (
+            <View style={styles.contextContainer}>
+              <Text style={styles.contextLabel}>
+                Additional context (optional)
+              </Text>
+              <TextInput
+                style={styles.textInput}
+                value={additionalContext}
+                onChangeText={setAdditionalContext}
+                placeholder="Provide any additional details..."
+                placeholderTextColor={colors.textTertiary}
+                multiline
+                numberOfLines={4}
+                maxLength={300}
+                textAlignVertical="top"
+              />
+              <Text style={styles.charCount}>
+                {additionalContext.length}/300
+              </Text>
+            </View>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+        </>
+      )}
+    </AppModal>
   );
 }
 
-function createStyles(colors: any) {
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    backdrop: {
-      flex: 1,
-      justifyContent: 'flex-end',
-    },
-    container: {
-      backgroundColor: colors.surface,
-      borderTopLeftRadius: 16,
-      borderTopRightRadius: 16,
-      maxHeight: '90%',
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    headerTitle: {
-      fontSize: fontSize.headline,
-      fontWeight: '600',
-      color: colors.text,
-    },
-    closeButton: {
-      padding: 8,
-    },
-    closeButtonText: {
-      fontSize: fontSize.title2,
-      color: colors.textSecondary,
-    },
-    content: {
-      padding: 16,
-    },
     description: {
       fontSize: fontSize.subheadline,
       color: colors.textSecondary,
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     },
     successText: {
       fontSize: fontSize.subheadline,
       color: colors.textSecondary,
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     },
     categoriesContainer: {
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     },
     categoryItem: {
       flexDirection: 'row',
-      padding: 12,
+      padding: spacing.md,
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 8,
-      marginBottom: 8,
+      borderRadius: borderRadius.medium,
+      marginBottom: spacing.sm,
     },
     categoryItemSelected: {
       backgroundColor: colors.unreadBackground,
@@ -463,8 +398,8 @@ function createStyles(colors: any) {
       borderRadius: 10,
       borderWidth: 2,
       borderColor: colors.borderLight,
-      marginRight: 12,
-      marginTop: 2,
+      marginRight: spacing.md,
+      marginTop: spacing.xxs,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -482,28 +417,28 @@ function createStyles(colors: any) {
     },
     categoryLabel: {
       fontSize: fontSize.subheadline,
-      fontWeight: '600',
+      fontWeight: fontWeights.semibold,
       color: colors.text,
-      marginBottom: 4,
+      marginBottom: spacing.xs,
     },
     categoryDescription: {
       fontSize: fontSize.footnote,
       color: colors.textSecondary,
     },
     contextContainer: {
-      marginTop: 8,
+      marginTop: spacing.sm,
     },
     contextLabel: {
       fontSize: fontSize.subheadline,
-      fontWeight: '600',
+      fontWeight: fontWeights.semibold,
       color: colors.text,
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     },
     textInput: {
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 8,
-      padding: 12,
+      borderRadius: borderRadius.medium,
+      padding: spacing.md,
       fontSize: fontSize.subheadline,
       color: colors.text,
       minHeight: 100,
@@ -512,39 +447,39 @@ function createStyles(colors: any) {
       fontSize: fontSize.caption1,
       color: colors.textTertiary,
       textAlign: 'right',
-      marginTop: 4,
+      marginTop: spacing.xs,
     },
     errorContainer: {
       backgroundColor: colors.errorBackground,
-      padding: 12,
-      borderRadius: 8,
-      marginTop: 16,
+      padding: spacing.md,
+      borderRadius: borderRadius.medium,
+      marginTop: spacing.lg,
     },
     errorText: {
       color: colors.danger,
       fontSize: fontSize.subheadline,
     },
     postReportActions: {
-      marginTop: 8,
-      padding: 16,
+      marginTop: spacing.sm,
+      padding: spacing.lg,
       backgroundColor: colors.surfaceAlt,
-      borderRadius: 8,
+      borderRadius: borderRadius.medium,
     },
     postReportTitle: {
       fontSize: fontSize.subheadline,
-      fontWeight: '600',
+      fontWeight: fontWeights.semibold,
       color: colors.text,
-      marginBottom: 8,
+      marginBottom: spacing.sm,
     },
     postReportDescription: {
       fontSize: fontSize.footnote,
       color: colors.textSecondary,
-      marginBottom: 12,
+      marginBottom: spacing.md,
     },
     actionButton: {
-      padding: 12,
-      borderRadius: 8,
-      marginBottom: 8,
+      padding: spacing.md,
+      borderRadius: borderRadius.medium,
+      marginBottom: spacing.sm,
       alignItems: 'center',
     },
     blockButton: {
@@ -556,20 +491,12 @@ function createStyles(colors: any) {
     actionButtonText: {
       color: colors.textOnPrimary,
       fontSize: fontSize.subheadline,
-      fontWeight: '600',
-    },
-    footer: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-      gap: 8,
-      padding: 16,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
+      fontWeight: fontWeights.semibold,
     },
     button: {
-      paddingHorizontal: 16,
+      paddingHorizontal: spacing.lg,
       paddingVertical: 10,
-      borderRadius: 8,
+      borderRadius: borderRadius.medium,
       minWidth: 100,
       alignItems: 'center',
       justifyContent: 'center',
@@ -580,7 +507,7 @@ function createStyles(colors: any) {
     secondaryButtonText: {
       color: colors.textMuted,
       fontSize: fontSize.subheadline,
-      fontWeight: '600',
+      fontWeight: fontWeights.semibold,
     },
     primaryButton: {
       backgroundColor: colors.primary,
@@ -588,7 +515,7 @@ function createStyles(colors: any) {
     primaryButtonText: {
       color: colors.textOnPrimary,
       fontSize: fontSize.subheadline,
-      fontWeight: '600',
+      fontWeight: fontWeights.semibold,
     },
     dangerButton: {
       backgroundColor: colors.danger,
@@ -596,7 +523,7 @@ function createStyles(colors: any) {
     dangerButtonText: {
       color: colors.textOnPrimary,
       fontSize: fontSize.subheadline,
-      fontWeight: '600',
+      fontWeight: fontWeights.semibold,
     },
     buttonDisabled: {
       opacity: 0.5,

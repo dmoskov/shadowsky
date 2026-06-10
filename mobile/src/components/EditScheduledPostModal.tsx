@@ -10,19 +10,15 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Modal,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  useWindowDimensions,
 } from 'react-native';
 import { ScheduledPost } from '../services/scheduled-posts';
-import { useTheme } from "../contexts/ThemeContext";
-import { BlurOverlay } from "./BlurOverlay";
-
+import { ThemeColors, useTheme } from "../contexts/ThemeContext";
+import { AppModal } from "./ui/AppModal";
 
 import { createLogger } from '../utils/logger';
 import {fontSize} from '../utils/typography';
+import {borderRadius} from '../constants/elevation';
+import {fontWeights, spacing} from '../constants/spacing';
 
 const logger = createLogger('Editscheduledpostmodalx');
 const MAX_POST_LENGTH = 300;
@@ -41,8 +37,6 @@ export function EditScheduledPostModal({
   onSave,
 }: EditScheduledPostModalProps) {
   const { colors } = useTheme();
-  const { width: windowWidth } = useWindowDimensions();
-  const isWideScreen = windowWidth > 768;
   const [text, setText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -82,162 +76,104 @@ export function EditScheduledPostModal({
   const isSaveDisabled = !text.trim() || isOverLimit || isSaving;
 
   return (
-    <Modal
+    <AppModal
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={handleClose}
+      onClose={handleClose}
+      title="Edit Scheduled Post"
+      maxHeight="80%"
+      padded={false}
+      closeDisabled={isSaving}
+      keyboardShouldPersistTaps="handled"
+      footer={
+        <>
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={handleClose}
+            disabled={isSaving}
+          >
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.saveButton, isSaveDisabled && styles.saveButtonDisabled]}
+            onPress={handleSave}
+            disabled={isSaveDisabled}
+          >
+            <Text style={styles.saveButtonText}>
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </Text>
+          </TouchableOpacity>
+        </>
+      }
     >
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <BlurOverlay intensity={25} />
-        <View style={[styles.modalContainer, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 }]}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Edit Scheduled Post</Text>
-            <TouchableOpacity
-              onPress={handleClose}
-              disabled={isSaving}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Text style={[styles.closeButton, isSaving && styles.disabledText]}>✕</Text>
-            </TouchableOpacity>
-          </View>
+      <TextInput
+        style={styles.input}
+        placeholder="What's happening?"
+        placeholderTextColor={colors.textTertiary}
+        multiline
+        autoFocus
+        value={text}
+        onChangeText={setText}
+        editable={!isSaving}
+      />
 
-          <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
-            <TextInput
-              style={styles.input}
-              placeholder="What's happening?"
-              placeholderTextColor={colors.textTertiary}
-              multiline
-              autoFocus
-              value={text}
-              onChangeText={setText}
-              editable={!isSaving}
-            />
-
-            <View style={styles.footer}>
-              <Text style={[styles.charCount, isOverLimit && styles.charCountOver]}>
-                {charCount}/{MAX_POST_LENGTH}
-              </Text>
-            </View>
-          </ScrollView>
-
-          <View style={styles.actions}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={handleClose}
-              disabled={isSaving}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, styles.saveButton, isSaveDisabled && styles.saveButtonDisabled]}
-              onPress={handleSave}
-              disabled={isSaveDisabled}
-            >
-              <Text style={styles.saveButtonText}>
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+      <View style={styles.charCountContainer}>
+        <Text style={[styles.charCount, isOverLimit && styles.charCountOver]}>
+          {charCount}/{MAX_POST_LENGTH}
+        </Text>
+      </View>
+    </AppModal>
   );
 }
 
-function createStyles(colors: any) {
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    overlay: {
-      flex: 1,
-      justifyContent: 'flex-end',
-    },
-    modalContainer: {
-      backgroundColor: colors.surface,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-      maxHeight: '80%',
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.surface,
-    },
-    title: {
-      color: colors.text,
-      fontSize: fontSize.headline,
-      fontWeight: '600',
-    },
-    closeButton: {
-      color: colors.textSecondary,
-      fontSize: fontSize.title2,
-      fontWeight: '300',
-    },
-    disabledText: {
-      opacity: 0.5,
-    },
-    content: {
-      flex: 1,
-    },
     input: {
       color: colors.text,
       fontSize: fontSize.callout,
-      padding: 16,
+      padding: spacing.lg,
       minHeight: 150,
       textAlignVertical: 'top',
     },
-    footer: {
-      paddingHorizontal: 16,
-      paddingBottom: 16,
+    charCountContainer: {
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.lg,
     },
     charCount: {
       color: colors.textTertiary,
       fontSize: fontSize.caption1,
-      fontWeight: '500',
+      fontWeight: fontWeights.medium,
       textAlign: 'right',
     },
     charCountOver: {
       color: colors.danger,
     },
-    actions: {
-      flexDirection: 'row',
-      gap: 12,
-      padding: 16,
-      borderTopWidth: 1,
-      borderTopColor: colors.surface,
-    },
     button: {
       flex: 1,
       paddingVertical: 14,
-      borderRadius: 10,
+      borderRadius: borderRadius.medium,
       alignItems: 'center',
       justifyContent: 'center',
       minHeight: 48,
     },
     cancelButton: {
-      backgroundColor: colors.surface,
+      backgroundColor: colors.surfaceAlt,
     },
     cancelButtonText: {
       color: colors.textSecondary,
       fontSize: fontSize.callout,
-      fontWeight: '600',
+      fontWeight: fontWeights.semibold,
     },
     saveButton: {
       backgroundColor: colors.primary,
     },
     saveButtonDisabled: {
-      backgroundColor: colors.surface,
+      backgroundColor: colors.surfaceAlt,
       opacity: 0.5,
     },
     saveButtonText: {
       color: colors.text,
       fontSize: fontSize.callout,
-      fontWeight: '600',
+      fontWeight: fontWeights.semibold,
     },
   });
 }

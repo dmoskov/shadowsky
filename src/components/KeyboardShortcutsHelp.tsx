@@ -1,6 +1,13 @@
-import { Command, X } from "lucide-react";
+import { Command } from "lucide-react";
 import React from "react";
-import { useFocusTrap } from "../hooks/useFocusTrap";
+import {
+  Modal,
+  ModalBody,
+  ModalClose,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from "./ui/Modal";
 
 interface ShortcutGroup {
   category: string;
@@ -94,137 +101,104 @@ export const KeyboardShortcutsHelp: React.FC<KeyboardShortcutsHelpProps> = ({
   isOpen,
   onClose,
 }) => {
-  const containerRef = useFocusTrap<HTMLDivElement>(isOpen);
-
-  if (!isOpen) return null;
-
   return (
-    <div className="modal-backdrop">
-      <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="4xl"
+      labelledBy="shortcuts-title"
+      className="border border-asph-border-primary bg-asph-bg-primary"
+    >
+      <ModalHeader className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Command
+            size={24}
+            style={{ color: "var(--asph-primary)" }}
+            aria-hidden="true"
+          />
+          <ModalTitle id="shortcuts-title">Keyboard Shortcuts</ModalTitle>
+        </div>
+        <ModalClose
+          className="touch-target-icon"
+          aria-label="Close keyboard shortcuts help"
+        />
+      </ModalHeader>
 
-      <div
-        ref={containerRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="shortcuts-title"
-        className="modal-container modal-auto-height modal-4xl z-10 border border-asph-border-primary bg-asph-bg-primary"
-      >
-        {/* Header */}
-        <div
-          className="sticky top-0 z-10 flex items-center justify-between border-b px-6 py-4"
-          style={{
-            borderColor: "var(--asph-border-primary)",
-            backgroundColor: "var(--asph-bg-primary)",
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <Command
-              size={24}
-              style={{ color: "var(--asph-primary)" }}
-              aria-hidden="true"
-            />
-            <h2
-              id="shortcuts-title"
-              className="text-xl font-semibold"
-              style={{ color: "var(--asph-text-primary)" }}
+      <ModalBody className="grid gap-6 p-6 md:grid-cols-2">
+        {SHORTCUT_GROUPS.map((group) => (
+          <div key={group.category}>
+            <h3
+              className="mb-3 text-sm font-semibold uppercase tracking-wide"
+              style={{ color: "var(--asph-text-tertiary)" }}
             >
-              Keyboard Shortcuts
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close keyboard shortcuts help"
-            className="touch-target-icon rounded-full p-2 transition-colors hover:bg-asph-bg-hover"
-          >
-            <X size={20} style={{ color: "var(--asph-text-secondary)" }} />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="grid gap-6 p-6 md:grid-cols-2">
-          {SHORTCUT_GROUPS.map((group) => (
-            <div key={group.category}>
-              <h3
-                className="mb-3 text-sm font-semibold uppercase tracking-wide"
-                style={{ color: "var(--asph-text-tertiary)" }}
-              >
-                {group.category}
-              </h3>
-              <div className="space-y-2">
-                {group.shortcuts.map((shortcut, index) => (
-                  <div
-                    key={`${group.category}-${index}`}
-                    className="flex items-center justify-between gap-4"
+              {group.category}
+            </h3>
+            <div className="space-y-2">
+              {group.shortcuts.map((shortcut, index) => (
+                <div
+                  key={`${group.category}-${index}`}
+                  className="flex items-center justify-between gap-4"
+                >
+                  <span
+                    className="text-sm"
+                    style={{ color: "var(--asph-text-secondary)" }}
                   >
-                    <span
-                      className="text-sm"
-                      style={{ color: "var(--asph-text-secondary)" }}
-                    >
-                      {shortcut.description}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      {shortcut.keys.map((key, keyIndex) => (
-                        <React.Fragment key={keyIndex}>
-                          {key === "then" ? (
-                            <span
-                              className="px-1 text-xs"
-                              style={{ color: "var(--asph-text-tertiary)" }}
+                    {shortcut.description}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {shortcut.keys.map((key, keyIndex) => (
+                      <React.Fragment key={keyIndex}>
+                        {key === "then" ? (
+                          <span
+                            className="px-1 text-xs"
+                            style={{ color: "var(--asph-text-tertiary)" }}
+                          >
+                            then
+                          </span>
+                        ) : (
+                          <>
+                            <kbd
+                              className="min-w-[2rem] rounded px-2 py-1 text-center text-xs font-medium"
+                              style={{
+                                backgroundColor: "var(--asph-bg-secondary)",
+                                color: "var(--asph-text-primary)",
+                                border: "1px solid var(--asph-border-primary)",
+                              }}
                             >
-                              then
-                            </span>
-                          ) : (
-                            <>
-                              <kbd
-                                className="min-w-[2rem] rounded px-2 py-1 text-center text-xs font-medium"
-                                style={{
-                                  backgroundColor: "var(--asph-bg-secondary)",
-                                  color: "var(--asph-text-primary)",
-                                  border:
-                                    "1px solid var(--asph-border-primary)",
-                                }}
-                              >
-                                {key}
-                              </kbd>
-                              {keyIndex < shortcut.keys.length - 1 &&
-                                shortcut.keys[keyIndex + 1] !== "then" && (
-                                  <span
-                                    className="text-xs"
-                                    style={{
-                                      color: "var(--asph-text-tertiary)",
-                                    }}
-                                  >
-                                    +
-                                  </span>
-                                )}
-                            </>
-                          )}
-                        </React.Fragment>
-                      ))}
-                    </div>
+                              {key}
+                            </kbd>
+                            {keyIndex < shortcut.keys.length - 1 &&
+                              shortcut.keys[keyIndex + 1] !== "then" && (
+                                <span
+                                  className="text-xs"
+                                  style={{
+                                    color: "var(--asph-text-tertiary)",
+                                  }}
+                                >
+                                  +
+                                </span>
+                              )}
+                          </>
+                        )}
+                      </React.Fragment>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
+      </ModalBody>
 
-        {/* Footer */}
-        <div
-          className="border-t px-6 py-4 text-center text-xs"
-          style={{
-            borderColor: "var(--asph-border-primary)",
-            color: "var(--asph-text-tertiary)",
-          }}
-        >
-          <p>
-            Press{" "}
-            <kbd className="rounded border border-asph-border-secondary px-1.5 py-0.5">
-              Esc
-            </kbd>{" "}
-            to close this dialog
-          </p>
-        </div>
-      </div>
-    </div>
+      <ModalFooter className="justify-center bg-asph-bg-primary px-6 py-4 text-center text-xs text-asph-text-tertiary">
+        <p>
+          Press{" "}
+          <kbd className="rounded border border-asph-border-secondary px-1.5 py-0.5">
+            Esc
+          </kbd>{" "}
+          to close this dialog
+        </p>
+      </ModalFooter>
+    </Modal>
   );
 };

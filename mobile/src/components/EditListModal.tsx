@@ -10,19 +10,16 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Modal,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   ActivityIndicator,
   Alert,
   Image,
-  useWindowDimensions,
 } from 'react-native';
 import {AppBskyGraphDefs} from '@atproto/api';
-import { useTheme } from "../contexts/ThemeContext";
-import { BlurOverlay } from "./BlurOverlay";
+import { ThemeColors, useTheme } from "../contexts/ThemeContext";
+import { AppModal } from "./ui/AppModal";
 import {fontSize} from '../utils/typography';
+import {borderRadius} from '../constants/elevation';
+import {fontWeights, spacing} from '../constants/spacing';
 
 const MAX_NAME_LENGTH = 64;
 const MAX_DESCRIPTION_LENGTH = 300;
@@ -44,8 +41,6 @@ function EditListModalInner({
   onSave,
 }: EditListModalProps) {
   const { colors } = useTheme();
-  const { width: windowWidth } = useWindowDimensions();
-  const isWideScreen = windowWidth > 768;
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -100,175 +95,123 @@ function EditListModalInner({
     !name.trim() || isNameOverLimit || isDescOverLimit || isSaving;
 
   return (
-    <Modal
+    <AppModal
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={handleClose}>
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <BlurOverlay intensity={25} />
-        <View style={[styles.modalContainer, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 }]}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Edit List</Text>
-            <TouchableOpacity
-              onPress={handleClose}
-              disabled={isSaving}
-              hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}>
-              <Text style={[styles.closeButton, isSaving && styles.disabledText]}>
-                ✕
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
-            {/* Avatar Section - Coming Soon */}
-            {list?.avatar && (
-              <View style={styles.avatarSection}>
-                <Image source={{uri: list.avatar}} style={styles.avatar} />
-                <Text style={styles.avatarNote}>
-                  Avatar editing coming soon
-                </Text>
-              </View>
+      onClose={handleClose}
+      title="Edit List"
+      maxHeight="90%"
+      closeDisabled={isSaving}
+      keyboardShouldPersistTaps="handled"
+      footer={
+        <>
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={handleClose}
+            disabled={isSaving}>
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.saveButton, isSaveDisabled && styles.buttonDisabled]}
+            onPress={handleSave}
+            disabled={isSaveDisabled}>
+            {isSaving ? (
+              <ActivityIndicator color={colors.text} size="small" />
+            ) : (
+              <Text style={styles.saveButtonText}>Save</Text>
             )}
-
-            {/* Name Input */}
-            <View style={styles.inputSection}>
-              <Text style={styles.label}>List Name</Text>
-              <TextInput
-                style={[styles.input, isNameOverLimit && styles.inputError]}
-                placeholder="Enter list name"
-                placeholderTextColor={colors.textTertiary}
-                value={name}
-                onChangeText={setName}
-                maxLength={MAX_NAME_LENGTH + 10}
-                editable={!isSaving}
-                autoCapitalize="sentences"
-              />
-              <View style={styles.charCountContainer}>
-                <Text
-                  style={[
-                    styles.charCount,
-                    isNameOverLimit && styles.charCountError,
-                  ]}>
-                  {nameCharCount} / {MAX_NAME_LENGTH}
-                </Text>
-              </View>
-            </View>
-
-            {/* Description Input */}
-            <View style={styles.inputSection}>
-              <Text style={styles.label}>Description (Optional)</Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  styles.textArea,
-                  isDescOverLimit && styles.inputError,
-                ]}
-                placeholder="Enter list description"
-                placeholderTextColor={colors.textTertiary}
-                value={description}
-                onChangeText={setDescription}
-                maxLength={MAX_DESCRIPTION_LENGTH + 10}
-                multiline
-                numberOfLines={4}
-                editable={!isSaving}
-                autoCapitalize="sentences"
-              />
-              <View style={styles.charCountContainer}>
-                <Text
-                  style={[
-                    styles.charCount,
-                    isDescOverLimit && styles.charCountError,
-                  ]}>
-                  {descCharCount} / {MAX_DESCRIPTION_LENGTH}
-                </Text>
-              </View>
-            </View>
-
-            {/* Purpose Info */}
-            {list && (
-              <View style={styles.infoSection}>
-                <Text style={styles.infoLabel}>List Type</Text>
-                <Text style={styles.infoValue}>
-                  {list.purpose === 'app.bsky.graph.defs#curatelist'
-                    ? 'Curate List'
-                    : 'Mod List'}
-                </Text>
-              </View>
-            )}
-          </ScrollView>
-
-          <View style={styles.footer}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={handleClose}
-              disabled={isSaving}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, styles.saveButton, isSaveDisabled && styles.buttonDisabled]}
-              onPress={handleSave}
-              disabled={isSaveDisabled}>
-              {isSaving ? (
-                <ActivityIndicator color={colors.text} size="small" />
-              ) : (
-                <Text style={styles.saveButtonText}>Save</Text>
-              )}
-            </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
+        </>
+      }>
+      {/* Avatar Section - Coming Soon */}
+      {list?.avatar && (
+        <View style={styles.avatarSection}>
+          <Image source={{uri: list.avatar}} style={styles.avatar} />
+          <Text style={styles.avatarNote}>
+            Avatar editing coming soon
+          </Text>
         </View>
-      </KeyboardAvoidingView>
-    </Modal>
+      )}
+
+      {/* Name Input */}
+      <View style={styles.inputSection}>
+        <Text style={styles.label}>List Name</Text>
+        <TextInput
+          style={[styles.input, isNameOverLimit && styles.inputError]}
+          placeholder="Enter list name"
+          placeholderTextColor={colors.textTertiary}
+          value={name}
+          onChangeText={setName}
+          maxLength={MAX_NAME_LENGTH + 10}
+          editable={!isSaving}
+          autoCapitalize="sentences"
+        />
+        <View style={styles.charCountContainer}>
+          <Text
+            style={[
+              styles.charCount,
+              isNameOverLimit && styles.charCountError,
+            ]}>
+            {nameCharCount} / {MAX_NAME_LENGTH}
+          </Text>
+        </View>
+      </View>
+
+      {/* Description Input */}
+      <View style={styles.inputSection}>
+        <Text style={styles.label}>Description (Optional)</Text>
+        <TextInput
+          style={[
+            styles.input,
+            styles.textArea,
+            isDescOverLimit && styles.inputError,
+          ]}
+          placeholder="Enter list description"
+          placeholderTextColor={colors.textTertiary}
+          value={description}
+          onChangeText={setDescription}
+          maxLength={MAX_DESCRIPTION_LENGTH + 10}
+          multiline
+          numberOfLines={4}
+          editable={!isSaving}
+          autoCapitalize="sentences"
+        />
+        <View style={styles.charCountContainer}>
+          <Text
+            style={[
+              styles.charCount,
+              isDescOverLimit && styles.charCountError,
+            ]}>
+            {descCharCount} / {MAX_DESCRIPTION_LENGTH}
+          </Text>
+        </View>
+      </View>
+
+      {/* Purpose Info */}
+      {list && (
+        <View style={styles.infoSection}>
+          <Text style={styles.infoLabel}>List Type</Text>
+          <Text style={styles.infoValue}>
+            {list.purpose === 'app.bsky.graph.defs#curatelist'
+              ? 'Curate List'
+              : 'Mod List'}
+          </Text>
+        </View>
+      )}
+    </AppModal>
   );
 }
 
-function createStyles(colors: any) {
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    overlay: {
-      flex: 1,
-      justifyContent: 'flex-end',
-    },
-    modalContainer: {
-      backgroundColor: colors.background,
-      borderTopLeftRadius: 16,
-      borderTopRightRadius: 16,
-      maxHeight: '90%',
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.surfaceAlt,
-    },
-    title: {
-      color: colors.text,
-      fontSize: fontSize.headline,
-      fontWeight: '700',
-    },
-    closeButton: {
-      color: colors.textSecondary,
-      fontSize: fontSize.title2,
-      fontWeight: '600',
-    },
-    disabledText: {
-      opacity: 0.5,
-    },
-    content: {
-      padding: 16,
-    },
     avatarSection: {
       alignItems: 'center',
-      marginBottom: 24,
+      marginBottom: spacing.xl,
     },
     avatar: {
       width: 80,
       height: 80,
-      borderRadius: 8,
-      marginBottom: 8,
+      borderRadius: borderRadius.medium,
+      marginBottom: spacing.sm,
     },
     avatarNote: {
       color: colors.textTertiary,
@@ -281,17 +224,17 @@ function createStyles(colors: any) {
     label: {
       color: colors.text,
       fontSize: fontSize.subheadline,
-      fontWeight: '600',
-      marginBottom: 8,
+      fontWeight: fontWeights.semibold,
+      marginBottom: spacing.sm,
     },
     input: {
       backgroundColor: colors.surfaceAlt,
       color: colors.text,
       fontSize: fontSize.callout,
-      padding: 12,
-      borderRadius: 8,
+      padding: spacing.md,
+      borderRadius: borderRadius.medium,
       borderWidth: 1,
-      borderColor: colors.surface,
+      borderColor: colors.border,
     },
     inputError: {
       borderColor: colors.danger,
@@ -302,7 +245,7 @@ function createStyles(colors: any) {
     },
     charCountContainer: {
       alignItems: 'flex-end',
-      marginTop: 4,
+      marginTop: spacing.xs,
     },
     charCount: {
       color: colors.textTertiary,
@@ -313,43 +256,36 @@ function createStyles(colors: any) {
     },
     infoSection: {
       backgroundColor: colors.surfaceAlt,
-      padding: 12,
-      borderRadius: 8,
+      padding: spacing.md,
+      borderRadius: borderRadius.medium,
       marginBottom: 20,
     },
     infoLabel: {
       color: colors.textSecondary,
       fontSize: fontSize.caption1,
-      marginBottom: 4,
+      marginBottom: spacing.xs,
     },
     infoValue: {
       color: colors.primary,
       fontSize: fontSize.subheadline,
-      fontWeight: '600',
-    },
-    footer: {
-      flexDirection: 'row',
-      gap: 12,
-      padding: 16,
-      borderTopWidth: 1,
-      borderTopColor: colors.surfaceAlt,
+      fontWeight: fontWeights.semibold,
     },
     button: {
       flex: 1,
-      paddingVertical: 12,
-      borderRadius: 8,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.medium,
       alignItems: 'center',
       justifyContent: 'center',
     },
     cancelButton: {
       backgroundColor: colors.surfaceAlt,
       borderWidth: 1,
-      borderColor: colors.surface,
+      borderColor: colors.border,
     },
     cancelButtonText: {
       color: colors.text,
       fontSize: fontSize.callout,
-      fontWeight: '600',
+      fontWeight: fontWeights.semibold,
     },
     saveButton: {
       backgroundColor: colors.primary,
@@ -357,7 +293,7 @@ function createStyles(colors: any) {
     saveButtonText: {
       color: colors.text,
       fontSize: fontSize.callout,
-      fontWeight: '600',
+      fontWeight: fontWeights.semibold,
     },
     buttonDisabled: {
       opacity: 0.5,

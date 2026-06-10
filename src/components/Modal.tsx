@@ -1,10 +1,9 @@
-import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { useFocusTrap } from "../hooks/useFocusTrap";
+import { AlertCircle, AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { Button } from "./ui/Button";
+import { Modal as ModalShell, ModalClose, ModalFooter } from "./ui/Modal";
 
 export type ModalType = "alert" | "confirm";
 export type ModalVariant = "info" | "warning" | "error" | "success";
-type ModalState = "entering" | "open" | "exiting" | "closed";
 
 interface ModalProps {
   isOpen: boolean;
@@ -26,10 +25,10 @@ const variantIcons = {
 };
 
 const variantColors = {
-  info: "text-blue-600 dark:text-blue-400",
-  warning: "text-yellow-600 dark:text-yellow-400",
-  error: "text-red-600 dark:text-red-400",
-  success: "text-green-600 dark:text-green-400",
+  info: "text-asph-info",
+  warning: "text-asph-warning",
+  error: "text-asph-error",
+  success: "text-asph-success",
 };
 
 export function Modal({
@@ -43,161 +42,70 @@ export function Modal({
   cancelText = "Cancel",
   onConfirm,
 }: ModalProps) {
-  const [modalState, setModalState] = useState<ModalState>("closed");
-  const containerRef = useFocusTrap<HTMLDivElement>(
-    modalState === "entering" || modalState === "open",
-  );
-
-  // Handle isOpen prop changes
-  useEffect(() => {
-    if (isOpen && modalState === "closed") {
-      setModalState("entering");
-    } else if (
-      !isOpen &&
-      (modalState === "entering" || modalState === "open")
-    ) {
-      setModalState("exiting");
-    }
-  }, [isOpen, modalState]);
-
-  // Transition from entering to open after entrance animation
-  const handleEntranceEnd = useCallback(() => {
-    if (modalState === "entering") {
-      setModalState("open");
-    }
-  }, [modalState]);
-
-  // Transition from exiting to closed after exit animation
-  const handleExitEnd = useCallback(() => {
-    if (modalState === "exiting") {
-      setModalState("closed");
-      onClose(); // Notify parent that modal has fully closed
-    }
-  }, [modalState, onClose]);
-
-  const handleClose = useCallback(() => {
-    setModalState("exiting");
-  }, []);
-
-  // Handle Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.key === "Escape" &&
-        (modalState === "entering" || modalState === "open")
-      ) {
-        e.preventDefault();
-        handleClose();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalState, handleClose]);
-
   const Icon = variantIcons[variant];
   const iconColor = variantColors[variant];
 
-  const handleConfirm = () => {
-    if (onConfirm) {
-      onConfirm();
-    }
-    handleClose();
-  };
-
-  const handleBackdropClick = () => {
-    if (type === "alert") {
-      handleClose();
-    }
-  };
-
-  // Don't render if modal is fully closed
-  if (modalState === "closed") return null;
-
-  // Determine animation classes based on state
-  const isEntering = modalState === "entering";
-  const isExiting = modalState === "exiting";
-
-  const backdropAnimationClass = isEntering
-    ? "animate-enter-fade"
-    : isExiting
-      ? "animate-exit-fade"
-      : "";
-
-  const contentAnimationClass = isEntering
-    ? "animate-enter-scale"
-    : isExiting
-      ? "animate-exit-scale"
-      : "";
-
   return (
-    <div
-      className={`modal-backdrop ${backdropAnimationClass}`}
-      onClick={handleBackdropClick}
-      onAnimationEnd={isExiting ? handleExitEnd : undefined}
-      role="presentation"
-      data-state={modalState}
+    <ModalShell
+      isOpen={isOpen}
+      onClose={onClose}
+      size="md"
+      labelledBy="modal-title"
+      describedBy="modal-description"
+      closeOnBackdrop={type === "alert"}
+      className="bg-asph-bg-secondary"
     >
-      <div
-        ref={containerRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-        aria-describedby="modal-description"
-        className={`modal-container modal-auto-height modal-md bg-asph-bg-secondary ${contentAnimationClass}`}
-        onClick={(e) => e.stopPropagation()}
-        onAnimationEnd={isEntering ? handleEntranceEnd : undefined}
-        data-state={modalState}
-      >
-        {/* Header */}
-        <div className="flex items-start gap-3 p-6">
-          <Icon
-            className={`mt-1 h-6 w-6 flex-shrink-0 ${iconColor}`}
-            aria-hidden="true"
-          />
-          <div className="flex-1">
-            {title && (
-              <h3
-                id="modal-title"
-                className="mb-2 text-lg font-semibold text-asph-text-primary"
+      {(close) => (
+        <>
+          <div className="flex items-start gap-3 p-6">
+            <Icon
+              className={`mt-1 h-6 w-6 flex-shrink-0 ${iconColor}`}
+              aria-hidden="true"
+            />
+            <div className="flex-1">
+              {title && (
+                <h3
+                  id="modal-title"
+                  className="mb-2 text-lg font-semibold text-asph-text-primary"
+                >
+                  {title}
+                </h3>
+              )}
+              <div
+                id="modal-description"
+                className="whitespace-pre-wrap text-asph-text-secondary"
               >
-                {title}
-              </h3>
-            )}
-            <div
-              id="modal-description"
-              className="whitespace-pre-wrap text-asph-text-secondary"
-            >
-              {message}
+                {message}
+              </div>
             </div>
+            <ModalClose className="touch-target-icon p-1" />
           </div>
-          <button
-            onClick={handleClose}
-            aria-label="Close dialog"
-            className="touch-target-icon rounded-full p-1 hover:bg-asph-bg-hover"
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </div>
 
-        {/* Actions */}
-        <div className="flex justify-end gap-3 border-t border-asph-border-primary bg-asph-bg-tertiary px-6 py-4">
-          {type === "confirm" && (
-            <button
-              onClick={handleClose}
-              className="touch-target-sm ios-press-light rounded-md px-4 py-2 text-sm font-medium text-asph-text-secondary hover:bg-asph-bg-active"
+          <ModalFooter className="bg-asph-bg-tertiary px-6 py-4">
+            {type === "confirm" && (
+              <Button
+                variant="ghost"
+                className="touch-target-sm"
+                onClick={close}
+              >
+                {cancelText}
+              </Button>
+            )}
+            <Button
+              variant="primary"
+              className="touch-target-sm"
+              onClick={() => {
+                if (onConfirm) {
+                  onConfirm();
+                }
+                close();
+              }}
             >
-              {cancelText}
-            </button>
-          )}
-          <button
-            onClick={handleConfirm}
-            className="touch-target-sm ios-press-light rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-          >
-            {confirmText}
-          </button>
-        </div>
-      </div>
-    </div>
+              {confirmText}
+            </Button>
+          </ModalFooter>
+        </>
+      )}
+    </ModalShell>
   );
 }

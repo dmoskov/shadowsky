@@ -5,21 +5,18 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  ScrollView,
-  Modal,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  useWindowDimensions,
 } from 'react-native';
 import {
   useBookmarkCollections,
   useBookmarkInCollections,
 } from '../hooks/useBookmarkCollections';
 import { COLLECTION_COLORS } from '../services/bookmark-collections';
-import { useTheme } from '../contexts/ThemeContext';
-import { BlurOverlay } from './BlurOverlay';
+import { ThemeColors, useTheme } from '../contexts/ThemeContext';
+import { AppModal } from './ui/AppModal';
 import {fontSize} from '../utils/typography';
+import {borderRadius} from '../constants/elevation';
+import {fontWeights, spacing} from '../constants/spacing';
 
 interface SaveToCollectionModalProps {
   visible: boolean;
@@ -33,8 +30,6 @@ function SaveToCollectionModalInner({
   onClose,
 }: SaveToCollectionModalProps) {
   const { colors } = useTheme();
-  const { width: windowWidth } = useWindowDimensions();
-  const isWideScreen = windowWidth > 768;
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [showNewCollectionForm, setShowNewCollectionForm] = useState(false);
@@ -83,166 +78,117 @@ function SaveToCollectionModalInner({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <BlurOverlay intensity={25} />
-        <View style={[styles.modal, isWideScreen && { maxWidth: 600, alignSelf: 'center' as const, borderRadius: 20 }]}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Save to collection</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Text style={styles.closeButtonText}>✕</Text>
-            </TouchableOpacity>
+    <AppModal
+      visible={visible}
+      onClose={onClose}
+      title="Save to collection"
+      maxHeight="80%"
+      keyboardDismissMode="on-drag">
+      {collections.length === 0 && !showNewCollectionForm && (
+        <Text style={styles.emptyText}>No collections yet</Text>
+      )}
+
+      {collections.map((collection) => (
+        <TouchableOpacity
+          key={collection.id}
+          onPress={() => handleToggleCollection(collection.id)}
+          style={styles.collectionItem}
+        >
+          <View
+            style={[
+              styles.colorDot,
+              { backgroundColor: getCollectionColor(collection.color || 'blue') },
+            ]}
+          />
+          <Text style={styles.collectionName}>{collection.name}</Text>
+          {collectionIds.includes(collection.id) && (
+            <Text style={styles.checkMark}>✓</Text>
+          )}
+        </TouchableOpacity>
+      ))}
+
+      {showNewCollectionForm ? (
+        <View style={styles.formContainer}>
+          <TextInput
+            style={styles.input}
+            value={newCollectionName}
+            onChangeText={setNewCollectionName}
+            placeholder="Collection name"
+            placeholderTextColor={colors.textSecondary}
+            autoFocus
+            editable={!isCreating}
+          />
+
+          <View style={styles.colorPicker}>
+            {COLLECTION_COLORS.map((color) => (
+              <TouchableOpacity
+                key={color.id}
+                onPress={() => setSelectedColor(color.id)}
+                style={[
+                  styles.colorOption,
+                  { backgroundColor: color.value },
+                  selectedColor === color.id && styles.selectedColorOption,
+                ]}
+              />
+            ))}
           </View>
 
-          <ScrollView style={styles.content} keyboardDismissMode="on-drag">
-            {collections.length === 0 && !showNewCollectionForm && (
-              <Text style={styles.emptyText}>No collections yet</Text>
-            )}
-
-            {collections.map((collection) => (
-              <TouchableOpacity
-                key={collection.id}
-                onPress={() => handleToggleCollection(collection.id)}
-                style={styles.collectionItem}
-              >
-                <View
-                  style={[
-                    styles.colorDot,
-                    { backgroundColor: getCollectionColor(collection.color || 'blue') },
-                  ]}
-                />
-                <Text style={styles.collectionName}>{collection.name}</Text>
-                {collectionIds.includes(collection.id) && (
-                  <Text style={styles.checkMark}>✓</Text>
-                )}
-              </TouchableOpacity>
-            ))}
-
-            {showNewCollectionForm ? (
-              <View style={styles.formContainer}>
-                <TextInput
-                  style={styles.input}
-                  value={newCollectionName}
-                  onChangeText={setNewCollectionName}
-                  placeholder="Collection name"
-                  placeholderTextColor={colors.textSecondary}
-                  autoFocus
-                  editable={!isCreating}
-                />
-
-                <View style={styles.colorPicker}>
-                  {COLLECTION_COLORS.map((color) => (
-                    <TouchableOpacity
-                      key={color.id}
-                      onPress={() => setSelectedColor(color.id)}
-                      style={[
-                        styles.colorOption,
-                        { backgroundColor: color.value },
-                        selectedColor === color.id && styles.selectedColorOption,
-                      ]}
-                    />
-                  ))}
-                </View>
-
-                <View style={styles.formButtons}>
-                  <TouchableOpacity
-                    onPress={() => setShowNewCollectionForm(false)}
-                    style={styles.cancelButton}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleCreateCollection}
-                    style={[
-                      styles.createButton,
-                      (!newCollectionName.trim() || isCreating) && styles.disabledButton,
-                    ]}
-                    disabled={!newCollectionName.trim() || isCreating}
-                  >
-                    {isCreating ? (
-                      <ActivityIndicator color={colors.text} size="small" />
-                    ) : (
-                      <Text style={styles.createButtonText}>Create</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-              <TouchableOpacity
-                onPress={() => setShowNewCollectionForm(true)}
-                style={styles.newCollectionButton}
-              >
-                <Text style={styles.newCollectionButtonText}>+ New collection</Text>
-              </TouchableOpacity>
-            )}
-          </ScrollView>
+          <View style={styles.formButtons}>
+            <TouchableOpacity
+              onPress={() => setShowNewCollectionForm(false)}
+              style={styles.cancelButton}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleCreateCollection}
+              style={[
+                styles.createButton,
+                (!newCollectionName.trim() || isCreating) && styles.disabledButton,
+              ]}
+              disabled={!newCollectionName.trim() || isCreating}
+            >
+              {isCreating ? (
+                <ActivityIndicator color={colors.text} size="small" />
+              ) : (
+                <Text style={styles.createButtonText}>Create</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
-      </KeyboardAvoidingView>
-    </Modal>
+      ) : (
+        <TouchableOpacity
+          onPress={() => setShowNewCollectionForm(true)}
+          style={styles.newCollectionButton}
+        >
+          <Text style={styles.newCollectionButtonText}>+ New collection</Text>
+        </TouchableOpacity>
+      )}
+    </AppModal>
   );
 }
 
-function createStyles(colors: any) {
+function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    overlay: {
-      flex: 1,
-      justifyContent: 'flex-end',
-    },
-    modal: {
-      backgroundColor: colors.background,
-      borderTopLeftRadius: 16,
-      borderTopRightRadius: 16,
-      maxHeight: '80%',
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    headerTitle: {
-      fontSize: fontSize.headline,
-      fontWeight: '600',
-      color: colors.text,
-    },
-    closeButton: {
-      minWidth: 44,
-      minHeight: 44,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    closeButtonText: {
-      fontSize: fontSize.title3,
-      color: colors.textSecondary,
-    },
-    content: {
-      padding: 16,
-    },
     emptyText: {
       fontSize: fontSize.subheadline,
       color: colors.textSecondary,
       textAlign: 'center',
-      paddingVertical: 16,
+      paddingVertical: spacing.lg,
     },
     collectionItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 12,
-      paddingHorizontal: 8,
-      borderRadius: 8,
-      marginBottom: 8,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.sm,
+      borderRadius: borderRadius.medium,
+      marginBottom: spacing.sm,
     },
     colorDot: {
       width: 12,
       height: 12,
       borderRadius: 6,
-      marginRight: 12,
+      marginRight: spacing.md,
     },
     collectionName: {
       flex: 1,
@@ -254,33 +200,33 @@ function createStyles(colors: any) {
       color: colors.success,
     },
     formContainer: {
-      marginTop: 16,
-      padding: 16,
-      backgroundColor: colors.surface,
-      borderRadius: 8,
+      marginTop: spacing.lg,
+      padding: spacing.lg,
+      backgroundColor: colors.surfaceAlt,
+      borderRadius: borderRadius.medium,
     },
     input: {
       backgroundColor: colors.background,
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 8,
-      paddingHorizontal: 12,
+      borderRadius: borderRadius.medium,
+      paddingHorizontal: spacing.md,
       paddingVertical: 10,
       fontSize: fontSize.subheadline,
       color: colors.text,
-      marginBottom: 12,
+      marginBottom: spacing.md,
     },
     colorPicker: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      marginBottom: 16,
+      marginBottom: spacing.lg,
     },
     colorOption: {
       width: 28,
       height: 28,
       borderRadius: 14,
-      marginRight: 8,
-      marginBottom: 8,
+      marginRight: spacing.sm,
+      marginBottom: spacing.sm,
       borderWidth: 2,
       borderColor: 'transparent',
     },
@@ -289,12 +235,12 @@ function createStyles(colors: any) {
     },
     formButtons: {
       flexDirection: 'row',
-      gap: 8,
+      gap: spacing.sm,
     },
     cancelButton: {
       flex: 1,
       paddingVertical: 10,
-      borderRadius: 8,
+      borderRadius: borderRadius.medium,
       backgroundColor: colors.background,
       alignItems: 'center',
     },
@@ -305,7 +251,7 @@ function createStyles(colors: any) {
     createButton: {
       flex: 1,
       paddingVertical: 10,
-      borderRadius: 8,
+      borderRadius: borderRadius.medium,
       backgroundColor: colors.info,
       alignItems: 'center',
     },
@@ -314,13 +260,13 @@ function createStyles(colors: any) {
     },
     createButtonText: {
       fontSize: fontSize.subheadline,
-      fontWeight: '600',
+      fontWeight: fontWeights.semibold,
       color: colors.text,
     },
     newCollectionButton: {
-      marginTop: 16,
-      paddingVertical: 12,
-      borderRadius: 8,
+      marginTop: spacing.lg,
+      paddingVertical: spacing.md,
+      borderRadius: borderRadius.medium,
       borderWidth: 1,
       borderStyle: 'dashed',
       borderColor: colors.border,
