@@ -196,7 +196,7 @@ export function CustomDrawerContent() {
       </View>
 
       <View style={styles.drawerFooter}>
-        <Text style={styles.version}>Asphodel v0.7.0</Text>
+        <Text style={styles.version}>Asphodel v0.8.0</Text>
       </View>
     </ScrollView>
   );

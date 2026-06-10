@@ -197,7 +197,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 Asphodel
               </div>
               <div style={{ letterSpacing: "var(--asph-letter-spacing-wide)" }}>
-                Version 0.7.4
+                Version 0.8.0
               </div>
             </div>
           </div>

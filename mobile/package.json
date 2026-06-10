@@ -1,13 +1,13 @@
 {
   "name": "shadowsky-mobile",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "npx oxlint app/ src/",
+    "lint": "npx oxlint app/ src/ && node scripts/check-design-tokens.mjs",
     "build": "npx tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -25,7 +25,8 @@
     "update:preview": "eas update --branch preview --message",
     "update:testflight": "eas update --branch testflight --message",
     "update:production": "eas update --branch production --message",
-    "postinstall": "npx patch-package"
+    "postinstall": "npx patch-package",
+    "tokens:baseline": "node scripts/check-design-tokens.mjs --update"
   },
   "dependencies": {
     "@atproto/api": "^0.20.7",
