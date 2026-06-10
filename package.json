@@ -36,7 +36,9 @@
     "test:types": "wireit",
     "test:unit": "wireit",
     "test:amplify": "wireit",
-    "test:unit:watch": "vitest watch"
+    "test:unit:watch": "vitest watch",
+    "tokens:build": "wireit",
+    "tokens:check": "wireit"
   },
   "dependencies": {
     "@atproto/api": "^0.20.11",
@@ -152,7 +154,8 @@
         "test:format",
         "test:lint",
         "test:types",
-        "test:unit"
+        "test:unit",
+        "tokens:check"
       ]
     },
     "test:unit": {
@@ -194,6 +197,27 @@
         "vite.config.ts",
         "tsconfig.json"
       ]
+    },
+    "tokens:build": {
+      "command": "node packages/tokens/build.mjs",
+      "files": [
+        "packages/tokens/*.mjs"
+      ],
+      "output": [
+        "src/styles/generated-tokens.css",
+        "mobile/src/constants/generated/tokens.ts",
+        "mobile/modules/*/ios/Generated/DesignTokens.swift"
+      ]
+    },
+    "tokens:check": {
+      "command": "node packages/tokens/build.mjs --check",
+      "files": [
+        "packages/tokens/*.mjs",
+        "src/styles/generated-tokens.css",
+        "mobile/src/constants/generated/tokens.ts",
+        "mobile/modules/*/ios/Generated/DesignTokens.swift"
+      ],
+      "output": []
     }
   },
   "packageManager": "npm@11.11.1"

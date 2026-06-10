@@ -303,7 +303,7 @@ function ImageCarouselInner({
               {showAddAlt && (
                 autoGenIndex === currentIndex ? (
                   <View style={styles.addAltButton}>
-                    <ActivityIndicator size="small" color="#ffffff" style={{marginRight: 6}} />
+                    <ActivityIndicator size="small" color={colors.textOnPrimary} style={{marginRight: 6}} />
                     <Text style={styles.addAltButtonText}>Generating ALT...</Text>
                   </View>
                 ) : (
@@ -411,7 +411,7 @@ function createStyles(colors: any) {
       position: 'absolute',
       top: Platform.OS === 'ios' ? 50 : 20,
       left: 20,
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      backgroundColor: colors.overlayBackground,
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 16,
@@ -425,7 +425,7 @@ function createStyles(colors: any) {
       position: 'absolute',
       top: Platform.OS === 'ios' ? 50 : 20,
       right: 20,
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      backgroundColor: colors.overlayBackground,
       width: 36,
       height: 36,
       borderRadius: 18,
@@ -445,7 +445,7 @@ function createStyles(colors: any) {
       gap: 12,
     },
     bottomButton: {
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      backgroundColor: colors.overlayBackground,
       width: 36,
       height: 36,
       borderRadius: 18,
@@ -461,7 +461,7 @@ function createStyles(colors: any) {
       alignItems: 'center',
     },
     addAltButtonText: {
-      color: '#ffffff',
+      color: colors.textOnPrimary,
       fontSize: fontSize.footnote,
       fontWeight: '700',
     },
@@ -498,7 +498,7 @@ function createStyles(colors: any) {
       right: 16,
     },
     altBadge: {
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      backgroundColor: colors.overlayBackground,
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 16,
@@ -525,7 +525,7 @@ function createStyles(colors: any) {
       alignSelf: 'center',
       flexDirection: 'row',
       alignItems: 'flex-start',
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      backgroundColor: colors.overlayBackground,
       paddingHorizontal: 12,
       paddingVertical: 8,
       borderRadius: 8,
@@ -533,7 +533,7 @@ function createStyles(colors: any) {
       gap: 8,
     },
     galleryAltLabel: {
-      color: '#fff',
+      color: colors.textOnPrimary,
       fontSize: 11,
       fontWeight: '700',
       backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -543,7 +543,7 @@ function createStyles(colors: any) {
       overflow: 'hidden',
     },
     galleryAltBodyText: {
-      color: '#fff',
+      color: colors.textOnPrimary,
       fontSize: 13,
       lineHeight: 18,
       flex: 1,

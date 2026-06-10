@@ -5,8 +5,13 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { mockTheme } from '../../components/__tests__/test-utils';
 
 const mockUseLocalSearchParams = useLocalSearchParams as jest.MockedFunction<typeof useLocalSearchParams>;
+
+jest.mock('../../contexts/ThemeContext', () => ({
+  useTheme: () => mockTheme,
+}));
 
 // Helper to create mock components inside jest.mock factories
 function mockComponent(testID: string) {

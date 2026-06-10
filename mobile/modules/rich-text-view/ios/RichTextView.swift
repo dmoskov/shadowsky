@@ -150,8 +150,8 @@ public struct RichTextView: View {
         self.onLinkTap = onLinkTap
     }
 
-    // Theme colors - matching React Native theme (primary blue #1d9bf0)
-    private let primaryColor = Color(red: 0x1d / 255.0, green: 0x9b / 255.0, blue: 0xf0 / 255.0)
+    // Theme colors - matching React Native theme (links/mentions/hashtags use colors.primary)
+    private let primaryColor = DesignTokens.primary
 
     public var body: some View {
         let parser = RichTextParser(text: text, facets: facets)

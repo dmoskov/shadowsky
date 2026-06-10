@@ -264,7 +264,7 @@ function SearchFilterSheetInner({
                         onPress={chip.onRemove}
                         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                       >
-                        <CloseIcon size={14} color="#ffffff" />
+                        <CloseIcon size={14} color={colors.textOnPrimary} />
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -541,7 +541,7 @@ function createStyles(colors: any) {
       borderRadius: 16,
     },
     chipText: {
-      color: "#ffffff",
+      color: colors.textOnPrimary,
       fontSize: fontSize.footnote,
       fontWeight: "500",
     },
@@ -650,7 +650,7 @@ function createStyles(colors: any) {
       alignItems: "center",
     },
     applyButtonText: {
-      color: "#ffffff",
+      color: colors.textOnPrimary,
       fontSize: fontSize.callout,
       fontWeight: "600",
     },

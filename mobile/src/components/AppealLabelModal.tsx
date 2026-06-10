@@ -174,7 +174,7 @@ function AppealLabelModalInner({
                   disabled={!reason.trim() || isSubmitting}
                 >
                   {isSubmitting ? (
-                    <ActivityIndicator color="#fff" />
+                    <ActivityIndicator color={colors.textOnPrimary} />
                   ) : (
                     <Text style={styles.primaryButtonText}>Submit Appeal</Text>
                   )}
@@ -285,7 +285,7 @@ function createStyles(colors: any) {
       backgroundColor: colors.primary,
     },
     primaryButtonText: {
-      color: "#fff",
+      color: colors.textOnPrimary,
       fontSize: fontSize.subheadline,
       fontWeight: "600",
     },

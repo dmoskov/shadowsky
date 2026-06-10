@@ -168,7 +168,7 @@ function createStyles(colors: any) {
       fontWeight: '700',
     },
     rankTextTop: {
-      color: '#ffffff',
+      color: colors.textOnPrimary,
     },
     engagementTotal: {
       color: colors.textSecondary,

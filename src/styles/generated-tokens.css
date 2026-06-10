@@ -1,0 +1,214 @@
+/* GENERATED FILE - do not edit.
+ * Edit packages/tokens/tokens.mjs and run `npm run tokens:build`.
+ *
+ * Color, shadow, and letter-spacing variables for the Asphodel theme.
+ * Non-token variables (focus rings, animation timing, loading states) live
+ * in asphodel-theme.css. */
+
+:root {
+  --asph-primary: #ff6b9d;
+  --asph-primary-rgb: 255, 107, 157;
+  --asph-primary-dark: #d63a71;
+  --asph-primary-light: #ff8fb5;
+  --asph-accent: #7c3aed;
+  --asph-bg-primary: #fafafa;
+  --asph-bg-secondary: #ffffff;
+  --asph-bg-tertiary: #f4f4f5;
+  --asph-bg-hover: rgba(244, 244, 245, 0.7);
+  --asph-bg-active: #e4e4e7;
+  --asph-text-primary: #09090b;
+  --asph-text-secondary: #52525b;
+  --asph-text-tertiary: #71717a;
+  --asph-text-link: #ff6b9d;
+  --asph-border-primary: #e4e4e7;
+  --asph-border-secondary: #d4d4d8;
+  --asph-border-light: #f4f4f5;
+  --asph-like: #ff1744;
+  --asph-repost: #00e676;
+  --asph-follow: #ff6b9d;
+  --asph-mention: #9c27b0;
+  --asph-reply: #00bcd4;
+  --asph-quote: #651fff;
+  --asph-success: #00e676;
+  --asph-success-light: #69f0ae;
+  --asph-success-lighter: #b9f6ca;
+  --asph-success-lightest: #ccffd4;
+  --asph-warning: #ffc107;
+  --asph-warning-light: #ffd54f;
+  --asph-warning-lighter: #ffecb3;
+  --asph-error: #ff1744;
+  --asph-error-light: #ff5252;
+  --asph-error-lighter: #ff8a80;
+  --asph-info: #2979ff;
+  --asph-info-light: #448aff;
+  --asph-info-lighter: #82b1ff;
+  --asph-orange: #ff6d00;
+  --asph-orange-light: #ff9100;
+  --asph-pink: #f50057;
+  --asph-pink-light: #ff4081;
+  --asph-pink-lighter: #ff80ab;
+  --asph-pink-lightest: #ff99bb;
+  --asph-teal: #00bfa5;
+  --asph-yellow: #ffd600;
+  --asph-yellow-light: #ffea00;
+  --asph-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.1);
+  --asph-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 8px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(0, 0, 0, 0.04);
+  --asph-shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.02), 0 10px 20px rgba(0, 0, 0, 0.06), 0 24px 48px rgba(0, 0, 0, 0.08);
+  --asph-shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.04), 0 24px 48px rgba(0, 0, 0, 0.08), 0 48px 96px rgba(0, 0, 0, 0.06);
+  --asph-glow: 0 0 20px rgba(255, 107, 157, 0.25), 0 0 40px rgba(255, 107, 157, 0.1);
+  --asph-shadow-inner: inset 0 1px 2px rgba(0, 0, 0, 0.06), inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --asph-shadow-ring: 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --asph-shadow-ring-primary: 0 0 0 1px rgba(255, 107, 157, 0.3);
+  --asph-letter-spacing-tight: -0.015em;
+  --asph-letter-spacing-heading: -0.025em;
+  --asph-letter-spacing-wide: 0.025em;
+  --asph-primary-10: rgba(255, 107, 157, 0.1);
+  --asph-success-10: rgba(0, 230, 118, 0.1);
+  --asph-error-10: rgba(255, 23, 68, 0.1);
+  --asph-warning-10: rgba(255, 193, 7, 0.1);
+  --asph-info-10: rgba(41, 121, 255, 0.1);
+  --asph-orange-10: rgba(255, 109, 0, 0.1);
+}
+
+/* Dark theme */
+.dark,
+[data-theme="dark"] {
+  --asph-primary: #ff6b9d;
+  --asph-primary-rgb: 255, 107, 157;
+  --asph-primary-dark: #d63a71;
+  --asph-primary-light: #ff8fb5;
+  --asph-accent: #a78bfa;
+  --asph-bg-primary: #0a0a0f;
+  --asph-bg-secondary: #13131a;
+  --asph-bg-tertiary: #1c1c26;
+  --asph-bg-hover: rgba(40, 40, 52, 0.5);
+  --asph-bg-active: #2d2d3d;
+  --asph-text-primary: #fafafa;
+  --asph-text-secondary: #e4e4e7;
+  --asph-text-tertiary: #d4d4d8;
+  --asph-text-link: #ff8fb5;
+  --asph-border-primary: #27272a;
+  --asph-border-secondary: #3f3f46;
+  --asph-border-light: #18181b;
+  --asph-like: #ff4081;
+  --asph-repost: #00e676;
+  --asph-follow: #ff6b9d;
+  --asph-mention: #ce93d8;
+  --asph-reply: #40c4ff;
+  --asph-quote: #7c4dff;
+  --asph-success: #00e676;
+  --asph-success-light: #69f0ae;
+  --asph-success-lighter: #b9f6ca;
+  --asph-success-lightest: #ccffd4;
+  --asph-warning: #ffd600;
+  --asph-warning-light: #ffea00;
+  --asph-warning-lighter: #fff59d;
+  --asph-error: #ff1744;
+  --asph-error-light: #ff5252;
+  --asph-error-lighter: #ff8a80;
+  --asph-info: #2979ff;
+  --asph-info-light: #448aff;
+  --asph-info-lighter: #82b1ff;
+  --asph-orange: #ff6d00;
+  --asph-orange-light: #ff9100;
+  --asph-pink: #f50057;
+  --asph-pink-light: #ff4081;
+  --asph-pink-lighter: #ff80ab;
+  --asph-pink-lightest: #ff99bb;
+  --asph-teal: #00bfa5;
+  --asph-yellow: #ffd600;
+  --asph-yellow-light: #ffea00;
+  --asph-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --asph-shadow-md: 0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 8px rgba(0, 0, 0, 0.25), 0 8px 16px rgba(0, 0, 0, 0.15);
+  --asph-shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.2), 0 10px 20px rgba(0, 0, 0, 0.3), 0 24px 48px rgba(0, 0, 0, 0.2);
+  --asph-shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.25), 0 24px 48px rgba(0, 0, 0, 0.3), 0 48px 96px rgba(0, 0, 0, 0.2);
+  --asph-glow: 0 0 20px rgba(255, 107, 157, 0.3), 0 0 40px rgba(255, 107, 157, 0.15);
+  --asph-shadow-inner: inset 0 1px 2px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --asph-shadow-ring: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --asph-shadow-ring-primary: 0 0 0 1px rgba(255, 107, 157, 0.4);
+  --asph-letter-spacing-tight: -0.015em;
+  --asph-letter-spacing-heading: -0.025em;
+  --asph-letter-spacing-wide: 0.025em;
+  --asph-primary-10: rgba(255, 107, 157, 0.15);
+  --asph-success-10: rgba(0, 230, 118, 0.15);
+  --asph-error-10: rgba(255, 23, 68, 0.15);
+  --asph-warning-10: rgba(255, 214, 0, 0.15);
+  --asph-info-10: rgba(41, 121, 255, 0.15);
+  --asph-orange-10: rgba(255, 109, 0, 0.15);
+}
+
+/* High Contrast - Light - WCAG AAA (7:1 minimum contrast ratio) */
+[data-high-contrast="true"],
+[data-high-contrast="true"][data-theme="light"] {
+  --asph-primary: #d1004b;
+  --asph-primary-rgb: 209, 0, 75;
+  --asph-primary-dark: #a3003a;
+  --asph-primary-light: #d1004b;
+  --asph-accent: #5b21b6;
+  --asph-bg-primary: #ffffff;
+  --asph-bg-secondary: #ffffff;
+  --asph-bg-tertiary: #f5f5f5;
+  --asph-bg-hover: #e5e5e5;
+  --asph-bg-active: #d4d4d4;
+  --asph-text-primary: #000000;
+  --asph-text-secondary: #1a1a1a;
+  --asph-text-tertiary: #2d2d2d;
+  --asph-text-link: #8b7335;
+  --asph-border-primary: #404040;
+  --asph-border-secondary: #2d2d2d;
+  --asph-border-light: #525252;
+  --asph-like: #be123c;
+  --asph-repost: #047857;
+  --asph-follow: #d1004b;
+  --asph-mention: #5b21b6;
+  --asph-reply: #0e7490;
+  --asph-quote: #4c1d95;
+  --asph-success: #047857;
+  --asph-warning: #b45309;
+  --asph-error: #b91c1c;
+  --asph-info: #1e40af;
+  --asph-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5);
+  --asph-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
+  --asph-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --asph-glow: 0 0 0 3px rgba(209, 0, 75, 0.5);
+  --asph-primary-10: rgba(209, 0, 75, 0.15);
+  --asph-success-10: rgba(4, 120, 87, 0.15);
+}
+
+/* High Contrast - Dark - WCAG AAA (7:1 minimum contrast ratio) */
+[data-high-contrast="true"][data-theme="dark"],
+[data-high-contrast="true"].dark {
+  --asph-primary: #ff8fb5;
+  --asph-primary-rgb: 255, 143, 181;
+  --asph-primary-dark: #ff6b9d;
+  --asph-primary-light: #ffb3cc;
+  --asph-accent: #c4b5fd;
+  --asph-bg-primary: #000000;
+  --asph-bg-secondary: #0a0a0a;
+  --asph-bg-tertiary: #171717;
+  --asph-bg-hover: #262626;
+  --asph-bg-active: #404040;
+  --asph-text-primary: #ffffff;
+  --asph-text-secondary: #f5f5f5;
+  --asph-text-tertiary: #e5e5e5;
+  --asph-text-link: #93c5fd;
+  --asph-border-primary: #a3a3a3;
+  --asph-border-secondary: #d4d4d4;
+  --asph-border-light: #737373;
+  --asph-like: #ff5252;
+  --asph-repost: #69f0ae;
+  --asph-follow: #ff8fb5;
+  --asph-mention: #ce93d8;
+  --asph-reply: #40c4ff;
+  --asph-quote: #7c4dff;
+  --asph-success: #69f0ae;
+  --asph-warning: #ffd600;
+  --asph-error: #ff5252;
+  --asph-info: #448aff;
+  --asph-shadow-sm: 0 1px 3px rgba(255, 255, 255, 0.1);
+  --asph-shadow-md: 0 4px 6px rgba(255, 255, 255, 0.1);
+  --asph-shadow-lg: 0 10px 15px rgba(255, 255, 255, 0.1);
+  --asph-glow: 0 0 0 3px rgba(255, 143, 181, 0.5);
+  --asph-primary-10: rgba(255, 143, 181, 0.2);
+  --asph-success-10: rgba(105, 240, 174, 0.2);
+}

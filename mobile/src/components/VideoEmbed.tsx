@@ -217,7 +217,7 @@ function VideoEmbedInner({video, postUri, isVisible = false}: VideoEmbedProps) {
           )}
           <View style={styles.playButtonContainer}>
             {isLoading ? (
-              <ActivityIndicator size="large" color="#fff" />
+              <ActivityIndicator size="large" color={colors.textOnPrimary} />
             ) : (
               <View style={styles.playButton}>
                 <View style={styles.playIcon} />
@@ -260,7 +260,7 @@ function VideoEmbedInner({video, postUri, isVisible = false}: VideoEmbedProps) {
         {/* Loading overlay */}
         {isLoading && (
           <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#fff" />
+            <ActivityIndicator size="large" color={colors.textOnPrimary} />
           </View>
         )}
 
@@ -399,7 +399,7 @@ function createStyles(colors: any, screenWidth: number, screenHeight: number) {
       width: 64,
       height: 64,
       borderRadius: 32,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      backgroundColor: colors.overlayBackground,
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -408,7 +408,7 @@ function createStyles(colors: any, screenWidth: number, screenHeight: number) {
       height: 0,
       marginLeft: 4,
       borderLeftWidth: 20,
-      borderLeftColor: '#fff',
+      borderLeftColor: colors.textOnPrimary,
       borderTopWidth: 12,
       borderTopColor: 'transparent',
       borderBottomWidth: 12,
@@ -437,12 +437,12 @@ function createStyles(colors: any, screenWidth: number, screenHeight: number) {
       width: 32,
       height: 32,
       borderRadius: 16,
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      backgroundColor: colors.overlayBackground,
       justifyContent: 'center',
       alignItems: 'center',
     },
     controlIcon: {
-      color: '#fff',
+      color: colors.textOnPrimary,
       fontSize: fontSize.callout,
     },
     pausedIndicator: {
@@ -470,7 +470,7 @@ function createStyles(colors: any, screenWidth: number, screenHeight: number) {
       borderRadius: 1.5,
     },
     timeText: {
-      color: '#fff',
+      color: colors.textOnPrimary,
       fontSize: fontSize.caption2,
       textShadowColor: 'rgba(0,0,0,0.8)',
       textShadowOffset: {width: 0, height: 1},
@@ -481,12 +481,12 @@ function createStyles(colors: any, screenWidth: number, screenHeight: number) {
       bottom: 8,
       left: 8,
       right: 8,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      backgroundColor: colors.overlayBackground,
       padding: 8,
       borderRadius: 6,
     },
     altText: {
-      color: '#fff',
+      color: colors.textOnPrimary,
       fontSize: fontSize.caption1,
     },
     fullscreenContainer: {
@@ -506,12 +506,12 @@ function createStyles(colors: any, screenWidth: number, screenHeight: number) {
       width: 36,
       height: 36,
       borderRadius: 18,
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      backgroundColor: colors.overlayBackground,
       justifyContent: 'center',
       alignItems: 'center',
     },
     fullscreenCloseText: {
-      color: '#fff',
+      color: colors.textOnPrimary,
       fontSize: fontSize.headline,
       fontWeight: '600',
     },

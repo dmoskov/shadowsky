@@ -12,17 +12,8 @@ import SwiftUI
 // MARK: - Theme Colors
 
 enum MessagesThemeColors {
-    static let primary = Color(UIColor { traits in
-        traits.userInterfaceStyle == .dark
-            ? UIColor(red: 0.33, green: 0.53, blue: 0.85, alpha: 1.0)
-            : UIColor(red: 0.13, green: 0.39, blue: 0.78, alpha: 1.0)
-    })
-
-    static let danger = Color(UIColor { traits in
-        traits.userInterfaceStyle == .dark
-            ? UIColor(red: 0.9, green: 0.3, blue: 0.3, alpha: 1.0)
-            : UIColor(red: 0.85, green: 0.2, blue: 0.2, alpha: 1.0)
-    })
+    static let primary = DesignTokens.primary
+    static let danger = DesignTokens.danger
 }
 
 // MARK: - Conversation List View

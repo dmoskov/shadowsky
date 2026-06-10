@@ -1,6 +1,8 @@
+import { useMemo } from "react";
 import { useRequiredParam } from "../../../src/hooks/useRequiredParam";
 import { ErrorState } from "../../../src/components/ErrorState";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { useTheme } from "../../../src/contexts/ThemeContext";
 import {fontSize} from '../../../src/utils/typography';
 
 /**
@@ -8,6 +10,8 @@ import {fontSize} from '../../../src/utils/typography';
  * Handles URLs like: bsky.app/feeds/{feedUri}
  */
 export default function FeedRoute() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { value: uri, isValid } = useRequiredParam("uri");
 
   if (!isValid || !uri) {
@@ -20,7 +24,7 @@ export default function FeedRoute() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <ActivityIndicator size="large" color="#1d9bf0" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.text}>Loading feed...</Text>
         <Text style={styles.uri}>{decodedUri}</Text>
       </View>
@@ -28,26 +32,28 @@ export default function FeedRoute() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0a0a0f",
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  text: {
-    color: "#ffffff",
-    fontSize: fontSize.callout,
-    marginTop: 16,
-  },
-  uri: {
-    color: "#8b8b8b",
-    fontSize: fontSize.caption1,
-    marginTop: 8,
-    textAlign: "center",
-  },
-});
+function createStyles(colors: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 20,
+    },
+    text: {
+      color: colors.text,
+      fontSize: fontSize.callout,
+      marginTop: 16,
+    },
+    uri: {
+      color: colors.textSecondary,
+      fontSize: fontSize.caption1,
+      marginTop: 8,
+      textAlign: "center",
+    },
+  });
+}

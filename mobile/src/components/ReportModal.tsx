@@ -346,7 +346,7 @@ function ReportModalInner({
                       value={additionalContext}
                       onChangeText={setAdditionalContext}
                       placeholder="Provide any additional details..."
-                      placeholderTextColor="#999"
+                      placeholderTextColor={colors.textTertiary}
                       multiline
                       numberOfLines={4}
                       maxLength={300}
@@ -383,7 +383,7 @@ function ReportModalInner({
                   onPress={handleSubmit}
                   disabled={!selectedCategory || isSubmitting}>
                   {isSubmitting ? (
-                    <ActivityIndicator color="#fff" />
+                    <ActivityIndicator color={colors.textOnPrimary} />
                   ) : (
                     <Text style={styles.dangerButtonText}>Submit Report</Text>
                   )}
@@ -404,7 +404,7 @@ function createStyles(colors: any) {
       justifyContent: 'flex-end',
     },
     container: {
-      backgroundColor: '#fff',
+      backgroundColor: colors.surface,
       borderTopLeftRadius: 16,
       borderTopRightRadius: 16,
       maxHeight: '90%',
@@ -415,31 +415,31 @@ function createStyles(colors: any) {
       alignItems: 'center',
       padding: 16,
       borderBottomWidth: 1,
-      borderBottomColor: '#e0e0e0',
+      borderBottomColor: colors.border,
     },
     headerTitle: {
       fontSize: fontSize.headline,
       fontWeight: '600',
-      color: '#000',
+      color: colors.text,
     },
     closeButton: {
       padding: 8,
     },
     closeButtonText: {
       fontSize: fontSize.title2,
-      color: '#666',
+      color: colors.textSecondary,
     },
     content: {
       padding: 16,
     },
     description: {
       fontSize: fontSize.subheadline,
-      color: '#666',
+      color: colors.textSecondary,
       marginBottom: 16,
     },
     successText: {
       fontSize: fontSize.subheadline,
-      color: '#666',
+      color: colors.textSecondary,
       marginBottom: 16,
     },
     categoriesContainer: {
@@ -449,12 +449,12 @@ function createStyles(colors: any) {
       flexDirection: 'row',
       padding: 12,
       borderWidth: 1,
-      borderColor: '#e0e0e0',
+      borderColor: colors.border,
       borderRadius: 8,
       marginBottom: 8,
     },
     categoryItemSelected: {
-      backgroundColor: '#e3f2fd',
+      backgroundColor: colors.unreadBackground,
       borderColor: colors.primary,
     },
     radioButton: {
@@ -462,7 +462,7 @@ function createStyles(colors: any) {
       height: 20,
       borderRadius: 10,
       borderWidth: 2,
-      borderColor: '#ccc',
+      borderColor: colors.borderLight,
       marginRight: 12,
       marginTop: 2,
       alignItems: 'center',
@@ -483,12 +483,12 @@ function createStyles(colors: any) {
     categoryLabel: {
       fontSize: fontSize.subheadline,
       fontWeight: '600',
-      color: '#000',
+      color: colors.text,
       marginBottom: 4,
     },
     categoryDescription: {
       fontSize: fontSize.footnote,
-      color: '#666',
+      color: colors.textSecondary,
     },
     contextContainer: {
       marginTop: 8,
@@ -496,49 +496,49 @@ function createStyles(colors: any) {
     contextLabel: {
       fontSize: fontSize.subheadline,
       fontWeight: '600',
-      color: '#000',
+      color: colors.text,
       marginBottom: 8,
     },
     textInput: {
       borderWidth: 1,
-      borderColor: '#e0e0e0',
+      borderColor: colors.border,
       borderRadius: 8,
       padding: 12,
       fontSize: fontSize.subheadline,
-      color: '#000',
+      color: colors.text,
       minHeight: 100,
     },
     charCount: {
       fontSize: fontSize.caption1,
-      color: '#999',
+      color: colors.textTertiary,
       textAlign: 'right',
       marginTop: 4,
     },
     errorContainer: {
-      backgroundColor: '#fee',
+      backgroundColor: colors.errorBackground,
       padding: 12,
       borderRadius: 8,
       marginTop: 16,
     },
     errorText: {
-      color: '#c00',
+      color: colors.danger,
       fontSize: fontSize.subheadline,
     },
     postReportActions: {
       marginTop: 8,
       padding: 16,
-      backgroundColor: '#f5f5f5',
+      backgroundColor: colors.surfaceAlt,
       borderRadius: 8,
     },
     postReportTitle: {
       fontSize: fontSize.subheadline,
       fontWeight: '600',
-      color: '#000',
+      color: colors.text,
       marginBottom: 8,
     },
     postReportDescription: {
       fontSize: fontSize.footnote,
-      color: '#666',
+      color: colors.textSecondary,
       marginBottom: 12,
     },
     actionButton: {
@@ -548,13 +548,13 @@ function createStyles(colors: any) {
       alignItems: 'center',
     },
     blockButton: {
-      backgroundColor: '#dc3545',
+      backgroundColor: colors.danger,
     },
     muteButton: {
-      backgroundColor: '#6c757d',
+      backgroundColor: colors.textTertiary,
     },
     actionButtonText: {
-      color: '#fff',
+      color: colors.textOnPrimary,
       fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
@@ -564,7 +564,7 @@ function createStyles(colors: any) {
       gap: 8,
       padding: 16,
       borderTopWidth: 1,
-      borderTopColor: '#e0e0e0',
+      borderTopColor: colors.border,
     },
     button: {
       paddingHorizontal: 16,
@@ -575,10 +575,10 @@ function createStyles(colors: any) {
       justifyContent: 'center',
     },
     secondaryButton: {
-      backgroundColor: '#f0f0f0',
+      backgroundColor: colors.surfaceAlt,
     },
     secondaryButtonText: {
-      color: '#333',
+      color: colors.textMuted,
       fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
@@ -586,15 +586,15 @@ function createStyles(colors: any) {
       backgroundColor: colors.primary,
     },
     primaryButtonText: {
-      color: '#fff',
+      color: colors.textOnPrimary,
       fontSize: fontSize.subheadline,
       fontWeight: '600',
     },
     dangerButton: {
-      backgroundColor: '#dc3545',
+      backgroundColor: colors.danger,
     },
     dangerButtonText: {
-      color: '#fff',
+      color: colors.textOnPrimary,
       fontSize: fontSize.subheadline,
       fontWeight: '600',
     },

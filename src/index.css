@@ -1,4 +1,5 @@
-/* Import our Asphodel theme */
+/* Import our Asphodel theme (color tokens generated from packages/tokens) */
+@import "./styles/generated-tokens.css";
 @import "./styles/asphodel-theme.css";
 /* Keep complex animations and styles */
 @import "./styles/skydeck.css";

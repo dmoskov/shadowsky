@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useMemo} from 'react';
 import {Text} from 'react-native';
 import {AppBskyFeedDefs, AppBskyEmbedImages, AppBskyEmbedExternal, AppBskyEmbedRecord, AppBskyEmbedRecordWithMedia, AppBskyEmbedVideo} from '@atproto/api';
 import {ImageEmbed} from './ImageEmbed';
@@ -8,10 +8,8 @@ import {QuoteEmbed} from './QuoteEmbed';
 import {VideoEmbed} from './VideoEmbed';
 import {isTenorGifUri} from '../services/tenor';
 import {InlineErrorBoundary} from './ui/InlineErrorBoundary';
+import {useTheme} from '../contexts/ThemeContext';
 import {fontSize} from '../utils/typography';
-
-const embedFallbackStyle = { fontSize: fontSize.footnote, color: '#8899a6', padding: 12, textAlign: 'center' as const };
-const embedFallback = <Text style={embedFallbackStyle}>Content unavailable</Text>;
 
 interface PostEmbedProps {
   embed: AppBskyFeedDefs.PostView['embed'];
@@ -34,6 +32,22 @@ export function PostEmbed({
   onQuotePress,
   blurImages = false,
 }: PostEmbedProps) {
+  const {colors} = useTheme();
+  const embedFallback = useMemo(
+    () => (
+      <Text
+        style={{
+          fontSize: fontSize.footnote,
+          color: colors.textSecondary,
+          padding: 12,
+          textAlign: 'center' as const,
+        }}>
+        Content unavailable
+      </Text>
+    ),
+    [colors],
+  );
+
   if (!embed) return null;
 
   // Type guard checks — each embed type is wrapped in its own error boundary

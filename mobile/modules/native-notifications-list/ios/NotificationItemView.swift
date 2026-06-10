@@ -14,12 +14,12 @@ import RichTextView
 // MARK: - Theme Colors
 
 struct NotificationThemeColors {
-    static let like = Color(red: 0xF9 / 255.0, green: 0x17 / 255.0, blue: 0x80 / 255.0)
-    static let repost = Color(red: 0x00 / 255.0, green: 0xBA / 255.0, blue: 0x7C / 255.0)
-    static let primary = Color(red: 0x1D / 255.0, green: 0x9B / 255.0, blue: 0xF0 / 255.0)
-    static let mention = Color(red: 0xFF / 255.0, green: 0x6B / 255.0, blue: 0x35 / 255.0)
-    static let reply = Color(red: 0x1D / 255.0, green: 0x9B / 255.0, blue: 0xF0 / 255.0)
-    static let quote = Color(red: 0x87 / 255.0, green: 0x5C / 255.0, blue: 0xFF / 255.0)
+    static let like = DesignTokens.like
+    static let repost = DesignTokens.repost
+    static let primary = DesignTokens.primary
+    static let mention = DesignTokens.mention
+    static let reply = DesignTokens.reply
+    static let quote = DesignTokens.quote
 
     static func color(for reason: NotificationReason) -> Color {
         switch reason {
