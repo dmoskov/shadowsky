@@ -80,13 +80,15 @@ export function getManualChunk(id: string): string | undefined {
  * Modulepreload optimization configuration.
  * Filters out chunks that aren't needed for initial render.
  */
-export function optimizeModulePreload(_filename: string, deps: string[]): string[] {
+export function optimizeModulePreload(
+  _filename: string,
+  deps: string[],
+): string[] {
   // Filter out chunks that aren't needed for initial render
   // OAuth: only loaded when user initiates OAuth login
   // Amplify: only needed for API calls after authentication
   return deps.filter(
     (dep) =>
-      !dep.includes("vendor-atproto-oauth") &&
-      !dep.includes("vendor-amplify"),
+      !dep.includes("vendor-atproto-oauth") && !dep.includes("vendor-amplify"),
   );
 }

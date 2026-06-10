@@ -17,23 +17,14 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { defineConfig } from "vite";
 import { buildConfig } from "./config/vite/build.js";
-import {
-  bundleAnalyzerPlugin,
-  deferCssPlugin,
-  versionCacheBustPlugin,
-} from "./config/vite/plugins.js";
+import { bundleAnalyzerPlugin, deferCssPlugin } from "./config/vite/plugins.js";
 import { previewConfig, serverConfig } from "./config/vite/server.js";
 
 // https://viteplus.dev/
 export default defineConfig({
   base: "/",
   build: buildConfig,
-  plugins: [
-    react(),
-    deferCssPlugin(),
-    versionCacheBustPlugin(),
-    bundleAnalyzerPlugin(),
-  ].filter(Boolean),
+  plugins: [react(), deferCssPlugin(), bundleAnalyzerPlugin()].filter(Boolean),
   optimizeDeps: {
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
   },

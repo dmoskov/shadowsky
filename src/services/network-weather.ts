@@ -7,7 +7,7 @@
  * See: docs/vision/network-weather.md
  */
 
-const PAN_API_URLS = ["https://api.shadowsky.io", "https://api.asphodel.is"];
+import { fetchFromPan } from "./pan-api";
 
 export const WEATHER_CACHE_TTL = 5 * 60 * 1000;
 
@@ -109,28 +109,8 @@ interface PanTrendingTopic {
 
 // ─── Fetch Helpers ────────────────────────────────────────
 
-let panFailedUntil = 0;
-
 async function fetchPan(path: string): Promise<any> {
-  if (Date.now() < panFailedUntil) return null;
-
-  for (const baseUrl of PAN_API_URLS) {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
-      const resp = await fetch(`${baseUrl}${path}`, {
-        headers: { Accept: "application/json" },
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-      if (!resp.ok) continue;
-      return await resp.json();
-    } catch {
-      continue;
-    }
-  }
-  panFailedUntil = Date.now() + 5 * 60 * 1000;
-  return null;
+  return fetchFromPan(path);
 }
 
 // ─── Hue Classification ──────────────────────────────────

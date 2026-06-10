@@ -5,7 +5,6 @@
 
 import type { Plugin } from "vite";
 import { visualizer } from "rollup-plugin-visualizer";
-import pkg from "../../package.json" with { type: "json" };
 
 /**
  * Vite plugin to defer non-critical CSS loading.
@@ -37,22 +36,10 @@ export function deferCssPlugin(): Plugin {
  * NOTE: Only runs in production builds. In dev mode, adding query params
  * to .tsx files causes esbuild loader errors.
  */
-export function versionCacheBustPlugin(): Plugin {
-  const version = pkg.version;
-  return {
-    name: "version-cache-bust",
-    enforce: "post",
-    apply: "build", // Only run during production builds, not dev server
-    transformIndexHtml(html) {
-      // Add version query param to the main module script (production only)
-      // Prod: <script type="module" crossorigin src="/assets/index-xxx.js"></script>
-      return html.replace(
-        /<script type="module" crossorigin src="(\/assets\/[^"]+\.js)"><\/script>/g,
-        `<script type="module" crossorigin src="$1?v=${version}"></script>`,
-      );
-    },
-  };
-}
+// versionCacheBustPlugin was removed: it appended ?v=<version> to the entry
+// script URL while lazy chunks import the same file by its bare hashed name,
+// so the browser executed the entry module twice (duplicate module-level
+// singletons). The content hash in the filename already busts caches.
 
 /**
  * Bundle analyzer plugin.

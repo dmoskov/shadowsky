@@ -11,6 +11,7 @@
  */
 
 import { debug } from "@bsky/shared";
+import { fetchFromPan as fetchPanJson } from "./pan-api";
 import type {
   GapAnalysis,
   GapThread,
@@ -21,10 +22,6 @@ import type {
 } from "../types/network-weather";
 
 // ─── Pan API ─────────────────────────────────────────────
-
-const PAN_API_URLS = ["https://api.shadowsky.io", "https://api.asphodel.is"];
-
-const FETCH_TIMEOUT = 8000;
 
 /** Raw narrative cluster from Pan /api/narratives */
 interface PanNarrative {
@@ -66,28 +63,9 @@ interface PanNarrativesResponse {
 // ─── Fetch Helper ────────────────────────────────────────
 
 async function fetchFromPan(path: string): Promise<unknown> {
-  for (const baseUrl of PAN_API_URLS) {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
-
-      const response = await fetch(`${baseUrl}${path}`, {
-        headers: { Accept: "application/json" },
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-
-      if (!response.ok) {
-        debug.log(`Pan API ${baseUrl} returned ${response.status}`);
-        continue;
-      }
-      return await response.json();
-    } catch {
-      debug.log(`Pan API ${baseUrl} unreachable for ${path}`);
-      continue;
-    }
-  }
-  throw new Error("All Pan API endpoints unreachable");
+  const data = await fetchPanJson(path);
+  if (data === null) throw new Error("Pan API unavailable");
+  return data;
 }
 
 // ─── Character Classification ────────────────────────────

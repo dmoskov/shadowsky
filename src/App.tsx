@@ -87,8 +87,12 @@ function createAppQueryClient(): QueryClient {
         gcTime: loadingStrategy.queryCacheTime,
         retry: (failureCount, error: unknown) => {
           const err = error as { status?: number };
-          if (err?.status === 429) return false; // Don't retry rate limits
-          if (err?.status === 401) return false; // Don't retry auth errors
+          // Client errors (4xx) won't succeed on retry: bad/deleted records
+          // (400), auth (401), forbidden (403), missing (404), rate limits
+          // (429). Retrying just multiplies console noise and load.
+          if (err?.status && err.status >= 400 && err.status < 500) {
+            return false;
+          }
           // Fewer retries on slow connections to save battery/data
           const currentIsMobile = window.innerWidth < 768;
           const maxRetries =

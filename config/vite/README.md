@@ -7,7 +7,6 @@ This directory contains the modularized Vite configuration for the BSKY project.
 ### `plugins.ts`
 Contains custom Vite plugins:
 - **deferCssPlugin**: Defers non-critical CSS loading using the media="print" trick
-- **versionCacheBustPlugin**: Adds version query parameters to bust caches
 - **bundleAnalyzerPlugin**: Generates bundle analysis reports (when `ANALYZE=true`)
 
 **When to edit**: Adding new custom plugins, modifying plugin behavior, or adjusting transform logic.

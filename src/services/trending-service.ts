@@ -9,7 +9,8 @@
  *   - api.asphodel.is/api/trending/topics (fallback)
  */
 
-const PAN_API_URLS = ["https://api.shadowsky.io", "https://api.asphodel.is"];
+import { fetchFromPan as fetchPanJson } from "./pan-api";
+
 const BLUESKY_API_BASE = "https://public.api.bsky.app/xrpc";
 
 export interface TrendingTopic {
@@ -77,42 +78,13 @@ interface PanTrendingResponse {
 
 // ─── Pan Fetch ────────────────────────────────────────────
 
-/** Cache Pan failures to avoid hammering both Pan and Bluesky fallback */
-let panFailedUntil = 0;
-
 async function fetchFromPan(
   path: string,
   params: Record<string, string | number> = {},
 ): Promise<any> {
-  // Skip Pan entirely if it failed recently
-  if (Date.now() < panFailedUntil) {
-    throw new Error("Pan API recently failed — skipping");
-  }
-
-  const query = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) {
-    query.set(k, String(v));
-  }
-  const qs = query.toString() ? `?${query.toString()}` : "";
-
-  for (const baseUrl of PAN_API_URLS) {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000);
-      const resp = await fetch(`${baseUrl}${path}${qs}`, {
-        headers: { Accept: "application/json" },
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
-      if (!resp.ok) continue;
-      return await resp.json();
-    } catch {
-      continue;
-    }
-  }
-  // Cache failure for 5 minutes
-  panFailedUntil = Date.now() + 5 * 60 * 1000;
-  throw new Error("All Pan API endpoints unreachable");
+  const data = await fetchPanJson(path, params);
+  if (data === null) throw new Error("Pan API unavailable");
+  return data;
 }
 
 // ─── Public API ───────────────────────────────────────────
