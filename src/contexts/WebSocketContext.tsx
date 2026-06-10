@@ -74,6 +74,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   const [authExpiredReason, setAuthExpiredReason] = useState<string>();
 
   const isInitialized = useRef(false);
+  // Tracks whether we've completed the first connect, so reconnects can mark
+  // the timeline stale without forcing a feed-rebuilding refetch
+  const hasConnectedOnceRef = useRef(false);
   const reconnectAttemptTimer = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -335,7 +338,21 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     debug.log("🔄 [WebSocket] Triggering data refresh on connect");
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
     queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
-    queryClient.invalidateQueries({ queryKey: ["timeline"] });
+    if (!hasConnectedOnceRef.current) {
+      // First connect after startup: actively fetch a fresh timeline so the
+      // user isn't left looking at the offline-cache warmup data.
+      hasConnectedOnceRef.current = true;
+      queryClient.invalidateQueries({ queryKey: ["timeline"] });
+    } else {
+      // Subsequent connects (network blips, laptop wake): mark the timeline
+      // stale without an in-place refetch. Actively refetching here swapped
+      // the entire feed out from under the reader on every reconnect; the
+      // visibility-refresh hook and manual refresh pick up the stale data.
+      queryClient.invalidateQueries({
+        queryKey: ["timeline"],
+        refetchType: "none",
+      });
+    }
   }, [updateStats, updatePollingInterval, queryClient]);
 
   const handleDisconnect = useCallback(() => {
@@ -389,7 +406,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
     debug.log("🔄 [WebSocket] Triggering data refresh on reconnect");
     queryClient.invalidateQueries({ queryKey: ["notifications"] });
     queryClient.invalidateQueries({ queryKey: ["notificationCount"] });
-    queryClient.invalidateQueries({ queryKey: ["timeline"] });
+    // Mark stale only (see handleConnect): an active refetch on every
+    // reconnect visibly rebuilt the feed mid-read.
+    queryClient.invalidateQueries({
+      queryKey: ["timeline"],
+      refetchType: "none",
+    });
   }, [updateStats, queryClient]);
 
   const handleError = useCallback(() => {

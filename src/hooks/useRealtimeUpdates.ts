@@ -28,6 +28,13 @@ import {
 } from "../types/websocket";
 
 /**
+ * Window event dispatched when Jetstream reports a new post from a followed
+ * account. Feed columns listen for this (useFeedFreshness) to peek for new
+ * content immediately instead of waiting for the next poll interval.
+ */
+export const TIMELINE_NEW_POST_EVENT = "shadowsky:timeline-new-post";
+
+/**
  * Options for useRealtimeUpdates hook
  */
 export interface UseRealtimeUpdatesOptions {
@@ -128,6 +135,13 @@ export function useRealtimeUpdates(
     (event: TimelineNewPostEvent) => {
       log(`New post received from ${event.data.did}`);
       setNewPostsCount((prev) => prev + 1);
+
+      // Notify feed columns so they can peek for new content right away
+      window.dispatchEvent(
+        new CustomEvent(TIMELINE_NEW_POST_EVENT, {
+          detail: { did: event.data.did },
+        }),
+      );
 
       // Update stats
       const service = serviceRef.current;

@@ -1,3 +1,4 @@
+import type { BskyAgent } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -9,6 +10,71 @@ import { createLogger } from "../utils/logger";
 import { type ApiError, type FeedType, MOBILE_CONFIG } from "./Home.types";
 
 const logger = createLogger("useHomeFeedQuery");
+
+/**
+ * Fetch one page of a home feed, dispatching on feed type:
+ * standard timeline, custom feed generator (at:// URI), list feed,
+ * or a known named feed. Shared by the infinite query below and by
+ * useFeedFreshness's single-post "peek" check.
+ */
+export async function fetchFeedPage(
+  agent: BskyAgent,
+  selectedFeed: FeedType,
+  {
+    cursor,
+    limit = MOBILE_CONFIG.PAGE_SIZE,
+  }: {
+    cursor?: string;
+    limit?: number;
+  } = {},
+) {
+  switch (selectedFeed) {
+    case "following":
+    case "recent":
+      return agent.getTimeline({ cursor, limit });
+
+    default:
+      // Handle custom feed URIs
+      if (selectedFeed.startsWith("at://")) {
+        // Check if it's a list feed or a regular feed
+        if (selectedFeed.includes("/app.bsky.graph.list/")) {
+          // It's a list feed
+          return agent.app.bsky.feed.getListFeed({
+            list: selectedFeed,
+            cursor,
+            limit,
+          });
+        } else {
+          // It's a regular feed
+          return agent.app.bsky.feed.getFeed({
+            feed: selectedFeed,
+            cursor,
+            limit,
+          });
+        }
+      } else {
+        // Handle known feed types
+        switch (selectedFeed) {
+          case "whats-hot":
+            return agent.app.bsky.feed.getFeed({
+              feed: "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot",
+              cursor,
+              limit,
+            });
+
+          case "popular-with-friends":
+            return agent.app.bsky.feed.getFeed({
+              feed: "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/with-friends",
+              cursor,
+              limit,
+            });
+
+          default:
+            throw new Error(`Unknown feed type: ${selectedFeed}`);
+        }
+      }
+  }
+}
 
 /**
  * Encapsulates the home timeline feed fetching concern:
@@ -83,57 +149,9 @@ export function useHomeFeedQuery(selectedFeed: FeedType) {
       try {
         // Wrap all feed API calls in rate limiter to prevent 429s
         // when multiple columns load simultaneously
-        response = await rateLimitedFeedFetch(async () => {
-          switch (selectedFeed) {
-            case "following":
-            case "recent":
-              return agent.getTimeline({
-                cursor: pageParam,
-                limit: MOBILE_CONFIG.PAGE_SIZE,
-              });
-
-            default:
-              // Handle custom feed URIs
-              if (selectedFeed.startsWith("at://")) {
-                // Check if it's a list feed or a regular feed
-                if (selectedFeed.includes("/app.bsky.graph.list/")) {
-                  // It's a list feed
-                  return agent.app.bsky.feed.getListFeed({
-                    list: selectedFeed,
-                    cursor: pageParam,
-                    limit: MOBILE_CONFIG.PAGE_SIZE,
-                  });
-                } else {
-                  // It's a regular feed
-                  return agent.app.bsky.feed.getFeed({
-                    feed: selectedFeed,
-                    cursor: pageParam,
-                    limit: MOBILE_CONFIG.PAGE_SIZE,
-                  });
-                }
-              } else {
-                // Handle known feed types
-                switch (selectedFeed) {
-                  case "whats-hot":
-                    return agent.app.bsky.feed.getFeed({
-                      feed: "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/whats-hot",
-                      cursor: pageParam,
-                      limit: MOBILE_CONFIG.PAGE_SIZE,
-                    });
-
-                  case "popular-with-friends":
-                    return agent.app.bsky.feed.getFeed({
-                      feed: "at://did:plc:z72i7hdynmk6r22z27h6tvur/app.bsky.feed.generator/with-friends",
-                      cursor: pageParam,
-                      limit: MOBILE_CONFIG.PAGE_SIZE,
-                    });
-
-                  default:
-                    throw new Error(`Unknown feed type: ${selectedFeed}`);
-                }
-              }
-          }
-        });
+        response = await rateLimitedFeedFetch(() =>
+          fetchFeedPage(agent, selectedFeed, { cursor: pageParam }),
+        );
 
         // Cache timeline feed items for offline access (only first page)
         if (

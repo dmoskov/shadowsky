@@ -21,7 +21,7 @@ import {
   type HelpArticle,
   type HelpCategory,
 } from "../../content/help";
-import { useKeyboardShortcutsContext } from "../../contexts/KeyboardShortcutsContext";
+import { useKeyboardShortcutsActions } from "../../contexts/KeyboardShortcutsContext";
 import { BugReportModal } from "../feedback/BugReportModal";
 
 const iconMap: Record<string, LucideIcon> = {
@@ -361,7 +361,7 @@ export const HelpSettings: React.FC = () => {
   const [viewState, setViewState] = useState<ViewState>({ type: "home" });
   const [searchQuery, setSearchQuery] = useState("");
   const [isBugReportOpen, setIsBugReportOpen] = useState(false);
-  const { setIsShortcutsHelpOpen } = useKeyboardShortcutsContext();
+  const { setIsShortcutsHelpOpen } = useKeyboardShortcutsActions();
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);

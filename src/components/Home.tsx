@@ -1,40 +1,34 @@
 import type { AppBskyFeedDefs } from "@atproto/api";
 import { debug } from "@bsky/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
-import { Repeat2, Reply } from "lucide-react";
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useHiddenPosts } from "../contexts/HiddenPostsContext";
-import { useKeyboardShortcutsContext } from "../contexts/KeyboardShortcutsContext";
+import { useKeyboardShortcutsActions } from "../contexts/KeyboardShortcutsContext";
 import { useModeration } from "../contexts/ModerationContext";
 import { useBookmarks } from "../hooks/useBookmarks";
 import { useIntersectionLoader } from "../hooks/useIntersectionLoader";
-import {
-  useFeedCacheWarmup,
-  useVisibilityRefresh,
-} from "../hooks/useOfflineFeed";
+import { useFeedCacheWarmup } from "../hooks/useOfflineFeed";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
 import { usePostDeepLink } from "../hooks/usePostDeepLink";
 import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import { useMinDuration } from "../hooks/useTiming";
-import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
-import { proxifyBskyImage } from "../utils/image-proxy";
 import { lazyWithRetry } from "../utils/lazyWithRetry";
 import { NetworkWeatherLayer } from "./NetworkWeatherLayer";
-import { PostActionBar } from "./PostActionBar";
 import { Spinner } from "./ui/LoadingState";
-import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 
-import { RichText } from "./ui/RichText";
 import { FeedSkeleton, PostSkeleton } from "./ui/SkeletonLoader";
 import {
+  type FeedPageItem,
   type FeedQueryData,
   type HomeProps,
   MOBILE_CONFIG,
   type Post,
 } from "./Home.types";
-import { FeedEmbed, type GalleryImage } from "./HomeFeedEmbed";
+import { type GalleryImage } from "./HomeFeedEmbed";
+import { PostItem } from "./HomePostItem";
+import { NewPostsPill } from "./NewPostsPill";
+import { useFeedFreshness } from "./useFeedFreshness";
 import { useFeedSelection } from "./useFeedSelection";
 import { useHomeFeedQuery } from "./useHomeFeedQuery";
 import { useThreadModalState } from "./useThreadModalState";
@@ -61,7 +55,6 @@ export const Home: React.FC<HomeProps> = React.memo(
     onCloseFeedDiscovery,
   }) => {
     const { agent } = useAuth();
-    const navigate = useViewTransitionNavigate();
     const queryClient = useQueryClient();
     const { likeMutation, repostMutation, undoableUnlike, undoableUnrepost } =
       useOptimisticPosts();
@@ -94,11 +87,9 @@ export const Home: React.FC<HomeProps> = React.memo(
       isStandardTimelineFeed,
     );
 
-    // Auto-refresh feed when tab becomes visible after being hidden for 1+ minute
-    useVisibilityRefresh(["timeline", selectedFeed], {
-      enabled: isFocused,
-      minHiddenDuration: 60000, // 1 minute
-    });
+    // New-content detection (peek polling, visibility checks, Jetstream
+    // events) lives in useFeedFreshness below — it signals via a "New posts"
+    // pill instead of refetching underneath the reader.
 
     const [internalShowFeedDiscovery, setInternalShowFeedDiscovery] =
       useState(false);
@@ -132,9 +123,11 @@ export const Home: React.FC<HomeProps> = React.memo(
     // Removed dropdownRef - now handled by parent component
     const isKeyboardNavigationRef = useRef(false);
 
-    // Keyboard shortcuts context for L/R/B/S/C shortcuts
+    // Keyboard shortcuts actions for L/R/B/S/C shortcuts.
+    // Uses the stable actions context (not the focused-post state context)
+    // so Home does not re-render every time focus moves in another column.
     const { setFocusedPost, registerPostActions, unregisterPostActions } =
-      useKeyboardShortcutsContext();
+      useKeyboardShortcutsActions();
 
     // Dropdown is now handled by the parent component
 
@@ -152,28 +145,50 @@ export const Home: React.FC<HomeProps> = React.memo(
     // Apply minimum duration to prevent jarring flash of loading state
     const isLoading = useMinDuration(isLoadingRaw);
 
+    // Peek for new content and surface a "New posts" pill (official-client
+    // pattern) rather than refetching the feed in place.
+    const { hasNewPosts, refreshFeed } = useFeedFreshness({
+      feed: selectedFeed,
+      topPostUri: data?.pages?.[0]?.feed?.[0]?.post?.uri,
+      isReady: !isLoadingRaw && !error && !!data,
+    });
+
+    // Pill tap: jump back to the top and pull the fresh feed in
+    const handleLoadNewPosts = React.useCallback(() => {
+      containerRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      void refreshFeed();
+    }, [refreshFeed]);
+
     const posts = React.useMemo(() => {
       if (!data?.pages) return [];
-      return data.pages.flatMap((page, pageIndex) =>
-        page.feed
-          .filter((item) => {
-            const post = item.post;
-            // Filter out hidden posts
-            if (isPostHidden(post.uri)) return false;
-            // Filter out posts from muted users
-            if (isUserMuted(post.author.did)) return false;
-            // Filter out posts from blocked users
-            if (isUserBlocked(post.author.did)) return false;
-            // Filter out muted threads
-            if (isThreadMuted(post.uri)) return false;
-            return true;
-          })
-          .map((item, itemIndex) => ({
-            ...item,
-            _pageIndex: pageIndex,
-            _itemIndex: itemIndex,
-          })),
-      );
+      // Identity-based keys (post URI + repost attribution) keep React from
+      // remounting post DOM when positions shift across refetches. Dedupe is
+      // required because overlapping pages can repeat the same post.
+      const seen = new Set<string>();
+      const result: FeedPageItem[] = [];
+      for (const page of data.pages) {
+        for (const item of page.feed as FeedPageItem[]) {
+          const post = item.post;
+          // Filter out hidden posts
+          if (isPostHidden(post.uri)) continue;
+          // Filter out posts from muted users
+          if (isUserMuted(post.author.did)) continue;
+          // Filter out posts from blocked users
+          if (isUserBlocked(post.author.did)) continue;
+          // Filter out muted threads
+          if (isThreadMuted(post.uri)) continue;
+          const feedKey = item.reason?.by?.did
+            ? `${post.uri}::rt::${item.reason.by.did}`
+            : post.uri;
+          if (seen.has(feedKey)) continue;
+          seen.add(feedKey);
+          result.push({ ...item, _feedKey: feedKey });
+        }
+      }
+      return result;
     }, [data, isPostHidden, isUserMuted, isUserBlocked, isThreadMuted]);
 
     // Use progressive loading instead of full virtualization
@@ -237,285 +252,17 @@ export const Home: React.FC<HomeProps> = React.memo(
       }
     }, [posts]);
 
-    // Memoize post rendering to prevent unnecessary re-renders
-    const PostItem = React.memo(
-      ({ item, index }: { item: any; index: number }) => {
-        const post = item.post;
-        const isFocused = focusedPostIndex === index;
-
-        return (
-          <div
-            key={`${post.uri}-${index}`}
-            ref={(el) => {
-              if (el) postRefs.current[`${post.uri}-${index}`] = el;
-            }}
-            className={`relative cursor-pointer px-3 py-2.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-900 ${
-              item.reply?.parent || post.record?.reply?.parent
-                ? "from-blue-500/3 border-l-4 border-blue-500 bg-gradient-to-r to-transparent"
-                : ""
-            } ${isFocused ? "bg-blue-500/3 outline outline-2 outline-offset-[-2px] outline-blue-500" : ""}`}
-            id={`post-${post.uri.split("/").pop()}`}
-            data-post-id={post.uri.split("/").pop()}
-            data-post-uri={post.uri}
-            tabIndex={isFocused ? 0 : -1}
-            aria-selected={isFocused}
-            role="article"
-            {...getThreadPrefetchHandlers(post.uri)}
-            onClick={(e) => {
-              // Only handle click if not on interactive elements
-              const target = e.target as HTMLElement;
-              const clickedOnInteractive =
-                target.closest('[role="button"]') ||
-                target.closest("button") ||
-                target.closest("a") ||
-                target.closest("[data-clickable]") ||
-                target.tagName === "BUTTON" ||
-                target.tagName === "A";
-
-              if (!clickedOnInteractive) {
-                // Update focused index on click (not keyboard navigation)
-                isKeyboardNavigationRef.current = false;
-                setFocusedPostIndex(index);
-                // Open thread view when clicking anywhere on the card
-                handlePostClick(post);
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                handlePostClick(post);
-              }
-            }}
-          >
-            {item.reason && (
-              <div
-                className="mb-1.5 flex items-center gap-2 text-xs"
-                style={{ color: "var(--asph-text-secondary)" }}
-              >
-                <Repeat2 size={12} />
-                <span>
-                  <ProfileHoverCard handle={item.reason.by.handle}>
-                    <span
-                      className="cursor-pointer hover:underline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/profile/${item.reason?.by.handle}`);
-                      }}
-                    >
-                      {item.reason?.by.displayName || item.reason?.by.handle}
-                    </span>
-                  </ProfileHoverCard>{" "}
-                  reposted
-                </span>
-              </div>
-            )}
-
-            {/* Show reply context from feed item */}
-            {item.reply?.parent && (
-              <div className="relative">
-                {/* Reply indicator with background */}
-                <div className="border-asph-primary/20 from-asph-primary/10 to-asph-primary/5 mb-3 flex items-center gap-2 rounded-lg border bg-gradient-to-br px-3 py-2 backdrop-blur-sm">
-                  <div className="flex items-center">
-                    <div className="flex w-12 justify-center">
-                      <div className="h-6 w-0.5 bg-asph-primary"></div>
-                    </div>
-                    <Reply size={16} className="mr-2 text-asph-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <span
-                      className="text-sm font-medium"
-                      style={{ color: "var(--asph-text-primary)" }}
-                    >
-                      Replying to{" "}
-                      <ProfileHoverCard
-                        handle={item.reply.parent.author?.handle || "unknown"}
-                      >
-                        <button
-                          className="touch-target-sm font-semibold text-asph-primary hover:underline"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Navigate to parent post
-                            const parentPost = item.reply?.parent;
-                            if (parentPost) {
-                              handlePostClick(parentPost);
-                            }
-                          }}
-                        >
-                          @{item.reply?.parent.author?.handle || "unknown"}
-                        </button>
-                      </ProfileHoverCard>
-                    </span>
-                    {item.reply.parent.record?.text && (
-                      <div
-                        className="mt-0.5 line-clamp-2 text-xs"
-                        style={{ color: "var(--asph-text-secondary)" }}
-                      >
-                        "{item.reply.parent.record.text}"
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {/* Connecting line from reply indicator to avatar */}
-                <div className="bg-asph-primary/30 absolute left-6 top-full h-3 w-0.5"></div>
-              </div>
-            )}
-
-            {/* Show reply context from post record if not in feed item */}
-            {!item.reply?.parent && post.record?.reply?.parent && (
-              <div className="relative">
-                {/* Reply indicator with background */}
-                <div className="border-asph-primary/20 from-asph-primary/10 to-asph-primary/5 mb-3 flex items-center gap-2 rounded-lg border bg-gradient-to-br px-3 py-2 backdrop-blur-sm">
-                  <div className="flex items-center">
-                    <div className="flex w-12 justify-center">
-                      <div className="h-6 w-0.5 bg-asph-primary"></div>
-                    </div>
-                    <Reply size={16} className="mr-2 text-asph-primary" />
-                  </div>
-                  <span
-                    className="text-sm font-medium"
-                    style={{ color: "var(--asph-text-primary)" }}
-                  >
-                    This is a reply
-                  </span>
-                </div>
-                {/* Connecting line from reply indicator to avatar */}
-                <div className="bg-asph-primary/30 absolute left-6 top-full h-3 w-0.5"></div>
-              </div>
-            )}
-
-            <div>
-              {/* Avatar and user info row */}
-              <div className="flex items-start gap-3">
-                <ProfileHoverCard handle={post.author.handle}>
-                  <img
-                    src={
-                      proxifyBskyImage(post.author.avatar) ||
-                      "/default-avatar.svg"
-                    }
-                    alt={post.author.handle}
-                    className="h-12 w-12 cursor-pointer rounded-full transition-opacity hover:opacity-80"
-                    data-clickable="profile"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/profile/${post.author.handle}`);
-                    }}
-                  />
-                </ProfileHoverCard>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <ProfileHoverCard handle={post.author.handle}>
-                      <span
-                        className="cursor-pointer font-semibold hover:underline inline-flex items-center min-h-[44px]"
-                        style={{ color: "var(--asph-text-primary)" }}
-                        data-clickable="profile"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/profile/${post.author.handle}`);
-                        }}
-                      >
-                        {post.author.displayName || post.author.handle}
-                      </span>
-                    </ProfileHoverCard>
-                    {(item.reply?.parent || post.record?.reply?.parent) && (
-                      <span
-                        className="rounded-full px-2 py-0.5 text-xs font-medium"
-                        style={{
-                          backgroundColor: "var(--asph-primary)",
-                          color: "white",
-                        }}
-                      >
-                        REPLY
-                      </span>
-                    )}
-                  </div>
-                  <div
-                    className="text-sm"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  >
-                    <ProfileHoverCard handle={post.author.handle}>
-                      <span
-                        className="cursor-pointer hover:underline"
-                        data-clickable="profile"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/profile/${post.author.handle}`);
-                        }}
-                      >
-                        @{post.author.handle}
-                      </span>
-                    </ProfileHoverCard>{" "}
-                    ·{" "}
-                    <span
-                      className="cursor-pointer hover:underline"
-                      data-clickable="thread"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const postId = post.uri.split("/").pop();
-                        navigate(`/thread/${post.author.handle}/${postId}`);
-                      }}
-                    >
-                      {formatDistanceToNow(new Date(post.record.createdAt), {
-                        addSuffix: true,
-                      })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Post content below, aligned with avatar */}
-              <div className="mt-2">
-                <div
-                  className="whitespace-pre-wrap"
-                  style={{ color: "var(--asph-text-primary)" }}
-                >
-                  <RichText
-                    text={post.record.text}
-                    facets={
-                      post.record.facets as Parameters<
-                        typeof RichText
-                      >[0]["facets"]
-                    }
-                  />
-                </div>
-
-                <FeedEmbed
-                  embed={post.embed}
-                  onOpenGallery={openGallery}
-                  onOpenQuotedPost={openThreadByUri}
-                />
-
-                {/* Post Action Bar */}
-                <PostActionBar
-                  post={post as unknown as AppBskyFeedDefs.PostView}
-                  onReply={() => openThreadToReplyTo(post)}
-                  onRepost={() => handleRepost(post)}
-                  onQuote={() => openThreadToQuotePost(post)}
-                  onLike={() => handleLike(post)}
-                  onBookmark={() => handleBookmark(post)}
-                  showCounts={true}
-                  size="medium"
-                />
-              </div>
-            </div>
-          </div>
-        );
+    // Track post DOM nodes for keyboard-navigation scrolling. Stable identity
+    // so memoized PostItems don't re-render when Home re-renders.
+    const registerPostRef = React.useCallback(
+      (key: string, el: HTMLDivElement | null) => {
+        if (el) {
+          postRefs.current[key] = el;
+        } else {
+          delete postRefs.current[key];
+        }
       },
-      // Custom comparison function to prevent re-renders when only index changes
-      (prevProps, nextProps) => {
-        // Only re-render if the post data actually changes
-        return (
-          prevProps.item.post.uri === nextProps.item.post.uri &&
-          prevProps.item.post.viewer?.like ===
-            nextProps.item.post.viewer?.like &&
-          prevProps.item.post.viewer?.repost ===
-            nextProps.item.post.viewer?.repost &&
-          prevProps.item.post.likeCount === nextProps.item.post.likeCount &&
-          prevProps.item.post.repostCount === nextProps.item.post.repostCount &&
-          prevProps.item.post.replyCount === nextProps.item.post.replyCount &&
-          prevProps.index === nextProps.index
-        );
-      },
+      [],
     );
 
     // Intersection observer for infinite scroll with optimistic pre-fetching
@@ -566,6 +313,16 @@ export const Home: React.FC<HomeProps> = React.memo(
         setGalleryIndex(index);
       },
       [],
+    );
+
+    // Click on a post card: focus it (mouse, not keyboard) and open its thread
+    const handleActivatePost = React.useCallback(
+      (post: Post, index: number) => {
+        isKeyboardNavigationRef.current = false;
+        setFocusedPostIndex(index);
+        handlePostClick(post);
+      },
+      [handlePostClick],
     );
 
     // Mutations are handled by useOptimisticPosts hook
@@ -960,6 +717,7 @@ export const Home: React.FC<HomeProps> = React.memo(
               contain: "layout style paint",
             }}
           >
+            {hasNewPosts && <NewPostsPill onClick={handleLoadNewPosts} />}
             <div
               className="divide-y divide-gray-100 dark:divide-gray-950"
               role="feed"
@@ -967,7 +725,7 @@ export const Home: React.FC<HomeProps> = React.memo(
             >
               {visibleItems.map((item, index) => (
                 <div
-                  key={`${item.post.uri}-page${item._pageIndex}-item${item._itemIndex}`}
+                  key={item._feedKey}
                   className="content-enter"
                   style={
                     {
@@ -975,7 +733,22 @@ export const Home: React.FC<HomeProps> = React.memo(
                     } as React.CSSProperties
                   }
                 >
-                  <PostItem item={item} index={index} />
+                  <PostItem
+                    item={item}
+                    index={index}
+                    isFocused={focusedPostIndex === index}
+                    registerRef={registerPostRef}
+                    onActivate={handleActivatePost}
+                    onOpenThread={handlePostClick}
+                    onOpenGallery={openGallery}
+                    onOpenQuotedPost={openThreadByUri}
+                    onReply={openThreadToReplyTo}
+                    onQuote={openThreadToQuotePost}
+                    onRepost={handleRepost}
+                    onLike={handleLike}
+                    onBookmark={handleBookmark}
+                    getThreadPrefetchHandlers={getThreadPrefetchHandlers}
+                  />
                 </div>
               ))}
             </div>

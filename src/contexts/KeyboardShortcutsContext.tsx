@@ -62,6 +62,23 @@ const KeyboardShortcutsContext = createContext<
   KeyboardShortcutsContextType | undefined
 >(undefined);
 
+/**
+ * Stable subset of the keyboard shortcuts API. This context value never
+ * changes identity, so components that only need to *report* focus or
+ * register actions (e.g. feed columns) don't re-render every time the
+ * focused post changes — possibly in a different column entirely.
+ */
+export interface KeyboardShortcutsActionsType {
+  setFocusedPost: (info: FocusedPostInfo | null) => void;
+  registerPostActions: (columnId: string, actions: PostActionCallbacks) => void;
+  unregisterPostActions: (columnId: string) => void;
+  setIsShortcutsHelpOpen: (open: boolean) => void;
+}
+
+const KeyboardShortcutsActionsContext = createContext<
+  KeyboardShortcutsActionsType | undefined
+>(undefined);
+
 // G-key sequence timeout in milliseconds
 const G_KEY_TIMEOUT = 1000;
 
@@ -431,11 +448,36 @@ export function KeyboardShortcutsProvider({
     ],
   );
 
-  return (
-    <KeyboardShortcutsContext.Provider value={contextValue}>
-      {children}
-    </KeyboardShortcutsContext.Provider>
+  // All members are stable (useState setters / empty-dep useCallbacks), so
+  // this value is created once and consumers of the actions context never
+  // re-render due to focus changes.
+  const actionsValue = useMemo(
+    () => ({
+      setFocusedPost,
+      registerPostActions,
+      unregisterPostActions,
+      setIsShortcutsHelpOpen,
+    }),
+    [registerPostActions, unregisterPostActions],
   );
+
+  return (
+    <KeyboardShortcutsActionsContext.Provider value={actionsValue}>
+      <KeyboardShortcutsContext.Provider value={contextValue}>
+        {children}
+      </KeyboardShortcutsContext.Provider>
+    </KeyboardShortcutsActionsContext.Provider>
+  );
+}
+
+export function useKeyboardShortcutsActions() {
+  const context = useContext(KeyboardShortcutsActionsContext);
+  if (!context) {
+    throw new Error(
+      "useKeyboardShortcutsActions must be used within a KeyboardShortcutsProvider",
+    );
+  }
+  return context;
 }
 
 export function useKeyboardShortcutsContext() {
@@ -457,7 +499,7 @@ export function useRegisterPostActions(
   actions: PostActionCallbacks,
 ) {
   const { registerPostActions, unregisterPostActions } =
-    useKeyboardShortcutsContext();
+    useKeyboardShortcutsActions();
 
   useEffect(() => {
     registerPostActions(columnId, actions);
