@@ -40,10 +40,12 @@ export function generateWeatherReport(weather: NetworkWeatherState): string {
   if (emergent.length > 0) {
     const top = emergent[0];
     const age =
-      top.ageMinutes < 60
-        ? `${top.ageMinutes}m`
-        : `${Math.round(top.ageMinutes / 60)}h`;
-    return `Something is forming around ${top.token} — growing fast with diverse voices · ${age}`;
+      top.ageMinutes < 1
+        ? "just now"
+        : top.ageMinutes < 60
+          ? `${top.ageMinutes}m ago`
+          : `${Math.round(top.ageMinutes / 60)}h ago`;
+    return `A new conversation is forming around “${top.token}” — growing fast with diverse voices · started ${age}`;
   }
 
   if (weather.narratives && weather.narratives.narratives.length >= 3) {

@@ -8,7 +8,7 @@ import {
   Bell,
   Bookmark,
   Clock,
-  Hash,
+  Rss,
   Loader2,
   Mail,
   Plus,
@@ -117,7 +117,7 @@ const columnOptions = [
   {
     type: "feed" as ColumnType,
     label: "Feed Column",
-    icon: Hash,
+    icon: Rss,
     description: "Add another feed column",
   },
   {
@@ -172,7 +172,7 @@ export default function SkyDeck() {
   const [mobileColumnIndex, setMobileColumnIndex] = useState(0);
   const [customFeedUri, setCustomFeedUri] = useState("");
   const [isLoadingCustomFeed, setIsLoadingCustomFeed] = useState(false);
-  const [columnWidth, setColumnWidth] = useState(0); // Default: full width (0 = full)
+  const [columnWidth, setColumnWidth] = useState(320); // Default: multi-column deck; 0 = full-width single column (Settings > Appearance)
   const columnsContainerRef = useRef<HTMLDivElement>(null);
   const columnSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const columnsLoadedRef = useRef(false);
@@ -550,7 +550,7 @@ export default function SkyDeck() {
   // Helper to get icon for a column type
   const getColumnIcon = (type: ColumnType) => {
     const option = columnOptions.find((opt) => opt.type === type);
-    return option?.icon || Hash;
+    return option?.icon || Rss;
   };
 
   // In narrow view, show columns with swipe navigation
@@ -848,7 +848,7 @@ export default function SkyDeck() {
                                         {savedFeed.pinned ? (
                                           <Star className="mt-0.5 h-4 w-4 text-yellow-500" />
                                         ) : (
-                                          <Hash className="mt-0.5 h-4 w-4 text-asph-text-tertiary" />
+                                          <Rss className="mt-0.5 h-4 w-4 text-asph-text-tertiary" />
                                         )}
                                         <div className="min-w-0 flex-1">
                                           <div className="truncate text-sm font-medium text-asph-text-primary">

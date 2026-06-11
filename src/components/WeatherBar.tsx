@@ -60,6 +60,7 @@ export function WeatherBar({ weather }: Props) {
     <div
       className="cursor-pointer select-none border-b border-asph-border-primary px-4 py-3 text-asph-text-primary transition-all duration-500"
       style={{ backgroundColor: "var(--asph-primary-10)" }}
+      title="Network weather — a live read on what's moving across Bluesky right now. Click to see the conversation threads."
       onClick={() => setExpanded(!expanded)}
     >
       {/* Report line */}
