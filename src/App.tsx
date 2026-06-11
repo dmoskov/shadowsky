@@ -275,7 +275,6 @@ function AppContent() {
       </InlineErrorBoundary>
       {/* Offline/reconnection status indicator */}
       <ConnectedOfflineIndicator position="top" />
-      <WeatherBar weather={networkWeather} />
       <div className="relative flex mx-auto 2xl:max-w-[1536px]">
         <InlineErrorBoundary componentName="Sidebar">
           <Sidebar
@@ -291,6 +290,7 @@ function AppContent() {
           aria-label="Main content"
           className={`mt-16 min-h-[calc(100vh-4rem)] flex-1 pb-16 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto lg:pb-0`}
         >
+          <WeatherBar weather={networkWeather} />
           <AppRoutes />
         </main>
       </div>
