@@ -45,7 +45,11 @@ export function generateWeatherReport(weather: NetworkWeatherState): string {
         : top.ageMinutes < 60
           ? `${top.ageMinutes}m ago`
           : `${Math.round(top.ageMinutes / 60)}h ago`;
-    return `A new conversation is forming around “${top.token}” — growing fast with diverse voices · started ${age}`;
+    const growth =
+      top.countRatio >= 1.5 && top.countRatio < 100
+        ? `mentions up ${Math.round(top.countRatio)}×`
+        : "growing fast";
+    return `Emerging across Bluesky: “${top.token}” — ${growth} · started ${age}`;
   }
 
   if (weather.narratives && weather.narratives.narratives.length >= 3) {

@@ -92,6 +92,17 @@ export const SearchTabbed: React.FC = React.memo(() => {
     },
   );
 
+  // Run searches arriving via URL (?q=...), e.g. weather banner click-through
+  const urlQuery = searchParams.get("q") ?? "";
+  useEffect(() => {
+    if (urlQuery && urlQuery !== filters.query) {
+      setFilters((prev) => ({ ...prev, query: urlQuery }));
+      setActiveSearchQuery(urlQuery);
+      setActiveTab("posts");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlQuery]);
+
   // Sync faceted filters to URL params
   useEffect(() => {
     const params = serializeFacetedFiltersToParams(facetedFilters);
