@@ -15,6 +15,7 @@ import type {
 } from "../services/network-weather";
 import { WEATHER_COLORS } from "../services/network-weather";
 import { generateWeatherReport } from "../services/weather-report";
+import { NarrativePostsModal } from "./NarrativePostsModal";
 
 interface Props {
   weather: NetworkWeatherState | null | undefined;
@@ -46,6 +47,7 @@ function getColor(hue: WeatherHue): string {
 
 export function WeatherBar({ weather }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const [showPosts, setShowPosts] = useState(false);
   const navigate = useNavigate();
 
   const report = useMemo(
@@ -57,18 +59,25 @@ export function WeatherBar({ weather }: Props) {
   if (!weather || !report || weather.source === "fallback") return null;
 
   const narratives = weather.narratives?.narratives ?? [];
-  const emergentToken = weather.emergence?.emergentThreads?.find(
+  const emergent = weather.emergence?.emergentThreads?.find(
     (t) => t.isEmergent,
-  )?.token;
+  );
 
   const searchTopic = (topic: string) =>
     navigate(`/search?q=${encodeURIComponent(topic)}`);
 
+  // Prefer the classifier's own posts for the topic; search is the fallback
+  // when Pan didn't ship sample URIs.
+  const openTopic = (topic: string, sampleUris?: string[]) => {
+    if (sampleUris?.length) setShowPosts(true);
+    else searchTopic(topic);
+  };
+
   // With chips available, the bar toggles them; otherwise clicking the bar
-  // jumps straight to a search for the emergent topic it's describing.
+  // opens the emergent topic it's describing.
   const handleBarClick = () => {
     if (narratives.length > 0) setExpanded(!expanded);
-    else if (emergentToken) searchTopic(emergentToken);
+    else if (emergent) openTopic(emergent.token, emergent.samplePostUris);
   };
 
   return (
@@ -81,18 +90,27 @@ export function WeatherBar({ weather }: Props) {
       {/* Report line */}
       <p className="text-sm leading-relaxed font-medium">
         {report}
-        {emergentToken && (
+        {emergent && (
           <button
             className="ml-2 text-xs font-semibold text-asph-text-link underline-offset-2 hover:underline"
             onClick={(e) => {
               e.stopPropagation();
-              searchTopic(emergentToken);
+              openTopic(emergent.token, emergent.samplePostUris);
             }}
           >
             See posts
           </button>
         )}
       </p>
+
+      {emergent?.samplePostUris && (
+        <NarrativePostsModal
+          topic={emergent.token}
+          postUris={emergent.samplePostUris}
+          isOpen={showPosts}
+          onClose={() => setShowPosts(false)}
+        />
+      )}
 
       {/* Expandable thread chips — click to search that topic */}
       {expanded && narratives.length > 0 && (

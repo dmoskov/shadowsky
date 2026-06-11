@@ -41,6 +41,8 @@ export interface EmergentThread {
   countRatio: number;
   isEmergent: boolean;
   pulseIntensity: number;
+  /** Posts Pan classified into this topic, when provided */
+  samplePostUris?: string[];
 }
 
 export interface EmergenceState {
@@ -105,6 +107,8 @@ interface PanTrendingTopic {
     engagement_ratio: number;
     author_diversity_ratio: number;
   };
+  /** AT URIs of posts Pan classified into this topic (may be empty) */
+  sample_posts?: string[];
 }
 
 // ─── Fetch Helpers ────────────────────────────────────────
@@ -218,7 +222,11 @@ function detectEmergence(topics: PanTrendingTopic[]): EmergenceState {
     const prev = previousSnapshots.get(topic.token);
     const isNew = !prev || now - prev.timestamp > 2 * 60 * 60 * 1000;
     const isGrowing = topic.metrics.count_ratio > 3;
-    const isOrganic = topic.metrics.author_diversity_ratio > 1.5;
+    // Diversity ratio alone lets near-single-author spam through; require a
+    // floor of real distinct voices before calling something emergent.
+    const isOrganic =
+      topic.metrics.author_diversity_ratio > 1.5 &&
+      topic.metrics.hourly_unique_authors >= 5;
     const isEmergent = isNew && isGrowing && isOrganic;
 
     const ageMinutes = prev ? Math.round((now - prev.timestamp) / 60000) : 0;
@@ -238,6 +246,9 @@ function detectEmergence(topics: PanTrendingTopic[]): EmergenceState {
         countRatio: topic.metrics.count_ratio,
         isEmergent,
         pulseIntensity,
+        samplePostUris: topic.sample_posts?.length
+          ? topic.sample_posts
+          : undefined,
       });
     }
 
