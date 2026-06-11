@@ -2,12 +2,13 @@
  * WeatherBar (Web)
  *
  * A subtle bar at the top of the feed showing the network weather report
- * and narrative thread chips. Click a chip to see narrative detail.
+ * and narrative thread chips. Click a chip to search posts on that topic.
  *
  * See: docs/vision/network-weather.md (Layers 2-3)
  */
 
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import type {
   NetworkWeatherState,
   WeatherHue,
@@ -45,6 +46,7 @@ function getColor(hue: WeatherHue): string {
 
 export function WeatherBar({ weather }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
 
   const report = useMemo(
     () => (weather ? generateWeatherReport(weather) : null),
@@ -55,18 +57,44 @@ export function WeatherBar({ weather }: Props) {
   if (!weather || !report || weather.source === "fallback") return null;
 
   const narratives = weather.narratives?.narratives ?? [];
+  const emergentToken = weather.emergence?.emergentThreads?.find(
+    (t) => t.isEmergent,
+  )?.token;
+
+  const searchTopic = (topic: string) =>
+    navigate(`/search?q=${encodeURIComponent(topic)}`);
+
+  // With chips available, the bar toggles them; otherwise clicking the bar
+  // jumps straight to a search for the emergent topic it's describing.
+  const handleBarClick = () => {
+    if (narratives.length > 0) setExpanded(!expanded);
+    else if (emergentToken) searchTopic(emergentToken);
+  };
 
   return (
     <div
       className="cursor-pointer select-none border-b border-asph-border-primary px-4 py-3 text-asph-text-primary transition-all duration-500"
       style={{ backgroundColor: "var(--asph-primary-10)" }}
-      title="Network weather — a live read on what's moving across Bluesky right now. Click to see the conversation threads."
-      onClick={() => setExpanded(!expanded)}
+      title="Network weather — a live read on what's moving across Bluesky right now. Click a topic to see its posts."
+      onClick={handleBarClick}
     >
       {/* Report line */}
-      <p className="text-sm leading-relaxed font-medium">{report}</p>
+      <p className="text-sm leading-relaxed font-medium">
+        {report}
+        {emergentToken && (
+          <button
+            className="ml-2 text-xs font-semibold text-asph-text-link underline-offset-2 hover:underline"
+            onClick={(e) => {
+              e.stopPropagation();
+              searchTopic(emergentToken);
+            }}
+          >
+            See posts
+          </button>
+        )}
+      </p>
 
-      {/* Expandable thread chips */}
+      {/* Expandable thread chips — click to search that topic */}
       {expanded && narratives.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {narratives.slice(0, 8).map((n, i) => {
@@ -79,7 +107,7 @@ export function WeatherBar({ weather }: Props) {
                 style={{ borderColor: color }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  // TODO: navigate to narrative detail
+                  searchTopic(n.name);
                 }}
               >
                 <span
