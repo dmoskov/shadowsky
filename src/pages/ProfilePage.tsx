@@ -13,17 +13,13 @@ import {
   Edit,
   ExternalLink,
   Flag,
-  Heart,
   List as ListIcon,
-  MessageCircle,
   MoreHorizontal,
   Pin,
   QrCode,
-  Repeat2,
   Rss,
   Share2,
   Sparkles,
-  TrendingUp,
   UserX,
   Users,
   VolumeX,
@@ -294,15 +290,13 @@ export default function ProfilePage() {
     enabled: !!agent && !!profile?.description,
   });
 
-  // Top posts - always fetched for showcase and tab
+  // Top posts for tab
   const { data: topPostsData, isLoading: isTopPostsLoading } = useTopPosts({
     handle: handle || "",
     limit: 10,
     enabled: !!handle,
   });
 
-  // Showcase state for top posts and AI analysis
-  const [showTopPostsShowcase, setShowTopPostsShowcase] = useState(true);
   const [aiInsightsExpanded, setAiInsightsExpanded] = useState(false);
 
   // Auto-trigger AI analysis when profile loads (for inline insights)
@@ -1163,134 +1157,6 @@ export default function ProfilePage() {
             )}
         </div>
       </div>
-
-      {/* Top Posts Showcase */}
-      {topPostsData &&
-        topPostsData.topPosts.length > 0 &&
-        showTopPostsShowcase && (
-          <div className="mt-4">
-            <div
-              className="rounded-xl p-4"
-              style={{
-                backgroundColor: "var(--asph-bg-secondary)",
-                border: "1px solid var(--asph-border-primary)",
-              }}
-            >
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <TrendingUp
-                    className="h-4 w-4"
-                    style={{ color: "var(--asph-primary)" }}
-                  />
-                  <h2
-                    className="text-sm font-semibold"
-                    style={{ color: "var(--asph-text-primary)" }}
-                  >
-                    Top Posts
-                  </h2>
-                  <span
-                    className="text-xs"
-                    style={{ color: "var(--asph-text-tertiary)" }}
-                  >
-                    by engagement
-                  </span>
-                </div>
-                <button
-                  onClick={() => setShowTopPostsShowcase(false)}
-                  className="touch-target-sm rounded px-2 py-1 text-xs transition-all hover:opacity-80"
-                  style={{
-                    color: "var(--asph-text-tertiary)",
-                  }}
-                >
-                  Hide
-                </button>
-              </div>
-              <div className="flex gap-3 overflow-x-auto pb-1">
-                {topPostsData.topPosts.slice(0, 5).map((item, idx) => {
-                  const postText =
-                    (item.post.record as { text?: string })?.text || "";
-                  return (
-                    <button
-                      key={item.uri}
-                      onClick={() => {
-                        setSelectedPost(item.post);
-                        setOpenThreadToReply(false);
-                        setOpenThreadToQuote(false);
-                        setShowThread(true);
-                      }}
-                      className="touch-target group flex-shrink-0 rounded-lg p-3 text-left transition-all hover:scale-[1.02]"
-                      style={{
-                        backgroundColor: "var(--asph-bg-tertiary)",
-                        width: "220px",
-                      }}
-                    >
-                      <div className="mb-2 flex items-center gap-1.5">
-                        <span
-                          className="flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold"
-                          style={{
-                            backgroundColor:
-                              idx === 0
-                                ? "var(--asph-primary)"
-                                : "var(--asph-bg-hover)",
-                            color:
-                              idx === 0
-                                ? "white"
-                                : "var(--asph-text-secondary)",
-                          }}
-                        >
-                          {idx + 1}
-                        </span>
-                        <span
-                          className="truncate text-xs font-medium"
-                          style={{ color: "var(--asph-text-primary)" }}
-                        >
-                          {formatCount(item.totalEngagement)} total
-                        </span>
-                      </div>
-                      <p
-                        className="mb-2 line-clamp-3 text-xs leading-relaxed"
-                        style={{ color: "var(--asph-text-secondary)" }}
-                      >
-                        {postText || "(media post)"}
-                      </p>
-                      <div className="flex items-center gap-3 text-xs">
-                        <span
-                          className="flex items-center gap-1"
-                          style={{ color: "var(--asph-text-tertiary)" }}
-                        >
-                          <Heart className="h-3 w-3" />
-                          {formatCount(item.likes)}
-                        </span>
-                        <span
-                          className="flex items-center gap-1"
-                          style={{ color: "var(--asph-text-tertiary)" }}
-                        >
-                          <Repeat2 className="h-3 w-3" />
-                          {formatCount(item.reposts)}
-                        </span>
-                        <span
-                          className="flex items-center gap-1"
-                          style={{ color: "var(--asph-text-tertiary)" }}
-                        >
-                          <MessageCircle className="h-3 w-3" />
-                          {formatCount(item.replies)}
-                        </span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              {topPostsData.totalPostsAnalyzed > 0 && (
-                <div
-                  className="mt-2 text-xs"
-                  style={{ color: "var(--asph-text-tertiary)" }}
-                >
-                  Based on {topPostsData.totalPostsAnalyzed} posts analyzed
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
       {/* AI Profile Insights */}
       {analysisRequested && (analysisData || isLoadingAnalysis) && (

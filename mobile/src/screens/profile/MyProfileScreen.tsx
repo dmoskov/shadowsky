@@ -22,7 +22,6 @@ import { useActorStarterPacks } from "../../hooks/api/useStarterPacks";
 import { useBookmarks, useBookmarkCount } from "../../hooks/api/useBookmarks";
 import { useTheme } from "../../contexts/ThemeContext";
 import { ProfileSkeleton } from "../../components/ProfileSkeleton";
-import { TopPostsShowcase } from "../../components/TopPostsShowcase";
 import { PinIcon } from "../../components/icons";
 import { AuthorFeedFilter } from "../../services/atproto/feeds";
 import { triggerHaptic } from "../../utils/haptics";
@@ -335,13 +334,6 @@ export function MyProfileScreen({
           <>
             {renderHeader()}
             {renderTabBar()}
-            {topPostsData && topPostsData.topPosts.length > 0 && activeTab === "posts" && (
-              <TopPostsShowcase
-                topPosts={topPostsData.topPosts}
-                totalPostsAnalyzed={topPostsData.totalPostsAnalyzed}
-                onPostPress={(uri) => onNavigateToPost?.(uri)}
-              />
-            )}
             {pinnedPost && activeTab === "posts" && (
               <View style={styles.pinnedPostContainer}>
                 <View style={styles.pinnedPostLabel}>

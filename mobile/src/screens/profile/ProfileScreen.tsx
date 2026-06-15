@@ -26,7 +26,6 @@ import { MoreVerticalIcon, SendIcon, PinIcon } from "../../components/icons";
 import { ProfileLabelBadges } from "../../components/ProfileLabelBadges";
 import { PanEngagementBadge } from "../../components/PanEngagementBadge";
 import { partitionPanLabels } from "../../config/pan-labeler";
-import { TopPostsShowcase } from "../../components/TopPostsShowcase";
 import { AppBskyFeedDefs } from "@atproto/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -643,13 +642,6 @@ export function ProfileScreen({ handle, onNavigateToPost, onNavigateToProfile, o
           <>
             {renderHeader()}
             {renderTabBar()}
-            {topPostsData && topPostsData.topPosts.length > 0 && activeTab === "posts" && (
-              <TopPostsShowcase
-                topPosts={topPostsData.topPosts}
-                totalPostsAnalyzed={topPostsData.totalPostsAnalyzed}
-                onPostPress={(uri) => onNavigateToPost?.(uri)}
-              />
-            )}
             {pinnedPost && activeTab === "posts" && (
               <View style={styles.pinnedPostContainer}>
                 <View style={styles.pinnedPostLabel}>
