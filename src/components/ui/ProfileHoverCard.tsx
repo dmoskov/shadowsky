@@ -8,8 +8,10 @@ import { useOptimisticFollow } from "../../hooks/useOptimisticFollow";
 import { useRoutePrefetch } from "../../hooks/useRoutePrefetch";
 import { useViewTransitionNavigate } from "../../hooks/useViewTransitionNavigate";
 import { layoutMeasurementService } from "../../services/layout-measurement-service";
+import { type AuthorCard, fetchAuthorCard } from "../../services/pan-api";
 import { proxifyBskyImage } from "../../utils/image-proxy";
 import { DomainVerifiedBadge } from "./DomainVerifiedBadge";
+import { Tooltip } from "./Tooltip";
 
 interface ProfileData {
   did: string;
@@ -30,11 +32,134 @@ interface ProfileHoverCardProps {
   delay?: number;
 }
 
+// Reputation is a *suspicion* score: higher = more likely inauthentic. We show
+// the class label (never the raw number) and color it green→red accordingly.
+const REPUTATION_STYLES: Record<
+  string,
+  { label: string; color: string; bg: string }
+> = {
+  trusted: {
+    label: "Trusted",
+    color: "var(--asph-success)",
+    bg: "var(--asph-success-10)",
+  },
+  neutral: {
+    label: "Neutral",
+    color: "var(--asph-text-secondary)",
+    bg: "var(--asph-bg-tertiary)",
+  },
+  suspicious: {
+    label: "Suspicious",
+    color: "var(--asph-warning)",
+    bg: "var(--asph-warning-10)",
+  },
+  likely_inauthentic: {
+    label: "Likely inauthentic",
+    color: "var(--asph-error)",
+    bg: "var(--asph-error-10)",
+  },
+};
+
+const PanAuthorSection: React.FC<{ card: AuthorCard }> = ({ card }) => {
+  const rep = card.reputation
+    ? (REPUTATION_STYLES[card.reputation.class] ?? {
+        label: card.reputation.class,
+        color: "var(--asph-text-secondary)",
+        bg: "var(--asph-bg-tertiary)",
+      })
+    : null;
+
+  const s = card.sentiment_recent;
+  const sentiment = s && s.sample > 0 ? s : null;
+  const total = sentiment
+    ? sentiment.positive + sentiment.negative + sentiment.neutral
+    : 0;
+
+  const lines: string[] = [];
+  if (card.activity?.total_posts != null) {
+    lines.push(
+      `${formatCount(card.activity.total_posts)} ${
+        card.activity.total_posts === 1 ? "post" : "posts"
+      }`,
+    );
+  }
+  if (card.community_count != null && card.community_count > 0) {
+    lines.push(
+      `in ${card.community_count} ${
+        card.community_count === 1 ? "community" : "communities"
+      }`,
+    );
+  }
+  const topNarrative = card.narratives?.[0]?.name;
+
+  // Nothing to show — render nothing rather than an empty divider.
+  if (!rep && !sentiment && lines.length === 0 && !topNarrative) return null;
+
+  return (
+    <div
+      className="mt-3 border-t pt-3"
+      style={{ borderColor: "var(--asph-border-primary)" }}
+    >
+      {rep && (
+        <span
+          className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+          style={{ color: rep.color, backgroundColor: rep.bg }}
+        >
+          {rep.label}
+        </span>
+      )}
+
+      {sentiment && total > 0 && (
+        <Tooltip
+          content={`Recent sentiment (${sentiment.sample} ${
+            sentiment.sample === 1 ? "post" : "posts"
+          }): ${sentiment.positive} positive · ${sentiment.negative} negative · ${sentiment.neutral} neutral`}
+          delay={200}
+        >
+          <div
+            className="mt-2 flex h-1.5 w-full overflow-hidden rounded-full"
+            style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
+          >
+            <div
+              style={{
+                width: `${(sentiment.positive / total) * 100}%`,
+                backgroundColor: "var(--asph-success)",
+              }}
+            />
+            <div
+              style={{
+                width: `${(sentiment.negative / total) * 100}%`,
+                backgroundColor: "var(--asph-error)",
+              }}
+            />
+            <div
+              style={{
+                width: `${(sentiment.neutral / total) * 100}%`,
+                backgroundColor: "var(--asph-text-secondary)",
+              }}
+            />
+          </div>
+        </Tooltip>
+      )}
+
+      {(lines.length > 0 || topNarrative) && (
+        <p
+          className="mt-2 truncate text-xs"
+          style={{ color: "var(--asph-text-secondary)" }}
+        >
+          {[lines.join(" · "), topNarrative].filter(Boolean).join(" · ")}
+        </p>
+      )}
+    </div>
+  );
+};
+
 export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
   ({ handle, children, delay = 600 }) => {
     const [isHovering, setIsHovering] = useState(false);
     const [showCard, setShowCard] = useState(false);
     const [profile, setProfile] = useState<ProfileData | null>(null);
+    const [panCard, setPanCard] = useState<AuthorCard | null>(null);
     const [loading, setLoading] = useState(false);
     const [cardPosition, setCardPosition] = useState<{
       top: number;
@@ -168,6 +293,22 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
       prefetchProfile,
       queryClient,
     ]);
+
+    // Once the profile is known, fetch Pan's author signals out-of-band. This
+    // never blocks the main card — the Pan section pops in if/when it arrives.
+    useEffect(() => {
+      if (isTouchDevice) return;
+      const did = profile?.did;
+      if (!did || panCard?.did === did) return;
+
+      let cancelled = false;
+      fetchAuthorCard(did).then((card) => {
+        if (!cancelled && card) setPanCard(card);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [profile?.did, panCard?.did, isTouchDevice]);
 
     const handleFollow = async (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -320,6 +461,11 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = React.memo(
                       </span>
                     </div>
                   </div>
+
+                  {/* Pan author signals (pops in when available) */}
+                  {panCard && panCard.did === profile.did && (
+                    <PanAuthorSection card={panCard} />
+                  )}
                 </div>
               )}
             </div>,
