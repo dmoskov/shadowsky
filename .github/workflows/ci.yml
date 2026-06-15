@@ -38,7 +38,17 @@ jobs:
         working-directory: amplify
         # npm install (not ci): the amplify lockfile is intentionally not kept
         # in strict sync, and these deps are only needed to run the function tests.
-        run: npm install --no-audit --no-fund
+        # Retry up to 3 times to handle transient network errors (ECONNRESET).
+        run: |
+          for attempt in 1 2 3; do
+            if npm install --no-audit --no-fund; then
+              exit 0
+            fi
+            echo "::warning::npm install attempt $attempt failed, retrying..."
+            sleep 5
+          done
+          echo "::error::npm install failed after 3 attempts"
+          exit 1
       - name: Run Amplify function tests
         run: npm run test:amplify
       - name: Run unit tests with coverage
