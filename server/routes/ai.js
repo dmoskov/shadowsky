@@ -124,7 +124,7 @@ router.post(
             "content-type": "application/json",
           },
           body: JSON.stringify({
-            model: "claude-sonnet-4-5-20250929",
+            model: "claude-sonnet-4-6",
             // ~700 tokens comfortably covers up to 2000 characters of alt text.
             max_tokens: 700,
             messages: [
@@ -203,7 +203,7 @@ router.post(
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5-20250929",
+          model: "claude-sonnet-4-6",
           max_tokens: 1500,
           messages: [
             {
@@ -302,7 +302,7 @@ router.post(
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5-20250929",
+          model: "claude-sonnet-4-6",
           max_tokens: 1000,
           messages: [
             {
@@ -390,7 +390,7 @@ router.post(
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5-20250929",
+          model: "claude-sonnet-4-6",
           max_tokens: 500,
           messages: [
             {
@@ -456,7 +456,7 @@ router.post(
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5-20250929",
+          model: "claude-sonnet-4-6",
           max_tokens: 2000,
           messages: [
             {
@@ -525,7 +525,7 @@ router.post(
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5-20250929",
+          model: "claude-sonnet-4-6",
           max_tokens: 500,
           messages: [
             {
@@ -664,7 +664,7 @@ Provide specific evidence and quotes to support your analysis. Start directly wi
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-5-20250929",
+          model: "claude-sonnet-4-6",
           max_tokens: maxTokens,
           messages: [
             {
@@ -984,7 +984,7 @@ Return the full analysis followed by the highlights section.`;
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
+          model: "claude-sonnet-4-6",
           max_tokens: maxTokens,
           messages: [
             {

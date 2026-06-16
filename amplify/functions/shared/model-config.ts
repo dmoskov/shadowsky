@@ -14,13 +14,13 @@
  */
 export const MODELS = {
   /** Claude Sonnet - balanced performance and cost, good for most tasks */
-  SONNET: 'claude-sonnet-4-5-20250929',
+  SONNET: 'claude-sonnet-4-6',
 
-  /** Claude Haiku - fastest and most cost-effective, good for simpler tasks */
-  HAIKU: 'claude-haiku-4-5-20251001',
+  /** Claude Haiku - fastest and most cost-effective, good for simpler tasks (no 4.6 exists; 4.5 is the latest Haiku) */
+  HAIKU: 'claude-haiku-4-5',
 
   /** Claude Opus - most capable, best for complex reasoning tasks */
-  OPUS: 'claude-opus-4-5-20251101',
+  OPUS: 'claude-opus-4-6',
 } as const;
 
 export type ModelName = (typeof MODELS)[keyof typeof MODELS];
@@ -48,7 +48,7 @@ export const MODEL_RECOMMENDATIONS = {
   QUICK_SUGGESTIONS: MODELS.SONNET,
 
   /** Thread summaries, content analysis */
-  CONTENT_ANALYSIS: MODELS.HAIKU,
+  CONTENT_ANALYSIS: MODELS.SONNET,
 
   /** Tone adjustment, writing feedback */
   WRITING_ASSISTANCE: MODELS.SONNET,
