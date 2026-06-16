@@ -277,7 +277,7 @@ function GifPickerInner({
 
         {/* Footer */}
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-          <Text style={styles.footerText}>Powered by Tenor</Text>
+          <Text style={styles.footerText}>Powered by KLIPY</Text>
           <Text style={styles.footerHint}>
             GIFs will be attached as animated images
           </Text>

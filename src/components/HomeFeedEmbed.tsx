@@ -1,6 +1,7 @@
 import { Heart, List, MessageCircle, Rss, Shield, Users } from "lucide-react";
 import React, { Suspense } from "react";
 import { proxifyBskyImage, proxifyBskyVideo } from "../utils/image-proxy";
+import { getGifDisplayUrl, isGifEmbedUri } from "../services/tenor";
 import { lazyWithRetry } from "../utils/lazyWithRetry";
 import { ImageGrid } from "./ImageGrid";
 import { Spinner } from "./ui/LoadingState";
@@ -63,10 +64,9 @@ export const FeedEmbed: React.FC<FeedEmbedProps> = ({
     if (!external) return null;
 
     const isGif =
+      isGifEmbedUri(external.uri || "") ||
       external.uri?.toLowerCase().includes(".gif") ||
-      external.uri?.includes("tenor.com") ||
-      external.uri?.includes("giphy.com") ||
-      external.uri?.includes("t.gifs.bsky.app");
+      external.uri?.includes("giphy.com");
 
     const handleClick = (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -82,7 +82,7 @@ export const FeedEmbed: React.FC<FeedEmbedProps> = ({
           onClick={handleClick}
         >
           <img
-            src={external.uri}
+            src={getGifDisplayUrl(external.uri || "")}
             alt={external.title || "GIF"}
             className="w-full object-contain"
             style={{ maxHeight: "400px" }}

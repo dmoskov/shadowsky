@@ -1,11 +1,14 @@
 /**
- * GIF Service via Bluesky's Tenor Proxy
+ * GIF Service via Bluesky's KLIPY Proxy
  *
- * Uses Bluesky's GIF proxy at gifs.bsky.app which handles Tenor API auth
- * server-side. No API key needed. GIF delivery URLs are rewritten through
- * t.gifs.bsky.app for CDN delivery.
+ * Uses Bluesky's GIF proxy at gifs.bsky.app which handles KLIPY API auth
+ * server-side. No API key needed. KLIPY responses are normalized by the
+ * proxy into the legacy Tenor `media_formats` schema, so downstream code
+ * stays provider-agnostic.
  *
- * This matches the official Bluesky app's implementation.
+ * GIF delivery URLs are rewritten through k.gifs.bsky.app (KLIPY) or
+ * t.gifs.bsky.app (legacy Tenor posts) for CDN delivery. This matches the
+ * official Bluesky app's implementation.
  */
 
 import { Platform } from 'react-native';
@@ -15,9 +18,15 @@ import { fetchWithTimeout } from '../utils/with-timeout';
 
 const logger = createLogger('GifService');
 
+// Provider CDN hosts and their Bluesky proxy equivalents
+const KLIPY_HOST = 'static.klipy.com';
+const KLIPY_PROXY = 'k.gifs.bsky.app';
+const TENOR_HOST = 'media.tenor.com';
+const TENOR_PROXY = 't.gifs.bsky.app';
+
 const GIF_SERVICE = 'https://gifs.bsky.app';
-const GIF_SEARCH_URL = (params: string) => `${GIF_SERVICE}/tenor/v2/search?${params}`;
-const GIF_FEATURED_URL = (params: string) => `${GIF_SERVICE}/tenor/v2/featured?${params}`;
+const GIF_SEARCH_URL = (params: string) => `${GIF_SERVICE}/klipy/v2/search?${params}`;
+const GIF_FEATURED_URL = (params: string) => `${GIF_SERVICE}/klipy/v2/featured?${params}`;
 
 const CLIENT_KEY = Platform.select({
   ios: 'shadowsky-ios',
@@ -37,6 +46,8 @@ export interface TenorGif {
     mediumgif?: TenorMediaFormat;
     nanogif?: TenorMediaFormat;
     preview?: TenorMediaFormat;
+    mp4?: TenorMediaFormat;
+    webm?: TenorMediaFormat;
   };
   url: string;
 }
@@ -58,12 +69,11 @@ function buildParams(extra?: Record<string, string>): string {
   const params = new URLSearchParams();
   params.set('client_key', CLIENT_KEY!);
   params.set('limit', '30');
-  params.set('contentfilter', 'high');
-  params.set('media_filter', 'preview,gif,tinygif');
+  params.set('contentfilter', 'low'); // PG-13 equivalent
 
   const locale = getLocales?.()?.[0];
-  if (locale) {
-    params.set('locale', locale.languageTag.replace('-', '_'));
+  if (locale?.regionCode) {
+    params.set('locale', locale.regionCode.toLowerCase());
   }
 
   if (extra) {
@@ -78,7 +88,7 @@ function buildParams(extra?: Record<string, string>): string {
 }
 
 /**
- * Search GIFs by query via Bluesky's proxy
+ * Search GIFs by query via Bluesky's KLIPY proxy
  */
 export async function searchGifs(query: string, limit = 30): Promise<TenorGif[]> {
   if (!query.trim()) return [];
@@ -100,7 +110,7 @@ export async function searchGifs(query: string, limit = 30): Promise<TenorGif[]>
 }
 
 /**
- * Get trending/featured GIFs via Bluesky's proxy
+ * Get trending/featured GIFs via Bluesky's KLIPY proxy
  */
 export async function getTrending(limit = 30): Promise<TenorGif[]> {
   try {
@@ -120,13 +130,49 @@ export async function getTrending(limit = 30): Promise<TenorGif[]> {
 }
 
 /**
- * Rewrite a Tenor media URL to go through Bluesky's GIF CDN proxy.
- * This matches the official Bluesky app behavior.
+ * The filename slug (without extension) of a provider media URL. KLIPY uses
+ * a different filename slug per format (unlike Tenor, which encodes the format
+ * in the URL id), so the mp4/webm slugs must travel with the embed URL.
  */
+function fileSlug(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  const filename = url.split('/').pop();
+  if (!filename) return undefined;
+  const dot = filename.lastIndexOf('.');
+  return dot > 0 ? filename.slice(0, dot) : undefined;
+}
+
+/**
+ * Rewrite a provider CDN URL (KLIPY or legacy Tenor) to the corresponding
+ * Bluesky GIF proxy host. Leaves unrecognized hosts untouched.
+ */
+function gifUrlToProxy(gifUrl: string): string {
+  try {
+    const url = new URL(gifUrl);
+    if (url.hostname === KLIPY_HOST) url.hostname = KLIPY_PROXY;
+    else if (url.hostname === TENOR_HOST) url.hostname = TENOR_PROXY;
+    return url.href;
+  } catch {
+    logger.error('Invalid URL passed to gifUrlToProxy()');
+    return gifUrl;
+  }
+}
+
+export function klipyUrlToBskyGifUrl(klipyUrl: string): string {
+  try {
+    const url = new URL(klipyUrl);
+    url.hostname = KLIPY_PROXY;
+    return url.href;
+  } catch {
+    logger.error('Invalid URL passed to klipyUrlToBskyGifUrl()');
+    return '';
+  }
+}
+
 export function tenorUrlToBskyGifUrl(tenorUrl: string): string {
   try {
     const url = new URL(tenorUrl);
-    url.hostname = 't.gifs.bsky.app';
+    url.hostname = TENOR_PROXY;
     return url.href;
   } catch {
     logger.error('Invalid URL passed to tenorUrlToBskyGifUrl()');
@@ -135,7 +181,8 @@ export function tenorUrlToBskyGifUrl(tenorUrl: string): string {
 }
 
 /**
- * Get the best GIF URL for embedding, proxied through Bluesky CDN
+ * Best GIF URL for in-app display (picker thumbnails, compose preview),
+ * proxied through the Bluesky CDN.
  */
 export function getBestGifUrl(gif: TenorGif): string {
   const raw =
@@ -144,38 +191,86 @@ export function getBestGifUrl(gif: TenorGif): string {
     gif.media_formats.gif?.url ||
     gif.media_formats.mediumgif?.url ||
     '';
-  return raw ? tenorUrlToBskyGifUrl(raw) : '';
+  return raw ? gifUrlToProxy(raw) : '';
 }
 
 /**
- * Check if a URI is a Tenor GIF (from our app or the official Bluesky app)
+ * Build the URI to store in the AT Protocol external embed record.
+ *
+ * IMPORTANT for interoperability: this returns the RAW provider URL
+ * (static.klipy.com/...) with `?hh=&ww=` dimensions and, for KLIPY, the
+ * `mp4`/`webm` filename slugs. Other Bluesky clients (including the official
+ * app) detect a GIF by this exact host/path/params shape and rewrite it to
+ * the proxy host themselves at render time. Do NOT store the proxied host.
  */
-export function isTenorGifUri(uri: string): boolean {
+export function getGifEmbedUrl(gif: TenorGif): string {
+  const format = gif.media_formats.gif;
+  if (!format?.url) return getBestGifUrl(gif);
+
+  const params = new URLSearchParams();
+  const dims = format.dims;
+  if (dims && dims[0] > 0 && dims[1] > 0) {
+    params.set('hh', String(dims[1]));
+    params.set('ww', String(dims[0]));
+  }
+
+  try {
+    const url = new URL(format.url);
+    if (url.hostname === KLIPY_HOST) {
+      const mp4Slug = fileSlug(gif.media_formats.mp4?.url);
+      const webmSlug = fileSlug(gif.media_formats.webm?.url);
+      if (mp4Slug) params.set('mp4', mp4Slug);
+      if (webmSlug) params.set('webm', webmSlug);
+    }
+  } catch {
+    // fall through and return the URL with whatever params we have
+  }
+
+  const qs = params.toString();
+  return qs ? `${format.url}?${qs}` : format.url;
+}
+
+/**
+ * Given a stored embed URI, return a proxied animated-GIF URL suitable for an
+ * <Image>. Handles both KLIPY and legacy Tenor URIs (and already-proxied
+ * URIs). Strips the video-only slug params.
+ */
+export function getGifDisplayUrl(uri: string): string {
   try {
     const url = new URL(uri);
-    return url.hostname === 'media.tenor.com' || url.hostname === 't.gifs.bsky.app';
+    if (url.hostname === KLIPY_HOST) url.hostname = KLIPY_PROXY;
+    else if (url.hostname === TENOR_HOST) url.hostname = TENOR_PROXY;
+    url.searchParams.delete('mp4');
+    url.searchParams.delete('webm');
+    return url.href;
+  } catch {
+    return uri;
+  }
+}
+
+/**
+ * Whether a URI points at a GIF embed (KLIPY or legacy Tenor, raw or proxied).
+ */
+export function isGifEmbedUri(uri: string): boolean {
+  try {
+    const host = new URL(uri).hostname;
+    return (
+      host === KLIPY_HOST ||
+      host === KLIPY_PROXY ||
+      host === TENOR_HOST ||
+      host === TENOR_PROXY
+    );
   } catch {
     return false;
   }
 }
 
 /**
- * Get the full-quality GIF embed URL proxied through Bluesky CDN with dimensions.
- * Matches the official Bluesky app convention of appending ?hh=HEIGHT&ww=WIDTH.
+ * Legacy alias retained for back-compat: matches Tenor GIF URIs only.
+ * Prefer {@link isGifEmbedUri} which also matches KLIPY.
  */
-export function getGifEmbedUrl(gif: TenorGif): string {
-  const format = gif.media_formats.gif;
-  if (!format?.url) return getBestGifUrl(gif);
-
-  const proxied = tenorUrlToBskyGifUrl(format.url);
-  if (!proxied) return getBestGifUrl(gif);
-
-  const dims = format.dims;
-  if (dims && dims[0] > 0 && dims[1] > 0) {
-    const separator = proxied.includes('?') ? '&' : '?';
-    return `${proxied}${separator}hh=${dims[1]}&ww=${dims[0]}`;
-  }
-  return proxied;
+export function isTenorGifUri(uri: string): boolean {
+  return isGifEmbedUri(uri);
 }
 
 /**
@@ -198,13 +293,13 @@ export function parseTenorGifDimensions(uri: string): { width: number; height: n
 }
 
 /**
- * Get GIF dimensions
+ * Get GIF dimensions from the best available format.
  */
 export function getGifDimensions(gif: TenorGif): { width: number; height: number } {
   const format =
+    gif.media_formats.gif ||
     gif.media_formats.tinygif ||
     gif.media_formats.preview ||
-    gif.media_formats.gif ||
     gif.media_formats.mediumgif;
 
   if (format?.dims) {

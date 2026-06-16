@@ -29,8 +29,12 @@ export const TRUSTED_MEDIA_DOMAINS = [
   "player.vimeo.com",
   "giphy.com",
   "media.giphy.com",
+  // GIF providers + Bluesky GIF CDN proxies
   "tenor.com",
   "media.tenor.com",
+  "t.gifs.bsky.app",
+  "static.klipy.com",
+  "k.gifs.bsky.app",
 ];
 
 /**

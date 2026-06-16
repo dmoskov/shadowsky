@@ -126,11 +126,12 @@ export interface UploadedMedia {
 // GIF embed type
 export interface GifEmbed {
   id: string;
-  url: string;
+  url: string; // Proxied animated GIF URL for the compose preview
+  embedUri: string; // Raw provider URI (with hh/ww/mp4/webm) stored in the record
+  thumbUrl: string; // Static preview-frame URL uploaded as the embed thumbnail
   title: string;
   width: number;
   height: number;
-  tenorUrl: string; // Original Tenor page URL
 }
 
 // Post status types
