@@ -70,3 +70,31 @@ export async function fetchFromPan(
   );
   return null;
 }
+
+/** Aggregated author signals from Pan, backing the profile hover card. */
+export interface AuthorCard {
+  did: string;
+  reputation?: { score: number; class: string; confidence: number | null };
+  activity?: { total_posts: number; last_post_at: string | null };
+  sentiment_recent?: {
+    positive: number;
+    negative: number;
+    neutral: number;
+    sample: number;
+    model_share: number;
+  };
+  community_count?: number;
+  narratives?: { name: string; post_count: number }[];
+}
+
+/**
+ * Fetch aggregated author signals for a DID, or null when Pan is unavailable
+ * (breaker open) or the author is unknown (response carries only the did).
+ */
+export async function fetchAuthorCard(did: string): Promise<AuthorCard | null> {
+  const res = await fetchFromPan(
+    `/api/cards/author/${encodeURIComponent(did)}`,
+  );
+  const data = (res as { data?: AuthorCard } | null)?.data;
+  return data?.did ? data : null;
+}

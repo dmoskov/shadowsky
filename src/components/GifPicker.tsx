@@ -76,8 +76,6 @@ export function GifPicker({
     [onSelectGif, onClose],
   );
 
-  const hasApiKey = !!import.meta.env.VITE_TENOR_API_KEY;
-
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
@@ -140,30 +138,6 @@ export function GifPicker({
           className="asph-scrollbar flex-1 overflow-y-auto p-4"
           style={{ maxHeight: "60vh" }}
         >
-          {!hasApiKey && (
-            <div className="py-8 text-center">
-              <p style={{ color: "var(--asph-text-secondary)" }}>
-                Tenor API key not configured. Add VITE_TENOR_API_KEY to your
-                .env file.
-              </p>
-              <p
-                className="mt-2 text-sm"
-                style={{ color: "var(--asph-text-tertiary)" }}
-              >
-                Get a free API key at{" "}
-                <a
-                  href="https://developers.google.com/tenor/guides/quickstart"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline"
-                  style={{ color: "var(--asph-primary)" }}
-                >
-                  developers.google.com/tenor
-                </a>
-              </p>
-            </div>
-          )}
-
           {error && (
             <div className="py-8 text-center">
               <p style={{ color: "var(--asph-error)" }}>{error}</p>
@@ -246,7 +220,7 @@ export function GifPicker({
             className="mb-1 text-xs"
             style={{ color: "var(--asph-text-tertiary)" }}
           >
-            Powered by Tenor
+            Powered by KLIPY
           </p>
           <p className="text-xs" style={{ color: "var(--asph-text-tertiary)" }}>
             GIFs will be attached as animated images

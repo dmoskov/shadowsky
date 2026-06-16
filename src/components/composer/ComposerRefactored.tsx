@@ -42,7 +42,13 @@ import {
   type ThreadDraft,
 } from "../../services/drafts";
 import type { TenorGif } from "../../services/tenor";
-import { getBestGifUrl, getGifDimensions } from "../../services/tenor";
+import {
+  buildGifEmbedUri,
+  getBestGifUrl,
+  getGifDimensions,
+  getGifDisplayUrl,
+  getGifThumbUrl,
+} from "../../services/tenor";
 import { debug } from "../../shared/debug";
 import { uploadBlobWithRetry } from "../../utils/blob-upload";
 import { isGifFile } from "../../utils/gif-to-video";
@@ -1013,24 +1019,28 @@ export function ComposerRefactored() {
         // Add GIF embed for first post (mutually exclusive with media)
         if (i === 0 && !postData.embed && state.gifEmbed) {
           try {
-            // Fetch the GIF to upload as thumbnail
-            const gifResponse = await fetch(state.gifEmbed.url);
-            if (gifResponse.ok) {
-              const gifBlob = await gifResponse.blob();
-              const gifData = new Uint8Array(await gifBlob.arrayBuffer());
+            // Upload the static preview frame as the embed thumbnail. The
+            // animated GIF itself is referenced via the embed URI and rendered
+            // through the Bluesky GIF CDN proxy by each client.
+            const thumbResponse = await fetch(
+              getGifDisplayUrl(state.gifEmbed.thumbUrl),
+            );
+            if (thumbResponse.ok) {
+              const thumbBlob = await thumbResponse.blob();
+              const thumbData = new Uint8Array(await thumbBlob.arrayBuffer());
 
               const uploadResult = await uploadBlobWithRetry(
                 state.agent!,
-                gifData,
-                { encoding: "image/gif" },
+                thumbData,
+                { encoding: thumbBlob.type || "image/jpeg" },
               );
 
               postData.embed = {
                 $type: "app.bsky.embed.external",
                 external: {
-                  uri: state.gifEmbed.tenorUrl,
+                  uri: state.gifEmbed.embedUri,
                   title: state.gifEmbed.title,
-                  description: "GIF from Tenor",
+                  description: `ALT: ${state.gifEmbed.title}`,
                   thumb: uploadResult.data.blob,
                 },
               };
@@ -1213,16 +1223,16 @@ export function ComposerRefactored() {
         return;
       }
 
-      const url = getBestGifUrl(gif);
       const dimensions = getGifDimensions(gif);
 
       state.setGifEmbed({
         id: gif.id,
-        url,
+        url: getBestGifUrl(gif),
+        embedUri: buildGifEmbedUri(gif),
+        thumbUrl: getGifThumbUrl(gif),
         title: gif.title || gif.content_description,
         width: dimensions.width,
         height: dimensions.height,
-        tenorUrl: gif.url,
       });
 
       state.setPostStatus({

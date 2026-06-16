@@ -3,7 +3,7 @@ import {View, Text, StyleSheet, useWindowDimensions} from 'react-native';
 import {Image} from 'expo-image';
 import {useTheme} from '../contexts/ThemeContext';
 import {useVideoAutoplay} from '../contexts/VideoAutoplayContext';
-import {parseTenorGifDimensions} from '../services/tenor';
+import {getGifDisplayUrl, parseTenorGifDimensions} from '../services/tenor';
 import {fontSize} from '../utils/typography';
 
 interface GifEmbedProps {
@@ -20,6 +20,10 @@ function GifEmbedInner({uri, thumb, description, title, isVisible = false}: GifE
   const {isAutoplayEnabled} = useVideoAutoplay();
 
   const shouldAutoplay = isAutoplayEnabled && isVisible;
+
+  // The stored embed URI is the raw provider URL; render through the Bluesky
+  // GIF CDN proxy and strip the video-only slug params.
+  const displayUri = useMemo(() => getGifDisplayUrl(uri), [uri]);
 
   const dimensions = useMemo(() => {
     const parsed = parseTenorGifDimensions(uri);
@@ -40,11 +44,11 @@ function GifEmbedInner({uri, thumb, description, title, isVisible = false}: GifE
   return (
     <View style={styles.container}>
       <Image
-        source={{uri}}
+        source={{uri: displayUri}}
         style={[styles.image, {height: calculatedHeight}]}
         contentFit="cover"
         cachePolicy="memory-disk"
-        recyclingKey={uri}
+        recyclingKey={displayUri}
         autoplay={shouldAutoplay}
         placeholderContentFit="cover"
         placeholder={thumb ? {uri: thumb} : undefined}
