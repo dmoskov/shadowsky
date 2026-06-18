@@ -70,6 +70,15 @@ class NotificationListState: ObservableObject {
                 self?.decodeError = message
             }
         }
+
+        // Replay the latest payload that React already pushed before this view
+        // registered its observers (the bridge posts on mount, which can race
+        // ahead of .onAppear). Without this, the live post is missed entirely.
+        if let latest = NotificationBridgeStore.shared.latest {
+            decodeError = nil
+            hasReceivedData = true
+            updateNotifications(latest)
+        }
     }
 
     deinit {
