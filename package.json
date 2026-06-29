@@ -45,7 +45,7 @@
     "@atproto/api": "^0.20.22",
     "@atproto/oauth-client-browser": "^0.4.3",
     "@bsky/core": "*",
-    "@aws-sdk/client-cloudwatch-logs": "^3.1073.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.1075.0",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
     "@tanstack/react-query": "^5.101.2",
