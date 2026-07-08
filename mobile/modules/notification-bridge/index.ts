@@ -7,7 +7,7 @@
  * bolted onto native-notifications-list never registered at runtime.
  */
 
-import { NativeModule, requireNativeModule } from "expo";
+import { NativeModule, requireOptionalNativeModule } from "expo";
 
 export interface NotificationBridgeModule extends NativeModule {
   /** Pass serialized, processed notification data to Swift as a JSON string. */
@@ -16,6 +16,8 @@ export interface NotificationBridgeModule extends NativeModule {
   clearNotificationData(): void;
 }
 
-export default requireNativeModule<NotificationBridgeModule>(
+// Optional so a missing native module degrades gracefully (matches the
+// accessor in native-notifications-list/src/NotificationBridge.ts).
+export default requireOptionalNativeModule<NotificationBridgeModule>(
   "NotificationBridge",
 );
