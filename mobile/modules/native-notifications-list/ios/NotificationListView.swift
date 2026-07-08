@@ -10,6 +10,7 @@
 import SwiftUI
 import ExpoModulesCore
 import FeedBridge
+import NotificationBridge
 import ExpoSwiftUIFeed
 
 // MARK: - Notification List Props

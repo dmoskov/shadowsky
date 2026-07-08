@@ -15,10 +15,36 @@ import FeedBridge
 
 // MARK: - Notification Names (formerly on NotificationBridgeModule)
 
-enum NotificationBridgeNotifications {
-    static let dataUpdated = Notification.Name("NotificationBridgeDataUpdated")
-    static let dataCleared = Notification.Name("NotificationBridgeDataCleared")
-    static let decodeError = Notification.Name("NotificationBridgeDecodeError")
+public enum NotificationBridgeNotifications {
+    public static let dataUpdated = Notification.Name("NotificationBridgeDataUpdated")
+    public static let dataCleared = Notification.Name("NotificationBridgeDataCleared")
+    public static let decodeError = Notification.Name("NotificationBridgeDecodeError")
+}
+
+// MARK: - Bridge Store
+
+/// Shared, thread-safe holder for the latest serialized notification data.
+///
+/// The SwiftUI view registers its NotificationCenter observers in `.onAppear`,
+/// which can land *after* React has already pushed (and the bridge has already
+/// posted) the data — so the live post is missed and there is nothing to replay.
+/// The view reads `shared.latest` on appear to recover the most recent payload
+/// regardless of post/observe ordering.
+public final class NotificationBridgeStore {
+    public static let shared = NotificationBridgeStore()
+    private let lock = NSLock()
+    private var _latest: SerializedNotificationData?
+
+    private init() {}
+
+    public var latest: SerializedNotificationData? {
+        lock.lock(); defer { lock.unlock() }
+        return _latest
+    }
+
+    public func set(_ data: SerializedNotificationData?) {
+        lock.lock(); _latest = data; lock.unlock()
+    }
 }
 
 // MARK: - Serialized Author
