@@ -134,7 +134,7 @@
       ]
     },
     "fix:format": {
-      "command": "npx oxfmt src packages",
+      "command": "vp fmt -c .oxfmtrc.json src packages",
       "files": [
         ".oxfmtrc.json",
         "*.{html,js,md,ts,yml}",
@@ -176,7 +176,7 @@
       ]
     },
     "test:format": {
-      "command": "npx oxfmt --check src packages",
+      "command": "vp fmt --check -c .oxfmtrc.json src packages",
       "files": [
         ".oxfmtrc.json",
         "*.{html,js,md,ts,yml}",
