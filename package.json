@@ -42,8 +42,8 @@
     "tokens:check": "wireit"
   },
   "dependencies": {
-    "@atproto/api": "^0.20.25",
-    "@atproto/oauth-client-browser": "^0.4.5",
+    "@atproto/api": "^0.20.28",
+    "@atproto/oauth-client-browser": "^0.4.8",
     "@bsky/core": "*",
     "@aws-sdk/client-cloudwatch-logs": "^3.1079.0",
     "@ffmpeg/ffmpeg": "^0.12.15",
