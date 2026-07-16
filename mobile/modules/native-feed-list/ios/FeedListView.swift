@@ -32,6 +32,17 @@ struct ScrollOffsetPreferenceKey: PreferenceKey {
     }
 }
 
+/// Non-observed reference holder for scroll bookkeeping. These fields mutate
+/// on every cell boundary crossing and every scroll frame; keeping them out of
+/// @State/@Published is deliberate — an invalidating write here re-diffs the
+/// entire LazyVStack per event, which showed up as jerky scroll starts and
+/// deceleration. Held in @State only for stable identity across body passes.
+final class ScrollTracker {
+    var visiblePostIds: Set<String> = []
+    var firstVisiblePostId: String? = nil
+    var lastEmittedOffset: CGFloat = .nan
+}
+
 // MARK: - Feed List Props
 
 /// ObservableObject for props passed from React Native.
@@ -56,9 +67,8 @@ struct FeedListView: View {
     // Feed data
     @StateObject private var feedState = FeedState()
 
-    // Scroll position restoration
-    @State private var visiblePostIds: Set<String> = []
-    @State private var firstVisiblePostId: String? = nil
+    // Scroll position restoration + event throttling (see ScrollTracker)
+    @State private var scrollTracker = ScrollTracker()
     @State private var scrollProxy: ScrollViewProxy? = nil
 
     // Accessibility
@@ -199,11 +209,11 @@ struct FeedListView: View {
                         ))
                         .accessibilityIdentifier("feed-post-\(index)")
                         .onAppear {
-                            visiblePostIds.insert(converted.id)
+                            scrollTracker.visiblePostIds.insert(converted.id)
                             updateFirstVisiblePost()
                         }
                         .onDisappear {
-                            visiblePostIds.remove(converted.id)
+                            scrollTracker.visiblePostIds.remove(converted.id)
                             updateFirstVisiblePost()
                         }
 
@@ -238,15 +248,25 @@ struct FeedListView: View {
             }
             .coordinateSpace(name: "feedScroll")
             .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
-                onScroll?(value)
+                // Throttle bridge events: emitting every frame floods the RN
+                // event queue and competes with cell mounts on the main
+                // thread. The JS chrome hide/show logic commits direction on
+                // an 8pt delta, so 8pt granularity is lossless; below 64pt
+                // emit every change so the "always show chrome near top"
+                // zone (50pt) tracks the exact offset.
+                let last = scrollTracker.lastEmittedOffset
+                if last.isNaN || abs(value - last) >= 8 || value < 64 {
+                    scrollTracker.lastEmittedOffset = value
+                    onScroll?(value)
+                }
             }
             .scrollDismissesKeyboardCompat()
             .refreshable {
                 // Haptic confirmation at pull-to-refresh threshold
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 // Clear tracked position so refresh shows content from top
-                firstVisiblePostId = nil
-                visiblePostIds.removeAll()
+                scrollTracker.firstVisiblePostId = nil
+                scrollTracker.visiblePostIds.removeAll()
                 onRefresh?()
             }
             .onAppear {
@@ -272,17 +292,19 @@ struct FeedListView: View {
     /// Posts report visibility via onAppear/onDisappear; this finds the first
     /// one in feed order that is currently on screen.
     private func updateFirstVisiblePost() {
-        guard !visiblePostIds.isEmpty else {
-            firstVisiblePostId = nil
+        guard !scrollTracker.visiblePostIds.isEmpty else {
+            scrollTracker.firstVisiblePostId = nil
             return
         }
-        firstVisiblePostId = feedState.convertedPosts.first { visiblePostIds.contains($0.id) }?.id
+        scrollTracker.firstVisiblePostId = feedState.convertedPosts.first {
+            scrollTracker.visiblePostIds.contains($0.id)
+        }?.id
     }
 
     /// When new posts are prepended to the feed (e.g. after background refetch),
     /// scroll back to the post the user was viewing so their position isn't lost.
     private func restoreScrollPositionIfNeeded() {
-        guard let target = firstVisiblePostId,
+        guard let target = scrollTracker.firstVisiblePostId,
               let proxy = scrollProxy,
               feedState.convertedPosts.contains(where: { $0.id == target }) else {
             return

@@ -156,6 +156,7 @@ struct NotificationListView: View {
     @ObservedObject var props: NotificationListProps
     @StateObject private var state = NotificationListState()
     @State private var activeFilter: NotificationListFilter = .all
+    @State private var scrollThrottle = ScrollEmitThrottle()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // Event handlers
@@ -327,7 +328,14 @@ struct NotificationListView: View {
         .scrollDismissesKeyboardCompat()
         .coordinateSpace(name: "notifScroll")
         .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offset in
-            onScroll?(offset)
+            // Same throttle as FeedListView: 8pt granularity is lossless for
+            // the JS chrome logic; emit every change near the top so the
+            // always-show-chrome zone tracks the exact offset.
+            let last = scrollThrottle.lastEmittedOffset
+            if last.isNaN || abs(offset - last) >= 8 || offset < 64 {
+                scrollThrottle.lastEmittedOffset = offset
+                onScroll?(offset)
+            }
         }
         .refreshable {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -450,4 +458,9 @@ private struct ScrollOffsetPreferenceKey: PreferenceKey {
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
     }
+}
+
+/// Non-observed holder so throttle bookkeeping doesn't invalidate the view.
+final class ScrollEmitThrottle {
+    var lastEmittedOffset: CGFloat = .nan
 }
