@@ -85,10 +85,13 @@ const AuthExplainer: React.FC = () => {
 
 export const LandingPage: React.FC = () => {
   const { login, loginWithOAuth, isOAuthAvailable } = useAuth();
-  // Default to app-password if OAuth isn't available yet
-  const [loginMode, setLoginMode] = useState<LoginMode>(
-    isOAuthAvailable ? "oauth" : "app-password",
-  );
+  // The OAuth client loads asynchronously, so isOAuthAvailable is false on the
+  // first render even when OAuth works. Start on OAuth and step back only if it
+  // turns out to be unavailable, rather than defaulting to app passwords and
+  // stranding everyone there once it loads.
+  const [loginMode, setLoginMode] = useState<LoginMode>("oauth");
+  // Once someone picks a method, availability stops overriding them.
+  const [modeChosenByUser, setModeChosenByUser] = useState(false);
   const [handle, setHandle] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -99,12 +102,11 @@ export const LandingPage: React.FC = () => {
   const [showEmailCode, setShowEmailCode] = useState(false);
   const [emailCode, setEmailCode] = useState("");
 
-  // Switch to app-password mode if OAuth becomes unavailable
+  // Follow OAuth availability until the user expresses a preference.
   useEffect(() => {
-    if (!isOAuthAvailable && loginMode === "oauth") {
-      setLoginMode("app-password");
-    }
-  }, [isOAuthAvailable, loginMode]);
+    if (modeChosenByUser) return;
+    setLoginMode(isOAuthAvailable ? "oauth" : "app-password");
+  }, [isOAuthAvailable, modeChosenByUser]);
 
   const handleOAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -496,6 +498,7 @@ export const LandingPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
+                      setModeChosenByUser(true);
                       setLoginMode(
                         loginMode === "oauth" ? "app-password" : "oauth",
                       );

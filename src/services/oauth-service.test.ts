@@ -298,15 +298,15 @@ mockOAuthClient = {
   authorize: vi.fn().mockResolvedValue(new URL("https://oauth.example.com")),
 };
 
-// Capture onDelete callback passed to BrowserOAuthClient.load()
+// Capture the session-deleted callback passed to BrowserOAuthClient.load()
 let capturedOnDelete: ((sub: string, cause: unknown) => void) | undefined;
 
 // Mock the OAuth client module
 vi.mock("@atproto/oauth-client-browser", () => ({
   BrowserOAuthClient: {
     load: vi.fn((opts: Record<string, unknown>) => {
-      if (opts?.onDelete) {
-        capturedOnDelete = opts.onDelete as (
+      if (opts?.onSessionDeleted) {
+        capturedOnDelete = opts.onSessionDeleted as (
           sub: string,
           cause: unknown,
         ) => void;
@@ -442,7 +442,7 @@ describe("OAuthService", () => {
       );
     });
 
-    it("should pass onDelete hook to BrowserOAuthClient.load()", async () => {
+    it("should pass the onSessionDeleted hook to BrowserOAuthClient.load()", async () => {
       const deletedCallback = vi.fn();
       oauthService.addEventListener("deleted", deletedCallback);
 
@@ -450,7 +450,7 @@ describe("OAuthService", () => {
 
       expect(capturedOnDelete).toBeDefined();
 
-      // Simulate a deletion event via the onDelete hook
+      // Simulate a deletion event via the onSessionDeleted hook
       capturedOnDelete!("did:plc:test123", new Error("Token revoked"));
 
       expect(deletedCallback).toHaveBeenCalledWith({
@@ -805,7 +805,7 @@ describe("OAuthService", () => {
   });
 
   describe("Session management lifecycle", () => {
-    it("should transition to unauthenticated state when onDelete fires", async () => {
+    it("should transition to unauthenticated state when onSessionDeleted fires", async () => {
       await oauthService.init();
       expect(oauthService.isAuthenticated()).toBe(true);
 
@@ -816,7 +816,7 @@ describe("OAuthService", () => {
       expect(oauthService.getAgent()).toBeNull();
     });
 
-    it("should clear all state fields when onDelete fires", async () => {
+    it("should clear all state fields when onSessionDeleted fires", async () => {
       const deletedCallback = vi.fn();
       oauthService.addEventListener("deleted", deletedCallback);
 
@@ -941,7 +941,7 @@ describe("OAuthService", () => {
 
       expect(events).toEqual([
         "session:did:plc:test123", // from init
-        "deleted:did:plc:test123", // from onDelete
+        "deleted:did:plc:test123", // from onSessionDeleted
         "session:null", // from signOut
       ]);
     });
@@ -968,7 +968,7 @@ describe("OAuthService", () => {
     });
 
     it("should receive deleted events when listener is added after init", async () => {
-      // onDelete is wired up during init
+      // onSessionDeleted is wired up during init
       await oauthService.init();
 
       // Add the listener afterwards
