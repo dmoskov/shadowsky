@@ -1,10 +1,14 @@
 import {
   ArrowRight,
+  BarChart3,
   Bell,
   Bookmark,
+  Clock,
   Command,
+  Compass,
   Hash,
   Home,
+  List,
   LogOut,
   MessageSquare,
   Moon,
@@ -122,6 +126,49 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         section: "Navigation",
         action: () => {
           navigate("/search");
+          onClose();
+        },
+      },
+      {
+        id: "discover",
+        name: "Go to Discover",
+        description: "Browse feeds, lists, and labelers",
+        icon: Compass,
+        section: "Navigation",
+        action: () => {
+          navigate("/discover");
+          onClose();
+        },
+      },
+      {
+        id: "lists",
+        name: "Go to Lists",
+        icon: List,
+        section: "Navigation",
+        action: () => {
+          navigate("/lists");
+          onClose();
+        },
+      },
+      {
+        id: "timeline",
+        name: "Go to Timeline",
+        description: "Chronological view of your activity",
+        icon: Clock,
+        section: "Navigation",
+        action: () => {
+          navigate("/timeline");
+          onClose();
+        },
+      },
+      {
+        id: "analytics",
+        name: "Go to Analytics",
+        description: "Engagement trends and top engagers",
+        icon: BarChart3,
+        section: "Navigation",
+        action: () => {
+          navigate("/analytics");
           onClose();
         },
       },

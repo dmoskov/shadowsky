@@ -29,6 +29,15 @@ export interface MultiAccountPostingSettings {
   showConfirmationDialog: boolean;
 }
 
+/**
+ * Default column width for users who have never chosen one.
+ *
+ * 0 means a single full-width column — the calm default. A non-zero width puts
+ * the app into multi-column deck mode, which is opt-in via
+ * Settings → Appearance → Column Width.
+ */
+export const DEFAULT_COLUMN_WIDTH = 0;
+
 // Define the app preferences stored as custom record
 export interface AsphodelPreferences {
   $type: "com.shadowsky.preferences";

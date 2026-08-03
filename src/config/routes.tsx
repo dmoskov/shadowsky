@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { Navigate, Route, Routes, useParams } from "react-router";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { RouteSkeletonFallback } from "../components/ui/RouteSkeletonFallback";
@@ -21,13 +21,6 @@ import { default as ProfilePage } from "../pages/ProfilePage";
 import { Settings } from "../pages/Settings";
 import { default as ThreadPage } from "../pages/ThreadPage";
 import { UserAnalytics } from "../pages/UserAnalytics";
-
-// Lazy loaded dev tools
-const CompressionTest = lazy(() =>
-  import("../components/CompressionTest").then((m) => ({
-    default: m.CompressionTest,
-  })),
-);
 
 // Wrapper components that use route params as keys to force remount on navigation
 // This ensures all component state resets when navigating between different items
@@ -195,14 +188,6 @@ export function AppRoutes() {
           element={
             <ErrorBoundary componentName="Settings">
               <Settings />
-            </ErrorBoundary>
-          }
-        />
-        <Route
-          path="/compression-test"
-          element={
-            <ErrorBoundary componentName="CompressionTest">
-              <CompressionTest />
             </ErrorBoundary>
           }
         />

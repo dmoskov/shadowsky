@@ -1,17 +1,21 @@
 import { useEffect, useState } from "react";
-import { appPreferencesService } from "../services/app-preferences-service";
+import {
+  DEFAULT_COLUMN_WIDTH,
+  appPreferencesService,
+} from "../services/app-preferences-service";
 import { useMediaQuery } from "./useMediaQuery";
-
-const DEFAULT_COLUMN_WIDTH = 320;
 
 /**
  * Computes the viewport width below which there isn't room for the sidebar plus
  * three columns, so the sidebar should auto-collapse.
  *
  * Sidebar: 256px, 3 columns: 3*columnWidth + 2*12px gap + 24px padding
+ *
+ * Returns null in full-width (single column) mode, where there is no column
+ * count to run out of room for and the sidebar should never auto-collapse.
  */
-function collapseThreshold(columnWidth: number): number {
-  if (columnWidth === 0) return 0; // Full-width: never auto-collapse
+function collapseThreshold(columnWidth: number): number | null {
+  if (columnWidth === 0) return null;
   return 256 + 3 * columnWidth + 2 * 12 + 24;
 }
 
@@ -52,9 +56,13 @@ export function useSidebarManagement(isAuthenticated: boolean) {
 
   // Only collapse on desktop (>=1024px). For authenticated users the upper
   // bound is the computed three-column threshold; otherwise a fixed 1280px.
+  // A null bound (single-column mode) means "never collapse" — pass a query
+  // that cannot match rather than building an invalid negative max-width.
   const upperBound = isAuthenticated ? collapseThreshold(columnWidth) : 1280;
   const isSidebarCollapsed = useMediaQuery(
-    `(min-width: 1024px) and (max-width: ${upperBound - 1}px)`,
+    upperBound === null
+      ? "not all"
+      : `(min-width: 1024px) and (max-width: ${upperBound - 1}px)`,
   );
 
   return {

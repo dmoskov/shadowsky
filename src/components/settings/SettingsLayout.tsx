@@ -143,8 +143,8 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
         ],
       },
       {
-        id: "data",
-        label: "Data & Storage",
+        id: "moderation",
+        label: "Moderation",
         items: [
           {
             id: "moderation",
@@ -164,23 +164,23 @@ export const SettingsLayout: React.FC<SettingsLayoutProps> = ({
             icon: History,
             path: "/settings/moderation-history",
           },
+        ],
+      },
+      {
+        id: "data",
+        label: "Data & Storage",
+        items: [
           {
             id: "data",
-            label: "Data & Storage",
+            label: "Data & Sync",
             icon: Database,
             path: "/settings/data",
           },
           {
             id: "storage",
-            label: "Storage Management",
+            label: "Storage",
             icon: HardDrive,
             path: "/settings/storage",
-          },
-          {
-            id: "media-cache",
-            label: "Media Cache",
-            icon: HardDrive,
-            path: "/settings/media-cache",
           },
           {
             id: "performance",
