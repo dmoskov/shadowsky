@@ -117,10 +117,11 @@
       "command": "vp build",
       "files": [
         "src/**/*",
+        "public/**/*",
         "vite.config.ts",
         "tsconfig.json",
         "postcss.config.js",
-        "tailwindcss.config.js",
+        "tailwind.config.js",
         "index.html"
       ],
       "output": [

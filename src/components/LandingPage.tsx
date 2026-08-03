@@ -1,12 +1,11 @@
 import {
-  Activity,
   BarChart3,
   Bell,
+  Columns,
   Database,
   ExternalLink,
-  Key,
   Mail,
-  MessageSquare,
+  Search,
   Shield,
   Sparkles,
   Zap,
@@ -187,7 +186,7 @@ export const LandingPage: React.FC = () => {
                     className="text-sm"
                     style={{ color: "var(--asph-text-secondary)" }}
                   >
-                    Free Bluesky Analytics & Notifications
+                    Bluesky, in as many columns as you like
                   </p>
                 </div>
               </div>
@@ -207,63 +206,6 @@ export const LandingPage: React.FC = () => {
               >
                 Sign in with your Bluesky account
               </h2>
-
-              {/* Login Mode Toggle */}
-              <div
-                className="mb-4 flex rounded-lg p-1"
-                style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (isOAuthAvailable) {
-                      setLoginMode("oauth");
-                      setError("");
-                    }
-                  }}
-                  disabled={!isOAuthAvailable}
-                  className={`touch-target flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all ${
-                    loginMode === "oauth" ? "shadow-sm" : ""
-                  } ${!isOAuthAvailable ? "cursor-not-allowed opacity-50" : ""}`}
-                  style={{
-                    backgroundColor:
-                      loginMode === "oauth"
-                        ? "var(--asph-bg-secondary)"
-                        : "transparent",
-                    color:
-                      loginMode === "oauth"
-                        ? "var(--asph-text-primary)"
-                        : "var(--asph-text-tertiary)",
-                  }}
-                  title={!isOAuthAvailable ? "OAuth not available yet" : ""}
-                >
-                  <ExternalLink size={16} />
-                  OAuth
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setLoginMode("app-password");
-                    setError("");
-                  }}
-                  className={`touch-target flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all ${
-                    loginMode === "app-password" ? "shadow-sm" : ""
-                  }`}
-                  style={{
-                    backgroundColor:
-                      loginMode === "app-password"
-                        ? "var(--asph-bg-secondary)"
-                        : "transparent",
-                    color:
-                      loginMode === "app-password"
-                        ? "var(--asph-text-primary)"
-                        : "var(--asph-text-tertiary)",
-                  }}
-                >
-                  <Key size={16} />
-                  App Password
-                </button>
-              </div>
 
               {error && (
                 <div
@@ -546,6 +488,28 @@ export const LandingPage: React.FC = () => {
                   </button>
                 </form>
               )}
+
+              {/* Escape hatch, not a peer choice: OAuth is the way in, and app
+                  passwords are here for anyone it doesn't work for. */}
+              {isOAuthAvailable && (
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLoginMode(
+                        loginMode === "oauth" ? "app-password" : "oauth",
+                      );
+                      setError("");
+                    }}
+                    className="text-sm underline-offset-2 hover:underline"
+                    style={{ color: "var(--asph-text-tertiary)" }}
+                  >
+                    {loginMode === "oauth"
+                      ? "Trouble signing in? Use an app password"
+                      : "Back to signing in with Bluesky"}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Auth Explainer */}
@@ -611,16 +575,15 @@ export const LandingPage: React.FC = () => {
                 className="mb-6 text-lg"
                 style={{ color: "var(--asph-text-secondary)" }}
               >
-                Transform your Bluesky notifications into insights. Track
-                conversations, analyze engagement, never miss what matters.
+                Feeds, notifications, DMs, and bookmarks side by side &mdash; or
+                one calm column. Your call.
               </p>
             </header>
 
             <ul className="list-none space-y-4" aria-label="Features list">
-              {/* Key Features */}
               <li className="asph-card p-4 transition-shadow hover:shadow-md">
                 <div className="flex items-start gap-3">
-                  <Bell
+                  <Columns
                     size={20}
                     style={{ color: "var(--asph-primary)" }}
                     className="mt-0.5 flex-shrink-0"
@@ -631,15 +594,15 @@ export const LandingPage: React.FC = () => {
                       className="mb-1 font-semibold"
                       style={{ color: "var(--asph-text-primary)" }}
                     >
-                      Smart Notifications Feed
+                      A deck you arrange
                     </h3>
                     <p
                       className="text-sm"
                       style={{ color: "var(--asph-text-secondary)" }}
                     >
-                      All notifications organized with filters, aggregation, and
-                      unread tracking. See likes, reposts, follows, mentions,
-                      and replies in one place.
+                      Feeds, notifications, DMs, bookmarks, and search as
+                      columns you order yourself &mdash; or one calm column, if
+                      that suits you better.
                     </p>
                   </div>
                 </div>
@@ -647,7 +610,33 @@ export const LandingPage: React.FC = () => {
 
               <li className="asph-card p-4 transition-shadow hover:shadow-md">
                 <div className="flex items-start gap-3">
-                  <MessageSquare
+                  <Bell
+                    size={20}
+                    style={{ color: "var(--asph-accent)" }}
+                    className="mt-0.5 flex-shrink-0"
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <h3
+                      className="mb-1 font-semibold"
+                      style={{ color: "var(--asph-text-primary)" }}
+                    >
+                      Notifications worth reading
+                    </h3>
+                    <p
+                      className="text-sm"
+                      style={{ color: "var(--asph-text-secondary)" }}
+                    >
+                      Filters, aggregation, and unread tracking, so a pile of
+                      likes never buries the reply you actually wanted to see.
+                    </p>
+                  </div>
+                </div>
+              </li>
+
+              <li className="asph-card p-4 transition-shadow hover:shadow-md">
+                <div className="flex items-start gap-3">
+                  <Search
                     size={20}
                     style={{ color: "var(--asph-success)" }}
                     className="mt-0.5 flex-shrink-0"
@@ -658,39 +647,14 @@ export const LandingPage: React.FC = () => {
                       className="mb-1 font-semibold"
                       style={{ color: "var(--asph-text-primary)" }}
                     >
-                      Conversation Tracking
+                      Search and threads that go deep
                     </h3>
                     <p
                       className="text-sm"
                       style={{ color: "var(--asph-text-secondary)" }}
                     >
-                      Never lose track of replies. See all conversations in
-                      threaded view with search and unread indicators.
-                    </p>
-                  </div>
-                </div>
-              </li>
-
-              <li className="asph-card p-4 transition-shadow hover:shadow-md">
-                <div className="flex items-start gap-3">
-                  <BarChart3
-                    size={20}
-                    className="mt-0.5 flex-shrink-0 text-purple-500 dark:text-purple-400"
-                    aria-hidden="true"
-                  />
-                  <div>
-                    <h3
-                      className="mb-1 font-semibold"
-                      style={{ color: "var(--asph-text-primary)" }}
-                    >
-                      Engagement Analytics
-                    </h3>
-                    <p
-                      className="text-sm"
-                      style={{ color: "var(--asph-text-secondary)" }}
-                    >
-                      See trends, top engagers, and activity patterns.
-                      Understand when and how people interact with your content.
+                      Posts, people, and feeds, with faceted filters and
+                      threaded conversations that keep your place.
                     </p>
                   </div>
                 </div>
@@ -700,7 +664,8 @@ export const LandingPage: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <Zap
                     size={20}
-                    className="mt-0.5 flex-shrink-0 text-yellow-500 dark:text-yellow-400"
+                    style={{ color: "var(--asph-warning)" }}
+                    className="mt-0.5 flex-shrink-0"
                     aria-hidden="true"
                   />
                   <div>
@@ -708,14 +673,14 @@ export const LandingPage: React.FC = () => {
                       className="mb-1 font-semibold"
                       style={{ color: "var(--asph-text-primary)" }}
                     >
-                      Lightning Fast & Works Offline
+                      Fast, and works offline
                     </h3>
                     <p
                       className="text-sm"
                       style={{ color: "var(--asph-text-secondary)" }}
                     >
-                      Loads instantly with intelligent caching. Pre-fetches 4
-                      weeks of data for offline access.
+                      Loads instantly with intelligent caching, and keeps weeks
+                      of your activity readable with no connection at all.
                     </p>
                   </div>
                 </div>
@@ -723,9 +688,10 @@ export const LandingPage: React.FC = () => {
 
               <li className="asph-card p-4 transition-shadow hover:shadow-md">
                 <div className="flex items-start gap-3">
-                  <Activity
+                  <BarChart3
                     size={20}
-                    className="mt-0.5 flex-shrink-0 text-orange-400 dark:text-orange-300"
+                    style={{ color: "var(--asph-info)" }}
+                    className="mt-0.5 flex-shrink-0"
                     aria-hidden="true"
                   />
                   <div>
@@ -733,14 +699,14 @@ export const LandingPage: React.FC = () => {
                       className="mb-1 font-semibold"
                       style={{ color: "var(--asph-text-primary)" }}
                     >
-                      Visual Timeline
+                      Analytics when you want them
                     </h3>
                     <p
                       className="text-sm"
                       style={{ color: "var(--asph-text-secondary)" }}
                     >
-                      Beautiful chronological view of your notifications with
-                      activity bursts and time gaps.
+                      Engagement trends, top engagers, and activity patterns
+                      &mdash; tucked away until you go looking for them.
                     </p>
                   </div>
                 </div>

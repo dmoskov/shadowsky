@@ -53,6 +53,131 @@ function generateCss() {
   return `${blocks.join("\n\n")}\n`;
 }
 
+// --- Static pages CSS ---------------------------------------------------------
+
+// The standalone legal pages in public/ (privacy, terms) are served outside the
+// Vite build, so they can't use the Tailwind asph-* utilities. They get their
+// own generated stylesheet instead: the same token values, plus the small set
+// of base element styles those pages need. Theme follows the OS, since there is
+// no app shell to carry a theme toggle.
+function generateStaticPagesCss() {
+  const vars = (obj, indent) =>
+    Object.entries(obj)
+      .map(([key, value]) => `${indent}--asph-${key}: ${value};`)
+      .join("\n");
+
+  return `/* ${HEADER_NOTE.join("\n * ")}
+ *
+ * Stylesheet for the standalone legal pages in public/ (privacy, terms).
+ * Token values are shared with the app; theme follows the OS. */
+
+:root {
+${vars({ ...web.light, ...typeScaleVars() }, "  ")}
+  --asph-measure: 42rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+${vars(web.dark, "    ")}
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0 1.25rem 4rem;
+  background: var(--asph-bg-primary);
+  color: var(--asph-text-primary);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--asph-font-body);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.doc {
+  max-width: var(--asph-measure);
+  margin: 0 auto;
+}
+
+/* Masthead: the butterfly plus wordmark, linking back into the app. */
+.doc-masthead {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 1.75rem 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--asph-border-light);
+  color: var(--asph-text-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.doc-masthead img {
+  width: 2rem;
+  height: 2rem;
+}
+
+.doc-masthead:hover {
+  color: var(--asph-primary);
+}
+
+h1 {
+  font-size: var(--asph-font-title1);
+  line-height: 1.25;
+  margin: 0 0 0.25rem;
+}
+
+h2 {
+  font-size: var(--asph-font-title3);
+  line-height: 1.35;
+  margin: 2.5rem 0 0.5rem;
+  color: var(--asph-text-primary);
+}
+
+p,
+li {
+  color: var(--asph-text-secondary);
+}
+
+a {
+  color: var(--asph-text-link);
+  text-underline-offset: 0.15em;
+}
+
+ul {
+  padding-left: 1.25rem;
+}
+
+li + li {
+  margin-top: 0.35rem;
+}
+
+.doc-updated {
+  color: var(--asph-text-tertiary);
+  font-size: var(--asph-font-footnote);
+  margin: 0 0 2.5rem;
+}
+
+.doc-footer {
+  margin-top: 3.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--asph-border-light);
+  font-size: var(--asph-font-footnote);
+  color: var(--asph-text-tertiary);
+}
+
+.doc-footer a + a {
+  margin-left: 1rem;
+}
+`;
+}
+
 // --- React Native TS --------------------------------------------------------
 
 function tsObject(name, vars) {
@@ -133,6 +258,7 @@ ${swiftStatics(lightOnly, "    ")}
 
 const outputs = [
   { path: "src/styles/generated-tokens.css", content: generateCss() },
+  { path: "public/static-pages.css", content: generateStaticPagesCss() },
   {
     path: "mobile/src/constants/generated/tokens.ts",
     content: generateMobileTs(),
