@@ -217,6 +217,7 @@
       ],
       "output": [
         "src/styles/generated-tokens.css",
+        "public/static-pages.css",
         "mobile/src/constants/generated/tokens.ts",
         "mobile/modules/*/ios/Generated/DesignTokens.swift"
       ]
@@ -226,6 +227,7 @@
       "files": [
         "packages/tokens/*.mjs",
         "src/styles/generated-tokens.css",
+        "public/static-pages.css",
         "mobile/src/constants/generated/tokens.ts",
         "mobile/modules/*/ios/Generated/DesignTokens.swift"
       ],
