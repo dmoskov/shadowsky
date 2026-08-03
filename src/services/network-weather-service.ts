@@ -11,6 +11,7 @@
  */
 
 import { debug } from "@bsky/shared";
+import { dedupeNarratives } from "./narrative-dedupe";
 import { fetchFromPan as fetchPanJson } from "./pan-api";
 import type {
   GapAnalysis,
@@ -135,11 +136,20 @@ function transformNarrative(
   };
 }
 
+/** Luminance used when Pan's network_energy isn't a usable measurement. */
+const NEUTRAL_LUMINANCE = 0.4;
+
 function transformToTextile(
   response: PanNarrativesResponse,
   source: "pan" = "pan",
 ): TextileState {
-  const narratives = response.data.narratives;
+  // Pan emits several rows per conversation; collapse them so the textile
+  // shows distinct threads rather than one band per duplicate.
+  const narratives = dedupeNarratives(
+    response.data.narratives,
+    (n) => n.label,
+    (n) => n.author_count,
+  );
   const maxAuthors = Math.max(...narratives.map((n) => n.author_count), 1);
 
   const threads = narratives.map((n) => transformNarrative(n, maxAuthors));
@@ -156,7 +166,14 @@ function transformToTextile(
   return {
     threads,
     crossings,
-    luminance: Math.min(response.data.network_energy, 1),
+    // A network_energy at or above the ceiling means the upstream measure ran
+    // out of range, not that the network is maximally busy. Fall back to a
+    // neutral luminance rather than rendering a permanent full-brightness
+    // textile off a saturated number.
+    luminance:
+      response.data.network_energy >= 1
+        ? NEUTRAL_LUMINANCE
+        : Math.max(0, response.data.network_energy),
     saturation: Math.min(response.data.network_conviction, 1),
     weatherReport:
       response.data.weather_summary ?? generateWeatherReport(threads),
@@ -193,9 +210,21 @@ function generateWeatherReport(threads: NarrativeThread[]): string {
 
 export async function fetchGlobalTextile(): Promise<TextileState> {
   try {
+    // `/api/narratives` is the endpoint that carries `narratives`,
+    // `network_energy`, and `network_conviction`. This previously requested
+    // `/api/narratives/crossings`, whose payload has none of those — so
+    // `response.data.narratives` was undefined, the transform threw, and every
+    // caller silently got the empty fallback textile instead of the ~50 live
+    // threads. Crossings are optional enrichment, not the source of threads.
     const response = (await fetchFromPan(
-      "/api/narratives/crossings",
+      "/api/narratives",
     )) as PanNarrativesResponse;
+
+    // Guard rather than relying on the transform throwing on a bad shape.
+    if (!response?.data?.narratives?.length) {
+      debug.log("Pan returned no narratives; using empty textile");
+      return generateSyntheticTextile();
+    }
     return transformToTextile(response);
   } catch {
     debug.log("Pan narratives unavailable, generating synthetic textile");

@@ -27,7 +27,15 @@ function describeHue(hue: WeatherHue): string {
   return seededPick(HUE_DESCRIPTORS[hue], _seed++);
 }
 
-function describeEnergy(energy: number): string {
+/**
+ * Energy adjective, or null when energy isn't a real measurement.
+ *
+ * Calling the network "buzzing" off a placeholder value is worse than saying
+ * nothing, so callers drop the clause entirely rather than assert.
+ */
+function describeEnergy(weather: NetworkWeatherState): string | null {
+  if (!weather.energyReliable) return null;
+  const { energy } = weather;
   if (energy < 0.3) return seededPick(["quiet", "gentle", "calm"], _seed++);
   if (energy < 0.65) return seededPick(["steady", "active", "alive"], _seed++);
   return seededPick(["buzzing", "energetic", "intense"], _seed++);
@@ -59,18 +67,29 @@ export function generateWeatherReport(weather: NetworkWeatherState): string {
     const weft = weather.narratives.narratives.filter(
       (n) => n.threadType === "weft",
     );
-    const topWarp = warp[0]?.name ?? "conversation";
-    const topWeft = weft[0]?.name ?? "threads";
-    const energy = describeEnergy(weather.energy);
-    return `${topWarp} weaving through ${topWeft} · ${energy}`;
+    const energy = describeEnergy(weather);
+    const suffix = energy ? ` · ${energy}` : "";
+
+    // "X weaving through Y" only makes sense with a thread on each axis. With
+    // no weft the old fallback produced "X weaving through threads", which
+    // reads as a missing value rather than a description.
+    if (warp[0] && weft[0]) {
+      return `${warp[0].name} weaving through ${weft[0].name}${suffix}`;
+    }
+    const only = warp[0] ?? weft[0];
+    if (only) {
+      return `The network is holding on ${only.name}${suffix}`;
+    }
   }
 
   const dominant = describeHue(weather.dominantHue);
   const secondary = describeHue(weather.secondaryHue);
-  const energy = describeEnergy(weather.energy);
+  const energy = describeEnergy(weather);
 
   if (weather.dominantHue === weather.secondaryHue) {
-    return `A ${energy} ${dominant} tone across the network`;
+    return energy
+      ? `A ${energy} ${dominant} tone across the network`
+      : `A ${dominant} tone across the network`;
   }
   return `A wide ${dominant} conversation meeting a burst of ${secondary} energy`;
 }
