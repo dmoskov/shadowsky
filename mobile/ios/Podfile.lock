@@ -1,4 +1,6 @@
 PODS:
+  - AlternateIcon (1.0.0):
+    - ExpoModulesCore
   - EASClient (1.0.8):
     - ExpoModulesCore
   - EXApplication (7.0.8):
@@ -289,7 +291,7 @@ PODS:
     - Yoga
   - ExpoQuickActions (6.0.1):
     - ExpoModulesCore
-  - ExpoScreenOrientation (55.0.8):
+  - ExpoScreenOrientation (9.0.9):
     - ExpoModulesCore
     - hermes-engine
     - RCTRequired
@@ -405,6 +407,7 @@ PODS:
     - ExpoModulesCore
     - ExpoSwiftUIFeed
     - FeedBridge
+    - NotificationBridge
     - RichTextView
   - NativeProfileView (1.0.0):
     - ExpoModulesCore
@@ -417,6 +420,9 @@ PODS:
     - ExpoSwiftUIFeed
     - FeedBridge
     - RichTextView
+  - NotificationBridge (1.0.0):
+    - ExpoModulesCore
+    - FeedBridge
   - RCTDeprecation (0.81.5)
   - RCTRequired (0.81.5)
   - RCTTypeSafety (0.81.5):
@@ -2473,6 +2479,7 @@ PODS:
   - Yoga (0.0.0)
 
 DEPENDENCIES:
+  - AlternateIcon (from `../modules/alternate-icon/ios`)
   - EASClient (from `../node_modules/expo-eas-client/ios`)
   - EXApplication (from `../node_modules/expo-application/ios`)
   - EXAV (from `../node_modules/expo-av/ios`)
@@ -2534,6 +2541,7 @@ DEPENDENCIES:
   - NativeProfileView (from `../modules/native-profile-view/ios`)
   - NativeSearch (from `../modules/native-search/ios`)
   - NativeThreadView (from `../modules/native-thread-view/ios`)
+  - NotificationBridge (from `../modules/notification-bridge/ios`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
   - RCTRequired (from `../node_modules/react-native/Libraries/Required`)
   - RCTTypeSafety (from `../node_modules/react-native/Libraries/TypeSafety`)
@@ -2631,6 +2639,8 @@ SPEC REPOS:
     - SDWebImageWebPCoder
 
 EXTERNAL SOURCES:
+  AlternateIcon:
+    :path: "../modules/alternate-icon/ios"
   EASClient:
     :path: "../node_modules/expo-eas-client/ios"
   EXApplication:
@@ -2754,6 +2764,8 @@ EXTERNAL SOURCES:
     :path: "../modules/native-search/ios"
   NativeThreadView:
     :path: "../modules/native-thread-view/ios"
+  NotificationBridge:
+    :path: "../modules/notification-bridge/ios"
   RCTDeprecation:
     :path: "../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation"
   RCTRequired:
@@ -2920,6 +2932,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
+  AlternateIcon: fb237d1e5360dc9d9240f22f3a38057760856fe6
   EASClient: 40dd9e740684782610c49becab2643782ea1a20c
   EXApplication: 1e98d4b1dccdf30627f92917f4b2c5a53c330e5f
   EXAV: b60fcf142fae6684d295bc28cd7cfcb3335570ea
@@ -2956,7 +2969,7 @@ SPEC CHECKSUMS:
   ExpoMediaLibrary: a3093b04365b245bb23b25b6eba84eb6ab55fecb
   ExpoModulesCore: f3da4f1ab5a8375d0beafab763739dbee8446583
   ExpoQuickActions: 61e27ec458e4e06b854ddc6967c2b57aa6a772d5
-  ExpoScreenOrientation: c61e6181dd81b55a7e65a542e9fc43af8e9eea87
+  ExpoScreenOrientation: 4a7d3cead7465ba6520ef80df919cda595554594
   ExpoSecureStore: d32f751874a2ceb5aaeebeb3578e165c1ba2b24a
   ExpoSharing: 0d983394ed4a80334bab5a0d5384f75710feb7e8
   ExpoSwiftUIFeed: b7a362dbca1306a864906369e1d245e3753e844b
@@ -2981,10 +2994,11 @@ SPEC CHECKSUMS:
   NativeCompose: 84f4994c150a13da10677f6b66885e729466278f
   NativeFeedList: 48d165bcc57283052d574e4ea207f054c27511bb
   NativeMessages: 5f8dc1ea49db758a9b5f6d5dcb036099530e9114
-  NativeNotificationsList: dd60666fa323be50569b0bdfaebf30e57e2c36ff
+  NativeNotificationsList: ff0c158ae6e9f4a5f68865c1c2d6309be2c03d7b
   NativeProfileView: aab8865f3dd1ac2532bb6fd74eaebe7efca107b9
   NativeSearch: 7800a36d2c3d43a573f3b8d79ea3f3a540bee77c
   NativeThreadView: c3f43ccf5364b06cba7c40871612d22e8e62bc96
+  NotificationBridge: 69a83c558960ce20e262985486f16b07a981789b
   RCTDeprecation: 943572d4be82d480a48f4884f670135ae30bf990
   RCTRequired: 8f3cfc90cc25cf6e420ddb3e7caaaabc57df6043
   RCTTypeSafety: 16a4144ca3f959583ab019b57d5633df10b5e97c
@@ -3023,7 +3037,7 @@ SPEC CHECKSUMS:
   react-native-mmkv: 3d69c8bbdbceb1c0d3754863ecffa6ec24e4be12
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
   react-native-safe-area-context: 37e680fc4cace3c0030ee46e8987d24f5d3bdab2
-  react-native-skia: 307ec15c87cc4377956b4fc0dac5f5307a4ea2dd
+  react-native-skia: 6a51463f8391c82f675f490c8078135925285a8f
   React-NativeModulesApple: 8969913947d5b576de4ed371a939455a8daf28aa
   React-oscompat: ce47230ed20185e91de62d8c6d139ae61763d09c
   React-perflogger: 02b010e665772c7dcb859d85d44c1bfc5ac7c0e4

@@ -7,24 +7,39 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		03D4B51A8A3349F8B3D15ECD /* icon-light-120.png in Resources */ = {isa = PBXBuildFile; fileRef = 930CCF3AE288492EA1C5F305 /* icon-light-120.png */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		16789855F23D4796BD64D256 /* icon-light.png in Resources */ = {isa = PBXBuildFile; fileRef = 6DE746BFCC45466194A58ACF /* icon-light.png */; };
+		1C56DB81709E45F48220264B /* icon-mono.png in Resources */ = {isa = PBXBuildFile; fileRef = 5903F07B8E0044DA998E3DE9 /* icon-mono.png */; };
+		2BB429E7DBB542C0BFA6CEC6 /* icon-light-152.png in Resources */ = {isa = PBXBuildFile; fileRef = 5ED35E87F0A34B3882E6B05C /* icon-light-152.png */; };
+		2DFBBC90517D48C6B95035C0 /* icon-light-167.png in Resources */ = {isa = PBXBuildFile; fileRef = 673F36B8BC4D436388BC0C56 /* icon-light-167.png */; };
+		3C047CDB40374BC9A5E23D24 /* icon-pride-152.png in Resources */ = {isa = PBXBuildFile; fileRef = 90D2E87C0F304D63BCABBA61 /* icon-pride-152.png */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		4EC0D9BD5C9448C5975C44E7 /* icon-pride.png in Resources */ = {isa = PBXBuildFile; fileRef = 3F9B06A255AD47E1B7B6D73C /* icon-pride.png */; };
 		4F6F8AEF6CC54D66BDB4BD67 /* icon-pride-167.png in Resources */ = {isa = PBXBuildFile; fileRef = DF0B9105065440569513C52A /* icon-pride-167.png */; };
+		5471106C39CB466ABC3F50E8 /* icon-pride-167.png in Resources */ = {isa = PBXBuildFile; fileRef = 2A52C4270E994BEA8A6425CF /* icon-pride-167.png */; };
 		61DE30430FF34A7E857A197B /* icon-light-167.png in Resources */ = {isa = PBXBuildFile; fileRef = D118B45AA03A49299168DFC9 /* icon-light-167.png */; };
 		71C2B06C336047B0A8748579 /* icon-light-152.png in Resources */ = {isa = PBXBuildFile; fileRef = 4184AE68BB144E889B7A72C3 /* icon-light-152.png */; };
 		7FC032BF76CBF20676011D84 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7511231C9D6DC01613D92A12 /* ExpoModulesProvider.swift */; };
+		8173E7D41495442389457C1B /* icon-light-180.png in Resources */ = {isa = PBXBuildFile; fileRef = 77D98050809F441E80351A6C /* icon-light-180.png */; };
+		8B36DAB2312F47B3BEB8F5E1 /* icon-light.png in Resources */ = {isa = PBXBuildFile; fileRef = E7FFD324EDEA4615B8BAE8C8 /* icon-light.png */; };
 		8EE35A3901BA45119258817A /* icon-mono-180.png in Resources */ = {isa = PBXBuildFile; fileRef = 5BD23555AC864ED1A74236CD /* icon-mono-180.png */; };
 		8F826BE5FB1C492499BCF597 /* icon-pride-152.png in Resources */ = {isa = PBXBuildFile; fileRef = 943D2E98E83349778B8D53B4 /* icon-pride-152.png */; };
 		91C8EBA0C00D43A885A424E1 /* icon-pride-180.png in Resources */ = {isa = PBXBuildFile; fileRef = 5AF7FF218A52439486DA819C /* icon-pride-180.png */; };
+		9E6844E41BC243EDB718DFB9 /* icon-mono-167.png in Resources */ = {isa = PBXBuildFile; fileRef = 8B6FDF4F8BF941648A5261C8 /* icon-mono-167.png */; };
+		A347EAC594D542D49AA9902D /* icon-mono-180.png in Resources */ = {isa = PBXBuildFile; fileRef = CD031F3388894A3EBD671C36 /* icon-mono-180.png */; };
 		AB567CAC4E3D4FCA9ED4A803 /* icon-light-120.png in Resources */ = {isa = PBXBuildFile; fileRef = 541DE930AAFB42DD8B6B38EC /* icon-light-120.png */; };
 		AD0F6E332AD748EE9741E217 /* icon-mono-152.png in Resources */ = {isa = PBXBuildFile; fileRef = B7F1CDAACFC04F0693896607 /* icon-mono-152.png */; };
+		B230F70BAA0E452EBBDA9E8D /* icon-mono-152.png in Resources */ = {isa = PBXBuildFile; fileRef = 7F5D7C51751D489FBBACF33F /* icon-mono-152.png */; };
+		B2AC3CD014884E39BE66441A /* icon-pride-180.png in Resources */ = {isa = PBXBuildFile; fileRef = F603CD91FA144050A93D6993 /* icon-pride-180.png */; };
 		B92D6293E3A04057966DCF4B /* icon-mono-120.png in Resources */ = {isa = PBXBuildFile; fileRef = E61C17EB8E7744BA83CD752D /* icon-mono-120.png */; };
+		BAC8D862BAEF47E897C5C86A /* icon-pride.png in Resources */ = {isa = PBXBuildFile; fileRef = FB95F4164D884C8C9DA7F801 /* icon-pride.png */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		BFFE18AA0C324D06B6647105 /* icon-pride-120.png in Resources */ = {isa = PBXBuildFile; fileRef = C0444A08CC5A4144933CD151 /* icon-pride-120.png */; };
 		C11AFA8CB60E42DC40F4A255 /* libPods-Asphodel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 96E10E2F73625F1A5F9069CF /* libPods-Asphodel.a */; };
+		C436A8BFD90B4225B9A40BC6 /* icon-pride-120.png in Resources */ = {isa = PBXBuildFile; fileRef = CCDA74AEF9DD42B0AA16A3B2 /* icon-pride-120.png */; };
 		D81405D7CCBD4CF0A214C7E1 /* icon-mono-167.png in Resources */ = {isa = PBXBuildFile; fileRef = 7EE8E3BBEEE74053ABBCCEA7 /* icon-mono-167.png */; };
+		D92B1F94F80D42818BF62EC2 /* icon-mono-120.png in Resources */ = {isa = PBXBuildFile; fileRef = FFA300728C7E4E238189660E /* icon-mono-120.png */; };
 		DAF1484D22B540B8A6FD4470 /* icon-mono.png in Resources */ = {isa = PBXBuildFile; fileRef = CD8CBCF1E39B43A28D3BD0B5 /* icon-mono.png */; };
 		F0C51A9556B2475683A6BAFC /* icon-light-180.png in Resources */ = {isa = PBXBuildFile; fileRef = 35E231EE799E49F686AEE281 /* icon-light-180.png */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
@@ -36,16 +51,25 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Asphodel/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Asphodel/Info.plist; sourceTree = "<group>"; };
 		2921B66174A7149A6D763644 /* Pods-Asphodel.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Asphodel.release.xcconfig"; path = "Target Support Files/Pods-Asphodel/Pods-Asphodel.release.xcconfig"; sourceTree = "<group>"; };
+		2A52C4270E994BEA8A6425CF /* icon-pride-167.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-167.png"; path = "Asphodel/icon-pride-167.png"; sourceTree = "<group>"; };
 		2F5747F145235E71801359ED /* Pods-Asphodel.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Asphodel.debug.xcconfig"; path = "Target Support Files/Pods-Asphodel/Pods-Asphodel.debug.xcconfig"; sourceTree = "<group>"; };
 		35E231EE799E49F686AEE281 /* icon-light-180.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-180.png"; path = "Asphodel/icon-light-180.png"; sourceTree = "<group>"; };
 		3F9B06A255AD47E1B7B6D73C /* icon-pride.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride.png"; path = "Asphodel/icon-pride.png"; sourceTree = "<group>"; };
 		4184AE68BB144E889B7A72C3 /* icon-light-152.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-152.png"; path = "Asphodel/icon-light-152.png"; sourceTree = "<group>"; };
 		541DE930AAFB42DD8B6B38EC /* icon-light-120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-120.png"; path = "Asphodel/icon-light-120.png"; sourceTree = "<group>"; };
+		5903F07B8E0044DA998E3DE9 /* icon-mono.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono.png"; path = "Asphodel/icon-mono.png"; sourceTree = "<group>"; };
 		5AF7FF218A52439486DA819C /* icon-pride-180.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-180.png"; path = "Asphodel/icon-pride-180.png"; sourceTree = "<group>"; };
 		5BD23555AC864ED1A74236CD /* icon-mono-180.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-180.png"; path = "Asphodel/icon-mono-180.png"; sourceTree = "<group>"; };
+		5ED35E87F0A34B3882E6B05C /* icon-light-152.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-152.png"; path = "Asphodel/icon-light-152.png"; sourceTree = "<group>"; };
+		673F36B8BC4D436388BC0C56 /* icon-light-167.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-167.png"; path = "Asphodel/icon-light-167.png"; sourceTree = "<group>"; };
 		6DE746BFCC45466194A58ACF /* icon-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light.png"; path = "Asphodel/icon-light.png"; sourceTree = "<group>"; };
 		7511231C9D6DC01613D92A12 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Asphodel/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		77D98050809F441E80351A6C /* icon-light-180.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-180.png"; path = "Asphodel/icon-light-180.png"; sourceTree = "<group>"; };
 		7EE8E3BBEEE74053ABBCCEA7 /* icon-mono-167.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-167.png"; path = "Asphodel/icon-mono-167.png"; sourceTree = "<group>"; };
+		7F5D7C51751D489FBBACF33F /* icon-mono-152.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-152.png"; path = "Asphodel/icon-mono-152.png"; sourceTree = "<group>"; };
+		8B6FDF4F8BF941648A5261C8 /* icon-mono-167.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-167.png"; path = "Asphodel/icon-mono-167.png"; sourceTree = "<group>"; };
+		90D2E87C0F304D63BCABBA61 /* icon-pride-152.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-152.png"; path = "Asphodel/icon-pride-152.png"; sourceTree = "<group>"; };
+		930CCF3AE288492EA1C5F305 /* icon-light-120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-120.png"; path = "Asphodel/icon-light-120.png"; sourceTree = "<group>"; };
 		943D2E98E83349778B8D53B4 /* icon-pride-152.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-152.png"; path = "Asphodel/icon-pride-152.png"; sourceTree = "<group>"; };
 		96E10E2F73625F1A5F9069CF /* libPods-Asphodel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Asphodel.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Asphodel/SplashScreen.storyboard; sourceTree = "<group>"; };
@@ -53,13 +77,19 @@
 		B7F1CDAACFC04F0693896607 /* icon-mono-152.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-152.png"; path = "Asphodel/icon-mono-152.png"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		C0444A08CC5A4144933CD151 /* icon-pride-120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-120.png"; path = "Asphodel/icon-pride-120.png"; sourceTree = "<group>"; };
+		CCDA74AEF9DD42B0AA16A3B2 /* icon-pride-120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-120.png"; path = "Asphodel/icon-pride-120.png"; sourceTree = "<group>"; };
+		CD031F3388894A3EBD671C36 /* icon-mono-180.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-180.png"; path = "Asphodel/icon-mono-180.png"; sourceTree = "<group>"; };
 		CD8CBCF1E39B43A28D3BD0B5 /* icon-mono.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono.png"; path = "Asphodel/icon-mono.png"; sourceTree = "<group>"; };
 		D118B45AA03A49299168DFC9 /* icon-light-167.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light-167.png"; path = "Asphodel/icon-light-167.png"; sourceTree = "<group>"; };
 		DF0B9105065440569513C52A /* icon-pride-167.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-167.png"; path = "Asphodel/icon-pride-167.png"; sourceTree = "<group>"; };
 		E61C17EB8E7744BA83CD752D /* icon-mono-120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-120.png"; path = "Asphodel/icon-mono-120.png"; sourceTree = "<group>"; };
+		E7FFD324EDEA4615B8BAE8C8 /* icon-light.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-light.png"; path = "Asphodel/icon-light.png"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Asphodel/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Asphodel-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Asphodel-Bridging-Header.h"; path = "Asphodel/Asphodel-Bridging-Header.h"; sourceTree = "<group>"; };
+		F603CD91FA144050A93D6993 /* icon-pride-180.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride-180.png"; path = "Asphodel/icon-pride-180.png"; sourceTree = "<group>"; };
+		FB95F4164D884C8C9DA7F801 /* icon-pride.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-pride.png"; path = "Asphodel/icon-pride.png"; sourceTree = "<group>"; };
+		FFA300728C7E4E238189660E /* icon-mono-120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-mono-120.png"; path = "Asphodel/icon-mono-120.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,6 +139,21 @@
 				DF0B9105065440569513C52A /* icon-pride-167.png */,
 				5AF7FF218A52439486DA819C /* icon-pride-180.png */,
 				B4EB427D7CD85984D470A5B3 /* PrivacyInfo.xcprivacy */,
+				E7FFD324EDEA4615B8BAE8C8 /* icon-light.png */,
+				930CCF3AE288492EA1C5F305 /* icon-light-120.png */,
+				5ED35E87F0A34B3882E6B05C /* icon-light-152.png */,
+				673F36B8BC4D436388BC0C56 /* icon-light-167.png */,
+				77D98050809F441E80351A6C /* icon-light-180.png */,
+				5903F07B8E0044DA998E3DE9 /* icon-mono.png */,
+				FFA300728C7E4E238189660E /* icon-mono-120.png */,
+				7F5D7C51751D489FBBACF33F /* icon-mono-152.png */,
+				8B6FDF4F8BF941648A5261C8 /* icon-mono-167.png */,
+				CD031F3388894A3EBD671C36 /* icon-mono-180.png */,
+				FB95F4164D884C8C9DA7F801 /* icon-pride.png */,
+				CCDA74AEF9DD42B0AA16A3B2 /* icon-pride-120.png */,
+				90D2E87C0F304D63BCABBA61 /* icon-pride-152.png */,
+				2A52C4270E994BEA8A6425CF /* icon-pride-167.png */,
+				F603CD91FA144050A93D6993 /* icon-pride-180.png */,
 			);
 			name = Asphodel;
 			sourceTree = "<group>";
@@ -259,6 +304,21 @@
 				4F6F8AEF6CC54D66BDB4BD67 /* icon-pride-167.png in Resources */,
 				91C8EBA0C00D43A885A424E1 /* icon-pride-180.png in Resources */,
 				F28422759661ABFF3E32E3AF /* PrivacyInfo.xcprivacy in Resources */,
+				8B36DAB2312F47B3BEB8F5E1 /* icon-light.png in Resources */,
+				03D4B51A8A3349F8B3D15ECD /* icon-light-120.png in Resources */,
+				2BB429E7DBB542C0BFA6CEC6 /* icon-light-152.png in Resources */,
+				2DFBBC90517D48C6B95035C0 /* icon-light-167.png in Resources */,
+				8173E7D41495442389457C1B /* icon-light-180.png in Resources */,
+				1C56DB81709E45F48220264B /* icon-mono.png in Resources */,
+				D92B1F94F80D42818BF62EC2 /* icon-mono-120.png in Resources */,
+				B230F70BAA0E452EBBDA9E8D /* icon-mono-152.png in Resources */,
+				9E6844E41BC243EDB718DFB9 /* icon-mono-167.png in Resources */,
+				A347EAC594D542D49AA9902D /* icon-mono-180.png in Resources */,
+				BAC8D862BAEF47E897C5C86A /* icon-pride.png in Resources */,
+				C436A8BFD90B4225B9A40BC6 /* icon-pride-120.png in Resources */,
+				3C047CDB40374BC9A5E23D24 /* icon-pride-152.png in Resources */,
+				5471106C39CB466ABC3F50E8 /* icon-pride-167.png in Resources */,
+				B2AC3CD014884E39BE66441A /* icon-pride-180.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -436,7 +496,7 @@
 					"FB_SONARKIT_ENABLED=1",
 				);
 				INFOPLIST_FILE = Asphodel/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -470,7 +530,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = P8T66U743T;
 				INFOPLIST_FILE = Asphodel/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

@@ -25,7 +25,6 @@ export const LOCAL_STORAGE_KEYS = {
 
   // Migration tracking
   COLUMNS_MIGRATED: "shadowsky_columns_migrated",
-  COLUMN_MIGRATION_NOTICE_SHOWN: "shadowsky_column_migration_notice_shown",
 
   // Deck configuration tracking
   COLUMNS_CONFIGURED: "shadowsky_columns_configured",

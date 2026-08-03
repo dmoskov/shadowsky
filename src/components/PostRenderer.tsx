@@ -1093,16 +1093,16 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
         {/* Reply context - show parent author and text when available */}
         {record?.reply?.parent && (
           <div
-            className="mb-2 flex items-center gap-2 text-sm"
+            className="mb-2 flex items-start gap-2 text-sm"
             style={{ color: "var(--asph-text-secondary)" }}
           >
             <Reply
               size={14}
-              className="flex-shrink-0"
+              className="mt-0.5 flex-shrink-0"
               style={{ color: "var(--asph-primary)" }}
             />
             {replyParent ? (
-              <span className="line-clamp-2 min-w-0">
+              <span className="line-clamp-6 min-w-0">
                 Replying to{" "}
                 <span
                   className="font-medium"

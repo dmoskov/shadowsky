@@ -132,9 +132,18 @@ redirects:
     target: /index.html
     status: 200
 
-  # Debug routes
-  - source: /compression-test
-    target: /index.html
+  # Standalone static pages. These MUST precede the catch-all below, which
+  # matches any path and would otherwise rewrite them to the SPA shell — the
+  # reason /privacy.html and /terms.html have been serving the app instead of
+  # the documents, including for App Store review links.
+  - source: /privacy.html
+    target: /privacy.html
+    status: 200
+  - source: /terms.html
+    target: /terms.html
+    status: 200
+  - source: /static-pages.css
+    target: /static-pages.css
     status: 200
 
   # Catch-all fallback for any other routes

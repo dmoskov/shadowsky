@@ -13,7 +13,10 @@ import type {
   NetworkWeatherState,
   WeatherHue,
 } from "../services/network-weather";
-import { WEATHER_COLORS } from "../services/network-weather";
+import {
+  weatherColor,
+  weatherColorWithAlpha,
+} from "../services/network-weather";
 import { generateWeatherReport } from "../services/weather-report";
 import { NarrativePostsModal } from "./NarrativePostsModal";
 
@@ -41,8 +44,7 @@ function assignHue(name: string, index: number): WeatherHue {
 }
 
 function getColor(hue: WeatherHue): string {
-  const isDark = document.documentElement.classList.contains("dark");
-  return isDark ? WEATHER_COLORS[hue].dark : WEATHER_COLORS[hue].light;
+  return weatherColor(hue, document.documentElement.classList.contains("dark"));
 }
 
 export function WeatherBar({ weather }: Props) {
@@ -54,6 +56,14 @@ export function WeatherBar({ weather }: Props) {
     () => (weather ? generateWeatherReport(weather) : null),
     [weather],
   );
+
+  // The bar's wash carries the dominant hue rather than a fixed brand tint, so
+  // the weather is legible as colour before you read a word of the report.
+  const barTint = useMemo(() => {
+    if (!weather) return "transparent";
+    const isDark = document.documentElement.classList.contains("dark");
+    return weatherColorWithAlpha(weather.dominantHue, isDark, 0.14);
+  }, [weather]);
 
   // Hide entirely when running on fallback data (Pan API not connected)
   if (!weather || !report || weather.source === "fallback") return null;
@@ -82,8 +92,8 @@ export function WeatherBar({ weather }: Props) {
 
   return (
     <div
-      className="cursor-pointer select-none border-b border-asph-border-primary px-4 py-3 text-asph-text-primary transition-all duration-500"
-      style={{ backgroundColor: "var(--asph-primary-10)" }}
+      className="cursor-pointer select-none border-b border-asph-border-primary px-4 py-3 text-asph-text-primary motion-safe:transition-colors motion-safe:duration-[3s]"
+      style={{ backgroundColor: barTint }}
       title="Network weather — a live read on what's moving across Bluesky right now. Click a topic to see its posts."
       onClick={handleBarClick}
     >

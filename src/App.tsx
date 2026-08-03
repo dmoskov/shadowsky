@@ -41,7 +41,6 @@ import { removeTrailingSlash } from "./utils/removeTrailingSlash";
 // Static imports for core components
 import { BackgroundNotificationLoader } from "./components/BackgroundNotificationLoader";
 import { RealtimeUpdatesLoader } from "./components/RealtimeUpdatesLoader";
-import { ColumnMigrationNotice } from "./components/ColumnMigrationNotice";
 import { CommandPalette } from "./components/CommandPalette";
 import { KeyboardShortcutsHelp } from "./components/KeyboardShortcutsHelp";
 import { NetworkWeatherBackground } from "./components/NetworkWeatherBackground";
@@ -306,7 +305,6 @@ function AppContent() {
           <DebugConsole />
           <DevPerformanceOverlay />
           <WebSocketStressPanel />
-          <ColumnMigrationNotice />
           <CommandPalette
             isOpen={isCommandPaletteOpen}
             onClose={() => setIsCommandPaletteOpen(false)}

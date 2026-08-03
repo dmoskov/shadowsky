@@ -8,16 +8,29 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { requireNativeViewManager } from "expo-modules-core";
 import { useRouter } from "expo-router";
-import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from "react";
 import { Platform, View, ViewProps } from "react-native";
 import {
   useMarkNotificationsSeen,
   useNotifications,
 } from "../../../src/hooks/api/useNotifications";
+import { useNotificationPosts } from "../../../src/hooks/api/useNotificationPosts";
 import { useAppNavigation } from "../../../src/hooks/useNavigation";
 import { useOfflineNotificationsEnhancer } from "../../../src/hooks/useOfflineFeed";
+import { usePreferences } from "../../../src/contexts/PreferencesContext";
+import { useCompleteNotificationSerializer } from "../../../src/services/notification-bridge";
+import { aggregateNotifications } from "../../../src/utils/notification-aggregator";
 import { clearBadgeCount } from "../../../src/utils/badge";
 import { openLink } from "../../../src/utils/browser";
+import { filterMutedNotifications } from "../../../src/utils/content-filter";
+import NotificationBridge from "./NotificationBridge";
 
 // Lazy-load native modules (only available on iOS)
 let NativeNotificationsListNative: any = null;
@@ -130,6 +143,7 @@ function getHandleFromUri(uri: string): string {
 export const NativeNotificationsList = forwardRef<any, ViewProps & { onScroll?: (event: { nativeEvent: { y: number } }) => void }>(
   (props, ref) => {
     const router = useRouter();
+    const { preferences } = usePreferences();
     const notificationsQuery = useNotifications();
     const enhancedNotificationsQuery = useOfflineNotificationsEnhancer(
       notificationsQuery,
@@ -151,8 +165,58 @@ export const NativeNotificationsList = forwardRef<any, ViewProps & { onScroll?: 
     const { navigateToProfile, navigateToThread } = useAppNavigation();
     const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
-    // Bridge error state (notification bridge module removed)
-    const bridgeError: string | null = null;
+    // Flatten all pages of notifications and filter by muted words
+    const notifications = useMemo(() => {
+      const allNotifications =
+        data?.pages?.flatMap((page) => page.notifications) || [];
+      if (!preferences?.mutedWords || preferences.mutedWords.length === 0) {
+        return allNotifications;
+      }
+      return filterMutedNotifications(allNotifications, preferences.mutedWords);
+    }, [data?.pages, preferences?.mutedWords]);
+
+    // Aggregate notifications (matches NotificationsScreen.tsx grouping)
+    const processedNotifications = useMemo(() => {
+      return aggregateNotifications(notifications);
+    }, [notifications]);
+
+    // Fetch post data for rich notification previews (images, videos, links)
+    const { postMap } = useNotificationPosts(notifications);
+
+    // Get cursor for pagination
+    const cursor = useMemo(() => {
+      const pages = data?.pages;
+      return pages?.[pages.length - 1]?.cursor;
+    }, [data?.pages]);
+
+    // Serialize for Swift (including post preview data)
+    const { serializedJSON } = useCompleteNotificationSerializer(
+      processedNotifications,
+      cursor,
+      { isOnline: isNotifOnline, postMap },
+    );
+
+    // Bridge error state
+    const [bridgeError, setBridgeError] = useState<string | null>(null);
+
+    // Push serialized data to Swift via NotificationBridge
+    useEffect(() => {
+      if (serializedJSON && NotificationBridge) {
+        try {
+          NotificationBridge.updateNotificationData(serializedJSON);
+          setBridgeError(null);
+        } catch (e: any) {
+          setBridgeError(e?.message || "Failed to load notification data");
+        }
+      }
+    }, [serializedJSON]);
+
+    // Clear data on unmount
+    useEffect(() => {
+      return () => {
+        NotificationBridge?.clearNotificationData();
+      };
+    }, []);
 
     // Handle refresh
     const handleRefresh = useCallback(() => {

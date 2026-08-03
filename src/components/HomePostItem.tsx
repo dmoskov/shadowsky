@@ -120,20 +120,16 @@ export const PostItem = React.memo(
 
         {/* Show reply context from feed item */}
         {item.reply?.parent && (
-          <div className="relative">
-            {/* Reply indicator with background */}
-            <div className="border-asph-primary/20 from-asph-primary/10 to-asph-primary/5 mb-3 flex items-center gap-2 rounded-lg border bg-gradient-to-br px-3 py-2 backdrop-blur-sm">
-              <div className="flex items-center">
-                <div className="flex w-12 justify-center">
-                  <div className="h-6 w-0.5 bg-asph-primary"></div>
-                </div>
-                <Reply size={16} className="mr-2 text-asph-primary" />
-              </div>
-              <div className="flex-1">
-                <span
-                  className="text-sm font-medium"
-                  style={{ color: "var(--asph-text-primary)" }}
-                >
+          <div className="border-asph-primary/20 from-asph-primary/10 to-asph-primary/5 mb-3 flex gap-2.5 rounded-lg border bg-gradient-to-br px-3 py-2 backdrop-blur-sm">
+            {/* Quote accent bar */}
+            <div className="bg-asph-primary w-0.5 flex-shrink-0 self-stretch rounded-full" />
+            <div className="min-w-0 flex-1">
+              <div
+                className="flex items-center gap-1.5 text-sm font-medium"
+                style={{ color: "var(--asph-text-primary)" }}
+              >
+                <Reply size={14} className="flex-shrink-0 text-asph-primary" />
+                <span>
                   Replying to{" "}
                   <ProfileHoverCard
                     handle={item.reply.parent.author?.handle || "unknown"}
@@ -153,41 +149,31 @@ export const PostItem = React.memo(
                     </button>
                   </ProfileHoverCard>
                 </span>
-                {item.reply.parent.record?.text && (
-                  <div
-                    className="mt-0.5 line-clamp-2 text-xs"
-                    style={{ color: "var(--asph-text-secondary)" }}
-                  >
-                    "{item.reply.parent.record.text}"
-                  </div>
-                )}
               </div>
+              {item.reply.parent.record?.text && (
+                <div
+                  className="mt-1 line-clamp-6 text-xs"
+                  style={{ color: "var(--asph-text-secondary)" }}
+                >
+                  "{item.reply.parent.record.text}"
+                </div>
+              )}
             </div>
-            {/* Connecting line from reply indicator to avatar */}
-            <div className="bg-asph-primary/30 absolute left-6 top-full h-3 w-0.5"></div>
           </div>
         )}
 
         {/* Show reply context from post record if not in feed item */}
         {!item.reply?.parent && post.record?.reply?.parent && (
-          <div className="relative">
-            {/* Reply indicator with background */}
-            <div className="border-asph-primary/20 from-asph-primary/10 to-asph-primary/5 mb-3 flex items-center gap-2 rounded-lg border bg-gradient-to-br px-3 py-2 backdrop-blur-sm">
-              <div className="flex items-center">
-                <div className="flex w-12 justify-center">
-                  <div className="h-6 w-0.5 bg-asph-primary"></div>
-                </div>
-                <Reply size={16} className="mr-2 text-asph-primary" />
-              </div>
-              <span
-                className="text-sm font-medium"
-                style={{ color: "var(--asph-text-primary)" }}
-              >
-                This is a reply
-              </span>
+          <div className="border-asph-primary/20 from-asph-primary/10 to-asph-primary/5 mb-3 flex items-center gap-2.5 rounded-lg border bg-gradient-to-br px-3 py-2 backdrop-blur-sm">
+            {/* Quote accent bar */}
+            <div className="bg-asph-primary w-0.5 flex-shrink-0 self-stretch rounded-full" />
+            <div
+              className="flex items-center gap-1.5 text-sm font-medium"
+              style={{ color: "var(--asph-text-primary)" }}
+            >
+              <Reply size={14} className="flex-shrink-0 text-asph-primary" />
+              This is a reply
             </div>
-            {/* Connecting line from reply indicator to avatar */}
-            <div className="bg-asph-primary/30 absolute left-6 top-full h-3 w-0.5"></div>
           </div>
         )}
 

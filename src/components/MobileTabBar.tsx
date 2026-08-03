@@ -147,7 +147,7 @@ export const MobileTabBar: React.FC = () => {
                   unreadCount !== null &&
                   unreadCount > 0 && (
                     <span
-                      className="animate-badge-in animate-badge-pulse absolute -right-1 -top-1 h-2 w-2 rounded-full"
+                      className="animate-badge-in absolute -right-1 -top-1 h-2 w-2 rounded-full"
                       style={{
                         backgroundColor: "var(--asph-accent)",
                       }}

@@ -1,4 +1,4 @@
-import { Clock, Compass, ExternalLink, PenSquare } from "lucide-react";
+import { Compass, ExternalLink } from "lucide-react";
 import React from "react";
 import { NavLink } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
@@ -7,7 +7,6 @@ import { useRoutePrefetch } from "../hooks/useRoutePrefetch";
 import {
   BellIcon,
   BookmarkIcon,
-  ChartIcon,
   CloseIcon,
   HomeIcon,
   ListIcon,
@@ -32,6 +31,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { getRoutePrefetchHandlers, getProfilePrefetchHandlers } =
     useRoutePrefetch();
 
+  // Primary navigation only. Deliberately excluded, each reachable elsewhere:
+  //   Compose   -> floating action button and the command palette ("C")
+  //   Timeline  -> a deck column type, and the command palette
+  //   Analytics -> your own profile page, and the command palette
   const navItems = [
     { path: "/", label: "Home", icon: HomeIcon },
     { path: "/search", label: "Search", icon: SearchIcon },
@@ -41,19 +44,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: "Notifications",
       icon: BellIcon,
     },
-    { path: "/timeline", label: "Timeline", icon: Clock },
+    { path: "/messages", label: "Direct Messages", icon: MailboxIcon },
     { path: "/bookmarks", label: "Bookmarks", icon: BookmarkIcon },
     { path: "/lists", label: "Lists", icon: ListIcon },
-    { path: "/messages", label: "Direct Messages", icon: MailboxIcon },
-    // Scheduled posts disabled for testing
-    { path: "/compose", label: "Compose", icon: PenSquare },
     {
       path: `/profile/${session?.handle || ""}`,
       label: "Profile",
       icon: PersonIcon,
       profileHandle: session?.handle,
     },
-    { path: "/analytics", label: "Analytics", icon: ChartIcon },
   ];
 
   return (
@@ -138,7 +137,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     unreadCount !== undefined &&
                     unreadCount > 0 && (
                       <span
-                        className="animate-badge-in animate-badge-pulse absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full"
+                        className="animate-badge-in absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full"
                         style={{
                           backgroundColor: "var(--asph-accent)",
                           boxShadow: "0 0 0 2px var(--asph-bg-primary)",

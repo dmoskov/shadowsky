@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-query";
 import {
   BadgeCheck,
+  BarChart3,
   Calendar,
   ChevronDown,
   ChevronUp,
@@ -745,6 +746,27 @@ export default function ProfilePage() {
                           >
                             <Sparkles className="h-4 w-4" />
                             Analyze Profile
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setShowProfileMenu(false);
+                              navigate("/analytics");
+                            }}
+                            className="touch-target-sm flex w-full items-center gap-3 px-4 py-2.5 text-sm transition-all"
+                            style={{ color: "var(--asph-text-primary)" }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "var(--asph-bg-hover)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "transparent")
+                            }
+                          >
+                            <BarChart3 className="h-4 w-4" />
+                            Analytics
                           </button>
                           <button
                             onClick={() => {

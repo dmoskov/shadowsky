@@ -8,6 +8,7 @@
 
 import Foundation
 import FeedBridge
+import NotificationBridge
 
 // MARK: - Notification Reason
 

@@ -7,6 +7,7 @@
  * See: docs/vision/network-weather.md
  */
 
+import { dedupeNarratives } from "./narrative-dedupe";
 import { fetchFromPan } from "./pan-api";
 
 export const WEATHER_CACHE_TTL = 5 * 60 * 1000;
@@ -26,6 +27,12 @@ export type WeatherHue =
 export interface NetworkWeatherState {
   warmth: number;
   energy: number;
+  /**
+   * False when `energy` is a neutral placeholder rather than a measurement
+   * (saturated formula, or Pan omitted volume_ratio). Consumers should avoid
+   * asserting anything about energy when this is false.
+   */
+  energyReliable: boolean;
   conviction: number;
   dominantHue: WeatherHue;
   secondaryHue: WeatherHue;
@@ -88,6 +95,22 @@ export const WEATHER_COLORS: Record<
   ivory: { dark: "#B8B0A0", light: "#E8E2D8" },
 };
 
+/** Resolve a weather hue for the active theme. */
+export function weatherColor(hue: WeatherHue, isDark: boolean): string {
+  return isDark ? WEATHER_COLORS[hue].dark : WEATHER_COLORS[hue].light;
+}
+
+/** Weather hues are authored as hex; ambient washes need them with alpha. */
+export function weatherColorWithAlpha(
+  hue: WeatherHue,
+  isDark: boolean,
+  alpha: number,
+): string {
+  const hex = weatherColor(hue, isDark).replace("#", "");
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.substring(i, i + 2), 16));
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // ─── Pan API Types ────────────────────────────────────────
 
 interface PanSentiment {
@@ -113,8 +136,20 @@ interface PanTrendingTopic {
 
 // ─── Fetch Helpers ────────────────────────────────────────
 
+/**
+ * Fetch a Pan path and unwrap its `{ success, data, meta }` envelope.
+ *
+ * Every caller gets the payload, never the envelope. Callers used to unwrap it
+ * themselves and disagreed about how: sentiment read `.data`, trending read
+ * `.data.topics`, and narrative crossings read `.crossings` off the envelope —
+ * which is always undefined, so narratives silently resolved to "empty" for
+ * every user, forever. One unwrapping rule here removes that whole class of
+ * bug. Falls back to the raw body for any endpoint that isn't enveloped.
+ */
 async function fetchPan(path: string): Promise<any> {
-  return fetchFromPan(path);
+  const body: any = await fetchFromPan(path);
+  if (body && typeof body === "object" && "data" in body) return body.data;
+  return body;
 }
 
 // ─── Hue Classification ──────────────────────────────────
@@ -143,76 +178,155 @@ function classifyHue(
   return "sage";
 }
 
+// ─── Energy ───────────────────────────────────────────────
+
+/** Energy we report when the inputs can't produce a trustworthy value. */
+const NEUTRAL_ENERGY = 0.5;
+
+/**
+ * Derive network energy, and say whether the result means anything.
+ *
+ * Pan's `/api/sentiment/latest` does not currently return `volume_ratio`, so
+ * energy collapses to `(log2(avgCountRatio) + 1) / 4`, which saturates at an
+ * average count ratio of 8 — a level live data sits at routinely. A saturated
+ * value is indistinguishable from "busier than we can measure", so rather than
+ * reporting a confident 1.0 we report neutral and flag it as unreliable. The
+ * ambient layer and the written report both fall back instead of asserting.
+ */
+function computeEnergy(
+  sentiment: PanSentiment | null,
+  trending: PanTrendingTopic[],
+): { energy: number; energyReliable: boolean } {
+  const hasVolume = sentiment?.volume_ratio != null;
+  if (trending.length === 0) {
+    return { energy: NEUTRAL_ENERGY, energyReliable: false };
+  }
+
+  const volumeRatio = sentiment?.volume_ratio ?? 1;
+  const avgCountRatio =
+    trending.reduce((s, t) => s + t.metrics.count_ratio, 0) / trending.length;
+  const raw = (Math.log2(volumeRatio * avgCountRatio) + 1) / 4;
+
+  // Clamped at either end means the formula ran out of range, not that we
+  // measured a true extreme.
+  const saturated = raw >= 1 || raw <= 0;
+  if (saturated || !hasVolume) {
+    return { energy: NEUTRAL_ENERGY, energyReliable: false };
+  }
+  return { energy: raw, energyReliable: true };
+}
+
 // ─── Narrative Fetch ──────────────────────────────────
 
-async function fetchNarrativeCrossings(): Promise<NarrativeState> {
-  const resp = await fetchPan(
-    "/api/narratives/crossings?min_overlap=0.05&min_shared=1&limit=50",
+const EMPTY_NARRATIVES: NarrativeState = {
+  narratives: [],
+  crossings: [],
+  timestamp: 0,
+  source: "empty",
+};
+
+/** Enduring conversations are the warp; newer ones cut across as the weft. */
+const WARP_AGE_HOURS = 24;
+
+/**
+ * Fetch the live narrative threads behind the ambient textile.
+ *
+ * This used to derive narratives from `/api/narratives/crossings` — pairwise
+ * author overlaps — but that endpoint returns no crossings in practice, so the
+ * textile never had threads to draw. `/api/narratives` is the endpoint that
+ * actually carries them, with per-narrative author counts and ages, so warp and
+ * weft can be classified from age (matching network-weather-service.ts) rather
+ * than by arbitrarily splitting a sorted list down the middle.
+ *
+ * Crossings are left empty: nothing reads them on this path, so there is no
+ * reason to spend a second request on them.
+ */
+async function fetchNarratives(): Promise<NarrativeState> {
+  const resp = await fetchPan("/api/narratives");
+  const raw: any[] = resp?.narratives ?? [];
+  if (raw.length === 0) return { ...EMPTY_NARRATIVES, timestamp: Date.now() };
+
+  // Pan returns heavy near-duplicates (50 rows collapsing to a handful of
+  // labels, and those labels often restating one story); one band each would
+  // read as a far busier network than exists.
+  const deduped = dedupeNarratives(
+    raw,
+    (n) => String(n.label ?? ""),
+    (n) => n.author_count ?? 0,
   );
-  if (!resp?.crossings?.length) {
-    return {
-      narratives: [],
-      crossings: [],
-      timestamp: Date.now(),
-      source: "empty",
-    };
+  if (deduped.length === 0) {
+    return { ...EMPTY_NARRATIVES, timestamp: Date.now() };
   }
 
-  const narrativeMap = new Map<
-    string,
-    { id: string; name: string; sharedTotal: number }
-  >();
-  for (const c of resp.crossings) {
-    for (const n of [c.narrative_a, c.narrative_b]) {
-      const ex = narrativeMap.get(n.id);
-      if (ex) ex.sharedTotal += c.shared_authors;
-      else
-        narrativeMap.set(n.id, {
-          id: n.id,
-          name: n.name,
-          sharedTotal: c.shared_authors,
-        });
-    }
-  }
+  const maxAuthors = Math.max(...deduped.map((n) => n.author_count ?? 0), 1);
 
-  const maxShared = Math.max(
-    ...Array.from(narrativeMap.values()).map((n) => n.sharedTotal),
-    1,
-  );
-  const narratives: Narrative[] = Array.from(narrativeMap.values())
+  const narratives: Narrative[] = deduped
     .map((n) => ({
-      id: n.id,
-      name: n.name,
-      authorCount: n.sharedTotal,
-      authorWeight: n.sharedTotal / maxShared,
-      threadType: "warp" as const,
+      id: String(n.id),
+      name: String(n.label).trim(),
+      authorCount: n.author_count ?? 0,
+      authorWeight: (n.author_count ?? 0) / maxAuthors,
+      threadType:
+        (n.age_hours ?? 0) >= WARP_AGE_HOURS
+          ? ("warp" as const)
+          : ("weft" as const),
     }))
     .sort((a, b) => b.authorWeight - a.authorWeight);
 
-  const midpoint = Math.ceil(narratives.length / 2);
-  narratives.forEach((n, i) => {
-    n.threadType = i < midpoint ? "warp" : "weft";
-  });
-
   return {
     narratives,
-    crossings: resp.crossings.map((c: any) => ({
-      narrativeA: c.narrative_a.id,
-      narrativeB: c.narrative_b.id,
-      sharedAuthors: c.shared_authors,
-      overlapRatio: c.overlap_ratio,
-    })),
+    crossings: [],
     timestamp: Date.now(),
     source: "pan",
   };
 }
 
-// ─── Emergence Detection (in-memory) ─────────────────────
+// ─── Emergence Detection ─────────────────────────────────
 
-const previousSnapshots = new Map<
-  string,
-  { timestamp: number; countRatio: number }
->();
+const SNAPSHOT_KEY = "shadowsky_weather_topic_snapshots";
+const SNAPSHOT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * When *most* topics look emergent, "emergent" has stopped meaning anything.
+ * Above this share we suppress the signal rather than flag the whole board.
+ */
+const EMERGENCE_MAX_SHARE = 0.5;
+
+type TopicSnapshot = { timestamp: number; countRatio: number };
+
+/**
+ * First-seen times for trending topics, persisted across loads.
+ *
+ * Emergence asks "is this new?", which needs memory of previous visits. This
+ * was an in-memory Map, so every page load started empty, every topic looked
+ * brand new, and the whole trending board came back flagged as emergent.
+ */
+function loadSnapshots(): Map<string, TopicSnapshot> {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_KEY);
+    if (!raw) return new Map();
+    const cutoff = Date.now() - SNAPSHOT_MAX_AGE_MS;
+    const entries = Object.entries(
+      JSON.parse(raw) as Record<string, TopicSnapshot>,
+    ).filter(([, v]) => v?.timestamp > cutoff);
+    return new Map(entries);
+  } catch {
+    return new Map(); // Corrupt or unavailable storage: start fresh.
+  }
+}
+
+function saveSnapshots(snapshots: Map<string, TopicSnapshot>): void {
+  try {
+    localStorage.setItem(
+      SNAPSHOT_KEY,
+      JSON.stringify(Object.fromEntries(snapshots)),
+    );
+  } catch {
+    // Storage full or blocked; emergence degrades to per-session memory.
+  }
+}
+
+const previousSnapshots = loadSnapshots();
 
 function detectEmergence(topics: PanTrendingTopic[]): EmergenceState {
   const now = Date.now();
@@ -258,6 +372,25 @@ function detectEmergence(topics: PanTrendingTopic[]): EmergenceState {
     });
   }
 
+  saveSnapshots(previousSnapshots);
+
+  // Degenerate case: if emergence is flagging most of the board it isn't
+  // distinguishing anything, so report none rather than lighting everything up.
+  const flagged = emergentThreads.filter((t) => t.isEmergent);
+  const indiscriminate =
+    topics.length > 1 && flagged.length > topics.length * EMERGENCE_MAX_SHARE;
+
+  if (indiscriminate) {
+    return {
+      emergentThreads: emergentThreads.map((t) => ({
+        ...t,
+        isEmergent: false,
+        pulseIntensity: 0,
+      })),
+      timestamp: now,
+    };
+  }
+
   return { emergentThreads, timestamp: now };
 }
 
@@ -266,6 +399,7 @@ function detectEmergence(topics: PanTrendingTopic[]): EmergenceState {
 const DEFAULT_STATE: NetworkWeatherState = {
   warmth: 0.5,
   energy: 0.3,
+  energyReliable: false,
   conviction: 0.4,
   dominantHue: "slate",
   secondaryHue: "sage",
@@ -280,11 +414,12 @@ export async function fetchNetworkWeather(): Promise<NetworkWeatherState> {
     const [sentimentResp, trendingResp, narrativeState] = await Promise.all([
       fetchPan("/api/sentiment/latest"),
       fetchPan("/api/trending/topics?limit=10&hours=6"),
-      fetchNarrativeCrossings(),
+      fetchNarratives(),
     ]);
 
-    const sentiment: PanSentiment | null = sentimentResp?.data || sentimentResp;
-    const trending: PanTrendingTopic[] = trendingResp?.data?.topics || [];
+    // fetchPan already unwrapped the envelope for both of these.
+    const sentiment: PanSentiment | null = sentimentResp;
+    const trending: PanTrendingTopic[] = trendingResp?.topics || [];
 
     if (!sentiment && trending.length === 0) {
       return { ...DEFAULT_STATE, timestamp: Date.now() };
@@ -293,16 +428,7 @@ export async function fetchNetworkWeather(): Promise<NetworkWeatherState> {
     const rawSentiment = sentiment?.overall_sentiment ?? 0;
     const warmth = Math.max(0, Math.min(1, (rawSentiment + 1) / 2));
 
-    const volumeRatio = sentiment?.volume_ratio ?? 1;
-    const avgCountRatio =
-      trending.length > 0
-        ? trending.reduce((s, t) => s + t.metrics.count_ratio, 0) /
-          trending.length
-        : 1;
-    const energy = Math.max(
-      0,
-      Math.min(1, (Math.log2(volumeRatio * avgCountRatio) + 1) / 4),
-    );
+    const { energy, energyReliable } = computeEnergy(sentiment, trending);
 
     const variance = sentiment?.sentiment_variance ?? 0.5;
     const conviction = Math.max(0, Math.min(1, 1 - variance));
@@ -331,6 +457,7 @@ export async function fetchNetworkWeather(): Promise<NetworkWeatherState> {
     return {
       warmth,
       energy,
+      energyReliable,
       conviction,
       dominantHue,
       secondaryHue,

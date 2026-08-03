@@ -1,13 +1,24 @@
-import React from 'react';
-import {View, Text, TouchableOpacity, ActivityIndicator, StyleSheet} from 'react-native';
-import {AppBskyActorDefs, AppBskyFeedDefs, AppBskyFeedPost, AppBskyRichtextFacet} from '@atproto/api';
-import {Avatar} from './Avatar';
-import {ReplyIcon, MoreIcon, TranslateIcon, ShieldIcon} from './icons';
-import {RichText} from '../utils/rich-text';
-import {PostEmbed} from './PostEmbed';
-import {InlineErrorBoundary} from './ui/InlineErrorBoundary';
-import {PostCardActions} from './PostCardActions';
-import {fontSize} from '../utils/typography';
+import React from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
+import {
+  AppBskyActorDefs,
+  AppBskyFeedDefs,
+  AppBskyFeedPost,
+  AppBskyRichtextFacet,
+} from "@atproto/api";
+import { Avatar } from "./Avatar";
+import { ReplyIcon, MoreIcon, TranslateIcon, ShieldIcon } from "./icons";
+import { RichText } from "../utils/rich-text";
+import { PostEmbed } from "./PostEmbed";
+import { InlineErrorBoundary } from "./ui/InlineErrorBoundary";
+import { PostCardActions } from "./PostCardActions";
+import { fontSize } from "../utils/typography";
 
 interface PostCardContentProps {
   post: AppBskyFeedDefs.FeedViewPost;
@@ -50,7 +61,10 @@ interface PostCardContentProps {
   onReply?: () => void;
   onMentionPress?: (handle: string, did: string) => void;
   onHashtagPress?: (tag: string) => void;
-  onImagePress?: (images: Array<{thumb: string; fullsize: string; alt?: string}>, index: number) => void;
+  onImagePress?: (
+    images: Array<{ thumb: string; fullsize: string; alt?: string }>,
+    index: number,
+  ) => void;
   onLinkPress?: (url: string) => void;
   onQuotePress?: (uri: string, handle: string) => void;
   onPressProfile?: (handle: string) => void;
@@ -103,18 +117,47 @@ export function PostCardContent({
         <TouchableOpacity
           style={styles.replyContext}
           onPress={() => {
-            const parentAuthor = (post.reply!.parent as AppBskyFeedDefs.PostView).author;
+            const parentAuthor = (
+              post.reply!.parent as AppBskyFeedDefs.PostView
+            ).author;
             onPressProfile?.(parentAuthor.handle);
           }}
           activeOpacity={0.7}
-          accessibilityLabel={`Replying to @${(post.reply.parent as AppBskyFeedDefs.PostView).author.handle}`}>
-          <ReplyIcon size={12} color={colors.textTertiary} />
-          <Text style={styles.replyContextText}>
-            Replying to{' '}
-            <Text style={styles.replyContextHandle}>
-              @{(post.reply.parent as AppBskyFeedDefs.PostView).author.handle}
-            </Text>
-          </Text>
+          accessibilityLabel={`Replying to @${(post.reply.parent as AppBskyFeedDefs.PostView).author.handle}`}
+        >
+          <View style={styles.replyContextBar} />
+          <View style={styles.replyContextBody}>
+            <View style={styles.replyContextHeader}>
+              <ReplyIcon size={12} color={colors.textTertiary} />
+              <Text style={styles.replyContextText}>
+                Replying to{" "}
+                <Text style={styles.replyContextHandle}>
+                  @
+                  {
+                    (post.reply.parent as AppBskyFeedDefs.PostView).author
+                      .handle
+                  }
+                </Text>
+              </Text>
+            </View>
+            {!!(
+              (post.reply.parent as AppBskyFeedDefs.PostView).record as {
+                text?: string;
+              }
+            )?.text && (
+              <Text style={styles.replyContextPreview} numberOfLines={6}>
+                "
+                {
+                  (
+                    (post.reply.parent as AppBskyFeedDefs.PostView).record as {
+                      text?: string;
+                    }
+                  ).text
+                }
+                "
+              </Text>
+            )}
+          </View>
         </TouchableOpacity>
       )}
 
@@ -126,7 +169,8 @@ export function PostCardContent({
           activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel={`View profile of ${author.displayName || author.handle}`}
-          accessibilityHint="Double tap to open profile">
+          accessibilityHint="Double tap to open profile"
+        >
           <Avatar
             uri={author.avatar}
             size={44}
@@ -159,9 +203,10 @@ export function PostCardContent({
               accessibilityLabel="More options"
               accessibilityHint={
                 isOwnPost
-                  ? 'Double tap to open menu with delete option'
-                  : 'Double tap to open menu with mute, block, and report options'
-              }>
+                  ? "Double tap to open menu with delete option"
+                  : "Double tap to open menu with mute, block, and report options"
+              }
+            >
               <MoreIcon size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           )}
@@ -169,7 +214,7 @@ export function PostCardContent({
       </View>
 
       {/* Post Text */}
-      {record && typeof record.text === 'string' && (
+      {record && typeof record.text === "string" && (
         <InlineErrorBoundary silent context="RichText">
           <RichText
             text={record.text}
@@ -184,14 +229,18 @@ export function PostCardContent({
       {/* Inline Translation */}
       {translation.isShowingTranslation && translation.translatedText && (
         <View style={styles.translationContainer}>
-          <Text style={styles.translatedText}>{translation.translatedText}</Text>
+          <Text style={styles.translatedText}>
+            {translation.translatedText}
+          </Text>
           <Text style={styles.translationAttribution}>
             Translated from {translation.sourceLanguageName}
           </Text>
         </View>
       )}
       {translation.translationError && (
-        <Text style={styles.translationError}>Translation failed. Try again.</Text>
+        <Text style={styles.translationError}>
+          Translation failed. Try again.
+        </Text>
       )}
       {translation.showTranslateButton && (
         <TouchableOpacity
@@ -202,19 +251,24 @@ export function PostCardContent({
           accessibilityRole="button"
           accessibilityLabel={
             translation.isShowingTranslation
-              ? 'Show original'
+              ? "Show original"
               : `Translate from ${translation.sourceLanguageName}`
-          }>
+          }
+        >
           {translation.isTranslating ? (
-            <ActivityIndicator size="small" color={colors.primary} style={{marginRight: 4}} />
+            <ActivityIndicator
+              size="small"
+              color={colors.primary}
+              style={{ marginRight: 4 }}
+            />
           ) : (
             <TranslateIcon size={14} color={colors.primary} />
           )}
-          <Text style={[styles.translateButtonText, {color: colors.primary}]}>
+          <Text style={[styles.translateButtonText, { color: colors.primary }]}>
             {translation.isTranslating
-              ? 'Translating...'
+              ? "Translating..."
               : translation.isShowingTranslation
-                ? 'Show original'
+                ? "Show original"
                 : `Translate from ${translation.sourceLanguageName}`}
           </Text>
         </TouchableOpacity>
@@ -261,30 +315,50 @@ function createStyles(colors: any) {
       padding: 16,
     },
     replyContext: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 8,
       paddingHorizontal: 4,
       paddingVertical: 6,
       marginBottom: 2,
+    },
+    replyContextBar: {
+      width: 2,
+      alignSelf: "stretch",
+      borderRadius: 1,
+      backgroundColor: colors.info || colors.primary,
+    },
+    replyContextBody: {
+      flex: 1,
+      gap: 2,
+    },
+    replyContextHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
     },
     replyContextText: {
       fontSize: 12,
       color: colors.textTertiary,
     },
     replyContextHandle: {
-      fontWeight: '600',
+      fontWeight: "600",
       color: colors.info || colors.primary,
     },
+    replyContextPreview: {
+      fontSize: 12,
+      lineHeight: 16,
+      color: colors.textSecondary,
+    },
     header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
       marginBottom: 12,
     },
     authorSection: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       flex: 1,
     },
     authorInfo: {
@@ -292,20 +366,20 @@ function createStyles(colors: any) {
       marginLeft: 12,
     },
     headerRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 8,
     },
     moreButton: {
       minWidth: 44,
       minHeight: 44,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
     },
     displayName: {
       color: colors.text,
       fontSize: fontSize.callout,
-      fontWeight: '600',
+      fontWeight: "600",
       marginBottom: 2,
     },
     handle: {
@@ -347,15 +421,15 @@ function createStyles(colors: any) {
       marginBottom: 4,
     },
     translateButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 4,
       paddingVertical: 4,
       marginBottom: 8,
     },
     translateButtonText: {
       fontSize: fontSize.footnote,
-      fontWeight: '500',
+      fontWeight: "500",
     },
   });
 }

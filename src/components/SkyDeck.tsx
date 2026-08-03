@@ -22,7 +22,10 @@ import { useAuth } from "../contexts/AuthContext";
 import { useModal } from "../contexts/ModalContext";
 import { useColumnSwipe } from "../hooks/useColumnSwipe";
 import { useMediaQuery } from "../hooks/useMediaQuery";
-import { appPreferencesService } from "../services/app-preferences-service";
+import {
+  DEFAULT_COLUMN_WIDTH,
+  appPreferencesService,
+} from "../services/app-preferences-service";
 import { columnService } from "../services/column-service";
 import { LOCAL_STORAGE_KEYS } from "../services/storage/storage-constants";
 import type { Column, ColumnType } from "../types/column";
@@ -172,7 +175,9 @@ export default function SkyDeck() {
   const [mobileColumnIndex, setMobileColumnIndex] = useState(0);
   const [customFeedUri, setCustomFeedUri] = useState("");
   const [isLoadingCustomFeed, setIsLoadingCustomFeed] = useState(false);
-  const [columnWidth, setColumnWidth] = useState(320); // Default: multi-column deck; 0 = full-width single column (Settings > Appearance)
+  // 0 = full-width single column (the default). A saved non-zero width from
+  // Settings > Appearance opts into multi-column deck mode.
+  const [columnWidth, setColumnWidth] = useState(DEFAULT_COLUMN_WIDTH);
   const columnsContainerRef = useRef<HTMLDivElement>(null);
   const columnSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const columnsLoadedRef = useRef(false);
@@ -612,42 +617,43 @@ export default function SkyDeck() {
 
     return (
       <div className="flex h-full flex-col overflow-hidden bg-asph-bg-primary">
-        {/* Column tab bar */}
-        {columns.length > 1 && (
-          <div className="flex items-center gap-1 border-b border-asph-border-primary bg-asph-bg-secondary px-2">
-            <div className="asph-scrollbar flex flex-1 items-center gap-1 overflow-x-auto py-1">
-              {columns.map((col, index) => {
-                const Icon = getColumnIcon(col.type);
-                return (
-                  <button
-                    key={`tab-${col.id}`}
-                    onClick={() => setFocusedColumnIndex(index)}
-                    className={`flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors ${
-                      focusedColumnIndex === index
-                        ? "bg-asph-bg-active font-medium text-asph-text-primary"
-                        : "text-asph-text-secondary hover:bg-asph-bg-hover hover:text-asph-text-primary"
-                    }`}
-                    aria-current={
-                      focusedColumnIndex === index ? "true" : undefined
-                    }
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="max-w-[120px] truncate">
-                      {col.title || col.type}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            <button
-              onClick={() => setIsAddingColumn(true)}
-              className="shrink-0 rounded-md p-1.5 text-asph-text-tertiary transition-colors hover:bg-asph-bg-hover hover:text-asph-text-primary"
-              aria-label="Add column"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
+        {/* Column tab bar. Rendered even with a single column, because this bar
+            holds the only "add column" affordance in full-width mode — gating it
+            on columns.length > 1 left users with no pinned feeds unable to add
+            a second column at all. */}
+        <div className="flex items-center gap-1 border-b border-asph-border-primary bg-asph-bg-secondary px-2">
+          <div className="asph-scrollbar flex flex-1 items-center gap-1 overflow-x-auto py-1">
+            {columns.map((col, index) => {
+              const Icon = getColumnIcon(col.type);
+              return (
+                <button
+                  key={`tab-${col.id}`}
+                  onClick={() => setFocusedColumnIndex(index)}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors ${
+                    focusedColumnIndex === index
+                      ? "bg-asph-bg-active font-medium text-asph-text-primary"
+                      : "text-asph-text-secondary hover:bg-asph-bg-hover hover:text-asph-text-primary"
+                  }`}
+                  aria-current={
+                    focusedColumnIndex === index ? "true" : undefined
+                  }
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="max-w-[120px] truncate">
+                    {col.title || col.type}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-        )}
+          <button
+            onClick={() => setIsAddingColumn(true)}
+            className="shrink-0 rounded-md p-1.5 text-asph-text-tertiary transition-colors hover:bg-asph-bg-hover hover:text-asph-text-primary"
+            aria-label="Add column"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
 
         {/* Full-width column content */}
         <div className="relative flex-1 overflow-hidden">

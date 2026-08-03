@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Privacy Policy - Asphodel</title>
-<style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 680px; margin: 0 auto; padding: 24px 16px; background: #0a0a0f; color: #e4e4e7; line-height: 1.6; }
-  h1 { font-size: 24px; margin-bottom: 4px; }
-  h2 { font-size: 18px; margin-top: 32px; color: #a1a1aa; }
-  p, li { color: #d4d4d8; }
-  a { color: #60a5fa; }
-  .updated { color: #71717a; font-size: 14px; margin-bottom: 32px; }
-</style>
+<link rel="icon" type="image/svg+xml" href="/butterfly-icon.svg">
+<link rel="stylesheet" href="/static-pages.css">
 </head>
 <body>
+<div class="doc">
+
+<a class="doc-masthead" href="/">
+  <img src="/butterfly-icon.svg" alt="">
+  Asphodel
+</a>
 
 <h1>Privacy Policy</h1>
-<p class="updated">Last updated: February 13, 2026</p>
+<p class="doc-updated">Last updated: August 3, 2026</p>
 
 <p>Asphodel is a third-party client for the Bluesky social network, built on the AT Protocol. We are committed to being transparent about how the app handles your information.</p>
 
@@ -30,7 +30,7 @@
 <p>The app stores the following locally on your device:</p>
 <ul>
   <li>Session tokens for authenticated access to your PDS</li>
-  <li>Your app preferences (theme, notification settings, etc.)</li>
+  <li>Your app preferences (theme, layout, notification settings, etc.)</li>
   <li>Cached feed content for offline viewing</li>
   <li>Search history</li>
   <li>Draft posts</li>
@@ -43,10 +43,12 @@
 <h2>Push notifications</h2>
 <p>If you enable push notifications, your device's push token is registered with Expo's notification service to deliver alerts. We do not use push tokens for any other purpose.</p>
 
+<h2>GIF search</h2>
+<p>GIF search runs through Bluesky's own GIF proxy at <code>gifs.bsky.app</code>, which is backed by KLIPY. Your searches go to Bluesky's proxy rather than directly to a GIF provider, so the provider does not receive your IP address or device information from the app. GIFs in older posts may still be delivered through the same proxy's legacy Tenor path.</p>
+
 <h2>Third-party services</h2>
 <ul>
-  <li><strong>Bluesky / AT Protocol</strong> &mdash; All social features. See <a href="https://bsky.social/about/support/privacy-policy">Bluesky's privacy policy</a>.</li>
-  <li><strong>Tenor (Google)</strong> &mdash; GIF search. See <a href="https://policies.google.com/privacy">Google's privacy policy</a>.</li>
+  <li><strong>Bluesky / AT Protocol</strong> &mdash; All social features, and the GIF proxy described above. See <a href="https://bsky.social/about/support/privacy-policy">Bluesky's privacy policy</a>.</li>
   <li><strong>Sentry</strong> &mdash; Crash reporting. See <a href="https://sentry.io/privacy/">Sentry's privacy policy</a>.</li>
   <li><strong>Expo</strong> &mdash; Push notifications and OTA updates. See <a href="https://expo.dev/privacy">Expo's privacy policy</a>.</li>
 </ul>
@@ -66,5 +68,11 @@
 <h2>Contact</h2>
 <p>Questions about this policy can be directed to <a href="mailto:privacy@shadowsky.io">privacy@shadowsky.io</a>.</p>
 
+<footer class="doc-footer">
+  <a href="/">Back to Asphodel</a>
+  <a href="/terms.html">Terms of Service</a>
+</footer>
+
+</div>
 </body>
 </html>

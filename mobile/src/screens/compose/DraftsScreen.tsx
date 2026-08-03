@@ -31,8 +31,18 @@ export function DraftsScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  // Flatten all pages of drafts
-  const drafts = data?.pages.flatMap((page) => page.drafts) || [];
+  // Flatten all pages of drafts, de-duplicating by id. The draft.getDrafts
+  // endpoint can return overlapping pages, which otherwise renders each draft
+  // twice and triggers duplicate-key warnings.
+  const drafts = useMemo(() => {
+    const all = data?.pages.flatMap((page) => page.drafts) || [];
+    const seen = new Set<string>();
+    return all.filter((d) => {
+      if (seen.has(d.id)) return false;
+      seen.add(d.id);
+      return true;
+    });
+  }, [data?.pages]);
 
   const handleDraftPress = (draft: EnrichedDraft) => {
     // Navigate to compose screen with draft data

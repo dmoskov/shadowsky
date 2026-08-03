@@ -3,21 +3,24 @@ import { Columns, Monitor, Moon, Sun } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { appPreferencesService } from "../../services/app-preferences-service";
+import {
+  DEFAULT_COLUMN_WIDTH,
+  appPreferencesService,
+} from "../../services/app-preferences-service";
 
 const WIDTH_OPTIONS = [
-  { value: 0, label: "Full Width" },
-  { value: 280, label: "Compact" },
-  { value: 320, label: "Medium" },
-  { value: 360, label: "Comfortable" },
-  { value: 400, label: "Spacious" },
+  { value: 0, label: "Single column" },
+  { value: 280, label: "Deck — compact" },
+  { value: 320, label: "Deck — medium" },
+  { value: 360, label: "Deck — comfortable" },
+  { value: 400, label: "Deck — spacious" },
 ];
 
 export const AppearanceSettings: React.FC = () => {
   const { theme, setTheme } = useTheme();
   const { agent } = useAuth();
   const queryClient = useQueryClient();
-  const [selectedWidth, setSelectedWidth] = useState(0);
+  const [selectedWidth, setSelectedWidth] = useState(DEFAULT_COLUMN_WIDTH);
 
   // Get current preferences
   const { data: appPreferences } = useQuery({
@@ -189,7 +192,7 @@ export const AppearanceSettings: React.FC = () => {
           style={{ color: "var(--asph-text-primary)" }}
         >
           <Columns className="mr-2 inline-block h-4 w-4" />
-          Column Width
+          Layout
         </h3>
         <div
           className="rounded-lg p-4"
@@ -202,9 +205,9 @@ export const AppearanceSettings: React.FC = () => {
             className="mb-4 text-sm"
             style={{ color: "var(--asph-text-secondary)" }}
           >
-            Choose how columns are displayed. Full width shows one column at a
-            time like the standard Bluesky app. Fixed widths show multiple
-            columns side by side.
+            Single column shows one feed at a time, like the standard Bluesky
+            app. Deck mode shows your feeds side by side — pick a column width
+            to turn it on.
           </p>
           <div className="space-y-3">
             <div className="grid gap-2">
@@ -234,7 +237,7 @@ export const AppearanceSettings: React.FC = () => {
                     className="text-xs"
                     style={{ color: "var(--asph-text-tertiary)" }}
                   >
-                    {option.value === 0 ? "Single column" : `${option.value}px`}
+                    {option.value === 0 ? "Default" : `${option.value}px`}
                   </span>
                 </button>
               ))}
@@ -243,18 +246,21 @@ export const AppearanceSettings: React.FC = () => {
               onClick={() => updateColumnWidth.mutate(selectedWidth)}
               disabled={
                 updateColumnWidth.isPending ||
-                selectedWidth === (appPreferences?.columnWidth ?? 0)
+                selectedWidth ===
+                  (appPreferences?.columnWidth ?? DEFAULT_COLUMN_WIDTH)
               }
               className="touch-target-sm mt-3 rounded px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
               style={{
                 backgroundColor:
                   updateColumnWidth.isPending ||
-                  selectedWidth === (appPreferences?.columnWidth ?? 0)
+                  selectedWidth ===
+                    (appPreferences?.columnWidth ?? DEFAULT_COLUMN_WIDTH)
                     ? "var(--asph-bg-tertiary)"
                     : "var(--asph-primary)",
                 color:
                   updateColumnWidth.isPending ||
-                  selectedWidth === (appPreferences?.columnWidth ?? 0)
+                  selectedWidth ===
+                    (appPreferences?.columnWidth ?? DEFAULT_COLUMN_WIDTH)
                     ? "var(--asph-text-secondary)"
                     : "white",
               }}

@@ -8,6 +8,7 @@
 
 import SwiftUI
 import FeedBridge
+import NotificationBridge
 import ExpoSwiftUIFeed
 
 struct AggregatedNotificationItemView: View {

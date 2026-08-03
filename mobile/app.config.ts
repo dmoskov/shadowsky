@@ -19,8 +19,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "io.shadowsky.app",
-    // @ts-expect-error deploymentTarget is valid for EAS builds but not in ExpoConfig type
-    deploymentTarget: "16.0",
     associatedDomains: [
       "applinks:shadowsky.io",
       "applinks:main.shadowsky.io",
@@ -90,6 +88,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     bundler: "metro",
   },
   plugins: [
+    [
+      "expo-build-properties",
+      {
+        ios: {
+          deploymentTarget: "16.0",
+        },
+      },
+    ],
     "./plugins/withAlternateIcons",
     "expo-router",
     [
