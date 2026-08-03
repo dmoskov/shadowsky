@@ -196,7 +196,9 @@ class OAuthService {
         this.client = await BrowserOAuthClient.load({
           clientId,
           handleResolver: "https://bsky.social",
-          onDelete: (sub: string, cause: unknown) => {
+          // Renamed from onDelete in @atproto/oauth-client-browser 0.5; the old
+          // key was silently ignored, so session deletion never reached the app.
+          onSessionDeleted: (sub: string, cause: unknown) => {
             debug.log("OAuth session deleted:", { sub, cause });
             this.currentSession = null;
             this.currentAgent = null;
