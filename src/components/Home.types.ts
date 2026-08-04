@@ -146,18 +146,18 @@ export interface ApiError {
 }
 
 export interface HomeProps {
-  initialFeedUri?: string;
+  /** The feed this column shows. Fixed by the deck; not switchable in-column. */
+  feedUri: string;
   isFocused?: boolean;
+  /**
+   * False while this column has never been scrolled near. Holds off the feed
+   * fetch so a deck of saved feeds doesn't request every one of them on mount.
+   * Defaults to true for the single-column and routed cases.
+   */
+  isVisible?: boolean;
+  /** Scopes keyboard-shortcut post actions to this column. */
   columnId?: string;
-  onClose?: () => void;
-  onFeedChange?: (
-    feed: string,
-    label: string,
-    feedOptions: FeedOption[],
-  ) => void;
   onRefreshRequest?: number;
-  showFeedDiscovery?: boolean;
-  onCloseFeedDiscovery?: () => void;
 }
 
 // Session storage key for persisting open thread across view mode changes

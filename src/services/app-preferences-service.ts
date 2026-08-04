@@ -54,6 +54,8 @@ export interface AsphodelPreferences {
   };
   // Column display settings
   columnWidth?: number;
+  /** How many saved feeds to show as columns. Undefined shows all of them. */
+  columnCount?: number;
   // Background refresh settings
   backgroundRefresh?: BackgroundRefreshSettings;
   // Multi-account posting settings
@@ -70,8 +72,6 @@ export interface AsphodelColumns {
     data?: string;
     createdAt: string;
     updatedAt: string;
-    // Feed preferences for feed-type columns
-    selectedFeedUri?: string;
   }>;
   version: number;
 }
@@ -140,6 +140,8 @@ export interface AppPreferencesRecord {
   };
   // Column display settings
   columnWidth?: number;
+  /** How many saved feeds to show as columns. Undefined shows all of them. */
+  columnCount?: number;
   // Background refresh settings
   backgroundRefresh?: BackgroundRefreshSettings;
   // Multi-account posting settings
@@ -211,6 +213,7 @@ export class AppPreferencesService {
           updatedAt: shadowSkyPref.updatedAt,
           aiSettings: shadowSkyPref.aiSettings,
           columnWidth: shadowSkyPref.columnWidth,
+          columnCount: shadowSkyPref.columnCount,
           backgroundRefresh: shadowSkyPref.backgroundRefresh,
           multiAccountPosting: shadowSkyPref.multiAccountPosting,
         };
@@ -240,6 +243,7 @@ export class AppPreferencesService {
         updatedAt: localPrefs.updatedAt || new Date().toISOString(),
         aiSettings: localPrefs.aiSettings,
         columnWidth: localPrefs.columnWidth,
+        columnCount: localPrefs.columnCount,
         backgroundRefresh: localPrefs.backgroundRefresh,
         multiAccountPosting: localPrefs.multiAccountPosting,
       };
@@ -294,6 +298,7 @@ export class AppPreferencesService {
         version: 1,
         aiSettings: updatedPrefs.aiSettings,
         columnWidth: updatedPrefs.columnWidth,
+        columnCount: updatedPrefs.columnCount,
         backgroundRefresh: updatedPrefs.backgroundRefresh,
         multiAccountPosting: updatedPrefs.multiAccountPosting,
       };
