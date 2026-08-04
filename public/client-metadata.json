@@ -4,8 +4,8 @@
   "client_name": "Asphodel",
   "client_uri": "https://shadowsky.io",
   "logo_uri": "https://shadowsky.io/butterfly-icon.svg",
-  "tos_uri": "https://shadowsky.io/terms",
-  "policy_uri": "https://shadowsky.io/privacy",
+  "tos_uri": "https://shadowsky.io/terms.html",
+  "policy_uri": "https://shadowsky.io/privacy.html",
   "redirect_uris": [
     "https://shadowsky.io/oauth/callback",
     "https://main.shadowsky.io/oauth/callback"
