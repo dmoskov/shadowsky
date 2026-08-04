@@ -31,6 +31,11 @@ interface SkyColumnProps {
   onMoveRight?: () => void;
   chromeless?: boolean;
   isFocused?: boolean;
+  /**
+   * False until the column has been scrolled near, so offscreen deck columns
+   * don't fetch. Defaults to true for callers that always render one column.
+   */
+  isVisible?: boolean;
 }
 
 const SkyColumn = memo(
@@ -41,6 +46,7 @@ const SkyColumn = memo(
     onMoveRight,
     chromeless = false,
     isFocused = false,
+    isVisible = true,
   }: SkyColumnProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const gpuScrollRef = useScrollContainerGPU();
@@ -257,6 +263,7 @@ const SkyColumn = memo(
               <Home
                 feedUri={column.data ?? "following"}
                 isFocused={isFocused}
+                isVisible={isVisible}
                 columnId={column.id}
                 onRefreshRequest={refreshCounter}
               />
@@ -285,6 +292,9 @@ const SkyColumn = memo(
     }, [
       column,
       isFocused,
+      // Required: without it the memo holds the isVisible={false} render and
+      // the column never starts loading when it scrolls into view.
+      isVisible,
       refreshCounter,
       handleNotificationsError,
       handleTimelineError,

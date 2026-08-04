@@ -41,7 +41,13 @@ const ThreadModal = lazyWithRetry(() =>
 );
 
 export const Home: React.FC<HomeProps> = React.memo(
-  ({ feedUri, isFocused = true, columnId, onRefreshRequest }) => {
+  ({
+    feedUri,
+    isFocused = true,
+    isVisible = true,
+    columnId,
+    onRefreshRequest,
+  }) => {
     const { agent } = useAuth();
     const queryClient = useQueryClient();
     const { likeMutation, repostMutation, undoableUnlike, undoableUnrepost } =
@@ -116,7 +122,7 @@ export const Home: React.FC<HomeProps> = React.memo(
 
     // Dropdown is now handled by the parent component
 
-    const feedQuery = useHomeFeedQuery(selectedFeed);
+    const feedQuery = useHomeFeedQuery(selectedFeed, isVisible);
 
     const {
       data,

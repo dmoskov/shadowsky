@@ -19,6 +19,7 @@ import {
 } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useColumnSwipe } from "../hooks/useColumnSwipe";
+import { useHasBeenVisible } from "../hooks/useHasBeenVisible";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import {
   DEFAULT_COLUMN_WIDTH,
@@ -83,6 +84,57 @@ const columnOptions = [
     description: "Live trending topics",
   },
 ];
+
+/**
+ * One deck column, which only loads once it has been scrolled near.
+ *
+ * A wide deck derives one column per saved feed, and every feed column used to
+ * fire its own timeline request on mount — a dozen saved feeds meant a dozen
+ * parallel fetches of 30 posts each before the reader had scrolled anywhere.
+ * The observer lives here, per column, because hooks can't be called from
+ * inside the map above.
+ */
+function DeckColumn({
+  column,
+  width,
+  isFocused,
+  onFocus,
+  onClose,
+}: {
+  column: Column;
+  width: number;
+  isFocused: boolean;
+  onFocus: () => void;
+  onClose?: (columnId: string) => void;
+}) {
+  const { ref, hasBeenVisible } = useHasBeenVisible<HTMLDivElement>();
+
+  return (
+    <div
+      ref={ref}
+      className={`h-full shrink-0 rounded-lg border border-asph-border-primary bg-asph-bg-secondary shadow-md transition-all duration-300 ease-out ${
+        isFocused
+          ? "shadow-xl ring-2 ring-blue-500/30"
+          : "hover:shadow-lg dark:hover:shadow-black/30"
+      }`}
+      style={{ width: `${width}px` }}
+      onClickCapture={(e) => {
+        // Don't focus column if clicking the remove button
+        const target = e.target as HTMLElement;
+        if (!target.closest('button[title="Remove column"]')) {
+          onFocus();
+        }
+      }}
+    >
+      <SkyColumn
+        column={column}
+        onClose={onClose}
+        isFocused={isFocused}
+        isVisible={hasBeenVisible}
+      />
+    </div>
+  );
+}
 
 export default function SkyDeck() {
   const { agent } = useAuth();
@@ -534,28 +586,14 @@ export default function SkyDeck() {
       <div className="skydeck-columns-scrollbar flex-1 overflow-x-auto overflow-y-hidden p-3">
         <div ref={columnsContainerRef} className="flex h-full min-w-min gap-3">
           {columns.map((column, index) => (
-            <div
+            <DeckColumn
               key={column.id}
-              className={`h-full shrink-0 rounded-lg border border-asph-border-primary bg-asph-bg-secondary shadow-md transition-all duration-300 ease-out ${
-                focusedColumnIndex === index
-                  ? "shadow-xl ring-2 ring-blue-500/30"
-                  : "hover:shadow-lg dark:hover:shadow-black/30"
-              }`}
-              style={{ width: `${columnWidth}px` }}
-              onClickCapture={(e) => {
-                // Don't focus column if clicking the remove button
-                const target = e.target as HTMLElement;
-                if (!target.closest('button[title="Remove column"]')) {
-                  setFocusedColumnIndex(index);
-                }
-              }}
-            >
-              <SkyColumn
-                column={column}
-                onClose={closeHandlerFor(column)}
-                isFocused={focusedColumnIndex === index}
-              />
-            </div>
+              column={column}
+              width={columnWidth}
+              isFocused={focusedColumnIndex === index}
+              onFocus={() => setFocusedColumnIndex(index)}
+              onClose={closeHandlerFor(column)}
+            />
           ))}
 
           <div
