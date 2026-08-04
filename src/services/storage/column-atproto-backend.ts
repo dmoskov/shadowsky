@@ -11,7 +11,6 @@ interface ColumnAtProtoData {
   data?: string;
   createdAt: string;
   updatedAt: string;
-  selectedFeedUri?: string;
 }
 
 export class ColumnAtProtoBackend implements ColumnStorageBackend {
@@ -39,14 +38,6 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
         updatedAt: new Date().toISOString(),
       };
 
-      // For feed columns, use the data field as selectedFeedUri
-      if (col.type === "feed") {
-        columnItem.selectedFeedUri = col.data || undefined;
-      } else {
-        // For non-feed columns, include undefined selectedFeedUri
-        columnItem.selectedFeedUri = undefined;
-      }
-
       return columnItem;
     });
 
@@ -70,11 +61,7 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
       id: col.id,
       type: col.type as Column["type"], // Convert from string to ColumnType
       title: col.title,
-      // For feed columns, use selectedFeedUri if available, otherwise use data
-      data:
-        col.type === "feed" && col.selectedFeedUri
-          ? col.selectedFeedUri
-          : col.data,
+      data: col.data,
       createdAt: col.createdAt,
       updatedAt: col.updatedAt,
     }));
@@ -119,19 +106,5 @@ export class ColumnAtProtoBackend implements ColumnStorageBackend {
   async migrateFrom(sourceBackend: ColumnStorageBackend): Promise<void> {
     const columns = await sourceBackend.loadColumns();
     await this.saveColumns(columns);
-  }
-
-  async updateColumnFeedPreference(
-    columnId: string,
-    feedUri: string,
-  ): Promise<void> {
-    // Update the column's data field if it exists and is a feed column
-    const columns = await this.loadColumns();
-    const columnIndex = columns.findIndex((c) => c.id === columnId);
-
-    if (columnIndex !== -1 && columns[columnIndex].type === "feed") {
-      columns[columnIndex].data = feedUri;
-      await this.saveColumns(columns);
-    }
   }
 }

@@ -29,14 +29,10 @@ import { type GalleryImage } from "./HomeFeedEmbed";
 import { PostItem } from "./HomePostItem";
 import { NewPostsPill } from "./NewPostsPill";
 import { useFeedFreshness } from "./useFeedFreshness";
-import { useFeedSelection } from "./useFeedSelection";
 import { useHomeFeedQuery } from "./useHomeFeedQuery";
 import { useThreadModalState } from "./useThreadModalState";
 
 // Code-split heavy components to improve initial load time
-const FeedDiscovery = lazyWithRetry(() =>
-  import("./FeedDiscovery").then((m) => ({ default: m.FeedDiscovery })),
-);
 const ImageGallery = lazyWithRetry(() =>
   import("./ImageGallery").then((m) => ({ default: m.ImageGallery })),
 );
@@ -46,13 +42,11 @@ const ThreadModal = lazyWithRetry(() =>
 
 export const Home: React.FC<HomeProps> = React.memo(
   ({
-    initialFeedUri,
+    feedUri,
     isFocused = true,
+    isVisible = true,
     columnId,
-    onFeedChange,
     onRefreshRequest,
-    showFeedDiscovery: externalShowFeedDiscovery,
-    onCloseFeedDiscovery,
   }) => {
     const { agent } = useAuth();
     const queryClient = useQueryClient();
@@ -68,13 +62,16 @@ export const Home: React.FC<HomeProps> = React.memo(
       enabled: isFocused,
     });
     // Removed hoveredPost state to prevent re-renders - using CSS hover instead
-    // Feed selection (selected feed, available feed options, parent sync)
-    const { selectedFeed } = useFeedSelection({
-      initialFeedUri,
-      columnId,
-      onFeedChange,
-      onRefreshRequest,
-    });
+    // Which feed this column shows is fixed by the deck (derived from the
+    // user's saved feeds), so there is no in-column feed switching.
+    const selectedFeed = feedUri;
+
+    // Refresh requested by the column header
+    useEffect(() => {
+      if (onRefreshRequest && onRefreshRequest > 0) {
+        queryClient.invalidateQueries({ queryKey: ["timeline", selectedFeed] });
+      }
+    }, [onRefreshRequest, queryClient, selectedFeed]);
 
     // Stability-focused caching: warm up cache for instant first load
     // Pre-populates React Query cache with IndexedDB data before component fetches
@@ -91,12 +88,6 @@ export const Home: React.FC<HomeProps> = React.memo(
     // events) lives in useFeedFreshness below — it signals via a "New posts"
     // pill instead of refetching underneath the reader.
 
-    const [internalShowFeedDiscovery, setInternalShowFeedDiscovery] =
-      useState(false);
-    const showFeedDiscovery =
-      externalShowFeedDiscovery !== undefined
-        ? externalShowFeedDiscovery
-        : internalShowFeedDiscovery;
     const [galleryImages, setGalleryImages] = useState<GalleryImage[] | null>(
       null,
     );
@@ -131,7 +122,7 @@ export const Home: React.FC<HomeProps> = React.memo(
 
     // Dropdown is now handled by the parent component
 
-    const feedQuery = useHomeFeedQuery(selectedFeed);
+    const feedQuery = useHomeFeedQuery(selectedFeed, isVisible);
 
     const {
       data,
@@ -771,19 +762,6 @@ export const Home: React.FC<HomeProps> = React.memo(
             <div ref={loadMoreRef} className="h-20" />
           </div>
         </NetworkWeatherLayer>
-
-        <Suspense fallback={null}>
-          <FeedDiscovery
-            isOpen={showFeedDiscovery}
-            onClose={() => {
-              if (onCloseFeedDiscovery) {
-                onCloseFeedDiscovery();
-              } else {
-                setInternalShowFeedDiscovery(false);
-              }
-            }}
-          />
-        </Suspense>
 
         {galleryImages && (
           <Suspense

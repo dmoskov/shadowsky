@@ -242,27 +242,6 @@ export class ColumnDexieBackend implements ColumnStorageBackend {
     await this.saveColumns(columns);
   }
 
-  async updateColumnFeedPreference(
-    columnId: string,
-    feedUri: string,
-  ): Promise<void> {
-    const db = await this.ensureInitialized();
-
-    try {
-      const column = await db.columns.get(columnId);
-
-      if (column && column.type === "feed") {
-        await db.columns.update(columnId, {
-          data: feedUri,
-          updatedAt: new Date().toISOString(),
-        });
-      }
-    } catch (error) {
-      logger.error("Failed to update column feed preference in Dexie:", error);
-      throw error;
-    }
-  }
-
   /**
    * Close the database connection (useful for cleanup/testing)
    */

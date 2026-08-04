@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom";
 import "fake-indexeddb/auto";
-import { vi } from "vitest";
+import { afterEach, vi } from "vitest";
 
 // Mock window.matchMedia
 Object.defineProperty(window, "matchMedia", {
@@ -17,16 +17,33 @@ Object.defineProperty(window, "matchMedia", {
   })),
 });
 
-// Mock localStorage
-const localStorageMock = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
-  length: 0,
-  key: vi.fn(),
-};
-global.localStorage = localStorageMock as any;
+// In-memory localStorage that behaves like the real API:
+// - getItem returns null (not undefined) for missing keys
+// - setItem/removeItem/clear/key/length all work correctly
+// - Cleared between tests via afterEach in this file
+function createMemoryStorage(): Storage {
+  let store = new Map<string, string>();
+  return {
+    getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
+    setItem: (k: string, v: string) => void store.set(k, String(v)),
+    removeItem: (k: string) => void store.delete(k),
+    clear: () => store.clear(),
+    key: (i: number) => Array.from(store.keys())[i] ?? null,
+    get length() {
+      return store.size;
+    },
+  };
+}
+
+Object.defineProperty(globalThis, "localStorage", {
+  configurable: true,
+  writable: true,
+  value: createMemoryStorage(),
+});
+
+afterEach(() => {
+  (globalThis as any).localStorage = createMemoryStorage();
+});
 
 // Mock document.cookie
 Object.defineProperty(document, "cookie", {

@@ -281,7 +281,7 @@ Engagement: ${engagement} (${post.likes || 0} likes, ${post.reposts || 0} repost
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-6",
+          model: "claude-sonnet-5",
           max_tokens: 3000,
           messages: [
             {

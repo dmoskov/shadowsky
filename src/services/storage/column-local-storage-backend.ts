@@ -108,18 +108,4 @@ export class ColumnLocalStorageBackend implements ColumnStorageBackend {
     const columns = await sourceBackend.loadColumns();
     await this.saveColumns(columns);
   }
-
-  async updateColumnFeedPreference(
-    columnId: string,
-    feedUri: string,
-  ): Promise<void> {
-    // Update the column's data field if it exists and is a feed column
-    const columns = await this.loadColumns();
-    const columnIndex = columns.findIndex((c) => c.id === columnId);
-
-    if (columnIndex !== -1 && columns[columnIndex].type === "feed") {
-      columns[columnIndex].data = feedUri;
-      await this.saveColumns(columns);
-    }
-  }
 }

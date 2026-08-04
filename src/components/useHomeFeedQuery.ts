@@ -85,7 +85,12 @@ export async function fetchFeedPage(
  *
  * Extracted from Home.tsx to keep the component focused on rendering/state.
  */
-export function useHomeFeedQuery(selectedFeed: FeedType) {
+/**
+ * @param enabled Set false to hold off fetching entirely — used by deck columns
+ *   the user hasn't scrolled to yet, so a wide deck doesn't fire one timeline
+ *   request per saved feed on mount.
+ */
+export function useHomeFeedQuery(selectedFeed: FeedType, enabled = true) {
   const { agent } = useAuth();
   const queryClient = useQueryClient();
   const offlineStatus = useOfflineFeedStatus();
@@ -243,7 +248,7 @@ export function useHomeFeedQuery(selectedFeed: FeedType) {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.cursor,
     maxPages: 10,
-    enabled: !!agent,
+    enabled: !!agent && enabled,
     staleTime: MOBILE_CONFIG.STALE_TIME,
     gcTime: MOBILE_CONFIG.GC_TIME,
     refetchOnMount: false, // Don't automatically refetch
