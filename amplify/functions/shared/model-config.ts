@@ -14,13 +14,13 @@
  */
 export const MODELS = {
   /** Claude Sonnet - balanced performance and cost, good for most tasks */
-  SONNET: 'claude-sonnet-4-6',
+  SONNET: 'claude-sonnet-5',
 
-  /** Claude Haiku - fastest and most cost-effective, good for simpler tasks (no 4.6 exists; 4.5 is the latest Haiku) */
+  /** Claude Haiku - fastest and most cost-effective, good for simpler tasks */
   HAIKU: 'claude-haiku-4-5',
 
   /** Claude Opus - most capable, best for complex reasoning tasks */
-  OPUS: 'claude-opus-4-6',
+  OPUS: 'claude-opus-4-8',
 } as const;
 
 export type ModelName = (typeof MODELS)[keyof typeof MODELS];
