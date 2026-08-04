@@ -46,28 +46,7 @@ async function load() {
   return await import("./network-weather");
 }
 
-// The global test setup (src/tests/setup.ts) replaces localStorage with bare
-// vi.fn() stubs that never store anything, so snapshot round-trips can't be
-// observed through it. These tests need real read-back behaviour.
-function installMemoryStorage() {
-  const store = new Map<string, string>();
-  Object.defineProperty(globalThis, "localStorage", {
-    configurable: true,
-    value: {
-      getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
-      setItem: (k: string, v: string) => void store.set(k, String(v)),
-      removeItem: (k: string) => void store.delete(k),
-      clear: () => store.clear(),
-      key: (i: number) => Array.from(store.keys())[i] ?? null,
-      get length() {
-        return store.size;
-      },
-    },
-  });
-}
-
 beforeEach(() => {
-  installMemoryStorage();
   fetchFromPan.mockReset();
 });
 
