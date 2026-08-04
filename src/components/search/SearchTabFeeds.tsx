@@ -3,6 +3,7 @@ import { debug } from "@bsky/shared";
 import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, List } from "lucide-react";
 import React from "react";
+import { CURATED_FEED_URIS } from "../../config/curated-feeds";
 import { proxifyBskyImage } from "../../utils/image-proxy";
 import { LoadingState } from "../ui/LoadingState";
 
@@ -25,18 +26,23 @@ export const SearchTabFeeds: React.FC<SearchTabFeedsProps> = React.memo(
         if (!activeSearchQuery.trim()) return null;
 
         try {
-          // Get popular feeds and user's feeds
-          const [popularResponse, suggestedResponse] = await Promise.all([
-            agent!.app.bsky.unspecced.getPopularFeedGenerators({
-              limit: 50,
-            }),
-            agent!.app.bsky.feed.getSuggestedFeeds({
-              limit: 50,
-            }),
-          ]);
+          // Get popular feeds, suggested feeds, and curated picks
+          const [popularResponse, suggestedResponse, curatedResponse] =
+            await Promise.all([
+              agent!.app.bsky.unspecced.getPopularFeedGenerators({
+                limit: 50,
+              }),
+              agent!.app.bsky.feed.getSuggestedFeeds({
+                limit: 50,
+              }),
+              agent!.app.bsky.feed.getFeedGenerators({
+                feeds: CURATED_FEED_URIS,
+              }),
+            ]);
 
           // Combine and deduplicate feeds
           const allFeeds = [
+            ...curatedResponse.data.feeds,
             ...popularResponse.data.feeds,
             ...suggestedResponse.data.feeds,
           ];
