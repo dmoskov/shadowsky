@@ -4,8 +4,8 @@
   "client_name": "Asphodel",
   "client_uri": "https://asphodel.is",
   "logo_uri": "https://asphodel.is/butterfly-icon.svg",
-  "tos_uri": "https://asphodel.is/terms",
-  "policy_uri": "https://asphodel.is/privacy",
+  "tos_uri": "https://asphodel.is/terms.html",
+  "policy_uri": "https://asphodel.is/privacy.html",
   "redirect_uris": [
     "https://asphodel.is/oauth/callback",
     "https://main.asphodel.is/oauth/callback"

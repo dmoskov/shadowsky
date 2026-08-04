@@ -351,11 +351,11 @@ export function LandingScreen() {
 
           <Text style={styles.disclaimer}>
             {t("auth.disclaimer")}{" "}
-            <Text style={styles.link} onPress={() => openLink("https://shadowsky.io/terms")}>
+            <Text style={styles.link} onPress={() => openLink("https://shadowsky.io/terms.html")}>
               {t("auth.terms_of_service")}
             </Text>{" "}
             {t("auth.and")}{" "}
-            <Text style={styles.link} onPress={() => openLink("https://shadowsky.io/privacy")}>
+            <Text style={styles.link} onPress={() => openLink("https://shadowsky.io/privacy.html")}>
               {t("auth.privacy_policy")}
             </Text>
           </Text>
