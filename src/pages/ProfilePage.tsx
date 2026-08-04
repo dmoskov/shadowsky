@@ -14,6 +14,8 @@ import {
   Edit,
   ExternalLink,
   Flag,
+  Hash,
+  Heart,
   List as ListIcon,
   MoreHorizontal,
   Pin,
@@ -82,7 +84,8 @@ export default function ProfilePage() {
     tabParam === "replies" ||
     tabParam === "media" ||
     tabParam === "likes" ||
-    tabParam === "top"
+    tabParam === "top" ||
+    tabParam === "feeds"
       ? tabParam
       : "posts";
 
@@ -246,7 +249,8 @@ export default function ProfilePage() {
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.cursor || undefined,
     staleTime: 2 * 60 * 1000, // 2 minutes
-    enabled: !!agent && !!handle && activeTab !== "top",
+    enabled:
+      !!agent && !!handle && activeTab !== "top" && activeTab !== "feeds",
   });
 
   // Flatten paginated posts for rendering
@@ -296,6 +300,22 @@ export default function ProfilePage() {
     handle: handle || "",
     limit: 10,
     enabled: !!handle,
+  });
+
+  // Actor feeds (feed generators created by this user)
+  const hasFeedgens = (profile?.associated?.feedgens ?? 0) > 0;
+  const { data: actorFeedsData, isLoading: isActorFeedsLoading } = useQuery({
+    queryKey: ["actor-feeds", handle],
+    queryFn: async () => {
+      if (!agent || !handle) throw new Error("Missing agent or handle");
+      const response = await agent.app.bsky.feed.getActorFeeds({
+        actor: handle,
+        limit: 100,
+      });
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!agent && !!handle && hasFeedgens,
   });
 
   const [aiInsightsExpanded, setAiInsightsExpanded] = useState(false);
@@ -1535,6 +1555,28 @@ export default function ProfilePage() {
               />
             )}
           </button>
+          {hasFeedgens && (
+            <button
+              onClick={() => setActiveTab("feeds")}
+              className={`touch-target relative flex-1 px-4 py-4 text-center font-medium transition-all ${
+                activeTab === "feeds" ? "" : "hover:scale-105"
+              }`}
+              style={{
+                color:
+                  activeTab === "feeds"
+                    ? "var(--asph-primary)"
+                    : "var(--asph-text-secondary)",
+              }}
+            >
+              Feeds
+              {activeTab === "feeds" && (
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-0.5"
+                  style={{ backgroundColor: "var(--asph-primary)" }}
+                />
+              )}
+            </button>
+          )}
         </div>
       </div>
 
@@ -1580,7 +1622,103 @@ export default function ProfilePage() {
 
       {/* Posts - Virtualized */}
       <div ref={listContainerRef}>
-        {activeTab === "top" ? (
+        {activeTab === "feeds" ? (
+          <div className="p-4">
+            {isActorFeedsLoading ? (
+              <div
+                className="skeleton-stagger"
+                role="status"
+                aria-label="Loading feeds"
+              >
+                <FeedSkeleton count={3} />
+              </div>
+            ) : actorFeedsData?.feeds && actorFeedsData.feeds.length > 0 ? (
+              <div className="space-y-3">
+                {actorFeedsData.feeds.map((feed) => (
+                  <div
+                    key={feed.uri}
+                    className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-all duration-200 hover:shadow-md"
+                    style={{
+                      borderColor: "var(--asph-border-primary)",
+                      backgroundColor: "var(--asph-bg-secondary)",
+                    }}
+                    onClick={() => {
+                      const rkey = feed.uri.split("/").pop();
+                      window.open(
+                        `https://bsky.app/profile/${feed.creator.handle}/feed/${rkey}`,
+                        "_blank",
+                        "noopener,noreferrer",
+                      );
+                    }}
+                  >
+                    {feed.avatar ? (
+                      <img
+                        src={proxifyBskyImage(feed.avatar)}
+                        alt={feed.displayName}
+                        className="h-12 w-12 flex-shrink-0 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg"
+                        style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
+                      >
+                        <Hash
+                          className="h-5 w-5"
+                          style={{ color: "var(--asph-text-secondary)" }}
+                        />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <h3
+                        className="font-semibold"
+                        style={{ color: "var(--asph-text-primary)" }}
+                      >
+                        {feed.displayName}
+                      </h3>
+                      {feed.description && (
+                        <p
+                          className="mt-1 line-clamp-2 text-sm"
+                          style={{ color: "var(--asph-text-secondary)" }}
+                        >
+                          {feed.description}
+                        </p>
+                      )}
+                      <div className="mt-2 flex items-center gap-3 text-xs">
+                        {feed.likeCount !== undefined && (
+                          <span
+                            className="flex items-center gap-1"
+                            style={{ color: "var(--asph-text-tertiary)" }}
+                          >
+                            <Heart className="h-3 w-3" />
+                            {feed.likeCount.toLocaleString()}
+                          </span>
+                        )}
+                        <a
+                          href={`https://bsky.app/profile/${feed.creator.handle}/feed/${feed.uri.split("/").pop()}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-1 hover:underline"
+                          style={{ color: "var(--asph-primary)" }}
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          View
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                variant="empty"
+                title="No feeds"
+                message="This user hasn't created any feeds."
+                compact
+              />
+            )}
+          </div>
+        ) : activeTab === "top" ? (
           <div style={{ height: listHeight }}>
             {isTopPostsLoading ? (
               <div

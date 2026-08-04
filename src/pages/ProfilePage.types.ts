@@ -30,4 +30,10 @@ export interface ProfileData {
   };
 }
 
-export type ProfileTab = "posts" | "replies" | "media" | "likes" | "top";
+export type ProfileTab =
+  | "posts"
+  | "replies"
+  | "media"
+  | "likes"
+  | "top"
+  | "feeds";
