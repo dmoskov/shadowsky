@@ -69,7 +69,7 @@ describe("ColumnAtProtoBackend", () => {
       );
     });
 
-    it("should save columns with feed preferences", async () => {
+    it("should save columns", async () => {
       const columns: Column[] = [
         createMockColumn("col1", "feed"),
         createMockColumn("col2", "notifications"),
@@ -85,21 +85,18 @@ describe("ColumnAtProtoBackend", () => {
             type: "feed",
             title: "Column col1",
             data: "at://feed/123",
-            selectedFeedUri: "at://feed/123",
           }),
           expect.objectContaining({
             id: "col2",
             type: "notifications",
             title: "Column col2",
             data: undefined,
-            selectedFeedUri: undefined,
           }),
           expect.objectContaining({
             id: "col3",
             type: "feed",
             title: "Column col3",
             data: "at://feed/123",
-            selectedFeedUri: "at://feed/123",
           }),
         ]),
       );
@@ -134,7 +131,7 @@ describe("ColumnAtProtoBackend", () => {
       expect(columns).toEqual([]);
     });
 
-    it("should load columns and restore feed preferences", async () => {
+    it("should load columns", async () => {
       mockAppPreferencesService.getColumns.mockResolvedValueOnce({
         $type: "com.shadowsky.columns",
         columns: [
@@ -145,7 +142,6 @@ describe("ColumnAtProtoBackend", () => {
             data: "at://feed/123",
             createdAt: "2024-01-01T00:00:00Z",
             updatedAt: "2024-01-01T00:00:00Z",
-            selectedFeedUri: "at://feed/selected1",
           },
           {
             id: "col2",
@@ -165,7 +161,7 @@ describe("ColumnAtProtoBackend", () => {
         id: "col1",
         type: "feed",
         title: "Feed Column",
-        data: "at://feed/selected1", // Uses selectedFeedUri when available for feed columns
+        data: "at://feed/123", // Uses selectedFeedUri when available for feed columns
         createdAt: "2024-01-01T00:00:00Z",
         updatedAt: "2024-01-01T00:00:00Z",
       });
@@ -326,68 +322,6 @@ describe("ColumnAtProtoBackend", () => {
 
       await backend.deleteColumn("nonexistent");
 
-      expect(mockAppPreferencesService.updateColumns).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("updateColumnFeedPreference", () => {
-    beforeEach(() => {
-      backend.setAgent(mockAgent);
-    });
-
-    it("should update feed preference for feed column", async () => {
-      mockAppPreferencesService.getColumns.mockResolvedValueOnce({
-        $type: "com.shadowsky.columns",
-        columns: [
-          {
-            id: "col1",
-            type: "feed",
-            title: "Feed Column",
-            data: "at://feed/123",
-            createdAt: "2024-01-01T00:00:00Z",
-            updatedAt: "2024-01-01T00:00:00Z",
-          },
-        ],
-        version: 1,
-      });
-
-      await backend.updateColumnFeedPreference("col1", "at://feed/new");
-
-      // Should save to AT Protocol
-      expect(mockAppPreferencesService.updateColumns).toHaveBeenCalled();
-    });
-
-    it("should not save if column is not a feed type", async () => {
-      mockAppPreferencesService.getColumns.mockResolvedValueOnce({
-        $type: "com.shadowsky.columns",
-        columns: [
-          {
-            id: "col1",
-            type: "notifications",
-            title: "Notifications",
-            createdAt: "2024-01-01T00:00:00Z",
-            updatedAt: "2024-01-01T00:00:00Z",
-          },
-        ],
-        version: 1,
-      });
-
-      await backend.updateColumnFeedPreference("col1", "at://feed/new");
-
-      // Should not save to AT Protocol since it's not a feed column
-      expect(mockAppPreferencesService.updateColumns).not.toHaveBeenCalled();
-    });
-
-    it("should not save if column doesn't exist", async () => {
-      mockAppPreferencesService.getColumns.mockResolvedValueOnce({
-        $type: "com.shadowsky.columns",
-        columns: [],
-        version: 1,
-      });
-
-      await backend.updateColumnFeedPreference("nonexistent", "at://feed/new");
-
-      // Should not save to AT Protocol since column doesn't exist
       expect(mockAppPreferencesService.updateColumns).not.toHaveBeenCalled();
     });
   });

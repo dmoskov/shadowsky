@@ -10,9 +10,7 @@ import React, {
 import { useErrorTracking } from "../hooks/useErrorTracking";
 import { useScrollContainerGPU } from "../hooks/useGPUAcceleration";
 import { useRAFScroll } from "../hooks/useRAFScroll";
-import { columnService } from "../services/column-service";
 import type { ScrollState } from "../services/scroll-batching-service";
-import { useStorageErrorManager } from "../services/storage/storage-error-manager";
 import type { Column } from "../types/column";
 import { BookmarksColumn } from "./BookmarksColumn";
 import { ColumnHeader } from "./ColumnHeader";
@@ -22,11 +20,13 @@ import { Home } from "./Home";
 import { NotificationsFeed } from "./NotificationsFeed";
 import { SearchColumn } from "./SearchColumn";
 import { TrendingColumn } from "./TrendingColumn";
+import { UnavailableFeedColumn } from "./UnavailableFeedColumn";
 import { VisualTimeline } from "./VisualTimeline";
 
 interface SkyColumnProps {
   column: Column;
-  onClose: () => void;
+  /** Omitted for derived feed columns, which are removed by unsaving the feed. */
+  onClose?: (columnId: string) => void;
   onMoveLeft?: () => void;
   onMoveRight?: () => void;
   chromeless?: boolean;
@@ -44,20 +44,10 @@ const SkyColumn = memo(
   }: SkyColumnProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const gpuScrollRef = useScrollContainerGPU();
-    const { handleStorageError } = useStorageErrorManager();
     const { logError } = useErrorTracking();
     const [hasScrollTop, setHasScrollTop] = useState(false);
     const [hasScrollBottom, setHasScrollBottom] = useState(false);
-    const [currentFeedLabel, setCurrentFeedLabel] = useState<string>("");
-    const [feedOptions, setFeedOptions] = useState<any[]>([]);
     const [refreshCounter, setRefreshCounter] = useState(0);
-    const [showFeedDiscovery, setShowFeedDiscovery] = useState(false);
-    const [selectedFeedUri, setSelectedFeedUri] = useState<string | undefined>(
-      () => {
-        // The column.data already contains the selected feed from storage
-        return column.data;
-      },
-    );
     const [showScrollButton, setShowScrollButton] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -153,19 +143,6 @@ const SkyColumn = memo(
         }, 1000);
       }
     }, [column.type, scrollToTop]);
-
-    // Memoized callbacks for Home component
-    const handleFeedChange = useCallback(
-      (_: unknown, label: string, options: unknown[]) => {
-        setCurrentFeedLabel(label);
-        setFeedOptions(options);
-      },
-      [],
-    );
-
-    const handleCloseFeedDiscovery = useCallback(() => {
-      setShowFeedDiscovery(false);
-    }, []);
 
     // Memoized error handlers for ErrorBoundary components
     const handleNotificationsError = useCallback(
@@ -272,16 +249,16 @@ const SkyColumn = memo(
           );
 
         case "feed":
+          if (column.unavailable) {
+            return <UnavailableFeedColumn column={column} />;
+          }
           return (
             <ErrorBoundary componentName="Feed" onError={handleHomeError}>
               <Home
-                initialFeedUri={selectedFeedUri || column.data}
+                feedUri={column.data ?? "following"}
                 isFocused={isFocused}
                 columnId={column.id}
-                onFeedChange={handleFeedChange}
                 onRefreshRequest={refreshCounter}
-                showFeedDiscovery={showFeedDiscovery}
-                onCloseFeedDiscovery={handleCloseFeedDiscovery}
               />
             </ErrorBoundary>
           );
@@ -306,15 +283,9 @@ const SkyColumn = memo(
           );
       }
     }, [
-      column.type,
-      column.data,
-      column.id,
+      column,
       isFocused,
-      selectedFeedUri,
       refreshCounter,
-      showFeedDiscovery,
-      handleFeedChange,
-      handleCloseFeedDiscovery,
       handleNotificationsError,
       handleTimelineError,
       handleMessagesError,
@@ -326,44 +297,11 @@ const SkyColumn = memo(
 
     // Memoized event handlers for ColumnHeader
     const handleRemove = useCallback(() => {
-      onClose();
-    }, [onClose]);
+      onClose?.(column.id);
+    }, [onClose, column.id]);
 
     const handleRefresh = useCallback(() => {
       setRefreshCounter((prev) => prev + 1);
-    }, []);
-
-    const handleHeaderFeedChange = useCallback(
-      async (feedUri: string) => {
-        // Optimistic update
-        const previousFeedUri = selectedFeedUri;
-        setSelectedFeedUri(feedUri);
-        setRefreshCounter((prev) => prev + 1);
-
-        // Save to column-specific preferences if columnId exists
-        if (column.id) {
-          try {
-            await columnService.updateColumnFeedPreference(column.id, feedUri);
-          } catch (error) {
-            // Revert on error
-            setSelectedFeedUri(previousFeedUri);
-            setRefreshCounter((prev) => prev + 1);
-
-            // Show error to user
-            handleStorageError(
-              error instanceof Error
-                ? error
-                : new Error("Failed to save feed preference"),
-              "update feed preference",
-            );
-          }
-        }
-      },
-      [column.id, selectedFeedUri, handleStorageError],
-    );
-
-    const handleDiscoverFeeds = useCallback(() => {
-      setShowFeedDiscovery(true);
     }, []);
 
     // Render content with header
@@ -372,19 +310,13 @@ const SkyColumn = memo(
         <div className="flex h-full flex-col">
           <ColumnHeader
             column={column}
-            onRemove={handleRemove}
+            onRemove={onClose ? handleRemove : undefined}
             onMoveLeft={onMoveLeft}
             onMoveRight={onMoveRight}
-            onRefresh={column.type === "feed" ? handleRefresh : undefined}
-            onFeedChange={
-              column.type === "feed" ? handleHeaderFeedChange : undefined
-            }
-            currentFeedLabel={
-              column.type === "feed" ? currentFeedLabel : undefined
-            }
-            feedOptions={column.type === "feed" ? feedOptions : undefined}
-            onDiscoverFeeds={
-              column.type === "feed" ? handleDiscoverFeeds : undefined
+            onRefresh={
+              column.type === "feed" && !column.unavailable
+                ? handleRefresh
+                : undefined
             }
           />
           <div className="relative flex-1 overflow-hidden">
@@ -473,6 +405,9 @@ const SkyColumn = memo(
       prevProps.column.id === nextProps.column.id &&
       prevProps.column.type === nextProps.column.type &&
       prevProps.column.data === nextProps.column.data &&
+      // Titles arrive asynchronously once feed generators resolve
+      prevProps.column.title === nextProps.column.title &&
+      prevProps.column.unavailable === nextProps.column.unavailable &&
       prevProps.chromeless === nextProps.chromeless &&
       prevProps.isFocused === nextProps.isFocused &&
       // For callbacks, we compare by reference

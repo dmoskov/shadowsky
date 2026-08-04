@@ -146,18 +146,12 @@ export interface ApiError {
 }
 
 export interface HomeProps {
-  initialFeedUri?: string;
+  /** The feed this column shows. Fixed by the deck; not switchable in-column. */
+  feedUri: string;
   isFocused?: boolean;
+  /** Scopes keyboard-shortcut post actions to this column. */
   columnId?: string;
-  onClose?: () => void;
-  onFeedChange?: (
-    feed: string,
-    label: string,
-    feedOptions: FeedOption[],
-  ) => void;
   onRefreshRequest?: number;
-  showFeedDiscovery?: boolean;
-  onCloseFeedDiscovery?: () => void;
 }
 
 // Session storage key for persisting open thread across view mode changes

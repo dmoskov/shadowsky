@@ -1,9 +1,3 @@
-import type {
-  AppBskyActorDefs,
-  AppBskyGraphDefs,
-  BskyAgent,
-} from "@atproto/api";
-import { useQuery } from "@tanstack/react-query";
 import {
   Bell,
   Bookmark,
@@ -13,13 +7,17 @@ import {
   Mail,
   Plus,
   Search,
-  Star,
   TrendingUp,
-  Users,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useModal } from "../contexts/ModalContext";
 import { useColumnSwipe } from "../hooks/useColumnSwipe";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import {
@@ -27,102 +25,27 @@ import {
   appPreferencesService,
 } from "../services/app-preferences-service";
 import { columnService } from "../services/column-service";
-import { LOCAL_STORAGE_KEYS } from "../services/storage/storage-constants";
 import type { Column, ColumnType } from "../types/column";
+import { lazyWithRetry } from "../utils/lazyWithRetry";
 import { createLogger } from "../utils/logger";
 import SkyColumn from "./SkyColumn";
+import { useDeckFeeds } from "./useDeckFeeds";
 
 // Re-export types for backwards compatibility
 export type { Column, ColumnType } from "../types/column";
 
 const logger = createLogger("SkyDeck");
 
-interface FeedGenerator {
-  uri: string;
-  displayName: string;
-  description?: string;
-  avatar?: string;
-}
+const FeedDiscovery = lazyWithRetry(() =>
+  import("./FeedDiscovery").then((m) => ({ default: m.FeedDiscovery })),
+);
 
 /**
- * Build initial columns from the user's Bluesky pinned feeds.
- * Called when no saved column layout exists (first use or data loss).
+ * Column types you can add by hand. Feeds are not on this list: feed columns
+ * come from your Bluesky saved feeds (see useDeckFeeds), so the way to add one
+ * is to save the feed, not to add a column.
  */
-async function buildColumnsFromPinnedFeeds(
-  agent: BskyAgent,
-  homeColumn: Column,
-): Promise<Column[]> {
-  try {
-    const prefs = await agent.getPreferences();
-
-    // Get all pinned feeds (feed generators, lists, and timelines)
-    const allPinnedFeeds =
-      prefs.savedFeeds?.filter((f: AppBskyActorDefs.SavedFeed) => f.pinned) ||
-      [];
-
-    // Separate feed generators (need API lookup) from other types
-    const feedGeneratorFeeds = allPinnedFeeds.filter((f) => f.type === "feed");
-    const listFeeds = allPinnedFeeds.filter((f) => f.type === "list");
-
-    if (allPinnedFeeds.length === 0) {
-      return [homeColumn];
-    }
-
-    const columns: Column[] = [homeColumn];
-    const now = Date.now();
-    let colIndex = 0;
-
-    // Add feed generator columns (need display names from API)
-    if (feedGeneratorFeeds.length > 0) {
-      const feedUris = feedGeneratorFeeds.map(
-        (f: AppBskyActorDefs.SavedFeed) => f.value,
-      );
-      const feedResponse = await agent.app.bsky.feed.getFeedGenerators({
-        feeds: feedUris,
-      });
-
-      feedGeneratorFeeds.forEach((pinnedFeed: AppBskyActorDefs.SavedFeed) => {
-        const generator = feedResponse.data.feeds.find(
-          (g: FeedGenerator) => g.uri === pinnedFeed.value,
-        );
-        if (generator) {
-          columns.push({
-            id: `feed-${now}-${colIndex++}`,
-            type: "feed",
-            title: generator.displayName,
-            data: pinnedFeed.value,
-          });
-        }
-      });
-    }
-
-    // Add list-based feed columns
-    listFeeds.forEach((listFeed: AppBskyActorDefs.SavedFeed) => {
-      columns.push({
-        id: `feed-${now}-${colIndex++}`,
-        type: "feed",
-        title: "List",
-        data: listFeed.value,
-      });
-    });
-
-    return columns;
-  } catch (error) {
-    console.error(
-      "[SkyDeck] Failed to build columns from pinned feeds:",
-      error,
-    );
-    return [homeColumn];
-  }
-}
-
 const columnOptions = [
-  {
-    type: "feed" as ColumnType,
-    label: "Feed Column",
-    icon: Rss,
-    description: "Add another feed column",
-  },
   {
     type: "notifications" as ColumnType,
     label: "Notifications",
@@ -163,88 +86,35 @@ const columnOptions = [
 
 export default function SkyDeck() {
   const { agent } = useAuth();
-  const { showAlert } = useModal();
-  const [columns, setColumns] = useState<Column[]>([]);
-  const [columnsLoaded, setColumnsLoaded] = useState(false);
+  // Columns the user added by hand. Feed columns are derived, not stored.
+  const [extraColumns, setExtraColumns] = useState<Column[]>([]);
+  const [extrasLoaded, setExtrasLoaded] = useState(false);
   const [isAddingColumn, setIsAddingColumn] = useState(false);
+  const [showFeedDiscovery, setShowFeedDiscovery] = useState(false);
   // Narrow view for screens below tailwind's md breakpoint (768px). Driven by
   // matchMedia (via useMediaQuery) so it only updates when the breakpoint flips,
   // not on every resize event — keeps the resize gesture smooth.
   const isNarrowView = useMediaQuery("(max-width: 767px)");
   const [focusedColumnIndex, setFocusedColumnIndex] = useState(0);
   const [mobileColumnIndex, setMobileColumnIndex] = useState(0);
-  const [customFeedUri, setCustomFeedUri] = useState("");
-  const [isLoadingCustomFeed, setIsLoadingCustomFeed] = useState(false);
   // 0 = full-width single column (the default). A saved non-zero width from
   // Settings > Appearance opts into multi-column deck mode.
   const [columnWidth, setColumnWidth] = useState(DEFAULT_COLUMN_WIDTH);
+  // How many saved feeds to show. Undefined means all of them.
+  const [feedColumnLimit, setFeedColumnLimit] = useState<number | undefined>(
+    undefined,
+  );
   const columnsContainerRef = useRef<HTMLDivElement>(null);
   const columnSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const columnsLoadedRef = useRef(false);
+  const extrasLoadedRef = useRef(false);
 
-  // Fetch user's saved/pinned feeds
-  const { data: userPrefs } = useQuery({
-    queryKey: ["userPreferences"],
-    queryFn: async () => {
-      if (!agent) throw new Error("Not authenticated");
-      const prefs = await agent.getPreferences();
-      return prefs;
-    },
-    enabled: !!agent,
-    staleTime: 5 * 60 * 1000,
-    refetchOnMount: "always", // Always fetch fresh data on mount
-  });
+  const { feeds: feedColumns, isLoading: feedsLoading } =
+    useDeckFeeds(feedColumnLimit);
 
-  // Fetch feed generator details for saved feeds
-  const { data: feedGenerators } = useQuery({
-    queryKey: ["feedGenerators", userPrefs?.savedFeeds],
-    queryFn: async () => {
-      if (!agent || !userPrefs?.savedFeeds?.length) return [];
-
-      const feedUris = userPrefs.savedFeeds
-        .filter(
-          (feed: AppBskyActorDefs.SavedFeed): boolean => feed.type === "feed",
-        )
-        .map((feed: AppBskyActorDefs.SavedFeed) => feed.value);
-
-      if (feedUris.length === 0) return [];
-
-      try {
-        const response = await agent.app.bsky.feed.getFeedGenerators({
-          feeds: feedUris,
-        });
-        return response.data.feeds;
-      } catch (error) {
-        logger.error("Failed to fetch feed generators:", error);
-        return [];
-      }
-    },
-    enabled: !!agent && !!userPrefs?.savedFeeds,
-  });
-
-  // Fetch user's lists (paginate through all)
-  const { data: userLists } = useQuery({
-    queryKey: ["userLists", agent?.session?.did],
-    queryFn: async () => {
-      if (!agent || !agent.session?.did) throw new Error("Not authenticated");
-      const allLists: AppBskyGraphDefs.ListView[] = [];
-      let cursor: string | undefined;
-
-      do {
-        const response = await agent.app.bsky.graph.getLists({
-          actor: agent.session.did,
-          limit: 100,
-          cursor,
-        });
-        allLists.push(...response.data.lists);
-        cursor = response.data.cursor;
-      } while (cursor);
-
-      return allLists;
-    },
-    enabled: !!agent?.session?.did,
-    staleTime: 30 * 60 * 1000, // 30 minutes
-  });
+  const columns = useMemo(
+    () => [...feedColumns, ...extraColumns],
+    [feedColumns, extraColumns],
+  );
 
   // Handle keyboard navigation between columns
   useEffect(() => {
@@ -288,6 +158,16 @@ export default function SkyDeck() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [columns.length, focusedColumnIndex]);
 
+  // Keep the focused index inside the deck as feeds come and go
+  useEffect(() => {
+    if (columns.length > 0 && focusedColumnIndex > columns.length - 1) {
+      setFocusedColumnIndex(columns.length - 1);
+    }
+    if (columns.length > 0 && mobileColumnIndex > columns.length - 1) {
+      setMobileColumnIndex(columns.length - 1);
+    }
+  }, [columns.length, focusedColumnIndex, mobileColumnIndex]);
+
   // Scroll focused column into view
   useEffect(() => {
     if (columnsContainerRef.current && columns.length > 0) {
@@ -319,28 +199,7 @@ export default function SkyDeck() {
         data: topic,
       };
 
-      setColumns((prev) => {
-        // Focus the newly added column (index = prev.length, which is the last position)
-        setTimeout(() => {
-          setFocusedColumnIndex(prev.length);
-
-          if (columnsContainerRef.current) {
-            const container = columnsContainerRef.current;
-            const newColumnElement = container.querySelector(
-              ".column-wrapper:last-of-type",
-            ) as HTMLElement;
-            if (newColumnElement) {
-              newColumnElement.scrollIntoView({
-                behavior: "smooth",
-                inline: "end",
-                block: "nearest",
-              });
-            }
-          }
-        }, 100);
-
-        return [...prev, newColumn];
-      });
+      setExtraColumns((prev) => [...prev, newColumn]);
     };
 
     window.addEventListener("searchTopic", handleSearchTopic as EventListener);
@@ -353,17 +212,9 @@ export default function SkyDeck() {
   }, []);
 
   useEffect(() => {
-    const homeColumn: Column = {
-      id: "home",
-      type: "feed",
-      title: "Home",
-      data: "following", // Default to following feed
-    };
-
-    // Initialize column service and load columns
-    const loadColumns = async () => {
-      if (!agent || columnsLoadedRef.current) return;
-      columnsLoadedRef.current = true;
+    const loadExtras = async () => {
+      if (!agent || extrasLoadedRef.current) return;
+      extrasLoadedRef.current = true;
 
       // Initialize column service with the current storage type from preferences
       appPreferencesService.setAgent(agent);
@@ -375,68 +226,35 @@ export default function SkyDeck() {
       if (appPreferences && appPreferences.columnWidth != null) {
         setColumnWidth(appPreferences.columnWidth);
       }
+      if (appPreferences && appPreferences.columnCount != null) {
+        setFeedColumnLimit(appPreferences.columnCount);
+      }
 
-      // Load columns from service
+      // Drop stored feed columns, including the old hardcoded "home" column.
+      // Feeds are derived from saved feeds now, so anything left over here is
+      // a stale snapshot from the previous layout model.
       const savedColumns = await columnService.getColumns();
-
-      // Detect if this is a default-only layout (empty or just the auto-created home column)
-      // that should be auto-populated from the user's Bluesky pinned feeds
-      const isDefaultOnly =
-        !savedColumns ||
-        savedColumns.length === 0 ||
-        (savedColumns.length === 1 && savedColumns[0].id === "home");
-      const hasUserConfigured =
-        localStorage.getItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED) === "true";
-
-      // If Dexie has only default columns but the flag says "configured",
-      // a previous auto-populate set the flag before saving to Dexie completed.
-      // Clear the stale flag so auto-populate can retry.
-      if (isDefaultOnly && hasUserConfigured) {
-        localStorage.removeItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED);
-      }
-
-      if (isDefaultOnly) {
-        // Auto-populate from Bluesky pinned feeds
-        const initialColumns = await buildColumnsFromPinnedFeeds(
-          agent,
-          homeColumn,
-        );
-        setColumns(initialColumns);
-        if (initialColumns.length > 1) {
-          // Save immediately to Dexie — don't rely on the debounced save effect,
-          // because SkyDeck may remount (route change) before the timer fires
-          await columnService.importColumns(initialColumns);
-          localStorage.setItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED, "true");
-        }
-      } else if (savedColumns && savedColumns.length > 0) {
-        // Ensure the first column is always Home
-        if (savedColumns[0].id !== "home") {
-          const restoredColumns = [
-            homeColumn,
-            ...savedColumns.filter((col: Column) => col.id !== "home"),
-          ];
-          setColumns(restoredColumns);
-        } else {
-          setColumns(savedColumns);
-        }
-      } else {
-        setColumns([homeColumn]);
-      }
-      // Mark columns as loaded
-      setColumnsLoaded(true);
+      setExtraColumns(
+        (savedColumns || []).filter(
+          (col: Column) => col.type !== "feed" && col.id !== "home",
+        ),
+      );
+      setExtrasLoaded(true);
     };
 
-    loadColumns();
+    loadExtras();
   }, [agent]);
 
-  // Save columns using column service - only after initial load, debounced
+  // Save extra columns using column service - only after initial load, debounced.
+  // Runs even when the list is empty so a layout left over from the snapshot
+  // model gets cleaned out of storage.
   useEffect(() => {
-    if (columns.length > 0 && agent && columnsLoaded) {
+    if (agent && extrasLoaded) {
       if (columnSaveTimerRef.current) {
         clearTimeout(columnSaveTimerRef.current);
       }
       columnSaveTimerRef.current = setTimeout(() => {
-        columnService.importColumns(columns).catch((error) => {
+        columnService.importColumns(extraColumns).catch((error) => {
           logger.error("Failed to save columns:", error);
         });
       }, 500);
@@ -446,99 +264,34 @@ export default function SkyDeck() {
         clearTimeout(columnSaveTimerRef.current);
       }
     };
-  }, [columns, agent, columnsLoaded]);
+  }, [extraColumns, agent, extrasLoaded]);
 
-  const handleAddColumn = useCallback(
-    (type: ColumnType, feedUri?: string, feedTitle?: string) => {
-      const newColumn: Column = {
-        id: Date.now().toString(),
-        type: type,
-        title:
-          feedTitle ||
-          (type === "feed"
-            ? "Feed"
-            : columnOptions.find((opt) => opt.type === type)?.label || type),
-        data: feedUri || (type === "feed" ? "following" : undefined),
-      };
+  const handleAddColumn = useCallback((type: ColumnType) => {
+    const newColumn: Column = {
+      id: Date.now().toString(),
+      type: type,
+      title: columnOptions.find((opt) => opt.type === type)?.label || type,
+    };
 
-      // Mark deck as manually configured so auto-populate doesn't override
-      localStorage.setItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED, "true");
-
-      setColumns((prev) => {
-        // Focus the newly added column (index = prev.length, which is the last position)
-        setTimeout(() => {
-          setFocusedColumnIndex(prev.length);
-
-          // Scroll to show the new column
-          if (columnsContainerRef.current) {
-            const container = columnsContainerRef.current;
-            const newColumnElement = container.querySelector(
-              ".column-wrapper:last-of-type",
-            ) as HTMLElement;
-            if (newColumnElement) {
-              newColumnElement.scrollIntoView({
-                behavior: "smooth",
-                inline: "end",
-                block: "nearest",
-              });
-            }
-          }
-        }, 100);
-
-        return [...prev, newColumn];
-      });
-      setIsAddingColumn(false);
-    },
-    [],
-  );
+    setExtraColumns((prev) => [...prev, newColumn]);
+    setIsAddingColumn(false);
+  }, []);
 
   const handleRemoveColumn = useCallback((id: string) => {
-    // Don't allow removing the home column
-    if (id === "home") return;
-
-    // Mark deck as manually configured so auto-populate doesn't override
-    localStorage.setItem(LOCAL_STORAGE_KEYS.COLUMNS_CONFIGURED, "true");
-
-    setColumns((prev) => {
+    setExtraColumns((prev) => {
       const columnToRemove = prev.find((col) => col.id === id);
-      // Delete the column from the service
-      if (columnToRemove) {
-        columnService.deleteColumn(columnToRemove.id).catch((error) => {
-          logger.error("Failed to delete column:", error);
-        });
-      }
+      if (!columnToRemove) return prev;
+
+      columnService.deleteColumn(columnToRemove.id).catch((error) => {
+        logger.error("Failed to delete column:", error);
+      });
       return prev.filter((col) => col.id !== id);
     });
   }, []);
 
-  const handleMoveLeft = useCallback((columnId: string) => {
-    setColumns((prev) => {
-      const currentIndex = prev.findIndex((col) => col.id === columnId);
-      if (currentIndex > 0) {
-        const newColumns = [...prev];
-        [newColumns[currentIndex - 1], newColumns[currentIndex]] = [
-          newColumns[currentIndex],
-          newColumns[currentIndex - 1],
-        ];
-        return newColumns;
-      }
-      return prev;
-    });
-  }, []);
-
-  const handleMoveRight = useCallback((columnId: string) => {
-    setColumns((prev) => {
-      const currentIndex = prev.findIndex((col) => col.id === columnId);
-      if (currentIndex < prev.length - 1) {
-        const newColumns = [...prev];
-        [newColumns[currentIndex], newColumns[currentIndex + 1]] = [
-          newColumns[currentIndex + 1],
-          newColumns[currentIndex],
-        ];
-        return newColumns;
-      }
-      return prev;
-    });
+  const handleOpenFeedDiscovery = useCallback(() => {
+    setIsAddingColumn(false);
+    setShowFeedDiscovery(true);
   }, []);
 
   // Mobile swipe handlers
@@ -558,6 +311,91 @@ export default function SkyDeck() {
     return option?.icon || Rss;
   };
 
+  // Feed columns are derived, so only the extras can be closed from the column
+  // itself. Feeds are removed by unsaving them.
+  const closeHandlerFor = (column: Column) =>
+    column.savedFeedId ? undefined : handleRemoveColumn;
+
+  const feedDiscoveryModal = showFeedDiscovery ? (
+    <Suspense fallback={null}>
+      <FeedDiscovery
+        isOpen={showFeedDiscovery}
+        onClose={() => setShowFeedDiscovery(false)}
+      />
+    </Suspense>
+  ) : null;
+
+  const addColumnOptions = (
+    <div className="grid gap-2">
+      {columnOptions.map((option) => {
+        const Icon = option.icon;
+        return (
+          <button
+            key={option.type}
+            onClick={() => handleAddColumn(option.type)}
+            className="touch-target flex items-start gap-3 rounded-md border border-asph-border-primary p-3 text-left transition-colors hover:bg-asph-bg-hover"
+          >
+            <Icon className="mt-0.5 h-5 w-5 text-blue-500" />
+            <div className="flex-1">
+              <div className="font-medium text-asph-text-primary">
+                {option.label}
+              </div>
+              <div className="whitespace-normal text-sm text-asph-text-tertiary">
+                {option.description}
+              </div>
+            </div>
+          </button>
+        );
+      })}
+
+      <div className="mt-2 border-t border-asph-border-primary pt-3">
+        <p className="mb-2 px-1 text-sm text-asph-text-tertiary">
+          Feed columns come from your saved feeds, in the order you saved them.
+        </p>
+        <button
+          onClick={handleOpenFeedDiscovery}
+          className="touch-target flex w-full items-center gap-3 rounded-md border border-asph-border-primary p-3 text-left transition-colors hover:bg-asph-bg-hover"
+        >
+          <Rss className="h-5 w-5 text-blue-500" />
+          <span className="font-medium text-asph-text-primary">
+            Manage feeds
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+
+  if (!extrasLoaded || (feedsLoading && columns.length === 0)) {
+    return (
+      <div className="flex h-full items-center justify-center bg-asph-bg-primary">
+        <Loader2
+          className="h-6 w-6 animate-spin text-asph-text-tertiary"
+          aria-label="Loading feeds"
+        />
+      </div>
+    );
+  }
+
+  // Reachable only if preferences failed to load — every account has at least
+  // the Following feed saved. Without this, full-width mode would render a
+  // zero-width add button and strand the user on a blank page.
+  if (columns.length === 0) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3 bg-asph-bg-primary px-6 text-center">
+        <p className="text-sm text-asph-text-secondary">
+          Your feeds could not be loaded.
+        </p>
+        <button
+          onClick={handleOpenFeedDiscovery}
+          className="touch-target-sm rounded-md border border-asph-border-primary px-3 py-1.5 text-sm text-asph-text-secondary transition-colors hover:bg-asph-bg-hover"
+        >
+          Manage feeds
+        </button>
+        {feedDiscoveryModal}
+      </div>
+    );
+  }
+
   // In narrow view, show columns with swipe navigation
   if (isNarrowView && columns.length > 0) {
     const currentColumn = columns[mobileColumnIndex] || columns[0];
@@ -571,7 +409,7 @@ export default function SkyDeck() {
         >
           <SkyColumn
             column={currentColumn}
-            onClose={() => handleRemoveColumn(currentColumn.id)}
+            onClose={closeHandlerFor(currentColumn)}
             onMoveLeft={
               mobileColumnIndex > 0
                 ? () => setMobileColumnIndex(mobileColumnIndex - 1)
@@ -607,6 +445,7 @@ export default function SkyDeck() {
             </div>
           )}
         </div>
+        {feedDiscoveryModal}
       </div>
     );
   }
@@ -619,7 +458,7 @@ export default function SkyDeck() {
       <div className="flex h-full flex-col overflow-hidden bg-asph-bg-primary">
         {/* Column tab bar. Rendered even with a single column, because this bar
             holds the only "add column" affordance in full-width mode — gating it
-            on columns.length > 1 left users with no pinned feeds unable to add
+            on columns.length > 1 left users with no saved feeds unable to add
             a second column at all. */}
         <div className="flex items-center gap-1 border-b border-asph-border-primary bg-asph-bg-secondary px-2">
           <div className="asph-scrollbar flex flex-1 items-center gap-1 overflow-x-auto py-1">
@@ -661,23 +500,7 @@ export default function SkyDeck() {
             <SkyColumn
               key={currentColumn.id}
               column={currentColumn}
-              onClose={() => handleRemoveColumn(currentColumn.id)}
-              onMoveLeft={
-                focusedColumnIndex > 0
-                  ? () => {
-                      handleMoveLeft(currentColumn.id);
-                      setFocusedColumnIndex(focusedColumnIndex - 1);
-                    }
-                  : undefined
-              }
-              onMoveRight={
-                focusedColumnIndex < columns.length - 1
-                  ? () => {
-                      handleMoveRight(currentColumn.id);
-                      setFocusedColumnIndex(focusedColumnIndex + 1);
-                    }
-                  : undefined
-              }
+              onClose={closeHandlerFor(currentColumn)}
               isFocused={true}
             />
           </div>
@@ -686,32 +509,11 @@ export default function SkyDeck() {
         {/* Add column panel (full-width mode) */}
         {isAddingColumn && (
           <div className="absolute inset-0 z-50 flex items-start justify-center bg-black/50 pt-16">
-            <div className="mx-4 w-full max-w-md animate-fade-in rounded-lg border border-asph-border-primary bg-asph-bg-secondary p-4 shadow-xl">
+            <div className="asph-scrollbar mx-4 max-h-[80vh] w-full max-w-md animate-fade-in overflow-y-auto rounded-lg border border-asph-border-primary bg-asph-bg-secondary p-4 shadow-xl">
               <h3 className="mb-3 text-sm font-medium text-asph-text-primary">
                 Add Column
               </h3>
-              <div className="grid gap-2">
-                {columnOptions.map((option) => {
-                  const Icon = option.icon;
-                  return (
-                    <button
-                      key={option.type}
-                      onClick={() => handleAddColumn(option.type)}
-                      className="touch-target flex items-center gap-3 rounded-md border border-asph-border-primary p-3 text-left transition-colors hover:bg-asph-bg-hover"
-                    >
-                      <Icon className="h-5 w-5 text-blue-500" />
-                      <div>
-                        <div className="font-medium text-asph-text-primary">
-                          {option.label}
-                        </div>
-                        <div className="text-sm text-asph-text-tertiary">
-                          {option.description}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+              {addColumnOptions}
               <button
                 onClick={() => setIsAddingColumn(false)}
                 className="mt-3 w-full rounded-md bg-asph-bg-tertiary px-4 py-2 text-asph-text-secondary transition-colors hover:bg-asph-bg-active"
@@ -721,6 +523,7 @@ export default function SkyDeck() {
             </div>
           </div>
         )}
+        {feedDiscoveryModal}
       </div>
     );
   }
@@ -739,49 +542,17 @@ export default function SkyDeck() {
                   : "hover:shadow-lg dark:hover:shadow-black/30"
               }`}
               style={{ width: `${columnWidth}px` }}
-              onClick={(e) => {
-                // Don't focus column if clicking on menu button, menu dropdown, or remove button
-                const target = e.target as HTMLElement;
-                const isMenuButton = target.closest(
-                  'button[aria-label="More options"]',
-                );
-                const isMenuDropdown = target.closest(".absolute.z-50"); // Menu dropdown has these classes
-                const isRemoveButton = target.closest(
-                  'button[title="Remove column"]',
-                );
-                if (!isMenuButton && !isMenuDropdown && !isRemoveButton) {
-                  setFocusedColumnIndex(index);
-                }
-              }}
               onClickCapture={(e) => {
-                // Don't focus column if clicking on menu button, menu dropdown, or remove button
+                // Don't focus column if clicking the remove button
                 const target = e.target as HTMLElement;
-                const isMenuButton = target.closest(
-                  'button[aria-label="More options"]',
-                );
-                const isMenuDropdown = target.closest(".absolute.z-50"); // Menu dropdown has these classes
-                const isRemoveButton = target.closest(
-                  'button[title="Remove column"]',
-                );
-                if (!isMenuButton && !isMenuDropdown && !isRemoveButton) {
+                if (!target.closest('button[title="Remove column"]')) {
                   setFocusedColumnIndex(index);
                 }
               }}
             >
               <SkyColumn
                 column={column}
-                onClose={() => handleRemoveColumn(column.id)}
-                onMoveLeft={
-                  columns.findIndex((col) => col.id === column.id) > 0
-                    ? () => handleMoveLeft(column.id)
-                    : undefined
-                }
-                onMoveRight={
-                  columns.findIndex((col) => col.id === column.id) <
-                  columns.length - 1
-                    ? () => handleMoveRight(column.id)
-                    : undefined
-                }
+                onClose={closeHandlerFor(column)}
                 isFocused={focusedColumnIndex === index}
               />
             </div>
@@ -794,328 +565,15 @@ export default function SkyDeck() {
             {isAddingColumn ? (
               <div className="flex h-full animate-fade-in flex-col rounded-lg border border-asph-border-primary bg-asph-bg-secondary shadow-md">
                 <div className="asph-scrollbar flex-1 overflow-y-auto p-3">
-                  <div className="grid gap-2">
-                    {columnOptions.map((option) => {
-                      const Icon = option.icon;
-                      return (
-                        <button
-                          key={option.type}
-                          onClick={() => handleAddColumn(option.type)}
-                          className="touch-target flex min-h-[4rem] items-start gap-3 rounded-md border border-asph-border-primary p-3 text-left transition-colors hover:bg-asph-bg-hover"
-                        >
-                          <Icon className="mt-0.5 h-5 w-5 text-blue-500" />
-                          <div className="flex-1">
-                            <div className="font-medium text-asph-text-primary">
-                              {option.label}
-                            </div>
-                            <div className="whitespace-normal text-sm text-asph-text-tertiary">
-                              {option.description}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-
-                    {/* Add Feed Section */}
-                    {userPrefs?.savedFeeds &&
-                      feedGenerators &&
-                      feedGenerators.length > 0 && (
-                        <>
-                          <div className="mt-4 border-t border-asph-border-primary pt-4">
-                            <h4 className="mb-2 px-3 text-sm font-medium text-asph-text-secondary">
-                              Add Feed
-                            </h4>
-                            <div className="grid gap-1">
-                              {userPrefs.savedFeeds
-                                .filter(
-                                  (feed: AppBskyActorDefs.SavedFeed) =>
-                                    feed.type === "feed",
-                                )
-                                .map(
-                                  (savedFeed: AppBskyActorDefs.SavedFeed) => {
-                                    const generator = feedGenerators.find(
-                                      (g: FeedGenerator) =>
-                                        g.uri === savedFeed.value,
-                                    );
-                                    if (!generator) return null;
-
-                                    return (
-                                      <button
-                                        key={savedFeed.value}
-                                        onClick={() =>
-                                          handleAddColumn(
-                                            "feed",
-                                            savedFeed.value,
-                                            generator.displayName,
-                                          )
-                                        }
-                                        className="touch-target flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-asph-bg-hover"
-                                      >
-                                        {savedFeed.pinned ? (
-                                          <Star className="mt-0.5 h-4 w-4 text-yellow-500" />
-                                        ) : (
-                                          <Rss className="mt-0.5 h-4 w-4 text-asph-text-tertiary" />
-                                        )}
-                                        <div className="min-w-0 flex-1">
-                                          <div className="truncate text-sm font-medium text-asph-text-primary">
-                                            {generator.displayName}
-                                          </div>
-                                          {generator.description && (
-                                            <div className="line-clamp-2 text-xs text-asph-text-tertiary">
-                                              {generator.description}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </button>
-                                    );
-                                  },
-                                )}
-                            </div>
-                          </div>
-                        </>
-                      )}
-
-                    {/* Add Lists Section */}
-                    {userLists && userLists.length > 0 && (
-                      <>
-                        <div className="mt-4 border-t border-asph-border-primary pt-4">
-                          <h4 className="mb-2 px-3 text-sm font-medium text-asph-text-secondary">
-                            Add List
-                          </h4>
-                          <div className="grid gap-1">
-                            {userLists.map(
-                              (list: AppBskyGraphDefs.ListView) => (
-                                <button
-                                  key={list.uri}
-                                  onClick={() =>
-                                    handleAddColumn("feed", list.uri, list.name)
-                                  }
-                                  className="touch-target-icon touch-target flex items-start gap-2 rounded-lg p-3 text-left transition-colors hover:bg-asph-bg-hover"
-                                >
-                                  <Users className="mt-0.5 h-4 w-4 text-blue-500" />
-                                  <div className="min-w-0 flex-1">
-                                    <div className="truncate text-sm font-medium text-asph-text-primary">
-                                      {list.name}
-                                    </div>
-                                    {list.description && (
-                                      <div className="truncate text-xs text-asph-text-tertiary">
-                                        {list.description}
-                                      </div>
-                                    )}
-                                    <div className="mt-0.5 text-xs text-asph-text-tertiary">
-                                      {list.listItemCount || 0} members
-                                    </div>
-                                  </div>
-                                </button>
-                              ),
-                            )}
-                          </div>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Add Custom Feed by URI */}
-                    <div className="mt-4 border-t border-asph-border-primary pt-4">
-                      <h4 className="mb-2 px-3 text-sm font-medium text-asph-text-secondary">
-                        Add Custom Feed or List by URI
-                      </h4>
-                      <div className="flex gap-2 px-3">
-                        <label htmlFor="custom-feed-input" className="sr-only">
-                          Custom feed or list URL
-                        </label>
-                        <input
-                          id="custom-feed-input"
-                          type="text"
-                          value={customFeedUri}
-                          onChange={(e) => setCustomFeedUri(e.target.value)}
-                          onKeyPress={(e) => {
-                            if (
-                              e.key === "Enter" &&
-                              customFeedUri.trim() &&
-                              !isLoadingCustomFeed
-                            ) {
-                              e.preventDefault();
-                              document
-                                .getElementById("add-feed-button")
-                                ?.click();
-                            }
-                          }}
-                          placeholder="Paste feed/list AT-URI or bsky.app URL"
-                          aria-describedby="custom-feed-help"
-                          className="flex-1 rounded-md border border-asph-border-secondary bg-asph-bg-secondary px-3 py-2 text-asph-text-primary placeholder-asph-text-tertiary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                        />
-                        <button
-                          id="add-feed-button"
-                          onClick={async () => {
-                            if (customFeedUri.trim()) {
-                              setIsLoadingCustomFeed(true);
-                              try {
-                                let uri = customFeedUri.trim();
-
-                                // Handle starter pack URLs
-                                if (uri.includes("bsky.app/starter-pack/")) {
-                                  // Extract the handle and rkey from starter pack URL
-                                  const match = uri.match(
-                                    /starter-pack\/([^\/]+)\/([^\/\?]+)/,
-                                  );
-                                  if (match) {
-                                    const [, handle, rkey] = match;
-                                    try {
-                                      // Resolve the handle to DID
-                                      const resolveResponse =
-                                        await agent?.com.atproto.identity.resolveHandle(
-                                          {
-                                            handle: handle,
-                                          },
-                                        );
-                                      if (resolveResponse?.data?.did) {
-                                        // Construct the starter pack AT-URI
-                                        const starterPackUri = `at://${resolveResponse.data.did}/app.bsky.graph.starterpack/${rkey}`;
-
-                                        // Fetch the starter pack to get the list URI
-                                        const starterPackResponse =
-                                          await agent?.app.bsky.graph.getStarterPack(
-                                            {
-                                              starterPack: starterPackUri,
-                                            },
-                                          );
-
-                                        if (
-                                          starterPackResponse?.data?.starterPack
-                                            ?.list
-                                        ) {
-                                          // Use the list URI from the starter pack
-                                          const listData =
-                                            starterPackResponse.data.starterPack
-                                              .list;
-                                          // Handle both string URI and object with uri property
-                                          uri =
-                                            typeof listData === "string"
-                                              ? listData
-                                              : listData.uri;
-                                          logger.log(
-                                            "Extracted list URI from starter pack:",
-                                            uri,
-                                          );
-                                        } else {
-                                          logger.error(
-                                            "Starter pack does not contain a list",
-                                          );
-                                          throw new Error(
-                                            "Starter pack does not contain a list",
-                                          );
-                                        }
-                                      }
-                                    } catch (error) {
-                                      logger.error(
-                                        "Failed to resolve starter pack:",
-                                        error,
-                                      );
-                                      throw error;
-                                    }
-                                  }
-                                }
-
-                                // Ensure uri is a string
-                                if (!uri || typeof uri !== "string") {
-                                  throw new Error("Invalid feed URI");
-                                }
-
-                                // Check if it's a list URI
-                                if (uri.includes("/app.bsky.graph.list/")) {
-                                  // Try to fetch list info
-                                  const response =
-                                    await agent?.app.bsky.graph.getList({
-                                      list: uri,
-                                    });
-                                  if (response?.data.list) {
-                                    const list = response.data.list;
-                                    handleAddColumn(
-                                      "feed",
-                                      list.uri,
-                                      list.name,
-                                    );
-                                    setCustomFeedUri("");
-                                  } else {
-                                    // If no list info, add with URI as name
-                                    handleAddColumn("feed", uri, uri);
-                                    setCustomFeedUri("");
-                                  }
-                                } else {
-                                  // It's a feed URI
-                                  const response =
-                                    await agent?.app.bsky.feed.getFeedGenerators(
-                                      {
-                                        feeds: [uri],
-                                      },
-                                    );
-                                  if (response?.data.feeds[0]) {
-                                    const feed = response.data.feeds[0];
-                                    handleAddColumn(
-                                      "feed",
-                                      feed.uri,
-                                      feed.displayName,
-                                    );
-                                    setCustomFeedUri("");
-                                  } else {
-                                    // If no feed info, add with URI as name
-                                    handleAddColumn("feed", uri, uri);
-                                    setCustomFeedUri("");
-                                  }
-                                }
-                              } catch (error: unknown) {
-                                logger.error(
-                                  "Error fetching feed/list:",
-                                  error,
-                                );
-                                // Show error to user instead of adding invalid feed
-                                const errorMessage =
-                                  error instanceof Error
-                                    ? error.message
-                                    : "Invalid feed URL";
-                                showAlert(
-                                  `Failed to add feed: ${errorMessage}`,
-                                  {
-                                    variant: "error",
-                                    title: "Failed to Add Feed",
-                                  },
-                                );
-                              } finally {
-                                setIsLoadingCustomFeed(false);
-                              }
-                            }
-                          }}
-                          disabled={
-                            !customFeedUri.trim() || isLoadingCustomFeed
-                          }
-                          className="touch-target-icon flex h-10 w-10 items-center justify-center rounded-md bg-blue-500 text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-                          aria-label="Add custom feed"
-                          title="Add Feed"
-                        >
-                          {isLoadingCustomFeed ? (
-                            <Loader2
-                              size={18}
-                              className="animate-spin"
-                              aria-hidden="true"
-                            />
-                          ) : (
-                            <Plus size={18} aria-hidden="true" />
-                          )}
-                        </button>
-                        <span id="custom-feed-help" className="sr-only">
-                          Enter an AT-URI or Bluesky app URL for a feed or list
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <button
-                      onClick={() => setIsAddingColumn(false)}
-                      className="touch-target-list-item w-full rounded-md bg-asph-bg-tertiary px-4 py-2 text-asph-text-secondary transition-colors hover:bg-asph-bg-active"
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                  {addColumnOptions}
+                </div>
+                <div className="p-3 pt-0">
+                  <button
+                    onClick={() => setIsAddingColumn(false)}
+                    className="touch-target-list-item w-full rounded-md bg-asph-bg-tertiary px-4 py-2 text-asph-text-secondary transition-colors hover:bg-asph-bg-active"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             ) : (
@@ -1133,6 +591,7 @@ export default function SkyDeck() {
           </div>
         </div>
       </div>
+      {feedDiscoveryModal}
     </div>
   );
 }

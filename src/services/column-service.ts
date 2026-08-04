@@ -107,15 +107,6 @@ export class ColumnService {
   async clearAllColumns(): Promise<void> {
     return this.backend.saveColumns([]);
   }
-
-  async updateColumnFeedPreference(
-    columnId: string,
-    feedUri: string,
-  ): Promise<void> {
-    if (this.backend.updateColumnFeedPreference) {
-      await this.backend.updateColumnFeedPreference(columnId, feedUri);
-    }
-  }
 }
 
 // Singleton instance

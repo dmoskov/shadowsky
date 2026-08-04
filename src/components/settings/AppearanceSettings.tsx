@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Columns, Monitor, Moon, Sun } from "lucide-react";
+import { Columns, Monitor, Moon, Rss, Sun } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -21,6 +21,8 @@ export const AppearanceSettings: React.FC = () => {
   const { agent } = useAuth();
   const queryClient = useQueryClient();
   const [selectedWidth, setSelectedWidth] = useState(DEFAULT_COLUMN_WIDTH);
+  // "all" means every saved feed gets a column.
+  const [selectedCount, setSelectedCount] = useState<number | "all">("all");
 
   // Get current preferences
   const { data: appPreferences } = useQuery({
@@ -39,6 +41,29 @@ export const AppearanceSettings: React.FC = () => {
       setSelectedWidth(appPreferences.columnWidth);
     }
   }, [appPreferences]);
+
+  // Load feed count from preferences
+  useEffect(() => {
+    setSelectedCount(appPreferences?.columnCount ?? "all");
+  }, [appPreferences]);
+
+  const updateColumnCount = useMutation({
+    mutationFn: async (count: number | "all") => {
+      if (!agent) throw new Error("Not authenticated");
+      appPreferencesService.setAgent(agent);
+      await appPreferencesService.updatePreferences({
+        columnCount: count === "all" ? undefined : count,
+      });
+      return count;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appPreferences"] });
+      // Reload so the deck picks up the new count
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    },
+  });
 
   // Update column width mutation
   const updateColumnWidth = useMutation({
@@ -268,6 +293,58 @@ export const AppearanceSettings: React.FC = () => {
               {updateColumnWidth.isPending ? "Applying..." : "Apply Layout"}
             </button>
           </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h3
+          className="text-sm font-medium"
+          style={{ color: "var(--asph-text-primary)" }}
+        >
+          <Rss className="mr-2 inline-block h-4 w-4" />
+          Feeds to show
+        </h3>
+        <div
+          className="rounded-lg p-4"
+          style={{
+            backgroundColor: "var(--asph-bg-secondary)",
+            border: "1px solid var(--asph-border-primary)",
+          }}
+        >
+          <p
+            className="mb-4 text-sm"
+            style={{ color: "var(--asph-text-secondary)" }}
+          >
+            Your columns are your Bluesky saved feeds, pinned ones first, in the
+            order you saved them. Show all of them, or cap the deck at the first
+            few.
+          </p>
+          <label
+            htmlFor="feed-column-count"
+            className="mb-2 block text-sm font-medium"
+            style={{ color: "var(--asph-text-primary)" }}
+          >
+            Number of feed columns
+          </label>
+          <select
+            id="feed-column-count"
+            value={String(selectedCount)}
+            disabled={updateColumnCount.isPending}
+            onChange={(e) => {
+              const value =
+                e.target.value === "all" ? "all" : Number(e.target.value);
+              setSelectedCount(value);
+              updateColumnCount.mutate(value);
+            }}
+            className="w-full rounded-md border border-asph-border-primary bg-asph-bg-primary px-3 py-2 text-sm text-asph-text-primary disabled:opacity-50"
+          >
+            <option value="all">All saved feeds</option>
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+              <option key={n} value={n}>
+                {n === 1 ? "1 feed" : `${n} feeds`}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
     </div>
