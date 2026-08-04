@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   analyzePostingTimes,
   cacheAnalysis,
@@ -7,25 +7,6 @@ import {
   getDataDrivenPostingTimes,
   type PostTimingData,
 } from "./posting-time-recommendations";
-
-// Mock localStorage
-const localStorageMock = (() => {
-  let store: Record<string, string> = {};
-  return {
-    getItem: vi.fn((key: string) => store[key] || null),
-    setItem: vi.fn((key: string, value: string) => {
-      store[key] = value;
-    }),
-    removeItem: vi.fn((key: string) => {
-      delete store[key];
-    }),
-    clear: vi.fn(() => {
-      store = {};
-    }),
-  };
-})();
-
-Object.defineProperty(globalThis, "localStorage", { value: localStorageMock });
 
 function makePost(
   dayOfWeek: number,
@@ -118,7 +99,7 @@ describe("analyzePostingTimes", () => {
 
 describe("cache functions", () => {
   beforeEach(() => {
-    localStorageMock.clear();
+    localStorage.clear();
   });
 
   it("caches and retrieves analysis", () => {
@@ -142,7 +123,7 @@ describe("cache functions", () => {
       analysis,
       cachedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), // 8 days ago
     };
-    localStorageMock.setItem(
+    localStorage.setItem(
       "posting-time-recommendations",
       JSON.stringify(oldCache),
     );
@@ -176,7 +157,7 @@ describe("fromApiResponse", () => {
 
 describe("getDataDrivenPostingTimes", () => {
   beforeEach(() => {
-    localStorageMock.clear();
+    localStorage.clear();
   });
 
   it("returns hardcoded defaults when no cache", () => {
