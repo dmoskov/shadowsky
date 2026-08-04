@@ -58,98 +58,27 @@ frontend:
     paths:
       # Only cache Bun binary - download cache doesn't help
       - ~/.bun/bin/*
-# Redirect and rewrite rules for SPA routing
-redirects:
-  # Core app routes
-  - source: /home
-    target: /index.html
-    status: 200
-  - source: /home/*
-    target: /index.html
-    status: 200
-  - source: /timeline
-    target: /index.html
-    status: 200
-  - source: /timeline/*
-    target: /index.html
-    status: 200
-  - source: /notifications
-    target: /index.html
-    status: 200
-  - source: /notifications/*
-    target: /index.html
-    status: 200
-  - source: /analytics
-    target: /index.html
-    status: 200
-  - source: /analytics/*
-    target: /index.html
-    status: 200
-  - source: /search
-    target: /index.html
-    status: 200
-  - source: /search/*
-    target: /index.html
-    status: 200
-  - source: /bookmarks
-    target: /index.html
-    status: 200
-  - source: /bookmarks/*
-    target: /index.html
-    status: 200
-  - source: /conversations
-    target: /index.html
-    status: 200
-  - source: /conversations/*
-    target: /index.html
-    status: 200
-  - source: /messages
-    target: /index.html
-    status: 200
-  - source: /messages/*
-    target: /index.html
-    status: 200
-  - source: /compose
-    target: /index.html
-    status: 200
-  - source: /compose/*
-    target: /index.html
-    status: 200
-
-  # Dynamic routes
-  - source: /profile/<*>
-    target: /index.html
-    status: 200
-  - source: /thread/<*>
-    target: /index.html
-    status: 200
-
-  # Settings routes
-  - source: /settings
-    target: /index.html
-    status: 200
-  - source: /settings/<*>
-    target: /index.html
-    status: 200
-
-  # Standalone static pages. These MUST precede the catch-all below, which
-  # matches any path and would otherwise rewrite them to the SPA shell — the
-  # reason /privacy.html and /terms.html have been serving the app instead of
-  # the documents, including for App Store review links.
-  - source: /privacy.html
-    target: /privacy.html
-    status: 200
-  - source: /terms.html
-    target: /terms.html
-    status: 200
-  - source: /static-pages.css
-    target: /static-pages.css
-    status: 200
-
-  # Catch-all fallback for any other routes
-  - source: /<*>
-    target: /index.html
-    status: 200
+# ──────────────────────────────────────────────────────────────────────
+# ROUTING / REWRITE RULES
+#
+# Amplify does NOT read redirect/rewrite rules from this build spec.
+# They are configured at the app level and managed via the AWS CLI:
+#
+#   # View current rules
+#   aws amplify get-app --app-id d1g6mni4b6812x \
+#     --query 'app.customRules'
+#
+#   # Update rules (JSON array)
+#   aws amplify update-app --app-id d1g6mni4b6812x \
+#     --custom-rules '[{"source":"</^[^.]+$|\\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp|jpeg|webmanifest|html)$)([^.]+$)/>","target":"/index.html","status":"200"}]'
+#
+# After updating, redeploy the branch to propagate the change.
+#
+# The single rule above is a regex catch-all that rewrites any path
+# that does NOT end in a static-asset extension to /index.html (SPA
+# routing). To allow a new extension through without rewriting, add
+# it to the negative-lookahead list.
+# ──────────────────────────────────────────────────────────────────────
 customHeaders:
   - pattern: "**/*"
     headers:
