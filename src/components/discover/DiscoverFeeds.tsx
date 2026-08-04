@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Hash, Plus, Search, Users } from "lucide-react";
+import { Check, Hash, Plus, Search, Sparkles, Users } from "lucide-react";
 import React, { useContext, useState } from "react";
+import { CURATED_FEED_URIS } from "../../config/curated-feeds";
 import { AuthContext } from "../../contexts/AuthContext";
 import { proxifyBskyImage } from "../../utils/image-proxy";
 
@@ -23,14 +24,14 @@ interface FeedGenerator {
   };
 }
 
+type FeedSubTab = "picks" | "suggested" | "popular";
+
 export const DiscoverFeeds: React.FC = () => {
   const authContext = useContext(AuthContext);
   const agent = authContext?.agent ?? null;
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeSubTab, setActiveSubTab] = useState<"suggested" | "popular">(
-    "suggested",
-  );
+  const [activeSubTab, setActiveSubTab] = useState<FeedSubTab>("picks");
 
   const { data: userPrefs } = useQuery({
     queryKey: ["userPreferences"],
@@ -46,7 +47,12 @@ export const DiscoverFeeds: React.FC = () => {
     queryFn: async () => {
       if (!agent) throw new Error("Not authenticated");
 
-      if (activeSubTab === "suggested") {
+      if (activeSubTab === "picks") {
+        const response = await agent.app.bsky.feed.getFeedGenerators({
+          feeds: CURATED_FEED_URIS,
+        });
+        return response.data.feeds;
+      } else if (activeSubTab === "suggested") {
         const response = await agent.app.bsky.feed.getSuggestedFeeds({
           limit: 50,
         });
@@ -138,38 +144,42 @@ export const DiscoverFeeds: React.FC = () => {
       </div>
 
       <div className="flex gap-2">
-        <button
-          onClick={() => setActiveSubTab("suggested")}
-          className="touch-target rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
-          style={{
-            backgroundColor:
-              activeSubTab === "suggested"
-                ? "var(--asph-primary)"
-                : "var(--asph-bg-secondary)",
-            color:
-              activeSubTab === "suggested"
-                ? "white"
-                : "var(--asph-text-secondary)",
-          }}
-        >
-          Suggested
-        </button>
-        <button
-          onClick={() => setActiveSubTab("popular")}
-          className="touch-target rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
-          style={{
-            backgroundColor:
-              activeSubTab === "popular"
-                ? "var(--asph-primary)"
-                : "var(--asph-bg-secondary)",
-            color:
-              activeSubTab === "popular"
-                ? "white"
-                : "var(--asph-text-secondary)",
-          }}
-        >
-          Popular
-        </button>
+        {(
+          [
+            {
+              key: "picks" as FeedSubTab,
+              label: "Our Picks",
+              icon: Sparkles as React.ElementType | undefined,
+            },
+            {
+              key: "suggested" as FeedSubTab,
+              label: "Suggested",
+              icon: undefined as React.ElementType | undefined,
+            },
+            {
+              key: "popular" as FeedSubTab,
+              label: "Popular",
+              icon: undefined as React.ElementType | undefined,
+            },
+          ] as const
+        ).map(({ key, label, icon: TabIcon }) => (
+          <button
+            key={key}
+            onClick={() => setActiveSubTab(key)}
+            className="touch-target flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
+            style={{
+              backgroundColor:
+                activeSubTab === key
+                  ? "var(--asph-primary)"
+                  : "var(--asph-bg-secondary)",
+              color:
+                activeSubTab === key ? "white" : "var(--asph-text-secondary)",
+            }}
+          >
+            {TabIcon && <TabIcon size={14} />}
+            {label}
+          </button>
+        ))}
       </div>
 
       {isLoading ? (
