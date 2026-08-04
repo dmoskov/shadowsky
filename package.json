@@ -110,7 +110,8 @@
     },
     "build:ci": {
       "dependencies": [
-        "build:app"
+        "build:app",
+        "test:types"
       ]
     },
     "build:app": {
