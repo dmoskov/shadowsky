@@ -22,6 +22,10 @@ export default defineConfig({
       "**/mobile/**",
       // Server tests use node:test (run via `npm test` in server/)
       "**/server/**",
+      // Agent worktrees under .claude/ are full checkouts of this repo, so
+      // without this the suite re-runs stale copies of our own tests — 144 extra
+      // files at last count — and a deploy gate can fail on abandoned snapshots.
+      "**/.claude/**",
     ],
     coverage: {
       provider: "v8",
