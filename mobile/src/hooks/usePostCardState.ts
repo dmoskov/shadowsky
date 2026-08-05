@@ -1,4 +1,4 @@
-import {useState, useCallback, useMemo, useRef} from 'react';
+import {useState, useCallback, useEffect, useMemo, useRef} from 'react';
 import {Alert, Platform} from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import {
@@ -15,6 +15,7 @@ import {sharePost} from '../utils/share';
 import {useBlockUser, useMuteUser} from './api/useProfile';
 import {useDeletePost} from './api/usePosts';
 import {recordBlock, recordMute} from '../services/moderation-history';
+import {canEditPost, isEdited} from '../services/atproto/post-edit';
 import {useTheme} from '../contexts/ThemeContext';
 import {triggerHaptic} from '../utils/haptics';
 import {useModeration} from '../contexts/ModerationContext';
@@ -95,10 +96,13 @@ export function usePostCardState(props: PostCardProps) {
   // Modal state
   const [showReportModal, setShowReportModal] = useState(false);
   const [showSaveToCollection, setShowSaveToCollection] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [appealLabel, setAppealLabel] = useState<{val: string; src: string} | null>(null);
 
   const handleCloseReportModal = useCallback(() => setShowReportModal(false), []);
   const handleCloseSaveToCollection = useCallback(() => setShowSaveToCollection(false), []);
+  const handleCloseEditModal = useCallback(() => setShowEditModal(false), []);
+  const handleEditPost = useCallback(() => setShowEditModal(true), []);
   const handleAppeal = useCallback((labelVal: string, labelerDid: string) => {
     setAppealLabel({val: labelVal, src: labelerDid});
   }, []);
@@ -134,6 +138,32 @@ export function usePostCardState(props: PostCardProps) {
     () => (record && typeof record.text === 'string' ? record.text : ''),
     [record],
   );
+
+  const postWasEdited = useMemo(() => isEdited(postView.record), [postView.record]);
+
+  // Edit eligibility. The window closes with wall-clock time, so a row that is
+  // editable when it mounts stops being editable while still on screen. Rather
+  // than polling every post every second, schedule a single re-render at the
+  // moment the window lapses — for the vast majority of rows (older than 15
+  // minutes) no timer is created at all.
+  const [editWindowLapsed, setEditWindowLapsed] = useState(0);
+  const editEligibility = useMemo(
+    () => canEditPost({post: postView, viewerDid: currentUserDid}),
+    // editWindowLapsed is the tick that re-evaluates the window on expiry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [postView, currentUserDid, editWindowLapsed],
+  );
+  const canEdit = editEligibility.allowed;
+
+  useEffect(() => {
+    if (!editEligibility.allowed) return;
+    const timer = setTimeout(
+      () => setEditWindowLapsed((tick) => tick + 1),
+      // Small cushion so the recheck lands after the boundary, not exactly on it.
+      editEligibility.remainingMs + 250,
+    );
+    return () => clearTimeout(timer);
+  }, [editEligibility.allowed, editEligibility.remainingMs]);
 
   // Handlers
   const handleProfilePress = useCallback(() => {
@@ -355,6 +385,11 @@ export function usePostCardState(props: PostCardProps) {
     }
 
     if (isOwnPost) {
+      if (canEdit) {
+        options.push('Edit Post');
+        handlers.push(handleEditPost);
+      }
+
       options.push('Delete Post');
       destructiveIndices.push(options.length - 1);
       handlers.push(handleDeletePost);
@@ -384,7 +419,7 @@ export function usePostCardState(props: PostCardProps) {
         }
       },
     );
-  }, [isOwnPost, isReposted, isLiked, isBookmarked, postText, translation.showTranslateButton, translation.isShowingTranslation, author.handle, handleDeletePost, handleMuteUser, handleBlockUser, handleReport, handleCopyText, onReply, handleRepostPress, onQuotePost, handleLikePress, handleBookmarkPress, handleShare, translation.handleTranslate]);
+  }, [isOwnPost, isReposted, isLiked, isBookmarked, postText, translation.showTranslateButton, translation.isShowingTranslation, author.handle, canEdit, handleEditPost, handleDeletePost, handleMuteUser, handleBlockUser, handleReport, handleCopyText, onReply, handleRepostPress, onQuotePost, handleLikePress, handleBookmarkPress, handleShare, translation.handleTranslate]);
 
   // Accessibility
   const postPreviewText = useMemo(
@@ -457,6 +492,8 @@ export function usePostCardState(props: PostCardProps) {
     isReposted,
     isOwnPost,
     isBookmarked,
+    canEdit,
+    postWasEdited,
     hideContent,
     warnContent,
     blurImages,
@@ -465,9 +502,11 @@ export function usePostCardState(props: PostCardProps) {
     // Modal state
     showReportModal,
     showSaveToCollection,
+    showEditModal,
     appealLabel,
     handleCloseReportModal,
     handleCloseSaveToCollection,
+    handleCloseEditModal,
     handleAppeal,
     handleCloseAppeal,
 
@@ -484,6 +523,7 @@ export function usePostCardState(props: PostCardProps) {
     handleMuteUser,
     handleBlockUser,
     handleReport,
+    handleEditPost,
     handleDeletePost,
     handleBlockAfterReport,
     handleMuteAfterReport,

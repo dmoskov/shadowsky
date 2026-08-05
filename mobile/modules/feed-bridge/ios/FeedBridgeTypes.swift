@@ -374,11 +374,15 @@ public struct SerializedRecord: Codable {
     public let text: String
     public let facets: [Facet]?
     public let createdAt: String
+    /// Non-lexicon edit stamp (`updatedAt` on the post record). Non-nil only for
+    /// posts that have been edited; drives the "Edited" indicator.
+    public let updatedAt: String?
 
-    public init(text: String, facets: [Facet]?, createdAt: String) {
+    public init(text: String, facets: [Facet]?, createdAt: String, updatedAt: String? = nil) {
         self.text = text
         self.facets = facets
         self.createdAt = createdAt
+        self.updatedAt = updatedAt
     }
 }
 

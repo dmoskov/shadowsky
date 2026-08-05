@@ -35,6 +35,8 @@ interface PostCardContentProps {
   blurImages: boolean;
   labels: any[];
   hideContent: boolean;
+  /** Post carries an edit stamp — surfaced next to the timestamp. */
+  wasEdited?: boolean;
   // Animation styles
   likeAnimStyle: any;
   repostAnimStyle: any;
@@ -87,6 +89,7 @@ export function PostCardContent({
   blurImages,
   labels,
   hideContent,
+  wasEdited = false,
   likeAnimStyle,
   repostAnimStyle,
   bookmarkAnimStyle,
@@ -187,6 +190,15 @@ export function PostCardContent({
         </TouchableOpacity>
         <View style={styles.headerRight}>
           <Text style={styles.timestamp}>{timestamp}</Text>
+          {wasEdited && (
+            <Text
+              style={styles.editedBadge}
+              testID="post-edited-badge"
+              accessibilityLabel="This post was edited"
+            >
+              Edited
+            </Text>
+          )}
           {labels.length > 0 && !hideContent && (
             <ShieldIcon
               size={14}
@@ -389,6 +401,12 @@ function createStyles(colors: any) {
     timestamp: {
       color: colors.textTertiary,
       fontSize: fontSize.footnote,
+      marginRight: 4,
+    },
+    editedBadge: {
+      color: colors.textTertiary,
+      fontSize: fontSize.caption2,
+      fontStyle: "italic",
       marginRight: 4,
     },
     text: {

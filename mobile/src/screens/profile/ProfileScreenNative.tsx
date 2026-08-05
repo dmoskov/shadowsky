@@ -24,6 +24,8 @@ import { useActorStarterPacks } from "../../hooks/api/useStarterPacks";
 import { useLikePost, useUnlikePost, useRepost, useDeleteRepost } from "../../hooks/api/usePosts";
 import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { AddToListModal } from "../../components/AddToListModal";
+import { EditPostModal } from "../../components/EditPostModal";
+import { useNativePostEditor } from "../../hooks/useNativePostEditor";
 import { ReportModal } from "../../components/ReportModal";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -166,6 +168,14 @@ function ProfileScreenNativeIOS({
     }
     return map;
   }, [flatPosts]);
+
+  // Native context menu "Edit Post" → RN edit sheet. The native event carries
+  // only a URI, so resolve it against the feed we already hold.
+  const findPostForEdit = useCallback(
+    (uri: string) => postsByUri.get(uri)?.post,
+    [postsByUri],
+  );
+  const postEditor = useNativePostEditor(findPostForEdit);
 
   // Post interaction hooks
   const likePost = useLikePost();
@@ -715,7 +725,19 @@ function ProfileScreenNativeIOS({
         onLinkPress={handleLinkPress}
         onQuotePress={handleQuotePress}
         onQuotePost={handleQuotePost}
+        onEditPost={postEditor.handleNativeEditPost}
+        currentUserDid={postEditor.currentUserDid}
       />
+
+      {/* Edit sheet, opened from the native context menu */}
+      {postEditor.editingPost && (
+        <EditPostModal
+          visible
+          post={postEditor.editingPost}
+          currentUserDid={postEditor.currentUserDid}
+          onClose={postEditor.closeEditor}
+        />
+      )}
 
       {profile && showAddToList && (
         <AddToListModal
