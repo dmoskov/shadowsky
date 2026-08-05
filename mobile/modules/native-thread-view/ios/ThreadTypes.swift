@@ -57,6 +57,8 @@ struct ThreadRecord: Equatable {
     let facets: [Facet]?
     let createdAt: String
     let langs: [String]?
+    /// Non-lexicon edit stamp; non-nil only for posts that have been edited.
+    let updatedAt: String?
 }
 
 struct ThreadViewer: Equatable {

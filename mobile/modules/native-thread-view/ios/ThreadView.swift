@@ -30,6 +30,9 @@ struct ThreadView: View {
     let error: String?
     let threadUri: String?
     let focusedReplyUri: String?
+    /// Viewer's DID. Without it every post looks like someone else's, which
+    /// silently disables the whole own-post branch of the context menu.
+    let currentUserDid: String?
 
     // Track whether we've already scrolled to the focused reply
     @State private var hasScrolledToFocus = false
@@ -65,6 +68,7 @@ struct ThreadView: View {
     let onImagePress: (([ImageEmbedData], Int) -> Void)? // (images, index)
     let onQuotePress: ((String, String) -> Void)? // (uri, handle)
     let onQuotePost: ((String, String, String, String?, String?, String) -> Void)? // (uri, cid, handle, displayName?, avatar?, text)
+    let onEditPost: ((String) -> Void)? // uri
 
     // Composer event handlers (bridge to JS)
     let onSendReply: ((String, String?, String?) -> Void)?  // (text, replyToUri, replyToCid)
@@ -153,7 +157,7 @@ struct ThreadView: View {
                     ThreadPostCard(
                         node: rootPost,
                         isRoot: true,
-                        currentUserDid: nil,
+                        currentUserDid: currentUserDid,
                         onPress: {
                             onPostPress?(rootPost.post.uri, rootPost.post.author.handle)
                         },
@@ -229,6 +233,9 @@ struct ThreadView: View {
                                 rootPost.post.author.avatar,
                                 rootPost.post.record.text
                             )
+                        },
+                        onEditPost: {
+                            onEditPost?(rootPost.post.uri)
                         }
                     )
                     .id(rootPost.post.uri)
@@ -301,7 +308,7 @@ struct ThreadView: View {
                     expandedReplyUri = replyNode.post.uri
                 }
             },
-            currentUserDid: nil,
+            currentUserDid: currentUserDid,
             onPress: { uri, handle in
                 onPostPress?(uri, handle)
             },
@@ -358,6 +365,9 @@ struct ThreadView: View {
             },
             onQuotePost: { uri, cid, handle, displayName, avatar, text in
                 onQuotePost?(uri, cid, handle, displayName, avatar, text)
+            },
+            onEditPost: { uri in
+                onEditPost?(uri)
             }
         )
     }
@@ -601,7 +611,8 @@ class ThreadState: ObservableObject {
                 text: recordData["text"] as? String ?? "",
                 facets: parseFacets(from: recordData["facets"] as? [[String: Any]]),
                 createdAt: recordData["createdAt"] as? String ?? "",
-                langs: recordData["langs"] as? [String]
+                langs: recordData["langs"] as? [String],
+                updatedAt: recordData["updatedAt"] as? String
             ),
             embed: embed,
             indexedAt: data["indexedAt"] as? String ?? "",

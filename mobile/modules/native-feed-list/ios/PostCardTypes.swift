@@ -57,6 +57,8 @@ struct PostRecord: Equatable {
     let text: String
     let facets: [PostFacet]?
     let createdAt: String
+    /// Non-lexicon edit stamp; non-nil only for posts that have been edited.
+    let updatedAt: String?
     let embed: PostEmbedData?
 }
 

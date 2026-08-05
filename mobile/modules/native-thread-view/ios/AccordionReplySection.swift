@@ -56,6 +56,7 @@ struct AccordionReplySection: View {
     let onImagePress: (([ImageEmbedData], Int) -> Void)?
     let onQuotePress: ((String, String) -> Void)?
     let onQuotePost: ((String, String, String, String?, String?, String) -> Void)?
+    let onEditPost: ((String) -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -197,6 +198,9 @@ struct AccordionReplySection: View {
                     node.post.author.avatar,
                     node.post.record.text
                 )
+            },
+            onEditPost: {
+                onEditPost?(node.post.uri)
             }
         )
     }
@@ -287,6 +291,9 @@ struct AccordionReplySection: View {
                         item.node.post.author.avatar,
                         item.node.post.record.text
                     )
+                },
+                onEditPost: {
+                    onEditPost?(item.node.post.uri)
                 }
             )
         }

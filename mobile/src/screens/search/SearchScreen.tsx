@@ -23,6 +23,8 @@ import { useScrollChrome } from "../../contexts/ScrollChromeContext";
 import { PostCardSkeleton } from "../../components/PostCardSkeleton";
 import { TrendingTopics } from "../../components/TrendingTopics";
 import { SearchFilterSheet, type SearchFilterValues } from "../../components/SearchFilterSheet";
+import { EditPostModal } from "../../components/EditPostModal";
+import { findPostInFeedPages, useNativePostEditor } from "../../hooks/useNativePostEditor";
 import { CloseIcon, SearchIcon } from "../../components/icons";
 import { AppBskyActorDefs, AppBskyFeedDefs, AppBskyEmbedRecordWithMedia } from "@atproto/api";
 import { useBookmarks } from "../../hooks/api/useBookmarks";
@@ -223,6 +225,14 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
   } = enhancedSearchQuery;
   const { isServingCached: isSearchServingCached, isStale: isSearchStale, isOnline: isSearchOnline } = enhancedSearchQuery;
   const searchOfflineStatus = useOfflineFeedStatus();
+
+  // Native context menu "Edit Post" → RN edit sheet. The native event carries
+  // only a URI, so resolve it against the results we already hold.
+  const findPostForEdit = useCallback(
+    (uri: string) => findPostInFeedPages(postsData?.pages, uri),
+    [postsData?.pages],
+  );
+  const postEditor = useNativePostEditor(findPostForEdit);
 
   const posts = useMemo(() => {
     let allPosts = postsData?.pages.flatMap((page) => page.feed) || [];
@@ -603,6 +613,8 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
                 onPostPress={handleNativePostPress}
                 onProfilePress={handleNativeProfilePress}
                 onBookmark={handleNativeBookmark}
+                onEditPost={postEditor.handleNativeEditPost}
+                currentUserDid={postEditor.currentUserDid}
                 onScroll={(e) => handleChromeScroll(e.nativeEvent.y)}
                 emptyMessage={!debouncedQuery
                   ? (activeTab === "hashtags" ? "Search for posts by hashtag" : "Search for posts by keyword")
@@ -639,6 +651,16 @@ export function SearchScreen({ query: initialQuery }: SearchScreenProps) {
         filters={filters}
         onApplyFilters={handleApplyFilters}
       />
+
+      {/* Edit sheet, opened from the native context menu */}
+      {postEditor.editingPost && (
+        <EditPostModal
+          visible
+          post={postEditor.editingPost}
+          currentUserDid={postEditor.currentUserDid}
+          onClose={postEditor.closeEditor}
+        />
+      )}
     </View>
   );
 }

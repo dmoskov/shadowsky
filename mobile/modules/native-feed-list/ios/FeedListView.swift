@@ -55,6 +55,9 @@ class FeedListProps: ObservableObject {
     @Published var error: String? = nil
     @Published var emptyMessage: String = "No posts yet"
     @Published var scrollToTopTrigger: Int = 0
+    /// Viewer's DID. Without it every post looks like someone else's, which
+    /// silently disables the whole own-post branch of the context menu.
+    @Published var currentUserDid: String? = nil
 }
 
 // MARK: - FeedListView
@@ -93,6 +96,7 @@ struct FeedListView: View {
     let onLinkPress: ((String) -> Void)?
     let onQuotePress: ((String, String) -> Void)?
     let onQuotePost: ((String, String, String, String?, String?, String) -> Void)? // (uri, cid, handle, displayName?, avatar?, text)
+    let onEditPost: ((String) -> Void)? // uri
     let onScroll: ((CGFloat) -> Void)?
 
     // MARK: - Body
@@ -144,7 +148,7 @@ struct FeedListView: View {
                             post: converted.feedViewPost,
                             isBookmarked: converted.isBookmarked,
                             isOnline: true,
-                            currentUserDid: nil,
+                            currentUserDid: props.currentUserDid,
                             onPress: {
                                 onPostPress?(converted.sourcePost.post.uri, converted.sourcePost.post.author.handle)
                             },
@@ -200,6 +204,9 @@ struct FeedListView: View {
                                     converted.sourcePost.post.author.avatar,
                                     converted.sourcePost.post.record.text
                                 )
+                            },
+                            onEditPost: {
+                                onEditPost?(converted.sourcePost.post.uri)
                             }
                         )
                         .id(converted.id)
@@ -581,6 +588,7 @@ class FeedState: ObservableObject {
                     text: post.record.text,
                     facets: Self.convertFacets(post.record.facets),
                     createdAt: post.record.createdAt,
+                    updatedAt: post.record.updatedAt,
                     embed: post.embed.flatMap { PostEmbedData.from(serializedEmbed: $0) }
                 ),
                 indexedAt: post.indexedAt,
@@ -649,6 +657,7 @@ struct FeedListView_Previews: PreviewProvider {
             onLinkPress: { url in print("Link: \(url)") },
             onQuotePress: { uri, handle in print("Quote: \(uri)") },
             onQuotePost: { uri, cid, handle, displayName, avatar, text in print("QuotePost: \(uri)") },
+            onEditPost: { uri in print("EditPost: \(uri)") },
             onScroll: { offset in print("Scroll: \(offset)") }
         )
     }

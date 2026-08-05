@@ -42,11 +42,16 @@ public class FeedListModule: Module {
                 view.feedListProps.scrollToTopTrigger = trigger
             }
 
+            Prop("currentUserDid") { (view: FeedListViewWrapper, currentUserDid: String?) in
+                view.feedListProps.currentUserDid = currentUserDid
+            }
+
             // Events
             Events("onRefresh", "onLoadMore", "onPostPress", "onProfilePress",
                    "onLike", "onRepost", "onReply", "onBookmark",
                    "onMentionPress", "onHashtagPress", "onShare",
-                   "onImagePress", "onLinkPress", "onQuotePress", "onQuotePost", "onScroll")
+                   "onImagePress", "onLinkPress", "onQuotePress", "onQuotePost",
+                   "onEditPost", "onScroll")
         }
     }
 }
@@ -77,6 +82,7 @@ class FeedListViewWrapper: ExpoView {
     private let onLinkPress = EventDispatcher()
     private let onQuotePress = EventDispatcher()
     private let onQuotePost = EventDispatcher()
+    private let onEditPost = EventDispatcher()
     private let onScroll = EventDispatcher()
 
     // SwiftUI hosting controller
@@ -202,6 +208,11 @@ class FeedListViewWrapper: ExpoView {
                     "authorDisplayName": displayName as Any,
                     "authorAvatar": avatar as Any,
                     "text": text,
+                ])
+            },
+            onEditPost: { [weak self] uri in
+                self?.onEditPost([
+                    "uri": uri
                 ])
             },
             onScroll: { [weak self] offset in

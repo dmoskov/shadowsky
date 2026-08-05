@@ -11,6 +11,12 @@ interface UseContextMenuActionsParams {
   showTranslateButton: boolean;
   isShowingTranslation: boolean;
   hasQuotePost: boolean;
+  /**
+   * Whether the post is still inside its edit window. Expired edits are hidden
+   * rather than shown disabled — a greyed-out row invites a tap that can never
+   * succeed, and the window is short enough that it is normally already gone.
+   */
+  canEdit: boolean;
 }
 
 interface UseContextMenuHandlersParams {
@@ -22,6 +28,7 @@ interface UseContextMenuHandlersParams {
   handleBookmarkPress: () => void;
   handleShare: () => void;
   handleTranslate: () => void;
+  handleEditPost: () => void;
   handleDeletePost: () => void;
   handleMuteUser: () => void;
   handleBlockUser: () => void;
@@ -38,6 +45,7 @@ export function useContextMenuActions({
   showTranslateButton,
   isShowingTranslation,
   hasQuotePost,
+  canEdit,
 }: UseContextMenuActionsParams) {
   return useMemo(() => {
     const actions: Array<{title: string; systemIcon?: string; destructive?: boolean}> = [];
@@ -72,6 +80,9 @@ export function useContextMenuActions({
     }
 
     if (isOwnPost) {
+      if (canEdit) {
+        actions.push({title: 'Edit Post', systemIcon: 'pencil'});
+      }
       actions.push({title: 'Delete Post', systemIcon: 'trash', destructive: true});
     } else {
       actions.push(
@@ -82,7 +93,7 @@ export function useContextMenuActions({
     }
 
     return actions;
-  }, [isLiked, isReposted, isBookmarked, isOwnPost, authorHandle, postText, hasQuotePost, showTranslateButton, isShowingTranslation]);
+  }, [isLiked, isReposted, isBookmarked, isOwnPost, authorHandle, postText, hasQuotePost, showTranslateButton, isShowingTranslation, canEdit]);
 }
 
 export function useContextMenuHandler({
@@ -94,6 +105,7 @@ export function useContextMenuHandler({
   handleBookmarkPress,
   handleShare,
   handleTranslate,
+  handleEditPost,
   handleDeletePost,
   handleMuteUser,
   handleBlockUser,
@@ -132,6 +144,9 @@ export function useContextMenuHandler({
         case 'Show Original':
           handleTranslate();
           break;
+        case 'Edit Post':
+          handleEditPost();
+          break;
         case 'Delete Post':
           handleDeletePost();
           break;
@@ -152,6 +167,7 @@ export function useContextMenuHandler({
       handleBookmarkPress,
       handleShare,
       handleTranslate,
+      handleEditPost,
       handleDeletePost,
       handleMuteUser,
       handleBlockUser,

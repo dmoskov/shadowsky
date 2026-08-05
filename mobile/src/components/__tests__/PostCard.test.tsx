@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { act, render, fireEvent } from '@testing-library/react-native';
 import {
   makeFeedViewPost,
   makeImageEmbed,
@@ -52,8 +52,10 @@ jest.mock('../../hooks/api/useProfile', () => ({
   useUnfollowUser: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
+let mockEditPost = jest.fn();
 jest.mock('../../hooks/api/usePosts', () => ({
   useDeletePost: () => ({ mutateAsync: jest.fn() }),
+  useEditPost: () => ({ mutateAsync: mockEditPost }),
 }));
 
 jest.mock('../../hooks/usePostTranslation', () => ({
@@ -453,6 +455,76 @@ describe('PostCard', () => {
       const deleteAction = capturedContextMenuProps.actions.find((a: any) => a.title === 'Delete Post');
       expect(deleteAction.destructive).toBe(true);
       expect(deleteAction.systemIcon).toBe('trash');
+    });
+
+    it('offers Edit Post on a fresh own post', () => {
+      const post = makeFeedViewPost({
+        post: { record: { createdAt: new Date().toISOString() } },
+      });
+      render(
+        <PostCard post={post as any} currentUserDid="did:plc:test123" />
+      );
+
+      const actions = capturedContextMenuProps.actions;
+      const actionTitles = actions.map((a: any) => a.title);
+      expect(actionTitles).toContain('Edit Post');
+
+      const editAction = actions.find((a: any) => a.title === 'Edit Post');
+      expect(editAction.systemIcon).toBe('pencil');
+      // Editing is not destructive — it preserves the post's identity.
+      expect(editAction.destructive).toBeUndefined();
+      // Edit sits above Delete so the safe action is reached first.
+      expect(actionTitles.indexOf('Edit Post')).toBeLessThan(
+        actionTitles.indexOf('Delete Post'),
+      );
+    });
+
+    it('hides Edit Post once the edit window has expired', () => {
+      // The default factory post is dated 2025-01-01, far outside the 15m window.
+      const post = makeFeedViewPost();
+      render(
+        <PostCard post={post as any} currentUserDid="did:plc:test123" />
+      );
+
+      const actionTitles = capturedContextMenuProps.actions.map((a: any) => a.title);
+      // Hidden, not disabled — a greyed row invites a tap that cannot succeed.
+      expect(actionTitles).not.toContain('Edit Post');
+      expect(actionTitles).toContain('Delete Post');
+    });
+
+    it('does not offer Edit Post on a fresh post by someone else', () => {
+      const post = makeFeedViewPost({
+        post: { record: { createdAt: new Date().toISOString() } },
+      });
+      render(
+        <PostCard post={post as any} currentUserDid="did:plc:other" />
+      );
+
+      const actionTitles = capturedContextMenuProps.actions.map((a: any) => a.title);
+      expect(actionTitles).not.toContain('Edit Post');
+    });
+
+    it('opens the edit sheet when Edit Post is selected', () => {
+      const post = makeFeedViewPost({
+        post: { record: { createdAt: new Date().toISOString() } },
+      });
+      const { queryByTestId, getByTestId } = render(
+        <PostCard post={post as any} currentUserDid="did:plc:test123" />
+      );
+
+      expect(queryByTestId('edit-post-input')).toBeNull();
+
+      act(() => {
+        capturedContextMenuProps.onPress({
+          nativeEvent: { index: 0, indexPath: [0], name: 'Edit Post' },
+        });
+      });
+
+      // Sheet opens seeded with the post's current text.
+      expect(getByTestId('edit-post-input').props.value).toBe(
+        'Hello world! This is a test post.',
+      );
+      expect(getByTestId('edit-post-countdown')).toBeTruthy();
     });
 
     it('dispatches correct action from context menu', () => {
