@@ -2,6 +2,7 @@ import type { AppBskyFeedDefs } from "@atproto/api";
 import { formatDistanceToNow } from "date-fns";
 import { Repeat2, Reply } from "lucide-react";
 import React from "react";
+import { useFeedRepairedPostCounts } from "../hooks/useRepairedPostCounts";
 import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { proxifyBskyImage } from "../utils/image-proxy";
 import { PostActionBar } from "./PostActionBar";
@@ -58,9 +59,18 @@ export const PostItem = React.memo(
     const navigate = useViewTransitionNavigate();
     const post = item.post;
 
+    // Edited posts read as 0 likes because editing zeroes the AppView's
+    // aggregates. Recount them once the card is on screen; unedited posts (very
+    // nearly all of them) cost nothing.
+    const { ref: repairRef, post: displayPost } =
+      useFeedRepairedPostCounts(post);
+
     return (
       <div
-        ref={(el) => registerRef(`${post.uri}-${index}`, el)}
+        ref={(el) => {
+          registerRef(`${post.uri}-${index}`, el);
+          repairRef.current = el;
+        }}
         className={`relative cursor-pointer px-3 py-2.5 transition-colors hover:bg-asph-bg-hover ${
           item.reply?.parent || post.record?.reply?.parent
             ? "from-blue-500/3 border-l-4 border-blue-500 bg-gradient-to-r to-transparent"
@@ -278,7 +288,9 @@ export const PostItem = React.memo(
 
             {/* Post Action Bar */}
             <PostActionBar
-              post={post as unknown as AppBskyFeedDefs.PostView}
+              post={
+                (displayPost ?? post) as unknown as AppBskyFeedDefs.PostView
+              }
               onReply={() => onReply(post)}
               onRepost={() => onRepost(post)}
               onQuote={() => onQuote(post)}

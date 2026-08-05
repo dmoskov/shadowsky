@@ -1,6 +1,7 @@
 import { AppBskyFeedDefs } from "@atproto/api";
 import React, { memo, useCallback, useState } from "react";
 import { extractPostId } from "../hooks/usePostDeepLink";
+import { useFeedRepairedPostCounts } from "../hooks/useRepairedPostCounts";
 import { PostActionBar } from "./PostActionBar";
 import { PostContextMenu } from "./PostContextMenu";
 import { PostRenderer } from "./PostRenderer";
@@ -89,6 +90,10 @@ const PostCardComponent: React.FC<PostCardProps> = ({
   const authorName =
     post.author?.displayName || post.author?.handle || "Unknown user";
 
+  // Edited posts read as 0 likes because editing zeroes the AppView's aggregates.
+  // Recount once the card is on screen; unedited posts cost nothing.
+  const { ref: repairRef, post: displayPost } = useFeedRepairedPostCounts(post);
+
   // Extract post ID for deep linking
   const postId = extractPostId(post.uri);
 
@@ -114,6 +119,7 @@ const PostCardComponent: React.FC<PostCardProps> = ({
 
   return (
     <article
+      ref={repairRef}
       role="article"
       aria-label={`Post by ${authorName}`}
       id={`post-${postId}`}
@@ -136,7 +142,7 @@ const PostCardComponent: React.FC<PostCardProps> = ({
       />
       <div className="px-4 pb-3">
         <PostActionBar
-          post={post}
+          post={displayPost ?? post}
           onLike={onLike}
           onRepost={onRepost}
           onReply={onReply}

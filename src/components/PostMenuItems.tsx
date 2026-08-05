@@ -8,6 +8,7 @@ import {
   Flag,
   Link,
   List,
+  Pencil,
   Pin,
   PinOff,
   Share,
@@ -40,6 +41,9 @@ interface PostMenuItemsProps {
   onDelete: () => void;
   onPinToProfile?: () => void;
   onUnpinFromProfile?: () => void;
+  /** False once the edit window has closed; the item is hidden rather than disabled. */
+  canEdit?: boolean;
+  onEdit?: () => void;
 }
 
 /**
@@ -67,6 +71,8 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
   onBlock,
   onOpenReportModal,
   onDelete,
+  canEdit,
+  onEdit,
   onPinToProfile,
   onUnpinFromProfile,
 }) => {
@@ -243,6 +249,16 @@ export const PostMenuItems: React.FC<PostMenuItemsProps> = ({
             >
               <Pin className="h-4 w-4" aria-hidden="true" />
               Pin to profile
+            </button>
+          )}
+          {canEdit && onEdit && (
+            <button
+              role="menuitem"
+              onClick={onEdit}
+              className="touch-target-sm flex min-h-[44px] w-full items-center gap-3 px-4 py-3 text-sm text-asph-text-secondary transition-opacity hover:opacity-70 focus-visible:bg-asph-bg-hover focus-visible:outline-none"
+            >
+              <Pencil className="h-4 w-4" aria-hidden="true" />
+              Edit post
             </button>
           )}
           <button

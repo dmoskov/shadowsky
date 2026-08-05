@@ -81,3 +81,6 @@ infra/site/terraform.tfstate*
 infra/site/*.tfvars
 infra/site/*.zip
 infra/site/tfplan
+
+# Claude Code agent worktrees (scratch space for isolated subagents)
+.claude/worktrees/
