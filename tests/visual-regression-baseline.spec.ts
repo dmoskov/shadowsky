@@ -72,13 +72,37 @@ test.describe("Visual Regression Baseline - Landing Page", () => {
     await expect(page).toHaveScreenshot("01-login-page.png", VISUAL_CONFIG);
   });
 
-  test("14 - Loading States", async ({ page }) => {
-    // Navigate without waiting for full network idle to capture loading state
-    await page.goto(TEST_URL);
-    await expect(page).toHaveScreenshot(
-      "14-loading-skeleton.png",
-      VISUAL_CONFIG,
+  // Deliberately not a screenshot test. This previously called
+  // toHaveScreenshot after a plain goto, hoping to catch the app mid-load, but
+  // toHaveScreenshot retries until two consecutive frames match — it waits for
+  // the page to be *stable*, so it can only ever capture a settled page. The
+  // committed baseline was therefore just a second copy of the landing page,
+  // which is why it rotted silently when the front door was rebuilt and why it
+  // failed locally while passing in CI. Asserting on the DOM instead makes the
+  // loading state reproducible and needs no baseline.
+  test("14 - boot splash shows until the app mounts, then gives way", async ({
+    page,
+  }) => {
+    // The splash markup lives inside #root and React replaces it on mount, so
+    // blocking scripts is what pins the app in its loading state.
+    await page.route("**/*", (route) =>
+      route.request().resourceType() === "script"
+        ? route.abort()
+        : route.continue(),
     );
+    await page.goto(TEST_URL);
+
+    await expect(page.getByText("Loading Asphodel...")).toBeVisible();
+
+    // Let the scripts through: the splash must be replaced by the real app.
+    await page.unroute("**/*");
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+
+    await expect(page.getByText("Loading Asphodel...")).toBeHidden();
+    await expect(
+      page.getByText("Sign in with your Bluesky account"),
+    ).toBeVisible();
   });
 });
 
