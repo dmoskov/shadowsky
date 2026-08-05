@@ -263,7 +263,13 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light;
+  /* Governs browser-painted UI we don't draw ourselves: scrollbars, form
+     controls, spellcheck underlines. `light dark` means "we support both, follow
+     the OS" — correct before ThemeContext has set data-theme, and correct
+     afterwards for the default `system` theme. An explicit choice pins it below.
+     Declaring a single value here is what made native scrollbars render pale
+     against the dark UI. */
+  color-scheme: light dark;
   color: var(--asph-text-primary);
   background-color: var(--asph-bg-primary);
 
@@ -406,25 +412,55 @@ body {
   position: relative;
 }
 
-/* Apply scrollbar styling directly to body */
-body::-webkit-scrollbar {
+/* An explicit light/dark choice pins the browser-painted UI, so picking Light on
+   a dark-mode OS (or the reverse) themes scrollbars and form controls to match
+   the app rather than the machine. High-contrast variants ride along, since they
+   are always paired with a data-theme. */
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* Scrollbars are themed globally rather than per-container.
+ *
+ * These rules used to live on `body` plus an opt-in `.asph-scrollbar` utility,
+ * which meant a scroll area that forgot the class silently fell back to a native
+ * scrollbar. Nothing errors when you forget it, so the styling has to be the
+ * default and opting *out* has to be the deliberate act — see `.scrollbar-hide`
+ * and `.scrollbar-refined`, whose class specificity still beats this.
+ *
+ * Deliberately using ::-webkit-scrollbar rather than the standard
+ * `scrollbar-color`: setting the standard property makes Chrome ignore these
+ * pseudo-element rules entirely, which would drop the 10px sizing and the track
+ * inset. Firefox and other non-webkit engines are handled by `color-scheme`
+ * above instead. */
+*::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
-body::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
   background: var(--asph-bg-primary);
   border-radius: 5px;
 }
 
-body::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
   background: var(--asph-bg-tertiary);
   border-radius: 5px;
   border: 2px solid var(--asph-bg-primary);
 }
 
-body::-webkit-scrollbar-thumb:hover {
+*::-webkit-scrollbar-thumb:hover {
   background: var(--asph-bg-hover);
+}
+
+/* Corner where horizontal and vertical bars meet — otherwise a bare white
+   square shows through on dual-scroll containers like the deck. */
+*::-webkit-scrollbar-corner {
+  background: var(--asph-bg-primary);
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
