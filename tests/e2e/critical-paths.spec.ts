@@ -75,47 +75,32 @@ test.describe("Landing Page", () => {
     ).toBeVisible();
   });
 
-  test("login form elements are present", async ({ page }) => {
+  // Sign-in leads with OAuth and keeps app passwords as an escape hatch, so
+  // there is no mode-toggle button to look for. Which form renders depends on
+  // the origin: the OAuth client can only initialise against a public HTTPS
+  // origin, so a local/CI run falls back to the app-password form. Both are
+  // valid, so these assert on whichever surface is actually shown.
+  test("a sign-in form is present", async ({ page }) => {
     await page.goto("/");
     await waitForLandingPage(page);
 
-    // Check for login mode toggle buttons
-    const oauthButton = page.getByRole("button", { name: /oauth/i });
-    const appPasswordButton = page.getByRole("button", {
-      name: /app password/i,
+    const oauthSubmit = page.getByRole("button", {
+      name: /sign in with bluesky/i,
     });
+    const appPasswordField = page.getByLabel(/app password/i);
 
-    // At least one login method should be visible
-    const oauthVisible = await oauthButton.isVisible().catch(() => false);
-    const appPasswordVisible = await appPasswordButton
-      .isVisible()
-      .catch(() => false);
-    expect(oauthVisible || appPasswordVisible).toBe(true);
+    await expect(oauthSubmit.or(appPasswordField).first()).toBeVisible();
   });
 
-  test("OAuth login form has handle input", async ({ page }) => {
+  test("sign-in form exposes a handle input", async ({ page }) => {
     await page.goto("/");
     await waitForLandingPage(page);
 
-    // Try to switch to OAuth mode if available
-    const oauthButton = page.getByRole("button", { name: /oauth/i });
-    if (await oauthButton.isEnabled().catch(() => false)) {
-      await oauthButton.click();
-    }
+    // #handle in OAuth mode, #identifier in app-password mode.
+    const handleInput = page.locator("input#handle, input#identifier").first();
 
-    // Look for handle input field (used in OAuth mode)
-    const handleInput = page
-      .locator(
-        'input[placeholder*="handle" i], input[placeholder*="username" i]',
-      )
-      .first();
-    const handleVisible = await handleInput.isVisible().catch(() => false);
-
-    // If OAuth is available, handle input should be visible
-    // If not, this is acceptable (app password mode will be shown)
-    if (await oauthButton.isEnabled().catch(() => false)) {
-      expect(handleVisible).toBe(true);
-    }
+    await expect(handleInput).toBeVisible();
+    await expect(handleInput).toHaveAttribute("placeholder", /handle/i);
   });
 
   test("App Password login form has required fields", async ({ page }) => {
