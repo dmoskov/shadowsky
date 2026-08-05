@@ -30,6 +30,7 @@ import {
   clientMetadataFile,
   hasExistingOAuthSession,
   oauthService,
+  type OAuthState,
 } from "./oauth-service";
 
 // Mock the logger to suppress output during tests
@@ -60,6 +61,22 @@ vi.mock("@atproto/api", () => ({
 // Helper to wait for async operations
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Typed accessor for OAuthService private members, scoped to this test file.
+// Replaces per-line @ts-expect-error suppressions with a single explicit cast.
+type OAuthServiceTestable = {
+  client: BrowserOAuthClientType | null;
+  currentSession: OAuthSession | null;
+  currentAgent: unknown;
+  initPromise: Promise<OAuthState | null> | null;
+  eventListeners: Map<string, Set<unknown>>;
+  emitEvent(type: "session", state: OAuthState): void;
+  emitEvent(type: "deleted", detail: { sub: string; cause: Error }): void;
+};
+
+function internals(svc: typeof oauthService): OAuthServiceTestable {
+  return svc as unknown as OAuthServiceTestable;
 }
 
 describe("hasExistingOAuthSession", () => {
@@ -118,8 +135,7 @@ describe("hasExistingOAuthSession", () => {
 
   describe("IndexedDB availability", () => {
     it("should return false if IndexedDB is not available", async () => {
-      // @ts-expect-error - Deleting indexedDB for testing
-      delete global.indexedDB;
+      Reflect.deleteProperty(global, "indexedDB");
       const result = await hasExistingOAuthSession();
       expect(result).toBe(false);
     });
@@ -319,16 +335,12 @@ vi.mock("@atproto/oauth-client-browser", () => ({
 describe("OAuthService", () => {
   beforeEach(() => {
     // Reset service state
-    // @ts-expect-error - accessing private property for testing
-    oauthService.client = null;
-    // @ts-expect-error - accessing private property for testing
-    oauthService.currentSession = null;
-    // @ts-expect-error - accessing private property for testing
-    oauthService.currentAgent = null;
-    // @ts-expect-error - accessing private property for testing
-    oauthService.initPromise = null;
-    // @ts-expect-error - accessing private property for testing
-    oauthService.eventListeners = new Map();
+    const svc = internals(oauthService);
+    svc.client = null;
+    svc.currentSession = null;
+    svc.currentAgent = null;
+    svc.initPromise = null;
+    svc.eventListeners = new Map();
 
     // Reset window.location
     Object.defineProperty(window, "location", {
@@ -524,10 +536,8 @@ describe("OAuthService", () => {
 
     it("should throw error if client is not initialized", async () => {
       // Reset client
-      // @ts-expect-error - accessing private property for testing
-      oauthService.client = null;
-      // @ts-expect-error - accessing private property for testing
-      oauthService.initPromise = null;
+      internals(oauthService).client = null;
+      internals(oauthService).initPromise = null;
 
       const { BrowserOAuthClient } =
         await import("@atproto/oauth-client-browser");
@@ -584,10 +594,8 @@ describe("OAuthService", () => {
     });
 
     it("should throw error if client is not initialized", async () => {
-      // @ts-expect-error - accessing private property for testing
-      oauthService.client = null;
-      // @ts-expect-error - accessing private property for testing
-      oauthService.initPromise = null;
+      internals(oauthService).client = null;
+      internals(oauthService).initPromise = null;
 
       const { BrowserOAuthClient } =
         await import("@atproto/oauth-client-browser");
@@ -651,8 +659,7 @@ describe("OAuthService", () => {
     });
 
     it("should work when there is no current session", async () => {
-      // @ts-expect-error - accessing private property for testing
-      oauthService.currentSession = null;
+      internals(oauthService).currentSession = null;
 
       await expect(oauthService.signOut()).resolves.not.toThrow();
 
@@ -678,8 +685,7 @@ describe("OAuthService", () => {
     });
 
     it("isAuthenticated() should return false when session is null", () => {
-      // @ts-expect-error - accessing private property for testing
-      oauthService.currentSession = null;
+      internals(oauthService).currentSession = null;
 
       expect(oauthService.isAuthenticated()).toBe(false);
     });
@@ -689,8 +695,7 @@ describe("OAuthService", () => {
     });
 
     it("isAvailable() should return false when client is null", () => {
-      // @ts-expect-error - accessing private property for testing
-      oauthService.client = null;
+      internals(oauthService).client = null;
 
       expect(oauthService.isAvailable()).toBe(false);
     });
@@ -707,10 +712,8 @@ describe("OAuthService", () => {
     });
 
     it("getState() should return null values when not authenticated", () => {
-      // @ts-expect-error - accessing private property for testing
-      oauthService.currentSession = null;
-      // @ts-expect-error - accessing private property for testing
-      oauthService.currentAgent = null;
+      internals(oauthService).currentSession = null;
+      internals(oauthService).currentAgent = null;
 
       const state = oauthService.getState();
 
@@ -729,8 +732,7 @@ describe("OAuthService", () => {
       oauthService.addEventListener("session", callback);
 
       const state = oauthService.getState();
-      // @ts-expect-error - accessing private method for testing
-      oauthService.emitEvent("session", state);
+      internals(oauthService).emitEvent("session", state);
 
       expect(callback).toHaveBeenCalledWith(state);
     });
@@ -740,8 +742,7 @@ describe("OAuthService", () => {
       oauthService.addEventListener("deleted", callback);
 
       const detail = { sub: "did:plc:test123", cause: new Error("Revoked") };
-      // @ts-expect-error - accessing private method for testing
-      oauthService.emitEvent("deleted", detail);
+      internals(oauthService).emitEvent("deleted", detail);
 
       expect(callback).toHaveBeenCalledWith(detail);
     });
@@ -754,8 +755,7 @@ describe("OAuthService", () => {
       oauthService.addEventListener("session", callback2);
 
       const state = oauthService.getState();
-      // @ts-expect-error - accessing private method for testing
-      oauthService.emitEvent("session", state);
+      internals(oauthService).emitEvent("session", state);
 
       expect(callback1).toHaveBeenCalledWith(state);
       expect(callback2).toHaveBeenCalledWith(state);
@@ -768,8 +768,7 @@ describe("OAuthService", () => {
       oauthService.removeEventListener("session", callback);
 
       const state = oauthService.getState();
-      // @ts-expect-error - accessing private method for testing
-      oauthService.emitEvent("session", state);
+      internals(oauthService).emitEvent("session", state);
 
       expect(callback).not.toHaveBeenCalled();
     });
@@ -787,8 +786,7 @@ describe("OAuthService", () => {
 
       // Should not throw
       expect(() => {
-        // @ts-expect-error - accessing private method for testing
-        oauthService.emitEvent("session", state);
+        internals(oauthService).emitEvent("session", state);
       }).not.toThrow();
 
       // Normal callback should still be called
@@ -840,14 +838,11 @@ describe("OAuthService", () => {
       expect(oauthService.isAuthenticated()).toBe(true);
 
       // Reset service to simulate a fresh state
-      // @ts-expect-error - accessing private property for testing
-      oauthService.client = null;
-      // @ts-expect-error - accessing private property for testing
-      oauthService.currentSession = null;
-      // @ts-expect-error - accessing private property for testing
-      oauthService.currentAgent = null;
-      // @ts-expect-error - accessing private property for testing
-      oauthService.initPromise = null;
+      const svc = internals(oauthService);
+      svc.client = null;
+      svc.currentSession = null;
+      svc.currentAgent = null;
+      svc.initPromise = null;
 
       const newSession = {
         did: "did:plc:new456",
@@ -894,8 +889,7 @@ describe("OAuthService", () => {
       expect(oauthService.isAuthenticated()).toBe(false);
 
       // Reset initPromise to allow re-initialization
-      // @ts-expect-error - accessing private property for testing
-      oauthService.initPromise = null;
+      internals(oauthService).initPromise = null;
 
       const newSession = {
         did: "did:plc:newuser",
@@ -961,8 +955,7 @@ describe("OAuthService", () => {
       expect(persistentCallback).toHaveBeenCalledTimes(1);
 
       // Second emission — removedCallback should no longer be registered
-      // @ts-expect-error - accessing private method for testing
-      oauthService.emitEvent("session", oauthService.getState());
+      internals(oauthService).emitEvent("session", oauthService.getState());
       expect(removedCallback).toHaveBeenCalledTimes(1); // unchanged
       expect(persistentCallback).toHaveBeenCalledTimes(2);
     });
@@ -993,8 +986,7 @@ describe("OAuthService", () => {
       await expect(oauthService.init()).rejects.toThrow("Network error");
 
       // initPromise must be null so the service can be retried
-      // @ts-expect-error - accessing private property for testing
-      expect(oauthService.initPromise).toBeNull();
+      expect(internals(oauthService).initPromise).toBeNull();
 
       // Second call should succeed
       const result = await oauthService.init();
