@@ -588,7 +588,11 @@ export default {
           boxShadow:
             "0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.04)",
         },
-        // Custom scrollbar
+        // Custom scrollbar.
+        // No longer required: src/index.css themes scrollbars globally, so a new
+        // scroll container gets this for free. Kept because it is still @applied
+        // in tailwind-components.css and used by ~33 components; adding it to new
+        // markup is harmless but pointless.
         ".asph-scrollbar": {
           "&::-webkit-scrollbar": {
             width: "10px",
