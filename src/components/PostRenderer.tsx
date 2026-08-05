@@ -1,4 +1,5 @@
 import { AppBskyFeedDefs } from "@atproto/api";
+import { postEdit } from "@bsky/core";
 import { formatDistanceToNow } from "date-fns";
 import {
   BellOff,
@@ -9,6 +10,7 @@ import {
   Loader,
   MessageCircle,
   MoreVertical,
+  Pencil,
   Repeat2,
   Reply,
   Rss,
@@ -395,6 +397,9 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
   const record = post.record as any;
   const rootUri = getThreadRootUri(post);
   const isThreadMutedState = isThreadMuted(rootUri);
+  // Non-lexicon stamp, so no client shows an "edited" marker unless it looks for
+  // it. Free to read — it rides along on the post view we already have.
+  const editedAt = postEdit.getEditedAt(record);
   const { getProfilePrefetchHandlers, getThreadPrefetchHandlers } =
     useRoutePrefetch();
 
@@ -1196,6 +1201,23 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                     addSuffix: true,
                   })}
                 </Link>
+                {editedAt && (
+                  <>
+                    <span style={{ color: "var(--asph-text-secondary)" }}>
+                      ·
+                    </span>
+                    <span
+                      className="flex items-center gap-1 text-sm"
+                      style={{ color: "var(--asph-text-secondary)" }}
+                      title={`Edited ${formatDistanceToNow(new Date(editedAt), {
+                        addSuffix: true,
+                      })}`}
+                    >
+                      <Pencil size={12} aria-hidden="true" />
+                      <span className="text-xs">Edited</span>
+                    </span>
+                  </>
+                )}
                 {isThreadMutedState && (
                   <>
                     <span style={{ color: "var(--asph-text-secondary)" }}>

@@ -69,57 +69,38 @@ test.describe("Interaction Timing - INP Budget @performance", () => {
     await page.waitForLoadState("networkidle");
   });
 
-  test("App Password button click-to-feedback should be under 200ms @performance", async ({
+  // The sign-in-method disclosure is the landing page's one cheap, purely local
+  // click: it expands an explainer panel with no network work, which is exactly
+  // what an INP budget should be measured against. (It replaced an App Password
+  // mode-toggle button that no longer exists now that sign-in leads with OAuth.)
+  test("Sign-in explainer toggle click-to-feedback should be under 200ms @performance", async ({
     page,
   }) => {
     await page.waitForLoadState("networkidle");
 
-    // Find the App Password toggle button (this one is enabled on the landing page)
-    const appPasswordButton = page.getByRole("button", {
-      name: /app password/i,
+    const explainerToggle = page.getByRole("button", {
+      name: /which sign-in method should i use/i,
     });
 
-    // Check if visible and enabled
-    const isVisible = await appPasswordButton.isVisible().catch(() => false);
-    const isEnabled = await appPasswordButton.isEnabled().catch(() => false);
+    await expect(explainerToggle).toBeVisible();
 
-    if (isVisible && isEnabled) {
-      const duration = await measureInteraction(
-        page,
-        async () => {
-          await appPasswordButton.click();
-        },
-        "app-password-toggle",
-      );
+    const duration = await measureInteraction(
+      page,
+      async () => {
+        await explainerToggle.click();
+      },
+      "sign-in-explainer-toggle",
+    );
 
-      console.log(`App Password toggle interaction: ${duration.toFixed(2)}ms`);
+    console.log(`Sign-in explainer toggle interaction: ${duration.toFixed(2)}ms`);
 
-      expect(
-        duration,
-        `App Password toggle interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
-      ).toBeLessThan(INP_BUDGET_MS);
-    } else {
-      // If button not available, test with submit button instead
-      const submitButton = page.locator('button[type="submit"]');
-      if (await submitButton.isEnabled()) {
-        const duration = await measureInteraction(
-          page,
-          async () => {
-            await submitButton.click();
-          },
-          "submit-button",
-        );
+    // Confirm the click actually did something, so we are not timing a no-op.
+    await expect(explainerToggle).toHaveAttribute("aria-expanded", "true");
 
-        console.log(`Submit button interaction: ${duration.toFixed(2)}ms`);
-
-        expect(
-          duration,
-          `Submit button interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
-        ).toBeLessThan(INP_BUDGET_MS);
-      } else {
-        test.skip();
-      }
-    }
+    expect(
+      duration,
+      `Sign-in explainer toggle interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
+    ).toBeLessThan(INP_BUDGET_MS);
   });
 
   test("Form input click-to-focus should be under 200ms @performance", async ({

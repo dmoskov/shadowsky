@@ -1,11 +1,14 @@
 import { AppBskyFeedDefs } from "@atproto/api";
+import { postEdit } from "@bsky/core";
 import { MoreHorizontal } from "lucide-react";
 import React, { useEffect, useId, useRef, useState } from "react";
 import ReactDOM from "react-dom";
+import { useAuth } from "../contexts/AuthContext";
 import { useMenuKeyboardNavigation } from "../hooks/useMenuKeyboardNavigation";
 import { useMenuPositioning } from "../hooks/useMenuPositioning";
 import { usePostMenuActions } from "../hooks/usePostMenuActions";
 import { AddToListModal } from "./AddToListModal";
+import { EditPostModal } from "./EditPostModal";
 import { PostMenuItems } from "./PostMenuItems";
 import { ReportModal } from "./ReportModal";
 
@@ -15,6 +18,8 @@ interface PostMenuProps {
   onBlock?: () => void;
   onDelete?: () => void;
   onReport?: () => void;
+  /** Fired after a successful edit so the caller can refresh its copy. */
+  onEdited?: (result: { uri: string; cid: string; text: string }) => void;
   className?: string;
 }
 
@@ -24,11 +29,14 @@ export const PostMenu: React.FC<PostMenuProps> = ({
   onBlock,
   onDelete,
   onReport,
+  onEdited,
   className = "",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showAddToListModal, setShowAddToListModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const { session } = useAuth();
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuId = useId();
@@ -81,6 +89,19 @@ export const PostMenu: React.FC<PostMenuProps> = ({
   const handleOpenAddToListModal = () => {
     setIsOpen(false);
     setShowAddToListModal(true);
+  };
+
+  // Evaluated when the menu opens rather than on a timer: a window that lapses
+  // while the menu sits open is caught by the modal, which re-checks and shows
+  // its own expiry message.
+  const canEdit = postEdit.canEditPost({
+    post,
+    viewerDid: session?.did,
+  }).allowed;
+
+  const handleOpenEditModal = () => {
+    setIsOpen(false);
+    setShowEditModal(true);
   };
 
   return (
@@ -144,6 +165,8 @@ export const PostMenu: React.FC<PostMenuProps> = ({
                 onBlock={actions.handleBlock}
                 onOpenReportModal={handleOpenReportModal}
                 onDelete={actions.handleDelete}
+                canEdit={canEdit}
+                onEdit={handleOpenEditModal}
                 onPinToProfile={actions.handlePinToProfile}
                 onUnpinFromProfile={actions.handleUnpinFromProfile}
               />
@@ -161,6 +184,15 @@ export const PostMenu: React.FC<PostMenuProps> = ({
         subjectDid={post.author.did}
         subjectHandle={post.author.handle}
       />
+
+      {showEditModal && (
+        <EditPostModal
+          post={post}
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onEdited={onEdited}
+        />
+      )}
 
       {showAddToListModal && (
         <AddToListModal

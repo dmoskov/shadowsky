@@ -28,6 +28,7 @@ import React, {
 import { useAuth } from "../contexts/AuthContext";
 import { ThreadProvider, type ThreadNode } from "../contexts/ThreadContext";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
+import { useRepairedPostCounts } from "../hooks/useRepairedPostCounts";
 import { useResponsiveCollapseThresholds } from "../hooks/useResponsiveCollapseThresholds";
 import { useScrollPersistence } from "../hooks/useScrollPersistence";
 import { useThreadCollapse } from "../hooks/useThreadCollapse";
@@ -118,6 +119,11 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   const navigate = useViewTransitionNavigate();
   const { session } = useAuth();
   const currentUserDid = propCurrentUserDid || session?.did;
+
+  // Focal post only. If it was edited, the AppView's aggregate counts are stuck
+  // at zero; recount them from the engagement listings so the numbers shown here
+  // are the real ones. No-op (and no requests) for unedited posts.
+  const rootPost = useRepairedPostCounts(rootPostObject);
 
   // Gallery state (can't extract - needs to be local for image click handling)
   const [galleryImages, setGalleryImages] = useState<Array<{
@@ -1149,7 +1155,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             {/* Action bar */}
             <div className="mt-4">
               <PostActionBar
-                post={rootPostObject}
+                post={rootPost ?? rootPostObject}
                 onReply={() => onPostClick?.(rootPostObject, "reply")}
                 onRepost={() => handleRepost(rootPostObject)}
                 onQuote={() => onPostClick?.(rootPostObject, "quote")}
