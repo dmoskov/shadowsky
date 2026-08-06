@@ -13,7 +13,8 @@ import {
   AppBskyRichtextFacet,
 } from "@atproto/api";
 import { Avatar } from "./Avatar";
-import { ReplyIcon, MoreIcon, TranslateIcon, ShieldIcon } from "./icons";
+import { postEdit } from "@bsky/core";
+import { ReplyIcon, MoreIcon, TranslateIcon, ShieldIcon, PenIcon } from "./icons";
 import { RichText } from "../utils/rich-text";
 import { PostEmbed } from "./PostEmbed";
 import { InlineErrorBoundary } from "./ui/InlineErrorBoundary";
@@ -109,6 +110,9 @@ export function PostCardContent({
   onPressRepostCount,
 }: PostCardContentProps) {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
+  const editedAt = postEdit.getEditedAt(record);
+  const originalText = postEdit.getOriginalText(record);
+  const [showOriginal, setShowOriginal] = React.useState(false);
 
   return (
     <View style={styles.content}>
@@ -187,6 +191,26 @@ export function PostCardContent({
         </TouchableOpacity>
         <View style={styles.headerRight}>
           <Text style={styles.timestamp}>{timestamp}</Text>
+          {editedAt && (
+            originalText ? (
+              <TouchableOpacity
+                style={styles.editedBadge}
+                onPress={() => setShowOriginal((v) => !v)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={`Edited — ${showOriginal ? "hide" : "show"} original text`}
+                accessibilityState={{ expanded: showOriginal }}
+              >
+                <PenIcon size={11} color={colors.textTertiary} />
+                <Text style={styles.editedText}>Edited</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.editedBadge}>
+                <PenIcon size={11} color={colors.textTertiary} />
+                <Text style={styles.editedText}>Edited</Text>
+              </View>
+            )
+          )}
           {labels.length > 0 && !hideContent && (
             <ShieldIcon
               size={14}
@@ -224,6 +248,14 @@ export function PostCardContent({
             style={styles.text}
           />
         </InlineErrorBoundary>
+      )}
+
+      {/* Original text (pre-edit) */}
+      {showOriginal && originalText && (
+        <View style={styles.originalTextContainer}>
+          <Text style={styles.originalTextContent}>{originalText}</Text>
+          <Text style={styles.originalTextLabel}>Original text</Text>
+        </View>
       )}
 
       {/* Inline Translation */}
@@ -390,6 +422,32 @@ function createStyles(colors: any) {
       color: colors.textTertiary,
       fontSize: fontSize.footnote,
       marginRight: 4,
+    },
+    editedBadge: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      gap: 3,
+    },
+    editedText: {
+      color: colors.textTertiary,
+      fontSize: fontSize.caption1,
+    },
+    originalTextContainer: {
+      borderLeftWidth: 2,
+      borderLeftColor: colors.textTertiary,
+      paddingLeft: 12,
+      marginBottom: 12,
+      marginTop: 4,
+    },
+    originalTextContent: {
+      color: colors.textSecondary,
+      fontSize: fontSize.footnote,
+      lineHeight: 18,
+    },
+    originalTextLabel: {
+      color: colors.textTertiary,
+      fontSize: fontSize.caption1,
+      marginTop: 4,
     },
     text: {
       color: colors.text,

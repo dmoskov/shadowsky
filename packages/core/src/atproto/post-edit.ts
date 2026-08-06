@@ -53,10 +53,17 @@ export const EDIT_WINDOW_MS = 15 * 60 * 1000;
  * Non-lexicon field carrying the edit timestamp. `app.bsky.feed.post` has no
  * edit field, but the PDS accepts unknown properties, and mu.social already
  * writes `updatedAt` — so using the same name buys cross-client interop for
- * free. We deliberately do NOT write mu.social's companion `originalText`: no
- * client renders it, and it publishes the pre-edit text permanently.
+ * free. mu.social also writes `originalText`; we now write it too so that
+ * users can quickly see what a post said before it was edited.
  */
 export const EDITED_AT_FIELD = "updatedAt";
+
+/**
+ * Non-lexicon field carrying the pre-edit text so viewers can see the original.
+ * Only stamped on the first edit; subsequent edits preserve the value so the
+ * very first version is always reachable.
+ */
+export const ORIGINAL_TEXT_FIELD = "originalText";
 
 /** Byte-indexed fields that a text change invalidates and must not survive it. */
 const TEXT_DEPENDENT_FIELDS = ["facets", "entities"] as const;
@@ -101,6 +108,17 @@ export function getEditedAt(record: unknown): string | null {
 
 export function isEdited(record: unknown): boolean {
   return getEditedAt(record) !== null;
+}
+
+/**
+ * Read the non-lexicon original-text field off a post record. Returns the
+ * pre-edit text when present, or null for posts that were never edited (or
+ * edited by a client that doesn't write this field).
+ */
+export function getOriginalText(record: unknown): string | null {
+  if (!record || typeof record !== "object") return null;
+  const value = (record as Record<string, unknown>)[ORIGINAL_TEXT_FIELD];
+  return typeof value === "string" && value.length > 0 ? value : null;
 }
 
 /**
@@ -232,6 +250,11 @@ export async function editPostText(
     text,
     [EDITED_AT_FIELD]: editedAt,
   };
+  // Stamp the pre-edit text on the first edit so viewers can see the original.
+  // On re-edits the field already exists and we leave it alone.
+  if (!prior[ORIGINAL_TEXT_FIELD] && typeof prior.text === "string") {
+    next[ORIGINAL_TEXT_FIELD] = prior.text;
+  }
   // Old byte offsets do not survive new text; drop them, then re-apply.
   for (const field of TEXT_DEPENDENT_FIELDS) delete next[field];
   if (facets && facets.length > 0) next.facets = facets;
