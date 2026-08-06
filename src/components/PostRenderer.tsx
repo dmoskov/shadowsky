@@ -400,6 +400,8 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
   // Non-lexicon stamp, so no client shows an "edited" marker unless it looks for
   // it. Free to read — it rides along on the post view we already have.
   const editedAt = postEdit.getEditedAt(record);
+  const originalText = postEdit.getOriginalText(record);
+  const [showOriginal, setShowOriginal] = React.useState(false);
   const { getProfilePrefetchHandlers, getThreadPrefetchHandlers } =
     useRoutePrefetch();
 
@@ -1206,16 +1208,33 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                     <span style={{ color: "var(--asph-text-secondary)" }}>
                       ·
                     </span>
-                    <span
-                      className="flex items-center gap-1 text-sm"
-                      style={{ color: "var(--asph-text-secondary)" }}
-                      title={`Edited ${formatDistanceToNow(new Date(editedAt), {
-                        addSuffix: true,
-                      })}`}
-                    >
-                      <Pencil size={12} aria-hidden="true" />
-                      <span className="text-xs">Edited</span>
-                    </span>
+                    {originalText ? (
+                      <button
+                        className="flex items-center gap-1 text-sm transition-colors hover:opacity-80"
+                        style={{ color: "var(--asph-text-secondary)" }}
+                        title={`Edited ${formatDistanceToNow(new Date(editedAt), { addSuffix: true })} — click to ${showOriginal ? "hide" : "show"} original`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowOriginal((v) => !v);
+                        }}
+                        aria-expanded={showOriginal}
+                        aria-label={`Edited — ${showOriginal ? "hide" : "show"} original text`}
+                      >
+                        <Pencil size={12} aria-hidden="true" />
+                        <span className="text-xs underline decoration-dotted">
+                          Edited
+                        </span>
+                      </button>
+                    ) : (
+                      <span
+                        className="flex items-center gap-1 text-sm"
+                        style={{ color: "var(--asph-text-secondary)" }}
+                        title={`Edited ${formatDistanceToNow(new Date(editedAt), { addSuffix: true })}`}
+                      >
+                        <Pencil size={12} aria-hidden="true" />
+                        <span className="text-xs">Edited</span>
+                      </span>
+                    )}
                   </>
                 )}
                 {isThreadMutedState && (
@@ -1265,6 +1284,27 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               <p className="asph-text-body whitespace-pre-wrap break-words">
                 <RichText text={record?.text || ""} facets={record?.facets} />
               </p>
+              {showOriginal && originalText && (
+                <div
+                  className="mt-2 rounded-lg border-l-2 pl-3"
+                  style={{
+                    borderColor: "var(--asph-text-tertiary)",
+                  }}
+                >
+                  <p
+                    className="whitespace-pre-wrap break-words text-sm"
+                    style={{ color: "var(--asph-text-secondary)" }}
+                  >
+                    {originalText}
+                  </p>
+                  <span
+                    className="mt-1 block text-xs"
+                    style={{ color: "var(--asph-text-tertiary)" }}
+                  >
+                    Original text
+                  </span>
+                </div>
+              )}
               {/* Inline Translation */}
               {isShowingTranslation && translatedText && (
                 <div
