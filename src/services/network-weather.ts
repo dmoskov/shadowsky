@@ -63,6 +63,12 @@ export interface Narrative {
   authorCount: number;
   authorWeight: number;
   threadType: "warp" | "weft";
+  /**
+   * Posts Pan classified into this narrative. Labels are generated cluster
+   * summaries, so searching Bluesky for one returns nothing — these URIs are
+   * the only way to open a narrative's actual content.
+   */
+  samplePostUris?: string[];
 }
 
 export interface NarrativeCrossing {
@@ -270,6 +276,12 @@ async function fetchNarratives(): Promise<NarrativeState> {
         (n.age_hours ?? 0) >= WARP_AGE_HOURS
           ? ("warp" as const)
           : ("weft" as const),
+      samplePostUris: Array.isArray(n.sample_post_uris)
+        ? n.sample_post_uris.filter(
+            (uri: unknown): uri is string =>
+              typeof uri === "string" && uri.length > 0,
+          )
+        : undefined,
     }))
     .sort((a, b) => b.authorWeight - a.authorWeight);
 
