@@ -107,6 +107,8 @@ test.describe("Visual Regression Baseline - Landing Page", () => {
 });
 
 test.describe("Visual Regression Baseline - Authenticated", () => {
+  // Load-bearing: these tests login to a real Bluesky account to screenshot
+  // authenticated views — they cannot run without TEST_USER/TEST_PASS.
   test.skip(!hasCredentials(), "Requires test credentials");
 
   test.beforeEach(async ({ page }) => {
@@ -170,6 +172,7 @@ test.describe("Visual Regression Baseline - Error States", () => {
 
 // Component-specific detail tests
 test.describe("Component Details - Buttons", () => {
+  // Load-bearing: button-state screenshots require an authenticated session.
   test.skip(!hasCredentials(), "Requires test credentials");
 
   test.beforeEach(async ({ page }) => {

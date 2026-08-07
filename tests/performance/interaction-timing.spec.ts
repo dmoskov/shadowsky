@@ -110,25 +110,22 @@ test.describe("Interaction Timing - INP Budget @performance", () => {
 
     // Find any enabled input field on the page
     const input = page.locator("input:not([disabled])").first();
+    await expect(input).toBeVisible();
 
-    if (await input.isVisible()) {
-      const duration = await measureInteraction(
-        page,
-        async () => {
-          await input.click();
-        },
-        "input-focus",
-      );
+    const duration = await measureInteraction(
+      page,
+      async () => {
+        await input.click();
+      },
+      "input-focus",
+    );
 
-      console.log(`Input focus interaction: ${duration.toFixed(2)}ms`);
+    console.log(`Input focus interaction: ${duration.toFixed(2)}ms`);
 
-      expect(
-        duration,
-        `Input focus interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
-      ).toBeLessThan(INP_BUDGET_MS);
-    } else {
-      test.skip();
-    }
+    expect(
+      duration,
+      `Input focus interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
+    ).toBeLessThan(INP_BUDGET_MS);
   });
 
   test("Submit button click-to-feedback should be under 200ms @performance", async ({
@@ -138,25 +135,23 @@ test.describe("Interaction Timing - INP Budget @performance", () => {
 
     // Find the submit button
     const submitButton = page.locator('button[type="submit"]');
+    await expect(submitButton).toBeVisible();
+    await expect(submitButton).toBeEnabled();
 
-    if ((await submitButton.isVisible()) && (await submitButton.isEnabled())) {
-      const duration = await measureInteraction(
-        page,
-        async () => {
-          await submitButton.click();
-        },
-        "submit-click",
-      );
+    const duration = await measureInteraction(
+      page,
+      async () => {
+        await submitButton.click();
+      },
+      "submit-click",
+    );
 
-      console.log(`Submit button interaction: ${duration.toFixed(2)}ms`);
+    console.log(`Submit button interaction: ${duration.toFixed(2)}ms`);
 
-      expect(
-        duration,
-        `Submit button interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
-      ).toBeLessThan(INP_BUDGET_MS);
-    } else {
-      test.skip();
-    }
+    expect(
+      duration,
+      `Submit button interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
+    ).toBeLessThan(INP_BUDGET_MS);
   });
 
   test("Tab key navigation should be under 200ms @performance", async ({
@@ -190,28 +185,23 @@ test.describe("Interaction Timing - INP Budget @performance", () => {
 
     // Find an enabled interactive element
     const button = page.locator("button:not([disabled])").first();
+    await expect(button).toBeVisible();
+    await expect(button).toBeEnabled();
 
-    const isVisible = await button.isVisible().catch(() => false);
-    const isEnabled = await button.isEnabled().catch(() => false);
+    const duration = await measureInteraction(
+      page,
+      async () => {
+        await button.hover();
+      },
+      "button-hover",
+    );
 
-    if (isVisible && isEnabled) {
-      const duration = await measureInteraction(
-        page,
-        async () => {
-          await button.hover();
-        },
-        "button-hover",
-      );
+    console.log(`Button hover interaction: ${duration.toFixed(2)}ms`);
 
-      console.log(`Button hover interaction: ${duration.toFixed(2)}ms`);
-
-      expect(
-        duration,
-        `Button hover interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
-      ).toBeLessThan(INP_BUDGET_MS);
-    } else {
-      test.skip();
-    }
+    expect(
+      duration,
+      `Button hover interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
+    ).toBeLessThan(INP_BUDGET_MS);
   });
 
   test("Multiple rapid interactions should each be under 200ms @performance", async ({
@@ -221,44 +211,41 @@ test.describe("Interaction Timing - INP Budget @performance", () => {
 
     // Find an enabled input field for rapid interactions
     const input = page.locator("input:not([disabled])").first();
+    await expect(input).toBeVisible();
 
-    if (await input.isVisible()) {
-      const durations: number[] = [];
+    const durations: number[] = [];
 
-      // Measure 3 rapid focus/blur cycles
-      for (let i = 0; i < 3; i++) {
-        const duration = await measureInteraction(
-          page,
-          async () => {
-            await input.click();
-          },
-          `rapid-click-${i}`,
-        );
-        durations.push(duration);
-
-        // Small delay between interactions
-        await page.waitForTimeout(50);
-      }
-
-      console.log(
-        `Rapid click interactions: ${durations.map((d) => d.toFixed(2)).join("ms, ")}ms`,
+    // Measure 3 rapid focus/blur cycles
+    for (let i = 0; i < 3; i++) {
+      const duration = await measureInteraction(
+        page,
+        async () => {
+          await input.click();
+        },
+        `rapid-click-${i}`,
       );
+      durations.push(duration);
 
-      // Check each click was under budget
-      durations.forEach((duration, index) => {
-        expect(
-          duration,
-          `Rapid click ${index + 1} took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
-        ).toBeLessThan(INP_BUDGET_MS);
-      });
-
-      // Also check average
-      const avgDuration =
-        durations.reduce((a, b) => a + b, 0) / durations.length;
-      console.log(`Average rapid click duration: ${avgDuration.toFixed(2)}ms`);
-    } else {
-      test.skip();
+      // Small delay between interactions
+      await page.waitForTimeout(50);
     }
+
+    console.log(
+      `Rapid click interactions: ${durations.map((d) => d.toFixed(2)).join("ms, ")}ms`,
+    );
+
+    // Check each click was under budget
+    durations.forEach((duration, index) => {
+      expect(
+        duration,
+        `Rapid click ${index + 1} took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
+      ).toBeLessThan(INP_BUDGET_MS);
+    });
+
+    // Also check average
+    const avgDuration =
+      durations.reduce((a, b) => a + b, 0) / durations.length;
+    console.log(`Average rapid click duration: ${avgDuration.toFixed(2)}ms`);
   });
 });
 
@@ -273,25 +260,22 @@ test.describe("Interaction Timing - Responsive Design @performance", () => {
 
     // Find an enabled interactive element
     const input = page.locator("input:not([disabled])").first();
+    await expect(input).toBeVisible();
 
-    if (await input.isVisible()) {
-      const duration = await measureInteraction(
-        page,
-        async () => {
-          await input.click();
-        },
-        "mobile-click",
-      );
+    const duration = await measureInteraction(
+      page,
+      async () => {
+        await input.click();
+      },
+      "mobile-click",
+    );
 
-      console.log(`Mobile viewport interaction: ${duration.toFixed(2)}ms`);
+    console.log(`Mobile viewport interaction: ${duration.toFixed(2)}ms`);
 
-      expect(
-        duration,
-        `Mobile viewport interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
-      ).toBeLessThan(INP_BUDGET_MS);
-    } else {
-      test.skip();
-    }
+    expect(
+      duration,
+      `Mobile viewport interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
+    ).toBeLessThan(INP_BUDGET_MS);
   });
 
   test("Tablet viewport interactions should be under 200ms @performance", async ({
@@ -304,25 +288,22 @@ test.describe("Interaction Timing - Responsive Design @performance", () => {
 
     // Find an enabled interactive element
     const input = page.locator("input:not([disabled])").first();
+    await expect(input).toBeVisible();
 
-    if (await input.isVisible()) {
-      const duration = await measureInteraction(
-        page,
-        async () => {
-          await input.click();
-        },
-        "tablet-click",
-      );
+    const duration = await measureInteraction(
+      page,
+      async () => {
+        await input.click();
+      },
+      "tablet-click",
+    );
 
-      console.log(`Tablet viewport interaction: ${duration.toFixed(2)}ms`);
+    console.log(`Tablet viewport interaction: ${duration.toFixed(2)}ms`);
 
-      expect(
-        duration,
-        `Tablet viewport interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
-      ).toBeLessThan(INP_BUDGET_MS);
-    } else {
-      test.skip();
-    }
+    expect(
+      duration,
+      `Tablet viewport interaction took ${duration.toFixed(2)}ms, expected under ${INP_BUDGET_MS}ms`,
+    ).toBeLessThan(INP_BUDGET_MS);
   });
 });
 

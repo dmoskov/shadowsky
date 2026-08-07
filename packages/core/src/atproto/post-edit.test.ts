@@ -85,6 +85,22 @@ describe("@bsky/core post-edit", () => {
     }
   });
 
+  describe("getOriginalText", () => {
+    it("reads the non-lexicon originalText field", () => {
+      expect(postEdit.getOriginalText({ originalText: "helo wrold" })).toBe(
+        "helo wrold",
+      );
+    });
+
+    it("returns null when no originalText is present", () => {
+      expect(postEdit.getOriginalText(PRIOR_RECORD)).toBeNull();
+      expect(postEdit.getOriginalText({ originalText: "" })).toBeNull();
+      expect(postEdit.getOriginalText({ originalText: 42 })).toBeNull();
+      expect(postEdit.getOriginalText(undefined)).toBeNull();
+      expect(postEdit.getOriginalText(null)).toBeNull();
+    });
+  });
+
   describe("canEditPost", () => {
     const justAfter = new Date("2026-08-05T16:05:00.000Z");
     const wayAfter = new Date("2026-08-05T17:00:00.000Z");
@@ -250,6 +266,41 @@ describe("@bsky/core post-edit", () => {
         "2026-08-05T17:00:00.000Z",
       );
       expect(res.editedAt).toBe("2026-08-05T17:00:00.000Z");
+    });
+
+    it("stamps originalText with the pre-edit text on first edit", async () => {
+      const { agent, applyWrites } = stubAgent();
+      await postEdit.editPostText(agent, {
+        uri: POST_URI,
+        text: "hello world",
+      });
+
+      expect(createOpOf(applyWrites).value.originalText).toBe("helo wrold");
+    });
+
+    it("preserves originalText on re-edits", async () => {
+      const alreadyEdited = {
+        ...PRIOR_RECORD,
+        text: "hello world",
+        updatedAt: "2026-08-05T16:10:00.000Z",
+        originalText: "helo wrold",
+      };
+      const { agent, applyWrites } = stubAgent({
+        getRecord: vi
+          .fn()
+          .mockResolvedValueOnce({
+            data: { cid: "oldcid", value: alreadyEdited },
+          })
+          .mockResolvedValue({
+            data: { cid: "newcid", value: alreadyEdited },
+          }),
+      });
+      await postEdit.editPostText(agent, {
+        uri: POST_URI,
+        text: "hello world!",
+      });
+
+      expect(createOpOf(applyWrites).value.originalText).toBe("helo wrold");
     });
 
     it("drops stale byte-indexed fields so old offsets cannot corrupt new text", async () => {

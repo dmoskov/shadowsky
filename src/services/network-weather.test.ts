@@ -146,6 +146,61 @@ describe("narrative sourcing", () => {
     expect(weather.narratives?.narratives[0].authorCount).toBe(168);
   });
 
+  it("carries sample post URIs through, so chips have somewhere to go", async () => {
+    // Narrative labels are generated cluster summaries, so a text search for
+    // one returns nothing. These URIs are the only real destination.
+    routePan({
+      [SENTIMENT]: envelope({ overall_sentiment: 0, volume_ratio: 1 }),
+      [TRENDING]: envelope({ topics: [topic("a", 2)] }),
+      [NARRATIVES]: envelope({
+        narratives: [
+          {
+            ...panNarrative("1", "Housing Market Price Decline", 100),
+            sample_post_uris: [
+              "at://did:plc:x/app.bsky.feed.post/aaa",
+              "at://did:plc:y/app.bsky.feed.post/bbb",
+            ],
+          },
+        ],
+      }),
+    });
+
+    const { fetchNetworkWeather } = await load();
+    const weather = await fetchNetworkWeather();
+
+    expect(weather.narratives?.narratives[0].samplePostUris).toEqual([
+      "at://did:plc:x/app.bsky.feed.post/aaa",
+      "at://did:plc:y/app.bsky.feed.post/bbb",
+    ]);
+  });
+
+  it("leaves sample URIs undefined when Pan omits or empties them", async () => {
+    routePan({
+      [SENTIMENT]: envelope({ overall_sentiment: 0, volume_ratio: 1 }),
+      [TRENDING]: envelope({ topics: [topic("a", 2)] }),
+      [NARRATIVES]: envelope({
+        narratives: [
+          panNarrative("1", "No Samples", 100),
+          {
+            ...panNarrative("2", "Junk Samples", 50),
+            sample_post_uris: ["", null],
+          },
+        ],
+      }),
+    });
+
+    const { fetchNetworkWeather } = await load();
+    const ns = (await fetchNetworkWeather()).narratives!.narratives;
+
+    expect(
+      ns.find((n) => n.name === "No Samples")?.samplePostUris,
+    ).toBeUndefined();
+    // Malformed entries are filtered rather than handed to the modal.
+    expect(ns.find((n) => n.name === "Junk Samples")?.samplePostUris).toEqual(
+      [],
+    );
+  });
+
   it("reports empty rather than pan when Pan has no narratives", async () => {
     routePan({
       [SENTIMENT]: envelope({ overall_sentiment: 0, volume_ratio: 1 }),
