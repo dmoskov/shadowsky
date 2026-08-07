@@ -78,22 +78,47 @@ describe("fetchGlobalTextile", () => {
     expect(kept?.authorCount).toBe(40);
   });
 
-  it("neutralises luminance when network_energy is saturated", async () => {
+  // network_energy is a ratio against baseline activity, not a 0-1 fraction —
+  // Pan reports the same number as the sentiment endpoint's volume_ratio, and
+  // it sits above 1 routinely. An earlier guard treated >= 1 as a saturated
+  // sensor and substituted neutral, discarding real readings once Pan started
+  // reporting properly.
+  const luminanceFor = async (energy: number) => {
     fetchFromPan.mockResolvedValue(
-      panNarratives([narrative("1", "Alpha", 10)], 1.0),
+      panNarratives([narrative("1", "Alpha", 10)], energy),
     );
+    return (await fetchGlobalTextile()).luminance;
+  };
 
-    const textile = await fetchGlobalTextile();
-
-    expect(textile.luminance).toBe(0.4);
+  it("puts baseline activity in the middle of the range", async () => {
+    expect(await luminanceFor(1.0)).toBeCloseTo(0.5, 5);
   });
 
-  it("passes through a real in-range network_energy", async () => {
-    fetchFromPan.mockResolvedValue(
-      panNarratives([narrative("1", "Alpha", 10)], 0.72),
-    );
+  it("brightens above baseline and dims below it", async () => {
+    const quiet = await luminanceFor(0.5);
+    const baseline = await luminanceFor(1.0);
+    const busy = await luminanceFor(2.0);
 
-    expect((await fetchGlobalTextile()).luminance).toBeCloseTo(0.72, 5);
+    expect(quiet).toBeLessThan(baseline);
+    expect(baseline).toBeLessThan(busy);
+  });
+
+  it("keeps a ratio above 1 as a real reading rather than neutralising it", async () => {
+    // Regression: 1.049 is the live value, and used to collapse to 0.4.
+    const luminance = await luminanceFor(1.049);
+
+    expect(luminance).not.toBe(0.4);
+    expect(luminance).toBeGreaterThan(0.5);
+  });
+
+  it("clamps extremes so the wash stays behind text", async () => {
+    expect(await luminanceFor(1000)).toBeLessThanOrEqual(0.9);
+    expect(await luminanceFor(0.001)).toBeGreaterThanOrEqual(0.15);
+  });
+
+  it("falls back to neutral for a nonsensical energy", async () => {
+    expect(await luminanceFor(0)).toBe(0.4);
+    expect(await luminanceFor(-5)).toBe(0.4);
   });
 
   it("falls back to an empty textile when Pan returns no narratives", async () => {
