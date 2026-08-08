@@ -2,6 +2,7 @@ import { AppBskyFeedDefs, RichText as BskyRichText } from "@atproto/api";
 import { getProfileService } from "@bsky/shared";
 import {
   useInfiniteQuery,
+  useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -9,6 +10,7 @@ import {
   BadgeCheck,
   BarChart3,
   Calendar,
+  Check,
   ChevronDown,
   ChevronUp,
   Edit,
@@ -19,6 +21,7 @@ import {
   List as ListIcon,
   MoreHorizontal,
   Pin,
+  Plus,
   QrCode,
   Rss,
   Share2,
@@ -316,6 +319,54 @@ export default function ProfilePage() {
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!agent && !!handle && hasFeedgens,
+  });
+
+  // User preferences for checking saved feeds
+  const { data: userPrefs } = useQuery({
+    queryKey: ["userPreferences"],
+    queryFn: async () => {
+      if (!agent) throw new Error("Not authenticated");
+      return await agent.getPreferences();
+    },
+    enabled: !!agent && hasFeedgens,
+  });
+
+  const isFeedSaved = useCallback(
+    (feedUri: string) =>
+      userPrefs?.savedFeeds?.some((f: any) => f.value === feedUri) ?? false,
+    [userPrefs?.savedFeeds],
+  );
+
+  const addFeedMutation = useMutation({
+    mutationFn: async (feedUri: string) => {
+      if (!agent) throw new Error("Not authenticated");
+      const newSavedFeed = {
+        id: `feed-${Date.now()}`,
+        type: "feed" as const,
+        value: feedUri,
+        pinned: false,
+      };
+      await agent.addSavedFeeds([newSavedFeed]);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userPreferences"] });
+    },
+  });
+
+  const removeFeedMutation = useMutation({
+    mutationFn: async (feedUri: string) => {
+      if (!agent || !userPrefs?.savedFeeds)
+        throw new Error("Not authenticated");
+      const feedToRemove = userPrefs.savedFeeds.find(
+        (f: any) => f.value === feedUri,
+      );
+      if (feedToRemove) {
+        await agent.removeSavedFeeds([feedToRemove.id]);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userPreferences"] });
+    },
   });
 
   const [aiInsightsExpanded, setAiInsightsExpanded] = useState(false);
@@ -1634,80 +1685,123 @@ export default function ProfilePage() {
               </div>
             ) : actorFeedsData?.feeds && actorFeedsData.feeds.length > 0 ? (
               <div className="space-y-3">
-                {actorFeedsData.feeds.map((feed) => (
-                  <div
-                    key={feed.uri}
-                    className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-all duration-200 hover:shadow-md"
-                    style={{
-                      borderColor: "var(--asph-border-primary)",
-                      backgroundColor: "var(--asph-bg-secondary)",
-                    }}
-                    onClick={() => {
-                      const rkey = feed.uri.split("/").pop();
-                      window.open(
-                        `https://bsky.app/profile/${feed.creator.handle}/feed/${rkey}`,
-                        "_blank",
-                        "noopener,noreferrer",
-                      );
-                    }}
-                  >
-                    {feed.avatar ? (
-                      <img
-                        src={proxifyBskyImage(feed.avatar)}
-                        alt={feed.displayName}
-                        className="h-12 w-12 flex-shrink-0 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <div
-                        className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg"
-                        style={{ backgroundColor: "var(--asph-bg-tertiary)" }}
-                      >
-                        <Hash
-                          className="h-5 w-5"
-                          style={{ color: "var(--asph-text-secondary)" }}
+                {actorFeedsData.feeds.map((feed) => {
+                  const feedRkey = feed.uri.split("/").pop();
+                  const saved = isFeedSaved(feed.uri);
+                  return (
+                    <div
+                      key={feed.uri}
+                      className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-all duration-200 hover:shadow-md"
+                      style={{
+                        borderColor: "var(--asph-border-primary)",
+                        backgroundColor: "var(--asph-bg-secondary)",
+                      }}
+                      onClick={() => {
+                        navigate(
+                          `/profile/${feed.creator.handle}/feed/${feedRkey}`,
+                        );
+                      }}
+                    >
+                      {feed.avatar ? (
+                        <img
+                          src={proxifyBskyImage(feed.avatar)}
+                          alt={feed.displayName}
+                          className="h-12 w-12 flex-shrink-0 rounded-lg object-cover"
                         />
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <h3
-                        className="font-semibold"
-                        style={{ color: "var(--asph-text-primary)" }}
-                      >
-                        {feed.displayName}
-                      </h3>
-                      {feed.description && (
-                        <p
-                          className="mt-1 line-clamp-2 text-sm"
-                          style={{ color: "var(--asph-text-secondary)" }}
+                      ) : (
+                        <div
+                          className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg"
+                          style={{
+                            backgroundColor: "var(--asph-bg-tertiary)",
+                          }}
                         >
-                          {feed.description}
-                        </p>
+                          <Hash
+                            className="h-5 w-5"
+                            style={{ color: "var(--asph-text-secondary)" }}
+                          />
+                        </div>
                       )}
-                      <div className="mt-2 flex items-center gap-3 text-xs">
-                        {feed.likeCount !== undefined && (
-                          <span
-                            className="flex items-center gap-1"
-                            style={{ color: "var(--asph-text-tertiary)" }}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3
+                            className="font-semibold"
+                            style={{ color: "var(--asph-text-primary)" }}
                           >
-                            <Heart className="h-3 w-3" />
-                            {feed.likeCount.toLocaleString()}
-                          </span>
+                            {feed.displayName}
+                          </h3>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (saved) {
+                                removeFeedMutation.mutate(feed.uri);
+                              } else {
+                                addFeedMutation.mutate(feed.uri);
+                              }
+                            }}
+                            disabled={
+                              addFeedMutation.isPending ||
+                              removeFeedMutation.isPending
+                            }
+                            className="flex flex-shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors"
+                            style={{
+                              backgroundColor: saved
+                                ? "transparent"
+                                : "var(--asph-primary)",
+                              border: saved
+                                ? "1px solid var(--asph-border-primary)"
+                                : "1px solid transparent",
+                              color: saved
+                                ? "var(--asph-text-secondary)"
+                                : "white",
+                            }}
+                          >
+                            {saved ? (
+                              <>
+                                <Check className="h-3 w-3" />
+                                Saved
+                              </>
+                            ) : (
+                              <>
+                                <Plus className="h-3 w-3" />
+                                Save
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        {feed.description && (
+                          <p
+                            className="mt-1 line-clamp-2 text-sm"
+                            style={{ color: "var(--asph-text-secondary)" }}
+                          >
+                            {feed.description}
+                          </p>
                         )}
-                        <a
-                          href={`https://bsky.app/profile/${feed.creator.handle}/feed/${feed.uri.split("/").pop()}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex items-center gap-1 hover:underline"
-                          style={{ color: "var(--asph-primary)" }}
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          View
-                        </a>
+                        <div className="mt-2 flex items-center gap-3 text-xs">
+                          {feed.likeCount !== undefined && (
+                            <span
+                              className="flex items-center gap-1"
+                              style={{ color: "var(--asph-text-tertiary)" }}
+                            >
+                              <Heart className="h-3 w-3" />
+                              {feed.likeCount.toLocaleString()}
+                            </span>
+                          )}
+                          <a
+                            href={`https://bsky.app/profile/${feed.creator.handle}/feed/${feedRkey}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center gap-1 hover:underline"
+                            style={{ color: "var(--asph-primary)" }}
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            View on Bluesky
+                          </a>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <EmptyState
