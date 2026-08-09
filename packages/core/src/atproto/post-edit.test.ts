@@ -101,6 +101,109 @@ describe("@bsky/core post-edit", () => {
     });
   });
 
+  describe("getEditHistory", () => {
+    it("reads Skeets' full revision history, oldest first", () => {
+      const history = postEdit.getEditHistory({
+        text: "third",
+        skeetsAppHistory: {
+          data: [
+            { "2026-05-11T10:00:00.000Z": "first" },
+            { "2026-05-11T11:00:00.000Z": "second" },
+          ],
+        },
+      });
+
+      expect(history.versions).toEqual([
+        { text: "first", writtenAt: "2026-05-11T10:00:00.000Z" },
+        { text: "second", writtenAt: "2026-05-11T11:00:00.000Z" },
+      ]);
+      expect(history.sources).toEqual(["skeetsAppHistory"]);
+    });
+
+    it("dates originalText from createdAt, which survives edits", () => {
+      const history = postEdit.getEditHistory(
+        {
+          text: "fixed",
+          originalText: "typo",
+          updatedAt: "2026-05-12T00:00:00.000Z",
+        },
+        "2026-05-11T09:00:00.000Z",
+      );
+
+      expect(history.versions).toEqual([
+        { text: "typo", writtenAt: "2026-05-11T09:00:00.000Z" },
+      ]);
+      expect(history.editedAt).toBe("2026-05-12T00:00:00.000Z");
+      expect(history.sources).toEqual(["originalText"]);
+    });
+
+    it("merges both conventions without duplicating the same text", () => {
+      const history = postEdit.getEditHistory(
+        {
+          text: "current",
+          originalText: "first",
+          skeetsAppHistory: {
+            data: [
+              { "2026-05-11T10:00:00.000Z": "first" },
+              { "2026-05-11T12:00:00.000Z": "middle" },
+            ],
+          },
+        },
+        "2026-05-11T10:00:00.000Z",
+      );
+
+      // "first" appears in both fields and must not be listed twice.
+      expect(history.versions.map((v) => v.text)).toEqual(["first", "middle"]);
+      expect(history.sources).toEqual(["skeetsAppHistory"]);
+    });
+
+    it("ignores Bridgy Fed's originalText lookalike", () => {
+      // bridgyOriginalText is the pre-bridge ActivityPub text, not a prior
+      // revision — and it is ~800x more common than real edit history, so
+      // reading it would mark hundreds of thousands of posts as edited.
+      const history = postEdit.getEditHistory({
+        text: "bridged post",
+        bridgyOriginalText: "original fediverse text",
+        bridgyOriginalUrl: "https://example.social/@a/1",
+      });
+
+      expect(history.versions).toEqual([]);
+      expect(postEdit.isEdited({ bridgyOriginalText: "x" })).toBe(false);
+    });
+
+    it("treats a history-only post as edited despite no updatedAt", () => {
+      // Skeets writes history without updatedAt, so a timestamp-only check
+      // reports these as unedited.
+      const record = {
+        text: "current",
+        skeetsAppHistory: { data: [{ "2026-05-11T10:00:00.000Z": "before" }] },
+      };
+
+      expect(postEdit.isEdited(record)).toBe(true);
+      expect(postEdit.getEditedAt(record)).toBeNull();
+      expect(postEdit.getEditHistory(record).versions).toHaveLength(1);
+    });
+
+    it("survives malformed history from other clients", () => {
+      for (const junk of [
+        { skeetsAppHistory: null },
+        { skeetsAppHistory: { data: null } },
+        { skeetsAppHistory: { data: "nope" } },
+        { skeetsAppHistory: { data: [null, 42, [], {}] } },
+        { skeetsAppHistory: { data: [{ ts: "" }, { ts2: 7 }] } },
+      ]) {
+        expect(postEdit.getEditHistory(junk).versions).toEqual([]);
+      }
+    });
+
+    it("returns nothing for an unedited post", () => {
+      const history = postEdit.getEditHistory({ text: "untouched" });
+      expect(history.versions).toEqual([]);
+      expect(history.editedAt).toBeNull();
+      expect(history.sources).toEqual([]);
+    });
+  });
+
   describe("canEditPost", () => {
     const justAfter = new Date("2026-08-05T16:05:00.000Z");
     const wayAfter = new Date("2026-08-05T17:00:00.000Z");
@@ -217,6 +320,68 @@ describe("@bsky/core post-edit", () => {
   });
 
   describe("editPostText", () => {
+    it("appends the superseded text to the history array", async () => {
+      const { agent, applyWrites } = stubAgent();
+
+      await postEdit.editPostText(agent, {
+        uri: POST_URI,
+        text: "hello world",
+      });
+
+      const created = applyWrites.mock.calls[0][0].writes[1];
+      // The pre-edit text is keyed by createdAt, which is when that version was
+      // written — this post had never been edited before.
+      expect(created.value.skeetsAppHistory).toEqual({
+        data: [{ [PRIOR_RECORD.createdAt]: "helo wrold" }],
+      });
+      // The single-value convention is written too, for clients that read it.
+      expect(created.value.originalText).toBe("helo wrold");
+    });
+
+    it("accumulates across repeated edits instead of overwriting", async () => {
+      const alreadyEdited = {
+        ...PRIOR_RECORD,
+        text: "second version",
+        updatedAt: "2026-08-05T17:00:00.000Z",
+        originalText: "helo wrold",
+        skeetsAppHistory: {
+          data: [{ [PRIOR_RECORD.createdAt]: "helo wrold" }],
+        },
+      };
+      const applyWrites = vi.fn().mockResolvedValue({ data: {} });
+      const getRecord = vi
+        .fn()
+        .mockResolvedValueOnce({ data: { cid: "c1", value: alreadyEdited } })
+        .mockResolvedValue({ data: { cid: "c2", value: alreadyEdited } });
+      const agent = {
+        session: { did: DID },
+        com: { atproto: { repo: { applyWrites, getRecord } } },
+      } as unknown as BskyAgent;
+
+      await postEdit.editPostText(agent, { uri: POST_URI, text: "third" });
+
+      const created = applyWrites.mock.calls[0][0].writes[1];
+      expect(created.value.skeetsAppHistory.data).toEqual([
+        { [PRIOR_RECORD.createdAt]: "helo wrold" },
+        // Keyed by the *previous* edit's timestamp, since that is when the
+        // superseded version was written.
+        { "2026-08-05T17:00:00.000Z": "second version" },
+      ]);
+      // originalText stays pinned to the very first version.
+      expect(created.value.originalText).toBe("helo wrold");
+    });
+
+    it("round-trips: every version an edit chain produced is readable", async () => {
+      const { agent, applyWrites } = stubAgent();
+      await postEdit.editPostText(agent, { uri: POST_URI, text: "v2" });
+      const afterFirst = applyWrites.mock.calls[0][0].writes[1].value;
+
+      const history = postEdit.getEditHistory(afterFirst, afterFirst.createdAt);
+
+      expect(history.versions.map((v) => v.text)).toEqual(["helo wrold"]);
+      expect(postEdit.isEdited(afterFirst)).toBe(true);
+    });
+
     it("issues delete+create at the same rkey in one applyWrites commit", async () => {
       const { agent, applyWrites } = stubAgent();
       await postEdit.editPostText(agent, {

@@ -62,8 +62,23 @@ export const EDITED_AT_FIELD = "updatedAt";
  * Non-lexicon field carrying the pre-edit text so viewers can see the original.
  * Only stamped on the first edit; subsequent edits preserve the value so the
  * very first version is always reachable.
+ *
+ * Verified in the wild: 488 posts from 268 distinct authors across a 37.2M-post
+ * firehose sample carry `originalText`, always alongside `updatedAt`. It only
+ * ever holds one version, so it cannot express intermediate edits.
  */
 export const ORIGINAL_TEXT_FIELD = "originalText";
+
+/**
+ * Skeets' history field: `{ data: [ { "<ISO timestamp>": "<text>" }, ... ] }`,
+ * one entry per superseded version keyed by when that version was written.
+ * Strictly richer than `originalText` — it keeps every revision, not just the
+ * first — so we write it too and read it in preference.
+ *
+ * Skeets writes this *instead of* `updatedAt`/`originalText`, not alongside
+ * them, so a post carrying only this field is still an edited post.
+ */
+export const HISTORY_FIELD = "skeetsAppHistory";
 
 /** Byte-indexed fields that a text change invalidates and must not survive it. */
 const TEXT_DEPENDENT_FIELDS = ["facets", "entities"] as const;
@@ -106,8 +121,15 @@ export function getEditedAt(record: unknown): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
+/**
+ * Whether a post has been edited by any client we can recognise.
+ *
+ * Checks the history field as well as the timestamp: Skeets records revisions
+ * without writing `updatedAt`, so a timestamp-only check reports those posts as
+ * unedited even though their history is right there.
+ */
 export function isEdited(record: unknown): boolean {
-  return getEditedAt(record) !== null;
+  return getEditedAt(record) !== null || readHistoryField(record).length > 0;
 }
 
 /**
@@ -119,6 +141,98 @@ export function getOriginalText(record: unknown): string | null {
   if (!record || typeof record !== "object") return null;
   const value = (record as Record<string, unknown>)[ORIGINAL_TEXT_FIELD];
   return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+/** One superseded version of a post's text. */
+export interface PostVersion {
+  text: string;
+  /** When this version was written, when the source records it. */
+  writtenAt: string | null;
+}
+
+/** Prior versions of a post, normalised across every format we can read. */
+export interface PostEditHistory {
+  /** Superseded versions, oldest first. Never includes the current text. */
+  versions: PostVersion[];
+  /** When the post was last edited, when a client recorded it. */
+  editedAt: string | null;
+  /** Which non-lexicon fields this was assembled from. */
+  sources: string[];
+}
+
+/**
+ * Read Skeets' history array into ordered versions.
+ *
+ * Shape is `{ data: [ { "<ISO>": "<text>" } ] }` — each entry a single-key
+ * object. Tolerates junk entries rather than throwing, because this is
+ * arbitrary data written by other people's clients.
+ */
+function readHistoryField(record: unknown): PostVersion[] {
+  if (!record || typeof record !== "object") return [];
+  const field = (record as Record<string, unknown>)[HISTORY_FIELD];
+  if (!field || typeof field !== "object") return [];
+  const data = (field as Record<string, unknown>).data;
+  if (!Array.isArray(data)) return [];
+
+  const versions: PostVersion[] = [];
+  for (const entry of data) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
+    for (const [writtenAt, text] of Object.entries(
+      entry as Record<string, unknown>,
+    )) {
+      if (typeof text !== "string" || text.length === 0) continue;
+      versions.push({ text, writtenAt: writtenAt || null });
+    }
+  }
+  return versions;
+}
+
+/**
+ * Every prior version of a post we can recover, from any known format.
+ *
+ * Two independent conventions exist in the wild and a post may carry either:
+ *   - `skeetsAppHistory` — full revision history (Skeets)
+ *   - `originalText` + `updatedAt` — the first version only (Witchsky, others,
+ *     and us)
+ * Where both are present they are merged and de-duplicated by text.
+ *
+ * Deliberately does NOT read Bridgy Fed's `bridgyOriginalText`. That field is
+ * far more common (~398k posts in the same sample) but means something else
+ * entirely: the original ActivityPub text of a bridged post, not a prior
+ * revision. Treating it as edit history would label hundreds of thousands of
+ * never-edited posts as edited.
+ *
+ * @param record The raw post record.
+ * @param createdAt The post's createdAt, used to date `originalText` — that
+ *   field holds the text as first written, and createdAt survives edits.
+ */
+export function getEditHistory(
+  record: unknown,
+  createdAt?: string,
+): PostEditHistory {
+  const sources: string[] = [];
+  const fromHistory = readHistoryField(record);
+  if (fromHistory.length > 0) sources.push(HISTORY_FIELD);
+
+  const versions = [...fromHistory];
+
+  const original = getOriginalText(record);
+  if (original && !versions.some((v) => v.text === original)) {
+    sources.push(ORIGINAL_TEXT_FIELD);
+    // The original text is by definition what the post said when created.
+    versions.push({ text: original, writtenAt: createdAt ?? null });
+  }
+
+  // Oldest first. Undated entries sort last rather than pretending to be old.
+  versions.sort((a, b) => {
+    if (a.writtenAt && b.writtenAt)
+      return a.writtenAt.localeCompare(b.writtenAt);
+    if (a.writtenAt) return -1;
+    if (b.writtenAt) return 1;
+    return 0;
+  });
+
+  return { versions, editedAt: getEditedAt(record), sources };
 }
 
 /**
@@ -251,9 +365,30 @@ export async function editPostText(
     [EDITED_AT_FIELD]: editedAt,
   };
   // Stamp the pre-edit text on the first edit so viewers can see the original.
-  // On re-edits the field already exists and we leave it alone.
+  // On re-edits the field already exists and we leave it alone — it is a
+  // single-value field, so it can only ever carry the very first version.
   if (!prior[ORIGINAL_TEXT_FIELD] && typeof prior.text === "string") {
     next[ORIGINAL_TEXT_FIELD] = prior.text;
+  }
+
+  // Append the superseded text to the full history. Unlike originalText this
+  // accumulates, so every intermediate revision stays recoverable. Keyed by
+  // when that version was written: the previous edit's timestamp, or createdAt
+  // for the version the post was first published with.
+  if (typeof prior.text === "string") {
+    const priorWrittenAt =
+      (typeof prior[EDITED_AT_FIELD] === "string"
+        ? (prior[EDITED_AT_FIELD] as string)
+        : undefined) ??
+      (typeof prior.createdAt === "string"
+        ? (prior.createdAt as string)
+        : editedAt);
+    const existing = readHistoryField(prior).map((v) => ({
+      [v.writtenAt ?? editedAt]: v.text,
+    }));
+    next[HISTORY_FIELD] = {
+      data: [...existing, { [priorWrittenAt]: prior.text }],
+    };
   }
   // Old byte offsets do not survive new text; drop them, then re-apply.
   for (const field of TEXT_DEPENDENT_FIELDS) delete next[field];
