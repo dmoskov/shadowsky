@@ -43,6 +43,7 @@ import { GateIndicator } from "./ReplyControls";
 import { EmptyState } from "./ui/EmptyState";
 import { LabelBadge } from "./ui/LabelBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
+import { EditedPostMarker } from "./EditedPostMarker";
 import { RichText } from "./ui/RichText";
 import { ThrottledAvatar } from "./ui/ThrottledAvatar";
 import { type VirtualizedThreadListHandle } from "./VirtualizedThreadList";
@@ -803,6 +804,14 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       )}
                     </p>
 
+                    {post && (
+                      <EditedPostMarker
+                        record={post.record}
+                        size="compact"
+                        className="mt-1 block"
+                      />
+                    )}
+
                     {post?.embed && renderEmbed(post.embed, post.uri)}
 
                     {isUnread && (
@@ -1139,6 +1148,11 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                 }
               />
             </div>
+
+            <EditedPostMarker
+              record={rootPostObject.record}
+              className="mb-3 block"
+            />
 
             {/* Embeds */}
             {rootPostObject.embed &&

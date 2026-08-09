@@ -5,6 +5,7 @@ import React from "react";
 import { useFeedRepairedPostCounts } from "../hooks/useRepairedPostCounts";
 import { useViewTransitionNavigate } from "../hooks/useViewTransitionNavigate";
 import { proxifyBskyImage } from "../utils/image-proxy";
+import { EditedPostMarker } from "./EditedPostMarker";
 import { PostActionBar } from "./PostActionBar";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
 import { RichText } from "./ui/RichText";
@@ -279,6 +280,8 @@ export const PostItem = React.memo(
                 }
               />
             </div>
+
+            <EditedPostMarker record={post.record} className="mt-1 block" />
 
             <FeedEmbed
               embed={post.embed}
