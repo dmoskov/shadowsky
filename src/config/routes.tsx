@@ -17,6 +17,7 @@ import { SearchTabbed as Search } from "../components/SearchTabbed";
 import { default as SkyDeck } from "../components/SkyDeck";
 import { VisualTimeline } from "../components/VisualTimeline";
 import { AddAccountPage } from "../pages/AddAccountPage";
+import { default as FeedPage } from "../pages/FeedPage";
 import { default as ProfilePage } from "../pages/ProfilePage";
 import { Settings } from "../pages/Settings";
 import { default as ThreadPage } from "../pages/ThreadPage";
@@ -32,6 +33,11 @@ function ProfilePageWithKey() {
 function ThreadPageWithKey() {
   const { handle, postId } = useParams<{ handle: string; postId: string }>();
   return <ThreadPage key={`${handle}/${postId}`} />;
+}
+
+function FeedPageWithKey() {
+  const { handle, rkey } = useParams<{ handle: string; rkey: string }>();
+  return <FeedPage key={`${handle}/${rkey}`} />;
 }
 
 function ListTimelineWithKey() {
@@ -156,6 +162,14 @@ export function AppRoutes() {
           element={
             <ErrorBoundary componentName="Scheduled Posts">
               <ScheduledPosts />
+            </ErrorBoundary>
+          }
+        />
+        <Route
+          path="/profile/:handle/feed/:rkey"
+          element={
+            <ErrorBoundary componentName="Feed">
+              <FeedPageWithKey />
             </ErrorBoundary>
           }
         />
