@@ -1,4 +1,4 @@
-import { Compass, ExternalLink } from "lucide-react";
+import { Clock, Compass, ExternalLink } from "lucide-react";
 import React from "react";
 import { NavLink } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
@@ -33,7 +33,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   // Primary navigation only. Deliberately excluded, each reachable elsewhere:
   //   Compose   -> floating action button and the command palette ("C")
-  //   Timeline  -> a deck column type, and the command palette
   //   Analytics -> your own profile page, and the command palette
   const navItems = [
     { path: "/", label: "Home", icon: HomeIcon },
@@ -44,6 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: "Notifications",
       icon: BellIcon,
     },
+    { path: "/timeline", label: "Timeline", icon: Clock },
     { path: "/messages", label: "Direct Messages", icon: MailboxIcon },
     { path: "/bookmarks", label: "Bookmarks", icon: BookmarkIcon },
     { path: "/lists", label: "Lists", icon: ListIcon },
