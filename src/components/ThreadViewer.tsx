@@ -807,6 +807,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                     {post && (
                       <EditedPostMarker
                         record={post.record}
+                        uri={post.uri}
                         size="compact"
                         className="mt-1 block"
                       />
@@ -1151,6 +1152,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
 
             <EditedPostMarker
               record={rootPostObject.record}
+              uri={rootPostObject.uri}
               className="mb-3 block"
             />
 

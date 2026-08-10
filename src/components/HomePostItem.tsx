@@ -281,7 +281,11 @@ export const PostItem = React.memo(
               />
             </div>
 
-            <EditedPostMarker record={post.record} className="mt-1 block" />
+            <EditedPostMarker
+              record={post.record}
+              uri={post.uri}
+              className="mt-1 block"
+            />
 
             <FeedEmbed
               embed={post.embed}
