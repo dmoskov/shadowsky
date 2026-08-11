@@ -43,6 +43,7 @@ import { GateIndicator } from "./ReplyControls";
 import { EmptyState } from "./ui/EmptyState";
 import { LabelBadge } from "./ui/LabelBadge";
 import { ProfileHoverCard } from "./ui/ProfileHoverCard";
+import { useEditedFlags } from "../hooks/useEditedFlags";
 import { EditedPostMarker } from "./EditedPostMarker";
 import { RichText } from "./ui/RichText";
 import { ThrottledAvatar } from "./ui/ThrottledAvatar";
@@ -125,6 +126,16 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
   // at zero; recount them from the engagement listings so the numbers shown here
   // are the real ones. No-op (and no requests) for unedited posts.
   const rootPost = useRepairedPostCounts(rootPostObject);
+
+  // One batched lookup for the whole thread. Without it, edited posts whose
+  // records carry no edit fields — most of them — would show no badge at all,
+  // so a reader would never know there was history to open.
+  const threadUris = useMemo(() => {
+    const uris = posts.map((p) => p.uri);
+    if (rootPostObject?.uri) uris.push(rootPostObject.uri);
+    return uris;
+  }, [posts, rootPostObject?.uri]);
+  const editedFlags = useEditedFlags(threadUris);
 
   // Gallery state (can't extract - needs to be local for image click handling)
   const [galleryImages, setGalleryImages] = useState<Array<{
@@ -808,6 +819,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
                       <EditedPostMarker
                         record={post.record}
                         uri={post.uri}
+                        knownEditCount={editedFlags[post.uri]?.edit_count}
                         size="compact"
                         className="mt-1 block"
                       />
@@ -1153,6 +1165,7 @@ export const ThreadViewer: React.FC<ThreadViewerProps> = ({
             <EditedPostMarker
               record={rootPostObject.record}
               uri={rootPostObject.uri}
+              knownEditCount={editedFlags[rootPostObject.uri]?.edit_count}
               className="mb-3 block"
             />
 
