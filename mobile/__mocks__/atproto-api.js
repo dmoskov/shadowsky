@@ -130,8 +130,63 @@ class RichText {
     this.text = text || "";
     this.facets = facets;
   }
-  detectFacets() {
-    /* no-op: tests pass facets explicitly */
+
+  /**
+   * Grapheme count, as the real RichText reports it. Post length limits are
+   * counted in graphemes, not UTF-16 units, so tests around the 300-character
+   * ceiling need this to treat an emoji as one character. Intl.Segmenter is
+   * available in Node 16+; the spread fallback is close enough for the ASCII
+   * cases and only loses on astral-plane clusters.
+   */
+  get graphemeLength() {
+    if (typeof Intl !== "undefined" && typeof Intl.Segmenter === "function") {
+      const segmenter = new Intl.Segmenter(undefined, {
+        granularity: "grapheme",
+      });
+      let count = 0;
+      for (const _ of segmenter.segment(this.text)) count += 1;
+      return count;
+    }
+    return [...this.text].length;
+  }
+
+  /**
+   * Detect mention/link/tag facets from the text.
+   *
+   * The real implementation resolves mention handles to DIDs via the agent; the
+   * mock leaves `did` empty since no test asserts on resolution. Previously a
+   * no-op, which made "facets are recomputed before saving" untestable — the
+   * assertion would pass against undefined either way.
+   */
+  async detectFacets(_agent) {
+    const facets = [];
+    const encoder = (s) => Buffer.byteLength(s, "utf8");
+
+    const push = (match, feature) => {
+      const byteStart = encoder(this.text.slice(0, match.index));
+      const byteEnd = byteStart + encoder(match[0]);
+      facets.push({ index: { byteStart, byteEnd }, features: [feature] });
+    };
+
+    for (const match of this.text.matchAll(/https?:\/\/[^\s]+/g)) {
+      push(match, {
+        $type: "app.bsky.richtext.facet#link",
+        uri: match[0],
+      });
+    }
+    for (const match of this.text.matchAll(/@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g)) {
+      push(match, { $type: "app.bsky.richtext.facet#mention", did: "" });
+    }
+    for (const match of this.text.matchAll(/#([^\s#]+)/g)) {
+      push(match, {
+        $type: "app.bsky.richtext.facet#tag",
+        tag: match[1],
+      });
+    }
+
+    facets.sort((a, b) => a.index.byteStart - b.index.byteStart);
+    this.facets = facets.length > 0 ? facets : undefined;
+    return this.facets;
   }
   *segments() {
     const bytes = Buffer.from(this.text, "utf8");

@@ -13,7 +13,9 @@ import { useLikePost, useUnlikePost, useRepost, useDeleteRepost } from "../../ho
 import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useAppNavigation } from "../../hooks/useNavigation";
 import { NativeFeedList } from "../../../modules/native-feed-list";
+import { EditPostModal } from "../../components/EditPostModal";
 import { ErrorState } from "../../components/ErrorState";
+import { useNativePostEditor } from "../../hooks/useNativePostEditor";
 import { useRouter } from "expo-router";
 import { triggerHaptic } from "../../utils/haptics";
 import { useToast } from "../../contexts/ToastContext";
@@ -138,6 +140,14 @@ export function HomeScreen() {
     }
     return map;
   }, [flatPosts]);
+
+  // Native context menu "Edit Post" → RN edit sheet. The native event carries
+  // only a URI, so resolve it against the feed we already hold.
+  const findPostForEdit = useCallback(
+    (uri: string) => postsByUri.get(uri)?.post,
+    [postsByUri],
+  );
+  const postEditor = useNativePostEditor(findPostForEdit);
 
   // Prefetch thread and profile data for the first visible posts
   useDataPrefetch(flatPosts);
@@ -501,6 +511,8 @@ export function HomeScreen() {
             onImagePress={handleImagePress}
             onQuotePress={handleQuotePress}
             onQuotePost={handleQuotePost}
+            onEditPost={postEditor.handleNativeEditPost}
+            currentUserDid={postEditor.currentUserDid}
             onScroll={handleScroll}
             emptyMessage="No posts in your timeline yet"
           />
@@ -552,6 +564,16 @@ export function HomeScreen() {
           <PenIcon size={24} color="#ffffff" />
         </TouchableOpacity>
       </Animated.View>
+
+      {/* Edit sheet, opened from the native context menu */}
+      {postEditor.editingPost && (
+        <EditPostModal
+          visible
+          post={postEditor.editingPost}
+          currentUserDid={postEditor.currentUserDid}
+          onClose={postEditor.closeEditor}
+        />
+      )}
     </View>
   );
 }

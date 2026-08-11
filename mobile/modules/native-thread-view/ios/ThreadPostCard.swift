@@ -75,6 +75,7 @@ struct ThreadPostCard: View {
     let onImagePress: (([ImageEmbedData], Int) -> Void)?
     let onQuotePress: ((String, String) -> Void)?
     let onQuotePost: (() -> Void)?
+    let onEditPost: (() -> Void)?
 
     // Optimistic local state for instant feedback
     @State private var likeOverride: Bool? = nil
@@ -95,6 +96,22 @@ struct ThreadPostCard: View {
     private var isOwnPost: Bool {
         guard let currentUserDid = currentUserDid else { return false }
         return currentUserDid == node.post.author.did
+    }
+
+    /// Whether to offer "Edit post". Expired edits are hidden rather than
+    /// disabled; the JS side re-checks eligibility before writing.
+    private var canEditPost: Bool {
+        PostEditWindow.canEdit(
+            authorDid: node.post.author.did,
+            viewerDid: currentUserDid,
+            createdAt: node.post.record.createdAt
+        )
+    }
+
+    /// Posts carry a non-lexicon `updatedAt` once edited.
+    private var wasEdited: Bool {
+        guard let updatedAt = node.post.record.updatedAt else { return false }
+        return !updatedAt.isEmpty
     }
 
     var body: some View {
@@ -148,10 +165,19 @@ struct ThreadPostCard: View {
 
                     Spacer()
 
-                    // Timestamp
-                    Text(ThreadDateFormatting.relativeTimeString(from: node.post.record.createdAt))
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                    // Timestamp (+ edit marker)
+                    HStack(spacing: 4) {
+                        Text(ThreadDateFormatting.relativeTimeString(from: node.post.record.createdAt))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        if wasEdited {
+                            Text("Edited")
+                                .font(.caption)
+                                .italic()
+                                .foregroundColor(.secondary)
+                                .accessibilityLabel("This post was edited")
+                        }
+                    }
                 }
 
                 // Post content (rich text with facets)
@@ -321,6 +347,11 @@ struct ThreadPostCard: View {
             }
             Divider()
             if isOwnPost {
+                if canEditPost {
+                    Button { onEditPost?() } label: {
+                        Label("Edit Post", systemImage: "pencil")
+                    }
+                }
                 Button(role: .destructive) { onDelete?() } label: {
                     Label("Delete Post", systemImage: "trash")
                 }
@@ -447,6 +478,7 @@ struct ThreadReplyView: View {
     let onImagePress: (([ImageEmbedData], Int) -> Void)?
     let onQuotePress: ((String, String) -> Void)?
     let onQuotePost: ((String, String, String, String?, String?, String) -> Void)? // (uri, cid, handle, displayName?, avatar?, text)
+    let onEditPost: ((String) -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -563,6 +595,9 @@ struct ThreadReplyView: View {
                                 node.post.author.avatar,
                                 node.post.record.text
                             )
+                        },
+                        onEditPost: {
+                            onEditPost?(node.post.uri)
                         }
                     )
                 }
@@ -594,7 +629,8 @@ struct ThreadReplyView: View {
                         onLinkPress: onLinkPress,
                         onImagePress: onImagePress,
                         onQuotePress: onQuotePress,
-                        onQuotePost: onQuotePost
+                        onQuotePost: onQuotePost,
+                        onEditPost: onEditPost
                     )
                 }
             }

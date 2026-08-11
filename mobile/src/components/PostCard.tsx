@@ -4,6 +4,7 @@ import ContextMenu from 'react-native-context-menu-view';
 import {PostCardContent} from './PostCardContent';
 import {useContextMenuActions, useContextMenuHandler} from './PostCardContextMenu';
 import {ContentLabelWarning} from './ContentLabelWarning';
+import {EditPostModal} from './EditPostModal';
 import {ReportModal} from './ReportModal';
 import {AppealLabelModal} from './AppealLabelModal';
 import {SaveToCollectionModal} from './SaveToCollectionModal';
@@ -26,15 +27,18 @@ function PostCardComponent(props: PostCardProps) {
     isReposted,
     isOwnPost,
     isBookmarked,
+    canEdit,
     hideContent,
     warnContent,
     blurImages,
     labels,
     showReportModal,
     showSaveToCollection,
+    showEditModal,
     appealLabel,
     handleCloseReportModal,
     handleCloseSaveToCollection,
+    handleCloseEditModal,
     handleAppeal,
     handleCloseAppeal,
     likeAnimStyle,
@@ -68,6 +72,7 @@ function PostCardComponent(props: PostCardProps) {
     showTranslateButton: translation.showTranslateButton,
     isShowingTranslation: translation.isShowingTranslation,
     hasQuotePost: !!props.onQuotePost,
+    canEdit,
   });
 
   const handleContextMenuAction = useContextMenuHandler({
@@ -79,6 +84,7 @@ function PostCardComponent(props: PostCardProps) {
     handleBookmarkPress,
     handleShare,
     handleTranslate: translation.handleTranslate,
+    handleEditPost: state.handleEditPost,
     handleDeletePost: state.handleDeletePost,
     handleMuteUser: state.handleMuteUser,
     handleBlockUser: state.handleBlockUser,
@@ -187,6 +193,16 @@ function PostCardComponent(props: PostCardProps) {
           postUri={postView.uri}
           onClose={handleCloseSaveToCollection}
         />
+
+        {/* Edit Post Modal — own posts inside the edit window only */}
+        {showEditModal && (
+          <EditPostModal
+            visible={showEditModal}
+            post={postView}
+            currentUserDid={props.currentUserDid}
+            onClose={handleCloseEditModal}
+          />
+        )}
       </TouchableOpacity>
     </ContextMenu>
   );

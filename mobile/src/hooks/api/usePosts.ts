@@ -12,6 +12,7 @@ import {
   getRepostsByPost,
   getQuotesByPost,
 } from '../../services/atproto/posts';
+import {editPostText, type EditPostTextParams} from '../../services/atproto/post-edit';
 import {mutationQueue} from '../../services/mutation-queue';
 import {useToast} from '../../contexts/ToastContext';
 import {invalidateMany, cancelMany} from '../../utils/query-helpers';
@@ -142,6 +143,32 @@ export function useDeletePost() {
 
   return useMutation({
     mutationFn: deletePost,
+    onSuccess: () => {
+      invalidateMany(queryClient, [
+        {queryKey: ['timeline']},
+        {queryKey: ['authorFeed']},
+        {queryKey: ['thread']},
+      ]);
+    },
+  });
+}
+
+/**
+ * Hook to edit one of your own posts.
+ *
+ * No optimistic update: an edit rewrites text and facets and — because the
+ * mechanism is delete + create at the same rkey — resets the AppView's
+ * engagement counters. Guessing at that locally would show numbers that differ
+ * from what the server will report, so we refetch instead. Invalidating
+ * timeline/authorFeed/thread is what makes the edit appear without a manual
+ * reload, including in the native SwiftUI feed, which re-serializes from these
+ * same queries.
+ */
+export function useEditPost() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: EditPostTextParams) => editPostText(params),
     onSuccess: () => {
       invalidateMany(queryClient, [
         {queryKey: ['timeline']},

@@ -96,11 +96,30 @@ struct PostCardView: View {
     let onLinkPress: ((String) -> Void)?
     let onQuotePress: ((String, String) -> Void)?
     let onQuotePost: (() -> Void)?
+    let onEditPost: (() -> Void)?
 
     /// Whether the current user authored this post
     private var isOwnPost: Bool {
         guard let currentUserDid = currentUserDid else { return false }
         return currentUserDid == post.post.author.did
+    }
+
+    /// Whether to offer "Edit post". Evaluated when the context menu is built,
+    /// so a post whose window closes while the row sits on screen simply stops
+    /// offering the action the next time the menu opens. Expired edits are
+    /// hidden rather than disabled — the JS side re-checks before writing.
+    private var canEditPost: Bool {
+        PostEditWindow.canEdit(
+            authorDid: post.post.author.did,
+            viewerDid: currentUserDid,
+            createdAt: post.post.record.createdAt
+        )
+    }
+
+    /// Posts carry a non-lexicon `updatedAt` once edited.
+    private var wasEdited: Bool {
+        guard let updatedAt = post.post.record.updatedAt else { return false }
+        return !updatedAt.isEmpty
     }
 
     var body: some View {
@@ -153,10 +172,19 @@ struct PostCardView: View {
 
                     Spacer()
 
-                    // Timestamp
-                    Text(DateFormatting.relativeTimeString(from: post.post.record.createdAt))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    // Timestamp (+ edit marker)
+                    HStack(spacing: 4) {
+                        Text(DateFormatting.relativeTimeString(from: post.post.record.createdAt))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        if wasEdited {
+                            Text("Edited")
+                                .font(.caption2)
+                                .italic()
+                                .foregroundColor(.secondary)
+                                .accessibilityLabel("This post was edited")
+                        }
+                    }
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -383,6 +411,11 @@ struct PostCardView: View {
             }
             Divider()
             if isOwnPost {
+                if canEditPost {
+                    Button { onEditPost?() } label: {
+                        Label("Edit Post", systemImage: "pencil")
+                    }
+                }
                 Button(role: .destructive) { onDelete?() } label: {
                     Label("Delete Post", systemImage: "trash")
                 }

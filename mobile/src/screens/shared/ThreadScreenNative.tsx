@@ -4,6 +4,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { AppBskyFeedDefs, AppBskyFeedPost } from "@atproto/api";
+import { postEdit } from "@bsky/core";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { usePostThread } from "../../hooks/api/useFeed";
@@ -19,6 +20,8 @@ import { useBookmarks } from "../../hooks/api/useBookmarks";
 import { useToast } from "../../contexts/ToastContext";
 import { triggerHaptic } from "../../utils/haptics";
 import { InlineErrorBoundary } from '../../components/ui/InlineErrorBoundary';
+import { EditPostModal } from '../../components/EditPostModal';
+import { useNativePostEditor } from '../../hooks/useNativePostEditor';
 import { createLogger } from '../../utils/logger';
 import { NativeThreadView, setTranslationResult, setTranslationError, setMentionSearchResults, setReplySent, setThreadData, clearThreadData } from '../../../modules/native-thread-view';
 import { translatePost } from '../../services/translation-service';
@@ -60,6 +63,9 @@ function serializeThreadNode(node: any): any {
         facets: record?.facets,
         createdAt: record?.createdAt || post.indexedAt,
         langs: record?.langs,
+        // Non-lexicon edit stamp, read off the raw record — drives the native
+        // "Edited" indicator and is undefined for never-edited posts.
+        updatedAt: postEdit.getEditedAt(post.record) ?? undefined,
       },
       embed: post.embed,
       indexedAt: post.indexedAt,
@@ -350,6 +356,29 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri, onNav
     const parentUris = buildParentUriMap(thread);
     return { posts, parentUris };
   }, [thread]);
+
+  // Native context menu "Edit Post" → RN edit sheet. The native thread renders
+  // from the root, so a visible post can be an ancestor of the queried one —
+  // the lookup walks the parent chain as well as the reply tree.
+  const findPostForEdit = useCallback(
+    (uri: string) => {
+      if (!thread || !AppBskyFeedDefs.isThreadViewPost(thread)) return undefined;
+
+      for (const post of collectAllPosts(thread)) {
+        if (post.uri === uri) return post;
+      }
+
+      let ancestor: AppBskyFeedDefs.ThreadViewPost['parent'] = thread.parent;
+      while (ancestor && AppBskyFeedDefs.isThreadViewPost(ancestor)) {
+        if (ancestor.post.uri === uri) return ancestor.post;
+        ancestor = ancestor.parent;
+      }
+
+      return undefined;
+    },
+    [thread],
+  );
+  const postEditor = useNativePostEditor(findPostForEdit);
 
   // Determine if we should show a summary (5+ posts, matching JS behavior, and setting enabled)
   const aiSummariesEnabled = preferences?.enableAISummaries !== false;
@@ -697,6 +726,8 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri, onNav
         error={undefined}
         threadUri={postUri}
         focusedReplyUri={autoFocusUri || focusedReplyUri}
+        currentUserDid={postEditor.currentUserDid}
+        onEditPost={postEditor.handleNativeEditPost}
         summaryJson={summaryJson}
         isSummaryLoading={shouldFetchSummary && isSummaryLoading}
         summaryMode={summaryMode}
@@ -740,6 +771,16 @@ export function ThreadScreenNative({ handle, postId, did, focusedReplyUri, onNav
         onMentionSearchQuery={handleMentionSearchQuery}
       />
       </InlineErrorBoundary>
+
+      {/* Edit sheet, opened from the native context menu */}
+      {postEditor.editingPost && (
+        <EditPostModal
+          visible
+          post={postEditor.editingPost}
+          currentUserDid={postEditor.currentUserDid}
+          onClose={postEditor.closeEditor}
+        />
+      )}
     </View>
   );
 }

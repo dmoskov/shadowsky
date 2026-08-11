@@ -39,6 +39,8 @@ export interface FeedListEvents {
   onLinkPress?: (event: { nativeEvent: { uri: string } }) => void;
   onQuotePress?: (event: { nativeEvent: { uri: string; handle: string } }) => void;
   onQuotePost?: (event: { nativeEvent: { uri: string; cid: string; authorHandle: string; authorDisplayName?: string; authorAvatar?: string; text: string } }) => void;
+  /** Fired from the native context menu's "Edit Post" item (own posts, inside the edit window). */
+  onEditPost?: (event: { nativeEvent: { uri: string } }) => void;
   onScroll?: (event: { nativeEvent: { y: number } }) => void;
 }
 
@@ -50,6 +52,12 @@ export interface NativeFeedListProps extends ViewProps, FeedListEvents {
   error?: string | null;
   emptyMessage?: string;
   scrollToTopTrigger?: number;
+  /**
+   * Viewer's DID. Required for the own-post branch of the native context menu
+   * (edit / delete) — without it every post looks like it belongs to someone
+   * else and those items never appear.
+   */
+  currentUserDid?: string;
 }
 
 // Feed query type (matching useTimeline/useCustomFeed)
@@ -75,6 +83,7 @@ export const NativeFeedListView = forwardRef<any, NativeFeedListProps>((props, _
     error = null,
     emptyMessage = 'No posts yet',
     scrollToTopTrigger = 0,
+    currentUserDid,
     onRefresh,
     onLoadMore,
     onPostPress,
@@ -90,6 +99,7 @@ export const NativeFeedListView = forwardRef<any, NativeFeedListProps>((props, _
     onLinkPress,
     onQuotePress,
     onQuotePost,
+    onEditPost,
     onScroll,
     ...viewProps
   } = props;
@@ -108,6 +118,7 @@ export const NativeFeedListView = forwardRef<any, NativeFeedListProps>((props, _
       error={error}
       emptyMessage={emptyMessage}
       scrollToTopTrigger={scrollToTopTrigger}
+      currentUserDid={currentUserDid}
       onRefresh={onRefresh}
       onLoadMore={onLoadMore}
       onPostPress={onPostPress}
@@ -123,6 +134,7 @@ export const NativeFeedListView = forwardRef<any, NativeFeedListProps>((props, _
       onLinkPress={onLinkPress}
       onQuotePress={onQuotePress}
       onQuotePost={onQuotePost}
+      onEditPost={onEditPost}
       onScroll={onScroll}
     />
   );
