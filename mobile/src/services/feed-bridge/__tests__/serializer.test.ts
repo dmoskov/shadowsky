@@ -46,6 +46,27 @@ describe('serializeFeedViewPost', () => {
     expect(result.post.record.text).toBe('Hello world');
   });
 
+  // The native "Edited" indicator reads this field, and it is not part of the
+  // app.bsky.feed.post lexicon, so it has to be lifted off the raw record.
+  it('carries the updatedAt edit stamp across the bridge', () => {
+    const result = serializeFeedViewPost(makeFeedViewPost({
+      post: { record: { updatedAt: '2025-01-01T00:05:00.000Z' } },
+    }));
+    expect(result.post.record.updatedAt).toBe('2025-01-01T00:05:00.000Z');
+  });
+
+  it('omits updatedAt for a post that has never been edited', () => {
+    const result = serializeFeedViewPost(makeFeedViewPost());
+    expect(result.post.record.updatedAt).toBeUndefined();
+  });
+
+  it('ignores a non-string updatedAt rather than forwarding junk', () => {
+    const result = serializeFeedViewPost(makeFeedViewPost({
+      post: { record: { updatedAt: 12345 } },
+    }));
+    expect(result.post.record.updatedAt).toBeUndefined();
+  });
+
   it('serializes image embeds', () => {
     const result = serializeFeedViewPost(makeFeedViewPost({
       post: {

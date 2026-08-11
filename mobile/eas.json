@@ -65,14 +65,14 @@
       "ios": {
         "appleId": "dustin.moskovitz@gmail.com",
         "ascAppId": "6738274061",
-        "appleTeamId": "2Y3U7TMLHM"
+        "appleTeamId": "P8T66U743T"
       }
     },
     "production": {
       "ios": {
         "appleId": "dustin.moskovitz@gmail.com",
         "ascAppId": "6738274061",
-        "appleTeamId": "2Y3U7TMLHM"
+        "appleTeamId": "P8T66U743T"
       },
       "android": {
         "serviceAccountKeyPath": "./google-service-account.json",

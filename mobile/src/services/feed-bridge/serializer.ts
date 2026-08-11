@@ -6,6 +6,10 @@
  */
 
 import {AppBskyFeedDefs, AppBskyFeedPost, AppBskyActorDefs, AppBskyEmbedImages, AppBskyEmbedExternal, AppBskyEmbedRecord, AppBskyEmbedRecordWithMedia, AppBskyEmbedVideo, ComAtprotoLabelDefs} from '@atproto/api';
+// Imported from @bsky/core rather than services/atproto/post-edit so the
+// serializer stays free of the ATProto client + rate limiter: getEditedAt is a
+// pure field read.
+import {postEdit} from '@bsky/core';
 import {
   SerializedFeedViewPost,
   SerializedPost,
@@ -223,6 +227,10 @@ function serializePost(post: AppBskyFeedDefs.PostView): SerializedPost {
       text: record?.text || '',
       facets: serializeFacets(record?.facets),
       createdAt: record?.createdAt || post.indexedAt || new Date().toISOString(),
+      // `updatedAt` is not in the app.bsky.feed.post lexicon, so it is not on
+      // the typed Record — read it off the raw value. Undefined for the common
+      // case of a post that has never been edited.
+      updatedAt: postEdit.getEditedAt(post.record) ?? undefined,
     },
     embed: serializeEmbed(post.embed),
     replyCount: post.replyCount ?? 0,

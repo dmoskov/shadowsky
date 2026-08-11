@@ -37,6 +37,10 @@ public class ThreadViewModule: Module {
                 view.focusedReplyUri = focusedReplyUri
             }
 
+            Prop("currentUserDid") { (view: ThreadViewWrapper, currentUserDid: String?) in
+                view.currentUserDid = currentUserDid
+            }
+
             // Summary props
             Prop("summaryJson") { (view: ThreadViewWrapper, summaryJson: String?) in
                 view.summaryJson = summaryJson
@@ -71,6 +75,7 @@ public class ThreadViewModule: Module {
                    "onPressLikeCount", "onPressRepostCount", "onPressQuoteCount",
                    "onSummaryModeChange", "onTranslate",
                    "onLinkPress", "onImagePress", "onQuotePress", "onQuotePost",
+                   "onEditPost",
                    // Composer events
                    "onSendReply", "onOpenImagePicker", "onOpenGifPicker",
                    "onOpenEmojiPicker", "onMentionSearchQuery")
@@ -194,6 +199,10 @@ class ThreadViewWrapper: ExpoView {
         didSet { updateView() }
     }
 
+    var currentUserDid: String? = nil {
+        didSet { updateView() }
+    }
+
     // Summary props
     var summaryJson: String? = nil {
         didSet {
@@ -260,6 +269,7 @@ class ThreadViewWrapper: ExpoView {
     private let onImagePress = EventDispatcher()
     private let onQuotePress = EventDispatcher()
     private let onQuotePost = EventDispatcher()
+    private let onEditPost = EventDispatcher()
 
     // Composer event dispatchers
     private let onSendReply = EventDispatcher()
@@ -340,6 +350,7 @@ class ThreadViewWrapper: ExpoView {
             error: error,
             threadUri: threadUri,
             focusedReplyUri: focusedReplyUri,
+            currentUserDid: currentUserDid,
             summaryData: parsedSummaryData,
             isSummaryLoading: isSummaryLoading,
             summaryMode: summaryMode,
@@ -473,6 +484,11 @@ class ThreadViewWrapper: ExpoView {
                     "authorDisplayName": displayName as Any,
                     "authorAvatar": avatar as Any,
                     "text": text,
+                ])
+            },
+            onEditPost: { [weak self] uri in
+                self?.onEditPost([
+                    "uri": uri
                 ])
             },
             // Composer event handlers

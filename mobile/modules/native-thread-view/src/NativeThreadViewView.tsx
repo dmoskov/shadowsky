@@ -11,6 +11,13 @@ export type ThreadViewProps = ViewProps & {
   // Focused reply (scroll-to target from notification tap)
   focusedReplyUri?: string;
 
+  /**
+   * Viewer's DID. Required for the own-post branch of the native context menu
+   * (edit / delete) — without it every post looks like it belongs to someone
+   * else and those items never appear.
+   */
+  currentUserDid?: string;
+
   // Summary props (JSON-serialized ThreadSummaryResult from JS)
   summaryJson?: string;
   isSummaryLoading?: boolean;
@@ -43,6 +50,8 @@ export type ThreadViewProps = ViewProps & {
   onImagePress?: (event: { nativeEvent: { images: string; index: number } }) => void;
   onQuotePress?: (event: { nativeEvent: { uri: string; handle: string } }) => void;
   onQuotePost?: (event: { nativeEvent: { uri: string; cid: string; authorHandle: string; authorDisplayName?: string; authorAvatar?: string; text: string } }) => void;
+  /** Fired from the native context menu's "Edit Post" item (own posts, inside the edit window). */
+  onEditPost?: (event: { nativeEvent: { uri: string } }) => void;
 
   // Composer events (native -> JS)
   onSendReply?: (event: { nativeEvent: { text: string; replyToUri?: string; replyToCid?: string } }) => void;

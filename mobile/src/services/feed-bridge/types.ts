@@ -135,6 +135,12 @@ export interface SerializedRecord {
   text: string;
   facets?: Facet[];
   createdAt: string;
+  /**
+   * Non-lexicon edit stamp (`updatedAt` on the post record). Carried across the
+   * bridge so the native feed can show an "Edited" indicator; absent on posts
+   * that have never been edited.
+   */
+  updatedAt?: string;
   embed?: unknown; // Raw embed data from record
 }
 
