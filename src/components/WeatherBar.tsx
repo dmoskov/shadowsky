@@ -49,7 +49,12 @@ function getColor(hue: WeatherHue): string {
 
 export function WeatherBar({ weather }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const [showPosts, setShowPosts] = useState(false);
+  // Which topic's posts are open. Was a bare boolean with the modal wired to
+  // the emergent thread, so a chip could never show its own posts.
+  const [openPosts, setOpenPosts] = useState<{
+    topic: string;
+    uris: string[];
+  } | null>(null);
   const navigate = useNavigate();
 
   const report = useMemo(
@@ -76,10 +81,11 @@ export function WeatherBar({ weather }: Props) {
   const searchTopic = (topic: string) =>
     navigate(`/search?q=${encodeURIComponent(topic)}`);
 
-  // Prefer the classifier's own posts for the topic; search is the fallback
-  // when Pan didn't ship sample URIs.
+  // Prefer the classifier's own posts; search is the fallback when Pan didn't
+  // ship sample URIs. Narrative labels are generated cluster summaries, so a
+  // text search for one returns nothing — the URIs are the real destination.
   const openTopic = (topic: string, sampleUris?: string[]) => {
-    if (sampleUris?.length) setShowPosts(true);
+    if (sampleUris?.length) setOpenPosts({ topic, uris: sampleUris });
     else searchTopic(topic);
   };
 
@@ -113,16 +119,16 @@ export function WeatherBar({ weather }: Props) {
         )}
       </p>
 
-      {emergent?.samplePostUris && (
+      {openPosts && (
         <NarrativePostsModal
-          topic={emergent.token}
-          postUris={emergent.samplePostUris}
-          isOpen={showPosts}
-          onClose={() => setShowPosts(false)}
+          topic={openPosts.topic}
+          postUris={openPosts.uris}
+          isOpen={true}
+          onClose={() => setOpenPosts(null)}
         />
       )}
 
-      {/* Expandable thread chips — click to search that topic */}
+      {/* Expandable thread chips — click to open that narrative's posts */}
       {expanded && narratives.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {narratives.slice(0, 8).map((n, i) => {
@@ -135,7 +141,7 @@ export function WeatherBar({ weather }: Props) {
                 style={{ borderColor: color }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  searchTopic(n.name);
+                  openTopic(n.name, n.samplePostUris);
                 }}
               >
                 <span

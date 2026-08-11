@@ -15,7 +15,7 @@ import {sharePost} from '../utils/share';
 import {useBlockUser, useMuteUser} from './api/useProfile';
 import {useDeletePost} from './api/usePosts';
 import {recordBlock, recordMute} from '../services/moderation-history';
-import {canEditPost, isEdited} from '../services/atproto/post-edit';
+import {canEditPost} from '../services/atproto/post-edit';
 import {useTheme} from '../contexts/ThemeContext';
 import {triggerHaptic} from '../utils/haptics';
 import {useModeration} from '../contexts/ModerationContext';
@@ -138,8 +138,6 @@ export function usePostCardState(props: PostCardProps) {
     () => (record && typeof record.text === 'string' ? record.text : ''),
     [record],
   );
-
-  const postWasEdited = useMemo(() => isEdited(postView.record), [postView.record]);
 
   // Edit eligibility. The window closes with wall-clock time, so a row that is
   // editable when it mounts stops being editable while still on screen. Rather
@@ -493,7 +491,6 @@ export function usePostCardState(props: PostCardProps) {
     isOwnPost,
     isBookmarked,
     canEdit,
-    postWasEdited,
     hideContent,
     warnContent,
     blurImages,

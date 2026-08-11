@@ -7,6 +7,7 @@ import { useHiddenPosts } from "../contexts/HiddenPostsContext";
 import { useKeyboardShortcutsActions } from "../contexts/KeyboardShortcutsContext";
 import { useModeration } from "../contexts/ModerationContext";
 import { useBookmarks } from "../hooks/useBookmarks";
+import { useEditedFlags } from "../hooks/useEditedFlags";
 import { useIntersectionLoader } from "../hooks/useIntersectionLoader";
 import { useFeedCacheWarmup } from "../hooks/useOfflineFeed";
 import { useOptimisticPosts } from "../hooks/useOptimisticPosts";
@@ -181,6 +182,15 @@ export const Home: React.FC<HomeProps> = React.memo(
       }
       return result;
     }, [data, isPostHidden, isUserMuted, isUserBlocked, isThreadMuted]);
+
+    // One batched lookup per page of posts, so an edited post gets its badge
+    // even when its own record says nothing — which is the common case, since
+    // the repo keeps only the current version.
+    const postUris = React.useMemo(
+      () => posts.map((item) => item.post.uri),
+      [posts],
+    );
+    const editedFlags = useEditedFlags(postUris);
 
     // Use progressive loading instead of full virtualization
     const {
@@ -727,6 +737,7 @@ export const Home: React.FC<HomeProps> = React.memo(
                   <PostItem
                     item={item}
                     index={index}
+                    editCount={editedFlags[item.post.uri]?.edit_count}
                     isFocused={focusedPostIndex === index}
                     registerRef={registerPostRef}
                     onActivate={handleActivatePost}

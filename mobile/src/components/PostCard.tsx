@@ -28,7 +28,6 @@ function PostCardComponent(props: PostCardProps) {
     isOwnPost,
     isBookmarked,
     canEdit,
-    postWasEdited,
     hideContent,
     warnContent,
     blurImages,
@@ -112,7 +111,6 @@ function PostCardComponent(props: PostCardProps) {
       blurImages={blurImages}
       labels={labels}
       hideContent={hideContent}
-      wasEdited={postWasEdited}
       likeAnimStyle={likeAnimStyle}
       repostAnimStyle={repostAnimStyle}
       bookmarkAnimStyle={bookmarkAnimStyle}

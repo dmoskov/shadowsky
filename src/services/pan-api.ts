@@ -98,3 +98,106 @@ export async function fetchAuthorCard(did: string): Promise<AuthorCard | null> {
   const data = (res as { data?: AuthorCard } | null)?.data;
   return data?.did ? data : null;
 }
+
+// ─── Post edit history ────────────────────────────────────
+
+/** One version of a post, oldest first. */
+export interface PostVersion {
+  seq: number;
+  text: string;
+  at: string;
+  /**
+   * Where this version came from. "edit" is one Pan watched go past;
+   * "skeetsAppHistory"/"originalText" rode along inside the record.
+   */
+  origin: "skeetsAppHistory" | "originalText" | "captured" | "edit";
+  delay_seconds: number | null;
+  /**
+   * Whether this version's text differs from the one before it. `false` means
+   * a real edit that changed something other than the text — alt text or an
+   * embed — so render it as an edit event with no diff, not as a no-op.
+   */
+  text_changed: boolean | null;
+}
+
+export interface PostEditHistory {
+  uri: string;
+  author_did: string;
+  edit_count: number;
+  last_edited_at: string;
+  original_created_at: string | null;
+  sources: ("declared" | "recreate")[];
+  /**
+   * False means every version came from Pan's firehose capture and exists
+   * nowhere else on the network — not in the repo, not from any AppView call.
+   * That is most of the corpus, and the reason to call this API rather than
+   * parsing records client-side.
+   */
+  self_describing: boolean;
+  /**
+   * Oldest first. NOTE: these are post-edit states, and the last entry is the
+   * *current* text — verified against the live record. The pre-first-edit
+   * original is not included and is not retrievable from this endpoint.
+   */
+  versions: PostVersion[];
+}
+
+/**
+ * Full version history for one post, or null if it was never edited.
+ *
+ * Fetch on demand when someone opens the history, not eagerly — use
+ * fetchEditedFlags to decide whether to offer it at all.
+ *
+ * The URI is passed unencoded on purpose: fetchFromPan builds it into
+ * URLSearchParams, which encodes it. Calling encodeURIComponent here would
+ * double-encode and silently match nothing.
+ */
+export async function fetchPostEdits(
+  uri: string,
+): Promise<PostEditHistory | null> {
+  const res = await fetchFromPan("/api/posts/edits", { uri });
+  const data = (res as { data?: PostEditHistory } | null)?.data;
+  return data && data.edit_count > 0 ? data : null;
+}
+
+export interface EditedFlag {
+  edit_count: number;
+  last_edited_at: string;
+  self_describing: boolean;
+}
+
+/** Batch cap the endpoint accepts; callers must chunk above this. */
+export const EDITED_FLAGS_BATCH_LIMIT = 100;
+
+/**
+ * Which of these posts carry edit history, for badging a timeline. One call per
+ * rendered page — never per post, which is what this endpoint exists to avoid.
+ *
+ * Returns an empty object when Pan is unavailable, so a timeline renders
+ * unbadged rather than failing. URIs absent from the response were never
+ * edited.
+ */
+export async function fetchEditedFlags(
+  uris: string[],
+): Promise<Record<string, EditedFlag>> {
+  if (uris.length === 0) return {};
+
+  const chunks: string[][] = [];
+  for (let i = 0; i < uris.length; i += EDITED_FLAGS_BATCH_LIMIT) {
+    chunks.push(uris.slice(i, i + EDITED_FLAGS_BATCH_LIMIT));
+  }
+
+  const results = await Promise.all(
+    chunks.map(async (chunk) => {
+      const res = await fetchFromPan("/api/posts/edited", {
+        uris: chunk.join(","),
+      });
+      return (
+        (res as { data?: { edited?: Record<string, EditedFlag> } } | null)?.data
+          ?.edited ?? {}
+      );
+    }),
+  );
+
+  return Object.assign({}, ...results) as Record<string, EditedFlag>;
+}

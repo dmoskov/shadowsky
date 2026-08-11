@@ -35,13 +35,14 @@ describe("primary sidebar navigation", () => {
     );
   });
 
-  it("shows the eight primary destinations", () => {
+  it("shows the nine primary destinations", () => {
     const nav = screen.getByRole("navigation", { name: /main navigation/i });
     for (const label of [
       "Home",
       "Search",
       "Discover",
       "Notifications",
+      "Timeline",
       "Direct Messages",
       "Bookmarks",
       "Lists",
@@ -51,10 +52,9 @@ describe("primary sidebar navigation", () => {
     }
   });
 
-  it("keeps compose, timeline, and analytics out of primary nav", () => {
+  it("keeps compose and analytics out of primary nav", () => {
     const nav = screen.getByRole("navigation", { name: /main navigation/i });
     expect(within(nav).queryByText("Compose")).not.toBeInTheDocument();
-    expect(within(nav).queryByText("Timeline")).not.toBeInTheDocument();
     expect(within(nav).queryByText("Analytics")).not.toBeInTheDocument();
   });
 });

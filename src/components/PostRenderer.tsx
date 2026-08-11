@@ -399,7 +399,13 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
   const isThreadMutedState = isThreadMuted(rootUri);
   // Non-lexicon stamp, so no client shows an "edited" marker unless it looks for
   // it. Free to read — it rides along on the post view we already have.
-  const editedAt = postEdit.getEditedAt(record);
+  // Assembled from every format we can read: Skeets' full revision array and
+  // the single-value originalText convention. Either may be absent.
+  const editHistory = postEdit.getEditHistory(record, record?.createdAt);
+  const priorVersions = editHistory.versions;
+  const isEditedPost = postEdit.isEdited(record);
+  const editedAt = editHistory.editedAt;
+  const [showOriginal, setShowOriginal] = React.useState(false);
   const { getProfilePrefetchHandlers, getThreadPrefetchHandlers } =
     useRoutePrefetch();
 
@@ -1201,21 +1207,48 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
                     addSuffix: true,
                   })}
                 </Link>
-                {editedAt && (
+                {isEditedPost && (
                   <>
                     <span style={{ color: "var(--asph-text-secondary)" }}>
                       ·
                     </span>
-                    <span
-                      className="flex items-center gap-1 text-sm"
-                      style={{ color: "var(--asph-text-secondary)" }}
-                      title={`Edited ${formatDistanceToNow(new Date(editedAt), {
-                        addSuffix: true,
-                      })}`}
-                    >
-                      <Pencil size={12} aria-hidden="true" />
-                      <span className="text-xs">Edited</span>
-                    </span>
+                    {priorVersions.length > 0 ? (
+                      <button
+                        className="flex items-center gap-1 text-sm transition-colors hover:opacity-80"
+                        style={{ color: "var(--asph-text-secondary)" }}
+                        title={
+                          editedAt
+                            ? `Edited ${formatDistanceToNow(new Date(editedAt), { addSuffix: true })} — click to ${showOriginal ? "hide" : "show"} ${priorVersions.length > 1 ? "history" : "original"}`
+                            : `Click to ${showOriginal ? "hide" : "show"} ${priorVersions.length > 1 ? "history" : "original"}`
+                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowOriginal((v) => !v);
+                        }}
+                        aria-expanded={showOriginal}
+                        aria-label={`Edited — ${showOriginal ? "hide" : "show"} previous ${priorVersions.length > 1 ? "versions" : "version"}`}
+                      >
+                        <Pencil size={12} aria-hidden="true" />
+                        <span className="text-xs underline decoration-dotted">
+                          {priorVersions.length > 1
+                            ? `Edited ${priorVersions.length}×`
+                            : "Edited"}
+                        </span>
+                      </button>
+                    ) : (
+                      <span
+                        className="flex items-center gap-1 text-sm"
+                        style={{ color: "var(--asph-text-secondary)" }}
+                        title={
+                          editedAt
+                            ? `Edited ${formatDistanceToNow(new Date(editedAt), { addSuffix: true })}`
+                            : "Edited"
+                        }
+                      >
+                        <Pencil size={12} aria-hidden="true" />
+                        <span className="text-xs">Edited</span>
+                      </span>
+                    )}
                   </>
                 )}
                 {isThreadMutedState && (
@@ -1265,6 +1298,36 @@ const PostRendererComponent: React.FC<PostRendererProps> = ({
               <p className="asph-text-body whitespace-pre-wrap break-words">
                 <RichText text={record?.text || ""} facets={record?.facets} />
               </p>
+              {showOriginal && priorVersions.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  {priorVersions.map((version, index) => (
+                    <div
+                      key={`${version.writtenAt ?? "undated"}-${index}`}
+                      className="rounded-lg border-l-2 pl-3"
+                      style={{ borderColor: "var(--asph-text-tertiary)" }}
+                    >
+                      <p
+                        className="whitespace-pre-wrap break-words text-sm"
+                        style={{ color: "var(--asph-text-secondary)" }}
+                      >
+                        {version.text}
+                      </p>
+                      <span
+                        className="mt-1 block text-xs"
+                        style={{ color: "var(--asph-text-tertiary)" }}
+                      >
+                        {/* Only the first entry is the true original; the rest
+                            are intermediate revisions. Undated versions come
+                            from clients that don't timestamp them. */}
+                        {index === 0 ? "Original" : `Revision ${index + 1}`}
+                        {version.writtenAt
+                          ? ` · ${formatDistanceToNow(new Date(version.writtenAt), { addSuffix: true })}`
+                          : ""}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
               {/* Inline Translation */}
               {isShowingTranslation && translatedText && (
                 <div

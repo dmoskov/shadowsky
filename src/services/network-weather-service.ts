@@ -139,6 +139,24 @@ function transformNarrative(
 /** Luminance used when Pan's network_energy isn't a usable measurement. */
 const NEUTRAL_LUMINANCE = 0.4;
 
+/**
+ * Map Pan's network_energy onto a 0-1 luminance.
+ *
+ * network_energy is a *ratio* against baseline activity, not a 0-1 fraction —
+ * it currently reports the same value as the sentiment endpoint's volume_ratio,
+ * and is routinely above 1. An earlier guard treated `>= 1` as a saturated
+ * sensor and substituted neutral, which was right while the value was pinned at
+ * exactly 1.0 but now throws away a real reading.
+ *
+ * log2 so that doubling activity is one even step, centred so baseline (1.0)
+ * sits mid-range, then clamped to stay legible behind text at both ends.
+ */
+function luminanceFromEnergy(ratio: number): number {
+  if (!Number.isFinite(ratio) || ratio <= 0) return NEUTRAL_LUMINANCE;
+  const centred = 0.5 + Math.log2(ratio) / 4;
+  return Math.min(0.9, Math.max(0.15, centred));
+}
+
 function transformToTextile(
   response: PanNarrativesResponse,
   source: "pan" = "pan",
@@ -166,14 +184,7 @@ function transformToTextile(
   return {
     threads,
     crossings,
-    // A network_energy at or above the ceiling means the upstream measure ran
-    // out of range, not that the network is maximally busy. Fall back to a
-    // neutral luminance rather than rendering a permanent full-brightness
-    // textile off a saturated number.
-    luminance:
-      response.data.network_energy >= 1
-        ? NEUTRAL_LUMINANCE
-        : Math.max(0, response.data.network_energy),
+    luminance: luminanceFromEnergy(response.data.network_energy),
     saturation: Math.min(response.data.network_conviction, 1),
     weatherReport:
       response.data.weather_summary ?? generateWeatherReport(threads),
