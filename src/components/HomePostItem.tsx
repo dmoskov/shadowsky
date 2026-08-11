@@ -13,6 +13,11 @@ import type { FeedPageItem, Post } from "./Home.types";
 import { FeedEmbed, type GalleryImage } from "./HomeFeedEmbed";
 
 interface PostItemProps {
+  /**
+   * Edit count from the feed's batched fetchEditedFlags lookup. Lets the badge
+   * appear for posts whose own record carries no edit fields — the common case.
+   */
+  editCount?: number;
   item: FeedPageItem;
   index: number;
   isFocused: boolean;
@@ -44,6 +49,7 @@ export const PostItem = React.memo(
   ({
     item,
     index,
+    editCount,
     isFocused,
     registerRef,
     onActivate,
@@ -284,6 +290,7 @@ export const PostItem = React.memo(
             <EditedPostMarker
               record={post.record}
               uri={post.uri}
+              knownEditCount={editCount}
               className="mt-1 block"
             />
 
