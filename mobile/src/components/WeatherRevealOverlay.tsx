@@ -20,7 +20,7 @@ import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useTheme } from "../contexts/ThemeContext";
 import type { NetworkWeatherState, WeatherHue } from "../services/network-weather-service";
 import { WEATHER_COLORS } from "../services/network-weather-service";
-import { generateWeatherReport } from "../services/weather-report-service";
+import { describeEmergent } from "../services/weather-report-service";
 
 interface WeatherRevealOverlayProps {
   weather: NetworkWeatherState;
@@ -53,14 +53,18 @@ export function WeatherRevealOverlay({
 }: WeatherRevealOverlayProps) {
   const { colors, isDark } = useTheme();
 
-  const report = useMemo(
-    () => generateWeatherReport(weather),
+  const narratives = weather.narratives?.narratives ?? [];
+  const emergent = useMemo(
+    () => weather.emergence?.emergentThreads?.find((t) => t.isEmergent),
     [weather],
   );
-
-  const narratives = weather.narratives?.narratives ?? [];
+  // How many topics the headline lists; the chips below carry the full set.
+  const headline = narratives.slice(0, 3);
 
   if (revealProgress < 0.15) return null;
+
+  // Nothing factual to report — the ambient textile still carries the mood.
+  if (!emergent && narratives.length === 0) return null;
 
   return (
     <Animated.View
@@ -69,12 +73,33 @@ export function WeatherRevealOverlay({
       style={[styles.container, { opacity: Math.min(1, revealProgress * 2) }]}
       pointerEvents={revealProgress > 0.5 ? "auto" : "none"}
     >
-      {/* Weather report line */}
+      {/* Report line — an emergent headline, or the top topics as tap targets.
+          The hue lives in the colored bullet; labels stay legible in both themes. */}
       <Text
         style={[styles.report, { color: colors.textSecondary }]}
-        numberOfLines={2}
+        numberOfLines={3}
       >
-        {report}
+        {emergent
+          ? describeEmergent(emergent)
+          : [
+              "Trending:  ",
+              ...headline.map((n, i) => (
+                <React.Fragment key={n.id}>
+                  {i > 0 ? "  ·  " : ""}
+                  <Text
+                    style={[styles.reportTopic, { color: colors.text }]}
+                    onPress={() => onThreadPress?.(n.id, n.name)}
+                  >
+                    <Text
+                      style={{ color: getHueColor(assignHue(n.name, i), isDark) }}
+                    >
+                      ●{" "}
+                    </Text>
+                    {n.name}
+                  </Text>
+                </React.Fragment>
+              )),
+            ]}
       </Text>
 
       {/* Thread labels */}
@@ -132,6 +157,9 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     letterSpacing: 0.1,
     marginBottom: 12,
+  },
+  reportTopic: {
+    fontWeight: "500",
   },
   threadList: {
     flexDirection: "row",
