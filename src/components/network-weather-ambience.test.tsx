@@ -106,11 +106,33 @@ describe("ambient weather layer", () => {
   });
 });
 
+function narrativeState(
+  names: string[],
+): NonNullable<NetworkWeatherState["narratives"]> {
+  return {
+    narratives: names.map((name, i) => ({
+      id: `n${i}`,
+      name,
+      authorCount: 5,
+      authorWeight: 1,
+      threadType: "warp" as const,
+    })),
+    crossings: [],
+    timestamp: 1_700_000_000_000,
+    source: "pan",
+  };
+}
+
 describe("weather bar tint", () => {
   it("carries the dominant hue instead of a fixed brand tint", () => {
     const { container } = render(
       <MemoryRouter>
-        <WeatherBar weather={weatherState({ dominantHue: "rust" })} />
+        <WeatherBar
+          weather={weatherState({
+            dominantHue: "rust",
+            narratives: narrativeState(["Topic A"]),
+          })}
+        />
       </MemoryRouter>,
     );
 
@@ -123,5 +145,44 @@ describe("weather bar tint", () => {
 
     expect(bar.style.backgroundColor).toBe(`rgba(${r}, ${g}, ${b}, 0.14)`);
     expect(bar.style.backgroundColor).not.toContain("--asph-primary");
+  });
+});
+
+describe("weather bar report line", () => {
+  it("lists the top topics as plain links instead of a weaving metaphor", () => {
+    const { getByRole, queryByText } = render(
+      <MemoryRouter>
+        <WeatherBar
+          weather={weatherState({
+            narratives: narrativeState([
+              "Topic A",
+              "Topic B",
+              "Topic C",
+              "Topic D",
+            ]),
+          })}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(getByRole("button", { name: /Topic A/ })).toBeTruthy();
+    expect(getByRole("button", { name: /Topic C/ })).toBeTruthy();
+    // The fourth topic lives behind the chips, surfaced by the "+N more" toggle.
+    expect(getByRole("button", { name: "+1 more" })).toBeTruthy();
+    expect(queryByText(/weaving through/)).toBeNull();
+  });
+
+  it("hides entirely when there is nothing factual to report", () => {
+    // The old prose fallback described hues in words; mood is now carried by
+    // the ambient color layers alone.
+    const { container } = render(
+      <MemoryRouter>
+        <WeatherBar
+          weather={weatherState({ narratives: null, emergence: null })}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(container.firstElementChild).toBeNull();
   });
 });
