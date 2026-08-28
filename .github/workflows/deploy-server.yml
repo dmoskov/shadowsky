@@ -201,14 +201,13 @@ jobs:
           fi
 
       - name: Smoke test (public endpoint)
-        continue-on-error: true
         run: |
-          echo "Checking public endpoint https://api.shadowsky.io/health ..."
+          echo "Checking public endpoint https://api.shadowsky.io/api/version ..."
           sleep 30
           for i in $(seq 1 5); do
-            HTTP=$(curl -s -o /dev/null -w "%{http_code}" https://api.shadowsky.io/health)
+            HTTP=$(curl -s -o /dev/null -w "%{http_code}" https://api.shadowsky.io/api/version)
             if [ "$HTTP" = "200" ]; then
-              echo "✅ Health check passed"
+              echo "✅ Public API reachable"
 
               AI_HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
                 "https://api.shadowsky.io/api/v1/thread-summary" \
@@ -225,5 +224,5 @@ jobs:
             echo "⏳ Attempt $i/5: HTTP $HTTP — retrying in 20s..."
             sleep 20
           done
-          echo "⚠️ Public endpoint not responding (HTTP $HTTP). ECS task is running — check ALB target group registration and DNS."
+          echo "❌ Public endpoint not responding (HTTP $HTTP). ECS task is running — check ALB target group registration and DNS."
           exit 1
