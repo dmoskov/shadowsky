@@ -46,6 +46,34 @@ variable "cloudfront_aliases_shadowsky" {
   default     = ["shadowsky.io", "www.shadowsky.io"]
 }
 
+# --- Anthropic Workload Identity Federation ---
+# Populated once the Console federation rule is created (HUMAN STEP).
+# Until then, leave empty — ANTHROPIC_API_KEY takes precedence.
+
+variable "anthropic_federation_rule_id" {
+  description = "Anthropic federation rule ID for keyless auth"
+  type        = string
+  default     = ""
+}
+
+variable "anthropic_organization_id" {
+  description = "Anthropic organization ID for keyless auth"
+  type        = string
+  default     = ""
+}
+
+variable "anthropic_service_account_id" {
+  description = "Anthropic service account ID for keyless auth"
+  type        = string
+  default     = ""
+}
+
+variable "anthropic_workspace_id" {
+  description = "Anthropic workspace ID for keyless auth"
+  type        = string
+  default     = ""
+}
+
 # NOTE: asphodel.is web hosting is NOT managed here. asphodel.is,
 # www.asphodel.is, and main.asphodel.is are served by AWS Amplify
 # (app d1g6mni4b6812x), which owns their CloudFront aliases and Route53
