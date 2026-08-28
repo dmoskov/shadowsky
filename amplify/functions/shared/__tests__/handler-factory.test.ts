@@ -13,6 +13,15 @@ import {
 } from '../handler-factory';
 import { MODELS } from '../model-config';
 
+// Mock the anthropic-credentials module to behave like a simple env var check
+vi.mock('../anthropic-credentials', () => ({
+  anthropicAvailable: () => !!process.env.ANTHROPIC_API_KEY,
+  getAnthropicApiKey: async () => {
+    if (!process.env.ANTHROPIC_API_KEY) throw new Error('Not configured');
+    return process.env.ANTHROPIC_API_KEY;
+  },
+}));
+
 // Mock the resilience module
 vi.mock('../resilience', () => {
   const mockClient = {

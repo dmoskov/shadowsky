@@ -5,6 +5,15 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { withCommonSetup, type MiddlewareContext } from './middleware';
 
+// Mock the anthropic-credentials module to behave like a simple env var check
+vi.mock('./anthropic-credentials', () => ({
+  anthropicAvailable: () => !!process.env.ANTHROPIC_API_KEY,
+  getAnthropicApiKey: async () => {
+    if (!process.env.ANTHROPIC_API_KEY) throw new Error('Not configured');
+    return process.env.ANTHROPIC_API_KEY;
+  },
+}));
+
 // Mock the api-response module
 vi.mock('./api-response', () => ({
   createConfigError: vi.fn((configItem: string, _event: any, correlationId: string) => ({

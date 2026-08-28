@@ -49,6 +49,7 @@ import {
   TimeoutError,
   type ResilienceConfig,
 } from './resilience';
+import { anthropicAvailable, getAnthropicApiKey } from './anthropic-credentials';
 import { SchemaValidationError, validateSchema } from './schemas/validation';
 import { handleWarmupEvent } from './warmup';
 
@@ -173,11 +174,11 @@ export function createAnthropicHandler<TBody = Record<string, unknown>, TResult 
         }
       }
 
-      // Check API key
-      const apiKey = process.env.ANTHROPIC_API_KEY;
-      if (!apiKey) {
+      // Check API credentials (static key or federation)
+      if (!anthropicAvailable()) {
         return createConfigError('ANTHROPIC_API_KEY', event, correlationId);
       }
+      const apiKey = await getAnthropicApiKey();
 
       // Log operation start
       const message = logMessage ? logMessage(body) : `Processing ${name} request`;

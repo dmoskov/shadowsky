@@ -38,10 +38,18 @@ resource "aws_ecs_task_definition" "api" {
       { name = "NODE_ENV", value = "production" },
       { name = "TRENDING_TABLE_NAME", value = "${local.prefix}-trending-${var.environment}" },
       { name = "FIREHOSE_SAMPLE_RATE", value = "1" },
-      { name = "PUSH_TOKENS_TABLE", value = aws_dynamodb_table.push_tokens.name }
+      { name = "PUSH_TOKENS_TABLE", value = aws_dynamodb_table.push_tokens.name },
+      # Workload Identity Federation (keyless Anthropic auth)
+      # Populated once the Console federation rule exists; until then the
+      # ANTHROPIC_API_KEY secret below takes precedence.
+      { name = "ANTHROPIC_FEDERATION_RULE_ID", value = var.anthropic_federation_rule_id },
+      { name = "ANTHROPIC_ORGANIZATION_ID", value = var.anthropic_organization_id },
+      { name = "ANTHROPIC_SERVICE_ACCOUNT_ID", value = var.anthropic_service_account_id },
+      { name = "ANTHROPIC_WORKSPACE_ID", value = var.anthropic_workspace_id }
     ]
 
     secrets = [
+      # Keep until federation is verified, then remove (any set value shadows federation)
       {
         name      = "ANTHROPIC_API_KEY"
         valueFrom = aws_secretsmanager_secret.anthropic_api_key.arn

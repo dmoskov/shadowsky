@@ -20,6 +20,10 @@ const {
   getCachedProfileAnalysis,
   setCachedProfileAnalysis,
 } = require("../utils/cache");
+const {
+  anthropicAvailable,
+  getAnthropicApiKey,
+} = require("../utils/anthropic-client");
 
 /**
  * POST /api/generate-alt-text
@@ -31,22 +35,17 @@ router.post(
   aiEndpointLimiter,
   async (req, res) => {
     const { imageUrl } = req.body;
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-
-    console.log("Alt text generation request:", {
-      imageUrl,
-      hasServerApiKey: !!apiKey,
-    });
 
     if (!imageUrl) {
       return res.status(400).json({ error: "Missing imageUrl" });
     }
 
-    if (!apiKey) {
-      return res.status(500).json({ error: "Server API key not configured" });
+    if (!anthropicAvailable()) {
+      return res.status(500).json({ error: "Anthropic API not configured" });
     }
 
     try {
+      const apiKey = await getAnthropicApiKey();
       let base64Image;
       let mimeType;
 
@@ -184,17 +183,17 @@ router.post(
   aiEndpointLimiter,
   async (req, res) => {
     const { text } = req.body;
-    const apiKey = process.env.ANTHROPIC_API_KEY;
 
     if (!text) {
       return res.status(400).json({ error: "Missing text" });
     }
 
-    if (!apiKey) {
-      return res.status(500).json({ error: "Server API key not configured" });
+    if (!anthropicAvailable()) {
+      return res.status(500).json({ error: "Anthropic API not configured" });
     }
 
     try {
+      const apiKey = await getAnthropicApiKey();
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -272,7 +271,6 @@ router.post(
   aiEndpointLimiter,
   async (req, res) => {
     const { currentText, historicalPosts } = req.body;
-    const apiKey = process.env.ANTHROPIC_API_KEY;
 
     if (!currentText) {
       return res.status(400).json({ error: "Missing currentText" });
@@ -284,11 +282,12 @@ router.post(
         .json({ error: "Missing or invalid historicalPosts array" });
     }
 
-    if (!apiKey) {
-      return res.status(500).json({ error: "Server API key not configured" });
+    if (!anthropicAvailable()) {
+      return res.status(500).json({ error: "Anthropic API not configured" });
     }
 
     try {
+      const apiKey = await getAnthropicApiKey();
       const historicalContext = historicalPosts
         .slice(0, 20)
         .map((post, i) => `${i + 1}. ${post}`)
@@ -371,17 +370,17 @@ router.post(
   aiEndpointLimiter,
   async (req, res) => {
     const { text, tone } = req.body;
-    const apiKey = process.env.ANTHROPIC_API_KEY;
 
     if (!text || !tone) {
       return res.status(400).json({ error: "Missing text or tone" });
     }
 
-    if (!apiKey) {
-      return res.status(500).json({ error: "Server API key not configured" });
+    if (!anthropicAvailable()) {
+      return res.status(500).json({ error: "Anthropic API not configured" });
     }
 
     try {
+      const apiKey = await getAnthropicApiKey();
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -437,17 +436,17 @@ router.post(
   aiEndpointLimiter,
   async (req, res) => {
     const { text, maxCharsPerPost = 300 } = req.body;
-    const apiKey = process.env.ANTHROPIC_API_KEY;
 
     if (!text) {
       return res.status(400).json({ error: "Missing text" });
     }
 
-    if (!apiKey) {
-      return res.status(500).json({ error: "Server API key not configured" });
+    if (!anthropicAvailable()) {
+      return res.status(500).json({ error: "Anthropic API not configured" });
     }
 
     try {
+      const apiKey = await getAnthropicApiKey();
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -506,17 +505,17 @@ router.post(
   aiEndpointLimiter,
   async (req, res) => {
     const { text, existingTags = [] } = req.body;
-    const apiKey = process.env.ANTHROPIC_API_KEY;
 
     if (!text) {
       return res.status(400).json({ error: "Missing text" });
     }
 
-    if (!apiKey) {
-      return res.status(500).json({ error: "Server API key not configured" });
+    if (!anthropicAvailable()) {
+      return res.status(500).json({ error: "Anthropic API not configured" });
     }
 
     try {
+      const apiKey = await getAnthropicApiKey();
       const response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
@@ -574,14 +573,13 @@ router.post(
   async (req, res) => {
     const { posts, analysisType = "sonnet" } = req.body;
     const forceRefresh = req.query.forceRefresh === "true";
-    const apiKey = process.env.ANTHROPIC_API_KEY;
 
     if (!posts || !Array.isArray(posts) || posts.length === 0) {
       return res.status(400).json({ error: "Missing or invalid posts array" });
     }
 
-    if (!apiKey) {
-      return res.status(500).json({ error: "Server API key not configured" });
+    if (!anthropicAvailable()) {
+      return res.status(500).json({ error: "Anthropic API not configured" });
     }
 
     // Check cache first
@@ -602,6 +600,7 @@ router.post(
     }
 
     try {
+      const apiKey = await getAnthropicApiKey();
       const samplePosts = posts.slice(0, 50);
 
       const postsContext = samplePosts
@@ -716,7 +715,6 @@ router.post(
   async (req, res) => {
     const { posts, format = "haiku" } = req.body;
     const forceRefresh = req.query.forceRefresh === "true";
-    const apiKey = process.env.ANTHROPIC_API_KEY;
 
     // Input validation
     if (!posts || !Array.isArray(posts)) {
@@ -751,8 +749,8 @@ router.post(
       });
     }
 
-    if (!apiKey) {
-      return res.status(500).json({ error: "Server API key not configured" });
+    if (!anthropicAvailable()) {
+      return res.status(500).json({ error: "Anthropic API not configured" });
     }
 
     // Truncate and sanitize posts
@@ -869,6 +867,7 @@ router.post(
     }
 
     try {
+      const apiKey = await getAnthropicApiKey();
       const postsContext = postsForSummary
         .map((post) => {
           return `<post author="@${post.authorHandle}" likes="${post.likes}" replies="${post.replies}">

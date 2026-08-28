@@ -45,6 +45,22 @@
         {
           "name": "FIREHOSE_SAMPLE_RATE",
           "value": "1"
+        },
+        {
+          "name": "ANTHROPIC_FEDERATION_RULE_ID",
+          "value": ""
+        },
+        {
+          "name": "ANTHROPIC_ORGANIZATION_ID",
+          "value": ""
+        },
+        {
+          "name": "ANTHROPIC_SERVICE_ACCOUNT_ID",
+          "value": ""
+        },
+        {
+          "name": "ANTHROPIC_WORKSPACE_ID",
+          "value": ""
         }
       ],
       "secrets": [

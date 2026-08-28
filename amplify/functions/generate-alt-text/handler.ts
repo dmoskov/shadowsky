@@ -32,6 +32,7 @@ import {
   publishMetrics,
   publishMonitoringMetrics,
 } from "../shared/cloudwatch-metrics";
+import { anthropicAvailable, getAnthropicApiKey } from "../shared/anthropic-credentials";
 import { handleWarmupEvent } from "../shared/warmup";
 
 // Track invocations to periodically publish monitoring metrics
@@ -295,10 +296,10 @@ export const handler = async (event: any) => {
       return createMissingParameterError("imageUrl", event, correlationId);
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
+    if (!anthropicAvailable()) {
       return createConfigError("ANTHROPIC_API_KEY", event, correlationId);
     }
+    const apiKey = await getAnthropicApiKey();
 
     // Check cache first
     const imageHash = generateImageHash(imageUrl);
