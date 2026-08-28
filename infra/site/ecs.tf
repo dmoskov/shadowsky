@@ -48,13 +48,7 @@ resource "aws_ecs_task_definition" "api" {
       { name = "ANTHROPIC_WORKSPACE_ID", value = var.anthropic_workspace_id }
     ]
 
-    secrets = [
-      # Keep until federation is verified, then remove (any set value shadows federation)
-      {
-        name      = "ANTHROPIC_API_KEY"
-        valueFrom = aws_secretsmanager_secret.anthropic_api_key.arn
-      }
-    ]
+    secrets = []
 
     logConfiguration = {
       logDriver = "awslogs"

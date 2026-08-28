@@ -8,6 +8,7 @@ on:
       - main
     paths:
       - "server/**"
+      - ".github/workflows/deploy-server.yml"
   workflow_dispatch:
 
 permissions:
@@ -88,6 +89,13 @@ jobs:
           NEW_TASK_DEF=$(echo "$TASK_DEF" | jq \
             --arg IMAGE "$NEW_IMAGE" \
             '.containerDefinitions[0].image = $IMAGE |
+             .containerDefinitions[0].secrets = (
+               .containerDefinitions[0].secrets // [] |
+               map(select(.name != "ANTHROPIC_API_KEY"))
+             ) |
+             if .containerDefinitions[0].secrets == [] then
+               .containerDefinitions[0] |= del(.secrets)
+             else . end |
              del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
                  .compatibilities, .registeredAt, .registeredBy)')
 
@@ -176,8 +184,9 @@ jobs:
 
       - name: Smoke test
         run: |
-          sleep 15
-          for i in 1 2 3 4 5; do
+          echo "Waiting for ALB target registration..."
+          sleep 30
+          for i in $(seq 1 10); do
             HTTP=$(curl -s -o /dev/null -w "%{http_code}" https://api.shadowsky.io/health)
             if [ "$HTTP" = "200" ]; then
               echo "✅ Health check passed"
@@ -196,8 +205,8 @@ jobs:
                 exit 0  # Don't fail — DNS migration is a separate step
               fi
             fi
-            echo "⏳ Attempt $i: HTTP $HTTP — retrying in 15s..."
-            sleep 15
+            echo "⏳ Attempt $i/10: HTTP $HTTP — retrying in 20s..."
+            sleep 20
           done
-          echo "❌ Health check failed after 5 attempts"
+          echo "❌ Health check failed after 10 attempts"
           exit 1

@@ -1,9 +1,7 @@
 {
   "family": "shadowsky-api-server",
   "networkMode": "awsvpc",
-  "requiresCompatibilities": [
-    "FARGATE"
-  ],
+  "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
   "memory": "512",
   "executionRoleArn": "arn:aws:iam::181691141781:role/ecsTaskExecutionRole",
@@ -63,12 +61,7 @@
           "value": ""
         }
       ],
-      "secrets": [
-        {
-          "name": "ANTHROPIC_API_KEY",
-          "valueFrom": "arn:aws:secretsmanager:us-east-1:181691141781:secret:anthropic-api-key-88hbTt"
-        }
-      ],
+      "secrets": [],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
