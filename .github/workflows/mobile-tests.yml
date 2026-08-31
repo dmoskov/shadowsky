@@ -20,10 +20,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: "npm"
@@ -46,7 +46,7 @@ jobs:
         run: npm test -- --coverage --coverageReporters=text-summary --coverageReporters=json --coverageReporters=lcov --maxWorkers=2
 
       - name: Upload coverage reports
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           files: mobile/coverage/coverage-final.json
           flags: mobile
@@ -54,7 +54,7 @@ jobs:
         if: always()
 
       - name: Comment PR with coverage
-        uses: romeovs/lcov-reporter-action@v0.3.1
+        uses: romeovs/lcov-reporter-action@v0.4.0
         with:
           lcov-file: mobile/coverage/lcov.info
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -70,10 +70,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: "npm"
@@ -158,14 +158,14 @@ jobs:
         timeout-minutes: 15
 
       - name: Upload E2E test results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: e2e-test-results
           path: mobile/e2e-results-*.xml
 
       - name: Upload Maestro debug output
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: maestro-debug
@@ -177,10 +177,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: "npm"
@@ -228,7 +228,7 @@ jobs:
             | xcpretty || true
 
       - name: Upload test results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: swiftui-test-results
           path: mobile/ios/TestResults.xcresult
@@ -240,10 +240,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: "npm"
@@ -267,10 +267,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: "npm"
@@ -290,14 +290,14 @@ jobs:
 
       - name: Comment PR with bundle size
         if: github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           header: mobile-bundle-size
           path: mobile/bundle-size-comment.md
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload bundle export
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: mobile-bundle-export
