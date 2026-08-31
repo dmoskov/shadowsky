@@ -58,7 +58,7 @@
     "date-fns": "^3.0.0",
     "dexie": "^4.4.4",
     "dompurify": "3.4.13",
-    "hls.js": "^1.6.17",
+    "hls.js": "^1.7.1",
     "html2canvas": "^1.4.1",
     "idb-keyval": "^6.3.0",
     "lucide-react": "^0.577.0",
