@@ -86,7 +86,7 @@
     "@vitest/ui": "^3.2.7",
     "autoprefixer": "^10.5.4",
     "axe-core": "^4.13.0",
-    "esbuild": "^0.28.1",
+    "esbuild": "^0.28.2",
     "fake-indexeddb": "^6.2.5",
     "globals": "^16.3.0",
     "jsdom": "^26.1.0",
