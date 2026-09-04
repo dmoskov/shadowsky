@@ -8,6 +8,7 @@ import * as FileSystem from 'expo-file-system';
 
 import { createLogger } from '../utils/logger';
 import { fetchWithTimeout } from '../utils/with-timeout';
+import { createApiAuthHeaders } from '@bsky/core';
 import { getAtProtoClient } from './atproto/client';
 
 const logger = createLogger('AiService');
@@ -94,25 +95,36 @@ function getVersionedApiUrl(): string {
 }
 
 /**
- * Get API auth headers
- * Sends the user's Bluesky DID for server-side authentication,
- * matching the web app's auth pattern (X-User-DID / X-Bluesky-DID).
+ * API auth headers: an AT Protocol service-auth token minted by the user's
+ * PDS, which the API server verifies against their DID document. Matches
+ * the web app (src/utils/api-auth.ts); the token cache lives in @bsky/core.
  */
-function getApiAuthHeaders(): Record<string, string> {
-  try {
-    const client = getAtProtoClient();
-    const session = client.getSession();
-    if (session?.did) {
-      return {
-        "X-User-DID": session.did,
-        "X-Bluesky-DID": session.did,
-      };
+const apiAuthHeaders = createApiAuthHeaders({
+  getAgent: () => {
+    try {
+      return getAtProtoClient().getAgent();
+    } catch {
+      // Not logged in yet
+      return null;
     }
-  } catch {
-    // Client not initialized yet (user not logged in)
-  }
+  },
+  getDid: () => {
+    try {
+      return getAtProtoClient().getSession()?.did ?? null;
+    } catch {
+      return null;
+    }
+  },
+  onFallback: (error) => {
+    logger.warn(
+      'Could not mint a service-auth token; sending legacy DID headers',
+      error,
+    );
+  },
+});
 
-  return {};
+function getApiAuthHeaders(): Promise<Record<string, string>> {
+  return apiAuthHeaders.getHeaders();
 }
 
 /**
@@ -130,7 +142,7 @@ export async function generateThreadSummary(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...getApiAuthHeaders(),
+        ...(await getApiAuthHeaders()),
       },
       body: JSON.stringify({ posts, format }),
     }, 30000);
@@ -219,7 +231,7 @@ export async function generateAltText(imageUri: string): Promise<string> {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...getApiAuthHeaders(),
+          ...(await getApiAuthHeaders()),
         },
         body: JSON.stringify({ imageUrl: dataUrl }),
         signal: controller.signal,
@@ -309,7 +321,7 @@ export async function adjustTone(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...getApiAuthHeaders(),
+        ...(await getApiAuthHeaders()),
       },
       body: JSON.stringify({ text, tone }),
     }, 30000);
@@ -414,7 +426,7 @@ export async function analyzePosts(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...getApiAuthHeaders(),
+        ...(await getApiAuthHeaders()),
       },
       body: JSON.stringify({ posts, analysisType }),
     }, 30000);
@@ -481,7 +493,7 @@ export async function generateAltTextFromUrl(imageUrl: string): Promise<string> 
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...getApiAuthHeaders(),
+          ...(await getApiAuthHeaders()),
         },
         body: JSON.stringify({ imageUrl }),
         signal: controller.signal,
@@ -582,7 +594,7 @@ export async function suggestHashtags(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...getApiAuthHeaders(),
+        ...(await getApiAuthHeaders()),
       },
       body: JSON.stringify({ text, existingTags }),
     }, 30000);
@@ -651,7 +663,7 @@ export async function getWritingFeedback(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...getApiAuthHeaders(),
+        ...(await getApiAuthHeaders()),
       },
       body: JSON.stringify({ text }),
     }, 30000);
@@ -712,7 +724,7 @@ export async function analyzeWritingStyle(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...getApiAuthHeaders(),
+        ...(await getApiAuthHeaders()),
       },
       body: JSON.stringify({ currentText, historicalPosts }),
     }, 30000);
@@ -780,7 +792,7 @@ export async function optimizeThread(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...getApiAuthHeaders(),
+        ...(await getApiAuthHeaders()),
       },
       body: JSON.stringify({ text, maxCharsPerPost }),
     }, 30000);
