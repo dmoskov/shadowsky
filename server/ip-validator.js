@@ -146,6 +146,29 @@ function isIPv6Blocked(ip) {
 function isIPBlocked(ip) {
   // Detect IPv6
   if (ip.includes(":")) {
+    const normalizedIp = ip.toLowerCase();
+    
+    // Convert IPv6-mapped IPv4 (both dotted-decimal and hex formats) to standard IPv4
+    const ffffIndex = normalizedIp.lastIndexOf(":ffff:");
+    if (ffffIndex !== -1) {
+      const v4Part = normalizedIp.substring(ffffIndex + 6);
+      if (v4Part.includes(".")) {
+        // Handle ::ffff:169.254.170.2
+        return isIPv4Blocked(v4Part);
+      } else {
+        // Handle ::ffff:a9fe:aa02
+        const hexParts = v4Part.split(":");
+        if (hexParts.length === 2) {
+          const p1 = parseInt(hexParts[0], 16);
+          const p2 = parseInt(hexParts[1], 16);
+          if (!isNaN(p1) && !isNaN(p2)) {
+            const v4Str = `${(p1 >> 8) & 0xff}.${p1 & 0xff}.${(p2 >> 8) & 0xff}.${p2 & 0xff}`;
+            return isIPv4Blocked(v4Str);
+          }
+        }
+      }
+    }
+    
     return isIPv6Blocked(ip);
   }
 

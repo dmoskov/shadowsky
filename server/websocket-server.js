@@ -3,6 +3,11 @@ const jwt = require("jsonwebtoken");
 const { BskyAgent } = require("@atproto/api");
 const { nextBackoff, computePollDelay } = require("./utils/poll-backoff");
 
+// Authentication messages and heartbeat frames are only a few kilobytes. Keep
+// the parser ceiling intentionally small so a client cannot make the process
+// retain a large WebSocket message in memory.
+const DEFAULT_MAX_PAYLOAD_BYTES = 16 * 1024;
+
 /**
  * WebSocket Server for Real-Time Notifications
  *
@@ -18,7 +23,11 @@ const { nextBackoff, computePollDelay } = require("./utils/poll-backoff");
 
 class WebSocketNotificationServer {
   constructor(server, options = {}) {
-    this.wss = new WebSocket.Server({ server, ...options });
+    this.wss = new WebSocket.Server({
+      server,
+      ...options,
+      maxPayload: options.maxPayload ?? DEFAULT_MAX_PAYLOAD_BYTES,
+    });
     this.userConnections = new Map(); // Map<userDid, Set<WebSocket>>
     this.userAgents = new Map(); // Map<userDid, BskyAgent>
     this.userPollingIntervals = new Map(); // Map<userDid, NodeJS.Timeout>
@@ -547,4 +556,4 @@ class WebSocketNotificationServer {
   }
 }
 
-module.exports = { WebSocketNotificationServer };
+module.exports = { DEFAULT_MAX_PAYLOAD_BYTES, WebSocketNotificationServer };

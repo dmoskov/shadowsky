@@ -13,6 +13,7 @@ const path = require("path");
 const crypto = require("crypto");
 const os = require("os");
 const { moderateLimiter } = require("../middleware/rate-limit");
+const { largeJsonBody } = require("../middleware/body");
 const { validateUrlForSSRF, ssrfSafeFetch } = require("../ip-validator");
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -102,7 +103,7 @@ router.get("/proxy-image", moderateLimiter, async (req, res) => {
  * POST /api/convert-gif
  * Convert GIF URL to MP4 for better performance
  */
-router.post("/convert-gif", moderateLimiter, async (req, res) => {
+router.post("/convert-gif", largeJsonBody, moderateLimiter, async (req, res) => {
   const { gifUrl } = req.body;
 
   if (!gifUrl) {

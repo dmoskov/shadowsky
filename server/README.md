@@ -106,6 +106,33 @@ This endpoint is primarily used for fetching images from Bluesky's CDN for alt t
 - `WS_PORT`: WebSocket server port (default: 3001)
 - `ANTHROPIC_API_KEY`: Required for AI features
 
+### Authentication
+
+Clients authenticate to protected routes with an AT Protocol service-auth
+token (`Authorization: Bearer <jwt>`) minted by the user's PDS via
+`com.atproto.server.getServiceAuth`. The server verifies the signature
+against the account's DID document (`middleware/atproto-service-auth.js`).
+
+- `API_SERVICE_DID`: The `aud` tokens must be minted for (default
+  `did:web:api.asphodel.is`; must match `API_SERVICE_DID` in
+  `packages/core/src/api-auth.ts`)
+- `ALLOW_UNSIGNED_DID_AUTH`: Rollout flag. While not `"false"`, the legacy
+  unverified `X-User-DID` header is still accepted (and logged as
+  `did-unsigned`). Set to `"false"` once all clients send service-auth tokens.
+- `PLC_DIRECTORY_URL`: Override for DID resolution (default plc.directory)
+
+### AI abuse controls
+
+Request rate limits are per IP (30/min) and per account (20/min). Spend is
+capped in tokens (`utils/ai-budget.js`); counters are in-memory per task:
+
+- `AI_USER_DAILY_TOKEN_BUDGET`: Per-account tokens per UTC day (default 500000)
+- `AI_GLOBAL_DAILY_TOKEN_BUDGET`: Service-wide tokens per UTC day (default 25000000)
+- `AI_MAX_REQUEST_TOKENS`: Max estimated tokens for one request (default 120000)
+
+Every model call emits one JSON log line (`t: "ai"`) with the endpoint,
+user, auth method, and token counts for CloudWatch Logs Insights.
+
 ## Notes
 
 - This is a development-only feature

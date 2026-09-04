@@ -13,6 +13,7 @@ const {
   DescribeLogStreamsCommand,
 } = require("@aws-sdk/client-cloudwatch-logs");
 const { moderateLimiter } = require("../middleware/rate-limit");
+const { smallJsonBody } = require("../middleware/body");
 const { getClientIp } = require("../utils/helpers");
 
 // Initialize CloudWatch client (only if AWS credentials are available)
@@ -114,7 +115,7 @@ async function putLogEventsSerialized(logEvent) {
  * POST /api/log-error
  * Log client-side errors to CloudWatch
  */
-router.post("/log-error", moderateLimiter, async (req, res) => {
+router.post("/log-error", smallJsonBody, moderateLimiter, async (req, res) => {
   const { message, stack, componentStack, context, url, userAgent, timestamp } =
     req.body;
 

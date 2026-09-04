@@ -3,12 +3,25 @@
  *
  * Supports multiple authentication methods:
  * 1. AWS Cognito JWT tokens (for admin/service accounts)
- * 2. Bluesky DID (for regular users authenticated via OAuth)
+ * 2. AT Protocol service-auth JWTs (regular users; signed by the user's PDS,
+ *    verified against their DID document — see atproto-service-auth.js)
+ * 3. LEGACY: an unverified Bluesky DID header. Anyone can set this header to
+ *    any DID, so it is only honored while ALLOW_UNSIGNED_DID_AUTH is not
+ *    "false". It exists to keep old clients working during the rollout of
+ *    service-auth and should be disabled once web + mobile have shipped it.
  *
- * Priority: Cognito JWT > DID header
+ * Priority: Cognito JWT > service-auth JWT > legacy DID header
  */
 
 const crypto = require("crypto");
+const {
+  looksLikeServiceAuthToken,
+  verifyServiceAuthToken,
+} = require("./atproto-service-auth");
+
+function allowUnsignedDidAuth() {
+  return process.env.ALLOW_UNSIGNED_DID_AUTH !== "false";
+}
 
 // Cache for JWKS keys (in-memory)
 let jwksCache = null;
@@ -429,7 +442,47 @@ async function authenticateCognito(req) {
 }
 
 /**
- * Authenticate request using Bluesky DID
+ * Authenticate request using an AT Protocol service-auth JWT.
+ * The token proves the caller controls the DID in its `iss` claim.
+ *
+ * @param {Object} req - Express request object
+ * @param {Parameters<typeof verifyServiceAuthToken>[1]} [deps] - Test overrides
+ * @returns {Promise<Object>} AuthResult with user information or error
+ */
+async function authenticateServiceAuth(req, deps) {
+  const token = extractAuthToken(req);
+
+  if (!token || !looksLikeServiceAuthToken(token)) {
+    return {
+      authenticated: false,
+      error: "No service-auth token provided",
+    };
+  }
+
+  try {
+    const { did } = await verifyServiceAuthToken(token, deps);
+    return {
+      authenticated: true,
+      method: "did",
+      userId: did,
+      did,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return {
+      authenticated: false,
+      error: `Invalid service-auth token: ${message}`,
+    };
+  }
+}
+
+/**
+ * LEGACY: authenticate request using an unverified Bluesky DID header.
+ *
+ * This proves nothing — the header is caller-controlled — and is only kept
+ * so clients that predate service-auth keep working during rollout. Every
+ * use is logged as `did-unsigned` so the remaining legacy traffic can be
+ * measured before ALLOW_UNSIGNED_DID_AUTH=false is set.
  *
  * @param {Object} req - Express request object
  * @returns {Object} AuthResult with user information or error
@@ -451,31 +504,60 @@ function authenticateDid(req) {
     };
   }
 
+  if (!allowUnsignedDidAuth()) {
+    return {
+      authenticated: false,
+      error:
+        "Unsigned DID headers are no longer accepted. Send a service-auth token.",
+    };
+  }
+
+  console.warn(
+    JSON.stringify({
+      t: "auth",
+      method: "did-unsigned",
+      route: req.originalUrl?.split("?")[0],
+      did,
+    }),
+  );
+
   return {
     authenticated: true,
     method: "did",
     userId: did,
     did: did,
+    unsigned: true,
   };
 }
 
 /**
  * Authenticate request using any available method
- * Priority: Cognito JWT > Bluesky DID
+ * Priority: Cognito JWT > service-auth JWT > legacy DID header
  *
  * @param {Object} req - Express request object
+ * @param {Parameters<typeof verifyServiceAuthToken>[1]} [deps] - Test overrides
  * @returns {Promise<Object>} AuthResult with user information or error
  */
-async function authenticateRequest(req) {
-  // Try Cognito JWT first (if available)
-  if (cognitoAvailable) {
+async function authenticateRequest(req, deps) {
+  const token = extractAuthToken(req);
+  const isServiceToken = !!token && looksLikeServiceAuthToken(token);
+
+  // Try Cognito JWT first (if available). Skip it for tokens issued by a
+  // DID — those can never validate against Cognito's JWKS.
+  if (cognitoAvailable && token && !isServiceToken) {
     const cognitoAuth = await authenticateCognito(req);
     if (cognitoAuth.authenticated) {
       return cognitoAuth;
     }
   }
 
-  // Fall back to DID-based authentication
+  if (isServiceToken) {
+    // A presented service token must verify; never fall through to the
+    // unverified header when a signed credential was offered and rejected.
+    return authenticateServiceAuth(req, deps);
+  }
+
+  // Fall back to the legacy unverified DID header (gated by env flag)
   const didAuth = authenticateDid(req);
   if (didAuth.authenticated) {
     return didAuth;
@@ -485,7 +567,8 @@ async function authenticateRequest(req) {
   return {
     authenticated: false,
     error:
-      "Authentication required. Provide a valid Cognito JWT or Bluesky DID.",
+      didAuth.error ||
+      "Authentication required. Provide a Cognito JWT or an AT Protocol service-auth token.",
   };
 }
 
@@ -541,6 +624,7 @@ module.exports = {
   optionalCognitoAuth,
   authenticateRequest,
   authenticateCognito,
+  authenticateServiceAuth,
   authenticateDid,
   extractUserDid,
   isValidDid,

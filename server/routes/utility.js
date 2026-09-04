@@ -9,6 +9,7 @@ const router = express.Router();
 const fetch = require("node-fetch");
 const crypto = require("crypto");
 const { moderateLimiter } = require("../middleware/rate-limit");
+const { smallJsonBody, largeJsonBody } = require("../middleware/body");
 const { validateUrlForSSRF, ssrfSafeFetch } = require("../ip-validator");
 const { decodeHtmlEntities, getClientIp } = require("../utils/helpers");
 
@@ -16,7 +17,7 @@ const { decodeHtmlEntities, getClientIp } = require("../utils/helpers");
  * POST /api/fetch-link-metadata
  * Fetch metadata for link previews in composer
  */
-router.post("/fetch-link-metadata", moderateLimiter, async (req, res) => {
+router.post("/fetch-link-metadata", smallJsonBody, moderateLimiter, async (req, res) => {
   const { url } = req.body;
 
   if (!url) {
@@ -184,7 +185,7 @@ router.post("/fetch-link-metadata", moderateLimiter, async (req, res) => {
  * POST /api/bug-report
  * Submit a bug report with diagnostic information
  */
-router.post("/bug-report", moderateLimiter, async (req, res) => {
+router.post("/bug-report", largeJsonBody, moderateLimiter, async (req, res) => {
   const {
     description,
     stepsToReproduce,
