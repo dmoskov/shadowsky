@@ -45,7 +45,16 @@ resource "aws_ecs_task_definition" "api" {
       { name = "ANTHROPIC_FEDERATION_RULE_ID", value = var.anthropic_federation_rule_id },
       { name = "ANTHROPIC_ORGANIZATION_ID", value = var.anthropic_organization_id },
       { name = "ANTHROPIC_SERVICE_ACCOUNT_ID", value = var.anthropic_service_account_id },
-      { name = "ANTHROPIC_WORKSPACE_ID", value = var.anthropic_workspace_id }
+      { name = "ANTHROPIC_WORKSPACE_ID", value = var.anthropic_workspace_id },
+      # Identity the web/mobile clients mint service-auth tokens for.
+      { name = "API_SERVICE_DID", value = var.api_service_did },
+      # Rollout flag: accept the legacy unverified X-User-DID header. Flip to
+      # "false" once web + mobile builds that send service-auth tokens are out.
+      { name = "ALLOW_UNSIGNED_DID_AUTH", value = var.allow_unsigned_did_auth ? "true" : "false" },
+      # AI spend caps (tokens). See server/utils/ai-budget.js.
+      { name = "AI_USER_DAILY_TOKEN_BUDGET", value = tostring(var.ai_user_daily_token_budget) },
+      { name = "AI_GLOBAL_DAILY_TOKEN_BUDGET", value = tostring(var.ai_global_daily_token_budget) },
+      { name = "AI_MAX_REQUEST_TOKENS", value = tostring(var.ai_max_request_tokens) }
     ]
 
     secrets = []
