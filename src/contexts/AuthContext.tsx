@@ -36,7 +36,7 @@ import {
   oauthService,
 } from "../services/oauth-service";
 import { routePrefetchService } from "../services/route-prefetch-service";
-import { setApiAuthSession } from "../utils/api-auth";
+import { setApiAuthAgentProvider, setApiAuthSession } from "../utils/api-auth";
 
 type AuthMethod = "oauth" | "app-password" | null;
 
@@ -812,6 +812,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const activeClient = multiClientManager.getActiveClient();
     return activeClient?.agent || atProtoClient.agent;
   }, [authMethod, oauthAgent, session]);
+
+  // The API auth helper mints service-auth tokens with whichever agent is
+  // active, so it can prove the caller's DID to our API server.
+  useEffect(() => {
+    setApiAuthAgentProvider(() => (isAuthenticated ? currentAgent : null));
+  }, [isAuthenticated, currentAgent]);
 
   // Memoize context value to prevent unnecessary re-renders of consumers
   const contextValue = useMemo(

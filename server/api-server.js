@@ -14,6 +14,7 @@ const mediaRoutes = require("./routes/media");
 const utilityRoutes = require("./routes/utility");
 const pushRoutes = require("./routes/push-notifications");
 const loggingRoutes = require("./routes/logging");
+const { anthropicAvailable } = require("./utils/anthropic-client");
 
 // Load environment variables from parent directory's .env file
 require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
@@ -49,8 +50,8 @@ app.use(
   }),
 );
 
-// Increase JSON payload size limit for base64-encoded images
-app.use(express.json({ limit: "50mb" }));
+// JSON bodies are parsed per route with a size limit that fits each payload
+// (see middleware/body.js) rather than one app-wide 50 MB limit.
 
 // Response compression middleware
 // Compresses responses to improve load times on slow networks
@@ -183,9 +184,9 @@ httpServer.listen(PORT, () => {
   console.log(`  - GET  /api/v1/trending/stats`);
   console.log(
     `\nAPI Configuration:`,
-    process.env.ANTHROPIC_API_KEY
-      ? `✓ Anthropic API key loaded`
-      : `✗ Anthropic API key not found`,
+    anthropicAvailable()
+      ? `✓ Anthropic API available${process.env.ANTHROPIC_API_KEY ? " (static key)" : " (federation)"}`
+      : `✗ Anthropic API not configured`,
   );
   const cloudWatchStatus = loggingRoutes.getCloudWatchStatus
     ? loggingRoutes.getCloudWatchStatus()

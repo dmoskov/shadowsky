@@ -8,6 +8,7 @@ on:
       - main
     paths:
       - "server/**"
+      - ".github/workflows/deploy-server.yml"
   workflow_dispatch:
 
 permissions:
@@ -88,6 +89,13 @@ jobs:
           NEW_TASK_DEF=$(echo "$TASK_DEF" | jq \
             --arg IMAGE "$NEW_IMAGE" \
             '.containerDefinitions[0].image = $IMAGE |
+             .containerDefinitions[0].secrets = (
+               .containerDefinitions[0].secrets // [] |
+               map(select(.name != "ANTHROPIC_API_KEY"))
+             ) |
+             if .containerDefinitions[0].secrets == [] then
+               .containerDefinitions[0] |= del(.secrets)
+             else . end |
              del(.taskDefinitionArn, .revision, .status, .requiresAttributes,
                  .compatibilities, .registeredAt, .registeredBy)')
 
@@ -174,15 +182,33 @@ jobs:
             --query 'services[0].runningCount' --output text)
           echo "Running tasks: $RUNNING"
 
-      - name: Smoke test
+      - name: Verify ECS deployment health
         run: |
-          sleep 15
-          for i in 1 2 3 4 5; do
-            HTTP=$(curl -s -o /dev/null -w "%{http_code}" https://api.shadowsky.io/health)
-            if [ "$HTTP" = "200" ]; then
-              echo "✅ Health check passed"
+          echo "Checking ECS service health..."
+          HEALTH=$(aws ecs describe-services \
+            --cluster $ECS_CLUSTER --services $ECS_SERVICE \
+            --query 'services[0].{running: runningCount, desired: desiredCount, pending: pendingCount, deployments: deployments[*].{status: status, running: runningCount, desired: desiredCount, rollout: rolloutState}}' \
+            --output json)
+          echo "$HEALTH" | jq .
 
-              # Verify a key AI route is reachable (401 = auth required = route exists)
+          RUNNING=$(echo "$HEALTH" | jq '.running')
+          DESIRED=$(echo "$HEALTH" | jq '.desired')
+          if [ "$RUNNING" -ge "$DESIRED" ] && [ "$DESIRED" -gt 0 ]; then
+            echo "✅ ECS deployment healthy: $RUNNING/$DESIRED tasks running"
+          else
+            echo "❌ ECS deployment unhealthy: $RUNNING/$DESIRED tasks running"
+            exit 1
+          fi
+
+      - name: Smoke test (public endpoint)
+        run: |
+          echo "Checking public endpoint https://api.shadowsky.io/api/version ..."
+          sleep 30
+          for i in $(seq 1 5); do
+            HTTP=$(curl -s -o /dev/null -w "%{http_code}" https://api.shadowsky.io/api/version)
+            if [ "$HTTP" = "200" ]; then
+              echo "✅ Public API reachable"
+
               AI_HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
                 "https://api.shadowsky.io/api/v1/thread-summary" \
                 -H "Content-Type: application/json" -d '{}')
@@ -190,14 +216,13 @@ jobs:
 
               if [ "$AI_HTTP" = "401" ] || [ "$AI_HTTP" = "400" ]; then
                 echo "✅ API versioned routes working"
-                exit 0
               else
-                echo "⚠️ Versioned route returned $AI_HTTP (expected 401). DNS may still point to old server."
-                exit 0  # Don't fail — DNS migration is a separate step
+                echo "⚠️ Versioned route returned $AI_HTTP (expected 401)"
               fi
+              exit 0
             fi
-            echo "⏳ Attempt $i: HTTP $HTTP — retrying in 15s..."
-            sleep 15
+            echo "⏳ Attempt $i/5: HTTP $HTTP — retrying in 20s..."
+            sleep 20
           done
-          echo "❌ Health check failed after 5 attempts"
+          echo "❌ Public endpoint not responding (HTTP $HTTP). ECS task is running — check ALB target group registration and DNS."
           exit 1

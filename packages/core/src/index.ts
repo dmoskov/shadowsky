@@ -10,6 +10,7 @@ export const CORE_PACKAGE_VERSION = "0.0.0";
 
 export * from "./format";
 export * from "./logger";
+export * from "./api-auth";
 export * from "./errors";
 export * from "./moderation/labels";
 export * from "./notifications/aggregator";

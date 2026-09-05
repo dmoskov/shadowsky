@@ -99,6 +99,7 @@ vi.mock("../services/route-prefetch-service", () => ({
 
 vi.mock("../utils/api-auth", () => ({
   setApiAuthSession: vi.fn(),
+  setApiAuthAgentProvider: vi.fn(),
 }));
 
 vi.mock("@bsky/shared", () => ({

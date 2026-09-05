@@ -1,9 +1,7 @@
 {
   "family": "shadowsky-api-server",
   "networkMode": "awsvpc",
-  "requiresCompatibilities": [
-    "FARGATE"
-  ],
+  "requiresCompatibilities": ["FARGATE"],
   "cpu": "256",
   "memory": "512",
   "executionRoleArn": "arn:aws:iam::181691141781:role/ecsTaskExecutionRole",
@@ -45,14 +43,25 @@
         {
           "name": "FIREHOSE_SAMPLE_RATE",
           "value": "1"
-        }
-      ],
-      "secrets": [
+        },
         {
-          "name": "ANTHROPIC_API_KEY",
-          "valueFrom": "arn:aws:secretsmanager:us-east-1:181691141781:secret:anthropic-api-key-88hbTt"
+          "name": "ANTHROPIC_FEDERATION_RULE_ID",
+          "value": ""
+        },
+        {
+          "name": "ANTHROPIC_ORGANIZATION_ID",
+          "value": ""
+        },
+        {
+          "name": "ANTHROPIC_SERVICE_ACCOUNT_ID",
+          "value": ""
+        },
+        {
+          "name": "ANTHROPIC_WORKSPACE_ID",
+          "value": ""
         }
       ],
+      "secrets": [],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {

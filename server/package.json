@@ -11,6 +11,10 @@
   },
   "dependencies": {
     "@atproto/api": "^0.16.7",
+    "@atproto/identity": "^0.5.10",
+    "@atproto/xrpc-server": "^0.12.7",
+    "@aws-sdk/client-cloudwatch-logs": "^3.0.0",
+    "@aws-sdk/client-dynamodb": "^3.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -19,11 +23,10 @@
     "jsonwebtoken": "^9.0.2",
     "node-fetch": "^2.7.0",
     "web-push": "^3.6.7",
-    "ws": "^8.18.0",
-    "@aws-sdk/client-cloudwatch-logs": "^3.0.0",
-    "@aws-sdk/client-dynamodb": "^3.0.0"
+    "ws": "^8.21.3"
   },
   "devDependencies": {
+    "@atproto/crypto": "^0.5.4",
     "nodemon": "^3.0.1"
   }
 }

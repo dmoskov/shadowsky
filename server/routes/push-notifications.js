@@ -17,6 +17,7 @@ const express = require("express");
 const router = express.Router();
 const { requireCognitoAuth } = require("../middleware/cognito-auth");
 const { moderateLimiter } = require("../middleware/rate-limit");
+const { smallJsonBody } = require("../middleware/body");
 const { createPushTokenStore } = require("../utils/push-token-store");
 
 // Push enabled flag - set to true to enable push notifications
@@ -54,6 +55,7 @@ function isAdmin(req) {
  */
 router.post(
   "/push-subscription",
+  smallJsonBody,
   moderateLimiter,
   requireCognitoAuth(),
   async (req, res) => {
@@ -189,6 +191,7 @@ router.get(
  */
 router.post(
   "/push-notification/send",
+  smallJsonBody,
   moderateLimiter,
   requireCognitoAuth(),
   async (req, res) => {

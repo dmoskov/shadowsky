@@ -4,21 +4,34 @@
  * Coverage targets:
  * 1. Session management (set, get)
  * 2. Authentication status checking
- * 3. Header generation
+ * 3. Header generation (service-auth token, legacy fallback)
  * 4. Header merging with different input types
  * 5. RequestInit creation with auth
  */
 
+import type { BskyAgent } from "@atproto/api";
 import type { Session } from "@bsky/shared";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getApiAuthHeaders,
   getCurrentUserDid,
   isApiAuthenticated,
   mergeAuthHeaders,
+  setApiAuthAgentProvider,
   setApiAuthSession,
   withAuth,
 } from "./api-auth";
+
+function fakeAgent(token: string | null) {
+  const getServiceAuth = vi.fn(async () => {
+    if (!token) throw new Error("PDS refused");
+    return { success: true, headers: {}, data: { token } };
+  });
+  const agent = {
+    com: { atproto: { server: { getServiceAuth } } },
+  } as unknown as BskyAgent;
+  return { agent, getServiceAuth };
+}
 
 describe("api-auth", () => {
   const mockSession: Session = {
@@ -30,9 +43,12 @@ describe("api-auth", () => {
     active: true,
   };
 
+  const bearer = { Authorization: "Bearer svc-token" };
+
   beforeEach(() => {
-    // Reset session before each test
+    // Reset session and agent before each test
     setApiAuthSession(null);
+    setApiAuthAgentProvider(() => fakeAgent("svc-token").agent);
   });
 
   describe("setApiAuthSession", () => {
@@ -90,16 +106,56 @@ describe("api-auth", () => {
   });
 
   describe("getApiAuthHeaders", () => {
-    it("should return empty object when not authenticated", () => {
-      const headers = getApiAuthHeaders();
+    it("should return empty object when not authenticated", async () => {
+      const headers = await getApiAuthHeaders();
 
       expect(headers).toEqual({});
     });
 
-    it("should return auth headers when authenticated", () => {
+    it("should return a service-auth bearer token when authenticated", async () => {
+      const { agent, getServiceAuth } = fakeAgent("svc-token");
+      setApiAuthAgentProvider(() => agent);
       setApiAuthSession(mockSession);
 
-      const headers = getApiAuthHeaders();
+      const headers = await getApiAuthHeaders();
+
+      expect(headers).toEqual(bearer);
+      expect(getServiceAuth).toHaveBeenCalledWith(
+        expect.objectContaining({
+          aud: "did:web:api.asphodel.is",
+          lxm: "is.asphodel.api.auth",
+        }),
+      );
+    });
+
+    it("should reuse the token across requests for the same account", async () => {
+      const { agent, getServiceAuth } = fakeAgent("svc-token");
+      setApiAuthAgentProvider(() => agent);
+      setApiAuthSession(mockSession);
+
+      await getApiAuthHeaders();
+      await getApiAuthHeaders();
+
+      expect(getServiceAuth).toHaveBeenCalledTimes(1);
+    });
+
+    it("should mint a fresh token after switching accounts", async () => {
+      const { agent, getServiceAuth } = fakeAgent("svc-token");
+      setApiAuthAgentProvider(() => agent);
+      setApiAuthSession(mockSession);
+      await getApiAuthHeaders();
+
+      setApiAuthSession({ ...mockSession, did: "did:plc:other" });
+      await getApiAuthHeaders();
+
+      expect(getServiceAuth).toHaveBeenCalledTimes(2);
+    });
+
+    it("should fall back to legacy DID headers when no token can be minted", async () => {
+      setApiAuthAgentProvider(() => fakeAgent(null).agent);
+      setApiAuthSession(mockSession);
+
+      const headers = await getApiAuthHeaders();
 
       expect(headers).toEqual({
         "X-User-DID": "did:plc:test123",
@@ -113,83 +169,77 @@ describe("api-auth", () => {
       setApiAuthSession(mockSession);
     });
 
-    it("should merge with undefined headers", () => {
-      const result = mergeAuthHeaders(undefined);
+    it("should merge with undefined headers", async () => {
+      const result = await mergeAuthHeaders(undefined);
 
-      expect(result).toEqual({
-        "X-User-DID": "did:plc:test123",
-        "X-Bluesky-DID": "did:plc:test123",
-      });
+      expect(result).toEqual(bearer);
     });
 
-    it("should merge with plain object headers", () => {
+    it("should merge with plain object headers", async () => {
       const existingHeaders = {
         "Content-Type": "application/json",
         Accept: "*/*",
       };
 
-      const result = mergeAuthHeaders(existingHeaders);
+      const result = await mergeAuthHeaders(existingHeaders);
 
       expect(result).toEqual({
         "Content-Type": "application/json",
         Accept: "*/*",
-        "X-User-DID": "did:plc:test123",
-        "X-Bluesky-DID": "did:plc:test123",
+        ...bearer,
       });
     });
 
-    it("should merge with Headers object", () => {
+    it("should merge with Headers object", async () => {
       const existingHeaders = new Headers({
         "Content-Type": "application/json",
         Accept: "*/*",
       });
 
-      const result = mergeAuthHeaders(existingHeaders);
+      const result = await mergeAuthHeaders(existingHeaders);
 
       expect(result).toEqual({
         "content-type": "application/json",
         accept: "*/*",
-        "X-User-DID": "did:plc:test123",
-        "X-Bluesky-DID": "did:plc:test123",
+        ...bearer,
       });
     });
 
-    it("should merge with array of tuples headers", () => {
+    it("should merge with array of tuples headers", async () => {
       const existingHeaders: [string, string][] = [
         ["Content-Type", "application/json"],
         ["Accept", "*/*"],
       ];
 
-      const result = mergeAuthHeaders(existingHeaders);
+      const result = await mergeAuthHeaders(existingHeaders);
 
       expect(result).toEqual({
         "Content-Type": "application/json",
         Accept: "*/*",
-        "X-User-DID": "did:plc:test123",
-        "X-Bluesky-DID": "did:plc:test123",
+        ...bearer,
       });
     });
 
-    it("should not override existing auth headers", () => {
+    it("should override an existing Authorization header", async () => {
       const existingHeaders = {
-        "X-User-DID": "did:plc:existing",
+        Authorization: "Bearer stale",
         "Content-Type": "application/json",
       };
 
-      const result = mergeAuthHeaders(existingHeaders);
+      const result = await mergeAuthHeaders(existingHeaders);
 
       // Auth headers are added after existing headers, so they override
-      expect(result["X-User-DID"]).toBe("did:plc:test123");
+      expect(result.Authorization).toBe("Bearer svc-token");
     });
 
-    it("should return only existing headers when not authenticated", () => {
+    it("should return only existing headers when not authenticated", async () => {
       setApiAuthSession(null);
 
       const existingHeaders = {
         "Content-Type": "application/json",
       };
 
-      const result = mergeAuthHeaders(existingHeaders);
+      const result = await mergeAuthHeaders(existingHeaders);
 
       expect(result).toEqual({
         "Content-Type": "application/json",
@@ -202,84 +252,35 @@ describe("api-auth", () => {
       setApiAuthSession(mockSession);
     });
 
-    it("should create RequestInit with auth headers", () => {
-      const result = withAuth();
+    it("should add auth headers to undefined init", async () => {
+      const result = await withAuth(undefined);
 
-      expect(result).toEqual({
-        headers: {
-          "X-User-DID": "did:plc:test123",
-          "X-Bluesky-DID": "did:plc:test123",
-        },
-      });
+      expect(result).toEqual({ headers: bearer });
     });
 
-    it("should preserve existing RequestInit options", () => {
+    it("should preserve other init options", async () => {
       const init: RequestInit = {
         method: "POST",
-        body: JSON.stringify({ test: "data" }),
-        headers: {
-          "Content-Type": "application/json",
-        },
+        body: JSON.stringify({ test: true }),
+        headers: { "Content-Type": "application/json" },
       };
 
-      const result = withAuth(init);
+      const result = await withAuth(init);
 
-      expect(result).toEqual({
-        method: "POST",
-        body: JSON.stringify({ test: "data" }),
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-DID": "did:plc:test123",
-          "X-Bluesky-DID": "did:plc:test123",
-        },
-      });
-    });
-
-    it("should work with empty RequestInit", () => {
-      const result = withAuth({});
-
-      expect(result).toEqual({
-        headers: {
-          "X-User-DID": "did:plc:test123",
-          "X-Bluesky-DID": "did:plc:test123",
-        },
-      });
-    });
-
-    it("should work with Headers object in RequestInit", () => {
-      const init: RequestInit = {
-        headers: new Headers({
-          "Content-Type": "application/json",
-        }),
-      };
-
-      const result = withAuth(init);
-
+      expect(result.method).toBe("POST");
+      expect(result.body).toBe(JSON.stringify({ test: true }));
       expect(result.headers).toEqual({
-        "content-type": "application/json",
-        "X-User-DID": "did:plc:test123",
-        "X-Bluesky-DID": "did:plc:test123",
+        "Content-Type": "application/json",
+        ...bearer,
       });
     });
 
-    it("should return RequestInit without auth when not authenticated", () => {
+    it("should not add auth headers when not authenticated", async () => {
       setApiAuthSession(null);
 
-      const init: RequestInit = {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      };
+      const result = await withAuth({ method: "GET" });
 
-      const result = withAuth(init);
-
-      expect(result).toEqual({
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      expect(result).toEqual({ method: "GET", headers: {} });
     });
   });
 });

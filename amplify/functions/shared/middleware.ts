@@ -33,6 +33,7 @@ import {
   logError,
   type LambdaResponse,
 } from './api-response';
+import { anthropicAvailable, getAnthropicApiKey } from './anthropic-credentials';
 import { handleWarmupEvent } from './warmup';
 
 /**
@@ -125,11 +126,14 @@ export function withCommonSetup(config: MiddlewareConfig) {
       }
 
       try {
-        // 4. Verify API key if required
+        // 4. Verify API credentials if required (static key or federation)
         let apiKey: string | undefined;
         if (requireApiKey) {
-          apiKey = process.env[apiKeyEnvVar];
-          if (!apiKey) {
+          if (anthropicAvailable()) {
+            apiKey = await getAnthropicApiKey();
+          } else if (apiKeyEnvVar !== 'ANTHROPIC_API_KEY' && process.env[apiKeyEnvVar]) {
+            apiKey = process.env[apiKeyEnvVar];
+          } else {
             return createConfigError(apiKeyEnvVar, event, correlationId);
           }
         }

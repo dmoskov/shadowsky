@@ -10,7 +10,7 @@ const ipRequestCounts = new Map();
 
 // Clean up expired entries periodically
 const CLEANUP_INTERVAL = 60000; // 1 minute
-setInterval(() => {
+const cleanupTimer = setInterval(() => {
   const now = Date.now();
   for (const [key, data] of ipRequestCounts.entries()) {
     if (now > data.windowEnd) {
@@ -18,6 +18,7 @@ setInterval(() => {
     }
   }
 }, CLEANUP_INTERVAL);
+cleanupTimer.unref?.();
 
 /**
  * Get client IP address, handling proxies
@@ -26,11 +27,12 @@ setInterval(() => {
  * @returns {string} Client IP address
  */
 function getClientIp(req) {
-  // Check X-Forwarded-For header (set by load balancers/proxies)
+  // The production ALB appends the real client address to X-Forwarded-For.
+  // Trust the rightmost value: the leftmost value can be supplied by the
+  // client and would let an attacker rotate arbitrary rate-limit identities.
   const forwarded = req.headers["x-forwarded-for"];
   if (forwarded) {
-    // Take the first IP in the chain (original client)
-    return forwarded.split(",")[0].trim();
+    return forwarded.split(",").at(-1).trim();
   }
 
   // Fall back to direct connection IP
@@ -134,13 +136,26 @@ function rateLimit(options = {}) {
  * Preconfigured rate limiters for different endpoint types
  */
 
-// Rate limiting for AI endpoints (30 requests per minute)
+// Rate limiting for AI endpoints (30 requests per minute per IP)
 const aiEndpointLimiter = rateLimit({
   windowMs: 60000,
   maxRequests: 30,
   keyPrefix: "ai",
   message:
     "AI generation rate limit exceeded. Please wait before making more requests.",
+});
+
+// Per-identity rate limiting for AI endpoints (20 requests per minute per
+// authenticated user). Runs AFTER the auth middleware so req.auth is set; an
+// attacker rotating IPs is still bound by this one. Falls back to the IP for
+// requests that somehow reach it unauthenticated.
+const aiUserLimiter = rateLimit({
+  windowMs: 60000,
+  maxRequests: 20,
+  keyPrefix: "ai-user",
+  keyGenerator: (req) => `ai-user:${req.auth?.userId || getClientIp(req)}`,
+  message:
+    "AI generation rate limit exceeded for your account. Please wait before making more requests.",
 });
 
 // Moderate rate limiting for semi-expensive endpoints (60 requests per minute)
@@ -183,6 +198,7 @@ module.exports = {
   rateLimit,
   getClientIp,
   aiEndpointLimiter,
+  aiUserLimiter,
   moderateLimiter,
   generalLimiter,
   authLimiter,
