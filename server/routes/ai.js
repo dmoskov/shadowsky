@@ -34,8 +34,11 @@ const {
   readEnum,
   readInt,
 } = require("../utils/ai-input");
+const { aiDenylist } = require("../middleware/ai-denylist");
 const {
   callClaude,
+  clampText,
+  enforceShape,
   parseModelJson,
   sendAiError,
   wrapUserText,
@@ -64,7 +67,69 @@ const JSON_OUTPUT_RULES = `IMPORTANT: Your response MUST be valid JSON only. Rul
 4. Do not include any text before or after the JSON object
 5. Start directly with { and end with }`;
 
-const aiGuards = [requireCognitoAuth(), aiEndpointLimiter, aiUserLimiter];
+const aiGuards = [
+  requireCognitoAuth(),
+  aiDenylist,
+  aiEndpointLimiter,
+  aiUserLimiter,
+];
+
+// Every JSON-returning endpoint declares the exact shape it hands back. The
+// model's output is conformed to it (unknown keys dropped, fields capped), so
+// a prompt-injected "answer my question" can't ride out in a stray field.
+/** @type {import("../utils/claude-messages").Shape} */
+const WRITING_FEEDBACK_SHAPE = {
+  assessment: { summary: "string", hasIssues: "boolean" },
+  correctedVersion: { text: "string", changes: ["string"] },
+  enhancedVersion: { text: "string", improvements: ["string"] },
+};
+
+/** @type {import("../utils/claude-messages").Shape} */
+const STYLE_ANALYSIS_SHAPE = {
+  userStyleSummary: "string",
+  matchesStyle: "boolean",
+  styleNotes: ["string"],
+};
+
+/** @type {import("../utils/claude-messages").Shape} */
+const OPTIMIZE_THREAD_SHAPE = {
+  segments: [{ text: "string", number: "number", isStandalone: "boolean" }],
+  summary: "string",
+  suggestedFormat: "string",
+  totalPosts: "number",
+};
+
+/** @type {import("../utils/claude-messages").Shape} */
+const SUGGEST_HASHTAGS_SHAPE = {
+  hashtags: [{ tag: "string", "relevance?": "scalar", "isTrending?": "boolean" }],
+  "category?": "string",
+};
+
+/** @type {import("../utils/claude-messages").Shape} */
+const ANALYZE_POSTS_BRIEF_SHAPE = { summary: "string" };
+
+/** @type {import("../utils/claude-messages").Shape} */
+const ANALYZE_POSTS_FULL_SHAPE = {
+  contentThemes: [
+    {
+      theme: "string",
+      description: "string",
+      frequency: "string",
+      "examples?": ["string"],
+    },
+  ],
+  writingStyle: {
+    tone: "string",
+    characteristics: ["string"],
+    voiceDescription: "string",
+  },
+  engagementPatterns: {
+    topPerformers: ["string"],
+    contentStrengths: ["string"],
+    suggestions: ["string"],
+  },
+  summary: "string",
+};
 
 // -----------------------------------------------------------------------------
 // POST /api/generate-alt-text
@@ -233,7 +298,7 @@ ${JSON_OUTPUT_RULES}`,
       maxTokens: 1500,
     });
 
-    res.json(parseModelJson(reply));
+    res.json(enforceShape(parseModelJson(reply), WRITING_FEEDBACK_SHAPE));
   } catch (error) {
     sendAiError(res, error, "writing-feedback");
   }
@@ -291,7 +356,7 @@ IMPORTANT: Your response MUST be valid JSON only. Rules:
       maxTokens: 1000,
     });
 
-    res.json(parseModelJson(reply));
+    res.json(enforceShape(parseModelJson(reply), STYLE_ANALYSIS_SHAPE));
   } catch (error) {
     sendAiError(res, error, "style-analysis");
   }
@@ -330,7 +395,8 @@ router.post("/adjust-tone", smallJsonBody, ...aiGuards, async (req, res) => {
     });
 
     res.json({
-      adjustedText: adjustedText.trim(),
+      // A rewrite is bounded by its input; anything longer isn't a rewrite.
+      adjustedText: clampText(adjustedText, Math.max(600, text.length * 3)),
       originalText: text,
       tone,
     });
@@ -373,7 +439,7 @@ Start directly with { and end with }`,
       maxTokens: 2000,
     });
 
-    res.json(parseModelJson(reply));
+    res.json(enforceShape(parseModelJson(reply), OPTIMIZE_THREAD_SHAPE));
   } catch (error) {
     sendAiError(res, error, "optimize-thread");
   }
@@ -421,7 +487,7 @@ Start directly with { and end with }`,
       maxTokens: 500,
     });
 
-    res.json(parseModelJson(reply));
+    res.json(enforceShape(parseModelJson(reply), SUGGEST_HASHTAGS_SHAPE));
   } catch (error) {
     sendAiError(res, error, "suggest-hashtags");
   }
@@ -537,7 +603,10 @@ Provide specific evidence and quotes to support your analysis. Start directly wi
       maxTokens: isHaiku ? 200 : 3000,
     });
 
-    const result = parseModelJson(reply);
+    const result = enforceShape(
+      parseModelJson(reply),
+      isHaiku ? ANALYZE_POSTS_BRIEF_SHAPE : ANALYZE_POSTS_FULL_SHAPE,
+    );
 
     // Cache the result
     setCachedProfileAnalysis(cacheKey, result);
@@ -842,7 +911,8 @@ router.post("/thread-summary", textBatchJsonBody, ...aiGuards, async (req, res) 
       maxTokens,
     });
 
-    let summaryText = text.trim();
+    // The largest format asks for ~400 words plus highlights.
+    let summaryText = clampText(text, 8000);
 
     // Parse highlights from comprehensive/extended summaries
     let parsedHighlights;

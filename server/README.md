@@ -133,6 +133,17 @@ capped in tokens (`utils/ai-budget.js`); counters are in-memory per task:
 Every model call emits one JSON log line (`t: "ai"`) with the endpoint,
 user, auth method, and token counts for CloudWatch Logs Insights.
 
+Each call also sends `metadata.user_id` — a salted SHA-256 of the caller's
+DID — so Anthropic can attribute abuse to the end user rather than to us.
+Prompts are fixed per endpoint (caller text is passed as tagged data), and
+every JSON response is conformed to a declared shape with length caps, so
+the routes can't be repurposed as a general-purpose model proxy.
+
+- `AI_ATTRIBUTION_SALT`: Salt for `metadata.user_id` (set in production so
+  the hash isn't reproducible from a public DID)
+- `AI_BLOCKED_DIDS`: Comma-separated DIDs that get 403 from AI routes —
+  the switch for cutting off an identified abuser without a deploy
+
 ## Notes
 
 - This is a development-only feature

@@ -14,8 +14,10 @@
  *   - upstream/budget/format failures map to distinct HTTP statuses
  */
 
+const crypto = require("crypto");
 const fetch = require("node-fetch");
 const { anthropicAvailable, getAnthropicApiKey } = require("./anthropic-client");
+const { getClientIp } = require("../middleware/rate-limit");
 const {
   AiBudgetExceededError,
   defaultAiBudget,
@@ -27,6 +29,30 @@ const { cleanJsonResponse } = require("./helpers");
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
 const DEFAULT_MODEL = "claude-sonnet-5";
+
+// Caps applied when conforming model output to an endpoint's shape, so a
+// caller can't use a "post" field to smuggle out an essay.
+const MAX_FIELD_CHARS = 4000;
+const MAX_ARRAY_ITEMS = 25;
+
+/**
+ * Opaque per-caller identifier sent as `metadata.user_id` so Anthropic can
+ * attribute abuse to an end user rather than to this operator. Keyed on the
+ * authenticated DID (stable across networks); falls back to the client IP.
+ * Salted so the raw identifier never leaves the server.
+ *
+ * @param {import("express").Request} req
+ */
+function attributionId(req) {
+  const salt = process.env.AI_ATTRIBUTION_SALT || "asphodel-api";
+  const subject = req.auth?.userId
+    ? `did:${req.auth.userId}`
+    : `ip:${getClientIp(req)}`;
+  return crypto
+    .createHash("sha256")
+    .update(`${salt}:${subject}`)
+    .digest("hex");
+}
 
 // Shared guidance appended to every system prompt. Names the data tags so
 // the model treats their contents as material to work on, not instructions.
@@ -164,6 +190,7 @@ async function callClaude(params) {
       max_tokens: maxTokens,
       system: `${system.trim()}\n${DATA_HANDLING_RULES}`,
       messages: [{ role: "user", content }],
+      metadata: { user_id: attributionId(req) },
     }),
   });
   const durMs = Math.round(Number(process.hrtime.bigint() - start) / 1e6);
@@ -233,6 +260,120 @@ function parseModelJson(text) {
 }
 
 /**
+ * A shape is a plain object whose values are type names ("string", "number",
+ * "boolean", "scalar"), a one-element array of a shape/type (a list), or a
+ * nested shape. A key ending in "?" is optional.
+ *
+ * @typedef {"string" | "number" | "boolean" | "scalar"} ShapeType
+ * @typedef {ShapeType | Shape | [ShapeType | Shape]} ShapeNode
+ * @typedef {{ [key: string]: ShapeNode }} Shape
+ */
+
+/**
+ * @param {unknown} value
+ * @param {ShapeType} type
+ * @param {string} path
+ */
+function conformScalar(value, type, path) {
+  switch (type) {
+    case "string":
+      if (typeof value !== "string") {
+        throw new AiResponseFormatError(`${path} should be a string`);
+      }
+      return value.length > MAX_FIELD_CHARS ? value.slice(0, MAX_FIELD_CHARS) : value;
+    case "number": {
+      const n = typeof value === "string" ? Number(value) : value;
+      if (typeof n !== "number" || !Number.isFinite(n)) {
+        throw new AiResponseFormatError(`${path} should be a number`);
+      }
+      return n;
+    }
+    case "boolean":
+      if (value === "true") return true;
+      if (value === "false") return false;
+      if (typeof value !== "boolean") {
+        throw new AiResponseFormatError(`${path} should be a boolean`);
+      }
+      return value;
+    case "scalar":
+      if (typeof value === "string") return conformScalar(value, "string", path);
+      if (typeof value === "number" || typeof value === "boolean") return value;
+      throw new AiResponseFormatError(`${path} should be a string, number, or boolean`);
+    default:
+      throw new Error(`Unknown shape type ${type}`);
+  }
+}
+
+/**
+ * @param {unknown} value
+ * @param {ShapeNode} node
+ * @param {string} path
+ * @returns {unknown}
+ */
+function conformNode(value, node, path) {
+  if (typeof node === "string") {
+    return conformScalar(value, node, path);
+  }
+
+  if (Array.isArray(node)) {
+    if (!Array.isArray(value)) {
+      throw new AiResponseFormatError(`${path} should be an array`);
+    }
+    return value
+      .slice(0, MAX_ARRAY_ITEMS)
+      .map((item, i) => conformNode(item, node[0], `${path}[${i}]`));
+  }
+
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new AiResponseFormatError(`${path} should be an object`);
+  }
+
+  /** @type {Record<string, unknown>} */
+  const out = {};
+  const source = /** @type {Record<string, unknown>} */ (value);
+  for (const [rawKey, childNode] of Object.entries(node)) {
+    const optional = rawKey.endsWith("?");
+    const key = optional ? rawKey.slice(0, -1) : rawKey;
+    const child = source[key];
+    if (child === undefined || child === null) {
+      if (optional) continue;
+      throw new AiResponseFormatError(`${path}.${key} is missing`);
+    }
+    out[key] = conformNode(child, childNode, `${path}.${key}`);
+  }
+  // Keys not in the shape are dropped: the model can't add channels.
+  return out;
+}
+
+/**
+ * Validate a parsed model response against the endpoint's expected shape,
+ * dropping unknown keys and capping string/array sizes. Throws
+ * AiResponseFormatError (→ 502) when a required field is missing or the
+ * wrong type, so an off-script response never reaches the client.
+ *
+ * @template {Record<string, unknown>} T
+ * @param {Record<string, unknown>} result
+ * @param {Shape} shape
+ * @returns {T}
+ */
+function enforceShape(result, shape) {
+  return /** @type {T} */ (conformNode(result, shape, "response"));
+}
+
+/**
+ * Cap free-text model output. `max` should be sized to the task (e.g. a
+ * rewrite is bounded by a multiple of the input) so an endpoint that returns
+ * prose can't be turned into a general-purpose text generator.
+ *
+ * @param {string} text
+ * @param {number} max
+ */
+function clampText(text, max) {
+  const trimmed = text.trim();
+  return trimmed.length > max ? trimmed.slice(0, max) : trimmed;
+}
+
+/**
  * Translate an error thrown inside an AI route into an HTTP response.
  * Logs the full error server-side; clients get a stable code and no
  * upstream details.
@@ -295,7 +436,12 @@ module.exports = {
   AiNotConfiguredError,
   AiResponseFormatError,
   DEFAULT_MODEL,
+  MAX_FIELD_CHARS,
+  MAX_ARRAY_ITEMS,
+  attributionId,
   callClaude,
+  clampText,
+  enforceShape,
   parseModelJson,
   sendAiError,
   wrapUserText,

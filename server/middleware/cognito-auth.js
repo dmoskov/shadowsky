@@ -563,12 +563,13 @@ async function authenticateRequest(req, deps) {
     return didAuth;
   }
 
-  // No valid authentication found
+  // No valid authentication found. Only surface the legacy-header error when
+  // a header was actually sent; otherwise say what credentials are expected.
   return {
     authenticated: false,
-    error:
-      didAuth.error ||
-      "Authentication required. Provide a Cognito JWT or an AT Protocol service-auth token.",
+    error: extractUserDid(req)
+      ? didAuth.error
+      : "Authentication required. Provide a Cognito JWT or an AT Protocol service-auth token.",
   };
 }
 
