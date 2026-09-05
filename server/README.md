@@ -104,7 +104,26 @@ This endpoint is primarily used for fetching images from Bluesky's CDN for alt t
 
 - `PORT`: API server port (default: 3002)
 - `WS_PORT`: WebSocket server port (default: 3001)
-- `ANTHROPIC_API_KEY`: Required for AI features
+
+### Anthropic credentials
+
+Local dev: set `ANTHROPIC_API_KEY`. Production uses Workload Identity
+Federation instead of a stored key (`utils/anthropic-client.js`): the task
+asks AWS STS for an OIDC token asserting its IAM role (`GetWebIdentityToken`,
+audience `https://api.anthropic.com`) and exchanges it at
+`POST /v1/oauth/token` for a short-lived access token. Requires
+`sts:GetWebIdentityToken` on the task role, outbound web identity federation
+enabled on the AWS account, and a federation rule in the Claude Console
+matching the task role ARN. `ANTHROPIC_API_KEY`, if set, always wins.
+
+- `ANTHROPIC_FEDERATION_RULE_ID`: `fdrl_...` rule matching the task role
+- `ANTHROPIC_ORGANIZATION_ID`: Anthropic organization UUID
+- `ANTHROPIC_SERVICE_ACCOUNT_ID`: `svac_...` the rule targets
+- `ANTHROPIC_WORKSPACE_ID`: `wrkspc_...`; only required if the rule spans
+  more than one workspace
+
+A denied exchange is an opaque 401 by design — the reason is under
+Console → Settings → Workload identity → History.
 
 ### Authentication
 

@@ -175,13 +175,14 @@ async function callClaude(params) {
   budget.check(userId, estimated);
 
   // Static key locally; Workload Identity Federation token in production.
-  const apiKey = await getAnthropicApiKey();
+  // Both are accepted as a bearer token.
+  const bearerToken = await getAnthropicApiKey();
 
   const start = process.hrtime.bigint();
   const response = await fetch(ANTHROPIC_MESSAGES_URL, {
     method: "POST",
     headers: {
-      "x-api-key": apiKey,
+      authorization: `Bearer ${bearerToken}`,
       "anthropic-version": ANTHROPIC_VERSION,
       "content-type": "application/json",
     },

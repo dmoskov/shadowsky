@@ -15,6 +15,7 @@
     "@atproto/xrpc-server": "^0.12.7",
     "@aws-sdk/client-cloudwatch-logs": "^3.0.0",
     "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/client-sts": "^3.1127.0",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",

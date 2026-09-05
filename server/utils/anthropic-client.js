@@ -1,36 +1,51 @@
 /**
  * Anthropic Credential Factory
  *
- * Resolves Anthropic API credentials in priority order:
- * 1. ANTHROPIC_API_KEY env var (local dev, or pre-federation deployments)
- * 2. Workload Identity Federation (keyless production auth via AWS IAM)
+ * Resolves the bearer token for Claude API calls, in priority order:
+ * 1. ANTHROPIC_API_KEY env var (local dev)
+ * 2. Workload Identity Federation (keyless production auth)
  * 3. Fails loudly if neither is configured
  *
- * Federation flow: sign an STS GetCallerIdentity request with the workload's
- * IAM role, POST the signed proof to Anthropic's token endpoint, cache the
- * temporary API key until near-expiry.
+ * Federation flow (https://platform.claude.com/docs/en/manage-claude/wif-providers/aws):
+ *   1. Ask AWS STS for an OIDC token that asserts this task's IAM role
+ *      (GetWebIdentityToken, audience https://api.anthropic.com). Uses the
+ *      task's ambient credentials; requires sts:GetWebIdentityToken on the
+ *      task role and outbound web identity federation enabled on the account.
+ *   2. Exchange it at POST /v1/oauth/token (RFC 7523 jwt-bearer grant) for a
+ *      short-lived sk-ant-oat01-... access token bound to the federation
+ *      rule's service account.
+ *   3. Cache the access token and re-run the exchange before it expires. A
+ *      fresh STS token is minted for every exchange: STS tokens carry a jti
+ *      and Anthropic accepts each one only once.
+ *
+ * Whatever this returns is sent as `Authorization: Bearer <token>`; that
+ * header accepts both API keys and federated access tokens.
  */
 
-const crypto = require("crypto");
-const http = require("http");
-const https = require("https");
+const { STSClient, GetWebIdentityTokenCommand } = require("@aws-sdk/client-sts");
+const fetch = require("node-fetch");
 
 const FEDERATION_ENV_VARS = [
   "ANTHROPIC_FEDERATION_RULE_ID",
   "ANTHROPIC_ORGANIZATION_ID",
   "ANTHROPIC_SERVICE_ACCOUNT_ID",
-  "ANTHROPIC_WORKSPACE_ID",
 ];
 
-const TOKEN_ENDPOINT =
-  "https://api.anthropic.com/v1/auth/workload-identity-token";
-const CACHE_MARGIN_MS = 5 * 60 * 1000;
+const TOKEN_ENDPOINT = "https://api.anthropic.com/v1/oauth/token";
+const STS_AUDIENCE = "https://api.anthropic.com";
+// STS token lifetime. Anthropic caps the minted token at 2x the remaining
+// life of the assertion, so keep this comfortably above the rule's lifetime.
+const STS_TOKEN_SECONDS = 900;
+// Re-exchange this long before the access token expires.
+const REFRESH_MARGIN_MS = 2 * 60 * 1000;
 
-let _cachedApiKey = null;
-let _cacheExpiry = 0;
+/** @type {{ token: string, expiresAt: number } | null} */
+let cached = null;
+/** @type {Promise<string> | null} */
+let inflight = null;
 
 /**
- * Check whether Anthropic API credentials are available (sync, no I/O).
+ * Check whether Anthropic credentials are available (sync, no I/O).
  */
 function anthropicAvailable() {
   if (process.env.ANTHROPIC_API_KEY) return true;
@@ -38,11 +53,26 @@ function anthropicAvailable() {
 }
 
 /**
- * Resolve an Anthropic API key. Returns a static key when ANTHROPIC_API_KEY
- * is set; otherwise performs a Workload Identity Federation token exchange.
- * Caches federation tokens and refreshes 5 minutes before expiry.
+ * Human-readable auth mode for the startup log.
  */
-async function getAnthropicApiKey() {
+function anthropicAuthMode() {
+  if (process.env.ANTHROPIC_API_KEY) return "static key";
+  if (anthropicAvailable()) return "federation";
+  return "not configured";
+}
+
+/**
+ * Resolve a bearer token for the Claude API. Returns the static key when
+ * ANTHROPIC_API_KEY is set; otherwise performs (or reuses) a Workload
+ * Identity Federation exchange.
+ *
+ * @param {Object} [deps] - Test overrides
+ * @param {(params: { audience: string, durationSeconds: number }) => Promise<string>} [deps.getIdentityToken]
+ * @param {typeof fetch} [deps.fetch]
+ * @param {() => number} [deps.now]
+ * @returns {Promise<string>}
+ */
+async function getAnthropicApiKey(deps = {}) {
   if (process.env.ANTHROPIC_API_KEY) {
     return process.env.ANTHROPIC_API_KEY;
   }
@@ -54,235 +84,124 @@ async function getAnthropicApiKey() {
     );
   }
 
-  if (_cachedApiKey && Date.now() < _cacheExpiry) {
-    return _cachedApiKey;
+  const now = deps.now || Date.now;
+  if (cached && now() < cached.expiresAt - REFRESH_MARGIN_MS) {
+    return cached.token;
   }
 
-  const result = await _exchangeFederationToken();
-  _cachedApiKey = result.api_key;
-  _cacheExpiry =
-    Date.now() + (result.expires_in || 3600) * 1000 - CACHE_MARGIN_MS;
-  return _cachedApiKey;
+  if (!inflight) {
+    inflight = exchangeFederationToken(deps)
+      .then((result) => {
+        cached = result;
+        return result.token;
+      })
+      .finally(() => {
+        inflight = null;
+      });
+  }
+  return inflight;
+}
+
+/** Drop the cached token (tests). */
+function resetAnthropicCredentialCache() {
+  cached = null;
+  inflight = null;
 }
 
 // ---------------------------------------------------------------------------
-// Federation token exchange
+// Federation exchange
 // ---------------------------------------------------------------------------
 
-async function _exchangeFederationToken() {
-  const signedRequest = await _createSignedGetCallerIdentityRequest();
+/**
+ * @param {Parameters<typeof getAnthropicApiKey>[0]} deps
+ * @returns {Promise<{ token: string, expiresAt: number }>}
+ */
+async function exchangeFederationToken(deps) {
+  const getIdentityToken = deps.getIdentityToken || getStsWebIdentityToken;
+  const doFetch = deps.fetch || fetch;
+  const now = deps.now || Date.now;
 
-  const body = JSON.stringify({
+  const assertion = await getIdentityToken({
+    audience: STS_AUDIENCE,
+    durationSeconds: STS_TOKEN_SECONDS,
+  });
+
+  const body = {
+    grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+    assertion,
     federation_rule_id: process.env.ANTHROPIC_FEDERATION_RULE_ID,
     organization_id: process.env.ANTHROPIC_ORGANIZATION_ID,
     service_account_id: process.env.ANTHROPIC_SERVICE_ACCOUNT_ID,
-    workspace_id: process.env.ANTHROPIC_WORKSPACE_ID,
-    aws_sts_request: signedRequest,
+  };
+  // Only needed when the rule spans several workspaces; harmless otherwise.
+  if (process.env.ANTHROPIC_WORKSPACE_ID) {
+    body.workspace_id = process.env.ANTHROPIC_WORKSPACE_ID;
+  }
+
+  const response = await doFetch(TOKEN_ENDPOINT, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
   });
 
-  const response = await _httpsPost(TOKEN_ENDPOINT, body, {
-    "content-type": "application/json",
-  });
-
-  if (response.statusCode < 200 || response.statusCode >= 300) {
+  const text = await response.text();
+  if (!response.ok) {
+    // Anthropic deliberately returns an opaque 401 for every assertion
+    // denial; the real reason is in Console → Workload identity → History.
     throw new Error(
-      `Federation token exchange failed (${response.statusCode}): ${response.body}`,
+      `Anthropic federation token exchange failed (${response.status}): ${text.slice(0, 300)}`,
     );
   }
 
-  const data = JSON.parse(response.body);
-  if (!data.api_key) {
-    throw new Error(
-      "Federation token exchange returned no api_key: " + response.body,
-    );
+  /** @type {{ access_token?: string, expires_in?: number }} */
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`Federation token exchange returned non-JSON: ${text.slice(0, 300)}`);
   }
-  return data;
-}
-
-// ---------------------------------------------------------------------------
-// AWS SigV4 signing (Node.js crypto only — no SDK dependency)
-// ---------------------------------------------------------------------------
-
-function _sha256(data) {
-  return crypto.createHash("sha256").update(data, "utf8").digest("hex");
-}
-
-function _hmac(key, data) {
-  return crypto.createHmac("sha256", key).update(data, "utf8").digest();
-}
-
-async function _createSignedGetCallerIdentityRequest() {
-  const region =
-    process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "us-east-1";
-  const credentials = await _resolveAwsCredentials();
-
-  const method = "POST";
-  const service = "sts";
-  const host = `sts.${region}.amazonaws.com`;
-  const path = "/";
-  const body = "Action=GetCallerIdentity&Version=2011-06-15";
-  const contentType = "application/x-www-form-urlencoded";
-
-  const now = new Date();
-  const amzDate = now.toISOString().replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z");
-  const dateStamp = amzDate.slice(0, 8);
-
-  const headerNames = ["content-type", "host", "x-amz-date"];
-  const headerValues = {
-    "content-type": contentType,
-    host: host,
-    "x-amz-date": amzDate,
-  };
-
-  if (credentials.sessionToken) {
-    headerNames.push("x-amz-security-token");
-    headerValues["x-amz-security-token"] = credentials.sessionToken;
-  }
-  headerNames.sort();
-
-  const canonicalHeaders = headerNames
-    .map((h) => `${h}:${headerValues[h]}`)
-    .join("\n") + "\n";
-  const signedHeaders = headerNames.join(";");
-  const payloadHash = _sha256(body);
-
-  const canonicalRequest = [
-    method,
-    path,
-    "", // query string
-    canonicalHeaders,
-    signedHeaders,
-    payloadHash,
-  ].join("\n");
-
-  const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
-  const stringToSign = [
-    "AWS4-HMAC-SHA256",
-    amzDate,
-    credentialScope,
-    _sha256(canonicalRequest),
-  ].join("\n");
-
-  const signingKey = _hmac(
-    _hmac(
-      _hmac(
-        _hmac(`AWS4${credentials.secretAccessKey}`, dateStamp),
-        region,
-      ),
-      service,
-    ),
-    "aws4_request",
-  );
-  const signature = crypto
-    .createHmac("sha256", signingKey)
-    .update(stringToSign, "utf8")
-    .digest("hex");
-
-  const authorization = `AWS4-HMAC-SHA256 Credential=${credentials.accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
-
-  const headers = {
-    ...headerValues,
-    authorization: authorization,
-  };
-
-  return {
-    url: `https://${host}${path}`,
-    method,
-    headers,
-    body,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// AWS credential resolution (ECS container metadata → env vars)
-// ---------------------------------------------------------------------------
-
-async function _resolveAwsCredentials() {
-  // ECS Fargate: credentials via container metadata
-  const relativeUri = process.env.AWS_CONTAINER_CREDENTIALS_RELATIVE_URI;
-  if (relativeUri) {
-    return _fetchJson(`http://169.254.170.2${relativeUri}`).then(_mapCreds);
+  if (!data.access_token) {
+    throw new Error(`Federation token exchange returned no access_token: ${text.slice(0, 300)}`);
   }
 
-  const fullUri = process.env.AWS_CONTAINER_CREDENTIALS_FULL_URI;
-  if (fullUri) {
-    const headers = {};
-    if (process.env.AWS_CONTAINER_AUTHORIZATION_TOKEN) {
-      headers["Authorization"] = process.env.AWS_CONTAINER_AUTHORIZATION_TOKEN;
-    }
-    return _fetchJson(fullUri, headers).then(_mapCreds);
-  }
-
-  // Env vars (local dev, CI, Lambda)
-  if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
-    return {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      sessionToken: process.env.AWS_SESSION_TOKEN || undefined,
-    };
-  }
-
-  throw new Error(
-    "No AWS credentials available for Anthropic federation token exchange",
-  );
+  const expiresIn = Number(data.expires_in) || 600;
+  return { token: data.access_token, expiresAt: now() + expiresIn * 1000 };
 }
 
-function _mapCreds(data) {
-  return {
-    accessKeyId: data.AccessKeyId,
-    secretAccessKey: data.SecretAccessKey,
-    sessionToken: data.Token,
-  };
-}
+let stsClient = null;
 
-// ---------------------------------------------------------------------------
-// Minimal HTTP helpers (no external deps)
-// ---------------------------------------------------------------------------
-
-function _fetchJson(url, extraHeaders = {}) {
-  return new Promise((resolve, reject) => {
-    const get = url.startsWith("https") ? https.get : http.get;
-    get(url, { headers: extraHeaders }, (res) => {
-      let body = "";
-      res.on("data", (chunk) => (body += chunk));
-      res.on("end", () => {
-        try {
-          resolve(JSON.parse(body));
-        } catch (e) {
-          reject(new Error(`Failed to parse credentials response: ${body}`));
-        }
-      });
-      res.on("error", reject);
-    }).on("error", reject);
-  });
-}
-
-function _httpsPost(url, body, headers) {
-  return new Promise((resolve, reject) => {
-    const parsed = new URL(url);
-    const options = {
-      hostname: parsed.hostname,
-      port: 443,
-      path: parsed.pathname,
-      method: "POST",
-      headers: {
-        ...headers,
-        "content-length": Buffer.byteLength(body),
-      },
-    };
-
-    const req = https.request(options, (res) => {
-      let data = "";
-      res.on("data", (chunk) => (data += chunk));
-      res.on("end", () =>
-        resolve({ statusCode: res.statusCode, body: data }),
-      );
+/**
+ * Mint an AWS-signed OIDC token asserting the caller's IAM role.
+ * GetWebIdentityToken exists only on regional STS endpoints, so the client
+ * is pinned to a region.
+ *
+ * @param {{ audience: string, durationSeconds: number }} params
+ * @returns {Promise<string>}
+ */
+async function getStsWebIdentityToken({ audience, durationSeconds }) {
+  if (!stsClient) {
+    stsClient = new STSClient({
+      region: process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "us-east-1",
     });
-
-    req.on("error", reject);
-    req.write(body);
-    req.end();
-  });
+  }
+  const out = await stsClient.send(
+    new GetWebIdentityTokenCommand({
+      Audience: [audience],
+      SigningAlgorithm: "RS256",
+      DurationSeconds: durationSeconds,
+    }),
+  );
+  if (!out.WebIdentityToken) {
+    throw new Error("STS GetWebIdentityToken returned no token");
+  }
+  return out.WebIdentityToken;
 }
 
-module.exports = { anthropicAvailable, getAnthropicApiKey };
+module.exports = {
+  FEDERATION_ENV_VARS,
+  STS_AUDIENCE,
+  anthropicAvailable,
+  anthropicAuthMode,
+  getAnthropicApiKey,
+  resetAnthropicCredentialCache,
+};
