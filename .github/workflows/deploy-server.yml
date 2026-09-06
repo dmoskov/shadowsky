@@ -25,6 +25,7 @@ env:
 
 jobs:
   deploy:
+    if: ${{ false }} # Public deployment retired 2026-09-06.
     runs-on: ubuntu-latest
     name: Build, Push, and Deploy API Server
 

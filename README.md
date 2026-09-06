@@ -1,3 +1,6 @@
+> **Public deployment retirement — 2026-09-06**
+> Asphodel production/staging, legacy ShadowSky hosting, its ECS API service, and the sandbox REST API are retired. Amplify edge authentication is enabled, automatic builds/branch creation are off, legacy CloudFront distributions are disabled, and the ECS service has desired count zero. The sandbox execute-api endpoint is disabled. PAN feed hosts (`feed.shadowsky.io` and `feed.asphodel.is`) and processing must remain available. Normal deployment entrypoints and Terraform plans are intentionally blocked; do not remove retirement guards as an outage repair. Main and prod hosting are disabled in AWS; this retirement is committed on main. Reopening requires an explicit user request and deliberate reversal of both AWS settings and deployment guards.
+
 # Asphodel - Advanced Bluesky Client
 
 A full-featured Bluesky client with TweetDeck-style multi-column interface, advanced analytics, and real-time updates. Built with React, TypeScript, and Vite.

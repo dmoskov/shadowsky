@@ -1,4 +1,6 @@
 #!/bin/bash
+echo "Asphodel public deployment was retired on 2026-09-06. Reopening requires an explicit decision and removal of this guard." >&2
+exit 1
 # Deploy API server to AWS ECS
 # Usage: ./deploy.sh
 

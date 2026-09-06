@@ -3,6 +3,7 @@ frontend:
   phases:
     preBuild:
       commands:
+        - 'echo "Public hosting retired 2026-09-06; deployment is intentionally blocked." >&2; exit 1'
         - nvm use 20
         - node --version
         # Install Bun with retry logic (GitHub can return 504 errors)

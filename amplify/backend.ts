@@ -50,6 +50,7 @@ const mainStack = backend.stack;
 // Create minimal REST API for scheduled posts only
 // All other API endpoints are handled by ECS
 const restApi = new RestApi(mainStack, 'RestApi', {
+  disableExecuteApiEndpoint: true,
   restApiName: 'shadowsky-scheduled-posts-api',
   description: 'ShadowSky scheduled posts API (other features served by ECS)',
   deploy: true,
