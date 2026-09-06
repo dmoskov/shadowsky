@@ -298,7 +298,19 @@ Amplify has its own build pipeline (configured in `amplify.yml`) that runs insid
 
 ---
 
-## 6. Readiness Verdict
+## 6. Crucible Executor Identity
+
+| Field | Value |
+|-------|-------|
+| **Task role ARN** | `arn:aws:iam::181691141781:role/crucible-executor-BSKY` |
+| **Auth method** | Anthropic Workload Identity Federation (no API key) |
+| **Effective date** | 2026-09-03 |
+
+This per-project IAM task role is assumed by BSKY's remote executor (ECS tasks on the Crucible scaffold). Anthropic API access is granted via workload identity federation — no static API key is stored or required. When BSKY moves to the member account (`086046210181`), this role must be re-created there and the federation trust policy updated to match.
+
+---
+
+## 7. Readiness Verdict
 
 ### Status: BLOCKED
 
