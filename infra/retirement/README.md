@@ -74,3 +74,14 @@ Changes were initially prepared in an isolated checkout. On follow-up, the user 
 ## Proposed retention policy
 
 See [RETENTION.md](RETENTION.md): 30 days for empty sandbox containers, 90 days for routine logs/redundant artifacts, one year for final backups/evidence, and indefinite retention for source/domains and PAN assets. This is a recommendation only; no data-deletion schedule has been applied.
+
+## Additional legacy service found during network sweep
+
+A cross-region network audit on 2026-09-06 found a separate
+`shadowsky-cluster` / `shadowsky-api-server` service in **us-west-1**, running
+task definition revision 6 with a direct public IP and no load balancer.
+It was scaled to desired/running count zero, and world-open ingress on
+`sg-015e88e8fc86287cc` (ports 80, 443, 3001, 3002) was revoked. This is separate
+from the deleted us-east-1 deployment above. The stopped legacy service,
+cluster, task definition and closed security group remain for cleanup; do not
+restart them. No PAN resources were changed.
