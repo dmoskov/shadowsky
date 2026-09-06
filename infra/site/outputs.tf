@@ -1,6 +1,6 @@
 output "vpc_id" {
-  description = "VPC ID"
-  value       = aws_vpc.main.id
+  description = "Shared Pan VPC ID used by the ShadowSky service"
+  value       = data.aws_vpc.pan.id
 }
 
 output "ecr_repository_url" {
@@ -10,12 +10,12 @@ output "ecr_repository_url" {
 
 output "alb_dns_name" {
   description = "ALB DNS name for API server"
-  value       = aws_lb.api.dns_name
+  value       = data.aws_lb.pan.dns_name
 }
 
 output "alb_zone_id" {
   description = "ALB hosted zone ID (for Route53 alias records)"
-  value       = aws_lb.api.zone_id
+  value       = data.aws_lb.pan.zone_id
 }
 
 output "ecs_cluster_name" {

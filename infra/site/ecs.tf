@@ -84,25 +84,25 @@ resource "aws_ecs_service" "api" {
   name            = "${local.prefix}-api-server"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.api.arn
-  desired_count   = var.api_desired_count
+  desired_count   = 0
   launch_type     = "FARGATE"
 
   enable_execute_command = true
 
   network_configuration {
-    subnets          = aws_subnet.private[*].id
-    security_groups  = [aws_security_group.ecs.id]
+    subnets          = data.aws_subnets.pan_private.ids
+    security_groups  = [data.aws_security_group.pan_shadowsky_api.id]
     assign_public_ip = false
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.api_http.arn
+    target_group_arn = data.aws_lb_target_group.pan_shadowsky_api_http.arn
     container_name   = "api-server"
     container_port   = 3002
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.api_ws.arn
+    target_group_arn = data.aws_lb_target_group.pan_shadowsky_api_ws.arn
     container_name   = "api-server"
     container_port   = 3001
   }

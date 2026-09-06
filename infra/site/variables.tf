@@ -40,6 +40,36 @@ variable "api_desired_count" {
   default     = 1
 }
 
+variable "api_service_did" {
+  description = "DID the API server verifies as the audience of client service-auth tokens. Must match API_SERVICE_DID in packages/core/src/api-auth.ts."
+  type        = string
+  default     = "did:web:api.asphodel.is"
+}
+
+variable "allow_unsigned_did_auth" {
+  description = "Rollout flag: accept the legacy unverified X-User-DID header. Set false once all clients send service-auth tokens."
+  type        = bool
+  default     = true
+}
+
+variable "ai_user_daily_token_budget" {
+  description = "Max Anthropic tokens (input + output) a single account may consume per UTC day"
+  type        = number
+  default     = 500000
+}
+
+variable "ai_global_daily_token_budget" {
+  description = "Max Anthropic tokens the whole service may consume per UTC day (circuit breaker)"
+  type        = number
+  default     = 25000000
+}
+
+variable "ai_max_request_tokens" {
+  description = "Max estimated tokens (prompt + max_tokens) for a single AI request"
+  type        = number
+  default     = 120000
+}
+
 variable "cloudfront_aliases_shadowsky" {
   description = "CloudFront aliases for shadowsky.io"
   type        = list(string)
@@ -72,36 +102,6 @@ variable "anthropic_workspace_id" {
   description = "Anthropic workspace ID for keyless auth"
   type        = string
   default     = ""
-}
-
-variable "api_service_did" {
-  description = "DID the API server verifies as the audience of client service-auth tokens. Must match API_SERVICE_DID in packages/core/src/api-auth.ts."
-  type        = string
-  default     = "did:web:api.asphodel.is"
-}
-
-variable "allow_unsigned_did_auth" {
-  description = "Rollout flag: accept the legacy unverified X-User-DID header. Set false once all clients send service-auth tokens."
-  type        = bool
-  default     = true
-}
-
-variable "ai_user_daily_token_budget" {
-  description = "Max Anthropic tokens (input + output) a single account may consume per UTC day"
-  type        = number
-  default     = 500000
-}
-
-variable "ai_global_daily_token_budget" {
-  description = "Max Anthropic tokens the whole service may consume per UTC day (circuit breaker)"
-  type        = number
-  default     = 25000000
-}
-
-variable "ai_max_request_tokens" {
-  description = "Max estimated tokens (prompt + max_tokens) for a single AI request"
-  type        = number
-  default     = 120000
 }
 
 # NOTE: asphodel.is web hosting is NOT managed here. asphodel.is,

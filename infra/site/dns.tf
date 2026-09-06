@@ -10,8 +10,8 @@ resource "aws_route53_record" "api_shadowsky" {
   type    = "A"
 
   alias {
-    name                   = aws_lb.api.dns_name
-    zone_id                = aws_lb.api.zone_id
+    name                   = data.aws_lb.pan.dns_name
+    zone_id                = data.aws_lb.pan.zone_id
     evaluate_target_health = true
   }
 }
@@ -24,8 +24,8 @@ resource "aws_route53_record" "api_asphodel" {
   type    = "A"
 
   alias {
-    name                   = aws_lb.api.dns_name
-    zone_id                = aws_lb.api.zone_id
+    name                   = data.aws_lb.pan.dns_name
+    zone_id                = data.aws_lb.pan.zone_id
     evaluate_target_health = true
   }
 }

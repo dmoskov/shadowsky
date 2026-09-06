@@ -43,11 +43,11 @@ resource "aws_s3_bucket_policy" "frontend" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "AllowCloudFrontShadowsky"
-        Effect = "Allow"
+        Sid       = "AllowCloudFrontShadowsky"
+        Effect    = "Allow"
         Principal = { Service = "cloudfront.amazonaws.com" }
-        Action   = "s3:GetObject"
-        Resource = "${aws_s3_bucket.frontend.arn}/*"
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.frontend.arn}/*"
         Condition = {
           StringEquals = {
             "AWS:SourceArn" = aws_cloudfront_distribution.shadowsky.arn
@@ -107,7 +107,7 @@ resource "aws_cloudfront_function" "spa_rewrite" {
 # --- CloudFront Distribution: shadowsky.io ---
 
 resource "aws_cloudfront_distribution" "shadowsky" {
-  enabled             = true
+  enabled             = false
   is_ipv6_enabled     = true
   default_root_object = "index.html"
   aliases             = var.cloudfront_aliases_shadowsky
