@@ -28,13 +28,6 @@ resource "aws_cloudwatch_log_group" "api_server" {
   lifecycle { prevent_destroy = true }
 }
 
-resource "aws_secretsmanager_secret" "anthropic_api_key" {
-  name                    = "${local.prefix}/anthropic-api-key"
-  description             = "Anthropic API key for ShadowSky AI features"
-  recovery_window_in_days = 7
-  lifecycle { prevent_destroy = true }
-}
-
 resource "aws_s3_bucket" "build_artifacts" {
   bucket = "${local.prefix}-build-artifacts-${data.aws_caller_identity.current.account_id}"
   lifecycle { prevent_destroy = true }
